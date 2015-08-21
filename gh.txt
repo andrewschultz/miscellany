@@ -1,0 +1,89 @@
+#Shuffling files
+shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\source\shuffling-logic.txt,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\source\walkthrough.txt,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\Source\dial.htm,stale-tales-slate\shuffling\shuffling-random.htm
+shu=c:\writing\scripts\shuffling-invisiclues.htm,stale-tales-slate\shuffling
+shu=c:\writing\scripts\sa.txt,stale-tales-slate\shuffling
+shu=c:\games\inform\sa Materials\Release\Cover.jpg,stale-tales-slate\shuffling
+shu=c:\games\inform\triz\mine\shuffling-around.trizbort,stale-tales-slate\shuffling
+shu=c:\games\inform\triz\mine\shuffling-around.pdf,stale-tales-slate\shuffling
+shu=c:\users\andrew\dropbox\notes\shuf*.txt,stale-tales-slate\shuffling
+
+#Roiling files
+roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\source\logic.htm,stale-tales-slate\roiling\roiling-logic.htm
+roi=c:\games\inform\roiling.inform\Source\dial.htm,stale-tales-slate\roiling\roiling-random.htm
+roi=c:\writing\scripts\roiling-invisiclues.htm,stale-tales-slate\roiling
+roi=c:\writing\scripts\roi.txt,stale-tales-slate\roiling
+roi=c:\games\inform\roiling Materials\Release\Cover.png,stale-tales-slate\roiling
+roi=C:\games\inform\roiling.inform\Source\thru.txt,stale-tales-slate\roiling\thru.txt
+roi=c:\games\inform\triz\mine\roiling.trizbort,stale-tales-slate\roiling
+roi=c:\games\inform\triz\mine\roiling.pdf,stale-tales-slate\roiling
+roi=c:\users\andrew\dropbox\notes\roiling*.txt,stale-tales-slate\roiling
+
+#Stale Tales Slate scripts
+sts=c:\writing\scripts\icl.pl,stale-tales-slate\
+sts=c:\writing\dict\tsh.pl,stale-tales-slate\
+sts=c:\writing\dict\weed.pl,stale-tales-slate\
+sts=c:\writing\scripts\gq.pl,stale-tales-slate\
+sts=c:\writing\scripts\gq.bat,stale-tales-slate\
+sts=c:\writing\dict\anan.pl,stale-tales-slate\
+sts=c:\writing\dict\hv.pl,stale-tales-slate\
+sts=c:\writing\dict\punc.pl,stale-tales-slate\
+sts=c:\writing\dict\punc.txt,stale-tales-slate\
+sts=c:\writing\dict\lov.pl,stale-tales-slate\
+sts=c:\writing\dict\reds.pl,stale-tales-slate\
+sts=c:\writing\dict\reds.txt,stale-tales-slate\
+sts=c:\writing\dict\wutil.pm,stale-tales-slate\
+sts=c:\writing\dict\ancl.pl,stale-tales-slate\
+sts=c:\writing\dict\dash.pl,stale-tales-slate\
+sts=c:\writing\dict\rg.pl,stale-tales-slate\shuffling
+sts=c:\writing\dict\rg.txt,stale-tales-slate\shuffling
+sts=c:\writing\dict\wmet.pl,stale-tales-slate\
+sts=c:\writing\dict\wmet.txt,stale-tales-slate\
+sts=c:\writing\dict\metrics.htm,stale-tales-slate\
+sts=c:\writing\dict\badcap.pl,stale-tales-slate\
+sts=c:\writing\dict\alfy.pl,stale-tales-slate\
+
+#Stale Tales Slate data files to GitHub
+sts=c:\writing\dict\firsts.txt,stale-tales-slate\
+sts=c:\writing\dict\lasts.txt,stale-tales-slate\
+sts=c:\writing\dict\brit-1word.txt,stale-tales-slate\
+
+#Roiling utils to GitHub
+roi=c:\games\inform\roiling.inform\Source\bma.pl,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\Source\bk2txt.pl,stale-tales-slate\roiling
+roi=c:\writing\dict\ti.pl,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\Source\ti.bat,stale-tales-slate\roiling
+roi=c:\writing\dict\settler.pl,stale-tales-slate\roiling
+roi=c:\writing\dict\settler.txt,stale-tales-slate\roiling
+
+#Threediopolis files to GitHub
+3d=c:\games\inform\threediopolis.inform\source\story.ni,threediopolis
+3d=c:\games\inform\threediopolis.inform\source\logic.txt,threediopolis
+3d=c:\writing\scripts\threediopolis-invisiclues.htm,threediopolis
+3d=c:\writing\scripts\3d.txt,threediopolis
+
+#Ugly Oafs files to GitHub
+oafs=c:\games\inform\uglyoafs.inform\source\story.ni,ugly-oafs
+
+#Dirk files to GitHub
+dirk=c:\games\inform\dirk.inform\source\story.ni,dirk
+
+#Problems files to BitBucket
+prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
+prob=c:\games\inform\triz\mine\compound.trizbort,the-problems-compound
+prob=c:\games\inform\triz\mine\compound.pdf,the-problems-compound
+
+#RPG mapping files to GitHub
+rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
+rpg=c:\writing\scripts\mc.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
+rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
+
+#misc stuff
+misc=c:\writing\scripts\gh.pl,misc
+misc=c:\writing\scripts\gh.txt,misc
+
+
+;
