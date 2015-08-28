@@ -1,5 +1,6 @@
 #Shuffling files
 shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\source\testcase.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\shuffling-logic.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\walkthrough.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\Source\dial.htm,stale-tales-slate\shuffling\shuffling-random.htm
@@ -12,6 +13,7 @@ shu=c:\users\andrew\dropbox\notes\shuf*.txt,stale-tales-slate\shuffling
 
 #Roiling files
 roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\source\testcase.txt,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\logic.htm,stale-tales-slate\roiling\roiling-logic.htm
 roi=c:\games\inform\roiling.inform\Source\dial.htm,stale-tales-slate\roiling\roiling-random.htm
 roi=c:\writing\scripts\roiling-invisiclues.htm,stale-tales-slate\roiling
@@ -61,6 +63,7 @@ roi=c:\writing\dict\settler.txt,stale-tales-slate\roiling
 
 #Threediopolis files to GitHub
 3d=c:\games\inform\threediopolis.inform\source\story.ni,threediopolis
+3d=c:\games\inform\threediopolis.inform\source\testcase.txt,threediopolis
 3d=c:\games\inform\threediopolis.inform\source\logic.txt,threediopolis
 3d=c:\writing\scripts\threediopolis-invisiclues.htm,threediopolis
 3d=c:\writing\scripts\3d.txt,threediopolis
@@ -70,6 +73,9 @@ oafs=c:\games\inform\uglyoafs.inform\source\story.ni,ugly-oafs
 
 #Dirk files to GitHub
 dirk=c:\games\inform\dirk.inform\source\story.ni,dirk
+dirk=c:\games\inform\dirk.inform\source\testcase.txt,dirk
+dirk=c:\games\inform\beta materials\Release\beta-Dirk.zblorb,dirk
+dirk=c:\games\inform\dirk materials\Release\Dirk.zblorb,dirk
 
 #Problems files to BitBucket
 prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
@@ -84,6 +90,8 @@ rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 #misc stuff
 misc=c:\writing\scripts\gh.pl,misc
 misc=c:\writing\scripts\gh.txt,misc
+misc=c:\writing\dict\tli.pl,misc
+misc=c:\writing\dict\sec.pl,misc
 
 
 ;

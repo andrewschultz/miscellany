@@ -4,6 +4,8 @@ $justPrint = 0;
 
 $gh = "c:\\users\\andrew\\Documents\\github";
 
+if (@ARGV[0] eq "-j") { shift(@ARGV); $justPrint = 1; }
+
 if (@ARGV[0]) { $procString = @ARGV[0]; } else { print "Default string: $procString\n"; }
 
 findTerms();
@@ -32,7 +34,7 @@ sub processTerms
     if ($do{$b})
     {
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
-      $cmd = "copy @d[0] $gh\\@d[1]";
+      $cmd = "copy \"@d[0]\" $gh\\@d[1]";
 	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
 #      `$cmd`;
     }
