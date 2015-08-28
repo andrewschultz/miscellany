@@ -90,8 +90,6 @@ rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 #misc stuff
 misc=c:\writing\scripts\gh.pl,misc
 misc=c:\writing\scripts\gh.txt,misc
-misc=c:\writing\dict\tli.pl,misc
-misc=c:\writing\dict\sec.pl,misc
-
-
+misc=c:\writing\scripts\tli.pl,misc
+misc=c:\writing\scripts\sec.pl,misc
 ;
