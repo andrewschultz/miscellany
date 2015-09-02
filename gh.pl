@@ -1,5 +1,7 @@
 $procString="shu,roi,sts";
 
+$ght = "c:/writing/scripts/gh.txt";
+
 $justPrint = 0;
 
 $gh = "c:\\users\\andrew\\Documents\\github";
@@ -25,7 +27,7 @@ processTerms();
 
 sub processTerms
 {
-  open(A, "c:/writing/scripts/gh.txt") || die ("No c:/writing/scripts/gh.txt");
+  open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
     chomp($a);
@@ -46,7 +48,7 @@ sub processTerms
 
 sub findTerms
 {
-open(A, "gh.txt");
+open(A, $ght) || die ("Oops, couldn't open gh.txt.");
 
 while ($a = <A>)
 {
