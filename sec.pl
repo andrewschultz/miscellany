@@ -1,16 +1,25 @@
-$idx = 0;
-
-$ignoreString = "roi";
-
-$spc{"volume"} = 0;
-$spc{"book"} = 2;
-$spc{"part"} = 4;
-$spc{"chapter"} = 6;
-$spc{"section"} = 8;
-
+initializeStuff();
 getIgnoreStrings();
 readOutline();
 readMain();
+
+##########################
+#initializeStuff
+#
+#variables defined
+
+sub initializeStuff
+{
+  $idx = 0;
+
+  $ignoreString = "roi";
+
+  $spc{"volume"} = 0;
+  $spc{"book"} = 2;
+  $spc{"part"} = 4;
+  $spc{"chapter"} = 6;
+  $spc{"section"} = 8;
+}
 
 ##########################
 #readOutline
@@ -37,6 +46,10 @@ while ($a = <A>)
 }
 }
 
+##############################
+#ReadMain
+#the main function
+#
 sub readMain
 {
 for (0..$#strs)
@@ -59,10 +72,11 @@ for (0..$#strs)
   {
   if ($ig{$t2})
   {
+    $ignores++;
     $printable = 0;
 	#print "Ignoring $t2\n";
   }
-  else { $printable = 1; }
+  else { $printable = 1; $views++; }
   }
   if ($printable)
   {
@@ -70,11 +84,13 @@ for (0..$#strs)
   }
   }
 
+close(A);
+
 for $x (sort keys %inc) { print "$inc{$x} of $x.\n"; $total += $inc{$x}; }
 
 print "$total total breaks.\n";
 
-close(A);
+if ($ignores) { print "$ignores volumes ignored, $views read.\n"; }
 }
 
 #################################

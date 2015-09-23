@@ -1,5 +1,7 @@
 $procString="shu,roi,sts";
 
+$altHash{"pc"} = "prob";
+
 $ght = "c:/writing/scripts/gh.txt";
 
 $justPrint = 0;
@@ -18,7 +20,11 @@ for (@procAry)
 {
   if ($_ eq "-a")
   { $alph = 1; next; }
+  if ($altHash{$_}) { $do{$altHash{$_}} = 1; print "$_ => $altHash{$_}\n"; }
+  else
+  {
   $do{$_} = 1;
+  }
 }
 
 for $k (sort keys %poss) { print "$k is a valid key.\n"; }
@@ -35,12 +41,14 @@ sub processTerms
     $b =~ s/=.*//g;
     if ($do{$b})
     {
+	  $didOne = 1;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
       $cmd = "copy \"@d[0]\" $gh\\@d[1]";
 	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
 #      `$cmd`;
     }
   }
+  if (!$didOne) { print "Didn't find anything for $procString."; }
 }
 
 ##########################
