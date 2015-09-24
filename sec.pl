@@ -1,3 +1,10 @@
+####################################
+#sec.pl
+#
+#this reads in the volumes down to the sections in an Inform 7 source file and prints them out as
+#formatted text, with some minor additional stats.
+#
+
 initializeStuff();
 getIgnoreStrings();
 readOutline();
