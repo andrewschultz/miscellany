@@ -1,0 +1,76 @@
+name=shuffling,s,sa,12
+>>tsh.pl -s > sa-log.txt
+>>punc.pl -s >> sa-log.txt
+>>crv.pl -s >> sa-log.txt
+out=shuffling.zip
+v=5
+F=c:/games/inform/shuffling.inform/Source/story.ni
+F=c:/games/inform/shuffling.inform/Source/walkthrough.txt
+F=c:\games\inform\roiling.inform\Source\metrics.htm
+F=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb
+F=c:\games\inform\triz\shuffling-around.pdf
+F=c:\games\inform\sa.inform\Source\shuffling-logic.txt
+F=c:\writing\scripts\shuffling-invisiclues.htm
+F=c:\Users\Andrew\Dropbox\notes\shuffling_around_release_%_notes.txt
+!
+
+name=3dop,3d,13
+out=threediopolis.zip
+v=4
+F=c:\Users\Andrew\Dropbox\notes\threediopolis_release_%_notes.txt
+F=c:\games\inform\threediopolis Materials\Release\Threediopolis.zblorb
+F=c:\games\inform\threediopolis.inform\Source\logic.txt
+F=c:/games/inform/threediopolis Materials/Release\threediopolis-invisiclues.htm
+!
+
+name=uglyoafs,uo,14
+v=3
+out=ugly_oafs_release_%.zip
+>>soffice --headless --convert-to pdf c:/games/inform/uglyoafs.inform/Source/uo.odt --outdir c:/games/inform/uglyoafs.inform/Source --headless
+#>>pdftk c:/games/inform/uglyoafs.inform/Source/uo.pdf c:/games/inform/triz/uoup.pdf c:/games/inform/triz/uodn.pdf cat output ugly-oafs-guide.pdf
+>>pdftk A=c:/games/inform/uglyoafs.inform/Source/uo.pdf B=c:/games/inform/triz/uoup.pdf C=c:/games/inform/triz/uodn.pdf cat A1-6 B C A7 output ugly-oafs-guide.pdf
+F=c:/games/inform/zip/ugly-oafs-guide.pdf
+F=c:/games/inform/uglyoafs.inform/Source/story.ni
+F=c:\Users\Andrew\Dropbox\notes\ugly_oafs_release_%_notes.txt
+F=C:\games\inform\uglyoafs Materials\Release\Ugly Oafs.gblorb
+F=C:\games\inform\uglyoafs Materials\Release\ugly-oafs-invisiclues.htm
+!
+
+name=roiling,r,ro,aro,s13
+>>c:/games/inform/roiling.inform/Source/bma.pl > roil-log.txt
+>>tsh.pl -r > roil-log.txt
+>>punc.pl r >> roil-log.txt
+>>crv.pl -r >> roil-log.txt
+out=roiling.zip
+v=4
+F=c:/games/inform/roiling.inform/Source/story.ni
+F=c:\games\inform\roiling Materials\Release\A Roiling Original.gblorb
+F=c:\games\inform\triz\roiling.pdf
+F=c:\games\inform\roiling.inform\Source\logic.htm
+F=c:\games\inform\roiling.inform\Source\metrics.htm
+F=c:\writing\scripts\roiling-invisiclues.htm
+F=c:\Users\Andrew\Dropbox\notes\roiling_release_%_notes.txt
+F=c:\games\inform\roiling.inform\Source\thru.txt
+F=c:\games\inform\roiling.inform\Source\story.ni
+!
+
+name=dirk,s15
+out=dirk.zip
+#v=2
+F=c:\games\inform\dirk.inform\Source\dirk_walkthrough.txt
+F=c:\games\inform\dirk.inform\Source\story.ni
+F=c:\games\inform\dirk Materials\Release\Dirk.zblorb
+#c:\Users\Andrew\Dropbox\notes\dirk_release_%_notes.txt
+!
+
+name=pc,15
+out=problems-compound.zip
+#v=0
+F=c:\games\inform\Compound.inform\Source\story.ni
+F=c:/games/inform/Compound Materials/Release\The Problems Compound.gblorb
+F=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm
+F=c:/games/inform/triz/mine/compound.pdf
+F=c:/games/inform/triz/mine/compound-walkthrough.pdf
+!
+
+;

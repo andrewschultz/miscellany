@@ -95,6 +95,8 @@ prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\The Problems Compound.zblorb,the-problems-compound
 prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.zblorb,the-problems-compound
+prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,the-problems-compound
+prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,the-problems-compound
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
@@ -107,4 +109,7 @@ misc=c:\writing\scripts\gh.txt,misc
 misc=c:\writing\scripts\tli.pl,misc
 misc=c:\writing\scripts\sec.pl,misc
 misc=c:\writing\scripts\typo.pl,misc
+misc=c:\writing\scripts\zup.txt,misc
+misc=c:\writing\scripts\zup.pl,misc
+
 ;
