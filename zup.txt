@@ -66,6 +66,7 @@ F=c:\games\inform\dirk Materials\Release\Dirk.zblorb
 name=pc,15
 out=problems-compound.zip
 #v=0
+>>invis.pl pc
 F=c:\games\inform\Compound.inform\Source\story.ni
 F=c:/games/inform/Compound Materials/Release\The Problems Compound.gblorb
 F=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm

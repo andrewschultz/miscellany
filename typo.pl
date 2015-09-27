@@ -5,14 +5,19 @@
 #
 #It's a bit crude--it takes everything between quotes and then removes everything between brackets
 #
+#also checks for if you have a missing quote
+#
 
 open(A, "story.ni") || die ("Need to run from a directory with a story.ni.");
 open(B, ">stotext.txt");
+open(C, ">apost.txt");
 
 #define defaults here
 $ignorebracket = 1;
 $openAfter = 1;
 $bracketText = "/";
+
+@ignores = ("bad-guy", "i", "r");
 
 while ($count < $#ARGV)
 {
@@ -39,6 +44,12 @@ while ($a = <A>)
     $b = $a;
     $b =~ s/^[^\"]*\"(.*)\".*/$1/g;
 	if ($ignorebracket) { $b =~ s/\[[^\]]+\]/$bracketText/g; }
+	$apo = $a;
+	for $x (@ignores) { $apo =~ s/\[$x\]/x/g; }
+	$apo =~ s/\['\]//g;
+	$apo =~ s/[a-z]'[a-z]//gi;
+	@app = split(/'/, $apo);
+	if (@app % 2 == 0) { print C "Apostrophe $a"; }
     print B "$b";
   }
 }

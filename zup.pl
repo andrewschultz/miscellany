@@ -1,4 +1,5 @@
-open(A, "zup.txt");
+$zup = "c:/writing/scripts/zup.txt";
+open(A, $zup) || die ("$zup not available, bailing.");
 
 while ($count <= $#ARGV)
 {
@@ -44,7 +45,7 @@ while ($a = <A>)
   {
 
   /^!/ && do { processCmd($zipcmd); $zipUp = 0; next; };
-  /^out=/ && do { $a =~ s/^out=//g; $zipcmd .= " \"$a\""; next; };
+  /^out=/ && do { $a =~ s/^out=//g; $zipcmd .= " \"c:\\games\\inform\\zip\\$a\""; next; };
   /^>>/ && do { $cmd = $a; $cmd =~ s/^>>//g; `$cmd`; print "Running $cmd\n"; next; };
   /^>/ && do { $fileName = $a; $fileName =~ s/^>//g; $zipcmd = "$zipcmd "; $needFile = 1; next; };
   /^F=/i && do

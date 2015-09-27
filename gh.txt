@@ -87,14 +87,15 @@ dirk=c:\games\inform\dirk materials\Release\Dirk.zblorb,dirk
 
 #Problems files to BitBucket
 prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
+prob=c:\games\inform\Compound.inform\source\problems-compound-walkthrough.htm,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.pdf,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-walkthrough.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-walkthrough.pdf,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,the-problems-compound
-prob=c:\games\inform\Compound Materials\Release\The Problems Compound.zblorb,the-problems-compound
-prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.zblorb,the-problems-compound
+#prob=c:\games\inform\Compound Materials\Release\The Problems Compound.zblorb,the-problems-compound
+#prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.zblorb,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,the-problems-compound
 prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,the-problems-compound
 
@@ -111,5 +112,7 @@ misc=c:\writing\scripts\sec.pl,misc
 misc=c:\writing\scripts\typo.pl,misc
 misc=c:\writing\scripts\zup.txt,misc
 misc=c:\writing\scripts\zup.pl,misc
+misc=c:\writing\scripts\wpb.pl,misc
+misc=c:\writing\scripts\rwi.pl,misc
 
 ;
