@@ -1,4 +1,5 @@
-$procString="shu,roi,sts";
+#$procString="shu,roi,sts";
+$procString="pc";
 
 $altHash{"pc"} = "prob";
 
