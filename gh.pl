@@ -2,6 +2,8 @@
 $procString="pc";
 
 $altHash{"pc"} = "prob";
+$altHash{"sts"} = "shu,roi,stsu";
+$altHash{"sa"} = "shu";
 
 $ght = "c:/writing/scripts/gh.txt";
 
@@ -11,7 +13,15 @@ $gh = "c:\\users\\andrew\\Documents\\github";
 
 if (@ARGV[0] eq "-j") { shift(@ARGV); $justPrint = 1; }
 
-if (@ARGV[0]) { $procString = @ARGV[0]; } else { print "Default string: $procString\n"; }
+if (@ARGV[0])
+{
+  if ($altHash{@ARGV[0]})
+  { $procString = $altHash{@ARGV[0]}; }
+  else
+  { $procString = @ARGV[0]; }
+}
+else
+{ print "Default string: $procString\n"; }
 
 findTerms();
 
@@ -28,7 +38,7 @@ for (@procAry)
   }
 }
 
-for $k (sort keys %poss) { print "$k is a valid key.\n"; }
+for $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
 
 processTerms();
 

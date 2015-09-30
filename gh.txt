@@ -31,36 +31,36 @@ roi=c:\games\inform\triz\mine\voltmaze.trizbort,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,stale-tales-slate\roiling
 
 #Stale Tales Slate scripts
-sts=c:\writing\scripts\icl.pl,stale-tales-slate\
-sts=c:\writing\dict\tsh.pl,stale-tales-slate\
-sts=c:\writing\dict\weed.pl,stale-tales-slate\
-sts=c:\writing\scripts\gq.pl,stale-tales-slate\
-sts=c:\writing\scripts\gq.bat,stale-tales-slate\
-sts=c:\writing\dict\anan.pl,stale-tales-slate\
-sts=c:\writing\dict\hv.pl,stale-tales-slate\
-sts=c:\writing\dict\punc.pl,stale-tales-slate\
-sts=c:\writing\dict\punc.txt,stale-tales-slate\
-sts=c:\writing\dict\lov.pl,stale-tales-slate\
-sts=c:\writing\dict\reds.pl,stale-tales-slate\
-sts=c:\writing\dict\reds.txt,stale-tales-slate\
-sts=c:\writing\dict\wutil.pm,stale-tales-slate\
-sts=c:\writing\dict\ancl.pl,stale-tales-slate\
-sts=c:\writing\dict\dash.pl,stale-tales-slate\
-sts=c:\writing\dict\rg.pl,stale-tales-slate\shuffling
-sts=c:\writing\dict\rg.txt,stale-tales-slate\shuffling
-sts=c:\writing\dict\wmet.pl,stale-tales-slate\
-sts=c:\writing\dict\wmet.txt,stale-tales-slate\
-sts=c:\writing\dict\metrics.htm,stale-tales-slate\
-sts=c:\writing\dict\badcap.pl,stale-tales-slate\
-sts=c:\writing\dict\alfy.pl,stale-tales-slate\
+stsu=c:\writing\scripts\icl.pl,stale-tales-slate\
+stsu=c:\writing\dict\tsh.pl,stale-tales-slate\
+stsu=c:\writing\dict\weed.pl,stale-tales-slate\
+stsu=c:\writing\scripts\gq.pl,stale-tales-slate\
+stsu=c:\writing\scripts\gq.bat,stale-tales-slate\
+stsu=c:\writing\dict\anan.pl,stale-tales-slate\
+stsu=c:\writing\dict\hv.pl,stale-tales-slate\
+stsu=c:\writing\dict\punc.pl,stale-tales-slate\
+stsu=c:\writing\dict\punc.txt,stale-tales-slate\
+stsu=c:\writing\dict\lov.pl,stale-tales-slate\
+stsu=c:\writing\dict\reds.pl,stale-tales-slate\
+stsu=c:\writing\dict\reds.txt,stale-tales-slate\
+stsu=c:\writing\dict\wutil.pm,stale-tales-slate\
+stsu=c:\writing\dict\ancl.pl,stale-tales-slate\
+stsu=c:\writing\dict\dash.pl,stale-tales-slate\
+stsu=c:\writing\dict\rg.pl,stale-tales-slate\shuffling
+stsu=c:\writing\dict\rg.txt,stale-tales-slate\shuffling
+stsu=c:\writing\dict\wmet.pl,stale-tales-slate\
+stsu=c:\writing\dict\wmet.txt,stale-tales-slate\
+stsu=c:\writing\dict\metrics.htm,stale-tales-slate\
+stsu=c:\writing\dict\badcap.pl,stale-tales-slate\
+stsu=c:\writing\dict\alfy.pl,stale-tales-slate\
 
-#Stale Tales Slate data files to GitHub
-sts=c:\writing\dict\firsts.txt,stale-tales-slate\
-sts=c:\writing\dict\lasts.txt,stale-tales-slate\
-sts=c:\writing\dict\brit-1word.txt,stale-tales-slate\
+#Stale Tales Slate data/utility files to GitHub
+stsu=c:\writing\dict\firsts.txt,stale-tales-slate\
+stsu=c:\writing\dict\lasts.txt,stale-tales-slate\
+stsu=c:\writing\dict\brit-1word.txt,stale-tales-slate\
 #below are ones I edit and add to the source files
-sts=c:\writing\dict\sts.txt,stale-tales-slate\
-sts=c:\writing\dict\stsx.pl,stale-tales-slate\
+stsu=c:\writing\dict\sts.txt,stale-tales-slate\
+stsu=c:\writing\dict\stsx.pl,stale-tales-slate\
 
 #Roiling utils to GitHub
 roi=c:\games\inform\roiling.inform\Source\bma.pl,stale-tales-slate\roiling
@@ -92,6 +92,8 @@ prob=c:\games\inform\triz\mine\compound.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.pdf,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-walkthrough.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-walkthrough.pdf,the-problems-compound
+prob=c:\games\inform\triz\mine\compound-full.trizbort,the-problems-compound
+prob=c:\games\inform\triz\mine\compound-full.pdf,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,the-problems-compound
 #prob=c:\games\inform\Compound Materials\Release\The Problems Compound.zblorb,the-problems-compound
@@ -99,6 +101,8 @@ prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.ht
 prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,the-problems-compound
 prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
+prob=c:\games\inform\Compound Materials\Cover.png,the-problems-compound
+prob=c:\games\inform\Compound Materials\Small Cover.png,the-problems-compound
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
