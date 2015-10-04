@@ -53,7 +53,7 @@ while ($a = <A>)
     $a =~ s/^F=//gi;
     #$fileName =~ s/\./_release_$a\./g;
     $needFile = 0;
-	if (! -f "$a") { print "No file $a.\n"; }
+	if ((! -f "$a") && (! -d "$a")) { print "No file/directory $a.\n"; }
 	else
 	{
     $zipcmd .= " \"$a\"";
@@ -64,7 +64,7 @@ while ($a = <A>)
   /^c:/ && do
   {
     $cmd .= " \"$a\"";
-    if (! -f "$a") { print "WARNING: $a doesn't exist.\n"; }
+    if ((! -f "$a") && (! -d "$a")) { print "WARNING: $a doesn't exist.\n"; }
     next;
   };
   /^;/ && do { last; next; };
