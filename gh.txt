@@ -103,6 +103,8 @@ prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,th
 prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Cover.png,the-problems-compound
 prob=c:\games\inform\Compound Materials\Small Cover.png,the-problems-compound
+prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conversation Modified.i7x,the-problems-compound
+prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips Modified.i7x,the-problems-compound
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools

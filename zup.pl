@@ -53,7 +53,7 @@ while ($a = <A>)
     $a =~ s/^F=//gi;
     #$fileName =~ s/\./_release_$a\./g;
     $needFile = 0;
-	if ((! -f "$a") && (! -d "$a")) { print "No file/directory $a.\n"; }
+	if ((! -f "$a") && (! -d "$a") && ($a !~ /\*/)) { print "No file/directory $a.\n"; }
 	else
 	{
     $zipcmd .= " \"$a\"";

@@ -69,9 +69,7 @@ out=problems-compound.zip
 >>invis.pl pc
 F=c:\games\inform\Compound.inform\Source\story.ni
 F=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb
-F=c:\games\inform\Compound Materials\Release\play.html
-F=c:\games\inform\Compound Materials\Release\index.html
-F=c:\games\inform\Compound Materials\Release\interpreter
+F=c:\games\inform\Compound Materials\Release\*
 F=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm
 F=c:\games\inform\triz\mine\compound.pdf
 F=c:\games\inform\triz\mine\compound-directors-cut.pdf
