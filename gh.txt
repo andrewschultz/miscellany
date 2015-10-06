@@ -87,6 +87,7 @@ dirk=c:\games\inform\dirk materials\Release\Dirk.zblorb,dirk
 
 #Problems files to BitBucket
 prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
+prob=c:\games\inform\Compound.inform\source\termpuz.pl,the-problems-compound
 prob=c:\games\inform\Compound.inform\source\problems-compound-walkthrough.htm,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.pdf,the-problems-compound
@@ -96,8 +97,6 @@ prob=c:\games\inform\triz\mine\compound-directors-cut.trizbort,the-problems-comp
 prob=c:\games\inform\triz\mine\compound-directors-cut.pdf,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,the-problems-compound
-#prob=c:\games\inform\Compound Materials\Release\The Problems Compound.zblorb,the-problems-compound
-#prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.zblorb,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,the-problems-compound
 prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
