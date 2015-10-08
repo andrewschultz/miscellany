@@ -16,7 +16,9 @@ while (1)
   if ($q =~ /^h/) { showhidden(); next; }
   if ($q =~ /^l/) { printdeck(); next; }
   if ($q =~ /^$/) { printdeck(); next; }
-  if ($q =~ /^r/) { init(); drawSix(); printdeck(); next; }
+  if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
+  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left."; } init(); drawSix(); printdeck(); next; }
+  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left."; next; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
   if ($q =~ /^[qx]/) { last; }
   if ($q =~ /^\?/) { usage(); next; }
