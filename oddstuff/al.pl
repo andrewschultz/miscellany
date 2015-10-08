@@ -25,10 +25,24 @@ while (1)
   if ($q =~ /^z/) { $stack[5][4] = 17; printdeck(); next; }
   if ($q =~ /^t1/) { setPushMult(); printdeck(); next; }
   if ($q =~ /^t2/) { setPushEmpty(); printdeck(); next; }
+  if ($q =~ /^t3/) { setPushWin(); printdeck(); next; }
 
   print "That wasn't recognized. Push ? for usage.\n";
 }
 exit;
+
+sub setPushWin
+{
+@stack = (
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[13,12,11,10,9,8,7,6,5,4,3,2,1],
+[17,16,15,14,26,25,24,23,22,21,20,19,18],
+[39,38,37,36,35,34,33,32,31,30,29,28,27],
+[52,51,50,49,48,47,46,45,44,43,42,41,40],
+[],
+[]
+);
+}
 
 sub setPushMult
 {
@@ -200,7 +214,7 @@ sub tryMove
 	}
   }
 
-  print "Start at $fromEl\n";
+  #print "Start at $fromEl\n";
   while ($fromEl > 0)
   {
     if ($stack[$from][$fromEl-1] != $stack[$from][$fromEl] + 1) { last; }
@@ -223,12 +237,40 @@ sub tryMove
 	}
   }
   printdeck();
+  checkwin();
   
 }
 
 sub showhidden
 {
   print "Still off the board: "; for $j (sort { $a <=> $b } keys %inStack) { print " " . faceval($j); } print "\n";
+}
+
+sub checkwin
+{
+  my $suitsDone = 0;
+  
+  OUTER:
+  for $stax (1..6)
+  {
+    @x = @{$stack[$stax]};
+	if (@x == 0) { next; }
+	if (@x % 13) { next; }
+	if ($#x != 12) { next; }
+	$lasty = @x[0];
+	for (1..$#x)
+	{
+	  if (@x[$_] != $lasty - 1)
+	  {
+	    #print "$stax failed at $_.\n";
+        next OUTER;
+	  }
+	  $lasty--;
+	}
+	$suitsDone++;
+  }
+  if ($suitsDone == 4) { print "You win! Push any key to restart."; $x = <STDIN>; init(); drawSix(); printdeck(); return; }
+  elsif ($suitsDone) { print "$suitsDone suits on their own row/column.\n"; }
 }
 
 sub usage
