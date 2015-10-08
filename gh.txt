@@ -111,6 +111,7 @@ rpg=c:\writing\scripts\mc.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
 rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 
 #misc stuff
+misc=c:\coding\perl\proj\al.pl,misc\oddstuff
 misc=c:\writing\scripts\gh.pl,misc
 misc=c:\writing\scripts\gh.txt,misc
 misc=c:\writing\scripts\tli.pl,misc
