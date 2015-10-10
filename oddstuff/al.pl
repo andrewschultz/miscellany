@@ -17,8 +17,8 @@ while (1)
   if ($q =~ /^l/) { printdeck(); next; }
   if ($q =~ /^$/) { printdeck(); next; }
   if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
-  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left."; } init(); drawSix(); printdeck(); next; }
-  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left."; next; } init(); drawSix(); printdeck(); next; }
+  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } init(); drawSix(); printdeck(); next; }
+  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
   if ($q =~ /^[qx]/) { last; }
   if ($q =~ /^\?/) { usage(); next; }
@@ -28,6 +28,7 @@ while (1)
   if ($q =~ /^t1/) { setPushMult(); printdeck(); next; }
   if ($q =~ /^t2/) { setPushEmpty(); printdeck(); next; }
   if ($q =~ /^t3/) { setPushWin(); printdeck(); next; }
+  if ($q =~ /^t4/) { setOffByOne(); printdeck(); next; }
 
   print "That wasn't recognized. Push ? for usage.\n";
 }
@@ -41,6 +42,19 @@ sub setPushWin
 [17,16,15,14,26,25,24,23,22,21,20,19,18],
 [39,38,37,36,35,34,33,32,31,30,29,28,27],
 [52,51,50,49,48,47,46,45,44,43,42,41,40],
+[],
+[]
+);
+}
+
+sub setOffByOne
+{
+@stack = (
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+[14,13,12],
+[27,26,25],
+[40,39,38],
+[1,52,51],
 [],
 []
 );
@@ -124,21 +138,41 @@ sub faceval
 
 sub printdeck
 {
+  $chains = 0; $order = 0;
   for $d (1..6)
   {
     print "$d:";
-    for $q (0..$#{$stack[$_]}) { if ($stack[$d][$q]) { print faceval($stack[$d][$q]) . " "; } }
+    for $q (0..$#{$stack[$_]})
+	{
+	$t1 = $stack[$d][$q];
+	if (!$t1) { last; }
+	$t2 = $stack[$d][$q-1];
+	if ($t1)
+	{
+	if (($q >= 1) && (($t1-1)/13 == ($t2-1)/13))
+	{
+	  if ($stack[$d][$q-1] -1 == $stack[$d][$q]) { print "-"; $chains++; $order++;}
+	  elsif ($stack[$d][$q-1] -1 > $stack[$d][$q]) { print ":"; $order++; }
+	  else { print " "; }
+	}
+	else #default
+	{
+	print " ";;
+	}
+	}
+	print faceval($stack[$d][$q]);
+	}
 	print "\n";
   }
   showLegals();
-    print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards.\n";
+    print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
 }
 
 sub printdeckraw
 {
   for $d (1..6)
   {
-    print "$d:";
+    print "$d: ";
     for $q (0..$#{$stack[$_]}) { if ($stack[$d][$q]) { print $stack[$d][$q] . " "; } }
 	print "\n";
   }
@@ -219,7 +253,7 @@ sub tryMove
   #print "Start at $fromEl\n";
   while ($fromEl > 0)
   {
-    if ($stack[$from][$fromEl-1] != $stack[$from][$fromEl] + 1) { last; }
+    if (($stack[$from][$fromEl-1] != $stack[$from][$fromEl] + 1) || ($stack[$from][$fromEl] % 13 == 0)) { last; }
 	$fromEl--;
   }
   #print "Going from $from-$fromEl to $to-$toEl\n";
