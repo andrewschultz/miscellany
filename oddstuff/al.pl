@@ -254,7 +254,28 @@ sub showLegals
 	{
 	  if ($from == $to) {}
 	  elsif (@blank[$to] == 1) { print " $from$to"; }
-	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]])) { print " $from$to"; }
+	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]]))
+	  {
+	    print " ";
+	    $thisEl = @idx[$from];
+	    while ($thisEl > 0)
+		{
+		  if (($stack[$from][$thisEl-1] == $stack[$from][$thisEl] + 1) && ($stack[$from][$thisEl-1] % 13))
+		  {
+		    $thisEl--;
+		  }
+		  else { last; }
+		}
+		if ($thisEl > 0)
+		{#print "- $thisEl:" . ($stack[$from][$thisEl-1] - 1) / 13 . ($stack[$from][$thisEl] - 1) / 13;
+		if ((($stack[$from][$thisEl-1] - 1) / 13) != (($stack[$from][$thisEl] - 1) / 13))
+		  {
+		  print "*";
+		  }
+		}
+		print "$from$to";
+		if ($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) { print "+"; }
+	  }
 	}
   }
   print "\n";
