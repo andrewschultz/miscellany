@@ -14,7 +14,9 @@ while (1)
   if ($q =~ /^debug/) { printdeckraw(); next; }
   if ($q =~ /^d/) { drawSix(); printdeck(); next; }
   if ($q =~ /^h/) { showhidden(); next; }
-  if ($q =~ /^l/) { printdeck(); next; }
+  if ($q =~ /^l=/i) { loadDeck($q); next; }
+  if ($q =~ /^s=/i) { saveDeck($q); next; }
+  if ($q =~ /^t=/i) { loadDeck($q, "debug"); next; }
   if ($q =~ /^$/) { printdeck(); next; }
   if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
   if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } init(); drawSix(); printdeck(); next; }
@@ -24,15 +26,67 @@ while (1)
   if ($q =~ /^\?/) { usage(); next; }
 #cheats
 
-  if ($q =~ /^z/) { $stack[5][4] = 17; printdeck(); next; }
-  if ($q =~ /^t1/) { setPushMult(); printdeck(); next; }
-  if ($q =~ /^t2/) { setPushEmpty(); printdeck(); next; }
-  if ($q =~ /^t3/) { setPushWin(); printdeck(); next; }
-  if ($q =~ /^t4/) { setOffByOne(); printdeck(); next; }
-
   print "That wasn't recognized. Push ? for usage.\n";
 }
 exit;
+
+sub saveDeck
+{
+  chomp($_[0]);
+  my $filename = "al.txt";
+  
+  open(A, "alt.txt");
+  open(B, ">albak.txt");
+  while ($a = <A>)
+  {
+	if ($a =~ /^;/) { last; }
+    print B $a;
+    if ($a =~ /^s=$_[0]/)
+	{
+	  $overwrite = 1;
+	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+	  for (1..6) { <A>; }
+	}
+  }
+  
+  if (!$overwrite)
+  {
+    print B "$_[0]\n";
+	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+	  for (1..6) { <A>; }
+  }
+  
+  close(A);
+  close(B);
+  
+  `copy albak.txt al.txt`;
+
+  print "OK, saved.\n";
+  printdeck();
+}
+
+sub loadDeck
+{
+  if ($_[1] =~ /debug/) { $filename = "alt.txt"; print "DEBUG test\n"; }
+  chomp($_[0]);
+  my $search = $_[0]; $search =~ s/^[lt]/s/gi;
+  open(A, "$filename");
+  
+  while ($a = <A>)
+  {
+    chomp($a);
+    if ($a eq $search)
+	{
+	print "Found $search\n";
+    for (1..6) { $a = <A>; chomp($a); @{$stack[$_]} = split(/,/, $a); }
+	printdeck();
+	close(A);
+	return;
+	}
+  }
+  
+  print "No $search found.\n";
+}
 
 sub setPushWin
 {
