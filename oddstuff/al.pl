@@ -20,12 +20,14 @@ while (1)
   if ($q =~ /^s=/i) { saveDeck($q); next; }
   if ($q =~ /^t=/i) { loadDeck($q, "debug"); next; }
   if ($q =~ /^$/) { printdeck(); next; }
+  if ($q =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; next; }
   if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
   if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
+  if ($q =~ /^[1-6][1-6][^1-9]/) { $q = substr($q, 0, 2); tryMove($q); tryMove(reverse($q)); next; }
   if ($q =~ /^[1-6][1-6][1-6]/)
-  {
+  { # detect 2 ways
     @x = split(//, $q);
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
@@ -98,45 +100,6 @@ sub loadDeck
   print "No $search found.\n";
 }
 
-sub setPushWin
-{
-@stack = (
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[13,12,11,10,9,8,7,6,5,4,3,2,1],
-[17,16,15,14,26,25,24,23,22,21,20,19,18],
-[39,38,37,36,35,34,33,32,31,30,29,28,27],
-[52,51,50,49,48,47,46,45,44,43,42,41,40],
-[],
-[]
-);
-}
-
-sub setOffByOne
-{
-@stack = (
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[14,13,12],
-[27,26,25],
-[40,39,38],
-[1,52,51],
-[],
-[]
-);
-}
-
-sub setPushMult
-{
-@stack = (
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[10, 9],
-[5, 4],
-[],
-[],
-[],
-[],
-);
-}
-
 sub setPushEmpty
 {
 @stack = (
@@ -202,6 +165,14 @@ sub faceval
 
 sub printdeck
 {
+  if ($vertical)
+  { printdeckvertical(); }
+  else
+  { printdeckhorizontal(); }
+}
+
+sub printdeckhorizontal
+{
   $chains = 0; $order = 0;
   for $d (1..6)
   {
@@ -230,8 +201,7 @@ sub printdeck
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
 	print "$thisLine\n";
   }
-  showLegals();
-    print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
+  showLegalsAndStats();
 }
 
 sub printdeckraw
@@ -242,12 +212,35 @@ sub printdeckraw
     for $q (0..$#{$stack[$_]}) { if ($stack[$d][$q]) { print $stack[$d][$q] . " "; } }
 	print "\n";
   }
-  showLegals();
+  showLegalsAndStats();
   print "Left: "; for $j (sort { $a <=> $b } keys %inStack) { print " $j"; } print "\n";
     print "$cardsInPlay cards in play, $drawsLeft draws left.\n";
 }
 
-sub showLegals
+sub printdeckvertical
+{
+  my @deckPos = (0, 0, 0, 0, 0, 0, 0);
+  for (1..6) { print "   $_"; } print "\n";
+  do
+  {
+  $foundCard = 0;
+  for $row (1..6)
+  {
+    if ($stack[$row][@deckPos[$row]])
+	{
+	$foundCard = 1;
+	if ($stack[$row][@deckPos[$row]] % 13 != 10) { print " "; }
+	print " " . faceval($stack[$row][@deckPos[$row]]);
+	@deckPos[$row]++;
+	}
+	else { print "    "; }
+  }
+  if ($foundCard) { print "\n"; }
+  } while ($foundCard);
+  showLegalsAndStats();
+}
+
+sub showLegalsAndStats
 {
   my @idx;
   my @blank = (0,0,0,0,0,0);
@@ -291,6 +284,7 @@ sub showLegals
 	}
   }
   print "\n";
+  print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
 }
 
 sub cromu
@@ -400,9 +394,15 @@ sub usage
 {
 print<<EOT;
 [1-6][1-6] moves stack a to stack b
+[1-6][1-6]0 (or any character moves stack a to stack b and back
+[1-6][1-6][1-6] moves from a to b, a to c, b to c.
+v toggles vertical view (default is horizontal)
 q/x quits
 r restarts
-l/(blank) prints it
-d draws 6 cards
+(blank) prints the screen
+d draws 6 cards (you get 5)
+s=saves deck name
+l=loads deck name
+t=loads test
 EOT
 }
