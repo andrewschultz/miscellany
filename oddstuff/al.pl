@@ -25,37 +25,43 @@ init(); drawSix(); printdeck();
 
 while (1)
 {
-  $q = <STDIN>;
-  if ($q =~ /^debug/) { printdeckraw(); next; }
-  if ($q =~ /^d/) { drawSix(); printdeck(); next; }
-  if ($q =~ /^h/) { showhidden(); next; }
-  if ($q =~ /^l=/i) { loadDeck($q); next; }
-  if ($q =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; next; }
-  if ($q =~ /^s=/i) { saveDeck($q); next; }
-  if ($q =~ /^t=/i) { loadDeck($q, "debug"); next; }
-  if ($q =~ /^$/) { printdeck(); next; }
-  if ($q =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; next; }
-  if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
-  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); next; }
-  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } doAnotherGame(); next; }
-  if ($q =~ /^%/) { stats(); next; }
-  if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
-  if ($q =~ /^[1-6][1-6][^1-9]/) { $q = substr($q, 0, 2); tryMove($q); tryMove(reverse($q)); next; }
-  if ($q =~ /^[1-6][1-6][1-6]/)
+  $oneline = <STDIN>;
+  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { readLine($myCmd); } }
+  else { readLine($oneline); }
+}
+exit;
+
+sub readLine
+{
+  if ($_[0] =~ /^debug/) { printdeckraw(); next; }
+  if ($_[0] =~ /^d/) { drawSix(); printdeck(); next; }
+  if ($_[0] =~ /^h/) { showhidden(); next; }
+  if ($_[0] =~ /^l=/i) { loadDeck($_[0]); next; }
+  if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; next; }
+  if ($_[0] =~ /^s=/i) { saveDeck($_[0]); next; }
+  if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); next; }
+  if ($_[0] =~ /^$/) { printdeck(); next; }
+  if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; next; }
+  if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
+  if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); next; }
+  if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } doAnotherGame(); next; }
+  if ($_[0] =~ /^%/) { stats(); next; }
+  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); next; }
+  if ($_[0] =~ /^[1-6][1-6][^1-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); next; }
+  if ($_[0] =~ /^[1-6][1-6][1-6]/)
   { # detect 2 ways
-    @x = split(//, $q);
+    @x = split(//, $_[0]);
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
 	next;
   }
-  if ($q =~ /^[qx]/) { last; }
-  if ($q =~ /^\?/) { usage(); next; }
+  if ($_[0] =~ /^[qx]/) { last; }
+  if ($_[0] =~ /^\?/) { usage(); next; }
 #cheats
 
-  print "That wasn't recognized. Push ? for usage.\n";
+  print "Command ($_[0]) wasn't recognized. Push ? for usage.\n";
 }
-exit;
 
 sub doAnotherGame
 {
@@ -200,7 +206,6 @@ sub printdeck
 
 sub printdeckhorizontal
 {
-  $chains = 0; $order = 0;
   for $d (1..6)
   {
     $thisLine = "$d:";
@@ -213,8 +218,8 @@ sub printdeckhorizontal
 	{
 	if (($q >= 1) && (($t1-1)/13 == ($t2-1)/13))
 	{
-	  if ($stack[$d][$q-1] -1 == $stack[$d][$q]) { $thisLine .= "-"; $chains++; $order++;}
-	  elsif ($stack[$d][$q-1] -1 > $stack[$d][$q]) { $thisLine .= ":"; $order++; }
+	  if ($stack[$d][$q-1] -1 == $stack[$d][$q]) { $thisLine .= "-"; }
+	  elsif ($stack[$d][$q-1] -1 > $stack[$d][$q]) { $thisLine .= ":"; }
 	  else { $thisLine .= " "; }
 	}
 	else #default
@@ -247,22 +252,48 @@ sub printdeckraw
 sub printdeckvertical
 {
   my @deckPos = (0, 0, 0, 0, 0, 0, 0);
-  for (1..6) { print "   $_"; } print "\n";
+  my @xtrChr = (" ", "=");
+  for (1..6) { @lookAhead[$row] = 0; print "   $_"; } print "\n";
   do
   {
   $foundCard = 0;
+  $thisLine = "";
   for $row (1..6)
   {
     if ($stack[$row][@deckPos[$row]])
 	{
 	$foundCard = 1;
-	if ($stack[$row][@deckPos[$row]] % 13 != 10) { print " "; }
-	print " " . faceval($stack[$row][@deckPos[$row]]);
+	#if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	if ($collapse)
+	{
+	if (@lookAhead[$row])
+	{
+	#print "$stack[$row][@deckPos[$row]] vs $stack[$row][@deckPos[$row]+1]: $stack[$row][@deckPos[$row+1] +1].\n";
+	while((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row] +1] % 13)) { @deckPos[$row]++; $eq = 1; }
+	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	if ($eq) { $thisLine .= "="; } else { $thisLine .= "-"; }
+	$thisLine .= faceval($stack[$row][@deckPos[$row]], 1);
+	@lookAhead[$row] = 0;
+	$eq = 0;
+	}
+	else
+	{
+	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	$thisLine .= " " . faceval($stack[$row][@deckPos[$row]], 1);
+	}
+	if ((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row+1] +1] % 13)) { @lookAhead[$row] = 1; }
 	@deckPos[$row]++;
 	}
-	else { print "    "; }
+	else
+	{
+	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	$thisLine .= " " . faceval($stack[$row][@deckPos[$row]], 1);
+	@deckPos[$row]++;
+	}
+	}
+	else { $thisLine .= "    "; }
   }
-  if ($foundCard) { print "\n"; }
+  if ($foundCard) { print "$thisLine\n"; }
   } while ($foundCard);
   showLegalsAndStats();
 }
@@ -325,14 +356,33 @@ sub showLegalsAndStats
 	}
   }
   print "\n";
+
+  $chains = 0; $order = 0;
+  for $col (1..6)
+  {
+    $entry = 1;
+	while ($stack[$col][$entry])
+	{
+	  if (($stack[$col][$entry] % 13) && ($stack[$col][$entry] == $stack[$col][$entry-1] - 1)) { $chains++; $order++; }
+	  if (($stack[$col][$entry] < $stack[$col][$entry-1] - 1) && (suit($stack[$col][$entry]) == suit($stack[$col][$entry-1]))) { $order++; }
+	  $entry++;
+	}
+  }
+
   print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
+}
+
+sub suit
+{
+  if ($_[0] == -1) { return -1; }
+  return ($_[0]-1) / 13;
 }
 
 sub cromu
 {
   if ($_[0] > $_[1]) { return 0; }
-  my $x = ($_[0] - 1) / 13;
-  my $y = ($_[1] - 1) / 13;
+  my $x = suit($_[0]);
+  my $y = suit($_[1]);
   #print "$_[0] vs. $_[1]: $x =? $y\n";
   if ($x != $y) { return 0; }
   return 1;
@@ -348,7 +398,7 @@ sub tryMove
   
   if ($from==$to) { print "The numbers should be different.\n"; return; }
   
-  if (!$stack[$from][0]) { print "Empty row/column."; return; }
+  if (!$stack[$from][0]) { print "Empty row/column.\n"; return; }
 
   my $toEl = 0;
   my $fromEl = 0;
