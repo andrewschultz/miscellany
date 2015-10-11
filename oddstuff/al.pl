@@ -3,11 +3,22 @@ use integer;
 my %inStack;
 @toggles = ( "off", "on" );
 
-init();
+open(A, "scores.txt");
 
-drawSix();
+$wins = $losses = $streak = 0;
 
-printdeck();
+if (A == NULL) { print "No scores.txt\n"; }
+else
+{
+print "Reading scoores\n";
+$stats = <A>; chomp($stats); @pcts = split(/,/, $stats);
+$wins = @pcts[0];
+$losses = @pcts[1];
+$streak = @pcts[2];
+close(A);
+}
+
+init(); drawSix(); printdeck();
 
 while (1)
 {
@@ -22,8 +33,8 @@ while (1)
   if ($q =~ /^$/) { printdeck(); next; }
   if ($q =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; next; }
   if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
-  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } init(); drawSix(); printdeck(); next; }
-  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } init(); drawSix(); printdeck(); next; }
+  if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); next; }
+  if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } doAnotherGame(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
   if ($q =~ /^[1-6][1-6][^1-9]/) { $q = substr($q, 0, 2); tryMove($q); tryMove(reverse($q)); next; }
   if ($q =~ /^[1-6][1-6][1-6]/)
@@ -41,6 +52,18 @@ while (1)
   print "That wasn't recognized. Push ? for usage.\n";
 }
 exit;
+
+sub doAnotherGame
+{
+if ($youWon) { $youWon = 0; $wins++; $streak++; }
+elsif ($hidCards == 16) { }
+else { $losses++; $streak = 0; }
+
+open(A, ">scores.txt");
+print A "$wins,$losses,$streak";
+close(A);
+init(); drawSix(); printdeck();
+}
 
 sub saveDeck
 {
@@ -386,7 +409,7 @@ sub checkwin
 	}
 	$suitsDone++;
   }
-  if ($suitsDone == 4) { print "You win! Push any key to restart."; $x = <STDIN>; init(); drawSix(); printdeck(); return; }
+  if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
   elsif ($suitsDone) { print "$suitsDone suits on their own row/column.\n"; }
 }
 
