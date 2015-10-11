@@ -5,16 +5,19 @@ my %inStack;
 
 open(A, "scores.txt");
 
-$wins = $losses = $streak = 0;
+$wins = $losses = $wstreak = $lstreak = $lwstreak = $llstreak = 0;
 
-if (A == NULL) { print "No scores.txt\n"; }
+if (!fileno(A)) { print "No scores.txt\n"; }
 else
 {
-print "Reading scoores\n";
+print "Reading scores...\n";
 $stats = <A>; chomp($stats); @pcts = split(/,/, $stats);
 $wins = @pcts[0];
 $losses = @pcts[1];
-$streak = @pcts[2];
+$wstreak = @pcts[2];
+$lstreak = @pcts[3];
+$lwstreak = @pcts[4];
+$llstreak = @pcts[5];
 close(A);
 }
 
@@ -35,6 +38,7 @@ while (1)
   if ($q =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
   if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); next; }
   if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } doAnotherGame(); next; }
+  if ($q =~ /^%/) { stats(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
   if ($q =~ /^[1-6][1-6][^1-9]/) { $q = substr($q, 0, 2); tryMove($q); tryMove(reverse($q)); next; }
   if ($q =~ /^[1-6][1-6][1-6]/)
@@ -55,12 +59,12 @@ exit;
 
 sub doAnotherGame
 {
-if ($youWon) { $youWon = 0; $wins++; $streak++; }
+if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lwstreak) { $lwstreak = $wstreak; } }
 elsif ($hidCards == 16) { }
-else { $losses++; $streak = 0; }
+else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
 
 open(A, ">scores.txt");
-print A "$wins,$losses,$streak";
+print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak";
 close(A);
 init(); drawSix(); printdeck();
 }
@@ -102,7 +106,7 @@ sub saveDeck
 
 sub loadDeck
 {
-  if ($_[1] =~ /debug/) { $filename = "alt.txt"; print "DEBUG test\n"; }
+  if ($_[1] =~ /debug/) { $filename = "alt.txt"; print "DEBUG test\n"; } else { $filename="al.txt"; }
   chomp($_[0]);
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
@@ -112,7 +116,7 @@ sub loadDeck
     chomp($a);
     if ($a eq $search)
 	{
-	print "Found $search\n";
+	print "Found $search in $filename.\n";
     for (1..6) { $a = <A>; chomp($a); @{$stack[$_]} = split(/,/, $a); }
 	printdeck();
 	close(A);
@@ -120,7 +124,7 @@ sub loadDeck
 	}
   }
   
-  print "No $search found.\n";
+  print "No $search found in $filename.\n";
 }
 
 sub setPushEmpty
@@ -300,9 +304,23 @@ sub showLegalsAndStats
 		  {
 		  print "*";
 		  }
+		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
+		  {
+		  print "<";
+		  }
+		}
+		if ((($stack[$from][$thisEl-1] - 1) / 13) == (($stack[$from][$thisEl] - 1) / 13))
+		{
+		  if ((($stack[$from][$thisEl] - 1) / 13) == (($stack[$to][@idx[$to]] - 1) / 13))
+		  {
+		    if (($stack[$from][$thisEl] < $stack[$to][@idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
+			{
+			  print "C";
+			}
+		  }
 		}
 		print "$from$to";
-		if ($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) { print "+"; }
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; }
 	  }
 	}
   }
@@ -329,6 +347,8 @@ sub tryMove
   #print "$_[0] becomes $from $to\n";
   
   if ($from==$to) { print "The numbers should be different.\n"; return; }
+  
+  if (!$stack[$from][0]) { print "Empty row/column."; return; }
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -411,6 +431,15 @@ sub checkwin
   }
   if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
   elsif ($suitsDone) { print "$suitsDone suits on their own row/column.\n"; }
+}
+
+sub stats
+{
+ print "$wins wins $losses losses\n";
+ if ($wstreak) { print "current streak = $wstreak wins\n"; }
+ elsif ($lstreak) { print "current streak = $lstreak losses\n"; }
+ print "Longest streak $lwstreak wins $llstreak losses\n";
+ printf("Win percentage = %d.%02d", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
 sub usage
