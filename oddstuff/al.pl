@@ -1,6 +1,7 @@
 use integer;
 
 my %inStack;
+@toggles = ( "off", "on" );
 
 init();
 
@@ -15,6 +16,7 @@ while (1)
   if ($q =~ /^d/) { drawSix(); printdeck(); next; }
   if ($q =~ /^h/) { showhidden(); next; }
   if ($q =~ /^l=/i) { loadDeck($q); next; }
+  if ($q =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; next; }
   if ($q =~ /^s=/i) { saveDeck($q); next; }
   if ($q =~ /^t=/i) { loadDeck($q, "debug"); next; }
   if ($q =~ /^$/) { printdeck(); next; }
@@ -22,6 +24,14 @@ while (1)
   if ($q =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } init(); drawSix(); printdeck(); next; }
   if ($q =~ /^[1-6] *[1-6]/) { tryMove($q); next; }
+  if ($q =~ /^[1-6][1-6][1-6]/)
+  {
+    @x = split(//, $q);
+	tryMove("@x[0]@x[1]");
+	tryMove("@x[0]@x[2]");
+	tryMove("@x[1]@x[2]");
+	next;
+  }
   if ($q =~ /^[qx]/) { last; }
   if ($q =~ /^\?/) { usage(); next; }
 #cheats
@@ -195,7 +205,7 @@ sub printdeck
   $chains = 0; $order = 0;
   for $d (1..6)
   {
-    print "$d:";
+    $thisLine = "$d:";
     for $q (0..$#{$stack[$_]})
 	{
 	$t1 = $stack[$d][$q];
@@ -205,18 +215,20 @@ sub printdeck
 	{
 	if (($q >= 1) && (($t1-1)/13 == ($t2-1)/13))
 	{
-	  if ($stack[$d][$q-1] -1 == $stack[$d][$q]) { print "-"; $chains++; $order++;}
-	  elsif ($stack[$d][$q-1] -1 > $stack[$d][$q]) { print ":"; $order++; }
-	  else { print " "; }
+	  if ($stack[$d][$q-1] -1 == $stack[$d][$q]) { $thisLine .= "-"; $chains++; $order++;}
+	  elsif ($stack[$d][$q-1] -1 > $stack[$d][$q]) { $thisLine .= ":"; $order++; }
+	  else { $thisLine .= " "; }
 	}
 	else #default
 	{
-	print " ";;
+	$thisLine .= " ";
 	}
 	}
-	print faceval($stack[$d][$q]);
+	$thisLine .= faceval($stack[$d][$q]);
 	}
-	print "\n";
+	
+	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
+	print "$thisLine\n";
   }
   showLegals();
     print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
