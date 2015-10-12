@@ -23,41 +23,44 @@ close(A);
 
 init(); drawSix(); printdeck();
 
+if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); for $initCmd(@cmds) { print "!$initCmd!\n"; procCmd($initCmd); } }
+
 while (1)
 {
   $oneline = <STDIN>;
-  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { readLine($myCmd); } }
-  else { readLine($oneline); }
+  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmd($myCmd); } }
+  else { procCmd($oneline); }
 }
 exit;
 
-sub readLine
+sub procCmd
 {
-  if ($_[0] =~ /^debug/) { printdeckraw(); next; }
-  if ($_[0] =~ /^d/) { drawSix(); printdeck(); next; }
-  if ($_[0] =~ /^h/) { showhidden(); next; }
-  if ($_[0] =~ /^l=/i) { loadDeck($_[0]); next; }
-  if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; next; }
-  if ($_[0] =~ /^s=/i) { saveDeck($_[0]); next; }
-  if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); next; }
-  if ($_[0] =~ /^$/) { printdeck(); next; }
-  if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; next; }
-  if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game."; next; }
-  if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); next; }
-  if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; next; } doAnotherGame(); next; }
-  if ($_[0] =~ /^%/) { stats(); next; }
-  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); next; }
-  if ($_[0] =~ /^[1-6][1-6][^1-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); next; }
+  if ($_[0] =~ /^debug/) { printdeckraw(); return; }
+  if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
+  if ($_[0] =~ /^d/) { if ($anySpecial) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
+  if ($_[0] =~ /^h/) { showhidden(); return; }
+  if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
+  if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
+  if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
+  if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
+  if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); return; }
+  if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
+  if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game."; return; }
+  if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
+  if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
+  if ($_[0] =~ /^%/) { stats(); return; }
+  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); return; }
+  if ($_[0] =~ /^[1-6][1-6][^1-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[1-6][1-6][1-6]/)
   { # detect 2 ways
     @x = split(//, $_[0]);
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
-	next;
+	return;
   }
-  if ($_[0] =~ /^[qx]/) { last; }
-  if ($_[0] =~ /^\?/) { usage(); next; }
+  if ($_[0] =~ /^[qx]/) { exit; }
+  if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
 
   print "Command ($_[0]) wasn't recognized. Push ? for usage.\n";
@@ -310,6 +313,7 @@ sub showLegalsAndStats
 	if (@idx[$d] < 0) { @blank [$d] = 1; @idx[$d] = 0; }
   }
   #for $thi (0..5) { print "Stack $thi (@idx[$thi]): $stack[$thi][@idx[$thi]]\n"; }
+  $anySpecial = 0;
   print "Legal moves:";
   for $from (1..6)
   {
@@ -333,11 +337,11 @@ sub showLegalsAndStats
 		{#print "- $thisEl:" . ($stack[$from][$thisEl-1] - 1) / 13 . ($stack[$from][$thisEl] - 1) / 13;
 		if ((($stack[$from][$thisEl-1] - 1) / 13) != (($stack[$from][$thisEl] - 1) / 13))
 		  {
-		  print "*";
+		  print "*"; $anySpecial = 1;
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
-		  print "<";
+		  print "<"; $anySpecial = 1;
 		  }
 		}
 		if ((($stack[$from][$thisEl-1] - 1) / 13) == (($stack[$from][$thisEl] - 1) / 13))
@@ -351,7 +355,7 @@ sub showLegalsAndStats
 		  }
 		}
 		print "$from$to";
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; }
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; }
 	  }
 	}
   }
