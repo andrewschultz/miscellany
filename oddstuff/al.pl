@@ -21,6 +21,8 @@ $llstreak = @pcts[5];
 close(A);
 }
 
+$vertical = $collapse = 0;
+
 init(); drawSix(); printdeck();
 
 if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); for $initCmd(@cmds) { print "!$initCmd!\n"; procCmd($initCmd); } }
@@ -35,6 +37,7 @@ exit;
 
 sub procCmd
 {
+  if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^d/) { if ($anySpecial) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
@@ -83,7 +86,7 @@ sub saveDeck
   chomp($_[0]);
   my $filename = "al.txt";
   
-  open(A, "alt.txt");
+  open(A, "$filename");
   open(B, ">albak.txt");
   while ($a = <A>)
   {
@@ -92,6 +95,8 @@ sub saveDeck
     if ($a =~ /^s=$_[0]/)
 	{
 	  $overwrite = 1;
+	  <A>;
+	  print B "$vertical,$collapse\n";
 	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	  for (1..6) { <A>; }
 	}
@@ -100,14 +105,16 @@ sub saveDeck
   if (!$overwrite)
   {
     print B "$_[0]\n";
-	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
-	  for (1..6) { <A>; }
+	<A>;
+	print "$vertical,$collapse\n";
+	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+	for (1..6) { <A>; }
   }
   
   close(A);
   close(B);
   
-  `copy albak.txt al.txt`;
+  `copy albak.txt $filename`;
 
   print "OK, saved.\n";
   printdeck();
@@ -123,9 +130,11 @@ sub loadDeck
   while ($a = <A>)
   {
     chomp($a);
+	if ($a =~ /$;/) { last; }
     if ($a eq $search)
 	{
 	print "Found $search in $filename.\n";
+	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
     for (1..6) { $a = <A>; chomp($a); @{$stack[$_]} = split(/,/, $a); }
 	printdeck();
 	close(A);
@@ -255,8 +264,9 @@ sub printdeckraw
 sub printdeckvertical
 {
   my @deckPos = (0, 0, 0, 0, 0, 0, 0);
+  my @lookAhead = (0, 0, 0, 0, 0, 0, 0);
   my @xtrChr = (" ", "=");
-  for (1..6) { @lookAhead[$row] = 0; print "   $_"; } print "\n";
+  for (1..6) { @lookAhead[$row] = 0; print "    $_"; } print "\n";
   do
   {
   $foundCard = 0;
@@ -265,13 +275,13 @@ sub printdeckvertical
   {
     if ($stack[$row][@deckPos[$row]])
 	{
+	$thisLine .= " ";
 	$foundCard = 1;
 	#if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
 	if ($collapse)
 	{
 	if (@lookAhead[$row])
 	{
-	#print "$stack[$row][@deckPos[$row]] vs $stack[$row][@deckPos[$row]+1]: $stack[$row][@deckPos[$row+1] +1].\n";
 	while((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row] +1] % 13)) { @deckPos[$row]++; $eq = 1; }
 	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
 	if ($eq) { $thisLine .= "="; } else { $thisLine .= "-"; }
@@ -284,7 +294,11 @@ sub printdeckvertical
 	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
 	$thisLine .= " " . faceval($stack[$row][@deckPos[$row]], 1);
 	}
-	if ((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row+1] +1] % 13)) { @lookAhead[$row] = 1; }
+	if ((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row] +1] % 13))
+	{
+	  @lookAhead[$row] = 1;
+	  #print "$row: $stack[$row][@deckPos[$row]] to $stack[$row][@deckPos[$row]+1]: DING!\n";
+	}
 	@deckPos[$row]++;
 	}
 	else
@@ -294,7 +308,7 @@ sub printdeckvertical
 	@deckPos[$row]++;
 	}
 	}
-	else { $thisLine .= "    "; }
+	else { $thisLine .= "     "; }
   }
   if ($foundCard) { print "$thisLine\n"; }
   } while ($foundCard);
