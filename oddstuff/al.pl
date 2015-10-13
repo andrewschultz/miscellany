@@ -106,7 +106,7 @@ sub saveDeck
   {
     print B "$_[0]\n";
 	<A>;
-	print "$vertical,$collapse\n";
+	print B "$vertical,$collapse\n";
 	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	for (1..6) { <A>; }
   }
@@ -135,7 +135,15 @@ sub loadDeck
 	{
 	print "Found $search in $filename.\n";
 	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
-    for (1..6) { $a = <A>; chomp($a); @{$stack[$_]} = split(/,/, $a); }
+    $hidCards = 0;
+    for (1..52) { $inStack{$_} = 1; } print "1\n";
+    for (1..6)
+	{
+	  $a = <A>; chomp($a);
+	  @{$stack[$_]} = split(/,/, $a);
+	  for $card (@{$stack[$_]}) { if ($card > 0) { delete($inStack{$card}); } elsif ($card == -1) { $hidCards++; } }
+	  #for $x (sort keys %inStack) { print "$x: " . faceval($x) . "\n"; }
+	}
 	printdeck();
 	close(A);
 	return;
@@ -143,6 +151,16 @@ sub loadDeck
   }
   
   print "No $search found in $filename.\n";
+}
+
+sub hidCards
+{
+  my $retVal = 0;
+  for my $cardrow (1..6)
+  {
+    for my $card (@{stack[$_]}) { if ($card == -1) { $retVal++; } }
+  }
+  return $retVal;
 }
 
 sub setPushEmpty
@@ -266,7 +284,7 @@ sub printdeckvertical
   my @deckPos = (0, 0, 0, 0, 0, 0, 0);
   my @lookAhead = (0, 0, 0, 0, 0, 0, 0);
   my @xtrChr = (" ", "=");
-  for (1..6) { @lookAhead[$row] = 0; print "    $_"; } print "\n";
+  for $row (1..6) { @lookAhead[$row] = 0; print "   "; if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row"; } print "\n";
   do
   {
   $foundCard = 0;
@@ -358,6 +376,10 @@ sub showLegalsAndStats
 		  print "<"; $anySpecial = 1;
 		  }
 		}
+		else
+		{
+		  print "E";
+		}
 		if ((($stack[$from][$thisEl-1] - 1) / 13) == (($stack[$from][$thisEl] - 1) / 13))
 		{
 		  if ((($stack[$from][$thisEl] - 1) / 13) == (($stack[$to][@idx[$to]] - 1) / 13))
@@ -399,6 +421,7 @@ sub suit
 sub cromu
 {
   if ($_[0] > $_[1]) { return 0; }
+  if (!$_[0]) { return 0; }
   my $x = suit($_[0]);
   my $y = suit($_[1]);
   #print "$_[0] vs. $_[1]: $x =? $y\n";
