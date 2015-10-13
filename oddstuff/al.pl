@@ -37,6 +37,9 @@ exit;
 
 sub procCmd
 {
+  chomp($_[0]);
+  $moveBar = 0;
+  if ($_[0] =~ /^[1-6]$/) { print "Need a 2nd row.\n"; }
   if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
@@ -131,7 +134,7 @@ sub loadDeck
   {
     chomp($a);
 	if ($a =~ /$;/) { last; }
-    if ($a eq $search)
+    if ("$a" eq "$search")
 	{
 	print "Found $search in $filename.\n";
 	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
@@ -366,8 +369,8 @@ sub showLegalsAndStats
 		  else { last; }
 		}
 		if ($thisEl > 0)
-		{#print "- $thisEl:" . ($stack[$from][$thisEl-1] - 1) / 13 . ($stack[$from][$thisEl] - 1) / 13;
-		if ((($stack[$from][$thisEl-1] - 1) / 13) != (($stack[$from][$thisEl] - 1) / 13))
+		{
+		if (suit($stack[$from][$thisEl-1]) != suit($stack[$from][$thisEl]))
 		  {
 		  print "*"; $anySpecial = 1;
 		  }
@@ -380,9 +383,9 @@ sub showLegalsAndStats
 		{
 		  print "E";
 		}
-		if ((($stack[$from][$thisEl-1] - 1) / 13) == (($stack[$from][$thisEl] - 1) / 13))
+		if (suit($stack[$from][$thisEl-1]) == suit($stack[$from][$thisEl]))
 		{
-		  if ((($stack[$from][$thisEl] - 1) / 13) == (($stack[$to][@idx[$to]] - 1) / 13))
+		  if (suit($stack[$from][$thisEl]) == suit($stack[$to][@idx[$to]]))
 		  {
 		    if (($stack[$from][$thisEl] < $stack[$to][@idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
 			{
@@ -436,10 +439,11 @@ sub tryMove
   my $to = @q[1];
   
   #print "$_[0] becomes $from $to\n";
+  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
   
-  if ($from==$to) { print "The numbers should be different.\n"; return; }
+  if ($from==$to) { print "The numbers should be different.\n"; $moveBar = 1; return; }
   
-  if (!$stack[$from][0]) { print "Empty row/column.\n"; return; }
+  if (!$stack[$from][0]) { print "Empty row/column.\n"; $moveBar = 1; return; }
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -461,6 +465,7 @@ sub tryMove
 	if (!cromu($stack[$from][$fromEl], $stack[$to][$toEl]))
 	{
 	  print "Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n";
+	  $moveBar = 1;
 	  return;
 	}
   }
