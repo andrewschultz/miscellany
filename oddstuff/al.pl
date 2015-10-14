@@ -23,6 +23,8 @@ close(A);
 
 $vertical = $collapse = 0;
 
+loadDefault();
+
 init(); drawSix(); printdeck();
 
 if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); for $initCmd(@cmds) { print "!$initCmd!\n"; procCmd($initCmd); } }
@@ -39,7 +41,8 @@ sub procCmd
 {
   chomp($_[0]);
   $moveBar = 0;
-  if ($_[0] =~ /^[1-6]$/) { print "Need a 2nd row.\n"; }
+  if ($_[0] =~ /^sd/) { saveDefault(); return; }
+  if ($_[0] =~ /^[1-6]$/) { print "Need a 2nd row.\n"; return; }
   if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
@@ -55,7 +58,6 @@ sub procCmd
   if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
   if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
   if ($_[0] =~ /^%/) { stats(); return; }
-  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); return; }
   if ($_[0] =~ /^[1-6][1-6][^1-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[1-6][1-6][1-6]/)
   { # detect 2 ways
@@ -65,6 +67,7 @@ sub procCmd
 	tryMove("@x[1]@x[2]");
 	return;
   }
+  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); return; }
   if ($_[0] =~ /^[qx]/) { exit; }
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
@@ -88,15 +91,17 @@ sub saveDeck
 {
   chomp($_[0]);
   my $filename = "al.txt";
+  my $overwrite = 0;
   
   open(A, "$filename");
   open(B, ">albak.txt");
   while ($a = <A>)
   {
-	if ($a =~ /^;/) { last; }
     print B $a;
-    if ($a =~ /^s=$_[0]/)
+	if ($a =~ /^;/) { last; }
+    if ($a =~ /^$_[0]/)
 	{
+      print "Overwriting entry $_[0]\n";
 	  $overwrite = 1;
 	  <A>;
 	  print B "$vertical,$collapse\n";
@@ -107,12 +112,15 @@ sub saveDeck
   
   if (!$overwrite)
   {
+    print "Saving new entry $_[0]\n";
     print B "$_[0]\n";
 	<A>;
 	print B "$vertical,$collapse\n";
 	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	for (1..6) { <A>; }
   }
+  
+  while ($a = <A>) { print B $a; }
   
   close(A);
   close(B);
@@ -129,23 +137,29 @@ sub loadDeck
   chomp($_[0]);
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
+  my $li = 0;
+  
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); $vertical = @opts[0]; $collapse = @opts[1]; # read in default values
   
   while ($a = <A>)
   {
+    $li++;
     chomp($a);
 	if ($a =~ /$;/) { last; }
     if ("$a" eq "$search")
 	{
-	print "Found $search in $filename.\n";
+	print "Found $search in $filename, line $li.\n";
 	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
     $hidCards = 0;
-    for (1..52) { $inStack{$_} = 1; } print "1\n";
+   $cardsInPlay = 0; $drawsLeft = 5;
+    for (1..52) { $inStack{$_} = 1; }
     for (1..6)
 	{
 	  $a = <A>; chomp($a);
 	  @{$stack[$_]} = split(/,/, $a);
-	  for $card (@{$stack[$_]}) { if ($card > 0) { delete($inStack{$card}); } elsif ($card == -1) { $hidCards++; } }
+	  for $card (@{$stack[$_]}) { $cardsInPlay++; if ($card > 0) { delete($inStack{$card}); } elsif ($card == -1) { $hidCards++; } }
 	  #for $x (sort keys %inStack) { print "$x: " . faceval($x) . "\n"; }
+	  $drawsLeft = (52-$cardsInPlay)/6;
 	}
 	printdeck();
 	close(A);
@@ -538,6 +552,25 @@ sub stats
  printf("Win percentage = %d.%02d", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
+sub saveDefault
+{
+  my $filename = "al.txt";
+  open(A, "$filename");
+  <A>;
+  open(B, ">albak.txt");
+  print B "$vertical,$collapse\n";
+  while ($a = <A>) { print B $a; }
+  close(A);
+  close(B);
+  `copy albak.txt al.txt`;  
+}
+
+sub loadDefault
+{
+  open(A, "al.txt");
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $vertical = @opts[0]; $collapse = @opts[1]; close(A);
+}
+
 sub usage
 {
 print<<EOT;
@@ -545,12 +578,16 @@ print<<EOT;
 [1-6][1-6]0 (or any character moves stack a to stack b and back
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
 v toggles vertical view (default is horizontal)
+c toggles collapsed view (8h-7h-6h vs 8h=6h)
 q/x quits
-r restarts
-(blank) prints the screen
-d draws 6 cards (you get 5)
+r restarts, ry forces if draws are left
+(blank) or - prints the screen
+d draws 6 cards (you get 5 of these), dy forces if "good" moves are left
 s=saves deck name
+h=shows hidden/left cards
 l=loads deck name
 t=loads test
+sd=save default
+%=prints stats
 EOT
 }
