@@ -368,7 +368,7 @@ sub showLegalsAndStats
   {
     for $to (1..6)
 	{
-	  if ($from == $to) {}
+	  if ($from == $to) { next; }
 	  elsif (@blank[$to] == 1) { print " $from$to"; }
 	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]]))
 	  {
@@ -410,6 +410,7 @@ sub showLegalsAndStats
 		print "$from$to";
 		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; }
 	  }
+	  if (!$stack[$to][0]) { print "e"; }
 	}
   }
   print "\n";
@@ -524,23 +525,18 @@ sub checkwin
   for $stax (1..6)
   {
     @x = @{$stack[$stax]};
-	if (@x == 0) { next; }
-	if (@x % 13) { next; }
-	if ($#x != 12) { next; }
-	$lasty = @x[0];
-	for (1..$#x)
+	for (0..$#x)
 	{
-	  if (@x[$_] != $lasty - 1)
+	  $inarow = 0;
+	  if ((@x[$_] > 0) && (@x[$_] % 13 == 0))
 	  {
-	    #print "$stax failed at $_.\n";
-        next OUTER;
+	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1])) { $_++; $inarow++; }
 	  }
-	  $lasty--;
+	  if ($inarow == 12) { $suitsDone++; }
 	}
-	$suitsDone++;
   }
   if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
-  elsif ($suitsDone) { print "$suitsDone suits on their own row/column.\n"; }
+  elsif ($suitsDone) { print "$suitsDone suits completed.\n"; }
 }
 
 sub stats
@@ -549,7 +545,7 @@ sub stats
  if ($wstreak) { print "current streak = $wstreak wins\n"; }
  elsif ($lstreak) { print "current streak = $lstreak losses\n"; }
  print "Longest streak $lwstreak wins $llstreak losses\n";
- printf("Win percentage = %d.%02d", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
+ printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
 sub saveDefault
@@ -562,7 +558,7 @@ sub saveDefault
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
-  `copy albak.txt al.txt`;  
+  `copy albak.txt al.txt`;
 }
 
 sub loadDefault
