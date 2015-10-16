@@ -41,9 +41,27 @@ sub procCmd
 {
   chomp($_[0]);
   $moveBar = 0;
+  if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces first
+
   if ($_[0] =~ /^sd/) { saveDefault(); return; }
-  if ($_[0] =~ /^[1-6]$/) { print "Need a 2nd row.\n"; return; }
-  if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces
+  if ($_[0] =~ /^[1-6]$/)
+  {
+    my $fromCard = $stack[$_[0]][$#{$stack[$_[0]]}];
+	my $totalRows = 0;
+    for $tryRow (1..6)
+	{
+	  my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
+	  #print "$fromCard - $toCard\n";
+	  if ((cromu($fromCard, $toCard)) || ($#{$stack[$tryRow]} < 0))
+	  { if ($tryRow != $_[0])
+	    { $totalRows++; $forceRow = $tryRow; #print "$tryRow works. $#{$stack[$tryRow]}\n";
+	    }
+	  }
+	}
+	  if ($totalRows == 0) { print "No row to move $tryRow to.\n"; return; }
+	  elsif ($totalRows > 1) { print "Too many rows ($totalRows) to move $_[0] to.\n"; return; }
+	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); }
+  }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^d/) { if ($anySpecial) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
@@ -253,9 +271,17 @@ sub printdeck
 
 sub printdeckhorizontal
 {
+  my $anyJumps = 0;
+  for $d (1..6) { $anyJumps += jumpsFromBottom($d); }
+
   for $d (1..6)
   {
     $thisLine = "$d:";
+	if ($anyJumps > 0)
+	{
+	  my $temp = jumpsFromBottom($d);
+	  if ($temp) { $thisLine = "($temp) $thisLine"; } else { $thisLine = "    $thisLine"; }
+	}
     for $q (0..$#{$stack[$_]})
 	{
 	$t1 = $stack[$d][$q];
@@ -296,11 +322,33 @@ sub printdeckraw
     print "$cardsInPlay cards in play, $drawsLeft draws left.\n";
 }
 
+sub jumpsFromBottom
+{
+    my $thisdif = 0;
+    for ($thisone = $#{$stack[$_[0]]}; $thisone >= 1; $thisone--  )
+	{
+	  if (!cromu($stack[$_[0]][$thisone], $stack[$_[0]][$thisone-1])) { last; }
+	  if ($stack[$_[0]][$thisone-1] - $stack[$_[0]][$thisone] > 1)
+	  {
+	    $thisdif++;
+	  }
+	}
+	return $thisdif;
+}
+
 sub printdeckvertical
 {
   my @deckPos = (0, 0, 0, 0, 0, 0, 0);
   my @lookAhead = (0, 0, 0, 0, 0, 0, 0);
   my @xtrChr = (" ", "=");
+  my $temp;
+  my $myString = "";
+  my $anyJumps = 0;
+  for $row (1..6)
+  {
+    if ($temp = jumpsFromBottom($row)) { $myString .= "  ($temp)"; } else { $myString .= "     "; }
+  }
+  if ($myString =~ /[0-9]/) { print "$myString\n"; }
   for $row (1..6) { @lookAhead[$row] = 0; print "   "; if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row"; } print "\n";
   do
   {
@@ -354,6 +402,7 @@ sub showLegalsAndStats
 {
   my @idx;
   my @blank = (0,0,0,0,0,0);
+  my @circulars = (0,0,0,0,0,0);
   for $d(1..6)
   {
     $curEl = 0;
@@ -386,7 +435,7 @@ sub showLegalsAndStats
 		{
 		if (suit($stack[$from][$thisEl-1]) != suit($stack[$from][$thisEl]))
 		  {
-		  print "*"; $anySpecial = 1;
+		  print "*"; $anySpecial = 1; @circulars[$to]++;
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
@@ -403,16 +452,17 @@ sub showLegalsAndStats
 		  {
 		    if (($stack[$from][$thisEl] < $stack[$to][@idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
 			{
-			  print "C";
+			  print "C"; @circulars[$to]++;
 			}
 		  }
 		}
 		print "$from$to";
 		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; }
 	  }
-	  if (!$stack[$to][0]) { print "e"; }
-	}
+	  if (!$stack[$to][0]) { print "e"; $anySpecial = 1; }
+	} #?? maybe if there is no descending, we can check for that and give a pass
   }
+  for $toPile (1..6) { if (@circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x (@circulars[$toPile]-1)) . "$toPile"; } }
   print "\n";
 
   $chains = 0; $order = 0;
@@ -438,7 +488,7 @@ sub suit
 
 sub cromu
 {
-  if ($_[0] > $_[1]) { return 0; }
+  if ($_[0] >= $_[1]) { return 0; }
   if (!$_[0]) { return 0; }
   my $x = suit($_[0]);
   my $y = suit($_[1]);
