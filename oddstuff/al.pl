@@ -43,8 +43,9 @@ sub procCmd
 	}
 	  if ($totalRows == 0) { print "No row to move $_[0] to."; if ($anyEmpty) { print " There's an empty one, but you disabled it with e."; } print "\n"; return; }
 	  elsif ($totalRows > 1) { print "Too many rows ($totalRows) to move $_[0] to.\n"; return; }
-	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); }
+	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
+  if ($_[0] =~ /^u$/) { undo(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
@@ -248,6 +249,7 @@ for (1..6)
   {
   push (@{$stack[$_]}, randcard());
   }
+  if ($drawsLeft == 6) { @topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
 $drawsLeft--;
 $cardsInPlay += 6;
@@ -316,7 +318,7 @@ sub printdeckhorizontal
 	}
 	
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
-	print "$thisLine\n";
+	if (!$undo) { print "$thisLine\n"; }
   }
   showLegalsAndStats();
 }
@@ -408,13 +410,14 @@ sub printdeckvertical
 	}
 	else { $thisLine .= "     "; }
   }
-  if ($foundCard) { print "$thisLine\n"; }
+  if (($foundCard) && (!$undo)) { print "$thisLine\n"; }
   } while ($foundCard);
   showLegalsAndStats();
 }
 
 sub showLegalsAndStats
 {
+  if ($undo) { return; }
   my @idx;
   my @blank = (0,0,0,0,0,0);
   my @circulars = (0,0,0,0,0,0);
@@ -597,6 +600,30 @@ sub tryMove
   }
   printdeck();
   checkwin();
+}
+
+sub reinitBoard
+{
+  my @depth = (0, 3, 3, 2, 2, 3, 3);
+  for (1..6)
+  {
+    @{stack[$_]} = ();
+    for $x (1..@depth[$_]) { push (@{$stack[$_]}, -1); }
+	push (@{$stack[$_]}, @topCard[$_]);
+  }
+}
+
+sub undo
+{
+  $undo = 1;
+  #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
+  reinitBoard();
+  for (0..$#undoArray-1)
+  {
+    procCmd(@undoArray[$_]);
+  }
+  $undo = 0;
+  printdeck();
 }
 
 sub showhidden
