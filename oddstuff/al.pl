@@ -114,12 +114,12 @@ sub saveDeck
 	  $overwrite = 1;
 	  <A>;
 	  print B "$vertical,$collapse\n";
-	  print "TC=" . join(",", @topCard . "\n");
-	  if (!$fixedDeckOpt) { print "M=" . join(",", @undoArray) . "\n"; }
-	  else
+	  print B "TC=" . join(",", @topCard) . "\n";
+	  print B "M=" . join(",", @undoArray) . "\n";
+	  if ($fixedDeckOpt)
 	  {
-	    print "FD=" . join(",", @oneDeck) . "\n";
-		for (1..6) { print "HC=" . join(",", @{$backupCardUnder[_]}) . "\n"; }
+	    print B "FD=" . join(",", @oneDeck) . "\n";
+		for (1..6) { print B "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
 	  }
 	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	  for (1..6) { <A>; }
@@ -132,6 +132,13 @@ sub saveDeck
     print B "$_[0]\n";
 	<A>;
 	print B "$vertical,$collapse\n";
+	print B "TC=" . join(",", @topCard) . "\n";
+	print B "M=" . join(",", @undoArray) . "\n";
+	if ($fixedDeckOpt)
+	{
+	  print B "FD=" . join(",", @oneDeck) . "\n";
+	  for (1..6) { print B "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
+	}
 	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	for (1..6) { <A>; }
   }
@@ -154,8 +161,10 @@ sub loadDeck
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
   my $li = 0;
+  my @temp;
   
   my $q = <A>; chomp($q); @opts = split(/,/, $q); $vertical = @opts[0]; $collapse = @opts[1]; # read in default values
+  my $hidRow = 0;
   
   while ($a = <A>)
   {
@@ -166,15 +175,37 @@ sub loadDeck
 	{
 	print "Found $search in $filename, line $li.\n";
 	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
+	#topCards line
     $hidCards = 0;
    $cardsInPlay = 0; $drawsLeft = 5;
     for (1..52) { $inStack{$_} = 1; }
-    for (1..6)
+	while ($rowsRead < 6)
 	{
 	  $a = <A>; chomp($a);
-	  @{$stack[$_]} = split(/,/, $a);
+	  $b = $a; $b =~ s/^[A-Z]+=//g; #b = the data for a
+	  if ($a =~ /^FD=/)
+	  {
+	    @fixedDeck = split(/,/, $a);
+		next;
+	  }
+	  if ($a =~ /^TC=/)
+	  {
+		@topCard = split(/,/, $b);
+		next;
+	  }
+	  if ($a =~ /^M=/)
+	  {
+		@undoArray = split(/,/, $b); next;
+	  }
+	  if ($a =~ /^HC=/)
+	  {
+	    $hidRow++;
+		@{backupCardUnder[$hidRow]} = split(/,/, $b);
+		@{cardUnder[$hidRow]} = split(/,/, $b);
+	  }
+	  $rowsRead++;
+	  @{$stack[$rowsRead]} = split(/,/, $a);
 	  for $card (@{$stack[$_]}) { $cardsInPlay++; if ($card > 0) { delete($inStack{$card}); } elsif ($card == -1) { $hidCards++; } }
-	  #for $x (sort keys %inStack) { print "$x: " . faceval($x) . "\n"; }
 	  $drawsLeft = (52-$cardsInPlay)/6;
 	}
 	printdeck();
@@ -202,6 +233,7 @@ sub forceArray
 	
 	if ($cardsInPlay + $#force >= 51) { print "Too many cards out.\n"; return; }
 	
+	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
 	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board.\n"; return; }
@@ -275,6 +307,7 @@ sub randcard
   if (@force[0]) { $rand = @force[0]; shift(@force); }
   else
   {
+  if (@force[0] eq "0") { shift(@force); }
   $rand = (keys %inStack)[rand keys %inStack];
   }
   delete $inStack{$rand};
@@ -445,6 +478,8 @@ sub showLegalsAndStats
   my @idx;
   my @blank = (0,0,0,0,0,0);
   my @circulars = (0,0,0,0,0,0);
+  my $canMakeEmpty = 0;
+  
   for $d(1..6)
   {
     $curEl = 0;
@@ -486,7 +521,7 @@ sub showLegalsAndStats
 		}
 		else
 		{
-		  print "E";
+		  print "E"; $canMakeEmpty = 1;
 		}
 		if (suit($stack[$from][$thisEl-1]) == suit($stack[$from][$thisEl]))
 		{
@@ -540,7 +575,7 @@ sub showLegalsAndStats
 	{
 	  if (!$stack[$_][0]) { $gotEmpty = 1; }
 	}
-	 if ($gotEmpty) { print "Still an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
+	 if (($gotEmpty) || ($canMakeEmpty)) { print "Still an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
   }
 
   print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
@@ -643,7 +678,7 @@ sub tryMove
 sub reinitBoard
 {
   my @depth = (0, 3, 3, 2, 2, 3, 3);
-  $cardsInPlay = 16;
+  $cardsInPlay = 22;
   $drawsLeft = 5;
   for (1..52) { $inStack{$_} = 1; }
   for (1..6)
@@ -660,6 +695,7 @@ sub undo
   $undo = 1;
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
   reinitBoard();
+  print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
   print "$x elts left\n";
   if ($x >= 0)
