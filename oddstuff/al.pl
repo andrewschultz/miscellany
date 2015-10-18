@@ -45,6 +45,7 @@ sub procCmd
 	  elsif ($totalRows > 1) { print "Too many rows ($totalRows) to move $_[0] to.\n"; return; }
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
+  if ($_[0] =~ /^uu$/) { undoToStart(); return; }
   if ($_[0] =~ /^u$/) { undo(); return; }
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
@@ -170,6 +171,8 @@ sub loadDeck
   {
     $li++;
     chomp($a);
+	$fixedDeckOpt = 0;
+	my $rowsRead = 0;
 	if ($a =~ /$;/) { last; }
     if ("$a" eq "$search")
 	{
@@ -185,6 +188,7 @@ sub loadDeck
 	  $b = $a; $b =~ s/^[A-Z]+=//g; #b = the data for a
 	  if ($a =~ /^FD=/)
 	  {
+	    $fixedDeckOpt = 1;
 	    @fixedDeck = split(/,/, $a);
 		next;
 	  }
@@ -195,17 +199,27 @@ sub loadDeck
 	  }
 	  if ($a =~ /^M=/)
 	  {
-		@undoArray = split(/,/, $b); next;
+		@undoArray = split(/,/, $b);
+		next;
 	  }
 	  if ($a =~ /^HC=/)
 	  {
 	    $hidRow++;
 		@{backupCardUnder[$hidRow]} = split(/,/, $b);
 		@{cardUnder[$hidRow]} = split(/,/, $b);
+		next;
 	  }
 	  $rowsRead++;
 	  @{$stack[$rowsRead]} = split(/,/, $a);
-	  for $card (@{$stack[$_]}) { $cardsInPlay++; if ($card > 0) { delete($inStack{$card}); } elsif ($card == -1) { $hidCards++; } }
+	    for $card (@{$stack[$rowsRead]})
+	    {
+		if ($card > 0)
+		{
+		  $cardsInPlay++;
+		  #print "$card in $curRow makes $cardsInPlay\n";
+		  delete($inStack{$card});
+		} elsif ($card == -1) { $cardsInPlay++; $hidCards++; }
+	    }
 	  $drawsLeft = (52-$cardsInPlay)/6;
 	}
 	printdeck();
@@ -660,7 +674,7 @@ sub tryMove
 	if ($fixedDeckOpt)
 	{
 	$stack[$from][$fromLook] = $cardUnder[$from][$#{$cardUnder[$from]}];
-	pop($cardUnder[$from]);
+	pop(@{$cardUnder[$from]});
 	}
 	else
 	{
@@ -688,6 +702,14 @@ sub reinitBoard
 	push (@{$stack[$_]}, @topCard[$_]);
 	delete($inStack{@topCard[$_]});
   }
+}
+
+sub undoToStart
+{
+  reinitBoard();
+  @cardUnder = @backupCardUnder;
+  @fixedDeck = @oneDeck;
+  printdeck();
 }
 
 sub undo
