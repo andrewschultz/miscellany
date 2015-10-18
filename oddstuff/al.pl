@@ -8,7 +8,7 @@ readScoreFile(); initGlobal();
 
 initGame(); printdeck();
 
-if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); for $initCmd(@cmds) { print "!$initCmd!\n"; procCmd($initCmd); } }
+if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); }
 
 while (1)
 {
@@ -34,10 +34,10 @@ sub procCmd
 	{
 	  my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
 	  if ($#{$stack[$tryRow]} < 0) { $anyEmpty++; }
-	  print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
+	  #print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
 	  if ((cromu($fromCard, $toCard)) || (($#{$stack[$tryRow]} < 0) && !$emptyIgnore))
 	  { if ($tryRow != $_[0])
-	    { $totalRows++; $forceRow = $tryRow; print "$tryRow works. $#{$stack[$tryRow]}\n";
+	    { $totalRows++; $forceRow = $tryRow; #print "$tryRow works. $#{$stack[$tryRow]}\n";
 	    }
 	  }
 	}
@@ -46,19 +46,21 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^u$/) { undo(); return; }
+  if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
-  if ($_[0] =~ /^d/) { if ($anySpecial) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
+  if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
-  if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); return; }
+  if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
   if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game."; return; }
+  if ($_[0] =~ /^ua/) { print join(",", @undoArray) . "\n"; return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
   if ($_[0] =~ /^ra/) { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; }
@@ -112,6 +114,13 @@ sub saveDeck
 	  $overwrite = 1;
 	  <A>;
 	  print B "$vertical,$collapse\n";
+	  print "TC=" . join(",", @topCard . "\n");
+	  if (!$fixedDeckOpt) { print "M=" . join(",", @undoArray) . "\n"; }
+	  else
+	  {
+	    print "FD=" . join(",", @oneDeck) . "\n";
+		for (1..6) { print "HC=" . join(",", @{$backupCardUnder[_]}) . "\n"; }
+	  }
 	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	  for (1..6) { <A>; }
 	}
@@ -182,7 +191,7 @@ sub hidCards
   my $retVal = 0;
   for my $cardrow (1..6)
   {
-    for my $card (@{stack[$_]}) { if ($card == -1) { $retVal++; } }
+    for my $card (@{$stack[$_]}) { if ($card == -1) { $retVal++; } }
   }
   return $retVal;
 }
@@ -196,7 +205,8 @@ sub forceArray
 	if (($card <= 52) && ($card >= 1))
 	{
 	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board.\n"; return; }
-	push (@force, $card); print faceval($card) . " successfully pushed.\n"; return;
+	push (@force, $card); delete ($inStack{$card}); if (!$undo) { print faceval($card) . " successfully pushed.\n"; }
+	return;
 	}
 	
 	for $su (0..$#suit)
@@ -216,6 +226,8 @@ sub initGame
 $hidCards = 16;
 $cardsInPlay = 16;
 $drawsLeft = 6;
+
+@undoArray = ();
 
 for (1..52) { $inStack{$_} = 1; }
 
@@ -242,15 +254,18 @@ for (1..6)
 {
   if ($fixedDeckOpt)
   {
-  push(@{stack[$_]}, @fixedDeck[0]);
+  push(@{$stack[$_]}, @fixedDeck[0]);
   shift(@fixedDeck);
   }
   else
   {
-  push (@{$stack[$_]}, randcard());
+  my $thiscard = randcard();
+  push (@{$stack[$_]}, $thiscard);
+  if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "f$thiscard"); }
   }
   if ($drawsLeft == 6) { @topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
+if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "dy"); }
 $drawsLeft--;
 $cardsInPlay += 6;
 }
@@ -363,10 +378,19 @@ sub printdeckvertical
   for $row (1..6)
   {
     if ($temp = jumpsFromBottom($row)) { $myString .= "  ($temp)"; } else { $myString .= "     "; }
+    @lookAhead[$row] = 0;
   }
-  if ($myString =~ /[0-9]/) { print "$myString\n"; }
+  if (($myString =~ /[0-9]/) && (!$undo)) { print "$myString\n"; }
   }
-  for $row (1..6) { @lookAhead[$row] = 0; print "   "; if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row"; } print "\n";
+  if (!$undo)
+  {
+  for $row (1..6)
+  {
+    print "   ";
+	if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row";
+  }
+  print "\n";
+  }
   do
   {
   $foundCard = 0;
@@ -508,6 +532,16 @@ sub showLegalsAndStats
 	}
 	if ($allBalanced) { $anySpecial = 0; }
   }
+  
+  if ((!$anySpecial) && (!$allBalanced) && ($cardsInPlay == 52))
+  {
+    my $gotEmpty = 0;
+    for (1..6)
+	{
+	  if (!$stack[$_][0]) { $gotEmpty = 1; }
+	}
+	 if ($gotEmpty) { print "Still an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
+  }
 
   print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
 }
@@ -534,6 +568,8 @@ sub tryMove
   my @q = split(/ */, $_[0]);
   my $from = @q[0];
   my $to = @q[1];
+  
+  if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is illegal. This shouldn't have happened, but it did.\n"; return; }
   
   #print "$_[0] becomes $from $to\n";
   if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
@@ -577,7 +613,7 @@ sub tryMove
   while ($stack[$from][$fromEl])
   {
   push (@{$stack[$to]}, $stack[$from][$fromEl]);
-  splice (@{stack[$from]}, $fromEl, 1);
+  splice (@{$stack[$from]}, $fromEl, 1);
   }
   if ($stack[$from][0] == -1) #see about turning a card over
   {
@@ -594,10 +630,12 @@ sub tryMove
 	else
 	{
 	$stack[$from][$fromLook] = randcard;
+	if (!$undo) { push(@undoArray, "f$stack[$from][$fromLook]"); }
 	}
 	$hidCards--;
 	}
   }
+  if (!$undo) { push(@undoArray, "$from$to"); }
   printdeck();
   checkwin();
 }
@@ -605,11 +643,15 @@ sub tryMove
 sub reinitBoard
 {
   my @depth = (0, 3, 3, 2, 2, 3, 3);
+  $cardsInPlay = 16;
+  $drawsLeft = 5;
+  for (1..52) { $inStack{$_} = 1; }
   for (1..6)
   {
-    @{stack[$_]} = ();
+    @{$stack[$_]} = ();
     for $x (1..@depth[$_]) { push (@{$stack[$_]}, -1); }
 	push (@{$stack[$_]}, @topCard[$_]);
+	delete($inStack{@topCard[$_]});
   }
 }
 
@@ -618,8 +660,24 @@ sub undo
   $undo = 1;
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
   reinitBoard();
-  for (0..$#undoArray-1)
+  $x = $#undoArray;
+  print "$x elts left\n";
+  if ($x >= 0)
   {
+    $temp = pop(@undoArray);
+	$x--;
+	print "Popped $temp\n";
+	while ((@undoArray[$x] =~ /^f/) && ($x >= 0))
+	{
+	  $x--;
+	  $temp = pop(@undoArray);
+	  print "extra-popped $temp\n";
+	}
+  }
+  print "@undoArray\n";
+  for (0..$#undoArray)
+  {
+    for $j (1..52) { if (!$inStack{$j}) { print "$j=" . faceval($j) . " "; } } print "\n";
     procCmd(@undoArray[$_]);
   }
   $undo = 0;
@@ -628,6 +686,7 @@ sub undo
 
 sub showhidden
 {
+  if ($hidCards == 0) { print "Nothing hidden left.\n"; }
   print "Still off the board: "; for $j (sort { $a <=> $b } keys %inStack) { print " " . faceval($j); } print "\n";
 }
 
@@ -638,13 +697,14 @@ sub checkwin
   OUTER:
   for $stax (1..6)
   {
-    @x = @{$stack[$stax]};
+    my @x = @{$stack[$stax]};
+	#print "$stax: total $#{$stack[$stax]}\n";
 	for (0..$#x)
 	{
 	  $inarow = 0;
 	  if ((@x[$_] > 0) && (@x[$_] % 13 == 0))
 	  {
-	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1])) { $_++; $inarow++; }
+	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1]) && (suit(@x[$_]) == suit(@x[$_+1]))) { $_++; $inarow++; }
 	  }
 	  if ($inarow == 12) { $suitsDone++; }
 	}
@@ -679,13 +739,14 @@ sub deckFix
 {
   @fixedDeck = ();
   my @blanks = (0,3,3,2,2,3,3);
-  my @oneDeck = shuffle(keys %inStack);
+  @oneDeck = shuffle(keys %inStack);
   #print "$#oneDeck: @oneDeck\n";
 	for $thisrow(1..6)
 	{
 	  for (1..@blanks[$thisrow])
 	  {
 	    $cardUnder[$thisrow][$_-1] = pop(@oneDeck);
+		$backupCardUnder[$thisrow][$_-1] = $cardUnder[$thisrow][$_-1];
 		#print "Popped $cardUnder[$thisrow][$_].\n";
 	  }
 	}
@@ -727,11 +788,11 @@ sub initGlobal
 
 sub showOpts
 {
-  print "Vertical view @toggles[$vertical]\n";
-  print "Collapsing @toggles[$collapse]\n";
-  print "Fixed deck @toggles[$fixedDeckOpt].\n";
-  print "Ignore Empty on Force @toggles[$emptyIgnore]\n";
-  print "Show Chain Breaks @toggles[$chainBreaks]\n";
+  print "Vertical view (v) @toggles[$vertical].\n";
+  print "Collapsing (c) @toggles[$collapse].\n";
+  print "Fixed deck (ra) @toggles[$fixedDeckOpt].\n";
+  print "Ignore Empty on Force (e) @toggles[$emptyIgnore].\n";
+  print "Show Chain Breaks (cb) @toggles[$chainBreaks].\n";
 }
 
 sub readScoreFile
