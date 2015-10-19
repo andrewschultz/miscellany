@@ -25,8 +25,9 @@ sub procCmd
   if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces first
 
   if ($_[0] =~ /^sd/) { saveDefault(); return; }
-  if ($_[0] =~ /^[1-6]$/)
+  if ($_[0] =~ /^[0-9]$/)
   {
+    if ($_[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; }
     my $fromCard = $stack[$_[0]][$#{$stack[$_[0]]}];
 	my $totalRows = 0;
 	my $anyEmpty = 0;
@@ -68,8 +69,9 @@ sub procCmd
   if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
   if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
   if ($_[0] =~ /^%/) { stats(); return; }
-  if ($_[0] =~ /^[1-6][1-6][^1-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
-  if ($_[0] =~ /^[1-6][1-6][1-6]/)
+  if ($_[0] =~ /^a[0-9][0-9]/) { altUntil($_[0]); return; }
+  if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  if ($_[0] =~ /^[0-9][0-9][0-9]/)
   { # detect 2 ways
     @x = split(//, $_[0]);
 	tryMove("@x[0]@x[1]");
@@ -77,7 +79,7 @@ sub procCmd
 	tryMove("@x[1]@x[2]");
 	return;
   }
-  if ($_[0] =~ /^[1-6] *[1-6]/) { tryMove($_[0]); return; }
+  if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
   if ($_[0] =~ /^[qx]/) { exit; }
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
@@ -245,13 +247,13 @@ sub forceArray
 {
     my $card = $_[0]; $card =~ s/^(f|f=)//g;
 	
-	if ($cardsInPlay + $#force >= 51) { print "Too many cards out.\n"; return; }
+	if (!$hidden) { print "Too many cards out.\n"; return; }
 	
 	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
 	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board.\n"; return; }
-	push (@force, $card); delete ($inStack{$card}); if (!$undo) { print faceval($card) . " successfully pushed.\n"; }
+	push (@force, $card); delete ($inStack{$card}); if ((!$undo) && (!$quickMove)) { print faceval($card) . " successfully pushed.\n"; }
 	return;
 	}
 	
@@ -380,7 +382,7 @@ sub printdeckhorizontal
 	}
 	
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
-	if (!$undo) { print "$thisLine\n"; }
+	if ((!$undo) && (!$quickMove)) { print "$thisLine\n"; }
   }
   showLegalsAndStats();
 }
@@ -427,9 +429,9 @@ sub printdeckvertical
     if ($temp = jumpsFromBottom($row)) { $myString .= "  ($temp)"; } else { $myString .= "     "; }
     @lookAhead[$row] = 0;
   }
-  if (($myString =~ /[0-9]/) && (!$undo)) { print "$myString\n"; }
+  if (($myString =~ /[0-9]/) && (!$undo) && (!$quickMove)) { print "$myString\n"; }
   }
-  if (!$undo)
+  if ((!$undo) && (!$quickMove))
   {
   for $row (1..6)
   {
@@ -481,14 +483,14 @@ sub printdeckvertical
 	}
 	else { $thisLine .= "     "; }
   }
-  if (($foundCard) && (!$undo)) { print "$thisLine\n"; }
+  if (($foundCard) && (!$undo) && (!$quickMove)) { print "$thisLine\n"; }
   } while ($foundCard);
   showLegalsAndStats();
 }
 
 sub showLegalsAndStats
 {
-  if ($undo) { return; }
+  if (($undo) || ($quickMove)) { return; }
   my @idx;
   my @blank = (0,0,0,0,0,0);
   my @circulars = (0,0,0,0,0,0);
@@ -592,7 +594,22 @@ sub showLegalsAndStats
 	 if (($gotEmpty) || ($canMakeEmpty)) { print "Still an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
   }
 
-  print "$cardsInPlay cards in play, $drawsLeft draws left, $hidCards hidden cards, $chains chains, $order in order.\n";
+  my $visible = $cardsInPlay - $hidCards;
+  my $breaks = 0;
+  for my $breakRow (1..6)
+  {
+    for (0..$#{$stack[$breakRow]} - 1)
+	{
+	  if ($stack[$breakRow][$_] != -1)
+	  {
+	    if (($stack[$breakRow][$_] - $stack[$breakRow][$_+1] != 1) || (suit($stack[$breakRow][$_+1]) != suit($stack[$breakRow][$_+1])))
+		{
+		  $breaks++;
+		}
+	  }
+	}
+  }
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $breaks breaks, $chains chains, $order in order.\n";
 }
 
 sub suit
@@ -618,10 +635,10 @@ sub tryMove
   my $from = @q[0];
   my $to = @q[1];
   
-  if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is illegal. This shouldn't have happened, but it did.\n"; return; }
-  
   #print "$_[0] becomes $from $to\n";
   if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
+  
+  if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6."; $moveBar = 1; return; }
   
   if ($from==$to) { print "The numbers should be different.\n"; $moveBar = 1; return; }
   
@@ -689,11 +706,58 @@ sub tryMove
   checkwin();
 }
 
+sub altUntil
+{
+  my @cmds = split(//, $_[0]);
+  my $from = @cmds[1];
+  my $to = @cmds[2];
+  my $totalMoves = 0;
+  if (($from < 1) || ($from > 6) || ($to < 1) || ($to > 6)) { print "From/to must be between 1 and 6.\n"; }
+  $quickMove = 1;
+  #print "$from$to trying\n";
+  if (!canChain($from,$to))
+  {
+    if (canChain($to, $from)) { $temp = $from; $from = $to; $to = $temp; }
+	else { print "These two rows aren't switchable.\n"; }
+  }
+  #print "$to$from trying\n";
+  while (canChain($from, $to))
+  {
+    tryMove("$from$to"); #print "$to$from trying\n";
+    if ($moveBlocked == 1) { print "Move was blocked. This should never happen.\n"; last; }
+	$temp = $from; $from = $to; $to = $temp;
+	$totalMoves++;
+  }
+  $quickMove = 0;
+  printdeck();
+  print "Made $totalMoves moves.\n";
+}
+
+sub canChain
+{
+  my $toCard = $stack[$_[1]][$#{$stack[$_[1]]}];
+  if ($toCard % 13 == 1) { return 0; } # if it is an ace, there's no way we can chain
+  my $fromLoc = $#{$stack[$_[0]]};
+  #print "CanChain: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
+  while (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] -  $stack[$_[0]][$fromLoc] == 1))
+  {
+    #print "...$stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
+    $fromLoc--;
+  }
+  #print "CanChainAfter: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
+  if ($toCard - $stack[$_[0]][$fromLoc] == 1)
+  {
+    return 1;
+  }
+  return 0;
+}
+
 sub reinitBoard
 {
   my @depth = (0, 3, 3, 2, 2, 3, 3);
   $cardsInPlay = 22;
   $drawsLeft = 5;
+  $hidCards = 16;
   for (1..52) { $inStack{$_} = 1; }
   for (1..6)
   {
@@ -745,7 +809,13 @@ sub undo
 sub showhidden
 {
   if ($hidCards == 0) { print "Nothing hidden left.\n"; }
-  print "Still off the board: "; for $j (sort { $a <=> $b } keys %inStack) { print " " . faceval($j); } print "\n";
+  my $lastSuit = -1;
+  print "Still off the board:";
+  for $j (sort { $a <=> $b } keys %inStack)
+  {
+    if ($lastSuit != suit($j)) { $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
+  }
+  print " (" . (keys %inStack) . " total)\n";
 }
 
 sub checkwin
@@ -894,6 +964,8 @@ h=shows hidden/left cards
 l=loads deck name
 t=loads test
 sd=save default
+u=undo
+uu=undo all the way to the start
 %=prints stats
 o=prints options
 EOT

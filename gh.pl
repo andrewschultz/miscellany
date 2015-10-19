@@ -5,6 +5,8 @@ $altHash{"pc"} = "prob";
 $altHash{"sts"} = "shu,roi,stsu";
 $altHash{"sa"} = "shu";
 
+$altHash{"4"} = "4d";
+
 $ght = "c:/writing/scripts/gh.txt";
 
 $justPrint = 0;
