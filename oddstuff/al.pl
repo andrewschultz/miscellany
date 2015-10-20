@@ -21,6 +21,7 @@ exit;
 sub procCmd
 {
   chomp($_[0]);
+  $_[0] = lc($_[0]);
   $moveBar = 0;
   if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces first
 
@@ -47,10 +48,35 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
+  if ($_[0] =~ /^x[0-9]$/)
+  {
+    if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
+    if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
+	my @rows = (0, 0);
+	for $emcheck (1..6)
+	{
+	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
+	  if (!$stack[$emcheck][0])
+	  {
+	    if (@rows[0]) { @rows[1] = $emcheck; last; }
+	    else
+	    {
+	    @rows[0] = $emcheck;
+	    }
+	  }
+	}
+	my $thisRow = $_[0]; $thisRow =~ s/^x//g;
+	$quickMove = 1;
+	autoShuffle($thisRow, @rows[0], @rows[1]);
+	$quickMove = 0;
+	printdeck();
+	return;
+  }
   if ($_[0] =~ /^u$/) { undo(); return; }
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time and/or ruin the challenge.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
@@ -75,12 +101,15 @@ sub procCmd
   { # detect 2 ways
     @x = split(//, $_[0]);
 	tryMove("@x[0]@x[1]");
+	if (@x[1] != @x[2])
+	{
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
+	}
 	return;
   }
   if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
-  if ($_[0] =~ /^[qx]/) { exit; }
+  if ($_[0] =~ /^q$/) { exit; }
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
 
@@ -247,7 +276,7 @@ sub forceArray
 {
     my $card = $_[0]; $card =~ s/^(f|f=)//g;
 	
-	if (!$hidden) { print "Too many cards out.\n"; return; }
+	if ((!$hidden) && (!$undo)) { print "Too many cards out.\n"; return; }
 	
 	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
@@ -271,6 +300,15 @@ sub forceArray
 sub initGame
 {
 
+my $deckTry = 0;
+
+my $thisStartMoves = 0;
+
+do
+{ 
+
+$thisStartMoves = 0;
+
 $hidCards = 16;
 $cardsInPlay = 16;
 $drawsLeft = 6;
@@ -291,7 +329,34 @@ for (1..52) { $inStack{$_} = 1; }
 
 drawSix();
 
+my @suitcard = (0,0,0,0);
+
+for (1..6)
+{
+  @suitcard[suit(@topCard[$_])]++;  
+}
+
+for (0..3)
+{
+  if (@suitcard[$_] > 1) { $thisStartMoves += (@suitcard[$_] - 1); }
+}
+
+for $x (1..6)
+{
+  for $y(1..6)
+  {
+    if (@topCard[$x] - @topCard[$y] == 1) { $thisStartMoves++; }
+  }
+}
+
+$deckTry++;
+#print "$deckTry: $thisStartMoves vs $startWith, @topCard, suits @suitcard\n";
+
+} while ((!$undo) && ($thisStartMoves < $startWith));
+
 deckFix();
+
+if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
 }
 
@@ -713,19 +778,26 @@ sub altUntil
   my $to = @cmds[2];
   my $totalMoves = 0;
   if (($from < 1) || ($from > 6) || ($to < 1) || ($to > 6)) { print "From/to must be between 1 and 6.\n"; }
-  $quickMove = 1;
   #print "$from$to trying\n";
-  if (!canChain($from,$to))
+  if (!canChain($from,$to) && !canChain($to, $from)) #do we need this
   {
-    if (canChain($to, $from)) { $temp = $from; $from = $to; $to = $temp; }
-	else { print "These two rows aren't switchable.\n"; }
+    #if (canChain($to, $from)) { $temp = $from; $from = $to; $to = $temp; }
+	print "These two rows aren't switchable.\n"; return;
   }
+  $quickMove = 1;
   #print "$to$from trying\n";
-  while (canChain($from, $to))
+  while (canChain($from, $to) || canChain($to, $from))
   {
+    if (canChain($from, $to))
+	{
     tryMove("$from$to"); #print "$to$from trying\n";
+	}
+	else
+	{
+    tryMove("$to$from"); #print "$to$from trying\n";
+	}	
     if ($moveBlocked == 1) { print "Move was blocked. This should never happen.\n"; last; }
-	$temp = $from; $from = $to; $to = $temp;
+	#$temp = $from; $from = $to; $to = $temp;
 	$totalMoves++;
   }
   $quickMove = 0;
@@ -735,21 +807,71 @@ sub altUntil
 
 sub canChain
 {
+  if ($moveBar) { return; }
   my $toCard = $stack[$_[1]][$#{$stack[$_[1]]}];
   if ($toCard % 13 == 1) { return 0; } # if it is an ace, there's no way we can chain
   my $fromLoc = $#{$stack[$_[0]]};
+  if ($fromLoc == -1) { return 0; } # can't move from empty row
+  my $fromCard = $stack[$_[0]][$fromLoc];
+  if (suit($toCard) != suit($fromCard)) { if ($#{$stack[$_[1]]} != -1) { return 0; } } #can't move onto a different suit, period. But we can move onto an empty card.
   #print "CanChain: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
-  while (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] -  $stack[$_[0]][$fromLoc] == 1))
+  if ($fromLoc) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { return 1; } } # we can/should move if suits are different in the "from" row
+  while (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] -  $stack[$_[0]][$fromLoc] == 1)) # this detects how far back we can go
   {
-    #print "...$stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
     $fromLoc--;
   }
-  #print "CanChainAfter: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
-  if ($toCard - $stack[$_[0]][$fromLoc] == 1)
+  if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
     return 1;
   }
+  if (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] < $stack[$_[0]][$fromLoc])) # 10H-9H-QH-JH case
+  {
+    if (($toCard > $fromCard) || ($#{$stack[$_[1]]} == -1)) { return 1; } # higher card or empty allows for 2 moves in a row
+  }
   return 0;
+}
+
+sub emptyRows
+{
+  my $retVal = 0;
+  for (1..6) { if (!$stack[$_][0]) { $retVal++; } }
+  return $retVal;
+}
+
+sub autoShuffle
+{
+  if ($moveBar) { return; }
+  my $count = $_[3];
+  if (!$_[3])
+  {
+    $count = 1;
+    my $x = $#{$stack[$_[0]]};
+	while ($x > 0)
+	{
+	  if (suit($stack[$_[0]][$x]) != suit($stack[$_[0]][$x-1])) { last; }
+	  if ($stack[$_[0]][$x] > $stack[$_[0]][$x-1]) { last; }
+	  $x--;
+	  $count++;
+	}
+  }
+  else { $count = $_[3]; }
+  #die ($count);
+  
+  #print "From $_[0] to $_[1] to $_[2], $count.\n";
+  if ($count < 0) { print "BUG.\n"; return; }
+  if (($count == 1) || ($count == 0))
+  {
+    #print "Trying (1 card) $_[0] to $_[1]\n";
+    if (!$moveBar) { tryMove("$_[0]$_[1]"); } return;
+  }
+
+  #print "$_[0] to $_[1], then $_[0] to $_[2], then $_[1] to $_[2].\n";  
+  autoShuffle($_[0], $_[2], $_[1], $count - 1);
+  if (!$moveBar)
+  {
+    tryMove("$_[0]$_[1]");
+    autoShuffle($_[2], $_[1], $_[0], $count - 1);
+  }
 }
 
 sub reinitBoard
@@ -799,7 +921,7 @@ sub undo
   print "@undoArray\n";
   for (0..$#undoArray)
   {
-    for $j (1..52) { if (!$inStack{$j}) { print "$j=" . faceval($j) . " "; } } print "\n";
+    #for $j (1..52) { if (!$inStack{$j}) { print "$j=" . faceval($j) . " "; } } print "\n";
     procCmd(@undoArray[$_]);
   }
   $undo = 0;
@@ -838,7 +960,7 @@ sub checkwin
 	}
   }
   if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
-  elsif ($suitsDone) { print "$suitsDone suits completed.\n"; }
+  elsif (($suitsDone) && (!$undo) && (!$quickMove)) { print "$suitsDone suits completed.\n"; }
 }
 
 sub peekAtCards
@@ -897,7 +1019,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
-  print B "$vertical,$collapse\n";
+  print B "$startWith,$vertical,$collapse\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -907,11 +1029,12 @@ sub saveDefault
 sub initGlobal
 {
   $vertical = $collapse = 0;
+  $startWith = 2;
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
   open(A, "al.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $vertical = @opts[0]; $collapse = @opts[1]; close(A);
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; close(A);
 }
 
 sub showOpts
@@ -964,6 +1087,7 @@ h=shows hidden/left cards
 l=loads deck name
 t=loads test
 sd=save default
+sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 u=undo
 uu=undo all the way to the start
 %=prints stats
