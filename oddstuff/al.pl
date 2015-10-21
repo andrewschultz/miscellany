@@ -48,6 +48,7 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
+  if ($_[0] =~ /^1s/) { ones(); return; }
   if ($_[0] =~ /^x[0-9]$/)
   {
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
@@ -76,7 +77,7 @@ sub procCmd
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
-  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time and/or ruin the challenge.\n"; } return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up and/or partially ruin the challenge.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
@@ -97,9 +98,19 @@ sub procCmd
   if ($_[0] =~ /^%/) { stats(); return; }
   if ($_[0] =~ /^a[0-9][0-9]/) { altUntil($_[0]); return; }
   if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  if ($_[0] =~ /^[0-9][0-9][0-9]x/)
+  {
+    @x = split(//, $_[0]);
+	$quickMove = 1;
+    autoShuffle(@x[0], @x[2], @x[1]);
+	$quickMove = 0;
+	printdeck();
+	return;
+  }
   if ($_[0] =~ /^[0-9][0-9][0-9]/)
   { # detect 2 ways
     @x = split(//, $_[0]);
+    if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
 	tryMove("@x[0]@x[1]");
 	if (@x[1] != @x[2])
 	{
@@ -118,6 +129,7 @@ sub procCmd
 
 sub doAnotherGame
 {
+$moveBar = 1; $quickMove = 0;
 if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lwstreak) { $lwstreak = $wstreak; } }
 elsif ($hidCards == 16) { }
 else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
@@ -728,7 +740,7 @@ sub tryMove
   {
 	if (!cromu($stack[$from][$fromEl], $stack[$to][$toEl]))
 	{
-	  print "Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n";
+	  if (!$quickMove) { print "Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n"; }
 	  $moveBar = 1;
 	  return;
 	}
@@ -795,8 +807,9 @@ sub altUntil
 	else
 	{
     tryMove("$to$from"); #print "$to$from trying\n";
-	}	
-    if ($moveBlocked == 1) { print "Move was blocked. This should never happen.\n"; last; }
+	}
+	if ($quickMove == 0) { return; } # this means you won
+    if ($moveBar == 1) { print "Move was blocked. This should never happen.\n"; last; }
 	#$temp = $from; $from = $to; $to = $temp;
 	$totalMoves++;
   }
@@ -814,8 +827,13 @@ sub canChain
   if ($fromLoc == -1) { return 0; } # can't move from empty row
   my $fromCard = $stack[$_[0]][$fromLoc];
   if (suit($toCard) != suit($fromCard)) { if ($#{$stack[$_[1]]} != -1) { return 0; } } #can't move onto a different suit, period. But we can move onto an empty card.
+  if ($toCard < $fromCard) { return 0; } # and of course smaller must move onto bigger
   #print "CanChain: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
-  if ($fromLoc) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { return 1; } } # we can/should move if suits are different in the "from" row
+  if ($fromLoc)
+  {
+    if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { return 1; }
+	if ($stack[$_[0]][$fromLoc-1] == -1) { return 1; }
+  } # we can/should move if suits are different in the "from" row, or we can reveal a blank
   while (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] -  $stack[$_[0]][$fromLoc] == 1)) # this detects how far back we can go
   {
     $fromLoc--;
@@ -838,7 +856,7 @@ sub emptyRows
   return $retVal;
 }
 
-sub autoShuffle
+sub autoShuffle # autoshuffle 0 to 1 via 2
 {
   if ($moveBar) { return; }
   my $count = $_[3];
@@ -938,6 +956,45 @@ sub showhidden
     if ($lastSuit != suit($j)) { $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
   }
   print " (" . (keys %inStack) . " total)\n";
+}
+
+sub ones
+{
+  my $onesMove = 0;
+  my $totMove = 0;
+  
+  OUTER: do
+  {
+  $anyYet = 0;
+  for (1..6)
+  {
+  my $temp = $#{$stack[$_]};
+  if ($temp == -1) { @topCard[$_] = -3; next; }
+  while ($temp > 0)
+  {
+  if (($stack[$_][$temp] == $stack[$_][$temp-1]-1) && (suit($stack[$_][$temp-1]) == suit($stack[$_][$temp])))
+  { $temp--; }
+  else
+  { last; }
+  }
+  @topCard[$_] = $stack[$_][$temp];
+  @botCard[$_] = $stack[$_][$#{$stack[$_]}];
+  }
+  
+  for $j (1..6)
+  {
+    for $i (1..6)
+	{
+	  if ((@botCard[$i] - @topCard[$j] == 1) && (suit(@topCard[$i]) == suit(@topCard[$j])))
+	  {
+	    if (!$anyYet) { $quickMove = 1; tryMove("$j$i"); $quickMove = 0; $anyYet = 1; $totMove++; }
+	  }
+	}
+  }
+  
+  }
+  while ($anyYet);
+  if (!$totMove) { print "No moves found.\n"; } else { printdeck(); print "$totMove move(s) made.\n"; }
 }
 
 sub checkwin
@@ -1094,3 +1151,5 @@ uu=undo all the way to the start
 o=prints options
 EOT
 }
+
+#?? club<->diamond doesn't work 10c-6c and 9d-7c
