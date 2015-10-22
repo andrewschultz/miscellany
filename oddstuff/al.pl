@@ -48,7 +48,7 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
-  if ($_[0] =~ /^1s/) { ones(); return; }
+  if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
   if ($_[0] =~ /^x[0-9]$/)
   {
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
@@ -79,6 +79,7 @@ sub procCmd
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up and/or partially ruin the challenge.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
+  if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
@@ -88,7 +89,7 @@ sub procCmd
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
-  if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game."; return; }
+  if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game.\n"; return; }
   if ($_[0] =~ /^ua/) { print join(",", @undoArray) . "\n"; return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
@@ -339,7 +340,7 @@ for (1..52) { $inStack{$_} = 1; }
 [-1, -1, -1],
 );
 
-drawSix();
+drawSix(-1);
 
 my @suitcard = (0,0,0,0);
 
@@ -370,6 +371,8 @@ deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
+if ($autoOnes) { $moveBar = 0; ones(); }
+
 }
 
 sub drawSix
@@ -393,6 +396,12 @@ for (1..6)
 if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "dy"); }
 $drawsLeft--;
 $cardsInPlay += 6;
+if (($autoOnes) && ($_[0] != -1))
+{
+  $ignoreFail = 1;
+  ones();
+  $ignoreFail = 0;
+}
 }
 
 sub randcard
@@ -713,7 +722,7 @@ sub tryMove
   my $to = @q[1];
   
   #print "$_[0] becomes $from $to\n";
-  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
+  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; die; return; }
   
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6."; $moveBar = 1; return; }
   
@@ -991,10 +1000,9 @@ sub ones
 	  }
 	}
   }
-  
   }
   while ($anyYet);
-  if (!$totMove) { print "No moves found.\n"; } else { printdeck(); print "$totMove move(s) made.\n"; }
+  if (!$totMove) { if (!$ignoreFail) { print "No moves found.\n"; } } else { print "$totMove move(s) made.\n"; }
 }
 
 sub checkwin
@@ -1076,7 +1084,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
-  print B "$startWith,$vertical,$collapse\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -1091,7 +1099,7 @@ sub initGlobal
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
   open(A, "al.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; close(A);
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; close(A);
 }
 
 sub showOpts
@@ -1101,6 +1109,7 @@ sub showOpts
   print "Fixed deck (ra) @toggles[$fixedDeckOpt].\n";
   print "Ignore Empty on Force (e) @toggles[$emptyIgnore].\n";
   print "Show Chain Breaks (cb) @toggles[$chainBreaks].\n";
+  print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
 }
 
 sub readScoreFile
@@ -1147,6 +1156,7 @@ sd=save default
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 u=undo
 uu=undo all the way to the start
+1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 %=prints stats
 o=prints options
 EOT
