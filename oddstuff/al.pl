@@ -80,6 +80,7 @@ sub procCmd
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up and/or partially ruin the challenge.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
+  if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
@@ -371,7 +372,7 @@ deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
-if ($autoOnes) { $moveBar = 0; ones(); }
+if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); }
 
 }
 
@@ -722,7 +723,7 @@ sub tryMove
   my $to = @q[1];
   
   #print "$_[0] becomes $from $to\n";
-  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; die; return; }
+  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
   
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6."; $moveBar = 1; return; }
   
@@ -1084,7 +1085,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
-  print B "$startWith,$vertical,$collapse,$autoOnes\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -1099,7 +1100,7 @@ sub initGlobal
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
   open(A, "al.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; close(A);
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; close(A);
 }
 
 sub showOpts
@@ -1157,6 +1158,7 @@ sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point
 u=undo
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
+1b=begin ones (far safer to twiddle)
 %=prints stats
 o=prints options
 EOT
