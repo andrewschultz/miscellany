@@ -54,6 +54,8 @@ sub procCmd
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
+	my $thisRow = $_[0]; $thisRow =~ s/^x//g;
+	if ($#{$stack[$_]} == -1) { print "Nothing to spill.\n"; return; }
 	for $emcheck (1..6)
 	{
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
@@ -66,7 +68,6 @@ sub procCmd
 	    }
 	  }
 	}
-	my $thisRow = $_[0]; $thisRow =~ s/^x//g;
 	$quickMove = 1;
 	autoShuffle($thisRow, @rows[0], @rows[1]);
 	$quickMove = 0;
@@ -77,7 +78,7 @@ sub procCmd
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
-  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up and/or partially ruin the challenge.\n"; } return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
@@ -103,6 +104,7 @@ sub procCmd
   if ($_[0] =~ /^[0-9][0-9][0-9]x/)
   {
     @x = split(//, $_[0]);
+	print "Trying @x[0] to @x[2] via @x[1].\n";
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
@@ -725,11 +727,11 @@ sub tryMove
   #print "$_[0] becomes $from $to\n";
   if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
   
-  if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6."; $moveBar = 1; return; }
+  if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6.\n"; $moveBar = 1; return; }
   
   if ($from==$to) { print "The numbers should be different.\n"; $moveBar = 1; return; }
   
-  if (!$stack[$from][0]) { print "Empty row/column.\n"; $moveBar = 1; return; }
+  if (!$stack[$from][0]) { if (!$quickMove) { print "Empty row/column.\n"; } $moveBar = 1; return; }
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -878,9 +880,10 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
 	{
 	  if (suit($stack[$_[0]][$x]) != suit($stack[$_[0]][$x-1])) { last; }
 	  if ($stack[$_[0]][$x] > $stack[$_[0]][$x-1]) { last; }
+	  if (($stack[$_[0]][$x-1]) - ($stack[$_[0]][$x]) != 1) { $count++; }
 	  $x--;
-	  $count++;
 	}
+	print "Total alts = $count\n";
   }
   else { $count = $_[3]; }
   #die ($count);
@@ -1141,6 +1144,7 @@ print<<EOT;
 [1-6][1-6] moves stack a to stack b
 [1-6][1-6]0 (or any character moves stack a to stack b and back
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
+[1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
 v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
