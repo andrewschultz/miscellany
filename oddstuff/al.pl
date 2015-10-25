@@ -125,7 +125,7 @@ sub procCmd
     while (canChain(@x[1], @x[2]) || canChain(@x[1], @x[3]) || canChain(@x[2], @x[3]) || canChain(@x[2], @x[1]) || canChain(@x[3], @x[1]) || canChain(@x[3], @x[2]))
 	{
 	  $empties = 0;
-	  for (1..3) { if ($#{stack[$_]} == -1) { $empties++; } }
+	  for (1..3) { if ($#{$stack[$_]} == -1) { $empties++; } }
 	  if ($empties == 2) { print "You made a full chain!\n"; last; }
 	  if (canChain(@x[1], @x[2])) { $didAny++; tryMove("@x[1]@x[2]"); next; }
 	  if (canChain(@x[1], @x[3])) { $didAny++; tryMove("@x[1]@x[3]"); next; }
