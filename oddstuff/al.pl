@@ -115,6 +115,29 @@ sub procCmd
   if ($_[0] =~ /^%/) { stats(); return; }
   if ($_[0] =~ /^a[0-9][0-9]/) { altUntil($_[0]); return; }
   if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  if ($_[0] =~ /^[!t][0-9][0-9][0-9]/)
+  {
+    my $didAny;
+	my $empties;
+    @x = split(//, $_[0]);
+	print "3-waying @x[1] @x[2] @x[3].\n";
+	$quickMove = 1;
+    while (canChain(@x[1], @x[2]) || canChain(@x[1], @x[3]) || canChain(@x[2], @x[3]) || canChain(@x[2], @x[1]) || canChain(@x[3], @x[1]) || canChain(@x[3], @x[2]))
+	{
+	  $empties = 0;
+	  for (1..3) { if ($#{stack[$_]} == -1) { $empties++; } }
+	  if ($empties == 2) { print "You made a full chain!\n"; last; }
+	  if (canChain(@x[1], @x[2])) { $didAny++; tryMove("@x[1]@x[2]"); next; }
+	  if (canChain(@x[1], @x[3])) { $didAny++; tryMove("@x[1]@x[3]"); next; }
+	  if (canChain(@x[2], @x[3])) { $didAny++; tryMove("@x[2]@x[3]"); next; }
+	  if (canChain(@x[2], @x[1])) { $didAny++; tryMove("@x[2]@x[1]"); next; }
+	  if (canChain(@x[3], @x[1])) { $didAny++; tryMove("@x[3]@x[1]"); next; }
+	  if (canChain(@x[3], @x[2])) { $didAny++; tryMove("@x[3]@x[2]"); next; }
+	}
+	if ($didAny) { print "$didAny total shifts.\n"; } else { print "No shifts available.\n"; }
+	$quickMove = 0;
+	return;
+  }
   if ($_[0] =~ /^[0-9][0-9][0-9]x/)
   {
     @x = split(//, $_[0]);
@@ -1202,6 +1225,7 @@ print<<EOT;
 [1-6][1-6]0 (or any character moves stack a to stack b and back
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
+[!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
 v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
