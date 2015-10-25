@@ -77,13 +77,13 @@ sub procCmd
   if ($_[0] =~ /^u$/) { undo(); return; }
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
-  if ($_[0] =~ /^dy/) { drawSix(); printdeck(); return; }
+  if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
-  if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push dy to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
+  if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
@@ -104,7 +104,6 @@ sub procCmd
   if ($_[0] =~ /^[0-9][0-9][0-9]x/)
   {
     @x = split(//, $_[0]);
-	print "Trying @x[0] to @x[2] via @x[1].\n";
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
@@ -134,12 +133,20 @@ sub procCmd
 sub doAnotherGame
 {
 $moveBar = 1; $quickMove = 0;
+
+
+if ($hidCards == 16) {}
+else
+{
+if ($#lastTen == 9) { shift(@lastTen); }
+push(@lastTen, $youWon);
 if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lwstreak) { $lwstreak = $wstreak; } }
-elsif ($hidCards == 16) { }
 else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
+}
 
 open(A, ">scores.txt");
-print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak";
+print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak\n";
+print A join (",", @lastTen); print A "\n";
 close(A);
 initGame(); printdeck();
 }
@@ -396,7 +403,7 @@ for (1..6)
   }
   if ($drawsLeft == 6) { @topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
-if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "dy"); }
+if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "df"); }
 $drawsLeft--;
 $cardsInPlay += 6;
 if (($autoOnes) && ($_[0] != -1))
@@ -839,7 +846,7 @@ sub canChain
   if ($fromLoc == -1) { return 0; } # can't move from empty row
   my $fromCard = $stack[$_[0]][$fromLoc];
   if (suit($toCard) != suit($fromCard)) { if ($#{$stack[$_[1]]} != -1) { return 0; } } #can't move onto a different suit, period. But we can move onto an empty card.
-  if ($toCard < $fromCard) { return 0; } # and of course smaller must move onto bigger
+  if (($toCard < $fromCard) && ($toCard)) { return 0; } # and of course smaller must move onto bigger
   #print "CanChain: on to $toCard From: $stack[$_[0]][$fromLoc-1] $stack[$_[0]][$fromLoc]\n";
   if ($fromLoc)
   {
@@ -850,13 +857,16 @@ sub canChain
   {
     $fromLoc--;
   }
+  if ($fromLoc == $#{$stack[$_[0]]} - 12) { print "Suit complete. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
   if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
     return 1;
   }
   if (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] < $stack[$_[0]][$fromLoc])) # 10H-9H-QH-JH case
   {
+    #print "Ping\n";
     if (($toCard > $fromCard) || ($#{$stack[$_[1]]} == -1)) { return 1; } # higher card or empty allows for 2 moves in a row
+    #if ($#{$stack[$_[1]]} == -1) { return 1; } 
   }
   return 0;
 }
@@ -883,7 +893,7 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
 	  if (($stack[$_[0]][$x-1]) - ($stack[$_[0]][$x]) != 1) { $count++; }
 	  $x--;
 	}
-	print "Total alts = $count\n";
+	#print "Total alts = $count\n";
   }
   else { $count = $_[3]; }
   #die ($count);
@@ -961,14 +971,21 @@ sub undo
 
 sub showhidden
 {
+  my @out = (0, 0, 0, 0);
+  my $outs = "";
+  
   if ($hidCards == 0) { print "Nothing hidden left.\n"; }
   my $lastSuit = -1;
   print "Still off the board:";
   for $j (sort { $a <=> $b } keys %inStack)
   {
-    if ($lastSuit != suit($j)) { $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
+    @out[suit($j)]++;
+    if ($lastSuit != suit($j)) { if (@out[$lastSuit] > 0) { print " (@out[$lastSuit])"; } $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
   }
-  print " (" . (keys %inStack) . " total)\n";
+  if (@out[$lastSuit]) { print " (@out[$lastSuit])"; }
+  print "\nTotal unrevealed: " . (keys %inStack) . "\n";
+  for (0..3) { if (!@out[$_]) { $outs .= "@sui[$_] OUT. "; } }
+  if ($outs) { print "$outs\n"; }
 }
 
 sub ones
@@ -1075,10 +1092,13 @@ sub deckFix
 
 sub stats
 {
+  my @wl = ("l", "w");
  print "$wins wins $losses losses\n";
- if ($wstreak) { print "current streak = $wstreak wins\n"; }
- elsif ($lstreak) { print "current streak = $lstreak losses\n"; }
- print "Longest streak $lwstreak wins $llstreak losses\n";
+ if ($wstreak) { print "Current win streak = $wstreak wins\n"; }
+ elsif ($lstreak) { print "Current loss streak = $lstreak losses\n"; }
+ print "Longest streaks $lwstreak wins $llstreak losses\n";
+ print "Last ten games:";
+ for (0..$#lastTen) { print " $_=@wl[@lastTen[$_]]"; } print "\n";
  printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
@@ -1099,6 +1119,7 @@ sub initGlobal
 {
   $vertical = $collapse = 0;
   $startWith = 2;
+  $youWon = 0;
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
@@ -1133,6 +1154,8 @@ $wstreak = @pcts[2];
 $lstreak = @pcts[3];
 $lwstreak = @pcts[4];
 $llstreak = @pcts[5];
+$stats = <A>; chomp($stats);
+@lastTen = split(/,/, $stats);
 close(A);
 }
 }
@@ -1152,7 +1175,7 @@ e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-
 q/x quits
 r restarts, ry forces if draws are left
 (blank) or - prints the screen
-d draws 6 cards (you get 5 of these), dy forces if "good" moves are left
+d draws 6 cards (you get 5 of these), df forces if "good" moves are left
 s=saves deck name
 h=shows hidden/left cards
 l=loads deck name
