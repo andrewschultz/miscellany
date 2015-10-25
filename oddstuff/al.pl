@@ -120,9 +120,9 @@ sub procCmd
     my $didAny;
 	my $empties;
     @x = split(//, $_[0]);
-	print "3-waying @x[1] @x[2] @x[3].\n";
+	print "3-waying stacks @x[1], @x[2] and @x[3].\n";
 	$quickMove = 1;
-    while (canChain(@x[1], @x[2]) || canChain(@x[1], @x[3]) || canChain(@x[2], @x[3]) || canChain(@x[2], @x[1]) || canChain(@x[3], @x[1]) || canChain(@x[3], @x[2]))
+    while (anyChainAvailable(@x[1], @x[2], @x[3]))
 	{
 	  $empties = 0;
 	  for (1..3) { if ($#{$stack[$_]} == -1) { $empties++; } }
@@ -134,8 +134,8 @@ sub procCmd
 	  if (canChain(@x[3], @x[1])) { $didAny++; tryMove("@x[3]@x[1]"); next; }
 	  if (canChain(@x[3], @x[2])) { $didAny++; tryMove("@x[3]@x[2]"); next; }
 	}
-	if ($didAny) { print "$didAny total shifts.\n"; } else { print "No shifts available.\n"; }
 	$quickMove = 0;
+	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	return;
   }
   if ($_[0] =~ /^[0-9][0-9][0-9]x/)
@@ -165,6 +165,21 @@ sub procCmd
 #cheats
 
   print "Command ($_[0]) wasn't recognized. Push ? for usage.\n";
+}
+
+sub anyChainAvailable
+{
+  for $temp(0..2)
+  {
+    my $sz = $#{$stack[$_[$temp]]};
+    if ($sz >= 12)
+	{
+	  $gotStraight = 1;
+	  for $back (0..12) { if ($stack[$_[$temp]][$sz] + $back != $stack[$_[$temp]][$sz-$back]) { $gotStraight = 0; } }
+	  if ($gotStraight == 1) { print "You got the whole suit straight on row $_[$temp].\n"; return 0; }
+	}
+	return  canChain(@x[1], @x[2], -1) || canChain(@x[1], @x[3], -1) || canChain(@x[2], @x[3], -1) || canChain(@x[2], @x[1], -1) || canChain(@x[3], @x[1], -1) || canChain(@x[3], @x[2], -1);
+  }
 }
 
 sub doAnotherGame
@@ -904,7 +919,7 @@ sub canChain
     $fromLoc--;
   }
   if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if ($_[2] > 0) { print "Revealing new suit must be done manually e.g. $_[0]$_[1].\n"; } return 0; } } # 8H-7C-6C won't jump to 
-  if ($fromLoc == $#{$stack[$_[0]]} - 12) { print "Suit complete after twiddling. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
+  if ($fromLoc == $#{$stack[$_[0]]} - 12) { if ($_[2] >= 0) { print "Suit complete after twiddling. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; } return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
   if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
     return 1;
@@ -1098,7 +1113,7 @@ sub checkwin
   }
   if ((!$undo) && (!$quickMove))
   {
-  if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
+  if ($suitsDone == 4) { print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } doAnotherGame(); return; }
   if ($suitsDone) { print "$suitsDone suits completed.\n"; }
   }
 }
