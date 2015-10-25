@@ -15,8 +15,21 @@ while (1)
   $oneline = <STDIN>;
   if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmd($myCmd); } }
   else { procCmd($oneline); }
+  seeBlockedMoves();
 }
 exit;
+
+sub seeBlockedMoves
+{
+  if ($blockedMoves > 0)
+  {
+    print "$blockedMoves blocked moves not shown.\n";
+  }
+  if (!$showBlockedMoves)
+  {
+  $blockedMoves = 0;
+  }
+}
 
 sub procCmd
 {
@@ -81,6 +94,7 @@ sub procCmd
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
+  if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
@@ -92,7 +106,7 @@ sub procCmd
   if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
   if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game.\n"; return; }
-  if ($_[0] =~ /^ua/) { print join(",", @undoArray) . "\n"; return; }
+  if ($_[0] =~ /^ua/) { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves: " . join(",", @undoArray) . "\n"; return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
   if ($_[0] =~ /^ra/) { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; }
@@ -218,7 +232,7 @@ sub loadDeck
   my $li = 0;
   my @temp;
   
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); $vertical = @opts[0]; $collapse = @opts[1]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
   
   while ($a = <A>)
@@ -297,7 +311,7 @@ sub hidCards
 
 sub forceArray
 {
-    my $card = $_[0]; $card =~ s/^(f|f=)//g;
+    my $card = $_[0]; $card =~ s/^(f|f=)//g; $card =~ s/\(.*//g;
 	
 	if ((!$hidden) && (!$undo)) { print "Too many cards out.\n"; return; }
 	
@@ -381,6 +395,8 @@ deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
+print "@topCard\n";
+
 if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); }
 
 }
@@ -399,10 +415,11 @@ for (1..6)
   {
   my $thiscard = randcard();
   push (@{$stack[$_]}, $thiscard);
-  if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "f$thiscard"); }
+  if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "f$thiscard(" . faceval($thiscard) . ")" ); }
   }
   if ($drawsLeft == 6) { @topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
+  #print "Top cards: @topCard\n";
 if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "df"); }
 $drawsLeft--;
 $cardsInPlay += 6;
@@ -705,7 +722,10 @@ sub showLegalsAndStats
 	  }
 	}
   }
+  if ($chains != 48) # that means a win, no need to print stats
+  {
   print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $breaks breaks, $chains chains, $order in order.\n";
+  }
 }
 
 sub suit
@@ -732,7 +752,7 @@ sub tryMove
   my $to = @q[1];
   
   #print "$_[0] becomes $from $to\n";
-  if ($moveBar == 1) { print "$from-$to blocked, as previous move failed.\n"; return; }
+  if ($moveBar == 1) { if ($showBlockedMoves) { print "$from-$to blocked, as previous move failed.\n"; } else { $blockedMoves++; } return; }
   
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6.\n"; $moveBar = 1; return; }
   
@@ -804,6 +824,7 @@ sub tryMove
 
 sub altUntil
 {
+  $altmoves = 0;
   my @cmds = split(//, $_[0]);
   my $from = @cmds[1];
   my $to = @cmds[2];
@@ -817,7 +838,7 @@ sub altUntil
   }
   $quickMove = 1;
   #print "$to$from trying\n";
-  while (canChain($from, $to) || canChain($to, $from))
+  while (canChain($from, $to, $totalMoves) || canChain($to, $from, $totalMoves))
   {
     if (canChain($from, $to))
 	{
@@ -835,6 +856,7 @@ sub altUntil
   $quickMove = 0;
   printdeck();
   print "Made $totalMoves moves.\n";
+  checkwin();
 }
 
 sub canChain
@@ -843,6 +865,7 @@ sub canChain
   my $toCard = $stack[$_[1]][$#{$stack[$_[1]]}];
   if ($toCard % 13 == 1) { return 0; } # if it is an ace, there's no way we can chain
   my $fromLoc = $#{$stack[$_[0]]};
+  my $toLoc = $#{$stack[$_[1]]};
   if ($fromLoc == -1) { return 0; } # can't move from empty row
   my $fromCard = $stack[$_[0]][$fromLoc];
   if (suit($toCard) != suit($fromCard)) { if ($#{$stack[$_[1]]} != -1) { return 0; } } #can't move onto a different suit, period. But we can move onto an empty card.
@@ -857,7 +880,8 @@ sub canChain
   {
     $fromLoc--;
   }
-  if ($fromLoc == $#{$stack[$_[0]]} - 12) { print "Suit complete. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
+  if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if ($_[2] > 0) { print "Revealing new suit must be done manually e.g. $_[0]$_[1].\n"; } return 0; } } # 8H-7C-6C won't jump to 
+  if ($fromLoc == $#{$stack[$_[0]]} - 12) { print "Suit complete after twiddling. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
   if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
     return 1;
@@ -886,11 +910,15 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
   {
     $count = 1;
     my $x = $#{$stack[$_[0]]};
+    my $y = $#{$stack[$_[1]]};
 	while ($x > 0)
 	{
+	  #print "$stack[$_[0]][$x-1] vs $stack[$_[1]][$y]\n";
+	  if (($y > -1) && ($stack[$_[0]][$x-1] > $stack[$_[1]][$y])) { last; } # e.g. KH-JH to QH only tries JH
 	  if (suit($stack[$_[0]][$x]) != suit($stack[$_[0]][$x-1])) { last; }
 	  if ($stack[$_[0]][$x] > $stack[$_[0]][$x-1]) { last; }
 	  if (($stack[$_[0]][$x-1]) - ($stack[$_[0]][$x]) != 1) { $count++; }
+	  #print "Moving from $stack[$_[0]][$x] to $stack[$_[0]][$x-1]\n";
 	  $x--;
 	}
 	#print "Total alts = $count\n";
@@ -1007,15 +1035,15 @@ sub ones
   else
   { last; }
   }
-  @topCard[$_] = $stack[$_][$temp];
-  @botCard[$_] = $stack[$_][$#{$stack[$_]}];
+  @thistopCard[$_] = $stack[$_][$temp];
+  @thisbotCard[$_] = $stack[$_][$#{$stack[$_]}];
   }
   
   for $j (1..6)
   {
     for $i (1..6)
 	{
-	  if ((@botCard[$i] - @topCard[$j] == 1) && (suit(@topCard[$i]) == suit(@topCard[$j])))
+	  if ((@thisbotCard[$i] - @thistopCard[$j] == 1) && (suit(@thistopCard[$i]) == suit(@thistopCard[$j])))
 	  {
 	    if (!$anyYet) { $quickMove = 1; tryMove("$j$i"); $quickMove = 0; $anyYet = 1; $totMove++; }
 	  }
@@ -1045,8 +1073,11 @@ sub checkwin
 	  if ($inarow == 12) { $suitsDone++; }
 	}
   }
+  if ((!$undo) && (!$quickMove))
+  {
   if ($suitsDone == 4) { print "You win! Push enter to restart."; $x = <STDIN>; $youWon = 1; doAnotherGame(); return; }
-  elsif (($suitsDone) && (!$undo) && (!$quickMove)) { print "$suitsDone suits completed.\n"; }
+  if ($suitsDone) { print "$suitsDone suits completed.\n"; }
+  }
 }
 
 sub peekAtCards
@@ -1092,13 +1123,14 @@ sub deckFix
 
 sub stats
 {
+  my $sum = 0;
   my @wl = ("l", "w");
  print "$wins wins $losses losses\n";
  if ($wstreak) { print "Current win streak = $wstreak wins\n"; }
  elsif ($lstreak) { print "Current loss streak = $lstreak losses\n"; }
  print "Longest streaks $lwstreak wins $llstreak losses\n";
  print "Last ten games:";
- for (0..$#lastTen) { print " $_=@wl[@lastTen[$_]]"; } print "\n";
+ for (0..$#lastTen) { $sum += @lastTem[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum wins.\n";
  printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
@@ -1135,6 +1167,8 @@ sub showOpts
   print "Ignore Empty on Force (e) @toggles[$emptyIgnore].\n";
   print "Show Chain Breaks (cb) @toggles[$chainBreaks].\n";
   print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
+  print "Begin with shuffling one-aparts (1b) @toggles[$beginOnes].\n";
+  print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
 }
 
 sub readScoreFile
@@ -1182,12 +1216,13 @@ l=loads deck name
 t=loads test
 sd=save default
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
+sb=show blocked moves toggle
 u=undo
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (far safer to twiddle)
 %=prints stats
-o=prints options
+o=prints options' current settings
 EOT
 }
 
