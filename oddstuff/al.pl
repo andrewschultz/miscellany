@@ -113,9 +113,9 @@ sub procCmd
   if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
   if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
   if ($_[0] =~ /^%/) { stats(); return; }
-  if ($_[0] =~ /^a[0-9][0-9]/) { altUntil($_[0]); return; }
+  if (($_[0] =~ /^a[0-9][0-9]/) || ($_[0] =~ /^[0-9][0-9]a/)) { $_[0] =~ s/a//g; altUntil($_[0]); return; }
   if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
-  if ($_[0] =~ /^[!t][0-9][0-9][0-9]/)
+  if ($_[0] =~ /^[!t~][0-9][0-9][0-9]/)
   {
     my $didAny;
 	my $empties;
@@ -270,7 +270,7 @@ sub loadDeck
   my $li = 0;
   my @temp;
   
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
   
   while ($a = <A>)
@@ -432,8 +432,6 @@ $deckTry++;
 deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
-
-print "@topCard\n";
 
 if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); }
 
@@ -864,8 +862,8 @@ sub altUntil
 {
   $altmoves = 0;
   my @cmds = split(//, $_[0]);
-  my $from = @cmds[1];
-  my $to = @cmds[2];
+  my $from = @cmds[0];
+  my $to = @cmds[1];
   my $totalMoves = 0;
   if (($from < 1) || ($from > 6) || ($to < 1) || ($to > 6)) { print "From/to must be between 1 and 6.\n"; }
   #print "$from$to trying\n";
@@ -1012,20 +1010,20 @@ sub undo
   reinitBoard();
   print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
-  print "$x elts left\n";
+  #print "$x elts left\n";
   if ($x >= 0)
   {
     $temp = pop(@undoArray);
 	$x--;
-	print "Popped $temp\n";
+	#print "Popped $temp\n";
 	while ((@undoArray[$x] =~ /^f/) && ($x >= 0))
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
-	  print "extra-popped $temp\n";
+	  #print "extra-popped $temp\n";
 	}
   }
-  print "@undoArray\n";
+  #print "@undoArray\n";
   for (0..$#undoArray)
   {
     #for $j (1..52) { if (!$inStack{$j}) { print "$j=" . faceval($j) . " "; } } print "\n";
