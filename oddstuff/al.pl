@@ -13,11 +13,17 @@ if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); }
 while (1)
 {
   $oneline = <STDIN>;
-  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmd($myCmd); } }
+  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmdFromUser($myCmd); } }
   else { procCmd($oneline); }
   seeBlockedMoves();
 }
 exit;
+
+sub procCmdFromUser #this is so they can't use debug commands
+{
+  if (($_[0] eq "n-") || ($_[0] eq "n+")) { print "This is a debug command, so I'm ignoring it.\n"; return; }
+  procCmd($_[0]);
+}
 
 sub seeBlockedMoves
 {
@@ -60,15 +66,16 @@ sub procCmd
 	  elsif ($totalRows > 1) { print "Too many rows ($totalRows) to move $_[0] to.\n"; return; }
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
+  if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
-  if ($_[0] =~ /^x[0-9]$/)
+  if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x/))
   {
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
-	my $thisRow = $_[0]; $thisRow =~ s/^x//g;
-	if ($#{$stack[$_]} == -1) { print "Nothing to spill.\n"; return; }
+	my $thisRow = $_[0]; $thisRow =~ s/x//g;
+	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill.\n"; return; }
 	for $emcheck (1..6)
 	{
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
@@ -81,13 +88,16 @@ sub procCmd
 	    }
 	  }
 	}
+	if ((x < 1) || (x > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; }
+	
 	$quickMove = 1;
 	autoShuffle($thisRow, @rows[0], @rows[1]);
 	$quickMove = 0;
 	printdeck();
 	return;
   }
-  if ($_[0] =~ /^u$/) { undo(); return; }
+  if ($_[0] =~ /^u$/) { undo(0); return; }
+  if ($_[0] =~ /^u1$/) { undo(1); return; }
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
@@ -113,7 +123,7 @@ sub procCmd
   if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
   if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
   if ($_[0] =~ /^%/) { stats(); return; }
-  if (($_[0] =~ /^a[0-9][0-9]/) || ($_[0] =~ /^[0-9][0-9]a/)) { $_[0] =~ s/a//g; altUntil($_[0]); return; }
+  if (($_[0] =~ /^a[0-9][0-9]/) || ($_[0] =~ /^[0-9][0-9]a/)) { $_[0] =~ s/a//g; placeUndoStart(); altUntil($_[0]); placeUndoEnd(); return; }
   if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[!t~][0-9][0-9][0-9]/)
   {
@@ -138,12 +148,15 @@ sub procCmd
 	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	return;
   }
-  if ($_[0] =~ /^[0-9][0-9][0-9]x/)
+  if (($_[0] =~ /^[0-9][0-9][0-9]x/) || ($_[0] == /^x[0-9][0-9][0-9]/))
   {
+    $_[0] =~ s/x//g;
     @x = split(//, $_[0]);
+	placeUndoStart();
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
+	placeUndoEnd();
 	printdeck();
 	return;
   }
@@ -1003,7 +1016,17 @@ sub undoToStart
   printdeck();
 }
 
-sub undo
+sub placeUndoStart
+{
+  push(@undoArray, "n+");
+}
+
+sub placeUndoEnd
+{
+  if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
+}
+
+sub undo # 1 = undo just one move
 {
   $undo = 1;
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
@@ -1016,11 +1039,18 @@ sub undo
     $temp = pop(@undoArray);
 	$x--;
 	#print "Popped $temp\n";
-	while ((@undoArray[$x] =~ /^f/) && ($x >= 0))
+	if (($temp eq "n-") && ($_[0] != 1))
+	{
+	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
+	}
+	else
+	{
+	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
 	  #print "extra-popped $temp\n";
+	}
 	}
   }
   #print "@undoArray\n";
