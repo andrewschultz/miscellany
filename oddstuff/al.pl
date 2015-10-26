@@ -935,6 +935,7 @@ sub canChain
   {
     return 1;
   }
+  if (($fromLoc == 0) && ($fromCard < $toCard)) { return 1; } # 5h=ah will go on to x-kh=a8
   if (($fromLoc > 0) && ($stack[$_[0]][$fromLoc-1] < $stack[$_[0]][$fromLoc])) # 10H-9H-QH-JH case
   {
     #print "Ping\n";
