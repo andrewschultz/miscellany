@@ -76,6 +76,7 @@ sub procCmd
 	my @rows = (0, 0);
 	my $thisRow = $_[0]; $thisRow =~ s/x//g;
 	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill.\n"; return; }
+	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; } die;
 	for $emcheck (1..6)
 	{
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
@@ -88,7 +89,6 @@ sub procCmd
 	    }
 	  }
 	}
-	if ((x < 1) || (x > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; }
 	
 	$quickMove = 1;
 	autoShuffle($thisRow, @rows[0], @rows[1]);
@@ -148,16 +148,18 @@ sub procCmd
 	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	return;
   }
-  if (($_[0] =~ /^[0-9][0-9][0-9]x/) || ($_[0] == /^x[0-9][0-9][0-9]/))
+  if (($_[0] =~ /^[0-9][0-9][0-9]x/) || ($_[0] =~ /^x[0-9][0-9][0-9]/))
   {
     $_[0] =~ s/x//g;
     @x = split(//, $_[0]);
+	$b4 = $#undoArray;
 	placeUndoStart();
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
 	printdeck();
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; }
 	return;
   }
   if ($_[0] =~ /^[0-9][0-9][0-9]/)
