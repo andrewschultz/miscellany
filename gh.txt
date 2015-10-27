@@ -69,6 +69,7 @@ roi=c:\writing\dict\ti.pl,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\Source\ti.bat,stale-tales-slate\roiling
 roi=c:\writing\dict\settler.pl,stale-tales-slate\roiling
 roi=c:\writing\dict\settler.txt,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,stale-tales-slate\roiling
 
 #Threediopolis files to GitHub
 3d=c:\games\inform\threediopolis.inform\source\story.ni,threediopolis

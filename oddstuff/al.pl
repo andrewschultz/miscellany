@@ -69,14 +69,14 @@ sub procCmd
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
-  if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x/))
+  if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
 	my $thisRow = $_[0]; $thisRow =~ s/x//g;
 	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill.\n"; return; }
-	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; } die;
+	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for $emcheck (1..6)
 	{
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
@@ -102,7 +102,7 @@ sub procCmd
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /^sw0/) { printPoints(); return; }
-  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
