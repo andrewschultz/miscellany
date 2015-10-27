@@ -101,7 +101,8 @@ sub procCmd
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
-  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw[01]/)) { print "You can only fix 2 to 9 to start.\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 6) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } return; }
+  if ($_[0] =~ /^sw0/) { printPoints(); return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may partially ruin the challenge, too.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
@@ -1263,6 +1264,26 @@ close(A);
 }
 }
 
+sub printPoints
+{
+print<<EOT;
+1 point for cards of the same suit or consecutive cards.
+You must have at least 2 pairs of cards of the same suit (or 3 of one suit) since there are 6 cards and 4 suits. So you have 2 points automatically.
+10 is the maximum since you could have all of the same suit in a row e.g. 6H through AH.
+It is not allowed since 9 can take a few seconds, so 10 may take a minute or more.
+2: 5867004/20358520=28.8184% or 1 in 3.4700
+3: 7546400/20358520=37.0675% or 1 in 2.6978
+4: 4832234/20358520=23.7357% or 1 in 4.2131
+5: 1638076/20358520=8.0461% or 1 in 12.4283
+6: 401260/20358520=1.9710% or 1 in 50.7365
+7: 67144/20358520=0.3298% or 1 in 303.2068
+8: 5810/20358520=0.0285% or 1 in 3504.0482
+9: 560/20358520=0.0028% or 1 in 36354.5000
+10: 32/20358520=0.0002% or 1 in 636203.7500
+pts.pl runs this test.
+EOT
+}
+
 sub usage
 {
 print<<EOT;
@@ -1286,6 +1307,7 @@ l=loads deck name
 t=loads test
 sd=save default
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
+sw0=shows odds of points to start with
 sb=show blocked moves toggle
 u=undo
 uu=undo all the way to the start
