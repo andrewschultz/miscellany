@@ -108,7 +108,7 @@ sub procCmd
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
-  if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially good moves.\n"; return; } else { drawSix(); printdeck(); return; } }
+  if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
@@ -133,6 +133,7 @@ sub procCmd
     @x = split(//, $_[0]);
 	print "3-waying stacks @x[1], @x[2] and @x[3].\n";
 	$quickMove = 1;
+	placeUndoStart();
     while (anyChainAvailable(@x[1], @x[2], @x[3]))
 	{
 	  $empties = 0;
@@ -145,6 +146,7 @@ sub procCmd
 	  if (canChain(@x[3], @x[1])) { $didAny++; tryMove("@x[3]@x[1]"); next; }
 	  if (canChain(@x[3], @x[2])) { $didAny++; tryMove("@x[3]@x[2]"); next; }
 	}
+	placeUndoEnd();
 	$quickMove = 0;
 	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	return;
@@ -660,6 +662,7 @@ sub showLegalsAndStats
   my @blank = (0,0,0,0,0,0);
   my @circulars = (0,0,0,0,0,0);
   my $canMakeEmpty = 0;
+  $mbGood = "";
   
   for $d(1..6)
   {
@@ -715,7 +718,7 @@ sub showLegalsAndStats
 		  }
 		}
 		print "$from$to";
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; }
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; $mbGood = "$from$to"; }
 	  }
 	  if (!$stack[$to][0]) { print "e"; if (!$emptyIgnore) { $anySpecial = 1; } }
 	} #?? maybe if there is no descending, we can check for that and give a pass
