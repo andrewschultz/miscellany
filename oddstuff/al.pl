@@ -68,6 +68,8 @@ sub procCmd
   }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
+  if ($_[0] =~ /^ud$/) { undo(2); return; }
+  if ($_[0] =~ /^ud1$/) { undo(3); return; }
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
@@ -90,9 +92,11 @@ sub procCmd
 	  }
 	}
 	
+	placeUndoStart();
 	$quickMove = 1;
 	autoShuffle($thisRow, @rows[0], @rows[1]);
 	$quickMove = 0;
+	placeUndoEnd();
 	printdeck();
 	return;
   }
@@ -101,6 +105,7 @@ sub procCmd
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
+  if ($_[0] =~ /[0-9]{4}/) { print "Commands can take up to three row numbers. Please eliminate one and try again.\n"; return; }
   if ($_[0] =~ /^sw0/) { printPoints(); return; }
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
@@ -124,9 +129,10 @@ sub procCmd
   if ($_[0] =~ /^ry/) { if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } doAnotherGame(); return; }
   if ($_[0] =~ /^r/) { if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } doAnotherGame(); return; }
   if ($_[0] =~ /^%/) { stats(); return; }
-  if (($_[0] =~ /^a[0-9][0-9]/) || ($_[0] =~ /^[0-9][0-9]a/)) { $_[0] =~ s/a//g; placeUndoStart(); altUntil($_[0]); placeUndoEnd(); return; }
-  if ($_[0] =~ /^[0-9][0-9][^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
-  if ($_[0] =~ /^[!t~][0-9][0-9][0-9]/)
+  if ($_[0] =~ /[0-9]{4}/) { print "Too many numbers.\n"; return; }
+  if (($_[0] =~ /^a[0-9]{2}/) || ($_[0] =~ /^[0-9]{2}a/)) { $_[0] =~ s/a//g; placeUndoStart(); altUntil($_[0]); placeUndoEnd(); return; }
+  if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  if ($_[0] =~ /^[!t~][0-9]{3}/)
   {
     my $didAny;
 	my $empties;
@@ -151,7 +157,7 @@ sub procCmd
 	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	return;
   }
-  if (($_[0] =~ /^[0-9][0-9][0-9]x/) || ($_[0] =~ /^x[0-9][0-9][0-9]/))
+  if (($_[0] =~ /^[0-9]{3}x/) || ($_[0] =~ /^x[0-9]{3}/))
   {
     $_[0] =~ s/x//g;
     @x = split(//, $_[0]);
@@ -161,24 +167,39 @@ sub procCmd
     autoShuffle(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	printdeck();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; }
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
 	return;
   }
-  if ($_[0] =~ /^[0-9][0-9][0-9]/)
+  if (($_[0] =~ /^w[0-9]{3}/) || ($_[0] =~ /^[0-9]{3}w/))
+  {
+    $_[0] =~ s/w//g;
+    @x = split(//, $_[0]);
+	$b4 = $#undoArray;
+	placeUndoStart();
+	$quickMove = 1;
+    autoShuffle(@x[0], @x[2], @x[1]);
+    autoShuffle(@x[2], @x[0], @x[1]);
+	$quickMove = 0;
+	placeUndoEnd();
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
+	return;
+  }
+  if ($_[0] =~ /^[0-9]{3}/)
   { # detect 2 ways
     @x = split(//, $_[0]);
     if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
+	placeUndoStart();
 	tryMove("@x[0]@x[1]");
-	if (@x[1] != @x[2])
-	{
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
-	}
+	placeUndoEnd();
 	return;
   }
   if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
   if ($_[0] =~ /^q$/) { exit; }
+  if ($_[0] =~ /^x[0-9]/) { print "You may have the wrong number of numbers.\n"; return; }
+  if ($_[0] =~ /[0-9]x/) { print "You may have the wrong number of numbers.\n"; return; }
+  if ($_[0] =~ /^a[0-9]/) { print "You may have one too many numbers.\n"; return; }
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
 
@@ -1033,7 +1054,7 @@ sub placeUndoEnd
   if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
 }
 
-sub undo # 1 = undo just one move
+sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-card draw
 {
   $undo = 1;
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
@@ -1041,12 +1062,17 @@ sub undo # 1 = undo just one move
   print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
   #print "$x elts left\n";
+  if (($_[0] == 2) || ($_[0] ==3)) { 	if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; return; } }
   if ($x >= 0)
   {
     $temp = pop(@undoArray);
 	$x--;
 	#print "Popped $temp\n";
-	if (($temp eq "n-") && ($_[0] != 1))
+	if (($_[0] == 2) || ($_[0] == 3))
+	{
+	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); } if (($_[0] == 3) && ($x > 0)) { $x--; pop(@undoArray); }
+	}
+	elsif (($temp eq "n-") && ($_[0] != 1))
 	{
 	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
@@ -1100,7 +1126,7 @@ sub ones
   for (1..6)
   {
   my $temp = $#{$stack[$_]};
-  if ($temp == -1) { @topCard[$_] = -3; next; }
+  if ($temp == -1) { @thistopCard[$_] = -3; next; }
   while ($temp > 0)
   {
   if (($stack[$_][$temp] == $stack[$_][$temp-1]-1) && (suit($stack[$_][$temp-1]) == suit($stack[$_][$temp])))
@@ -1295,15 +1321,16 @@ print<<EOT;
 [1-6][1-6]0 (or any character moves stack a to stack b and back
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
+[1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh.
 [!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
 v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
 e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
-q/x quits
-r restarts, ry forces if draws are left
-(blank) or - prints the screen
-d draws 6 cards (you get 5 of these), df forces if "good" moves are left
+q/x quits.
+r restarts, ry forces if draws are left.
+(blank) or - prints the screen.
+d draws 6 cards (you get 5 of these), df forces if "good" moves are left.
 s=saves deck name
 h=shows hidden/left cards
 l=loads deck name
@@ -1315,7 +1342,7 @@ sb=show blocked moves toggle
 u=undo
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
-1b=begin ones (far safer to twiddle)
+1b=begin ones (this is safe, as no card stacks are out of order yet)
 %=prints stats
 o=prints options' current settings
 EOT
