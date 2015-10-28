@@ -225,8 +225,7 @@ sub doAnotherGame
 {
 $moveBar = 1; $quickMove = 0;
 
-
-if ($hidCards == 16) {}
+if (!$anyMovesYet) { print "No actual moves yet, so stats aren't recorded.\n"; }
 else
 {
 if ($#lastTen == 9) { shift(@lastTen); }
@@ -418,6 +417,8 @@ my $deckTry = 0;
 
 my $thisStartMoves = 0;
 
+$anyMovesYet = 0;
+
 do
 { 
 
@@ -472,7 +473,7 @@ deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
-if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); }
+if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); $anyMovesYet = 0; }
 
 }
 
@@ -893,7 +894,8 @@ sub tryMove
 	$hidCards--;
 	}
   }
-  if (!$undo) { push(@undoArray, "$from$to"); }
+  if (!$undo) { push(@undoArray, "$from$to"); $anyMovesYet = 1; }
+
   printdeck();
   checkwin();
 }
