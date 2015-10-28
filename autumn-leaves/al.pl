@@ -136,6 +136,7 @@ sub procCmd
   {
     my $didAny;
 	my $empties;
+	my $localFrom, my $localTo, my $curMinToFlip;
     @x = split(//, $_[0]);
 	print "3-waying stacks @x[1], @x[2] and @x[3].\n";
 	$quickMove = 1;
@@ -145,12 +146,32 @@ sub procCmd
 	  $empties = 0;
 	  for (1..3) { if ($#{$stack[$_]} == -1) { $empties++; } }
 	  if ($empties == 2) { print "You made a full chain!\n"; last; }
-	  if (canChain(@x[1], @x[2])) { $didAny++; tryMove("@x[1]@x[2]"); next; }
-	  if (canChain(@x[1], @x[3])) { $didAny++; tryMove("@x[1]@x[3]"); next; }
-	  if (canChain(@x[2], @x[3])) { $didAny++; tryMove("@x[2]@x[3]"); next; }
-	  if (canChain(@x[2], @x[1])) { $didAny++; tryMove("@x[2]@x[1]"); next; }
-	  if (canChain(@x[3], @x[1])) { $didAny++; tryMove("@x[3]@x[1]"); next; }
-	  if (canChain(@x[3], @x[2])) { $didAny++; tryMove("@x[3]@x[2]"); next; }
+	  $localFrom = 0; $localTo = 0;
+	  $curMinToFlip = 0;
+	  for $j (1..3) #this is so we pull the lowest card onto the lowest remaining. Not fully workable eg (other)-7-6-5 3-2-1-j-10-9 k-q-8-4 will lose
+	  #we'd need a check for "lowest" and "safest" and "safest" trumps "lowest" but if there is nothing else, "lowest"
+	  {
+	    for $k (1..3)
+		{
+		  if (canChain(@x[$j], @x[$k]))
+		  {
+		    $foundChain = 1;
+			if (($stack[@x[$k]][$#{$stack[@x[$k]]}] < $curMinToFlip) || ($curMinToFlip == 0)) { $localFrom = $j; $localTo = $k; }
+		  }
+		  else { }
+		}
+	  }
+	  tryMove("@x[$localFrom]@x[$localTo]");
+	  #if (canChain(@x[1], @x[2])) { $foundChain = 1; tryMove("@x[1]@x[2]"); next; }
+	  #if (canChain(@x[1], @x[3])) { $foundChain = 1; tryMove("@x[1]@x[3]"); next; }
+	  #if (canChain(@x[2], @x[3])) { $foundChain = 1; tryMove("@x[2]@x[3]"); next; }
+	  #if (canChain(@x[2], @x[1])) { $foundChain = 1; tryMove("@x[2]@x[1]"); next; }
+	  #if (canChain(@x[3], @x[1])) { $foundChain = 1; tryMove("@x[3]@x[1]"); next; }
+	  #if (canChain(@x[3], @x[2])) { $foundChain = 1; tryMove("@x[3]@x[2]"); next; }
+	  if ($foundChain)
+	  {
+	    $didAny = 1;
+	  }
 	}
 	placeUndoEnd();
 	$quickMove = 0;
@@ -939,7 +960,8 @@ sub altUntil
 
 sub canChain
 {
-  if ($moveBar) { return; }
+  if ($moveBar) { return 0; }
+  if ($_[0] == $_[1]) { return 0; }
   my $toCard = $stack[$_[1]][$#{$stack[$_[1]]}];
   if ($toCard % 13 == 1) { return 0; } # if it is an ace, there's no way we can chain
   my $fromLoc = $#{$stack[$_[0]]};
@@ -1324,7 +1346,7 @@ print<<EOT;
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
 [1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh.
-[!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
+[~!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
 v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
