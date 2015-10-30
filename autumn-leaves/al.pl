@@ -265,7 +265,7 @@ initGame(); printdeck();
 sub saveDeck
 {
   chomp($_[0]);
-  my $filename = "al.txt";
+  my $filename = "al-sav.txt";
   my $overwrite = 0;
   
   open(A, "$filename");
@@ -322,12 +322,13 @@ sub saveDeck
 
 sub loadDeck
 {
-  if ($_[1] =~ /debug/) { $filename = "alt.txt"; print "DEBUG test\n"; } else { $filename="al.txt"; }
+  if ($_[1] =~ /debug/) { $filename = "al.txt"; print "DEBUG test\n"; } else { $filename="al-sav.txt"; }
   chomp($_[0]);
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
   my $li = 0;
   my @temp;
+  my @testArray;
   
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
@@ -342,7 +343,7 @@ sub loadDeck
     if ("$a" eq "$search")
 	{
 	print "Found $search in $filename, line $li.\n";
-	$a = <A>; chomp($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
+	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
 	#topCards line
     $hidCards = 0;
    $cardsInPlay = 0; $drawsLeft = 5;
@@ -350,30 +351,38 @@ sub loadDeck
 	while ($rowsRead < 6)
 	{
 	  $a = <A>; chomp($a);
-	  $b = $a; $b =~ s/^[A-Z]+=//g; #b = the data for a
-	  if ($a =~ /^FD=/)
+	  $b = $a; $b =~ s/^[a-z]+=//g; #b = the data for a
+	  #print "Trying $a\n";
+	  if ($a =~ /^tm=/)
 	  {
-	    $fixedDeckOpt = 1;
-	    @fixedDeck = split(/,/, $a);
+	    $testing = 1;
+	    @testArray=split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /^TC=/)
+	  if ($a =~ /^fd=/i)
+	  {
+	    $fixedDeckOpt = 1;
+	    @fixedDeck = split(/,/, $b);
+		next;
+	  }
+	  if ($a =~ /^tc=/i)
 	  {
 		@topCard = split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /^M=/)
+	  if ($a =~ /^m=/)
 	  {
 		@undoArray = split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /^HC=/)
+	  if ($a =~ /^hc=/)
 	  {
 	    $hidRow++;
 		@{backupCardUnder[$hidRow]} = split(/,/, $b);
 		@{cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
+	  if ($a =~ /=/) { print "Unknown command. Skipping $a.\n"; next; }
 	  $rowsRead++;
 	  @{$stack[$rowsRead]} = split(/,/, $a);
 	    for $card (@{$stack[$rowsRead]})
@@ -386,6 +395,52 @@ sub loadDeck
 		} elsif ($card == -1) { $cardsInPlay++; $hidCards++; }
 	    }
 	  $drawsLeft = (52-$cardsInPlay)/6;
+	}
+	if ($#testArray > -1)
+	{
+	  $testing = 1;
+	  $quietMove = 1;
+	  my $errs = 0;
+	  my $expVal = 0;
+	  for (0..$#testArray)
+	  {
+	    printDebug("Testing @testArray[$_]\n");
+	    if (@testArray[$_] =~ /=/)
+		{
+		  @q = split(/=/, @testArray[$_]);
+		  @r = split(/-/, @q[0]);
+		  $expVal = $stack[@r[0]][@r[1]];
+		  printDebug("$expVal at @r[0] @r[1]\n");
+		  if ($expVal >= 0)
+		  {
+		    if (@q[1] != $expVal) { $errs++; print "$search: @r[0],@r[1] should be $expVal but is @q[1].\n"; }
+			else
+			{
+			  printDebug("$search: @r[0],@r[1] should be $expVal and is.\n");
+			}
+		  }
+		  else
+		  {
+		    $expVal = 0 - $expVal;
+		    if ($q[1] == $expVal) { $errs++; print "$search: @r[0],@r[1] should not be $expVal but is.\n"; }
+			else
+			{
+			  printDebug("$search: @r[0],@r[1] should not be $expVal and isn't.\n");
+			}
+		  }
+		  if ($errs == 0) { print "Test $search succeeded.\n"; }
+		  $quietMove = 0;
+		  $testing = 0;
+		  return;
+		}
+		else
+		{
+		print "Processing @testArray[$_]\n";
+		procCmd(@testArray[$_]);
+		}
+	  }
+	  $quietMove = 0;
+	  $testing = 0;
 	}
 	printdeck();
 	close(A);
@@ -551,6 +606,7 @@ sub faceval
 
 sub printdeck
 {
+  if ($testing) { return; }
   if ($vertical)
   { printdeckvertical(); }
   else
@@ -1102,12 +1158,14 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	}
 	else
 	{
+	print "@undoArray[$x]\n";
 	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
 	  #print "extra-popped $temp\n";
 	}
+	if ($x >= 0) { $x--; pop(@undoArray); }
 	}
   }
   #print "@undoArray\n";
@@ -1259,7 +1317,7 @@ sub stats
 
 sub saveDefault
 {
-  my $filename = "al.txt";
+  my $filename = "al-sav.txt";
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
@@ -1317,6 +1375,11 @@ close(A);
 }
 }
 
+sub printDebug
+{
+  if ($debug) { return; }
+}
+
 sub printPoints
 {
 print<<EOT;
@@ -1369,6 +1432,7 @@ uu=undo all the way to the start
 1b=begin ones (this is safe, as no card stacks are out of order yet)
 %=prints stats
 o=prints options' current settings
+debug shows debug text
 EOT
 }
 
