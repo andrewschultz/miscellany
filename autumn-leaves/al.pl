@@ -1405,8 +1405,8 @@ sub usage
 print<<EOT;
 [1-6] moves that row, if there is exactly one suitable destination
 [1-6][1-6] moves stack a to stack b
-[1-6][1-6]0 (or any character moves stack a to stack b and back
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
+a[1-6][1-6] moves stack a to b and back. If you end with 8h-2h-kh-qh, the kh-qh will go to the empty square. Use ud1 to undo this.
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
 [1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh.
 [~!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
@@ -1427,6 +1427,9 @@ sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point
 sw0=shows odds of points to start with
 sb=show blocked moves toggle
 u=undo
+u1=undo one move
+ud=undo to before last 6-card draw
+ud1=undo to last 6-card draw
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
