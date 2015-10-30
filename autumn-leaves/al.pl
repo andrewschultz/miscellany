@@ -115,6 +115,7 @@ sub procCmd
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
+  if ($_[0] =~ /^ll/i) { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
@@ -220,7 +221,7 @@ sub procCmd
   if ($_[0] =~ /^q$/) { exit; }
   if ($_[0] =~ /^x[0-9]/) { print "You may have the wrong number of numbers.\n"; return; }
   if ($_[0] =~ /[0-9]x/) { print "You may have the wrong number of numbers.\n"; return; }
-  if ($_[0] =~ /^a[0-9]/) { print "You may have one too many numbers.\n"; return; }
+  if ($_[0] =~ /^a[0-9]/) { print "You may have one too few numbers.\n"; return; }
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
 
@@ -255,11 +256,14 @@ if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lws
 else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
 }
 
+if ($anyMovesYet)
+{
 open(A, ">scores.txt");
 print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak\n";
 print A join (",", @lastTen); print A "\n";
 close(A);
 initGame(); printdeck();
+}
 }
 
 sub saveDeck
@@ -270,6 +274,7 @@ sub saveDeck
   
   open(A, "$filename");
   open(B, ">albak.txt");
+  $lastSearchCmd = $_[0];
   while ($a = <A>)
   {
     print B $a;
@@ -343,6 +348,7 @@ sub loadDeck
     if ("$a" eq "$search")
 	{
 	print "Found $search in $filename, line $li.\n";
+	$lastSearchCmd = $a;
 	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
 	#topCards line
     $hidCards = 0;
@@ -350,8 +356,8 @@ sub loadDeck
     for (1..52) { $inStack{$_} = 1; }
 	while ($rowsRead < 6)
 	{
-	  $a = <A>; chomp($a);
-	  $b = $a; $b =~ s/^[a-z]+=//g; #b = the data for a
+	  $a = <A>; chomp($a); $a = lc($a);
+	  $b = $a; $b =~ s/^[a-z]+=//gi; #b = the data for a
 	  #print "Trying $a\n";
 	  if ($a =~ /^tm=/)
 	  {
@@ -370,7 +376,7 @@ sub loadDeck
 		@topCard = split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /^m=/)
+	  if ($a =~ /^m=/i)
 	  {
 		@undoArray = split(/,/, $b);
 		next;
@@ -382,7 +388,7 @@ sub loadDeck
 		@{cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /=/) { print "Unknown command. Skipping $a.\n"; next; }
+	  if (($a !~ /m=/i) && ($a =~ /[a-z]/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
 	  @{$stack[$rowsRead]} = split(/,/, $a);
 	    for $card (@{$stack[$rowsRead]})
@@ -1147,8 +1153,15 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
   {
     $temp = pop(@undoArray);
 	$x--;
-	#print "Popped $temp\n";
-	if (($_[0] == 2) || ($_[0] == 3))
+	print "Popped $temp\n";
+	if ($_[0] == 1)
+	{
+	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
+	{
+	  $x--; $temp = pop(@undoArray);
+	}
+	}
+	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
 	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); } if (($_[0] == 3) && ($x > 0)) { $x--; pop(@undoArray); }
 	}
@@ -1158,14 +1171,12 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	}
 	else
 	{
-	print "@undoArray[$x]\n";
 	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
 	  #print "extra-popped $temp\n";
 	}
-	if ($x >= 0) { $x--; pop(@undoArray); }
 	}
   }
   #print "@undoArray\n";
