@@ -247,7 +247,7 @@ sub doAnotherGame
 {
 $moveBar = 1; $quickMove = 0;
 
-if (!$anyMovesYet) { print "No actual moves yet, so stats aren't recorded.\n"; }
+if (!$anyMovesYet) { print "No actual moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
 else
 {
 if ($#lastTen == 9) { shift(@lastTen); }
@@ -256,14 +256,11 @@ if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lws
 else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
 }
 
-if ($anyMovesYet)
-{
 open(A, ">scores.txt");
 print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak\n";
 print A join (",", @lastTen); print A "\n";
 close(A);
 initGame(); printdeck();
-}
 }
 
 sub saveDeck
@@ -1147,13 +1144,15 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
   reinitBoard();
   print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
+  $temp = @undoArray[$x];
   #print "$x elts left\n";
   if (($_[0] == 2) || ($_[0] ==3)) { 	if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; return; } }
   if ($x >= 0)
   {
+	while (($x > 0) && ($temp eq "n+")) { pop(@undoArray); $x--; }
     $temp = pop(@undoArray);
 	$x--;
-	print "Popped $temp\n";
+	printDebug("Popped $temp\n");
 	if ($_[0] == 1)
 	{
 	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
@@ -1177,6 +1176,12 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	  $temp = pop(@undoArray);
 	  #print "extra-popped $temp\n";
 	}
+	}
+	while ((@undoArray[$x] =~ /^n+/) && ($x >= 0)) # this is to get rid of stray N+
+	{
+	  $x--;
+	  $temp = pop(@undoArray);
+	  #print "extra-popped $temp\n";
 	}
   }
   #print "@undoArray\n";
