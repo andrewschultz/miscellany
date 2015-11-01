@@ -331,6 +331,7 @@ sub loadDeck
   my $li = 0;
   my @temp;
   my @testArray;
+  my @reconArray;
   
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
@@ -375,7 +376,7 @@ sub loadDeck
 	  }
 	  if ($a =~ /^m=/i)
 	  {
-		@undoArray = split(/,/, $b);
+		@reconArray = split(/,/, $b);
 		next;
 	  }
 	  if ($a =~ /^hc=/)
@@ -399,6 +400,7 @@ sub loadDeck
 	    }
 	  $drawsLeft = (52-$cardsInPlay)/6;
 	}
+	@undoArray = ();
 	if ($#testArray > -1)
 	{
 	  $testing = 1;
@@ -436,14 +438,19 @@ sub loadDeck
 		  $testing = 0;
 		  return;
 		}
-		else
-		{
-		print "Processing @testArray[$_]\n";
-		procCmd(@testArray[$_]);
-		}
-	  }
+    }
 	  $quietMove = 0;
 	  $testing = 0;
+	}
+	else
+	{
+	  #print "Processing @testArray[$_]\n";
+	  for (0..$#reconArray)
+	  {
+	  $quietMove = 1;
+	  procCmd(@reconArray[$_]);
+	  $quietMove = 0;
+	  }
 	}
 	printdeck();
 	close(A);
@@ -468,7 +475,7 @@ sub forceArray
 {
     my $card = $_[0]; $card =~ s/^(f|f=)//g; $card =~ s/\(.*//g;
 	
-	if ((!$hidden) && (!$undo)) { print "Too many cards out.\n"; return; }
+	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
 	
 	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
@@ -1141,12 +1148,13 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 {
   $undo = 1;
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
+  my $oldCardsInPlay = $cardsInPlay;
   reinitBoard();
-  print "$cardsInPlay cards in play.\n";
+  #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
   $temp = @undoArray[$x];
   #print "$x elts left\n";
-  if (($_[0] == 2) || ($_[0] ==3)) { 	if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; return; } }
+  if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; return; } }
   if ($x >= 0)
   {
 	while (($x > 0) && ($temp eq "n+")) { pop(@undoArray); $x--; }
@@ -1187,8 +1195,11 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
   #print "@undoArray\n";
   for (0..$#undoArray)
   {
-    #for $j (1..52) { if (!$inStack{$j}) { print "$j=" . faceval($j) . " "; } } print "\n";
+    $undo = 1;
+    #print "@undoArray[$_]\n";
     procCmd(@undoArray[$_]);
+	$undo = 0;
+	printdeck();
   }
   $undo = 0;
   printdeck();
