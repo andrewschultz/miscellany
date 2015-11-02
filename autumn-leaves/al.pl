@@ -1,6 +1,8 @@
 use integer;
 use List::Util 'shuffle';
 
+$undoDebug = 1;
+
 my %inStack;
 @toggles = ( "off", "on" );
 
@@ -57,15 +59,22 @@ sub procCmd
 	my $anyEmpty = 0;
 	my $fromCardTop = $#{$stack[$_[0]]};
 	
-	while (($fromCard2 > 0) && ($stack[$_[0]][$#{$stack[$fromCardTop]}] == $stack[$_[0]][$#{$stack[$fromCardTop-1]}] - 1) && ($stack[$_[0]][$#{$stack[$fromCardTop]}] % 13)) { $fromCardTop--; }
-	print "FromCardTop = $fromCardTop\n";
+	print "$fromCardTop, $_[0], $stack[$_[0]][$fromCardTop], $stack[$_[0]][$fromCardTop-1]\n";
+	while (($fromCardTop > 0) && ($stack[$_[0]][$fromCardTop] == $stack[$_[0]][$fromCardTop-1] - 1) && ($stack[$_[0]][$fromCardTop] % 13)) { $fromCardTop--; } # see if we can move the whole stack
     for $tryRow (1..6)
 	{
 	  my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
 	  if ($#{$stack[$tryRow]} < 0) { $anyEmpty++; }
 	  #print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
 	  if ((cromu($fromCard, $toCard)) || (($#{$stack[$tryRow]} < 0) && !$emptyIgnore))
-	  { if ($tryRow != $_[0])
+	  {
+	    if (($toCard - $fromCard == 1) && ($fromCard % 13))
+		{
+		  tryMove("$_[0]$tryRow"); # force 4-3 if we have 4S, QS, 3S
+		  return;
+		}
+		print "$tryRow: $fromCardTop\n";
+	    if ($tryRow != $_[0])
 	    { if (($fromCardTop != 0) || ($#{$stack[$tryRow]} != -1)) { $totalRows++; $forceRow = $tryRow; } # empty, Kh-7h, 4h : 4h to 7h #print "$tryRow works. $#{$stack[$tryRow]}\n";
 	    }
 	  }
@@ -256,7 +265,7 @@ sub doAnotherGame
 {
 $moveBar = 1; $quickMove = 0;
 
-if (!$anyMovesYet) { print "No actual moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
+if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
 else
 {
 if ($#lastTen == 9) { shift(@lastTen); }
@@ -285,7 +294,7 @@ sub saveDeck
   {
     print B $a;
 	if ($a =~ /^;/) { last; }
-    if ($a =~ /^$_[0]/)
+    if ($a =~ /^$_[0]$/)
 	{
       print "Overwriting entry $_[0]\n";
 	  $overwrite = 1;
@@ -1162,6 +1171,17 @@ sub placeUndoEnd
 sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-card draw
 {
   $undo = 1;
+  if ($undoDebug)
+  {
+    print "Writing to debug...\n";
+    open(B, ">>undo-debug.txt");
+	print B "========\n";
+	print B "TC=" . join(",", @topCard) . "\n";
+	print B "M=" . join (",", @undoArray) . "\n";
+	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+	close(B);
+	if (-s "undo-debug.txt" > 100000) { print "WARNING trim undodebug file.\n"; }
+  }
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
   my $oldCardsInPlay = $cardsInPlay;
   reinitBoard();
@@ -1169,7 +1189,7 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
   $x = $#undoArray;
   $temp = @undoArray[$x];
   #print "$x elts left\n";
-  if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; return; } }
+  if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
   if ($x >= 0)
   {
 	while (($x > 0) && ($temp eq "n+")) { pop(@undoArray); $x--; }
