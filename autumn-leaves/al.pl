@@ -71,7 +71,6 @@ sub procCmd
 		  tryMove("$_[0]$tryRow"); # force 4-3 if we have 4S, QS, 3S
 		  return;
 		}
-		print "$tryRow: $fromCardTop\n";
 	    if ($tryRow != $_[0])
 	    { if (($fromCardTop != 0) || ($#{$stack[$tryRow]} != -1)) { $totalRows++; $forceRow = $tryRow; } # empty, Kh-7h, 4h : 4h to 7h #print "$tryRow works. $#{$stack[$tryRow]}\n";
 	    }
@@ -132,7 +131,7 @@ sub procCmd
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); return; }
   if ($_[0] =~ /[0-9]{4}/) { print "Commands can take up to three row numbers. Please eliminate one and try again.\n"; return; }
   if ($_[0] =~ /^sw0/) { printPoints(); return; }
-  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
+  if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^mr/) { $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; }
@@ -223,25 +222,29 @@ sub procCmd
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
-	if ($#{$stack[@x[2]]} == -1) { print "You can't move onto an empty stack. Well, you can, but it's not productive. Maybe you meant to switch two numbers.\n"; return; }
+	if ($#{$stack[@x[2]]} == -1) { print "You can't move onto an empty stack. Well, you can, but it's not productive. Maybe you meant to switch two numbers?\n"; return; }
 	placeUndoStart();
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
     autoShuffle(@x[2], @x[0], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); checkwin(); }
 	return;
   }
   if ($_[0] =~ /^[0-9]{3}/)
   { # detect 2 ways
+    $b4 = $#undoArray;
     @x = split(//, $_[0]);
     if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
 	placeUndoStart();
+	$quickMove = 1;
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
+	$quickMove = 0;
 	placeUndoEnd();
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
 	return;
   }
   if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
@@ -906,8 +909,11 @@ sub showLegalsAndStats
 
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
+  my $brkPoint = 72 * $drawsLeft;
   for my $breakRow (1..6)
   {
+    #we deserve credit for an empty row, but how much?
+    if ($#{$stack[$breakRow]} == 0) { $brkPoint += 13 - (($stack[$breakRow][0] - 1) % 13);  } #ok technically should check for 8h-7h-6h ??
     for (0..$#{$stack[$breakRow]} - 1)
 	{
 	  if ($stack[$breakRow][$_] != -1)
@@ -915,13 +921,20 @@ sub showLegalsAndStats
 	    if (($stack[$breakRow][$_] - $stack[$breakRow][$_+1] != 1) || (suit($stack[$breakRow][$_+1]) != suit($stack[$breakRow][$_+1])))
 		{
 		  $breaks++;
+		  if (suit($stack[$breakRow][$_]) == suit($stack[$breakRow][$_+1]))
+		  {
+		    $temp = $stack[$breakRow][$_] - $stack[$breakRow][$_+1];
+			if ($temp < 0) { $temp = 0 - $temp; } $brkPoint += ($temp - 1);
+		  }
+		  else { $brkPoint += 12; }
 		}
 	  }
+	  else { $brkPoint += 12; }
 	}
   }
   if ($chains != 48) # that means a win, no need to print stats
   {
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $breaks breaks, $chains chains, $order in order.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chains, $order in order, $breaks breaks, $brkPoint break points.\n";
   }
 }
 
@@ -1211,6 +1224,7 @@ sub undoToStart
   reinitBoard();
   @cardUnder = @backupCardUnder;
   @fixedDeck = @oneDeck;
+  @undoArray = ();
   printdeck();
 }
 
