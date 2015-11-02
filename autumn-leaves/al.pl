@@ -27,7 +27,11 @@ sub procCmdFromUser #this is so they can't use debug commands
 
 sub seeBlockedMoves
 {
-  if ($blockedMoves > 0)
+  if ($blockedMoves == 1)
+  {
+    print "Blocked move not shown.\n";
+  }
+  elsif ($blockedMoves > 1)
   {
     print "$blockedMoves blocked moves not shown.\n";
   }
@@ -51,6 +55,10 @@ sub procCmd
     my $fromCard = $stack[$_[0]][$#{$stack[$_[0]]}];
 	my $totalRows = 0;
 	my $anyEmpty = 0;
+	my $fromCardTop = $#{$stack[$_[0]]};
+	
+	while (($fromCard2 > 0) && ($stack[$_[0]][$#{$stack[$fromCardTop]}] == $stack[$_[0]][$#{$stack[$fromCardTop-1]}] - 1) && ($stack[$_[0]][$#{$stack[$fromCardTop]}] % 13)) { $fromCardTop--; }
+	print "FromCardTop = $fromCardTop\n";
     for $tryRow (1..6)
 	{
 	  my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
@@ -58,7 +66,7 @@ sub procCmd
 	  #print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
 	  if ((cromu($fromCard, $toCard)) || (($#{$stack[$tryRow]} < 0) && !$emptyIgnore))
 	  { if ($tryRow != $_[0])
-	    { $totalRows++; $forceRow = $tryRow; #print "$tryRow works. $#{$stack[$tryRow]}\n";
+	    { if (($fromCardTop != 0) || ($#{$stack[$tryRow]} != -1)) { $totalRows++; $forceRow = $tryRow; } # empty, Kh-7h, 4h : 4h to 7h #print "$tryRow works. $#{$stack[$tryRow]}\n";
 	    }
 	  }
 	}
@@ -110,6 +118,7 @@ sub procCmd
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
+  if ($_[0] =~ /^mr/) { $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
@@ -376,7 +385,7 @@ sub loadDeck
 	  }
 	  if ($a =~ /^m=/i)
 	  {
-		@reconArray = split(/,/, $b);
+		@undoArray = split(/,/, $b);
 		next;
 	  }
 	  if ($a =~ /^hc=/)
@@ -400,9 +409,9 @@ sub loadDeck
 	    }
 	  $drawsLeft = (52-$cardsInPlay)/6;
 	}
-	@undoArray = ();
 	if ($#testArray > -1)
 	{
+      @undoArray = ();
 	  $testing = 1;
 	  $quietMove = 1;
 	  my $errs = 0;
@@ -444,13 +453,6 @@ sub loadDeck
 	}
 	else
 	{
-	  #print "Processing @testArray[$_]\n";
-	  for (0..$#reconArray)
-	  {
-	  $quietMove = 1;
-	  procCmd(@reconArray[$_]);
-	  $quietMove = 0;
-	  }
 	}
 	printdeck();
 	close(A);
@@ -617,6 +619,8 @@ sub faceval
 sub printdeck
 {
   if ($testing) { return; }
+  if ($undo) { return; }
+  if ($quickMove) { return; }
   if ($vertical)
   { printdeckvertical(); }
   else
@@ -627,6 +631,7 @@ sub printdeckhorizontal
 {
   my $anyJumps = 0;
   for $d (1..6) { $anyJumps += jumpsFromBottom($d); }
+  my @rowLength = ();
 
   for $d (1..6)
   {
@@ -636,7 +641,7 @@ sub printdeckhorizontal
 	  my $temp = jumpsFromBottom($d);
 	  if ($temp) { $thisLine = "($temp) $thisLine"; } else { $thisLine = "    $thisLine"; }
 	}
-    for $q (0..$#{$stack[$_]})
+    for $q (0..$#{$stack[$d]})
 	{
 	$t1 = $stack[$d][$q];
 	if (!$t1) { last; }
@@ -658,7 +663,15 @@ sub printdeckhorizontal
 	}
 	
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
-	if ((!$undo) && (!$quickMove)) { print "$thisLine\n"; }
+	if ($showMaxRows) { my $tlt = $thisLine; $tlt =~ s/^[0-9]: //g; @tmpArray = split(/[=\-: ]/, $tlt); @rowLength[$d] = $#tmpArray + 1; }
+	if ($thisLine =~ [CDHS]) { @rowLength[$_]++; }
+	print "$thisLine\n";
+  }
+  if ($showMaxRows)
+  {
+    my $maxRows = 0;
+	for (1..6) { if (@rowLength[$_] > $maxRows) { $maxRows = @rowLength[$_]; } }
+	print "($maxRows max row length) ";
   }
   showLegalsAndStats();
 }
@@ -698,6 +711,7 @@ sub printdeckvertical
   my $temp;
   my $myString = "";
   my $anyJumps = 0;
+  my $maxRows = 0;
   if ($chainBreaks)
   {
   for $row (1..6)
@@ -705,17 +719,14 @@ sub printdeckvertical
     if ($temp = jumpsFromBottom($row)) { $myString .= "  ($temp)"; } else { $myString .= "     "; }
     @lookAhead[$row] = 0;
   }
-  if (($myString =~ /[0-9]/) && (!$undo) && (!$quickMove)) { print "$myString\n"; }
+  if ($myString =~ /[0-9]/) { print "$myString\n"; }
   }
-  if ((!$undo) && (!$quickMove))
-  {
   for $row (1..6)
   {
     print "   ";
 	if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row";
   }
   print "\n";
-  }
   do
   {
   $foundCard = 0;
@@ -759,8 +770,12 @@ sub printdeckvertical
 	}
 	else { $thisLine .= "     "; }
   }
-  if (($foundCard) && (!$undo) && (!$quickMove)) { print "$thisLine\n"; }
+  if ($foundCard) { print "$thisLine\n"; $maxRows++; }
   } while ($foundCard);
+  if ($showMaxRows)
+  {
+    print "($maxRows max rows) ";
+  }
   showLegalsAndStats();
 }
 
@@ -1046,7 +1061,7 @@ sub canChain
   {
     $fromLoc--;
   }
-  if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if ($_[2] > 0) { print "Revealing new suit must be done manually e.g. $_[0]$_[1].\n"; } return 0; } } # 8H-7C-6C won't jump to 
+  if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if ($_[2] > 0) { print "With only 1 empty row, revealing new suit must be done manually e.g. $_[0]$_[1].\n"; } return 0; } } # 8H-7C-6C won't jump to 
   if ($fromLoc == $#{$stack[$_[0]]} - 12) { if ($_[2] >= 0) { print "Suit complete after twiddling. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; } return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
   if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
@@ -1198,8 +1213,6 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
     $undo = 1;
     #print "@undoArray[$_]\n";
     procCmd(@undoArray[$_]);
-	$undo = 0;
-	printdeck();
   }
   $undo = 0;
   printdeck();
@@ -1363,8 +1376,9 @@ sub initGlobal
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
-  open(A, "al.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; close(A);
+  open(A, "al-sav.txt");
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5];close(A);
+  print "$a = first line\n";
 }
 
 sub showOpts
@@ -1449,6 +1463,7 @@ s=saves deck name
 h=shows hidden/left cards
 l=loads deck name
 t=loads test
+mr = show max rows
 sd=save default
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 sw0=shows odds of points to start with
