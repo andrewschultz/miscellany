@@ -1,8 +1,6 @@
 use integer;
 use List::Util 'shuffle';
 
-$undoDebug = 1;
-
 my %inStack;
 @toggles = ( "off", "on" );
 
@@ -87,6 +85,8 @@ sub procCmd
   if ($_[0] =~ /^uu$/) { undoToStart(); return; }
   if ($_[0] =~ /^ud$/) { undo(2); return; }
   if ($_[0] =~ /^ud1$/) { undo(3); return; }
+  if ($_[0] =~ /^ul$/) { print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; }
+  if ($_[0] =~ /^du$/) { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; }
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
@@ -1183,6 +1183,7 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	if (-s "undo-debug.txt" > 100000) { print "WARNING trim undodebug file.\n"; }
   }
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
+  @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
@@ -1492,6 +1493,8 @@ u=undo
 u1=undo one move
 ud=undo to before last 6-card draw
 ud1=undo to last 6-card draw
+ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not perfect yet.)
+du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
