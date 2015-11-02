@@ -90,6 +90,7 @@ sub procCmd
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
+    my $oldEmptyRows = emptyRows();
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
@@ -112,6 +113,13 @@ sub procCmd
 	placeUndoStart();
 	$quickMove = 1;
 	autoShuffle($thisRow, @rows[0], @rows[1]);
+	
+	if ((emptyRows()) && ($oldEmptyRows - emptyRows() == 2))
+	{
+	  $moveBar = 0;
+	  my $q = firstEmptyRow();
+	  cleanStuffUp(@rows[1], @rows[0], $q);
+	}
 	$quickMove = 0;
 	placeUndoEnd();
 	printdeck();
@@ -215,6 +223,7 @@ sub procCmd
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
+	if ($#{$stack[@x[2]]} == -1) { print "You can't move onto an empty stack. Well, you can, but it's not productive. Maybe you meant to switch two numbers.\n"; return; }
 	placeUndoStart();
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
@@ -1086,11 +1095,58 @@ sub canChain
   return 0;
 }
 
+sub cleanStuffUp
+{
+  my $s0 = botSuit($_[0]);
+  my $s1 = botSuit($_[1]);
+  if ($s0 != $s1) { return; }
+  if (topCardInSuit($_[0]) > topCardInSuit($_[1]))
+  {
+    autoShuffle($_[1], $_[0], $_[2]);
+  }
+  else
+  {
+    autoShuffle($_[0], $_[1], $_[2]);
+  }
+}
+
+sub topCardInSuit
+{
+  my $temp = $#{$stack[$_[0]]};
+  while (($temp > 0) && (suit($stack[$_[0]][$temp]) == suit($stack[$_[0]][$temp]-1)) && ($stack[$_[0]][$temp-1] > $stack[$_[0]][$temp])) { $temp--; }
+  return $stack[$_[0]][$temp];
+}
+
+sub botSuit
+{
+  return suit(lowCard($_[0]));
+}
+
+sub lowCard
+{
+  return $stack[$_[0]][$#{$stack[$_[0]]}]
+}
+
+sub firstEmptyRow
+{
+  my $retVal = 0;
+  for my $rv (1..6)
+  {
+    if (!$stack[$rv][0]) { return $rv; }
+  }
+  return 0;
+}
+
 sub emptyRows
 {
   my $retVal = 0;
   for (1..6) { if (!$stack[$_][0]) { $retVal++; } }
   return $retVal;
+}
+
+sub isEmpty
+{
+  if ($stack[$_[0]][0]) { return 0; } else { return 1; }
 }
 
 sub autoShuffle # autoshuffle 0 to 1 via 2
@@ -1168,7 +1224,7 @@ sub placeUndoEnd
   if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
 }
 
-sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-card draw
+sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
 {
   $undo = 1;
   if ($undoDebug)
@@ -1199,7 +1255,7 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	printDebug("Popped $temp\n");
 	if ($_[0] == 1)
 	{
-	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
+	while ((@undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
 	{
 	  $x--; $temp = pop(@undoArray);
 	}
@@ -1208,13 +1264,13 @@ sub undo # 1 = undo just one move, 2 = undo to last cards-out 3 = undo last 6-ca
 	{
 	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); } if (($_[0] == 3) && ($x > 0)) { $x--; pop(@undoArray); }
 	}
-	elsif (($temp eq "n-") && ($_[0] != 1))
+	elsif (($temp eq "n-"))
 	{
 	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	else
 	{
-	while ((@undoArray[$x] =~ /^(f|n-)/) && ($x >= 0))
+	while ((@undoArray[$x] =~ /^(f|n\+)/) && ($x >= 0))
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
