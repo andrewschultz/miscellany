@@ -430,9 +430,15 @@ sub loadDeck
 		@{cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
-	  if (($a !~ /m=/i) && ($a =~ /[a-z]/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
+	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
 	  @{$stack[$rowsRead]} = split(/,/, $a);
+		print "$rowsRead: @{$stack[$rowsRead]}\n";
+	    for (0..$#{$stack[$rowsRead]})
+		{
+		if ($stack[$rowsRead][$_] =~ /[cdhs]$/i) { print "$stack[$rowsRead][$_] to " . revCard($stack[$rowsRead][$_]) . "\n"; $stack[$rowsRead][$_] = revCard($stack[$rowsRead][$_]); }
+		}
+		print "$rowsRead: @{$stack[$rowsRead]}\n";
 	    for $card (@{$stack[$rowsRead]})
 	    {
 		if ($card > 0)
@@ -498,6 +504,20 @@ sub loadDeck
   print "No $search found in $filename.\n";
 }
 
+sub revCard
+{
+  my $retVal = 0;
+  my $lc0 = $_[0];
+
+  $last = $lc0; $last =~ s/.*(.)/$1/g;
+  $retVal = $sre{$last};
+	
+  $lc0 =~ s/.$//g;
+  if ($rev{$lc0}) { $retVal += $rev{$lc0}; } else { $retVal += $lc0; }
+
+  return $retVal;
+}
+
 sub hidCards
 {
   my $retVal = 0;
@@ -517,7 +537,7 @@ sub forceArray
 	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
-	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board.\n"; return; }
+	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board or in the force queue.\n"; return; }
 	push (@force, $card); delete ($inStack{$card}); if ((!$undo) && (!$quickMove)) { print faceval($card) . " successfully pushed.\n"; }
 	return;
 	}
@@ -541,6 +561,8 @@ my $deckTry = 0;
 my $thisStartMoves = 0;
 
 $anyMovesYet = 0;
+
+@force = ();
 
 do
 { 
@@ -1002,7 +1024,10 @@ sub tryMove
   {
 	if (!cromu($stack[$from][$fromEl], $stack[$to][$toEl]))
 	{
-	  if (!$quickMove) { print "Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n"; }
+	  if (!$quickMove)
+	  {
+	    print "$from-$to: Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n";
+	  }
 	  $moveBar = 1;
 	  return;
 	}
@@ -1268,6 +1293,7 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
+  @force = ();
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
@@ -1289,12 +1315,23 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
-	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); }
-	if (($_[0] == 3) && ($x > 0)) { for (1..6) { $x--; pop(@undoArray); } } # must pop "force" or else it's not a very flexible undo
+	  #print "1=============\n@undoArray\n";
+	while ((@undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); }
+	  #print "2=============\n@undoArray\n";
+	if (($_[0] == 3) && ($x > 0))  # encountered df.
+	{
+	  $temp = 0;
+	  pop(@undoArray); $x = $#undoArray;
+	  while ((@undoArray[$x] =~ /^f/) && ($x > 0))
+	  {
+	    $x--; pop(@undoArray); $temp++;
+	  }
+	  if ($temp != 6) { print "WARNING: popped wrong number of forces ($temp) in undo array. Push ul for full details.\n"; }
+	}
 	}
 	elsif (($temp eq "n-"))
 	{
-	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
+	while ((@undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	else
 	{
@@ -1316,6 +1353,7 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
   for (0..$#undoArray)
   {
     $undo = 1;
+	#$undo = 0;
     #print "@undoArray[$_]\n";
     procCmd(@undoArray[$_]);
   }
@@ -1480,6 +1518,15 @@ sub initGlobal
   $youWon = 0;
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
+  
+  $sre{"c"} = 0;
+  $sre{"d"} = 13;
+  $sre{"h"} = 26;
+  $sre{"s"} = 39;
+  $rev{"a"} = 1;
+  $rev{"j"} = 11;
+  $rev{"q"} = 12;
+  $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
   my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5]; $saveAtEnd = @opts[6]; close(A);
@@ -1590,5 +1637,3 @@ o=prints options' current settings
 debug shows debug text
 EOT
 }
-
-#?? club<->diamond doesn't work 10c-6c and 9d-7c
