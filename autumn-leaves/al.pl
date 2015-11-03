@@ -6,6 +6,8 @@ my %inStack;
 
 readScoreFile(); initGlobal();
 
+if ($startWith > 7) { print "First draw may take a bit...\n"; }
+
 initGame(); printdeck();
 
 if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); }
@@ -921,7 +923,7 @@ sub showLegalsAndStats
 
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
-  my $brkPoint = 18 * $drawsLeft;
+  my $brkPoint = 24 * $drawsLeft;
   for my $breakRow (1..6)
   {
     #we deserve credit for an empty row, but how much?
@@ -935,12 +937,12 @@ sub showLegalsAndStats
 		  $breaks++;
 		  if (suit($stack[$breakRow][$_]) == suit($stack[$breakRow][$_+1]))
 		  {
-			$brkPoint++;
+		    if ($stack[$breakRow][$_] < $stack[$breakRow][$_+1]) { $brkPoint += 2; } else { $brkPoint += 1; }
 		  }
-		  else { $brkPoint += 2; }
+		  else { $brkPoint += 3; }
 		}
 	  }
-	  else { $brkPoint += 3; }
+	  else { $brkPoint += 4; }
 	}
   }
   if ($chains != 48) # that means a win, no need to print stats
@@ -1287,7 +1289,8 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
-	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); } if (($_[0] == 3) && ($x > 0)) { $x--; pop(@undoArray); }
+	while (($undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); }
+	if (($_[0] == 3) && ($x > 0)) { for (1..6) { $x--; pop(@undoArray); } } # must pop "force" or else it's not a very flexible undo
 	}
 	elsif (($temp eq "n-"))
 	{
@@ -1480,7 +1483,7 @@ sub initGlobal
 
   open(A, "al-sav.txt");
   my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5]; $saveAtEnd = @opts[6]; close(A);
-  print "$a = first line\n";
+  #print "$a = first line\n";
 }
 
 sub showOpts
