@@ -1463,7 +1463,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
-  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$showMaxRows,$saveAtEnd\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -1479,7 +1479,7 @@ sub initGlobal
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5];close(A);
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5]; $saveAtEnd = @opts[6]; close(A);
   print "$a = first line\n";
 }
 
@@ -1493,6 +1493,8 @@ sub showOpts
   print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
   print "Begin with shuffling one-aparts (1b) @toggles[$beginOnes].\n";
   print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
+  print "Show max rows (mr) @toggles[$showMaxRows].\n";
+  print "Save undos at end (sae) @toggles[$saveAtEnd].\n";
 }
 
 sub readScoreFile
