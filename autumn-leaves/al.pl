@@ -51,13 +51,12 @@ sub procCmd
   if ($_[0] =~ /^sd/) { saveDefault(); return; }
   if ($_[0] =~ /^[0-9]$/)
   {
-    if ($_[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; }
+    if ($_[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; return; }
     my $fromCard = $stack[$_[0]][$#{$stack[$_[0]]}];
 	my $totalRows = 0;
 	my $anyEmpty = 0;
 	my $fromCardTop = $#{$stack[$_[0]]};
 	
-	print "$fromCardTop, $_[0], $stack[$_[0]][$fromCardTop], $stack[$_[0]][$fromCardTop-1]\n";
 	while (($fromCardTop > 0) && ($stack[$_[0]][$fromCardTop] == $stack[$_[0]][$fromCardTop-1] - 1) && ($stack[$_[0]][$fromCardTop] % 13)) { $fromCardTop--; } # see if we can move the whole stack
     for $tryRow (1..6)
 	{
@@ -85,10 +84,12 @@ sub procCmd
   if ($_[0] =~ /^ud$/) { undo(2); return; }
   if ($_[0] =~ /^ud1$/) { undo(3); return; }
   if ($_[0] =~ /^ul$/) { print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; }
+  if ($_[0] =~ /^sae$/) { $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now @toggles[$saveAtEnd].\n"; return; }
+  if ($_[0] =~ /^sl$/) { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; }
   if ($_[0] =~ /^du$/) { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; }
   if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
-  {
+  {	
     my $oldEmptyRows = emptyRows();
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
@@ -275,21 +276,32 @@ sub anyChainAvailable
 
 sub doAnotherGame
 {
-$moveBar = 1; $quickMove = 0;
+  $moveBar = 1;
+  $quickMove = 0;
 
-if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
-else
-{
-if ($#lastTen == 9) { shift(@lastTen); }
-push(@lastTen, $youWon);
-if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lwstreak) { $lwstreak = $wstreak; } }
-else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
-}
+  if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
+  else
+  {
+  if ($#lastTen == 9) { shift(@lastTen); }
+  push(@lastTen, $youWon);
 
-open(A, ">scores.txt");
-print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak\n";
-print A join (",", @lastTen); print A "\n";
-close(A);
+  if ($youWon) { $youWon = 0; $wins++; $wstreak++; $lstreak=0; if ($wstreak > $lwstreak) { $lwstreak = $wstreak; } }
+  else { $losses++; $wstreak = 0; $lstreak++; if ($lstreak > $llstreak) { $llstreak = $lstreak; } }
+  }
+
+  open(A, ">scores.txt");
+  print A "$wins,$losses,$wstreak,$lstreak,$lwstreak,$llstreak\n";
+  print A join (",", @lastTen); print A "\n";
+  close(A);
+
+  if ($saveAtEnd)
+  {
+  print "(Adding complete game to undo-debug.txt.)\n";
+  open(B, ">>undo-debug.txt"); print B "s=$wins-$losses\n1,1\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n";
+  for (1..6) { print B join(",", @{$stack[$_]}) . "\n"; }
+  close(B);
+  }
+
 initGame(); printdeck();
 }
 
@@ -909,11 +921,11 @@ sub showLegalsAndStats
 
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
-  my $brkPoint = 72 * $drawsLeft;
+  my $brkPoint = 18 * $drawsLeft;
   for my $breakRow (1..6)
   {
     #we deserve credit for an empty row, but how much?
-    if ($#{$stack[$breakRow]} == 0) { $brkPoint += 13 - (($stack[$breakRow][0] - 1) % 13);  } #ok technically should check for 8h-7h-6h ??
+    if ($stack[$breakRow][0] > 0) { $brkPoint++;  }
     for (0..$#{$stack[$breakRow]} - 1)
 	{
 	  if ($stack[$breakRow][$_] != -1)
@@ -923,13 +935,12 @@ sub showLegalsAndStats
 		  $breaks++;
 		  if (suit($stack[$breakRow][$_]) == suit($stack[$breakRow][$_+1]))
 		  {
-		    $temp = $stack[$breakRow][$_] - $stack[$breakRow][$_+1];
-			if ($temp < 0) { $temp = 0 - $temp; } $brkPoint += ($temp - 1);
+			$brkPoint++;
 		  }
-		  else { $brkPoint += 12; }
+		  else { $brkPoint += 2; }
 		}
 	  }
-	  else { $brkPoint += 12; }
+	  else { $brkPoint += 3; }
 	}
   }
   if ($chains != 48) # that means a win, no need to print stats
@@ -1564,6 +1575,7 @@ u1=undo one move
 ud=undo to before last 6-card draw
 ud1=undo to last 6-card draw
 ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not perfect yet.)
+sl=save last undo array (to undo-debug.txt)
 du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
