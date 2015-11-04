@@ -151,6 +151,7 @@ sub procCmd
   if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
   if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game.\n"; return; }
+  if ($_[0] =~ /^af/) { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; }
   if ($_[0] =~ /^ua/) { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves: " . join(",", @undoArray) . "\n"; return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
@@ -438,7 +439,7 @@ sub loadDeck
 		{
 		if ($stack[$rowsRead][$_] =~ /[cdhs]$/i) { print "$stack[$rowsRead][$_] to " . revCard($stack[$rowsRead][$_]) . "\n"; $stack[$rowsRead][$_] = revCard($stack[$rowsRead][$_]); }
 		}
-		print "$rowsRead: @{$stack[$rowsRead]}\n";
+		#print "$rowsRead: @{$stack[$rowsRead]}\n";
 	    for $card (@{$stack[$rowsRead]})
 	    {
 		if ($card > 0)
@@ -534,7 +535,9 @@ sub forceArray
 	
 	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
 	
-	if ($card == 0) { push(@force, $card); print "Forcing null, for instance, for a draw.\n"; return; }
+	if ($card eq "0") { push(@force, $card); print "Forcing null, which is usually just for testing purposes.\n"; return; }
+	if ($card =~ /[cdhs]/i) { print "Changing suit of $card to number.\n"; $card = revCard($card); }
+	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
 	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board or in the force queue.\n"; return; }
@@ -1619,6 +1622,7 @@ l=loads deck name
 t=loads test
 mr = show max rows
 sd=save default
+af=show force array
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 sw0=shows odds of points to start with
 sb=show blocked moves toggle
