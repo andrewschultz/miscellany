@@ -145,6 +145,7 @@ sub procCmd
   if ($_[0] =~ /^h/) { showhidden(); return; }
   if ($_[0] =~ /^ll/i) { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
+  if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
@@ -223,6 +224,7 @@ sub procCmd
   }
   if (($_[0] =~ /^w[0-9]{3}/) || ($_[0] =~ /^[0-9]{3}w/))
   {
+    my $oldEmptyRows = emptyRows();
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
@@ -231,6 +233,15 @@ sub procCmd
 	$quickMove = 1;
     autoShuffle(@x[0], @x[2], @x[1]);
     autoShuffle(@x[2], @x[0], @x[1]);
+
+	if ((emptyRows()) && ($oldEmptyRows - emptyRows() == 1))
+	{
+	  print "Meep\n";
+	  $moveBar = 0;
+	  my $q = firstEmptyRow();
+	  cleanStuffUp(@x[0], @x[1], $q);
+	}
+	
 	$quickMove = 0;
 	placeUndoEnd();
 	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); checkwin(); }
@@ -377,6 +388,8 @@ sub loadDeck
   my @temp;
   my @testArray;
   my @reconArray;
+  my $loadFuzzy = 0;
+  if ($_[1]) { $loadFuzzy = 1;
   
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
@@ -388,7 +401,7 @@ sub loadDeck
 	$fixedDeckOpt = 0;
 	my $rowsRead = 0;
 	if ($a =~ /$;/) { last; }
-    if ("$a" eq "$search")
+    if (("$a" eq "$search") || ($loadFuzzy && ($a =~ /$search/i)))
 	{
 	print "Found $search in $filename, line $li.\n";
 	$lastSearchCmd = $a;
@@ -434,7 +447,7 @@ sub loadDeck
 	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
 	  @{$stack[$rowsRead]} = split(/,/, $a);
-		print "$rowsRead: @{$stack[$rowsRead]}\n";
+		#print "$rowsRead: @{$stack[$rowsRead]}\n";
 	    for (0..$#{$stack[$rowsRead]})
 		{
 		if ($stack[$rowsRead][$_] =~ /[cdhs]$/i) { print "$stack[$rowsRead][$_] to " . revCard($stack[$rowsRead][$_]) . "\n"; $stack[$rowsRead][$_] = revCard($stack[$rowsRead][$_]); }
@@ -487,11 +500,19 @@ sub loadDeck
 		  if ($errs == 0) { print "Test $search succeeded.\n"; }
 		  $quietMove = 0;
 		  $testing = 0;
-		  return;
-		}
     }
 	  $quietMove = 0;
 	  $testing = 0;
+		  if ($loadFuzzy)
+		  {
+		    while ($a = <A>)
+			{
+			  if ($a =~ /^s=/) { $a =~ s/^s=//g; if ($a =~ /$search/) { print "Note: duplicate save game $a found too.\n"; } }
+			}
+		  }
+		  close(A);
+		  return;
+		}
 	}
 	else
 	{
@@ -1342,14 +1363,14 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
-	  #print "extra-popped $temp\n";
+	  #print "extra-popped 1 $temp\n";
 	}
 	}
-	while ((@undoArray[$x] =~ /^n+/) && ($x >= 0)) # this is to get rid of stray N+
+	while ((@undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
 	{
 	  $x--;
 	  $temp = pop(@undoArray);
-	  #print "extra-popped $temp\n";
+	  #print "extra-popped 2 $temp\n";
 	}
   }
   #print "@undoArray\n";
@@ -1619,6 +1640,7 @@ d draws 6 cards (you get 5 of these), df forces if "good" moves are left.
 s=saves deck name
 h=shows hidden/left cards
 l=loads deck name
+lf=loads deck name (fuzzy)
 t=loads test
 mr = show max rows
 sd=save default
