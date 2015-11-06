@@ -54,12 +54,15 @@ sub procCmd
   if ($_[0] =~ /^[0-9]$/)
   {
     if ($_[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; return; }
-    my $fromCard = $stack[$_[0]][$#{$stack[$_[0]]}];
 	my $totalRows = 0;
 	my $anyEmpty = 0;
 	my $fromCardTop = $#{$stack[$_[0]]};
+	my $temp = 0;
 	
 	while (($fromCardTop > 0) && ($stack[$_[0]][$fromCardTop] == $stack[$_[0]][$fromCardTop-1] - 1) && ($stack[$_[0]][$fromCardTop] % 13)) { $fromCardTop--; } # see if we can move the whole stack
+	
+    my $fromCard = $stack[$_[0]][$fromCardTop];
+
     for $tryRow (1..6)
 	{
 	  my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
@@ -78,7 +81,11 @@ sub procCmd
 	  }
 	}
 	  if ($totalRows == 0) { print "No row to move $_[0] to."; if ($anyEmpty) { print " There's an empty one, but you disabled it with e."; } print "\n"; return; }
-	  elsif ($totalRows > 1) { print "Too many rows ($totalRows) to move $_[0] to.\n"; return; }
+	  elsif ($totalRows > 1)
+	  {
+	    if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$_[0]" . firstEmptyRow()); return; }
+	    print "Too many rows ($totalRows) to move $_[0] to.\n"; return;
+	  }
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
@@ -149,6 +156,7 @@ sub procCmd
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
+  if ($_[0] =~ /^tf/) { runEachTest(); return; }
   if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
   if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game.\n"; return; }
@@ -169,7 +177,7 @@ sub procCmd
 	my $empties;
 	my $localFrom, my $localTo, my $curMinToFlip;
     @x = split(//, $_[0]);
-	print "3-waying stacks @x[1], @x[2] and @x[3].\n";
+	printNoTest("3-waying stacks @x[1], @x[2] and @x[3].\n");
 	$quickMove = 1;
 	placeUndoStart();
     while (anyChainAvailable(@x[1], @x[2], @x[3]))
@@ -206,7 +214,10 @@ sub procCmd
 	}
 	placeUndoEnd();
 	$quickMove = 0;
+	if (!$testing)
+	{
 	if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
+	}
 	return;
   }
   if (($_[0] =~ /^[0-9]{3}x/) || ($_[0] =~ /^x[0-9]{3}/))
@@ -236,10 +247,14 @@ sub procCmd
 
 	if ((emptyRows()) && ($oldEmptyRows - emptyRows() == 1))
 	{
-	  print "Meep\n";
+	  $moveBar = 0;
+	  $quickMove = 0;
+	  printdeck();
+	  $quickMove = 1;
+	  print "==================\n";
 	  $moveBar = 0;
 	  my $q = firstEmptyRow();
-	  cleanStuffUp(@x[0], @x[1], $q);
+	  cleanStuffUp(@x[1], @x[2], $q);
 	}
 	
 	$quickMove = 0;
@@ -282,7 +297,7 @@ sub anyChainAvailable
 	{
 	  $gotStraight = 1;
 	  for $back (0..12) { if ($stack[$_[$temp]][$sz] + $back != $stack[$_[$temp]][$sz-$back]) { $gotStraight = 0; } }
-	  if ($gotStraight == 1) { print "You got the whole suit straight on row $_[$temp].\n"; return 0; }
+	  if (($gotStraight == 1) && (!$testing)) { print "You got the whole suit straight on row $_[$temp].\n"; return 0; }
 	}
 	return  canChain(@x[1], @x[2], -1) || canChain(@x[1], @x[3], -1) || canChain(@x[2], @x[3], -1) || canChain(@x[2], @x[1], -1) || canChain(@x[3], @x[1], -1) || canChain(@x[3], @x[2], -1);
   }
@@ -380,7 +395,7 @@ sub saveDeck
 
 sub loadDeck
 {
-  if ($_[1] =~ /debug/) { $filename = "al.txt"; print "DEBUG test\n"; } else { $filename="al-sav.txt"; }
+  if ($_[1] =~ /debug/) { $filename = "al.txt"; printNoTest("DEBUG test\n"); } else { $filename="al-sav.txt"; }
   chomp($_[0]);
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
@@ -389,7 +404,7 @@ sub loadDeck
   my @testArray;
   my @reconArray;
   my $loadFuzzy = 0;
-  if ($_[1]) { $loadFuzzy = 1;
+  if ($_[1]) { $loadFuzzy = 1; }
   
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
   my $hidRow = 0;
@@ -400,10 +415,10 @@ sub loadDeck
     chomp($a);
 	$fixedDeckOpt = 0;
 	my $rowsRead = 0;
-	if ($a =~ /$;/) { last; }
+	if ($a =~ /;$/) { last; }
     if (("$a" eq "$search") || ($loadFuzzy && ($a =~ /$search/i)))
 	{
-	print "Found $search in $filename, line $li.\n";
+	printNoTest("Found $search in $filename, line $li.\n");
 	$lastSearchCmd = $a;
 	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
 	#topCards line
@@ -473,7 +488,6 @@ sub loadDeck
 	  my $expVal = 0;
 	  for (0..$#testArray)
 	  {
-	    printDebug("Testing @testArray[$_]\n");
 	    if (@testArray[$_] =~ /=/)
 		{
 		  @q = split(/=/, @testArray[$_]);
@@ -482,7 +496,7 @@ sub loadDeck
 		  printDebug("$expVal at @r[0] @r[1]\n");
 		  if ($expVal >= 0)
 		  {
-		    if (@q[1] != $expVal) { $errs++; print "$search: @r[0],@r[1] should be $expVal but is @q[1].\n"; }
+		    if (@q[1] != $expVal) { $errs++; print "$search: @r[0],@r[1] should be @q[1] but is $expVal.\n"; }
 			else
 			{
 			  printDebug("$search: @r[0],@r[1] should be $expVal and is.\n");
@@ -497,26 +511,28 @@ sub loadDeck
 			  printDebug("$search: @r[0],@r[1] should not be $expVal and isn't.\n");
 			}
 		  }
-		  if ($errs == 0) { print "Test $search succeeded.\n"; }
-		  $quietMove = 0;
-		  $testing = 0;
-    }
+    } else { procCmd(@testArray[$_]); }
+		}
 	  $quietMove = 0;
 	  $testing = 0;
-		  if ($loadFuzzy)
-		  {
-		    while ($a = <A>)
-			{
-			  if ($a =~ /^s=/) { $a =~ s/^s=//g; if ($a =~ /$search/) { print "Note: duplicate save game $a found too.\n"; } }
-			}
-		  }
+		  if ($errs == 0) { $totalTestPass++; print "Test $search succeeded.\n"; } else { print "Test $search had $errs errors.\n"; $totalTestFail++; if ($inMassTest) { push(@fail, $search); } }
 		  close(A);
 		  return;
-		}
 	}
 	else
 	{
 	}
+		  if ($loadFuzzy)
+		  {
+		    while ($a = <A>)
+			{
+			  if ($a =~ /^s=/)
+			  {
+			    $a =~ s/^s=//g;
+			    if ($a =~ /$search/) { print "Note: duplicate save game $a found too.\n"; }
+			  }
+			}
+		  }
 	printdeck();
 	close(A);
 	return;
@@ -524,6 +540,28 @@ sub loadDeck
   }
   
   print "No $search found in $filename.\n";
+}
+
+sub runEachTest
+{
+  my @tests = ();
+  open(A, "al.txt");
+  while ($a = <A>) { if ($a =~ /^s=/) { $b = $a; chomp($b); $b =~ s/^.=//g; push(@tests, $b); } if ($a =~ /;$/) { last; } }
+  close(A);
+  
+  @fail = ();
+  
+  $totalTestPass = 0;
+  $totalTestFail = 0;
+  
+  $inMassTest = 1;
+  for $t (@tests)
+  {
+    loadDeck($t, "debug");
+  }
+  $inMassTest = 0;
+  print "Tests passed = $totalTestPass, test failed = $totalTestFail.\n";
+  print "List of failures = @fail\n";
 }
 
 sub revCard
@@ -1172,15 +1210,18 @@ sub canChain
 
 sub cleanStuffUp
 {
+  $moveBar = 0;
   my $s0 = botSuit($_[0]);
   my $s1 = botSuit($_[1]);
   if ($s0 != $s1) { return; }
   if (topCardInSuit($_[0]) > topCardInSuit($_[1]))
   {
+    autoShuffle($_[0], $_[1], $_[2]);
     autoShuffle($_[1], $_[0], $_[2]);
   }
   else
   {
+    autoShuffle($_[1], $_[0], $_[2]);
     autoShuffle($_[0], $_[1], $_[2]);
   }
 }
@@ -1461,7 +1502,7 @@ sub checkwin
 	  if ($inarow == 12) { $suitsDone++; }
 	}
   }
-  if ((!$undo) && (!$quickMove))
+  if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
   if ($suitsDone == 4) { print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } doAnotherGame(); return; }
   if ($suitsDone) { print "$suitsDone suits completed.\n"; }
@@ -1594,9 +1635,14 @@ close(A);
 }
 }
 
+sub printNoTest
+{
+  if (!$inMassTest) { print $_[0]; }
+}
+
 sub printDebug
 {
-  if ($debug) { return; }
+  if ($debug) { print "$_[0]"; }
 }
 
 sub printPoints
@@ -1642,6 +1688,7 @@ h=shows hidden/left cards
 l=loads deck name
 lf=loads deck name (fuzzy)
 t=loads test
+tf=full test
 mr = show max rows
 sd=save default
 af=show force array
