@@ -121,14 +121,7 @@ sub procCmd
 	
 	placeUndoStart();
 	$quickMove = 1;
-	autoShuffle($thisRow, @rows[0], @rows[1]);
-	
-	if ((emptyRows()) && ($oldEmptyRows - emptyRows() == 2))
-	{
-	  $moveBar = 0;
-	  my $q = firstEmptyRow();
-	  cleanStuffUp(@rows[1], @rows[0], $q);
-	}
+	autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	$quickMove = 0;
 	placeUndoEnd();
 	printdeck();
@@ -227,7 +220,7 @@ sub procCmd
 	$b4 = $#undoArray;
 	placeUndoStart();
 	$quickMove = 1;
-    autoShuffle(@x[0], @x[2], @x[1]);
+    autoShuffleExt(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
 	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
@@ -239,27 +232,24 @@ sub procCmd
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
-	if ($#{$stack[@x[2]]} == -1) { print "You can't move onto an empty stack. Well, you can, but it's not productive. Maybe you meant to switch two numbers?\n"; return; }
+	my $wrongOrder = 0;
+	if ($#{$stack[@x[2]]} == -1)
+	{
+	  $temp = @x[2]; @x[2] = @x[1]; @x[1] = $temp;
+	  $wrongOrder = 1;
+	}
 	placeUndoStart();
 	$quickMove = 1;
-    autoShuffle(@x[0], @x[2], @x[1]);
-    autoShuffle(@x[2], @x[0], @x[1]);
-
-	if ((emptyRows()) && ($oldEmptyRows - emptyRows() == 1))
-	{
-	  $moveBar = 0;
-	  $quickMove = 0;
-	  printdeck();
-	  $quickMove = 1;
-	  print "==================\n";
-	  $moveBar = 0;
-	  my $q = firstEmptyRow();
-	  cleanStuffUp(@x[1], @x[2], $q);
-	}
-	
+    autoShuffleExt(@x[0], @x[2], @x[1]);
+    autoShuffleExt(@x[2], @x[0], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); checkwin(); }
+	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else
+	{
+	  printdeck();
+	  print "NOTE: I switched the last two numbers. You can UNDO if it doesn't work for you.\n";
+	  checkwin();
+	}
 	return;
   }
   if ($_[0] =~ /^[0-9]{3}/)
@@ -733,6 +723,20 @@ sub faceval
   my $x = $_[0] - 1;
   my $suit = @sui[$x/13];
   return "$vals[$x%13]$suit";
+}
+
+sub printdeckforce
+{
+  my $testold = $testing;
+  my $undoold = $undo;
+  my $qmold = $quickMove;
+  $undo = $testing = $quickMove = 0;
+  print "============start force print deck\n";
+  printdeck();
+  print "============end force print deck\n";
+  $quickMove = $qmold;
+  $undo = $undoold;
+  $testing = $testold;
 }
 
 sub printdeck
@@ -1265,6 +1269,21 @@ sub isEmpty
   if ($stack[$_[0]][0]) { return 0; } else { return 1; }
 }
 
+sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if stuff is left on 2
+{
+  autoShuffle($_[0], $_[1], $_[2]);
+  if (isEmpty($_[2]))
+  {
+    return;
+  }
+  if (!emptyRows()) { return; }
+  #printdeckforce();
+  my $fer = firstEmptyRow();
+  $moveBar = 0;
+  #print "Trying $_[2] to $_[1] via $fer.\n";
+  autoShuffle($_[2], $_[1], $fer);
+}
+
 sub autoShuffle # autoshuffle 0 to 1 via 2
 {
   if ($moveBar) { return; }
@@ -1559,7 +1578,7 @@ sub stats
  elsif ($lstreak) { print "Current loss streak = $lstreak losses\n"; }
  print "Longest streaks $lwstreak wins $llstreak losses\n";
  print "Last ten games:";
- for (0..$#lastTen) { $sum += @lastTem[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum wins.\n";
+ for (0..$#lastTen) { $sum += @lastTen[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum wins.\n";
  printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
