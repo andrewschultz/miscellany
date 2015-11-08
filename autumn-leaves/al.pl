@@ -247,7 +247,10 @@ sub procCmd
 	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else
 	{
 	  printdeck();
+	  if ($wrongOrder)
+	  {
 	  print "NOTE: I switched the last two numbers. You can UNDO if it doesn't work for you.\n";
+	  }
 	  checkwin();
 	}
 	return;

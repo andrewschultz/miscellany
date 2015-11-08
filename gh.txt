@@ -63,6 +63,7 @@ stsu=c:\writing\dict\brit-1word.txt,stale-tales-slate\
 #below are ones I edit and add to the source files
 stsu=c:\writing\dict\sts.txt,stale-tales-slate\
 stsu=c:\writing\dict\stsx.pl,stale-tales-slate\
+stsu=c:\writing\dict\myan.pl,stale-tales-slate\
 
 #Roiling utils to GitHub
 roi=c:\games\inform\roiling.inform\Source\bma.pl,stale-tales-slate\roiling
