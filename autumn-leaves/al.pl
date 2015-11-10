@@ -48,7 +48,7 @@ sub procCmd
   chomp($_[0]);
   $_[0] = lc($_[0]);
   $moveBar = 0;
-  if ($_[0] =~ /^ +[^ ]/) { $_[0] =~ s/^ *//g; } #trim leading spaces first
+  $_[0] =~ s/^\s+//g;
 
   if ($_[0] =~ /^sd/) { saveDefault(); return; }
   if ($_[0] =~ /^[0-9]$/)
@@ -164,7 +164,7 @@ sub procCmd
   if ($_[0] =~ /[0-9]{4}/) { print "Too many numbers.\n"; return; }
   if (($_[0] =~ /^a[0-9]{2}/) || ($_[0] =~ /^[0-9]{2}a/)) { $_[0] =~ s/a//g; placeUndoStart(); altUntil($_[0]); placeUndoEnd(); return; }
   if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
-  if ($_[0] =~ /^[!t~][0-9]{3}/)
+  if ($_[0] =~ /^[!t~`][0-9]{3}/)
   {
     my $didAny;
 	my $empties;
