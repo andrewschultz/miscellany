@@ -1096,7 +1096,7 @@ sub tryMove
   {
 	if (!cromu($stack[$from][$fromEl], $stack[$to][$toEl]))
 	{
-	  if (!$quickMove)
+	  if ((!$quickMove) || (!$moveBar))
 	  {
 	    print "$from-$to: Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n";
 	  }
@@ -1479,6 +1479,8 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   
   $moveBar = 0;
   
+  my $quickStr = "";
+  
   OUTER: do
   {
   $anyYet = 0;
@@ -1505,9 +1507,11 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 	  {
 	    if (!$anyYet)
 		{
-		  $quickMove = 1; print "(quick flip $j -> $i, " . faceval(@thisBotCard[$j]) . " -> " . faceval (@thisBotCard[$i]) . ")\n";
+		  $tempStr = "";
+		  $quickMove = 1; $tempStr .= "(quick flip $j"; if (@thisBotCard[$j] != @thisTopCard[$j]) { $tempStr .= "/@thisTopCard[$j]"; }  $tempStr .= " -> $i, " . faceval(@thisBotCard[$j]) . " -> " . faceval (@thisBotCard[$i]) . ")\n";
 		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(); die; }
 		  tryMove("$j$i", -1);
+		  if ($quickStr) { $quickStr = "AUTO: "; } else { $quickStr .= ", "; }
 		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
 		}
 	  }
@@ -1515,6 +1519,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   }
   }
   while ($anyYet);
+  if ($quickStr) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove move(s) made.\n"; }
   
   checkwin();
