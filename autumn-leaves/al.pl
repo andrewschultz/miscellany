@@ -96,7 +96,7 @@ sub procCmd
   if ($_[0] =~ /^sae$/) { $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now @toggles[$saveAtEnd].\n"; return; }
   if ($_[0] =~ /^sl$/) { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; }
   if ($_[0] =~ /^du$/) { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; }
-  if ($_[0] =~ /^1s/) { ones(); printdeck(); return; }
+  if ($_[0] =~ /^1p/) { ones(1); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {	
     my $oldEmptyRows = emptyRows();
@@ -137,6 +137,7 @@ sub procCmd
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
+  if ($_[0] =~ /^1s/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on draw @toggles[$autoOneSafe].\n"; return; }
   if ($_[0] =~ /^mr/) { $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
@@ -223,7 +224,7 @@ sub procCmd
     autoShuffleExt(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); }
 	return;
   }
   if (($_[0] =~ /^w[0-9]{3}/) || ($_[0] =~ /^[0-9]{3}w/))
@@ -244,7 +245,7 @@ sub procCmd
     autoShuffleExt(@x[2], @x[0], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
 	{
 	  printdeck();
 	  if ($wrongOrder)
@@ -267,7 +268,7 @@ sub procCmd
 	tryMove("@x[1]@x[2]");
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { print "No moves made. Please check the stacks shifted.\n"; } else { printdeck(); }
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); }
 	return;
   }
   if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
@@ -399,7 +400,7 @@ sub loadDeck
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
   
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; # read in default values
   my $hidRow = 0;
   
   while ($a = <A>)
@@ -427,6 +428,7 @@ sub loadDeck
 	  {
 	    $testing = 1;
 	    @testArray=split(/,/, $b);
+		$anyMovesYet = 1;
 		next;
 	  }
 	  if ($a =~ /^fd=/i)
@@ -443,6 +445,7 @@ sub loadDeck
 	  if ($a =~ /^m=/i)
 	  {
 		@undoArray = split(/,/, $b);
+		$anyMovesYet = 1;
 		next;
 	  }
 	  if ($a =~ /^hc=/)
@@ -673,7 +676,7 @@ deckFix();
 
 if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
 
-if (($autoOnes) || ($beginOnes)) { $moveBar = 0; ones(); $anyMovesYet = 0; }
+if (($autoOnes) || ($beginOnes) || ($autoOneSafe)) { $moveBar = 0; ones(0); $anyMovesYet = 0; }
 
 }
 
@@ -701,9 +704,7 @@ $drawsLeft--;
 $cardsInPlay += 6;
 if (($autoOnes) && ($_[0] != -1))
 {
-  $ignoreFail = 1;
-  ones();
-  $ignoreFail = 0;
+  ones(0);
 }
 }
 
@@ -723,6 +724,7 @@ sub randcard
 sub faceval
 {
   if ($_[0] == -1) { return "**"; }
+  if ($_[0] == -3) { return "**"; }
   my $x = $_[0] - 1;
   my $suit = @sui[$x/13];
   return "$vals[$x%13]$suit";
@@ -742,11 +744,12 @@ sub printdeckforce
   $testing = $testold;
 }
 
-sub printdeck
+sub printdeck #-1 means don't print the ones
 {
   if ($testing) { return; }
   if ($undo) { return; }
   if ($quickMove) { return; }
+  if (($autoOneSafe) && ($_[0] != -1)) { ones(0); } # there has to be a better way to do this
   if ($vertical)
   { printdeckvertical(); }
   else
@@ -1065,14 +1068,14 @@ sub tryMove
   my $from = @q[0];
   my $to = @q[1];
   
-  #print "$_[0] becomes $from $to\n";
+  #print "$_[0] becomes $from $to, $moveBar moves barred\n";
   if ($moveBar == 1) { if ($showBlockedMoves) { print "$from-$to blocked, as previous move failed.\n"; } else { $blockedMoves++; } return; }
   
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { print "$from-$to is not valid. Rows range from 1 to 6.\n"; $moveBar = 1; return; }
   
-  if ($from==$to) { print "The numbers should be different.\n"; $moveBar = 1; return; }
+  if ($from==$to) { print "Oops, tried to switch a row with itself.\n"; $moveBar = 1; return; }
   
-  if (!$stack[$from][0]) { if (!$quickMove) { print "Empty row/column.\n"; } $moveBar = 1; return; }
+  if (!$stack[$from][0]) { print "Empty row/column.\n"; $moveBar = 1; return; } # note: this needs a better error message.
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -1134,7 +1137,7 @@ sub tryMove
 	$hidCards--;
 	}
   }
-  if (!$undo) { push(@undoArray, "$from$to"); $anyMovesYet = 1; }
+  if (!$undo) { push(@undoArray, "$from$to"); if ($_[1] != -1) { $anyMovesYet = 1; } } #-1 means that we are in the "ones" subroutine so it is not a player-move
 
   printdeck();
   checkwin();
@@ -1437,15 +1440,15 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
 	}
   }
   #print "@undoArray\n";
+  $undo = 1;
   for (0..$#undoArray)
   {
-    $undo = 1;
 	#$undo = 0;
     #print "@undoArray[$_]\n";
     procCmd(@undoArray[$_]);
   }
   $undo = 0;
-  printdeck();
+  printdeck(-1);
 }
 
 sub showhidden
@@ -1467,10 +1470,14 @@ sub showhidden
   if ($outs) { print "$outs\n"; }
 }
 
-sub ones
+sub ones # 0 means that you don't print the error message, 1 means that you do
 {
+  if ($undo) { return 0; } # otherwise this is a big problem if we want to undo something automatic.
   my $onesMove = 0;
   my $totMove = 0;
+  my $localAnyMove = $anyMovesYet;
+  
+  $moveBar = 0;
   
   OUTER: do
   {
@@ -1478,7 +1485,7 @@ sub ones
   for (1..6)
   {
   my $temp = $#{$stack[$_]};
-  if ($temp == -1) { @thistopCard[$_] = -3; next; }
+  if ($temp == -1) { @thisTopCard[$_] = -3; next; }
   while ($temp > 0)
   {
   if (($stack[$_][$temp] == $stack[$_][$temp-1]-1) && (suit($stack[$_][$temp-1]) == suit($stack[$_][$temp])))
@@ -1486,23 +1493,53 @@ sub ones
   else
   { last; }
   }
-  @thistopCard[$_] = $stack[$_][$temp];
-  @thisbotCard[$_] = $stack[$_][$#{$stack[$_]}];
+  @thisTopCard[$_] = $stack[$_][$temp];
+  @thisBotCard[$_] = $stack[$_][$#{$stack[$_]}];
   }
   
   for $j (1..6)
   {
     for $i (1..6)
 	{
-	  if ((@thisbotCard[$i] - @thistopCard[$j] == 1) && (suit(@thistopCard[$i]) == suit(@thistopCard[$j])))
+	  if (canFlipQuick(@thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i]))
 	  {
-	    if (!$anyYet) { $quickMove = 1; tryMove("$j$i"); $quickMove = 0; $anyYet = 1; $totMove++; }
+	    if (!$anyYet)
+		{
+		  $quickMove = 1; print "(quick flip $j -> $i, " . faceval(@thisBotCard[$j]) . " -> " . faceval (@thisBotCard[$i]) . ")\n";
+		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(); die; }
+		  tryMove("$j$i", -1);
+		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
+		}
 	  }
 	}
   }
   }
   while ($anyYet);
-  if (!$totMove) { if (!$ignoreFail) { print "No moves found.\n"; } } else { print "$totMove move(s) made.\n"; }
+  if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove move(s) made.\n"; }
+  
+  checkwin();
+}
+
+sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one
+{
+  #print "Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n";
+  if (suit($_[0]) != suit($_[2])) { return 0; }
+  if ($_[2] - $_[1] != 1) { return 0; }
+  if (!$anyMovesYet) { return 1; }
+  #if (($_[0] % 13 == 1) && $autoOneSafe ) { return 1; }
+  if ($autoOneSafe) #this is extended safe: 2h to 3h if ah is not on the board
+  {
+    my $temp = ($_[0] / 13) * 13 + 1;
+	while ($temp < $_[0])
+	{
+	#print "$temp: $inStack{$temp}\n";
+	if (!$inStack{$temp}) { return 0; }
+	$temp++;
+	}
+	return 1;
+  }
+  if ($autoOnes) { return 1; }
+  return 0;
 }
 
 sub checkwin
@@ -1591,7 +1628,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">albak.txt");
-  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$showMaxRows,$saveAtEnd\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$showMaxRows,$saveAtEnd\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -1616,7 +1653,8 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $showMaxRows = @opts[5]; $saveAtEnd = @opts[6]; close(A);
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $showMaxRows = @opts[6]; $saveAtEnd = @opts[7]; close(A); # note showmaxrows and saveatend are global as of now
+  
   #print "$a = first line\n";
 }
 
@@ -1629,6 +1667,7 @@ sub showOpts
   print "Show Chain Breaks (cb) @toggles[$chainBreaks].\n";
   print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
   print "Begin with shuffling one-aparts (1b) @toggles[$beginOnes].\n";
+  print "Auto-Ones Safe (1s) @toggles[$autoOnesSafe].\n";
   print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
   print "Show max rows (mr) @toggles[$showMaxRows].\n";
   print "Save undos at end (sae) @toggles[$saveAtEnd].\n";
@@ -1727,6 +1766,8 @@ du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
+1s=auto ones safe (only bottom ones)
+1p=push ones once
 %=prints stats
 o=prints options' current settings
 debug shows debug text
