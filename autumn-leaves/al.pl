@@ -143,6 +143,7 @@ sub procCmd
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
   if ($_[0] =~ /^1s/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on draw @toggles[$autoOneSafe].\n"; return; }
+  if ($_[0] =~ /^1f/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup @toggles[$autoOneFull].\n"; return; }
   if ($_[0] =~ /^mr/) { $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
   if ($_[0] =~ /^1b/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
@@ -408,7 +409,7 @@ sub loadDeck
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
   
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; # read in default values
   my $hidRow = 0;
   
   while ($a = <A>)
@@ -1547,8 +1548,8 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   }
   }
   while ($anyYet);
-  if ($quickStr) { print "$quickStr\n"; }
-  if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove move(s) made.\n"; }
+  if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
+  if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move(s) made.\n"; }
   
   #checkwin(-1);
 }
@@ -1597,8 +1598,14 @@ sub checkwin
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
   if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastFix = @fixedDeck; doAnotherGame(); return; }
-  if ($suitsDone) { print "$suitsDone suits completed.\n"; }
+  if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed.\n"; }
   }
+}
+
+sub plur
+{
+  if ($_[0] eq 1) { return ""; }
+  return "s";
 }
 
 sub peekAtCards
@@ -1686,7 +1693,7 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $showMaxRows = @opts[6]; $saveAtEnd = @opts[7]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; $showMaxRows = @opts[7]; $saveAtEnd = @opts[8]; close(A); # note showmaxrows and saveatend are global as of now
   
   #print "$a = first line\n";
 }
@@ -1701,6 +1708,7 @@ sub showOpts
   print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
   print "Begin with shuffling one-aparts (1b) @toggles[$beginOnes].\n";
   print "Auto-Ones Safe (1s) @toggles[$autoOnesSafe].\n";
+  print "Auto-Ones Full Desc (1f) @toggles[$autoOneFull].\n";
   print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
   print "Show max rows (mr) @toggles[$showMaxRows].\n";
   print "Save undos at end (sae) @toggles[$saveAtEnd].\n";
@@ -1809,7 +1817,8 @@ du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 uu=undo all the way to the start
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
-1s=auto ones safe (only bottom ones)
+1s=auto ones safe (only bottom ones visible are matched up)
+1f=ones full description (default is off) tells all the hidden moves the computer makes with 1s
 1p=push ones once
 %=prints stats
 o=prints options' current settings
