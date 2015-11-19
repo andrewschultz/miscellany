@@ -158,7 +158,7 @@ sub procCmd
   if ($_[0] =~ /^sw/) { if (($_[0] !~ /^sw[0-9]$/) || ($_[0] =~ /sw1/)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; } $temp = $_[0]; $temp =~ s/^..//g; $startWith = $temp; if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may ruin some of the game's challenge, as well.\n"; } print "Now $temp points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return; }
   if ($_[0] =~ /^cb/) { $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; }
   if ($_[0] =~ /^1a/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
-  if ($_[0] =~ /^1s/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on draw @toggles[$autoOneSafe].\n"; return; }
+  if ($_[0] =~ /^1s/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on move @toggles[$autoOneSafe].\n"; return; }
   if ($_[0] =~ /^1f/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup @toggles[$autoOneFull].\n"; return; }
   if ($_[0] =~ /^mr/) { $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; }
   if ($_[0] =~ /^sb/) { $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; }
@@ -839,7 +839,7 @@ sub printdeckraw
   for $d (1..6)
   {
     print "$d: ";
-    for $q (0..$#{$stack[$_]}) { if ($stack[$d][$q]) { print $stack[$d][$q] . " "; } }
+    for $q (0..$#{$stack[$_]}) { if ($stack[$d][$q]) { print faceval($stack[$d][$q]) . " "; } }
 	print "\n";
   }
   showLegalsAndStats();
@@ -1309,6 +1309,20 @@ sub isEmpty
   if ($stack[$_[0]][0]) { return 0; } else { return 1; }
 }
 
+sub straightUp
+{
+  my $max = $stack[$_[0]][0];
+  my $sui = suit($#{$stack[$_[0]]});
+  my $temp;
+  for (1..$#{$stack[$_[0]]})
+  {
+    $temp = $stack[$_[0]][$_];
+    if ($temp > $max) { return 0; }
+    if ($sui != suit($temp)) { return 0; }
+  }
+  return 1;
+}
+
 sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if stuff is left on 2
 {
   autoShuffle($_[0], $_[1], $_[2]);
@@ -1317,12 +1331,14 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
     return;
   }
   if (!emptyRows()) { return; }
-  #printdeckforce();
   my $fer = firstEmptyRow();
+  if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1]))) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; return; }
+  #printdeckforce();
   #print "First empty row $fer\n";
   $moveBar = 0;
-  #print "Trying $_[2] to $_[1] via $fer.\n";
+  print "Trying $_[1] to $_[2] via $fer.\n";
   autoShuffle($_[1], $_[2], $fer);
+  print "Trying $_[2] to $_[1] via $fer.\n";
   autoShuffle($_[2], $_[1], $fer);
 }
 
