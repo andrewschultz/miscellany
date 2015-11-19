@@ -1,5 +1,21 @@
+####################################
+#al.pl: a PERL simulation of Autumn Leaves, solitaire card game invented (?) by Toby Ord
+#
+#featuring user conveniences, etc.
+#
+#? in-line gives hints
+#
+#by Andrew Schultz
+#
+#source at https://raw.githubusercontent.com/andrewschultz/miscellany/master/autumn-leaves/al.pl
+#project at https://github.com/andrewschultz/miscellany/blob/master/autumn-leaves/al.pl
+
 use integer;
 use List::Util 'shuffle';
+use Devel::StackTrace;
+
+#my $trace = Devel::StackTrace->new;
+#print $trace->as_string . "\n"; # like carp
 
 my %inStack;
 @toggles = ( "off", "on" );
@@ -288,7 +304,7 @@ sub procCmd
   if ($_[0] =~ /^\?/) { usage(); return; }
 #cheats
 
-  print "Command ($_[0]) wasn't recognized. Push ? for usage.\n";
+  print "Command ($_[0]) wasn't recognized. Push ? for usage beyond basic 1-6 moves.\n";
 }
 
 sub anyChainAvailable
@@ -1025,7 +1041,7 @@ sub showLegalsAndStats
 	{
 	  if (!$stack[$_][0]) { $gotEmpty = 1; }
 	}
-	 if (($gotEmpty) || ($canMakeEmpty)) { print "Still an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
+	 if (($gotEmpty) || ($canMakeEmpty)) { print "You can still create an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
   }
 
   my $visible = $cardsInPlay - $hidCards;
@@ -1303,8 +1319,10 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   if (!emptyRows()) { return; }
   #printdeckforce();
   my $fer = firstEmptyRow();
+  #print "First empty row $fer\n";
   $moveBar = 0;
   #print "Trying $_[2] to $_[1] via $fer.\n";
+  autoShuffle($_[1], $_[2], $fer);
   autoShuffle($_[2], $_[1], $fer);
 }
 
@@ -1506,14 +1524,14 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   $moveBar = 0;
   
   my $quickStr = "";
-  
+
   OUTER: do
   {
   $anyYet = 0;
   for (1..6)
   {
   my $temp = $#{$stack[$_]};
-  if ($temp == -1) { @thisTopCard[$_] = -3; next; }
+  if ($temp == -1) { @thisTopCard[$_] = -3; @thisBotCard[$_] = -3; next; }
   while ($temp > 0)
   {
   if (($stack[$_][$temp] == $stack[$_][$temp-1]-1) && (suit($stack[$_][$temp-1]) == suit($stack[$_][$temp])))
@@ -1524,7 +1542,6 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   @thisTopCard[$_] = $stack[$_][$temp];
   @thisBotCard[$_] = $stack[$_][$#{$stack[$_]}];
   }
-  
   for $j (1..6)
   {
     for $i (1..6)
