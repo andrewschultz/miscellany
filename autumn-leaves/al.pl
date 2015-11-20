@@ -315,10 +315,11 @@ sub procCmd
   if ($_[0] =~ /[0-9]x/) { print "You may have the wrong number of numbers.\n"; return; }
   if ($_[0] =~ /^[az][0-9]/) { print "You may have one too few numbers.\n"; return; }
   if ($_[0] =~ /^z/) { print "Time passes more slowly than if you actually played the game.\n"; return; }
-  if ($_[0] =~ /^\?/) { usage(); return; }
+  if ($_[0] =~ /^\?\?$/) { usageDet(); return; }
+  if ($_[0] =~ /^\?$/) { usage(); return; }
 #cheats
 
-  print "Command ($_[0]) wasn't recognized. Push ? for usage beyond basic 1-6 moves.\n";
+  print "Command ($_[0]) wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
 }
 
 sub anyChainAvailable
@@ -1840,10 +1841,17 @@ v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
 e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
-q/x quits.
 r restarts, ry forces if draws are left.
-(blank) or - prints the screen.
-d draws 6 cards (you get 5 of these), df forces if "good" moves are left.
+(blank) or - reprints the deck.
+d draws 6 cards (you get 5 of these), df forces if noncircular moves are left or you can move between AB, AC and BC.
+q/x quits.
+?? has more detailed usage, with u/undo, l/load and s/save
+EOT
+}
+
+sub usageDet
+{
+print<<EOT;
 s=saves deck name
 h=shows hidden/left cards
 l=loads deck name
