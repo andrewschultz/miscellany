@@ -20,13 +20,27 @@ use Devel::StackTrace;
 my %inStack;
 @toggles = ( "off", "on" );
 
+if (@ARGV[0])
+{
+  $count = 0;
+  $a = lc(@ARGV[$count]);
+  while ($count <= $#ARGV)
+  {
+    for ($a)
+	{
+	#print "Trying $a: $count\n";
+    /^[0-9]/ && do { procCmd("sw$a"); $count++; next; };
+    /^sw[0-9]/ && do { procCmd($a); $count++; next; };
+	cmdUse(); exit;
+	}
+  }
+}
+
 readScoreFile(); initGlobal();
 
 if ($startWith > 7) { print "First draw may take a bit...\n"; }
 
 initGame(); printdeck();
-
-if (@ARGV[0]) { @cmds = split(/;/, @ARGV[0]); }
 
 while (1)
 {
@@ -174,7 +188,7 @@ sub procCmd
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^tf/) { runEachTest(); return; }
   if ($_[0] =~ /^g$/) { procCmd($lastCommand); }
-  if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(); checkwin(); return; }
+  if (($_[0] =~ /^ *$/) || ($_[0] =~ /^-/)) { printdeck(-1); checkwin(); return; }
   if ($_[0] =~ /^v/) { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; }
   if ($_[0] =~ /^af/) { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; }
   if ($_[0] =~ /^ua/) { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves: " . join(",", @undoArray) . "\n"; return; }
@@ -1312,7 +1326,7 @@ sub isEmpty
 sub straightUp
 {
   my $max = $stack[$_[0]][0];
-  my $sui = suit($#{$stack[$_[0]]});
+  my $sui = suit($max);
   my $temp;
   for (1..$#{$stack[$_[0]]})
   {
@@ -1332,6 +1346,8 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   }
   if (!emptyRows()) { return; }
   my $fer = firstEmptyRow();
+  print straightUp($_[2]) . " = $_[2]!\n";
+  print straightUp($_[1]) . " = $_[1]!\n";
   if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1]))) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; return; }
   #printdeckforce();
   #print "First empty row $fer\n";
@@ -1711,7 +1727,6 @@ sub saveDefault
 sub initGlobal
 {
   $vertical = $collapse = 0;
-  $startWith = 2;
   $youWon = 0;
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
@@ -1726,8 +1741,10 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); $startWith = @opts[0]; $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; $showMaxRows = @opts[7]; $saveAtEnd = @opts[8]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; $showMaxRows = @opts[7]; $saveAtEnd = @opts[8]; close(A); # note showmaxrows and saveatend are global as of now
   
+  if (!$startWith) { $startWith = 2; }
+
   #print "$a = first line\n";
 }
 
@@ -1856,5 +1873,14 @@ uu=undo all the way to the start
 %=prints stats
 o=prints options' current settings
 debug shows debug text
+EOT
+}
+
+sub cmdUse
+{
+print<<EOT;
+You typed an invalid command line parameter.
+
+So far the only argument allowed is SW[0-9] or [0-9] to say what to start with.
 EOT
 }
