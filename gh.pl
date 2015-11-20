@@ -1,13 +1,8 @@
 #$procString="shu,roi,sts";
-$procString="pc";
-
-$altHash{"pc"} = "prob";
-$altHash{"sts"} = "shu,roi,stsu";
-$altHash{"sa"} = "shu";
-
-$altHash{"4"} = "4d";
 
 $ght = "c:/writing/scripts/gh.txt";
+
+preProcessHashes();
 
 $justPrint = 0;
 
@@ -74,6 +69,8 @@ open(A, $ght) || die ("Oops, couldn't open gh.txt.");
 while ($a = <A>)
 {
   chomp($a);
+  if ($a =~ /~/) { next; } #congruency
+  if ($a =~ /^d:/) { next; } #default
   if ($a =~ /^;/) { last; }
   if ($a =~ /^#/) { next; }
   if ($a !~ /[a-z]/i) { next; }
@@ -82,4 +79,9 @@ while ($a = <A>)
 }
 
 close(A);
+}
+
+sub preProcessHashes
+{
+  open(A, "$ght") || die ("Can't open $ght.");
 }

@@ -1,3 +1,10 @@
+d:pc
+pc~prob
+tpc~prob
+sts~shu,roi,stsu
+sa~shu
+4~4d
+
 #Shuffling files
 shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\testcase.txt,stale-tales-slate\shuffling

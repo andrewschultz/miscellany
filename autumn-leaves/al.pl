@@ -716,7 +716,7 @@ $deckTry++;
 
 deckFix();
 
-if ($startWith > 2) { print "Needed $deckTry tries, starting with $thisStartMoves 'points'.\n"; }
+if ($startWith > 2) { print "Succeded on try $deckTry, starting with $thisStartMoves 'points'.\n"; }
 
 if (($autoOnes) || ($beginOnes) || ($autoOneSafe)) { $moveBar = 0; ones(0); $anyMovesYet = 0; }
 
@@ -794,6 +794,7 @@ sub printdeck #-1 means don't print the ones
   if (($autoOneSafe) && ($_[0] != -1)) { ones(0); } # there has to be a better way to do this
   if ($printedThisTurn) { print "Warning tried to print this turn.\n"; return; }
   $printedThisTurn = 1;
+  if (!$anyMovesYet) { print "========NO MANUAL MOVES MADE YET========\n"; }
   if ($vertical)
   { printdeckvertical(); }
   else
@@ -859,7 +860,7 @@ sub printdeckraw
   }
   showLegalsAndStats();
   print "Left: "; for $j (sort { $a <=> $b } keys %inStack) { print " $j"; } print "\n";
-    print "$cardsInPlay cards in play, $drawsLeft draws left.\n";
+    print "$cardsInPlay cards in play, $drawsLeft draw" . plur($drawsLeft) . " left.\n";
 }
 
 sub jumpsFromBottom
@@ -1085,7 +1086,7 @@ sub showLegalsAndStats
   }
   if ($chains != 48) # that means a win, no need to print stats
   {
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chains, $order in order, $breaks breaks, $brkPoint break points.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chain chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-reamining score.\n";
   }
 }
 
@@ -1142,6 +1143,7 @@ sub tryMove
   #print "$fromEl elts\n";
   #print "From " . $stack[$from][$fromEl] . "\n";
   #print "To " . $stack[$to][$toEl] . "\n";
+
   if (($toEl > -1) && ($fromEl > -1))
   {
 	if (!cromu($stack[$from][$fromEl], $stack[$to][$toEl]))
@@ -1161,6 +1163,9 @@ sub tryMove
 	$fromEl--;
   }
   #print "Going from $from-$fromEl to $to-$toEl\n";
+  my $toCard = $stack[$to][$toEl];
+  my $fromCard = $stack[$from][$fromEl];
+  
   while ($stack[$from][$fromEl])
   {
   push (@{$stack[$to]}, $stack[$from][$fromEl]);
@@ -1186,7 +1191,11 @@ sub tryMove
 	$hidCards--;
 	}
   }
-  if (!$undo) { push(@undoArray, "$from$to"); if ($_[1] != -1) { $anyMovesYet = 1; } } #-1 means that we are in the "ones" subroutine so it is not a player-move
+  if (!$undo)
+  {
+    push(@undoArray, "$from$to");
+	if ($_[1] != -1) { if ($toCard - $fromCard != 1) { $anyMovesYet = 1; } }
+  } #-1 means that we are in the "ones" subroutine so it is not a player-move
 
   printdeck();
   checkwin();
@@ -1353,9 +1362,9 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   #printdeckforce();
   #print "First empty row $fer\n";
   $moveBar = 0;
-  print "Trying $_[1] to $_[2] via $fer.\n";
+  #print "Trying $_[1] to $_[2] via $fer.\n";
   autoShuffle($_[1], $_[2], $fer);
-  print "Trying $_[2] to $_[1] via $fer.\n";
+  #print "Trying $_[2] to $_[1] via $fer.\n";
   autoShuffle($_[2], $_[1], $fer);
 }
 
@@ -1406,6 +1415,7 @@ sub reinitBoard
   $cardsInPlay = 22;
   $drawsLeft = 5;
   $hidCards = 16;
+  $anyMovesYet = 0;
   for (1..52) { $inStack{$_} = 1; }
   for (1..6)
   {
@@ -1599,7 +1609,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   }
   while ($anyYet);
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
-  if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move(s) made.\n"; }
+  if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
   
   #checkwin(-1);
 }
@@ -1655,6 +1665,7 @@ sub checkwin
 sub plur
 {
   if ($_[0] eq 1) { return ""; }
+  if ($_[1]) { return "$_[1]"; }
   return "s";
 }
 
@@ -1703,12 +1714,15 @@ sub stats
 {
   my $sum = 0;
   my @wl = ("l", "w");
- print "$wins wins $losses losses\n";
- if ($wstreak) { print "Current win streak = $wstreak wins\n"; }
- elsif ($lstreak) { print "Current loss streak = $lstreak losses\n"; }
- print "Longest streaks $lwstreak wins $llstreak losses\n";
+  my $winsuf = "win" . plur($wstreak);
+  my $los = "loss" . plur($lstreak, "es");
+
+ print "$wins $winsuf $losses $los\n";
+ if ($wstreak) { print "Current win streak = $wstreak $winsuf\n"; }
+ elsif ($lstreak) { print "Current loss streak = $lstreak $los\n"; }
+ print "Longest streaks $lwstreak $winsuf $llstreak $los\n";
  print "Last ten games:";
- for (0..$#lastTen) { $sum += @lastTen[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum wins.\n";
+ for (0..$#lastTen) { $sum += @lastTen[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum $winsuf, " . (10-$sum) . " $los\n";
  printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
