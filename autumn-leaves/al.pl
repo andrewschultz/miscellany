@@ -276,6 +276,7 @@ sub procCmd
 	  $temp = @x[2]; @x[2] = @x[1]; @x[1] = $temp;
 	  $wrongOrder = 1;
 	}
+	if (!canMove(@x[0], @x[2])) { print "Can't move @x[0] onto @x[2].\n"; return; }
 	placeUndoStart();
 	$quickMove = 1;
     autoShuffleExt(@x[0], @x[2], @x[1]);
@@ -320,6 +321,15 @@ sub procCmd
 #cheats
 
   print "Command ($_[0]) wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
+}
+
+sub canMove
+{
+  #print botSuit($_[0]) . " vs " . botSuit($_[1]) . " suits\n";
+  #print lowCard($_[0]) . " vs " . lowCard($_[1]) . " cards\n";
+  if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
+  if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
+  return 1;
 }
 
 sub anyChainAvailable
@@ -1191,10 +1201,10 @@ sub tryMove
 	$hidCards--;
 	}
   }
+  if ($_[1] != -1) { if ($toCard - $fromCard != 1) { $anyMovesYet = 1; } }
   if (!$undo)
   {
     push(@undoArray, "$from$to");
-	if ($_[1] != -1) { if ($toCard - $fromCard != 1) { $anyMovesYet = 1; } }
   } #-1 means that we are in the "ones" subroutine so it is not a player-move
 
   printdeck();
@@ -1356,8 +1366,8 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   }
   if (!emptyRows()) { return; }
   my $fer = firstEmptyRow();
-  print straightUp($_[2]) . " = $_[2]!\n";
-  print straightUp($_[1]) . " = $_[1]!\n";
+  #print straightUp($_[2]) . " = $_[2]!\n";
+  #print straightUp($_[1]) . " = $_[1]!\n";
   if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1]))) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; return; }
   #printdeckforce();
   #print "First empty row $fer\n";
