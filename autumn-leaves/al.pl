@@ -92,9 +92,9 @@ sub procCmd
 	my $anyEmpty = 0;
 	my $fromCardTop = $#{$stack[$_[0]]};
 	my $temp = 0;
-	
+
 	while (($fromCardTop > 0) && ($stack[$_[0]][$fromCardTop] == $stack[$_[0]][$fromCardTop-1] - 1) && ($stack[$_[0]][$fromCardTop] % 13)) { $fromCardTop--; } # see if we can move the whole stack
-	
+
     my $fromCard = $stack[$_[0]][$fromCardTop];
 
     for $tryRow (1..6)
@@ -132,7 +132,7 @@ sub procCmd
   if ($_[0] =~ /^du$/) { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; }
   if ($_[0] =~ /^1p/) { ones(1); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
-  {	
+  {
     my $oldEmptyRows = emptyRows();
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
@@ -152,7 +152,7 @@ sub procCmd
 	    }
 	  }
 	}
-	
+
 	placeUndoStart();
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
@@ -389,7 +389,7 @@ sub saveDeck
   chomp($_[0]);
   my $filename = "al-sav.txt";
   my $overwrite = 0;
-  
+
   open(A, "$filename");
   open(B, ">albak.txt");
   $lastSearchCmd = $_[0];
@@ -414,7 +414,7 @@ sub saveDeck
 	  for (1..6) { <A>; }
 	}
   }
-  
+
   if (!$overwrite)
   {
     print "Saving new entry $_[0]\n";
@@ -431,12 +431,12 @@ sub saveDeck
 	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
 	for (1..6) { <A>; }
   }
-  
+
   while ($a = <A>) { print B $a; }
-  
+
   close(A);
   close(B);
-  
+
   `copy albak.txt $filename`;
 
   print "OK, saved.\n";
@@ -455,10 +455,10 @@ sub loadDeck
   my @reconArray;
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
-  
+
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; # read in default values
   my $hidRow = 0;
-  
+
   while ($a = <A>)
   {
     $li++;
@@ -590,7 +590,7 @@ sub loadDeck
 	return;
 	}
   }
-  
+
   print "No $search found in $filename.\n";
 }
 
@@ -600,12 +600,12 @@ sub runEachTest
   open(A, "al.txt");
   while ($a = <A>) { if ($a =~ /^s=/) { $b = $a; chomp($b); $b =~ s/^.=//g; push(@tests, $b); } if ($a =~ /;$/) { last; } }
   close(A);
-  
+
   @fail = ();
-  
+
   $totalTestPass = 0;
   $totalTestFail = 0;
-  
+
   $inMassTest = 1;
   for $t (@tests)
   {
@@ -623,7 +623,7 @@ sub revCard
 
   $last = $lc0; $last =~ s/.*(.)/$1/g;
   $retVal = $sre{$last};
-	
+
   $lc0 =~ s/.$//g;
   if ($rev{$lc0}) { $retVal += $rev{$lc0}; } else { $retVal += $lc0; }
 
@@ -643,9 +643,9 @@ sub hidCards
 sub forceArray
 {
     my $card = $_[0]; $card =~ s/^(f|f=)//g; $card =~ s/\(.*//g;
-	
+
 	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
-	
+
 	if ($card eq "0") { push(@force, $card); print "Forcing null, which is usually just for testing purposes.\n"; return; }
 	if ($card =~ /[cdhs]/i) { print "Card " . uc($card) . " now in queue.\n"; $card = revCard($card); }
 	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
@@ -655,7 +655,7 @@ sub forceArray
 	push (@force, $card); delete ($inStack{$card}); if ((!$undo) && (!$quickMove)) { print faceval($card) . " successfully pushed.\n"; }
 	return;
 	}
-	
+
 	for $su (0..$#suit)
 	{
 	  if ($card =~ /$su/)
@@ -681,7 +681,7 @@ $anyMovesYet = 0;
 @force = ();
 
 do
-{ 
+{
 
 $thisStartMoves = 0;
 
@@ -709,7 +709,7 @@ my @suitcard = (0,0,0,0);
 
 for (1..6)
 {
-  @suitcard[suit(@topCard[$_])]++;  
+  @suitcard[suit(@topCard[$_])]++;
 }
 
 for (0..3)
@@ -851,7 +851,7 @@ sub printdeckhorizontal
 	}
 	$thisLine .= faceval($stack[$d][$q]);
 	}
-	
+
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
 	if ($showMaxRows) { my $tlt = $thisLine; $tlt =~ s/^[0-9]: //g; @tmpArray = split(/[=\-: ]/, $tlt); @rowLength[$d] = $#tmpArray + 1; }
 	if ($thisLine =~ [CDHS]) { @rowLength[$_]++; }
@@ -977,7 +977,7 @@ sub showLegalsAndStats
   my @circulars = (0,0,0,0,0,0);
   my $canMakeEmpty = 0;
   $mbGood = "";
-  
+
   for $d(1..6)
   {
     $curEl = 0;
@@ -1051,7 +1051,7 @@ sub showLegalsAndStats
 	  $entry++;
 	}
   }
-  
+
   if ($anySpecial)
   {
     $allBalanced = 1;
@@ -1065,7 +1065,7 @@ sub showLegalsAndStats
 	}
 	if ($allBalanced) { $anySpecial = 0; }
   }
-  
+
   if ((!$anySpecial) && (!$allBalanced) && ($cardsInPlay == 52))
   {
     my $gotEmpty = 0;
@@ -1134,14 +1134,14 @@ sub tryMove
   my @q = split(/ */, $_[0]);
   my $from = @q[0];
   my $to = @q[1];
-  
+
   #print "$_[0] becomes $from $to, $moveBar moves barred\n";
   if ($moveBar == 1) { if ($showBlockedMoves) { barMove("$from-$to blocked, as previous move failed.\n"); } else { $blockedMoves++; } return; }
-  
+
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { barMove("$from-$to is not valid. Rows range from 1 to 6.\n"); return; }
-  
+
   if ($from==$to) { barMove("Oops, tried to switch a row with itself.\n"); return; }
-  
+
   if (!$stack[$from][0]) { barMove("Empty row/column.\n"); return; } # note: this needs a better error message.
 
   my $toEl = 0;
@@ -1181,7 +1181,7 @@ sub tryMove
   #print "Going from $from-$fromEl to $to-$toEl\n";
   my $toCard = $stack[$to][$toEl];
   my $fromCard = $stack[$from][$fromEl];
-  
+
   while ($stack[$from][$fromEl])
   {
   push (@{$stack[$to]}, $stack[$from][$fromEl]);
@@ -1276,7 +1276,7 @@ sub canChain
   {
     $fromLoc--;
   }
-  if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if ($_[2] > 0) { print "With only 1 empty row, revealing new suit must be done manually e.g. $_[0]$_[1].\n"; } return 0; } } # 8H-7C-6C won't jump to 
+  if ($toLoc == -1) { if (suit($stack[$_[0]][$fromLoc-1]) != suit($stack[$_[0]][$fromLoc])) { if (($_[2] > 0)) { if (emptyRows() < 2) { print "With only 1 empty row, revealing new suit must be done manually e.g. $_[0]$_[1].\n"; return 0; } else { print "u1 if the last flip to an empty column doesn't work.\n"; } } } } # 8H-7C-6C won't jump to unless 2 open
   if ($fromLoc == $#{$stack[$_[0]]} - 12) { if ($_[2] >= 0) { print "Suit complete after twiddling. "; if ($fromLoc > 0) { print "Player must force move off."; } print "\n"; } return 0; } # KH-AH should not be moved. If it's at the top, useless. If not, the player should make that choice.
   if ($toCard - $stack[$_[0]][$fromLoc] == 1) # automatically move if we can create a bigger chain
   {
@@ -1287,7 +1287,7 @@ sub canChain
   {
     #print "Ping\n";
     if (($toCard > $fromCard) || ($#{$stack[$_[1]]} == -1)) { return 1; } # higher card or empty allows for 2 moves in a row
-    #if ($#{$stack[$_[1]]} == -1) { return 1; } 
+    #if ($#{$stack[$_[1]]} == -1) { return 1; }
   }
   return 0;
 }
@@ -1356,9 +1356,9 @@ sub straightUp
   my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
   my $sui = suit($max);
   my $temp;
-  for (1..$#{$stack[$_[0]]})
+  for (my $z = $#{$stack[$_[0]]}; $z >= 0; $z--)
   {
-    $temp = $stack[$_[0]][$_];
+    $temp = $stack[$_[0]][$z];
     if ($temp > $max) { return 0; }
     if ($sui != suit($temp)) { return 0; }
 	if ($temp > $whatTo) { return 1; }
@@ -1377,7 +1377,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $fer = firstEmptyRow();
   #print straightUp($_[2]) . " = $_[2]!\n";
   #print straightUp($_[1]) . " = $_[1]!\n";
-  if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1])))
+  if ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
   {
     if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; }
 	return;
@@ -1421,7 +1421,7 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
   }
   else { $count = $_[3]; }
   #die ($count);
-  
+
   #print "From $_[0] to $_[1] to $_[2], $count.\n";
   if ($count < 0) { print "BUG.\n"; return; }
   if (($count == 1) || ($count == 0))
@@ -1430,7 +1430,7 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
     if (!$moveBar) { tryMove("$_[0]$_[1]"); } return;
   }
 
-  #print "$_[0] to $_[1], then $_[0] to $_[2], then $_[1] to $_[2].\n";  
+  #print "$_[0] to $_[1], then $_[0] to $_[2], then $_[1] to $_[2].\n";
   autoShuffle($_[0], $_[2], $_[1], $count - 1);
   if (!$moveBar)
   {
@@ -1572,7 +1572,7 @@ sub showhidden
 {
   my @out = (0, 0, 0, 0);
   my $outs = "";
-  
+
   if ($hidCards == 0) { print "Nothing hidden left.\n"; }
   my $lastSuit = -1;
   print "Still off the board:";
@@ -1593,9 +1593,9 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   my $onesMove = 0;
   my $totMove = 0;
   my $localAnyMove = $anyMovesYet;
-  
+
   $moveBar = 0;
-  
+
   my $quickStr = "";
 
   OUTER: do
@@ -1640,7 +1640,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   while ($anyYet);
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
-  
+
   #checkwin(-1);
 }
 
@@ -1669,7 +1669,7 @@ sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one
 sub checkwin
 {
   my $suitsDone = 0;
-  
+
   OUTER:
   for $stax (1..6)
   {
@@ -1775,7 +1775,7 @@ sub initGlobal
   $youWon = 0;
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
-  
+
   $sre{"c"} = 0;
   $sre{"d"} = 13;
   $sre{"h"} = 26;
@@ -1787,7 +1787,7 @@ sub initGlobal
 
   open(A, "al-sav.txt");
   my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $autoOneFull = @opts[6]; $showMaxRows = @opts[7]; $saveAtEnd = @opts[8]; close(A); # note showmaxrows and saveatend are global as of now
-  
+
   if (!$startWith) { $startWith = 2; }
 
   #print "$a = first line\n";
