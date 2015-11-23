@@ -265,14 +265,14 @@ sub procCmd
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); }
 	return;
   }
-  if (($_[0] =~ /^w[0-9]{3}/) || ($_[0] =~ /^[0-9]{3}w/))
+  if (($_[0] =~ /^[yw][0-9]{3}/) || ($_[0] =~ /^[0-9]{3}[yw]/))
   {
     my $oldEmptyRows = emptyRows();
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
 	my $wrongOrder = 0;
-	if ($#{$stack[@x[2]]} == -1)
+	if (isEmpty(@x[2]))
 	{
 	  $temp = @x[2]; @x[2] = @x[1]; @x[1] = $temp;
 	  $wrongOrder = 1;
@@ -281,8 +281,12 @@ sub procCmd
 	if (!canMove(@x[0], @x[1])) { print "Can't move @x[0] through @x[1].\n"; return; }
 	placeUndoStart();
 	$quickMove = 1;
+	do
+	{
+	$b4 = $#undoArray;
     autoShuffleExt(@x[0], @x[2], @x[1]);
     autoShuffleExt(@x[2], @x[0], @x[1]);
+	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
 	placeUndoEnd();
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
@@ -290,7 +294,7 @@ sub procCmd
 	  printdeck();
 	  if ($wrongOrder)
 	  {
-	  print "NOTE: I switched the last two numbers. You can UNDO if it doesn't work for you.\n";
+	  print "NOTE: I switched the last two numbers, since you specified to an empty row. You can UNDO if it doesn't work for you.\n";
 	  }
 	  checkwin();
 	}
@@ -1875,7 +1879,7 @@ print<<EOT;
 [1-6][1-6][1-6] moves from a to b, a to c, b to c.
 a[1-6][1-6] moves stack a to b and back. If you end with 8h-2h-kh-qh, the kh-qh will go to the empty square. Use ud1 to undo this.
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
-[1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh.
+[1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh. Y repeats w.
 [~!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
 v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
