@@ -52,11 +52,13 @@ sub processTerms
 	  $didOne = 1;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
       $cmd = "copy \"@d[0]\" $gh\\@d[1]";
+	  $copies++;
 	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
 #      `$cmd`;
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
+  if ($copies > 0) { print "Copied $copies file(s).\n"; }
 }
 
 ##########################
@@ -84,4 +86,20 @@ close(A);
 sub preProcessHashes
 {
   open(A, "$ght") || die ("Can't open $ght.");
+  while ($a = <A>)
+  {
+    chomp($a);
+    if ($a =~ /^d:/)
+	{
+	  $procString = $a;
+	  $procString =~ s/^d://gi;
+	}
+	if ($a =~ /~/)
+	{
+	  @b = split(/~/, $a);
+	  $altHash{@b[0]} = @b[1];
+	  #print "@b[0] -> @b[1]\n";
+	}
+  }
+  close(A);
 }

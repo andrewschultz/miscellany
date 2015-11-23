@@ -154,6 +154,7 @@ sub procCmd
 	}
 	
 	placeUndoStart();
+	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
 	autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	$quickMove = 0;
@@ -276,7 +277,8 @@ sub procCmd
 	  $temp = @x[2]; @x[2] = @x[1]; @x[1] = $temp;
 	  $wrongOrder = 1;
 	}
-	if (!canMove(@x[0], @x[2])) { print "Can't move @x[0] onto @x[2].\n"; return; }
+	if (!canMove(@x[0], @x[2]) && !canMove(@x[2], @x[0])) { print "Can't move @x[0] onto @x[2].\n"; return; }
+	if (!canMove(@x[0], @x[1])) { print "Can't move @x[0] through @x[1].\n"; return; }
 	placeUndoStart();
 	$quickMove = 1;
     autoShuffleExt(@x[0], @x[2], @x[1]);
@@ -306,8 +308,7 @@ sub procCmd
 	tryMove("@x[1]@x[2]");
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); }
-	checkwin();
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	return;
   }
   if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
@@ -327,6 +328,7 @@ sub canMove
 {
   #print botSuit($_[0]) . " vs " . botSuit($_[1]) . " suits\n";
   #print lowCard($_[0]) . " vs " . lowCard($_[1]) . " cards\n";
+  if ($#{$stack[$_[1]]} == -1) { return 1; }
   if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
   if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
   return 1;
@@ -641,7 +643,7 @@ sub forceArray
 	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
 	
 	if ($card eq "0") { push(@force, $card); print "Forcing null, which is usually just for testing purposes.\n"; return; }
-	if ($card =~ /[cdhs]/i) { print "Changing suit of $card to number.\n"; $card = revCard($card); }
+	if ($card =~ /[cdhs]/i) { print "Card " . uc($card) . " now in queue.\n"; $card = revCard($card); }
 	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
@@ -1346,6 +1348,8 @@ sub isEmpty
 sub straightUp
 {
   my $max = $stack[$_[0]][0];
+  if ($#{$stack[$_[1]]} == -1) { return 1; }
+  my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
   my $sui = suit($max);
   my $temp;
   for (1..$#{$stack[$_[0]]})
@@ -1353,6 +1357,7 @@ sub straightUp
     $temp = $stack[$_[0]][$_];
     if ($temp > $max) { return 0; }
     if ($sui != suit($temp)) { return 0; }
+	if ($temp > $whatTo) { return 1; }
   }
   return 1;
 }
@@ -1368,7 +1373,11 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $fer = firstEmptyRow();
   #print straightUp($_[2]) . " = $_[2]!\n";
   #print straightUp($_[1]) . " = $_[1]!\n";
-  if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1]))) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; return; }
+  if ((emptyRows == 1) && (!straightUp($_[2]) || !straightUp($_[1])))
+  {
+    if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; }
+	return;
+  }
   #printdeckforce();
   #print "First empty row $fer\n";
   $moveBar = 0;
@@ -1378,9 +1387,16 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   autoShuffle($_[2], $_[1], $fer);
 }
 
+sub endSuit
+{
+  if ($#{$stack[$_[0]]} == -1) { return -1; }
+  return suit($stack[$_[0]][$#{$stack[$_[0]]}]);
+}
+
 sub autoShuffle # autoshuffle 0 to 1 via 2
 {
   if ($moveBar) { return; }
+  #if ((endSuit[$_[0]] != endSuit[$_[1]]) && ($#{$stack[$_[1]]} != -1)) { barMove("To and from must be the same suit.\n"); return; }
   my $count = $_[3];
   if (!$_[3])
   {
