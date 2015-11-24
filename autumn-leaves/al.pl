@@ -181,6 +181,7 @@ sub procCmd
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d$/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
+  if ($_[0] =~ /^os/) { saveOpts(); return; }
   if ($_[0] =~ /^ll/i) { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
@@ -438,6 +439,7 @@ sub saveDeck
   close(B);
 
   `copy albak.txt $filename`;
+  `erase al-bak.txt`;
 
   print "OK, saved.\n";
   printdeck();
@@ -741,6 +743,7 @@ if (($autoOnes) || ($beginOnes) || ($autoOneSafe)) { $moveBar = 0; ones(0); $any
 sub drawSix
 {
 if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
+$anyMovesYet = 1;
 for (1..6)
 {
   if ($fixedDeckOpt)
@@ -1354,14 +1357,20 @@ sub straightUp
   my $max = $stack[$_[0]][0];
   if ($#{$stack[$_[1]]} == -1) { return 1; }
   my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
-  my $sui = suit($max);
+  my $sui = suit($stack[$_[0]][$#{$stack[$_[0]]}]);
   my $temp;
   for (my $z = $#{$stack[$_[0]]}; $z >= 0; $z--)
-  {
+  { # go up the "from" stack and see if the 
+    if ($z == 0) { return 1; }
     $temp = $stack[$_[0]][$z];
-    if ($temp > $max) { return 0; }
-    if ($sui != suit($temp)) { return 0; }
-	if ($temp > $whatTo) { return 1; }
+    #print "$temp($sui) vs $max vs $whatTo for $_[0] to $_[1]\n";
+    #if ($temp > $max) { return 0; }
+	if (($temp > $whatTo) && ($sui == suit($temp))) { return 1; }
+    if ($sui != suit($temp))
+	{
+	  #print "Bad suit.\n";
+	  return 0;
+	}
   }
   return 1;
 }
@@ -1375,8 +1384,8 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   }
   if (!emptyRows()) { return; }
   my $fer = firstEmptyRow();
-  #print straightUp($_[2]) . " = $_[2]!\n";
-  #print straightUp($_[1]) . " = $_[1]!\n";
+  #print straightUp($_[2], $_[1]) . " = $_[2]-$_[1]!\n";
+  #print straightUp($_[1], $_[2]) . " = $_[1]-$_[2]!\n";
   if ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
   {
     if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; }
@@ -1458,6 +1467,7 @@ sub reinitBoard
 
 sub undoToStart
 {
+  if (!$anyMovesYet) { print "Reshuffling auto-moves if available.\n"; }
   reinitBoard();
   @cardUnder = @backupCardUnder;
   @fixedDeck = @oneDeck;
@@ -1793,6 +1803,28 @@ sub initGlobal
   #print "$a = first line\n";
 }
 
+sub saveOpts
+{
+open(A, "al-sav.txt");
+open(B, ">al-bak.txt");
+#first line is global settings
+<A>;
+
+print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$autoOneFull,$showMaxRows,$saveAtEnd\n";
+
+while ($a = <A>)
+{
+  print B $a;
+}
+close(A);
+close(B);
+
+`copy al-bak.txt al-sav.txt`;
+`erase al-bak.txt`;
+print "Options saved.\n";
+
+}
+
 sub showOpts
 {
   print "Vertical view (v) @toggles[$vertical].\n";
@@ -1902,6 +1934,7 @@ l=loads deck name
 lf=loads deck name (fuzzy)
 t=loads test
 tf=full test
+os=option save
 mr = show max rows
 sd=save default
 af=show force array
