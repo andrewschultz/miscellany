@@ -83,7 +83,7 @@ sub procCmd
   $_[0] =~ s/^\s+//g;
   if ($_[0] ne "g") { $lastCommand = $_[0]; }
 
-  if ($_[0] =~ /^lw/) { printLastWon(); return; }
+  if ($_[0] =~ /^lw/) { printLastWon(); if ($_[0] =~ /^lw=/) { saveLastWon($_[0]); } return; }
   if ($_[0] =~ /^sd/) { saveDefault(); return; }
   if ($_[0] =~ /^[0-9]$/)
   {
@@ -385,6 +385,34 @@ sub doAnotherGame
 initGame(); printdeck();
 }
 
+sub copyAndErase
+{
+  `copy $backupFile $filename`;
+  `erase $backupFile`;
+}
+
+sub saveLastWon
+{
+  my $filename = "al-sav.txt";
+
+  $truncated = $_[0]; $truncated =~ s/^lw=//g;
+
+  open(A, "$filename");
+  open(B, ">$backupFile");
+  while ($a = <A>)
+  {
+    print B $a;
+  }
+  print B "s=$truncated\n";
+  print B "TC=" . join(",", @topCard) . "\n";
+  print B "M=" . join(",", @undoArray) . "\n";
+  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+  close(B);
+  close(A);
+  copyAndErase();
+  print "Last-won $truncated is appended.\n";
+}
+
 sub saveDeck
 {
   chomp($_[0]);
@@ -392,7 +420,7 @@ sub saveDeck
   my $overwrite = 0;
 
   open(A, "$filename");
-  open(B, ">albak.txt");
+  open(B, ">$backupFile");
   $lastSearchCmd = $_[0];
   while ($a = <A>)
   {
@@ -438,8 +466,7 @@ sub saveDeck
   close(A);
   close(B);
 
-  `copy albak.txt $filename`;
-  `erase al-bak.txt`;
+  copyAndErase();
 
   print "OK, saved.\n";
   printdeck();
@@ -1355,7 +1382,10 @@ sub isEmpty
 sub straightUp
 {
   my $max = $stack[$_[0]][0];
+  #print "Testing $_[0] to $_[1]\n";
   if ($#{$stack[$_[1]]} == -1) { return 1; }
+  #print "$_[1] has more than 1 item\n";
+  my $fromBot = $stack[$_[0]][$#{$stack[$_[0]]}];
   my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
   my $sui = suit($stack[$_[0]][$#{$stack[$_[0]]}]);
   my $temp;
@@ -1364,14 +1394,19 @@ sub straightUp
     if ($z == 0) { return 1; }
     $temp = $stack[$_[0]][$z];
     #print "$temp($sui) vs $max vs $whatTo for $_[0] to $_[1]\n";
-    #if ($temp > $max) { return 0; }
-	if (($temp > $whatTo) && ($sui == suit($temp))) { return 1; }
+    if ($temp > $max) { return 0; }
+	if (($temp > $whatTo) && ($sui == suit($temp)) && ($fromBot < $whatTo))
+	{
+	  #$quickMove = 0; printdeck(); $quickMove = 1; print "Okay $_[0] to $_[1]: $temp > $whatTo and $sui is suit of $temp\n";
+	  return 1;
+	}
     if ($sui != suit($temp))
 	{
 	  #print "Bad suit.\n";
 	  return 0;
 	}
   }
+  print "Okay $_[0] to $_[1]\n";
   return 1;
 }
 
@@ -1386,18 +1421,32 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $fer = firstEmptyRow();
   #print straightUp($_[2], $_[1]) . " = $_[2]-$_[1]!\n";
   #print straightUp($_[1], $_[2]) . " = $_[1]-$_[2]!\n";
-  if ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
+  $moveBar = 0;
+  do
   {
-    if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x may be viable but it is not necessarily best, so I'll let you decide.\n"; }
+  $madeAMove = 0;
+  if ((emptyRows == 1) && (straightUp($_[1], $_[2])))
+  {
+    $madeAMove = 1;
+	print "$_[1] to $_[2]\n";
+    autoShuffle($_[1], $_[2], $fer);
+  }
+  elsif ((emptyRows == 1) && (straightUp($_[2], $_[1])))
+  {
+    $madeAMove = 1;
+	print "$_[2] to $_[1]\n";
+    autoShuffle($_[2], $_[1], $fer);
+  }
+  elsif ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
+  {
+    if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x is a possibility but I can't prove it's best, so I'll let you decide.\n"; }
 	return;
   }
+  } while ($madeAMove)
   #printdeckforce();
   #print "First empty row $fer\n";
-  $moveBar = 0;
   #print "Trying $_[1] to $_[2] via $fer.\n";
-  autoShuffle($_[1], $_[2], $fer);
   #print "Trying $_[2] to $_[1] via $fer.\n";
-  autoShuffle($_[2], $_[1], $fer);
 }
 
 sub endSuit
@@ -1697,7 +1746,7 @@ sub checkwin
   }
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
-  if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastFix = @fixedDeck; doAnotherGame(); return; }
+  if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return; }
   if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed.\n"; }
   }
 }
@@ -1771,18 +1820,20 @@ sub saveDefault
   my $filename = "al-sav.txt";
   open(A, "$filename");
   <A>;
-  open(B, ">albak.txt");
+  open(B, ">$backupFile");
   print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$showMaxRows,$saveAtEnd\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
-  `copy albak.txt al.txt`;
+  `copy $backupFile al.txt`;
+  `erase $backupFile`;
 }
 
 sub initGlobal
 {
   $vertical = $collapse = 0;
   $youWon = 0;
+  $backupFile = "albak.txt";
   @sui = ("C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
@@ -1806,7 +1857,7 @@ sub initGlobal
 sub saveOpts
 {
 open(A, "al-sav.txt");
-open(B, ">al-bak.txt");
+open(B, ">$backupFile");
 #first line is global settings
 <A>;
 
@@ -1819,8 +1870,8 @@ while ($a = <A>)
 close(A);
 close(B);
 
-`copy al-bak.txt al-sav.txt`;
-`erase al-bak.txt`;
+`copy $backupFile al-sav.txt`;
+`erase $backupFile`;
 print "Options saved.\n";
 
 }
@@ -1868,7 +1919,7 @@ sub printLastWon
 {
   print "#printout of last win: undo to get the right alignment";
   print "s=last won\n1,1\n";
-  print "TC=" . join(",", @lastFix) . "\n";
+  print "TC=" . join(",", @lastTopCard) . "\n";
   print "M=" . join(",", @lastWonArray) . "\n";
   print "\n\n\n\n\n\n";
 }
