@@ -142,7 +142,7 @@ sub procCmd
 	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for $emcheck (1..6)
 	{
-	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
+	  print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
 	  if (!$stack[$emcheck][0])
 	  {
 	    if (@rows[0]) { @rows[1] = $emcheck; last; }
@@ -263,7 +263,7 @@ sub procCmd
     autoShuffleExt(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
 	placeUndoEnd();
-	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); }
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	return;
   }
   if (($_[0] =~ /^[yw][0-9]{3}/) || ($_[0] =~ /^[0-9]{3}[yw]/))
@@ -1383,11 +1383,16 @@ sub straightUp
 {
   my $max = $stack[$_[0]][0];
   #print "Testing $_[0] to $_[1]\n";
+  if ($#{$stack[$_[0]]} == -1) { return 0; }
   if ($#{$stack[$_[1]]} == -1) { return 1; }
   #print "$_[1] has more than 1 item\n";
   my $fromBot = $stack[$_[0]][$#{$stack[$_[0]]}];
   my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
   my $sui = suit($stack[$_[0]][$#{$stack[$_[0]]}]);
+  my $suiTo = suit($stack[$_[1]][$#{$stack[$_[1]]}]);
+  
+  if ($sui != $suiTo) { return 0; }
+
   my $temp;
   for (my $z = $#{$stack[$_[0]]}; $z >= 0; $z--)
   { # go up the "from" stack and see if the 
@@ -1406,7 +1411,7 @@ sub straightUp
 	  return 0;
 	}
   }
-  print "Okay $_[0] to $_[1]\n";
+  #print "Okay $_[0] to $_[1]\n";
   return 1;
 }
 
@@ -1422,27 +1427,33 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   #print straightUp($_[2], $_[1]) . " = $_[2]-$_[1]!\n";
   #print straightUp($_[1], $_[2]) . " = $_[1]-$_[2]!\n";
   $moveBar = 0;
+  my $numMoves;
   do
   {
   $madeAMove = 0;
+  $numMoves = $#undoArray;
   if ((emptyRows == 1) && (straightUp($_[1], $_[2])))
   {
     $madeAMove = 1;
-	print "$_[1] to $_[2]\n";
+	#print "$_[1] to $_[2], $numMoves\n";
     autoShuffle($_[1], $_[2], $fer);
   }
   elsif ((emptyRows == 1) && (straightUp($_[2], $_[1])))
   {
     $madeAMove = 1;
-	print "$_[2] to $_[1]\n";
+	#print "$_[2] to $_[1]\n";
     autoShuffle($_[2], $_[1], $fer);
   }
   elsif ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
   {
-    if (!$errorPrintedYet) { print "$_[1]$fer$_[2]x is a possibility but I can't prove it's best, so I'll let you decide.\n"; }
+    if (!$errorPrintedYet)
+	{
+	  if (straightUp($_[2], $_[1])) { print "$_[2]$fer$_[1]x is a possibility but I can't prove it's best, so I'll let you decide.\n"; }
+	  if (straightUp($_[1], $_[2])) { print "$_[1]$fer$_[2]x is a possibility but I can't prove it's best, so I'll let you decide.\n"; }
+	}
 	return;
   }
-  } while ($madeAMove)
+  } while (($madeAMove) && ($numMoves != $#undoArray))
   #printdeckforce();
   #print "First empty row $fer\n";
   #print "Trying $_[1] to $_[2] via $fer.\n";
