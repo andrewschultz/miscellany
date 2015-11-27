@@ -23,14 +23,15 @@ my %inStack;
 if (@ARGV[0])
 {
   $count = 0;
-  $a = lc(@ARGV[$count]);
   while ($count <= $#ARGV)
   {
+  $a = lc(@ARGV[$count]);
     for ($a)
 	{
 	#print "Trying $a: $count\n";
     /^[0-9]/ && do { procCmd("sw$a"); $count++; next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
+	/^?-d/ && do { $debug = 1; $count++; next; };
 	cmdUse(); exit;
 	}
   }
@@ -138,6 +139,7 @@ sub procCmd
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
 	my $thisRow = $_[0]; $thisRow =~ s/x//g;
+    my $fromSuit = botSuit($thisRow);
 	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill.\n"; return; }
 	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for $emcheck (1..6)
@@ -156,16 +158,22 @@ sub procCmd
 	placeUndoStart();
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
-	print "$thisRow @rows[0] @rows[1] look\n";
-	autoShuffleExt($thisRow, @rows[0], @rows[1]);
-	autoShuffleExt($thisRow, @rows[1], @rows[0]);
-	$quickMove = 0;
-	placeUndoEnd();
+	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit(@rows[0]) . " (" . lowCard(@rows[0]) . ", row @rows[0]) " . botSuit(@rows[1]) . " (" . lowCard(@rows[1]) . ", row @rows[1])\n");
+    if ((botSuit($thisRow) == botSuit(@rows[0])) || (botSuit(@rows[0]) == -1))
+	{
+	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
+	}
+	if ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
+	{
+	  autoShuffleExt($thisRow, @rows[1], @rows[0]);
+	}
 	if (emptyRows() > 1)
 	{
 	  my $thisRow = firstEmptyRow();
 	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
 	}
+	placeUndoEnd();
+	$quickMove = 0;
 	printdeck();
 	checkwin();
 	return;
@@ -1119,12 +1127,15 @@ sub showLegalsAndStats
   for my $breakRow (1..6)
   {
     #we deserve credit for an empty row, but how much?
-    if ($stack[$breakRow][0] > 0) { $brkPoint++;  }
+    if ($stack[$breakRow][0] > 0)
+	{
+	  $brkPoint++;
+	}
     for (0..$#{$stack[$breakRow]} - 1)
 	{
 	  if ($stack[$breakRow][$_] != -1)
 	  {
-	    if (($stack[$breakRow][$_] - $stack[$breakRow][$_+1] != 1) || (suit($stack[$breakRow][$_+1]) != suit($stack[$breakRow][$_+1])))
+	    if (($stack[$breakRow][$_] - $stack[$breakRow][$_+1] != 1) || (suit($stack[$breakRow][$_]) != suit($stack[$breakRow][$_+1])))
 		{
 		  $breaks++;
 		  if (suit($stack[$breakRow][$_]) == suit($stack[$breakRow][$_+1]))
@@ -1361,7 +1372,8 @@ sub botSuit
 
 sub lowCard
 {
-  return $stack[$_[0]][$#{$stack[$_[0]]}]
+  if ($#{$stack[$_[0]]} == -1) { return -1; }
+  return $stack[$_[0]][$#{$stack[$_[0]]}];
 }
 
 sub firstEmptyRow
@@ -1390,26 +1402,39 @@ sub straightUp
 {
   my $max = $stack[$_[0]][0];
   #print "Testing $_[0] to $_[1]\n";
-  if ($#{$stack[$_[0]]} == -1) { return 0; }
-  if ($#{$stack[$_[1]]} == -1) { return 1; }
+  my $fromH = $#{$stack[$_[0]]};
+  if ($fromH == -1) { return 0; }
+  my $toH = $#{$stack[$_[1]]};
+
+  my $fromBot = $stack[$_[0]][$fromH];
+  my $sui = suit($stack[$_[0]][$fromH]);
+  
+  if ($toH == -1)
+  {
+    for (my $z = $fromH; $z >= 0; $z--)
+	{
+	  if ($sui != suit($stack[$_[0]][$z])) { return 1; }
+	  if ($fromBot > $stack[$_[0]][$z]) { return 1; }
+	  if ($z == 0) { return 0; }
+	}
+    return 1;
+  }
   #print "$_[1] has more than 1 item\n";
-  my $fromBot = $stack[$_[0]][$#{$stack[$_[0]]}];
   my $whatTo = $stack[$_[1]][$#{$stack[$_[1]]}];
-  my $sui = suit($stack[$_[0]][$#{$stack[$_[0]]}]);
   my $suiTo = suit($stack[$_[1]][$#{$stack[$_[1]]}]);
   
   if ($sui != $suiTo) { return 0; }
 
   my $temp;
-  for (my $z = $#{$stack[$_[0]]}; $z >= 0; $z--)
+  for (my $z = $fromH; $z >= 0; $z--)
   { # go up the "from" stack and see if the 
-    if ($z == 0) { return 1; }
     $temp = $stack[$_[0]][$z];
     #print "$temp($sui) vs $max vs $whatTo for $_[0] to $_[1]\n";
     if ($temp > $max) { return 0; }
 	if (($temp > $whatTo) && ($sui == suit($temp)) && ($fromBot < $whatTo))
 	{
 	  #$quickMove = 0; printdeck(); $quickMove = 1; print "Okay $_[0] to $_[1]: $temp > $whatTo and $sui is suit of $temp\n";
+	  printDebug("a\n");
 	  return 1;
 	}
     if ($sui != suit($temp))
@@ -1419,12 +1444,15 @@ sub straightUp
 	}
   }
   #print "Okay $_[0] to $_[1]\n";
+  printDebug("b\n");
   return 1;
 }
 
 sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if stuff is left on 2
 {
+  printDebug("before autoshuffle\n");
   autoShuffle($_[0], $_[1], $_[2]);
+  printDebug("after autoshuffle\n");
   if (isEmpty($_[2]))
   {
     return;
@@ -1442,13 +1470,13 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   if ((emptyRows == 1) && (straightUp($_[1], $_[2])))
   {
     $madeAMove = 1;
-	#print "$_[1] to $_[2], $numMoves\n";
+	printDebug("$_[1] to $_[2], $numMoves\n");
     autoShuffle($_[1], $_[2], $fer);
   }
   elsif ((emptyRows == 1) && (straightUp($_[2], $_[1])))
   {
     $madeAMove = 1;
-	#print "$_[2] to $_[1]\n";
+	printDebug("$_[2] to $_[1]\, $numMoves\n");
     autoShuffle($_[2], $_[1], $fer);
   }
   elsif ((emptyRows == 1) && (!straightUp($_[2], $_[1]) || !straightUp($_[1], $_[2])))
@@ -1460,6 +1488,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
 	}
 	return;
   }
+	printdeckraw();
   } while (($madeAMove) && ($numMoves != $#undoArray))
   #printdeckforce();
   #print "First empty row $fer\n";
@@ -2036,5 +2065,7 @@ print<<EOT;
 You typed an invalid command line parameter.
 
 So far the only argument allowed is SW[0-9] or [0-9] to say what to start with.
+-d is used for debug, but you don't want to see those details.
+
 EOT
 }
