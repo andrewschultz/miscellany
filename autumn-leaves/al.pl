@@ -142,7 +142,7 @@ sub procCmd
 	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for $emcheck (1..6)
 	{
-	  print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
+	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
 	  if (!$stack[$emcheck][0])
 	  {
 	    if (@rows[0]) { @rows[1] = $emcheck; last; }
@@ -156,9 +156,16 @@ sub procCmd
 	placeUndoStart();
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
+	print "$thisRow @rows[0] @rows[1] look\n";
 	autoShuffleExt($thisRow, @rows[0], @rows[1]);
+	autoShuffleExt($thisRow, @rows[1], @rows[0]);
 	$quickMove = 0;
 	placeUndoEnd();
+	if (emptyRows() > 1)
+	{
+	  my $thisRow = firstEmptyRow();
+	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
+	}
 	printdeck();
 	checkwin();
 	return;
@@ -387,7 +394,7 @@ initGame(); printdeck();
 
 sub copyAndErase
 {
-  `copy $backupFile $filename`;
+  `copy $backupFile $_[0]`;
   `erase $backupFile`;
 }
 
@@ -409,7 +416,7 @@ sub saveLastWon
   for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
   close(B);
   close(A);
-  copyAndErase();
+  copyAndErase($filename);
   print "Last-won $truncated is appended.\n";
 }
 
@@ -466,7 +473,7 @@ sub saveDeck
   close(A);
   close(B);
 
-  copyAndErase();
+  copyAndErase($filename);
 
   print "OK, saved.\n";
   printdeck();
@@ -1103,7 +1110,7 @@ sub showLegalsAndStats
 	{
 	  if (!$stack[$_][0]) { $gotEmpty = 1; }
 	}
-	 if (($gotEmpty) || ($canMakeEmpty)) { print "You can still create an empty slot.\n"; } else { print "This is likely unwinnable.\n"; }
+	 if (($gotEmpty) || ($canMakeEmpty)) { print "You can still create an empty slot.\n"; } else { print "You don't have any productive moves left. This position looks lost, unless you wish to UNDO.\n"; }
   }
 
   my $visible = $cardsInPlay - $hidCards;
@@ -1132,7 +1139,7 @@ sub showLegalsAndStats
   }
   if ($chains != 48) # that means a win, no need to print stats
   {
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chain chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-reamining score.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chain chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-remaining score.\n";
   }
 }
 
