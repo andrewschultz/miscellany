@@ -1365,6 +1365,13 @@ sub topCardInSuit
   return $stack[$_[0]][$temp];
 }
 
+sub topPosInSuit
+{
+  my $temp = $#{$stack[$_[0]]};
+  while (($temp > 0) && (suit($stack[$_[0]][$temp]) == suit($stack[$_[0]][$temp]-1)) && ($stack[$_[0]][$temp-1] > $stack[$_[0]][$temp])) { $temp--; }
+  return $temp;
+}
+
 sub botSuit
 {
   return suit(lowCard($_[0]));
@@ -1448,11 +1455,49 @@ sub straightUp
   return 1;
 }
 
+sub safeShuffle
+{
+  if ($_[0] == $_[1]) { return 0; }
+  if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
+  if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
+  if (botSuit($_[0]) != $_[2]) { return 0; }
+  if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
+  if (emptyRows() == 0) { return 0; } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
+  my $topFrom = topCardInSuit($_[0]);
+  my $topFromPos = topPosInSuit($_[0]);
+  my $lowTo = lowCard($_[1]);
+  if ($topFromPos == 0) { return 1; } # empty out a row
+  if ($lowestHigherThanTo < $lowestHigherThanFrom) { return 0; }
+  return 1;
+}
+
 sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if stuff is left on 2
 {
+  my $i;
+  my $j;
+  my $didSafeShuffle = 0;
+  my $suitToShuf = botSuit($_[0]);
   printDebug("before autoshuffle\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
+  do
+  {
+  $didSafeShuffle = 0;
+  $x = firstEmptyRow();
+  for $i (1..6)
+  {
+    for $j (1..6)
+	{
+	  if (safeShuffle($i, $j, $suitToShuf))
+	  {
+	    printDebug ("Safe shuffling $i and $j\n");
+	    autoShuffle($i, $j, $x);
+		$didSafeShuffle = 1;
+	  }
+	}
+  }
+  } while ($didSafeShuffle);
+  return;
   if (isEmpty($_[2]))
   {
     return;
