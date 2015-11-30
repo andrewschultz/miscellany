@@ -29,7 +29,7 @@ if (@ARGV[0])
     for ($a)
 	{
 	#print "Trying $a: $count\n";
-    /^-?[0-9]/ && do { procCmd("sw$a"); $count++; next; };
+    /^-?[0-9]/ && do { if ($a < 0) { $a = -$a; } procCmd("sw$a"); $count++; next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
 	/^?-d/ && do { $debug = 1; $count++; next; };
 	cmdUse(); exit;
@@ -309,8 +309,8 @@ sub procCmd
 	do
 	{
 	$b4 = $#undoArray;
-    autoShuffleExt(@x[0], @x[2], @x[1]);
-    autoShuffleExt(@x[2], @x[0], @x[1]);
+    autoShuffleExt(@x[0], @x[2], @x[1], botSuit(@x[0]));
+    autoShuffleExt(@x[2], @x[0], @x[1], botSuit(@x[0]));
 	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
 	placeUndoEnd();
@@ -1181,7 +1181,7 @@ sub showLegalsAndStats
 sub suit
 {
   if ($_[0] == -1) { return -1; }
-  return ($_[0]-1) / 13;
+  return ($_[0]+12) / 13;
 }
 
 sub cromu
@@ -1482,9 +1482,9 @@ sub straightUp
 sub safeShuffle
 {
   if ($_[0] == $_[1]) { return 0; }
-  #printDebug("Trying $_[0] $_[1] via $_[2]\n");
   if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
   if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
+  printDebug("Trying $_[0] lowcard " . lowCard($_[0]) . " botsuit " . botSuit($_[0]) . " $_[1] with suit $_[2]\n");
   if (botSuit($_[0]) != $_[2]) { return 0; }
   if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
   if (emptyRows() == 0) { return 0; } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
@@ -1494,17 +1494,17 @@ sub safeShuffle
   if ($topFromPos == 0) { return 1; } # empty out a row
   my $breaks = 0;
   my $x = $#{$stack[$_[0]]};
-  #print "Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n";
-  while (($x > 0) && (suit($stack[$_[0]][$x-1]) == suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) > suit($stack[$_[0]][$x])))
+  #printDebug("Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n");
+  while (($x > 0) && (suit($stack[$_[0]][$x-1]) == suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) > suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) < lowCard($_[1])))
   {
     #printDebug("$x: " . suit($stack[$_[0]][$x-1]) . " $stack[$_[0]][$x-1] vs " . suit($stack[$_[0]][$x]) . " $stack[$_[0]][$x]\n");
     if ($stack[$_[0]][$x-1] - $stack[$_[0]][$x] > 1) { $breaks++; }
 	$x--;
   }
-  #printDebug("beep $_[0] to $_[1]\n");
+  printDebug("$_[0] to $_[1] is a strong candidate\n");
   if ($x == 0) { return 1; }
-  #printDebug("boop: $breaks vs " . emptyRows() . "\n");
-  if ($breaks > emptyRows()) { return 0; }
+  printDebug("boop: $breaks vs " . emptyRows() . "\n");
+  if ($breaks > emptyRows() && (!straightUp($_[0]))) { return 0; }
   print $stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n";
   print "$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n";
   printAnyway();
@@ -1516,19 +1516,22 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $i;
   my $j;
   my $didSafeShuffle = 0;
-  my $suitToShuf = botSuit($_[0]);
+  my $suitToShuf = $_[3];
+  if (!$suitToShuf)  { botSuit($_[0]); }
   printDebug("before autoshuffle\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
+  my $emptyShufRow = firstEmptyRow();
   do
   {
   $didSafeShuffle = 0;
-  my $emptyShufRow = firstEmptyRow();
+  $emptyShufRow = firstEmptyRow();
   if ($emptyShufRow == 0) { return; }
   for $i (1..6)
   {
     for $j (1..6)
 	{
+	  #print "Suit to shuffle $i $j is $suitToShuf\n";
 	  if (safeShuffle($i, $j, $suitToShuf))
 	  {
 	    #if ($debug) { printAnyway(); }
@@ -1536,7 +1539,8 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
 	    printDebug ("Safe shuffling $i and $j via $emptyShufRow, suit=$suitToShuf, move bar = $moveBar\n");
 	    autoShuffle($i, $j, $emptyShufRow);
 		$didSafeShuffle = 1;
-	  }
+        $emptyShufRow = firstEmptyRow();
+	  } #else { printDebug("$i to $j failed\n"); }
 	}
   }
   } while ($didSafeShuffle);
