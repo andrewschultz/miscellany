@@ -29,7 +29,7 @@ if (@ARGV[0])
     for ($a)
 	{
 	#print "Trying $a: $count\n";
-    /^[0-9]/ && do { procCmd("sw$a"); $count++; next; };
+    /^-?[0-9]/ && do { procCmd("sw$a"); $count++; next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
 	/^?-d/ && do { $debug = 1; $count++; next; };
 	cmdUse(); exit;
@@ -159,17 +159,26 @@ sub procCmd
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
 	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit(@rows[0]) . " (" . lowCard(@rows[0]) . ", row @rows[0]) " . botSuit(@rows[1]) . " (" . lowCard(@rows[1]) . ", row @rows[1])\n");
+	if (botSuit($thisRow) == $fromSuit)
+	{
     if ((botSuit($thisRow) == botSuit(@rows[0])) || (botSuit(@rows[0]) == -1))
 	{
+	  printDebug("1\n");
 	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	}
+	}
+	if (botSuit($thisRow) == $fromSuit)
+	{
 	if ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
 	{
+	  printDebug("2\n");
 	  autoShuffleExt($thisRow, @rows[1], @rows[0]);
+	}
 	}
 	if (emptyRows() > 1)
 	{
 	  my $thisRow = firstEmptyRow();
+	  printDebug("3\n");
 	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
 	}
 	placeUndoEnd();
@@ -847,6 +856,21 @@ sub printdeckforce
   $testing = $testold;
 }
 
+sub printAnyway
+{
+  my $qm = $quickMove;
+  my $ud = $undo;
+  my $te = $testing;
+  $testing = 0; $undo = 0; $quickMove = 0;
+  
+  $printedThisTurn = 0;
+  printdeck();
+  $printedThisTurn = 0;
+  $quickMove = $qm;
+  $undo = $ud;
+  $testing = $te;
+}
+
 sub printdeck #-1 means don't print the ones
 {
   if ($testing) { return; }
@@ -1388,7 +1412,7 @@ sub firstEmptyRow
   my $retVal = 0;
   for my $rv (1..6)
   {
-    if (!$stack[$rv][0]) { return $rv; }
+    if ($#{$stack[$rv]} == -1) { return $rv; }
   }
   return 0;
 }
@@ -1458,6 +1482,7 @@ sub straightUp
 sub safeShuffle
 {
   if ($_[0] == $_[1]) { return 0; }
+  #printDebug("Trying $_[0] $_[1] via $_[2]\n");
   if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
   if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
   if (botSuit($_[0]) != $_[2]) { return 0; }
@@ -1467,7 +1492,22 @@ sub safeShuffle
   my $topFromPos = topPosInSuit($_[0]);
   my $lowTo = lowCard($_[1]);
   if ($topFromPos == 0) { return 1; } # empty out a row
-  if ($lowestHigherThanTo < $lowestHigherThanFrom) { return 0; }
+  my $breaks = 0;
+  my $x = $#{$stack[$_[0]]};
+  #print "Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n";
+  while (($x > 0) && (suit($stack[$_[0]][$x-1]) == suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) > suit($stack[$_[0]][$x])))
+  {
+    #printDebug("$x: " . suit($stack[$_[0]][$x-1]) . " $stack[$_[0]][$x-1] vs " . suit($stack[$_[0]][$x]) . " $stack[$_[0]][$x]\n");
+    if ($stack[$_[0]][$x-1] - $stack[$_[0]][$x] > 1) { $breaks++; }
+	$x--;
+  }
+  #printDebug("beep $_[0] to $_[1]\n");
+  if ($x == 0) { return 1; }
+  #printDebug("boop: $breaks vs " . emptyRows() . "\n");
+  if ($breaks > emptyRows()) { return 0; }
+  print $stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n";
+  print "$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n";
+  printAnyway();
   return 1;
 }
 
@@ -1483,15 +1523,18 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   do
   {
   $didSafeShuffle = 0;
-  $x = firstEmptyRow();
+  my $emptyShufRow = firstEmptyRow();
+  if ($emptyShufRow == 0) { return; }
   for $i (1..6)
   {
     for $j (1..6)
 	{
 	  if (safeShuffle($i, $j, $suitToShuf))
 	  {
-	    printDebug ("Safe shuffling $i and $j\n");
-	    autoShuffle($i, $j, $x);
+	    #if ($debug) { printAnyway(); }
+		$moveBar = 0;
+	    printDebug ("Safe shuffling $i and $j via $emptyShufRow, suit=$suitToShuf, move bar = $moveBar\n");
+	    autoShuffle($i, $j, $emptyShufRow);
 		$didSafeShuffle = 1;
 	  }
 	}
@@ -2111,6 +2154,5 @@ You typed an invalid command line parameter.
 
 So far the only argument allowed is SW[0-9] or [0-9] to say what to start with.
 -d is used for debug, but you don't want to see those details.
-
 EOT
 }
