@@ -310,6 +310,7 @@ sub procCmd
 	{
 	$b4 = $#undoArray;
     autoShuffleExt(@x[0], @x[2], @x[1], botSuit(@x[0]));
+	if ($b4 != $#undoArray) { $moveBar = 1; }
     autoShuffleExt(@x[2], @x[0], @x[1], botSuit(@x[0]));
 	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
@@ -838,7 +839,7 @@ sub faceval
   if ($_[0] == -1) { return "**"; }
   if ($_[0] == -3) { return "**"; }
   my $x = $_[0] - 1;
-  my $suit = @sui[$x/13];
+  my $suit = @sui[$x/13+1];
   return "$vals[$x%13]$suit";
 }
 
@@ -854,6 +855,11 @@ sub printdeckforce
   $quickMove = $qmold;
   $undo = $undoold;
   $testing = $testold;
+}
+
+sub printDebugAnyway
+{
+  if ($debug) { printAnyway(); }
 }
 
 sub printAnyway
@@ -1174,7 +1180,7 @@ sub showLegalsAndStats
   }
   if ($chains != 48) # that means a win, no need to print stats
   {
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chain chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-remaining score.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-remaining score.\n";
   }
 }
 
@@ -1484,7 +1490,7 @@ sub safeShuffle
   if ($_[0] == $_[1]) { return 0; }
   if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
   if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
-  printDebug("Trying $_[0] lowcard " . lowCard($_[0]) . " botsuit " . botSuit($_[0]) . " $_[1] with suit $_[2]\n");
+  printDebug("Trying $_[0] lowcard " . lowCard($_[0]) . " " . faceval(lowCard($_[0])) . " botsuit " . botSuit($_[0]) . " " . faceval(botSuit($_[0])) . " $_[1] with suit $_[2] @sui($_[2])\n");
   if (botSuit($_[0]) != $_[2]) { return 0; }
   if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
   if (emptyRows() == 0) { return 0; } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
@@ -1494,7 +1500,7 @@ sub safeShuffle
   if ($topFromPos == 0) { return 1; } # empty out a row
   my $breaks = 0;
   my $x = $#{$stack[$_[0]]};
-  #printDebug("Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n");
+  printDebug("Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n");
   while (($x > 0) && (suit($stack[$_[0]][$x-1]) == suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) > suit($stack[$_[0]][$x])) && (($stack[$_[0]][$x-1]) < lowCard($_[1])))
   {
     #printDebug("$x: " . suit($stack[$_[0]][$x-1]) . " $stack[$_[0]][$x-1] vs " . suit($stack[$_[0]][$x]) . " $stack[$_[0]][$x]\n");
@@ -1505,9 +1511,9 @@ sub safeShuffle
   if ($x == 0) { return 1; }
   printDebug("boop: $breaks vs " . emptyRows() . "\n");
   if ($breaks > emptyRows() && (!straightUp($_[0]))) { return 0; }
-  print $stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n";
-  print "$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n";
-  printAnyway();
+  printDebug($stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n");
+  printDebug("$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n");
+  #printAnyway();
   return 1;
 }
 
@@ -1517,7 +1523,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $j;
   my $didSafeShuffle = 0;
   my $suitToShuf = $_[3];
-  if (!$suitToShuf)  { botSuit($_[0]); }
+  if (!$suitToShuf)  { $suitToShuf = botSuit($_[0]); }
   printDebug("before autoshuffle\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
@@ -1781,7 +1787,7 @@ sub showhidden
   }
   if (@out[$lastSuit]) { print " (@out[$lastSuit])"; }
   print "\nTotal unrevealed: " . (keys %inStack) . "\n";
-  for (0..3) { if (!@out[$_]) { $outs .= "@sui[$_] OUT. "; } }
+  for (1..4) { if (!@out[$_]) { $outs .= "@sui[$_] OUT. "; } }
   if ($outs) { print "$outs\n"; }
 }
 
@@ -1973,7 +1979,7 @@ sub initGlobal
   $vertical = $collapse = 0;
   $youWon = 0;
   $backupFile = "albak.txt";
-  @sui = ("C", "D", "H", "S");
+  @sui = ("-", "C", "D", "H", "S");
   @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
   $sre{"c"} = 0;
