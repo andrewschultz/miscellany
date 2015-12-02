@@ -1370,24 +1370,6 @@ sub canChain
   return 0;
 }
 
-sub cleanStuffUp
-{
-  $moveBar = 0;
-  my $s0 = botSuit($_[0]);
-  my $s1 = botSuit($_[1]);
-  if ($s0 != $s1) { return; }
-  if (topCardInSuit($_[0]) > topCardInSuit($_[1]))
-  {
-    autoShuffle($_[0], $_[1], $_[2]);
-    autoShuffle($_[1], $_[0], $_[2]);
-  }
-  else
-  {
-    autoShuffle($_[1], $_[0], $_[2]);
-    autoShuffle($_[0], $_[1], $_[2]);
-  }
-}
-
 sub topCardInSuit
 {
   my $temp = $#{$stack[$_[0]]};
@@ -1398,7 +1380,10 @@ sub topCardInSuit
 sub topPosInSuit
 {
   my $temp = $#{$stack[$_[0]]};
-  while (($temp > 0) && (suit($stack[$_[0]][$temp]) == suit($stack[$_[0]][$temp]-1)) && ($stack[$_[0]][$temp-1] > $stack[$_[0]][$temp])) { $temp--; }
+  while (($temp > 0) && (suit($stack[$_[0]][$temp]) == suit($stack[$_[0]][$temp-1])) && ($stack[$_[0]][$temp-1] > $stack[$_[0]][$temp]))
+  {
+    $temp--;
+  }
   return $temp;
 }
 

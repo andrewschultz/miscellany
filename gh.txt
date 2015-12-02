@@ -49,6 +49,7 @@ stsu=c:\writing\dict\hv.pl,stale-tales-slate\
 stsu=c:\writing\dict\punc.pl,stale-tales-slate\
 stsu=c:\writing\dict\punc.txt,stale-tales-slate\
 stsu=c:\writing\dict\lov.pl,stale-tales-slate\
+stsu=c:\writing\dict\lov.txt,stale-tales-slate\
 stsu=c:\writing\dict\reds.pl,stale-tales-slate\
 stsu=c:\writing\dict\reds.txt,stale-tales-slate\
 stsu=c:\writing\dict\wutil.pm,stale-tales-slate\
