@@ -166,10 +166,7 @@ sub procCmd
 	  printDebug("1\n");
 	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	}
-	}
-	if (botSuit($thisRow) == $fromSuit)
-	{
-	if ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
+	elsif ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
 	{
 	  printDebug("2\n");
 	  autoShuffleExt($thisRow, @rows[1], @rows[0]);
@@ -310,7 +307,7 @@ sub procCmd
 	{
 	$b4 = $#undoArray;
     autoShuffleExt(@x[0], @x[2], @x[1], botSuit(@x[0]));
-	if ($b4 != $#undoArray) { $moveBar = 1; }
+	if ($b4 != $#undoArray) { $errorPrintedYet = 1; } # this is a bit of a hack. No error is printed yet, but if we made a successful move, we may print a misleading error.
     autoShuffleExt(@x[2], @x[0], @x[1], botSuit(@x[0]));
 	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
@@ -1482,7 +1479,10 @@ sub safeShuffle
   my $topFrom = topCardInSuit($_[0]);
   my $topFromPos = topPosInSuit($_[0]);
   my $lowTo = lowCard($_[1]);
-  if ($topFromPos == 0) { return 1; } # empty out a row
+  if ($topFromPos == 0)
+  {
+    printDebug("Top from position = 0\n"); return 1;
+  } # empty out a row
   my $breaks = 0;
   my $x = $#{$stack[$_[0]]};
   printDebug("Start at position $x row $_[0] to row $_[1], bottom card " . lowCard($_[1]) . "\n");
@@ -1493,7 +1493,7 @@ sub safeShuffle
 	$x--;
   }
   printDebug("$_[0] to $_[1] is a strong candidate\n");
-  if ($x == 0) { return 1; }
+  if ($x == 0) { print "No breaks, returning\n"; return 1; }
   printDebug("boop: $breaks vs " . emptyRows() . "\n");
   if ($breaks > emptyRows() && (!straightUp($_[0]))) { return 0; }
   printDebug($stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n");
@@ -1522,7 +1522,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   {
     for $j (1..6)
 	{
-	  #print "Suit to shuffle $i $j is $suitToShuf\n";
+	  #printDebug("Suit to shuffle $i $j is $suitToShuf\n");
 	  if (safeShuffle($i, $j, $suitToShuf))
 	  {
 	    #if ($debug) { printAnyway(); }
@@ -1531,6 +1531,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
 	    autoShuffle($i, $j, $emptyShufRow);
 		$didSafeShuffle = 1;
         $emptyShufRow = firstEmptyRow();
+		printAnyway();
 	  } #else { printDebug("$i to $j failed\n"); }
 	}
   }
@@ -2061,7 +2062,7 @@ sub printNoTest
 
 sub printDebug
 {
-  if ($debug) { print "$_[0]"; }
+  if ($debug) { print "(DEBUG) $_[0]"; }
 }
 
 sub printPoints
