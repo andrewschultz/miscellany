@@ -207,7 +207,8 @@ sub procCmd
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
-  if ($_[0] =~ /^s=/i) { saveDeck($_[0]); return; }
+  if ($_[0] =~ /^s=/i) { saveDeck($_[0], 0); return; }
+  if ($_[0] =~ /^so=/i) { saveDeck($_[0], 0); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^tf/) { runEachTest(); return; }
   if ($_[0] =~ /^g$/) { procCmd($lastCommand); }
@@ -440,16 +441,20 @@ sub saveDeck
   chomp($_[0]);
   my $filename = "al-sav.txt";
   my $overwrite = 0;
+  
 
   open(A, "$filename");
   open(B, ">$backupFile");
   $lastSearchCmd = $_[0];
+  if ($lastSearchCmd =~ /^so=/) { $lastSearchCmd =~ s/^so=/s=/g; }
+  
   while ($a = <A>)
   {
     print B $a;
 	if ($a =~ /^;/) { last; }
     if ($a =~ /^$_[0]$/)
 	{
+	  if ($_[1] == 0) { print "Already an entry named $_[0]. Use so= to force.\n"; close(B); close(A); return; } #we don't care if the backup file is mashed. It'll be re-overwritten anyway
       print "Overwriting entry $_[0]\n";
 	  $overwrite = 1;
 	  <A>;
@@ -1467,15 +1472,31 @@ sub straightUp
   return 1;
 }
 
-sub safeShuffle
+sub lowNonChain
+{
+  my $temp = $#{$stack[$_[0]]};
+  while ($stack[$_[0]][$temp-1] == $stack[$_[0]][$temp] + 1)
+  { $temp--;  if ($temp == 0) { return -1; } }
+  return $stack[$_[0]][$temp-1];
+}
+
+sub safeShuffle # this tries sane but robust safe shuffling
 {
   if ($_[0] == $_[1]) { return 0; }
   if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
-  if (botSuit($_[0]) != botSuit($_[1])) { return 0; }
-  printDebug("Trying $_[0] lowcard " . lowCard($_[0]) . " " . faceval(lowCard($_[0])) . " botsuit " . botSuit($_[0]) . " " . faceval(botSuit($_[0])) . " $_[1] with suit $_[2] @sui($_[2])\n");
+  if (botSuit($_[0]) != botSuit($_[1])) { return 0; } #no point shuffling onto itself, empty is either risky or useless, and different suits can't work
+  printDebug("Trying $_[0] to $_[1] low-from " . lowCard($_[0]) . " " . faceval(lowCard($_[0])) . " botsuit " . botSuit($_[0]) . " " . faceval(botSuit($_[0])) . " to " . lowCard($_[1]) . " with suit $_[2] @sui($_[2])\n");
   if (botSuit($_[0]) != $_[2]) { return 0; }
+  printDebug("4\n");
   if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
-  if (emptyRows() == 0) { return 0; } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
+  printDebug("5\n");
+  if (emptyRows() == 0)
+  {
+    my $lnc = lowNonChain($_[0]);
+	if ((suit($lnc) == botSuit($_[0])) && (lowNonChain($_[0]) > lowCard($_[1]))) { printDebug("Cosmetic move $_[0] to $_[1]\n"); return 1; } # qc-ac to 7c but not vice versa
+    return 0;
+  } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
+  printDebug("6\n");
   my $topFrom = topCardInSuit($_[0]);
   my $topFromPos = topPosInSuit($_[0]);
   my $lowTo = lowCard($_[1]);
@@ -1517,7 +1538,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   {
   $didSafeShuffle = 0;
   $emptyShufRow = firstEmptyRow();
-  if ($emptyShufRow == 0) { return; }
+  #if ($emptyShufRow == 0) { return; }
   for $i (1..6)
   {
     for $j (1..6)
@@ -1531,7 +1552,6 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
 	    autoShuffle($i, $j, $emptyShufRow);
 		$didSafeShuffle = 1;
         $emptyShufRow = firstEmptyRow();
-		printAnyway();
 	  } #else { printDebug("$i to $j failed\n"); }
 	}
   }
@@ -1778,7 +1798,7 @@ sub showhidden
 }
 
 sub ones # 0 means that you don't print the error message, 1 means that you do
-{
+{ # note we could try to do another round of safe shuffling after but then we do shuffling, ones, etc. & that can lose player control
   if ($undo) { return 0; } # otherwise this is a big problem if we want to undo something automatic.
   my $onesMove = 0;
   my $totMove = 0;
@@ -2111,6 +2131,7 @@ sub usageDet
 {
 print<<EOT;
 s=saves deck name
+so=saves over if name exists
 h=shows hidden/left cards
 l=loads deck name
 lf=loads deck name (fuzzy)

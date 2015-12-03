@@ -101,6 +101,12 @@ dirk=c:\games\inform\dirk.inform\source\testcase.txt,dirk
 dirk=c:\games\inform\beta materials\Release\beta-Dirk.zblorb,dirk
 dirk=c:\games\inform\dirk materials\Release\Dirk.zblorb,dirk
 
+#EctoComp files to GitHub
+ect=c:\games\inform\dash.inform\source\story.ni,ectocomp\2011
+ect=c:\games\inform\ghost.inform\source\story.ni,ectocomp\2013
+ect=c:\games\inform\Candy Rush Saga.inform\source\story.ni,ectocomp\2014
+ect=c:\games\inform\heezy-park.inform\source\story.ni,ectocomp\2015
+
 #Problems files to BitBucket
 prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
 prob=c:\games\inform\Compound.inform\source\termpuz.pl,the-problems-compound
