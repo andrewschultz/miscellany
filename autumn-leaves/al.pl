@@ -582,11 +582,24 @@ sub loadDeck
 	  }
 	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
-	  @{$stack[$rowsRead]} = split(/,/, $a);
-		#print "$rowsRead: @{$stack[$rowsRead]}\n";
-	    for (0..$#{$stack[$rowsRead]})
+	  @loadedArray = split(/,/, $a); # here we read in an array and process it for 3-7, etc., but initialize everything first of course
+	  $loadedIndex = 0;
+	  $outIndex = 0;
+	    @{$stack[$rowsRead]} = ();
+	    for (0..$#loadedArray)
 		{
-		if ($stack[$rowsRead][$_] =~ /[cdhs]$/i) { $stack[$rowsRead][$_] = revCard($stack[$rowsRead][$_]); }
+		if (@loadedArray[$loadedIndex] =~ /[-=]/)
+		{
+		  @fromTo = split(/[-=]/, @loadedArray[$loadedIndex]); $upper = revCard(@fromTo[0]); $lower = revCard(@fromTo[1]);
+		  #print "@fromTo[0] $upper <-> @fromTo[1] $lower\n";
+		  if (($lower < 0) || ($upper > 52)) { print "Uh oh bad bail, lower = $lower, upper = $upper in @fromTo.\n"; close(A); return; }
+		  if (suit($lower) != suit($upper)) { print "Uh oh suits are wrong, @fromTo[0] vs @fromTo[1].\n"; close(A); return; }
+		  if ($lower > $upper) { $temp = $lower; $lower = $upper; $upper = $temp; }
+		  for ($temp = $upper; $temp >= $lower; $temp--) { $stack[$rowsRead][$outIndex] = $temp; $outIndex++; delete ($inStack{$temp}); }
+		  $loadedIndex++;
+		}
+		elsif (@loadedArray[$loadedIndex] =~ /[cdhs]$/i) { $stack[$rowsRead][$outIndex] = revCard(@loadedArray[$loadedIndex]); $loadedIndex++; $outIndex++; }
+		else { $stack[$rowsRead][$outIndex] = @loadedArray[$loadedIndex]; $loadedIndex++; $outIndex++; }
 		}
 		#print "$rowsRead: @{$stack[$rowsRead]}\n";
 	    for $card (@{$stack[$rowsRead]})
@@ -690,7 +703,7 @@ sub revCard
   my $retVal = 0;
   my $lc0 = $_[0];
   
-  if ($_[0] !~ /^(k|q|j|a|10|9|8|7|6|5|4|3|2|1)(cdhs)$/i) { return -1; } # invalid
+  if ($_[0] !~ /^(k|q|j|a|10|9|8|7|6|5|4|3|2|1)[cdhs]$/i) { return -1; } # invalid
 
   $last = $lc0; $last =~ s/.*(.)/$1/g;
   $retVal = $sre{$last};
@@ -757,8 +770,6 @@ sub fillInitArray
 sub initGame
 {
 
-@outSinceLast = ();
-
 my $forced = 0;
 
 $printedThisTurn = 0;
@@ -772,6 +783,8 @@ my $thisStartMoves = 0;
 
 do
 {
+
+@outSinceLast = ();
 
 $thisStartMoves = 0;
 
