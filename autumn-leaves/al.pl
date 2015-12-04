@@ -1482,21 +1482,18 @@ sub lowNonChain
 
 sub safeShuffle # this tries sane but robust safe shuffling
 {
-  if ($_[0] == $_[1]) { return 0; }
-  if (isEmpty($_[0]) || isEmpty($_[1])) { return 0; }
-  if (botSuit($_[0]) != botSuit($_[1])) { return 0; } #no point shuffling onto itself, empty is either risky or useless, and different suits can't work
+  if ($_[0] == $_[1]) { return -1; }
+  if (isEmpty($_[0]) || isEmpty($_[1])) { return -2; }
+  if (botSuit($_[0]) != botSuit($_[1])) { return -3; } #no point shuffling onto itself, empty is either risky or useless, and different suits can't work
   printDebug("Trying $_[0] to $_[1] low-from " . lowCard($_[0]) . " " . faceval(lowCard($_[0])) . " botsuit " . botSuit($_[0]) . " " . faceval(botSuit($_[0])) . " to " . lowCard($_[1]) . " with suit $_[2] @sui($_[2])\n");
-  if (botSuit($_[0]) != $_[2]) { return 0; }
-  printDebug("4\n");
-  if (lowCard($_[0]) > lowCard($_[1])) { return 0; }
-  printDebug("5\n");
+  if (botSuit($_[0]) != $_[2]) { return -4; }
+  if (lowCard($_[0]) > lowCard($_[1])) { return -5; }
   if (emptyRows() == 0)
   {
     my $lnc = lowNonChain($_[0]);
 	if ((suit($lnc) == botSuit($_[0])) && (lowNonChain($_[0]) > lowCard($_[1]))) { printDebug("Cosmetic move $_[0] to $_[1]\n"); return 1; } # qc-ac to 7c but not vice versa
-    return 0;
+    return -6;
   } # note we can tighten this up later if we have a bit more but for now it's a bit too tricky
-  printDebug("6\n");
   my $topFrom = topCardInSuit($_[0]);
   my $topFromPos = topPosInSuit($_[0]);
   my $lowTo = lowCard($_[1]);
@@ -1514,9 +1511,9 @@ sub safeShuffle # this tries sane but robust safe shuffling
 	$x--;
   }
   printDebug("$_[0] to $_[1] is a strong candidate\n");
-  if ($x == 0) { print "No breaks, returning\n"; return 1; }
+  if ($x == 0) { printDebug("No breaks, returning\n"); return 1; }
   printDebug("boop: $breaks vs " . emptyRows() . "\n");
-  if ($breaks > emptyRows() && (!straightUp($_[0]))) { return 0; }
+  if ($breaks > emptyRows() && (!straightUp($_[0]))) { return -7; }
   printDebug($stack[$_[0]][$x-1] . " vs " . lowCard($_[1]) . " is the question.\n");
   printDebug("$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n");
   #printAnyway();
@@ -1544,7 +1541,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
     for $j (1..6)
 	{
 	  #printDebug("Suit to shuffle $i $j is $suitToShuf\n");
-	  if (safeShuffle($i, $j, $suitToShuf))
+	  if (($errNum = safeShuffle($i, $j, $suitToShuf))==1)
 	  {
 	    #if ($debug) { printAnyway(); }
 		$moveBar = 0;
@@ -1552,7 +1549,9 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
 	    autoShuffle($i, $j, $emptyShufRow);
 		$didSafeShuffle = 1;
         $emptyShufRow = firstEmptyRow();
-	  } #else { printDebug("$i to $j failed\n"); }
+	  }
+	  else
+	  { printDebug("$i to $j failed, error $errNum.\n"); }
 	}
   }
   } while ($didSafeShuffle);
@@ -1854,16 +1853,46 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   #checkwin(-1);
 }
 
-sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one
+sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one. Ah, 8h, 9h would be yes, for instance.
 {
   #print "Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n";
   if (suit($_[0]) != suit($_[2])) { return 0; }
   if ($_[2] - $_[1] != 1) { return 0; }
   if (!$anyMovesYet) { return 1; }
-  #if (($_[0] % 13 == 1) && $autoOneSafe ) { return 1; }
+  
+  #note that having, say, a 2H on the bottom must be safe as only the 1H can be placed and it does not matter where the 1H might show up later
+  if ($_[0] % 13 == 1) { return 1; } # we'd like to be able to say X % 13 == 2 but that doesn't always work as if an AH falls next in a draw of 6, as it may want a choice of 2 places to go
+  if (($_[0] % 13 == 2) && ($drawsLeft == 0)) { return 1; } # however in this case with nothing to draw we can proceed pretty clearly. Either the ace will be visible or it won't.
   if ($autoOneSafe) #this is extended safe: 2h to 3h if ah is not on the board
   {
     my $temp = ($_[0] / 13) * 13 + 1;
+	my $searchRow = 0;
+	my $searchIndex = 0;
+	
+	if ($drawsLeft == 0) # a special case but a nice one to speed things up near the end.
+	{
+	if (!$inStack{$temp})
+	{
+	  my $searchRow = 0;
+	  my $searchIndex = 0;
+	  for $searchRow (1..6) # this simply searches to see if there is a ( X-1 .. 1) chunk left. If it is, then playing ones over is safe.
+	  {
+	    for $searchIndex (0..$#{$stack[$searchRow]})
+		{
+		  if ($stack[$searchRow][$searchIndex] == $temp)
+		  {
+		    my $si = $searchIndex;
+			while ($si > 0)
+			{
+			  if ($stack[$searchRow][$si-1] - $stack[$searchRow][$si] != 1) { return 0; }
+			  if ($stack[$searchRow][$si-1] == $temp - 1) { return 1; }
+			}
+		  }
+		}
+	  }
+	}
+	}
+	
 	while ($temp < $_[0])
 	{
 	#print "$temp: $inStack{$temp}\n";
