@@ -1180,7 +1180,10 @@ sub showLegalsAndStats
   {
     my $recDraw = 1;
     for $q (1..6) { if (!ascending($q)) { $recDraw = 0; } }
-	if ($recDraw) { if (emptyRows >= 2) { print " (you're clear to draw)"; } else { print " (almost clear to draw)"; } }
+	if ($recDraw)
+	{
+	  if (oneRowPerSuit()) { print " (you're clear to draw)"; } else { print " (almost clear to draw)"; }
+	}
   }
   print "\n";
 
@@ -1261,6 +1264,23 @@ sub showLegalsAndStats
   }
 }
 
+sub oneRowPerSuit
+{
+  my @q = (0, 0, 0, 0, 0);
+  my $st;
+  my $ind;
+  for $st (1..6)
+  {
+    for $ind (0..$#{$stack[$st]})
+	{
+	  $temp = suit($stack[$st][$ind]);
+	  if ((@q[$temp] > 0) && (@q[$temp] != $st)) { return 0; }
+	  @q[$temp] = $st;
+	}
+  }
+  return 1;
+}
+
 sub ascending
 {
   if ($#{$stack[$_[0]]} == -1) { return 1; } #empty stack ok
@@ -1270,7 +1290,10 @@ sub ascending
   {
     $lower = $stack[$_[0]][$_];
     $upper = $stack[$_[0]][$_-1];
-	if (suit($lower) != suit($upper)) { return 0; }
+	if (suit($lower) != suit($upper))
+	{
+	  if (($_ % 13 == 0) && ($lower % 13 == 0) && ($upper % 13 == 1)) {} else { return 0; } # very special case KC=AC KH-etc.
+	}
     if ($stack[$_[0]][$_] > $stack[$_[0]][$_-1]) { return 0; }
   }
   return 1;
