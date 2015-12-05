@@ -31,6 +31,8 @@ if (@ARGV[0])
 	{
 	#print "Trying $a: $count\n";
     /^-?[0-9]/ && do { if ($a < 0) { $a = -$a; } procCmd("sw$a"); $count++; next; };
+	/^-?ezd/ && do { $easyDefault = 1; $count++; next; };
+	/^-?ez/ && do { fillInitArray("8,9,10,11,12,13"); $count++; next; };
 	/^-[rf]/ && do { if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
 	/^?-d/ && do { $debug = 1; $count++; next; };
@@ -207,6 +209,8 @@ sub procCmd
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
   if ($_[0] =~ /^ra/) { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; }
+  if ($_[0] =~ /^ezd$/) { $easyDefault = !$easyDefault; print "Easy default is now @toggles[$easyDefault].\n"; return; }
+  if ($_[0] =~ /^ez$/) { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; fillInitArray("8,9,10,11,12,13"); doAnotherGame(); return; }
   if ($_[0] =~ /^ry/)
   {
     if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
@@ -784,7 +788,8 @@ $printedThisTurn = 0;
 
 $anyMovesYet = 0;
 
-if ($#initArray == -1) { @force = (); } else { @force = @initArray; $forced = 1; }
+if ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); }
+elsif ($#initArray == -1) { @force = (); } else { @force = @initArray; $forced = 1; }
 
 my $deckTry = 0;
 my $thisStartMoves = 0;
@@ -2189,6 +2194,7 @@ print "Options saved.\n";
 
 sub showOpts
 {
+  print "========OPTIONS SETTING========\n";
   print "Vertical view (v) @toggles[$vertical].\n";
   print "Collapsing (c) @toggles[$collapse].\n";
   print "Fixed deck (ra) @toggles[$fixedDeckOpt].\n";
@@ -2201,6 +2207,8 @@ sub showOpts
   print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
   print "Show max rows (mr) @toggles[$showMaxRows].\n";
   print "Save undos at end (sae) @toggles[$saveAtEnd].\n";
+  print "Show cards pulled since last (sl) @toggles[$sinceLast].\n";
+  print "Easy default (ez) @toggles[$easyDefault].\n";
 }
 
 sub readScoreFile
@@ -2279,7 +2287,8 @@ v toggles vertical view (default is horizontal)
 c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
 e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
-r restarts, ry forces if draws are left.
+r restarts, ry forces if draws are left. You can specify =(#s or cards, comma separated) to force starting cards.
+ez starts with 8C-KC across the top.
 (blank) or - reprints the deck.
 d draws 6 cards (you get 5 of these), df forces if noncircular moves are left or you can move between AB, AC and BC.
 q/x quits.
@@ -2332,6 +2341,7 @@ You typed an invalid command line parameter.
 
 So far the main argument allowed is SW[0-9] or [0-9] to say what to start with.
 -rf=(forced cards) or -rf (forced cards) can be used, if you want to be sneaky.
+-ez=start easy game, -ezd is start as default
 -d is used for debug, but you don't want to see those details.
 EOT
 }
