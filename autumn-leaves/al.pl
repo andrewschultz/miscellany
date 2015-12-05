@@ -64,6 +64,7 @@ sub procCmd
 {
   $errorPrintedYet = 0;
   $printedThisTurn = 0;
+  $movesAtStart = $#undoArray;
   chomp($_[0]);
   $_[0] = lc($_[0]);
   $moveBar = 0;
@@ -304,9 +305,13 @@ sub procCmd
 	do
 	{
 	$b4 = $#undoArray;
+	my $oldSuit = botSuit(@x[0]);
     autoShuffleExt(@x[0], @x[2], @x[1], botSuit(@x[0]));
 	if ($b4 != $#undoArray) { $errorPrintedYet = 1; } # this is a bit of a hack. No error is printed yet, but if we made a successful move, we may print a misleading error.
+	if ($oldSuit == botSuit(@x[2])) # don't even try a comeback if there's a different suit.
+	{
     autoShuffleExt(@x[2], @x[0], @x[1], botSuit(@x[0]));
+	}
 	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
 	placeUndoEnd();
@@ -588,7 +593,7 @@ sub loadDeck
 	    @{$stack[$rowsRead]} = ();
 	    for (0..$#loadedArray)
 		{
-		if (@loadedArray[$loadedIndex] =~ /[-=]/)
+		if (@loadedArray[$loadedIndex] =~ /.[-=]/)
 		{
 		  @fromTo = split(/[-=]/, @loadedArray[$loadedIndex]); $upper = revCard(@fromTo[0]); $lower = revCard(@fromTo[1]);
 		  #print "@fromTo[0] $upper <-> @fromTo[1] $lower\n";
@@ -731,7 +736,10 @@ sub forceArray
 	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
 
 	if ($card eq "0") { push(@force, $card); print "Forcing null, which is usually just for testing purposes.\n"; return; }
-	if ($card =~ /[cdhs]/i) { print "Card " . uc($card) . " now in queue.\n"; $card = revCard($card); }
+	if ($card =~ /[cdhs]/i)
+	{
+	  if (revCard($card) == -1) { print "Bad number value for card. (KQJA/1-10)(CDHS) is needed.\n"; return; }
+	  print "Card " . uc($card) . " now in queue.\n"; $card = revCard($card); }
 	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
@@ -1207,7 +1215,7 @@ sub showLegalsAndStats
 
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
-  my $brkPoint = 24 * $drawsLeft;
+  my $brkPoint = 0;
   for my $breakRow (1..6)
   {
     #we deserve credit for an empty row, but how much?
@@ -1240,8 +1248,9 @@ sub showLegalsAndStats
 	for (0..$#outSinceLast) { if ($_ > 0) { print ", "; } print faceval(@outSinceLast[$_]); }
 	print " out since last)\n";
   }
+  my $brkFull = 24 * $drawsLeft + $brkPoint;
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkPoint break-remaining score.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 
@@ -1610,7 +1619,9 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
         $emptyShufRow = firstEmptyRow();
 	  }
 	  else
-	  { printDebug("$i to $j failed, error $errNum.\n"); }
+	  {
+	    #printDebug("$i to $j failed, error $errNum.\n");
+	  }
 	}
   }
   } while ($didSafeShuffle);
@@ -1862,6 +1873,10 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   my $onesMove = 0;
   my $totMove = 0;
   my $localAnyMove = $anyMovesYet;
+  my $insertNMinus;
+  my $movesAtOnesStart = $#undoArray;
+  
+  if (@undoArray[$#undoArray] eq "n-") { pop(@undoArray); $insertNMinus = 1; }
 
   $moveBar = 0;
 
@@ -1909,6 +1924,10 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   while ($anyYet);
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
+  if ($insertNMinus) { push (@undoArray, "n-"); }
+  else
+  { if (($#undoArray > $movesAtOnesStart) && ($movesAtOnesStart > $movesAtStart)) { splice(@undoArray, $movesAtStart+1, 0, "n+"); push(@undoArray, "n-"); }
+  }
 
   #checkwin(-1);
 }
