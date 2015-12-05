@@ -1175,6 +1175,13 @@ sub showLegalsAndStats
 	} #?? maybe if there is no descending, we can check for that and give a pass
   }
   for $toPile (1..6) { if (@circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x (@circulars[$toPile]-1)) . "$toPile"; } }
+  if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty)) { print " (recommend drawing)"; }
+  elsif ($drawsLeft)
+  {
+    my $recDraw = 1;
+    for $q (1..6) { if (!ascending($q)) { $recDraw = 0; } }
+	if ($recDraw) { if (emptyRows >= 2) { print " (you're clear to draw)"; } else { print " (almost clear to draw)"; } }
+  }
   print "\n";
 
   $chains = 0; $order = 0;
@@ -1252,6 +1259,21 @@ sub showLegalsAndStats
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
   print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
+}
+
+sub ascending
+{
+  if ($#{$stack[$_[0]]} == -1) { return 1; } #empty stack ok
+  if ($stack[$_[0]][0] == -1) { return 0; } #still to draw not OK
+  my $lower, my $upper;
+  for (1..$#{$stack[$_[0]]})
+  {
+    $lower = $stack[$_[0]][$_];
+    $upper = $stack[$_[0]][$_-1];
+	if (suit($lower) != suit($upper)) { return 0; }
+    if ($stack[$_[0]][$_] > $stack[$_[0]][$_-1]) { return 0; }
+  }
+  return 1;
 }
 
 sub suit
@@ -1581,7 +1603,7 @@ sub safeShuffle # this tries sane but robust safe shuffling
   printDebug("$_[0] to $_[1] is a strong candidate\n");
   if ($x == 0) { printDebug("No breaks, returning\n"); return 1; }
   printDebug("boop: $breaks vs " . emptyRows() . "\n");
-  if ($breaks > emptyRows() && (!straightUp($_[0]))) { return -7; }
+  if ($breaks > emptyRows() && (!straightUp($_[0], $_[1]))) { return -7; }
   printDebug($stack[$_[0]][$x-1] . " vs " . botCard($_[1]) . " is the question.\n");
   printDebug("$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n");
   #printAnyway();
@@ -2007,7 +2029,13 @@ sub checkwin
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
   if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return; }
-  if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed.\n"; }
+  my $er = emptyRows();
+  if ($suitsDone || $er)
+  {
+  if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed"; }
+  if ($er) { if ($suitsDone) { print ", "; } print $er . " empty row" . plur($er); }
+  print ".\n";
+  }
   }
 }
 
