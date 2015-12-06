@@ -20,6 +20,20 @@ use Devel::StackTrace;
 my %inStack;
 @toggles = ( "off", "on" );
 
+readCmdLine(); readScoreFile(); initGlobal();
+
+initGame(); printdeck();
+
+while (1)
+{
+  $oneline = <STDIN>;
+  @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmdFromUser($myCmd); }
+  seeBlockedMoves();
+}
+exit;
+
+sub readCmdLine # some global commands like difficulty, debug flags, etc
+{
 if (@ARGV[0])
 {
   $count = 0;
@@ -40,26 +54,19 @@ if (@ARGV[0])
 	}
   }
 }
-
-readScoreFile(); initGlobal();
-
-if ($startWith > 7) { print "First draw may take a bit...\n"; }
-
-initGame(); printdeck();
-
-while (1)
-{
-  $oneline = <STDIN>;
-  if ($oneline =~ /;/) { @cmds = split(/;/, $oneline); for $myCmd (@cmds) { procCmdFromUser($myCmd); } }
-  else { procCmd($oneline); }
-  seeBlockedMoves();
 }
-exit;
 
 sub procCmdFromUser #this is so they can't use debug commands
 {
   if (($_[0] eq "n-") || ($_[0] eq "n+")) { print "This is a debug command, so I'm ignoring it.\n"; return; }
+  my $beforeCmd = $#undoArray;
   procCmd($_[0]);
+  my $afterCmd = $#undoArray;
+  if ($afterCmd - $beforeCmd > 1)
+  {
+  splice(@undoArray, $beforeCmd+1, 0, "n+");
+  push(@undoArray, "n-");
+  }
 }
 
 sub procCmd
@@ -137,15 +144,16 @@ sub procCmd
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
 	  if (!$stack[$emcheck][0])
 	  {
-	    if (@rows[0]) { @rows[1] = $emcheck; last; }
+	    if (@rows[0]) { @rows[1] = $emcheck; $fromrow = @rows[0]; last; }
 	    else
 	    {
-	    @rows[0] = $emcheck;
+	    @rows[0] = $emcheck; $fromrow = @rows[1];
 	    }
 	  }
 	}
+	
+	if (straightUp($fromrow)) { print "Row $fromrow is already in order.\n";  return; }
 
-	placeUndoStart();
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
 	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit(@rows[0]) . " (" . botCard(@rows[0]) . ", row @rows[0]) " . botSuit(@rows[1]) . " (" . botCard(@rows[1]) . ", row @rows[1])\n");
@@ -168,7 +176,6 @@ sub procCmd
 	  printDebug("3\n");
 	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
 	}
-	placeUndoEnd();
 	$quickMove = 0;
 	printdeck();
 	checkwin();
@@ -225,7 +232,7 @@ sub procCmd
   }
   if ($_[0] =~ /^%/) { stats(); return; }
   if ($_[0] =~ /[0-9]{4}/) { print "Too many numbers.\n"; return; }
-  if (($_[0] =~ /^[az][0-9]{2}/) || ($_[0] =~ /^[0-9]{2}[az]/)) { $_[0] =~ s/[az]//g; placeUndoStart(); altUntil($_[0]); placeUndoEnd(); return; }
+  if (($_[0] =~ /^[az][0-9]{2}/) || ($_[0] =~ /^[0-9]{2}[az]/)) { $_[0] =~ s/[az]//g; altUntil($_[0]); return; }
   if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[!t~`][0-9]{3}/)
   {
@@ -235,7 +242,6 @@ sub procCmd
     @x = split(//, $_[0]);
 	printNoTest("3-waying stacks @x[1], @x[2] and @x[3].\n");
 	$quickMove = 1;
-	placeUndoStart();
     while (anyChainAvailable(@x[1], @x[2], @x[3]))
 	{
 	  $empties = 0;
@@ -268,7 +274,6 @@ sub procCmd
 	    $didAny = 1;
 	  }
 	}
-	placeUndoEnd();
 	$quickMove = 0;
 	if (!$testing)
 	{
@@ -282,11 +287,9 @@ sub procCmd
     $_[0] =~ s/x//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
-	placeUndoStart();
 	$quickMove = 1;
     autoShuffleExt(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
-	placeUndoEnd();
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	return;
   }
@@ -304,7 +307,6 @@ sub procCmd
 	}
 	if (!canMove(@x[0], @x[2]) && !canMove(@x[2], @x[0])) { print "Can't move @x[0] onto @x[2].\n"; return; }
 	if (!canMove(@x[0], @x[1])) { print "Can't move @x[0] through @x[1].\n"; return; }
-	placeUndoStart();
 	$quickMove = 1;
 	do
 	{
@@ -318,7 +320,6 @@ sub procCmd
 	}
 	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@x[0])) && (!isEmpty(@x[2])));
 	$quickMove = 0;
-	placeUndoEnd();
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
 	{
 	  printdeck();
@@ -335,13 +336,11 @@ sub procCmd
     $b4 = $#undoArray;
     @x = split(//, $_[0]);
     if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
-	placeUndoStart();
 	$quickMove = 1;
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
 	tryMove("@x[1]@x[2]");
 	$quickMove = 0;
-	placeUndoEnd();
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	return;
   }
@@ -1799,12 +1798,12 @@ sub undoToStart
   printdeck();
 }
 
-sub placeUndoStart
+sub placeUndoStart #deprecated but I'll keep around til sure there are no bad bugs
 {
   push(@undoArray, "n+");
 }
 
-sub placeUndoEnd
+sub placeUndoEnd #deprecated but I'll keep around til sure there are no bad bugs
 {
   if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
 }
@@ -1979,10 +1978,6 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   while ($anyYet);
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
-  if ($insertNMinus) { push (@undoArray, "n-"); }
-  else
-  { if (($#undoArray > $movesAtOnesStart) && ($movesAtOnesStart > $movesAtStart)) { splice(@undoArray, $movesAtStart+1, 0, "n+"); push(@undoArray, "n-"); }
-  }
 
   #checkwin(-1);
 }
@@ -2173,6 +2168,9 @@ sub initGlobal
   if (!$startWith) { $startWith = 2; }
 
   #print "$a = first line\n";
+  
+  if ($startWith > 7) { print "First draw may take a bit...\n"; }
+
 }
 
 sub saveOpts
@@ -2182,7 +2180,7 @@ open(B, ">$backupFile");
 #first line is global settings
 <A>;
 
-print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$autoOneFull,$showMaxRows,$saveAtEnd\n";
+print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd\n";
 
 while ($a = <A>)
 {
