@@ -192,13 +192,13 @@ sub procCmd
   if ($_[0] =~ /^e$/) { $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; }
   if ($_[0] =~ /^d$/) { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } }
   if ($_[0] =~ /^h/) { showhidden(); return; }
-  if ($_[0] =~ /^os/) { saveOpts(); return; }
+  if ($_[0] =~ /^(os|so)/) { saveOpts(); return; }
   if ($_[0] =~ /^ll/i) { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0], 0); return; }
-  if ($_[0] =~ /^so=/i) { saveDeck($_[0], 0); return; }
+  if ($_[0] =~ /^sf=/i) { saveDeck($_[0], 1); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^tf/) { runEachTest(); return; }
   if ($_[0] =~ /^g$/) { procCmd($lastCommand); }
@@ -534,7 +534,7 @@ sub loadDeck
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
 
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $autoOneFull = @opts[7]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $easyDefault = @opts[7]; $autoOneFull = @opts[8]; # read in default values
   my $hidRow = 0;
 
   while ($a = <A>)
@@ -1257,15 +1257,20 @@ sub showLegalsAndStats
   }
   if ($chains != 48) # that means a win, no need to print stats
   {
+  printOutSinceLast();
+  my $brkFull = 24 * $drawsLeft + $brkPoint;
+  @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
+  }
+}
+
+sub printOutSinceLast
+{
   if (($#outSinceLast != -1) && $sinceLast)
   {
     print "(";
 	for (0..$#outSinceLast) { if ($_ > 0) { print ", "; } print faceval(@outSinceLast[$_]); }
 	print " out since last)\n";
-  }
-  my $brkFull = 24 * $drawsLeft + $brkPoint;
-  @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 
@@ -2056,7 +2061,7 @@ sub checkwin
   }
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
-  if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return; }
+  if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return; }
   my $er = emptyRows();
   if ($suitsDone || $er)
   {
@@ -2163,7 +2168,7 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $autoOneFull = @opts[7]; $showMaxRows = @opts[8]; $saveAtEnd = @opts[9]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $easyDefault = @opts[7]; $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
 
@@ -2299,14 +2304,14 @@ EOT
 sub usageDet
 {
 print<<EOT;
-s=saves deck name
-so=saves over if name exists
+s=saves current deck (rejected if name is used)
+sf=save-forces if name exists
 h=shows hidden/left cards
-l=loads deck name
-lf=loads deck name (fuzzy)
+l=loads exact saved-deck name (e.g. s=me loaded be l=me)
+lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name)
 t=loads test
 tf=full test
-os=option save
+os/so=option save
 mr = show max rows
 sd=save default
 af=show force array
