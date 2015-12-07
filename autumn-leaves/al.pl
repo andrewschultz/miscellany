@@ -67,6 +67,7 @@ sub procCmdFromUser #this is so they can't use debug commands
   splice(@undoArray, $beforeCmd+1, 0, "n+");
   push(@undoArray, "n-");
   }
+  if ((!$errorPrintedYet) && ($shouldMove) && ($beforeCmd == $afterCmd)) { print "NOTE: no moves were made, though no error message was thrown.\n"; }
 }
 
 sub procCmd
@@ -131,6 +132,7 @@ sub procCmd
   if ($_[0] =~ /^1p/) { ones(1); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
+    $shouldMove = 1;
     my $oldEmptyRows = emptyRows();
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
@@ -152,7 +154,7 @@ sub procCmd
 	  }
 	}
 	
-	if (straightUp($fromrow)) { print "Row $fromrow is already in order.\n";  return; }
+	if (ascending($thisRow)) { print "Row $thisRow is already in order.\n";  return; }
 
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
@@ -232,10 +234,11 @@ sub procCmd
   }
   if ($_[0] =~ /^%/) { stats(); return; }
   if ($_[0] =~ /[0-9]{4}/) { print "Too many numbers.\n"; return; }
-  if (($_[0] =~ /^[az][0-9]{2}/) || ($_[0] =~ /^[0-9]{2}[az]/)) { $_[0] =~ s/[az]//g; altUntil($_[0]); return; }
-  if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  if (($_[0] =~ /^[az][0-9]{2}/) || ($_[0] =~ /^[0-9]{2}[az]/)) { $shouldMove = 1; $_[0] =~ s/[az]//g; altUntil($_[0]); return; }
+  if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $shouldMove = 1; $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[!t~`][0-9]{3}/)
   {
+    $shouldMove = 1;
     my $didAny;
 	my $empties;
 	my $localFrom, my $localTo, my $curMinToFlip;
@@ -284,7 +287,8 @@ sub procCmd
   }
   if (($_[0] =~ /^[0-9]{3}x/) || ($_[0] =~ /^x[0-9]{3}/))
   {
-    $_[0] =~ s/x//g;
+    $shouldMove = 1;
+	$_[0] =~ s/x//g;
     @x = split(//, $_[0]);
 	$b4 = $#undoArray;
 	$quickMove = 1;
@@ -295,6 +299,7 @@ sub procCmd
   }
   if (($_[0] =~ /^[yw][0-9]{3}/) || ($_[0] =~ /^[0-9]{3}[yw]/))
   {
+    $shouldMove = 1;
     my $oldEmptyRows = emptyRows();
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
@@ -333,6 +338,7 @@ sub procCmd
   }
   if ($_[0] =~ /^[0-9]{3}/)
   { # detect 2 ways
+    $shouldMove = 1;
     $b4 = $#undoArray;
     @x = split(//, $_[0]);
     if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
@@ -344,7 +350,7 @@ sub procCmd
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	return;
   }
-  if ($_[0] =~ /^[0-9] *[0-9]/) { tryMove($_[0]); return; }
+  if ($_[0] =~ /^[0-9] *[0-9]/) { $shouldMove = 1; tryMove($_[0]); return; }
   if ($_[0] =~ /^q$/) { exit; }
   if ($_[0] =~ /^x[0-9]/) { print "You may have the wrong number of numbers.\n"; return; }
   if ($_[0] =~ /[0-9]x/) { print "You may have the wrong number of numbers.\n"; return; }
@@ -1544,7 +1550,17 @@ sub isEmpty
   if ($stack[$_[0]][0]) { return 0; } else { return 1; }
 }
 
-sub straightUp
+sub ascending # sees if we have a fully ascending row
+{
+  for (0..$#{$stack[$_[0]]} - 1)
+  {
+    if ($stack[$_[0]][$_] < $stack[$_[0]][$_+1]) { return 0; }
+    if (suit($stack[$_[0]][$_]) != suit($stack[$_[0]][$_+1])) { return 0; }
+  }
+  return 1;
+}
+
+sub straightUp # this doesn't say that a row is ascending but rather if it can be swapped
 {
   my $max = $stack[$_[0]][0];
   #print "Testing $_[0] to $_[1]\n";
