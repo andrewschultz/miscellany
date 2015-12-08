@@ -1,5 +1,7 @@
 #$procString="shu,roi,sts";
 
+use File::Compare;
+
 $ght = "c:/writing/scripts/gh.txt";
 
 preProcessHashes();
@@ -41,6 +43,7 @@ processTerms();
 
 sub processTerms
 {
+  $copies = 0; $unchanged = 0;
   open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
@@ -51,14 +54,23 @@ sub processTerms
     {
 	  $didOne = 1;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
+	  $short = @d[0]; $short =~ s/.*[\\\/]//g;
+	  if (compare(@d[0], "$gh\\@d[1]\\$short"))
+	  {
+	  #print "@d[0] $gh\\@d[1]\\$short\n";
       $cmd = "copy \"@d[0]\" $gh\\@d[1]";
 	  $copies++;
 	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
+	  }
+	  else
+	  {
+	  $unchanged++;
+	  }
 #      `$cmd`;
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  if ($copies > 0) { print "Copied $copies file(s).\n"; }
+  if ($copies > 0) { print "Copied $copies file(s), $unchanged unchanged.\n"; } elsif ($unchanged > 0) { print "All $unchanged file(s) were unchanged.\n"; }
 }
 
 ##########################

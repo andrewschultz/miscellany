@@ -18,7 +18,7 @@ use Devel::StackTrace;
 #print $trace->as_string . "\n"; # like carp
 
 my %inStack;
-@toggles = ( "off", "on" );
+@toggles = ( "off", "on", "random" ); # 2 = random for easy-array. This is a hack, but eh, well...
 
 readCmdLine(); readScoreFile(); initGlobal();
 
@@ -45,7 +45,9 @@ if (@ARGV[0])
 	{
 	#print "Trying $a: $count\n";
     /^-?[0-9]/ && do { if ($a < 0) { $a = -$a; } procCmd("sw$a"); $count++; next; };
+	/^-?erd/ && do { $easyDefault = 2; $count++; next; };
 	/^-?ezd/ && do { $easyDefault = 1; $count++; next; };
+	/^-?er/ && do { fillRandInitArray(); $count++; next; };
 	/^-?ez/ && do { fillInitArray("8,9,10,11,12,13"); $count++; next; };
 	/^-[rf]/ && do { if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
@@ -60,6 +62,7 @@ sub procCmdFromUser #this is so they can't use debug commands
 {
   if (($_[0] eq "n-") || ($_[0] eq "n+")) { print "This is a debug command, so I'm ignoring it.\n"; return; }
   my $beforeCmd = $#undoArray;
+  $shouldMove = 0;
   procCmd($_[0]);
   my $afterCmd = $#undoArray;
   if ($afterCmd - $beforeCmd > 1)
@@ -132,14 +135,13 @@ sub procCmd
   if ($_[0] =~ /^1p/) { ones(1); printdeck(); return; }
   if (($_[0] =~ /^x[0-9]$/) || ($_[0] =~ /^[0-9]x$/))
   {
-    $shouldMove = 1;
     my $oldEmptyRows = emptyRows();
     if (emptyRows() < 2) { print "Not enough empty rows.\n"; return; }
     if ($_[0] !~ /[1-6]/) { print "Not a valid row.\n"; return; }
 	my @rows = (0, 0);
 	my $thisRow = $_[0]; $thisRow =~ s/x//g;
     my $fromSuit = botSuit($thisRow);
-	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill.\n"; return; }
+	if ($#{$stack[$thisRow]} == -1) { print "Nothing to spill in row $thisRow.\n"; return; }
 	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for $emcheck (1..6)
 	{
@@ -156,6 +158,8 @@ sub procCmd
 	
 	if (ascending($thisRow)) { print "Row $thisRow is already in order.\n";  return; }
 
+    $shouldMove = 1;
+
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
 	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit(@rows[0]) . " (" . botCard(@rows[0]) . ", row @rows[0]) " . botSuit(@rows[1]) . " (" . botCard(@rows[1]) . ", row @rows[1])\n");
@@ -163,20 +167,29 @@ sub procCmd
 	{
     if ((botSuit($thisRow) == botSuit(@rows[0])) || (botSuit(@rows[0]) == -1))
 	{
-	  printDebug("1\n");
+	  printDebug("x-command 1\n");
+	  printAnyway();
 	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	}
 	elsif ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
 	{
-	  printDebug("2\n");
+	  printDebug("x-command 2\n");
 	  autoShuffleExt($thisRow, @rows[1], @rows[0]);
 	}
 	}
 	if (emptyRows() > 1)
 	{
 	  my $thisRow = firstEmptyRow();
-	  printDebug("3\n");
+	  printDebug("x-command 3\n");
 	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
+	}
+	if (!isEmpty(@rows[1]) || !isEmpty(@rows[0]))
+	{
+	  $errPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
+	  my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
+	  if ($from == @rows[0]) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); }
+	  elsif ($from == @rows[1]) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
+	  else { autoShuffleExt($thisRow, @rows[0], @rows[1]); }
 	}
 	$quickMove = 0;
 	printdeck();
@@ -184,7 +197,7 @@ sub procCmd
 	return;
   }
   if ($_[0] =~ /^u$/) { undo(0); return; }
-  if ($_[0] =~ /^u1$/) { undo(1); return; }
+  if ($_[0] =~ /^u[1-9]$/) { $turnsToUndo = $_[0]; $turnsToUndo =~ s/^u//g; undo(1, $turnsToUndo); return; }
   if ($_[0] =~ /^o$/) { showOpts(); return; }
   if ($_[0] =~ /^debug/) { printdeckraw(); return; }
   if ($_[0] =~ /^df/) { drawSix(); printdeck(); checkwin(); return; }
@@ -218,8 +231,9 @@ sub procCmd
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^lu/) { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; }
   if ($_[0] =~ /^ra/) { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; }
+  if ($_[0] =~ /^er(d?)$/) { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; }
   if ($_[0] =~ /^ezd$/) { $easyDefault = !$easyDefault; print "Easy default is now @toggles[$easyDefault].\n"; return; }
-  if ($_[0] =~ /^ez$/) { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; fillInitArray("8,9,10,11,12,13"); doAnotherGame(); return; }
+  if ($_[0] =~ /^ez$/) { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; }
   if ($_[0] =~ /^ry/)
   {
     if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
@@ -238,12 +252,12 @@ sub procCmd
   if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $shouldMove = 1; $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
   if ($_[0] =~ /^[!t~`][0-9]{3}/)
   {
-    $shouldMove = 1;
     my $didAny;
 	my $empties;
 	my $localFrom, my $localTo, my $curMinToFlip;
     @x = split(//, $_[0]);
 	printNoTest("3-waying stacks @x[1], @x[2] and @x[3].\n");
+    $shouldMove = 1;
 	$quickMove = 1;
     while (anyChainAvailable(@x[1], @x[2], @x[3]))
 	{
@@ -294,12 +308,11 @@ sub procCmd
 	$quickMove = 1;
     autoShuffleExt(@x[0], @x[2], @x[1]);
 	$quickMove = 0;
-	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
+	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(); checkwin(); }
 	return;
   }
   if (($_[0] =~ /^[yw][0-9]{3}/) || ($_[0] =~ /^[0-9]{3}[yw]/))
   {
-    $shouldMove = 1;
     my $oldEmptyRows = emptyRows();
     $_[0] =~ s/w//g;
     @x = split(//, $_[0]);
@@ -312,6 +325,7 @@ sub procCmd
 	}
 	if (!canMove(@x[0], @x[2]) && !canMove(@x[2], @x[0])) { print "Can't move @x[0] onto @x[2].\n"; return; }
 	if (!canMove(@x[0], @x[1])) { print "Can't move @x[0] through @x[1].\n"; return; }
+    $shouldMove = 1;
 	$quickMove = 1;
 	do
 	{
@@ -338,10 +352,10 @@ sub procCmd
   }
   if ($_[0] =~ /^[0-9]{3}/)
   { # detect 2 ways
-    $shouldMove = 1;
     $b4 = $#undoArray;
     @x = split(//, $_[0]);
     if ((@x[0] == @x[1]) || (@x[0] == @x[2]) || (@x[2] == @x[1])) { print "Repeated number.\n"; return; }
+    $shouldMove = 1;
 	$quickMove = 1;
 	tryMove("@x[0]@x[1]");
 	tryMove("@x[0]@x[2]");
@@ -361,6 +375,17 @@ sub procCmd
 #cheats
 
   print "Command ($_[0]) wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
+}
+
+sub lowestOf
+{
+  my $lowRow = $_[0];
+  my $botCard = botCard($_[0]);
+  my $b = botCard($_[1]);
+  if  (($b < $botCard) && ($b > 0)) { $botCard = $b; $lowRow = $_[1]; }
+  my $c = botCard($_[2]);
+  if  (($c < $botCard) && ($c > 0)) { $botCard = $c; $lowRow = $_[2]; }
+  return $lowRow;
 }
 
 sub canMove
@@ -539,7 +564,7 @@ sub loadDeck
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
 
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $easyDefault = @opts[7]; $autoOneFull = @opts[8]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; # read in default values
   my $hidRow = 0;
 
   while ($a = <A>)
@@ -768,6 +793,15 @@ sub forceArray
   if (!$gotFaceVal) { print "Card must be of the form [A23456789 10 JQK][CDHS], or the matching number.\nFace value = C=0 D=13 H=26 S=39.\n"; return; }
 }
 
+sub fillRandInitArray # anything in a row, but of course QH-KH-AD-2D-3D-4D needs to be DQ'd
+{
+  my $baseVal = 1 + rand(8);
+  my $baseCard = rand(4) * 13 + $baseVal;
+  printDebug("$baseCard.." . $baseCard+5 . "\n");
+  my $fillString = sprintf("%d,%d,%d,%d,%d,%d", $baseCard, $baseCard+1, $baseCard+2, $baseCard+3, $baseCard+4, $baseCard+5);
+  fillInitArray($fillString);
+}
+
 sub fillInitArray
 {
   my @cards = split(/,/, $_[0]);
@@ -793,7 +827,9 @@ $printedThisTurn = 0;
 
 $anyMovesYet = 0;
 
+printDebug("Easy default = $easyDefault, array: @initArray\n");
 if ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); }
+elsif ($easyDefault == 2) { fillRandInitArray(); @force = @initArray; }
 elsif ($#initArray == -1) { @force = (); } else { @force = @initArray; $forced = 1; }
 
 my $deckTry = 0;
@@ -833,7 +869,7 @@ for (1..6)
   @suitcard[suit(@topCard[$_])]++;
 }
 
-for (0..3)
+for (1..4)
 {
   if (@suitcard[$_] > 1) { $thisStartMoves += (@suitcard[$_] - 1); }
 }
@@ -1665,7 +1701,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $didSafeShuffle = 0;
   my $suitToShuf = $_[3];
   if (!$suitToShuf)  { $suitToShuf = botSuit($_[0]); }
-  printDebug("before autoshuffle\n");
+  printDebug("before autoshuffle: $_[0] to $_[1] via $_[2]\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
   my $emptyShufRow = firstEmptyRow();
@@ -1824,7 +1860,7 @@ sub placeUndoEnd #deprecated but I'll keep around til sure there are no bad bugs
   if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
 }
 
-sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
+sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
 {
   if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
   $undo = 1;
@@ -1859,9 +1895,13 @@ sub undo # 1 = undo just one move (u1) , 2 = undo to last cards-out (ud) 3 = und
 	}
 	if ($_[0] == 1)
 	{
+	while (($x >= 0) && ($undos < $_[1]))
+	{
 	while ((@undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
 	{
 	  $x--; $temp = pop(@undoArray);
+	}
+	$undos++;
 	}
 	}
 	elsif (($_[0] ==3) && (@undoArray[$x] eq "df"))
@@ -2179,7 +2219,7 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; $easyDefault = @opts[7]; $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
 
@@ -2307,7 +2347,7 @@ c toggles collapsed view (8h-7h-6h vs 8h=6h)
 cb shows chain breaks e.g. KH-JH-9H-7H has 3
 e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
 r restarts, ry forces if draws are left. You can specify =(#s or cards, comma separated) to force starting cards.
-ez starts with 8C-KC across the top.
+ez starts with 8C-KC across the top, and ezd sets it as default. er/erd sets randomized six-in-a-row.
 (blank) or - reprints the deck.
 d draws 6 cards (you get 5 of these), df forces if noncircular moves are left or you can move between AB, AC and BC.
 q/x quits.
@@ -2360,7 +2400,7 @@ You typed an invalid command line parameter.
 
 So far the main argument allowed is SW[0-9] or [0-9] to say what to start with.
 -rf=(forced cards) or -rf (forced cards) can be used, if you want to be sneaky.
--ez=start easy game, -ezd is start as default
+-ez=start easy game (8c-kc), -ezd is start as default, -er = random 6-in-a-row
 -d is used for debug, but you don't want to see those details.
 EOT
 }

@@ -17,6 +17,7 @@ shu=c:\games\inform\sa Materials\Release\Cover.jpg,stale-tales-slate\shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.trizbort,stale-tales-slate\shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.pdf,stale-tales-slate\shuffling
 shu=c:\users\andrew\dropbox\notes\shuf*.txt,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\uuid.txt,stale-tales-slate\shuffling
 
 #Roiling files
 roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
@@ -37,6 +38,7 @@ roi=c:\games\inform\roiling.inform\source\bot-json.txt,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.trizbort,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\ppl-scratch.txt,pdf,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\uuid.txt,stale-tales-slate\roiling
 
 #Stale Tales Slate scripts
 stsu=c:\writing\scripts\icl.pl,stale-tales-slate\
@@ -87,10 +89,12 @@ roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,stale-tales-slate\roil
 3d=c:\games\inform\threediopolis.inform\source\logic.txt,threediopolis
 3d=c:\writing\scripts\threediopolis-invisiclues.htm,threediopolis
 3d=c:\writing\scripts\3d.txt,threediopolis
+3d=c:\games\inform\threediopolis.inform\uuid.txt,threediopolis
 
 #Fourdiopolis files to BitBucket
 4d=c:\games\inform\fourdiopolis.inform\source\story.ni,fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\logic.txt,fourdiopolis
+4d=c:\games\inform\fourdiopolis.inform\uuid.txt,fourdiopolis
 
 #Ugly Oafs files to GitHub
 oafs=c:\games\inform\uglyoafs.inform\source\story.ni,ugly-oafs
@@ -100,6 +104,7 @@ dirk=c:\games\inform\dirk.inform\source\story.ni,dirk
 dirk=c:\games\inform\dirk.inform\source\testcase.txt,dirk
 dirk=c:\games\inform\beta materials\Release\beta-Dirk.zblorb,dirk
 dirk=c:\games\inform\dirk materials\Release\Dirk.zblorb,dirk
+dirk=c:\games\inform\dirk.inform\source\uuid.txt,dirk
 
 #EctoComp files to GitHub
 ect=c:\games\inform\dash.inform\source\story.ni,ectocomp\2011
@@ -126,6 +131,13 @@ prob=c:\games\inform\Compound Materials\Cover.png,the-problems-compound
 prob=c:\games\inform\Compound Materials\Small Cover.png,the-problems-compound
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conversation Modified.i7x,the-problems-compound
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips Modified.i7x,the-problems-compound
+prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
+
+#Slicker City files to BitBucket (for now)
+sc=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
+sc=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
+sc=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
+sc=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
