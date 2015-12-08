@@ -168,7 +168,6 @@ sub procCmd
     if ((botSuit($thisRow) == botSuit(@rows[0])) || (botSuit(@rows[0]) == -1))
 	{
 	  printDebug("x-command 1\n");
-	  printAnyway();
 	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
 	}
 	elsif ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
@@ -183,13 +182,17 @@ sub procCmd
 	  printDebug("x-command 3\n");
 	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
 	}
-	if (!isEmpty(@rows[1]) || !isEmpty(@rows[0]))
+	if (botSuit($thisRow) == $fromSuit)
+	{
+	while (isEmpty(@rows[1]) + isEmpty(@rows[0]) + isEmpty($thisRow) < 2)
 	{
 	  $errPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
 	  my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
-	  if ($from == @rows[0]) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); }
-	  elsif ($from == @rows[1]) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
-	  else { autoShuffleExt($thisRow, @rows[0], @rows[1]); }
+	  printDebug ("Lowest is $from, of @rows[0] @rows[1] $thisRow\n");
+	  if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
+	  elsif ($from == @rows[1]) { if (botCard($thisRow) > botCard(@rows[0])) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); } else { autoShuffleExt(@rows[1], @rows[0], $thisRow); } }
+	  else { if (botCard(@rows[0]) < botCard(@rows[1])) { autoShuffleExt($thisRow, @rows[0], @rows[1]); } else { autoShuffleExt($thisRow, @rows[1], @rows[0]); } }
+	}
 	}
 	$quickMove = 0;
 	printdeck();
@@ -218,6 +221,7 @@ sub procCmd
   if ($_[0] =~ /^ll/i) { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
   if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
+  if ($_[0] =~ /^lw=/i) { $avoidWin = 1; loadDeck($_[0]); $avoidWin = 0; return; }
   if ($_[0] =~ /^c/) { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; }
   if ($_[0] =~ /^s=/i) { saveDeck($_[0], 0); return; }
   if ($_[0] =~ /^sf=/i) { saveDeck($_[0], 1); return; }
@@ -707,6 +711,7 @@ sub loadDeck
 			}
 		  }
 	printdeck();
+	if (!$avoidWin) { checkwin(); }
 	close(A);
 	return;
 	}
@@ -1007,7 +1012,8 @@ sub printdeckhorizontal
 
   for $d (1..6)
   {
-    $thisLine = "$d:";
+    $thisLine = "$d";
+	if ($#{$stack[$d]} == -1) { $thisLine .= "E"; } elsif (ascending($d)) { $thisLine .= ">"; } else { $thisLine .= ":"; }
 	if (($anyJumps > 0) && ($chainBreaks))
 	{
 	  my $temp = jumpsFromBottom($d);
@@ -1097,7 +1103,8 @@ sub printdeckvertical
   for $row (1..6)
   {
     print "   ";
-	if ($stack[$row][0]) { print " "; } else { print "!"; }; print "$row";
+	if ($#{$stack[$row]} == -1) { print "!"; } elsif (ascending($row)) { print "^"; } else { print " "; }
+	print "$row";
   }
   print "\n";
   do
@@ -2094,6 +2101,7 @@ sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one. Ah, 8h
 sub checkwin
 {
   my $suitsDone = 0;
+  my $suitlist = "";
 
   OUTER:
   for $stax (1..6)
@@ -2107,16 +2115,22 @@ sub checkwin
 	  {
 	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1]) && (suit(@x[$_]) == suit(@x[$_+1]))) { $_++; $inarow++; }
 	  }
-	  if ($inarow == 12) { $suitsDone++; }
+	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[$_/13+1]; } else { $suitlist .= " @sui[@x[$_]/13+1]"; } }
 	}
   }
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
-  if ($suitsDone == 4) { if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, or q to exit."; $x = <STDIN>; $youWon = 1; if ($x =~ /^q/i) { exit; } @lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return; }
+  if ($suitsDone == 4)
+  {
+    if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game."; $x = <STDIN>; $youWon = 1;
+    if ($x =~ /^q/i) { exit; }
+	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
+	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
+  }
   my $er = emptyRows();
   if ($suitsDone || $er)
   {
-  if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed"; }
+  if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed ($suitlist)"; }
   if ($er) { if ($suitsDone) { print ", "; } print $er . " empty row" . plur($er); }
   print ".\n";
   }

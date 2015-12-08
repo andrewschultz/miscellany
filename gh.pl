@@ -54,12 +54,12 @@ sub processTerms
     {
 	  $didOne = 1;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
-	  $short = @d[0]; $short =~ s/.*[\\\/]//g;
-	  if (compare(@d[0], "$gh\\@d[1]\\$short"))
+	  
+	  if (-d "$gh\\@d[1]") { $short = @d[0]; $short =~ s/.*[\\\/]//g; $outName = "$gh\\@d[1]\\$short"; } else { $outName = "$gh\\@d[1]"; }
+	  if (compare(@d[0], "$outName"))
 	  {
-	  #print "@d[0] $gh\\@d[1]\\$short\n";
       $cmd = "copy \"@d[0]\" $gh\\@d[1]";
-	  $copies++;
+	  if (@d[0] =~ /\*/) { $wildcards++; } else { $copies++; }
 	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
 	  }
 	  else
@@ -70,7 +70,7 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  if ($copies > 0) { print "Copied $copies file(s), $unchanged unchanged.\n"; } elsif ($unchanged > 0) { print "All $unchanged file(s) were unchanged.\n"; }
+  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged.\n"; }
 }
 
 ##########################
