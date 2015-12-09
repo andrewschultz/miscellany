@@ -131,6 +131,7 @@ sub procCmd
   if ($_[0] =~ /^ud$/) { undo(2); return; }
   if ($_[0] =~ /^ud1$/) { undo(3); return; }
   if ($_[0] =~ /^ue$/) { $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; }
+  if ($_[0] =~ /^ue$/) { $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now @toggles[$showUndoBefore].\n"; return; }
   if ($_[0] =~ /^ul$/) { print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; }
   if ($_[0] =~ /^sl$/) { $sinceLast = !$sinceLast; print "See overturned since last now @toggles[$sinceLast].\n"; return; }
   if ($_[0] =~ /^sae$/) { $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now @toggles[$saveAtEnd].\n"; return; }
@@ -200,7 +201,7 @@ sub procCmd
 	    if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
 	    elsif ($from == @rows[1]) { if (botCard($thisRow) > botCard(@rows[0])) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); } else { autoShuffleExt(@rows[1], @rows[0], $thisRow); } }
 	    else { if (botCard(@rows[0]) < botCard(@rows[1])) { autoShuffleExt($thisRow, @rows[0], @rows[1]); } else { autoShuffleExt($thisRow, @rows[1], @rows[0]); } }
-		if ($#undoArray = $beforeArray) { printDebug("Nothing turned over turn $count."); }
+		if ($#undoArray == $beforeArray) { printDebug("Nothing turned over turn $count."); }
 	  }
 	}
 	$quickMove = 0;
@@ -511,8 +512,8 @@ sub saveDeck
   open(A, "$filename");
   open(B, ">$backupFile");
   $lastSearchCmd = $_[0];
-  if ($lastSearchCmd =~ /^so=/) { $lastSearchCmd =~ s/^so=/s=/g; }
-  
+  if ($lastSearchCmd =~ /^sf=/) { $lastSearchCmd =~ s/^sf=/s=/g; }
+
   while ($a = <A>)
   {
     print B $a;
@@ -1882,6 +1883,7 @@ sub undoToStart
 sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
 {
   $undo = 1; $undidThisTurn = 1;
+  if ($showUndoBefore) { print "Undo array: @undoArray\n"; }
   if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
   if ($_[0] == 2) { if ((@undoArray[$#undoArray] eq "n-") && (@undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
   if ($undoDebug)
