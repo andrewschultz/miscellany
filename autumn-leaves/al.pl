@@ -127,6 +127,7 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
+  if ($_[0] =~ /^pl$/) { if ($#pointsArray > -1) { for $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print @pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; }
   if ($_[0] =~ /^uu$/) { $undidThisTurn = 1; undoToStart(); return; }
   if ($_[0] =~ /^ud$/) { undo(2); return; }
   if ($_[0] =~ /^ud1$/) { undo(3); return; }
@@ -842,6 +843,8 @@ $printedThisTurn = 0;
 
 $anyMovesYet = 0;
 
+@pointsArray = ();
+
 printDebug("Easy default = $easyDefault, array: @initArray\n");
 if ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); $forced = 1; }
 elsif ($easyDefault == 2) { fillRandInitArray(); @force = @initArray; $forced = 1; }
@@ -920,7 +923,7 @@ if (($autoOnes) || ($beginOnes) || ($autoOneSafe))
 sub drawSix
 {
 if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
-if ($drawsLeft != 6) { $anyMovesYet = 1; } # this is the initial draw so it can't count as a move.
+if ($drawsLeft != 6) { $anyMovesYet = 1; my $newBreak = breakScore(0) . "/" . breakScore(1); push (@pointsArray, $newBreak); printDebug("Draw six: $newBreak\n"); } # this is the initial draw so it can't count as a move.
 for (1..6)
 {
   if ($fixedDeckOpt)
@@ -1290,6 +1293,21 @@ sub showLegalsAndStats
 	 if (($gotEmpty) || ($canMakeEmpty)) { print "You can still create an empty slot.\n"; } else { print "You don't have any productive moves left. This position looks lost, unless you wish to UNDO.\n"; }
   }
 
+  if ($chains != 48) # that means a win, no need to print stats
+  {
+  printOutSinceLast();
+  my $brkPoint = breakScore(0);
+  my $brkFull = breakScore(1);
+  my $breaks = breakScore(2);
+  $visible = $cardsInPlay - $hidCards;
+  @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
+  }
+}
+
+sub breakScore
+{
+  my $brkPoint = 0;
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
   my $brkPoint = 0;
@@ -1317,13 +1335,7 @@ sub showLegalsAndStats
 	  else { $brkPoint += 4; }
 	}
   }
-  if ($chains != 48) # that means a win, no need to print stats
-  {
-  printOutSinceLast();
-  my $brkFull = 24 * $drawsLeft + $brkPoint;
-  @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
-  }
+  if ($_[0] == 0) { return $brkPoint; } elsif ($_[0] == 2) { return $breaks; } else { return $brkPoint + 24 * $drawsLeft; }
 }
 
 sub printOutSinceLast
@@ -1873,6 +1885,7 @@ sub reinitBoard
 sub undoToStart
 {
   if (!$anyMovesYet) { print "Reshuffling auto-moves if available.\n"; }
+  @pointsArray = ();
   reinitBoard();
   @cardUnder = @backupCardUnder;
   @fixedDeck = @oneDeck;
@@ -1901,6 +1914,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   @force = ();
+  @pointsArray = ();
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
@@ -2060,7 +2074,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 		  if (!$quickStr) { $quickStr .= "AUTO: $tempStr"; } else { if ($totMove % 5 == 0) { $quickStr .= "\n      "; } else { $quickStr .= ", "; } $quickStr .= "$tempStr"; }
 		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
 		}
-	  } else { printDebug("$i $j @thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i] = err $err\n"); }
+	  } #else { printDebug("$i $j @thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i] = err $err\n"); }
 	}
   }
   }
@@ -2073,7 +2087,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 
 sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one. Ah, 8h, 9h would be yes, for instance.
 {
-  printDebug("Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n");
+  #printDebug("Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n");
   if (suit($_[0]) != suit($_[2])) { return -1; }
   if ($_[2] - $_[1] != 1) { return -2; }
   if (!$anyMovesYet) { return 1; }
