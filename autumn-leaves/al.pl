@@ -65,12 +65,15 @@ sub procCmdFromUser #this is so they can't use debug commands
   $shouldMove = 0;
   procCmd($_[0]);
   my $afterCmd = $#undoArray;
-  if ($afterCmd - $beforeCmd > 1)
+  if (($afterCmd - $beforeCmd > 1) && ($anyMovesYet) && (!$undidThisTurn))
   {
   splice(@undoArray, $beforeCmd+1, 0, "n+");
   push(@undoArray, "n-");
+  printDebug("pushing n+ to " . $beforeCmd + 1 . "\n");
   }
+  $undidThisTurn = 0;
   if ((!$errorPrintedYet) && ($shouldMove) && ($beforeCmd == $afterCmd)) { print "NOTE: no moves were made, though no error message was thrown.\n"; }
+  if ($undoEach) { print "Undo array: @undoArray\n"; }
 }
 
 sub procCmd
@@ -124,9 +127,10 @@ sub procCmd
 	  else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
   }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
-  if ($_[0] =~ /^uu$/) { undoToStart(); return; }
+  if ($_[0] =~ /^uu$/) { $undidThisTurn = 1; undoToStart(); return; }
   if ($_[0] =~ /^ud$/) { undo(2); return; }
   if ($_[0] =~ /^ud1$/) { undo(3); return; }
+  if ($_[0] =~ /^ue$/) { $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; }
   if ($_[0] =~ /^ul$/) { print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; }
   if ($_[0] =~ /^sl$/) { $sinceLast = !$sinceLast; print "See overturned since last now @toggles[$sinceLast].\n"; return; }
   if ($_[0] =~ /^sae$/) { $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now @toggles[$saveAtEnd].\n"; return; }
@@ -838,8 +842,8 @@ $printedThisTurn = 0;
 $anyMovesYet = 0;
 
 printDebug("Easy default = $easyDefault, array: @initArray\n");
-if ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); }
-elsif ($easyDefault == 2) { fillRandInitArray(); @force = @initArray; }
+if ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); $forced = 1; }
+elsif ($easyDefault == 2) { fillRandInitArray(); @force = @initArray; $forced = 1; }
 elsif ($#initArray == -1) { @force = (); } else { @force = @initArray; $forced = 1; }
 
 my $deckTry = 0;
@@ -900,18 +904,22 @@ $deckTry++;
 deckFix();
 
 if ($forced) { print "You start with $thisStartMoves 'points'.\n"; }
-elsif ($startWith > 2) { print "Succeded on try $deckTry, starting with $thisStartMoves 'points'.\n"; }
+elsif ($startWith > 2) { print "Succeeded on try $deckTry, starting with $thisStartMoves 'points'.\n"; }
 
 @initArray = ();
 
-if (($autoOnes) || ($beginOnes) || ($autoOneSafe)) { $moveBar = 0; ones(0); $anyMovesYet = 0; }
+if (($autoOnes) || ($beginOnes) || ($autoOneSafe))
+{
+  $moveBar = 0; ones(0); $anyMovesYet = 0;
+  if ($#undoArray > 1) { splice(@undoArray, 0, 0, "n+"); push(@undoArray, "n-"); }
+}
 
 }
 
 sub drawSix
 {
 if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
-$anyMovesYet = 1;
+if ($drawsLeft != 6) { $anyMovesYet = 1; } # this is the initial draw so it can't count as a move.
 for (1..6)
 {
   if ($fixedDeckOpt)
@@ -999,7 +1007,7 @@ sub printdeck #-1 means don't print the ones
   if ($testing) { return; }
   if ($undo) { return; }
   if ($quickMove) { return; }
-  if (($autoOneSafe) && ($_[0] != -1)) { ones(0); } # there has to be a better way to do this
+  if (($autoOneSafe) && ($_[0] != -1) && ($anyMovesYet)) { ones(0); } # there has to be a better way to do this
   if ($printedThisTurn) { print "Warning tried to print this turn.\n"; return; }
   $printedThisTurn = 1;
   if (!$anyMovesYet) { print "========NO MANUAL MOVES MADE YET========\n"; }
@@ -1871,20 +1879,11 @@ sub undoToStart
   printdeck();
 }
 
-sub placeUndoStart #deprecated but I'll keep around til sure there are no bad bugs
-{
-  push(@undoArray, "n+");
-}
-
-sub placeUndoEnd #deprecated but I'll keep around til sure there are no bad bugs
-{
-  if (@undoArray[$#undoArray] eq "n+") { pop(@undoArray); } else { push(@undoArray, "n-"); }
-}
-
 sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
 {
+  $undo = 1; $undidThisTurn = 1;
   if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
-  $undo = 1;
+  if ($_[0] == 2) { if ((@undoArray[$#undoArray] eq "n-") && (@undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
   if ($undoDebug)
   {
     print "Writing to debug...\n";
@@ -1928,12 +1927,12 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	elsif (($_[0] ==3) && (@undoArray[$x] eq "df"))
 	{
 	  print "Already at a draw, so only going back one move.\n";
-	  while ((@undoArray[$x] =~ /^[fd]/) && ($x > 0)) { $x--; pop(@undoArray); }
+	  while ((@undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
 	  #print "1=============\n@undoArray\n";
-	while ((@undoArray[$x] ne "df") && ($x > 0)) { $x--; pop(@undoArray); }
+	while ((@undoArray[$x] ne "df") && ($x >= 0)) { $x--; pop(@undoArray); }
 	  #print "2=============\n@undoArray\n";
 	if (($_[0] == 3) && ($x > 0))  # encountered df.
 	{
@@ -1945,6 +1944,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	  }
 	  if ($temp != 6) { print "WARNING: popped wrong number of forces ($temp) in undo array. Push ul for full details.\n"; }
 	}
+	if ($_[0] == 2) { push(@undoArray, "n-"); }
 	}
 	elsif (($temp eq "n-"))
 	{
@@ -1977,6 +1977,13 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   $undo = 0;
   @outSinceLast = ();
   printdeck(-1);
+  printDebug(@undoArray);
+}
+
+sub printLowCards
+{
+  print "Low cards: ";
+  for $a (1..6) { print "$a " . faceval(botCard($a)) . " "; } print "\n";
 }
 
 sub showhidden
@@ -2013,6 +2020,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 
   my $quickStr = "";
 
+  printDebug("Before outer: $#undoArray\n");
   OUTER: do
   {
   $anyYet = 0;
@@ -2034,7 +2042,8 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   {
     for $i (1..6)
 	{
-	  if (canFlipQuick(@thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i]))
+	  $err = canFlipQuick(@thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i]);
+	  if ($err > 0)
 	  {
 	    if (!$anyYet)
 		{
@@ -2044,11 +2053,12 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 		  if ($thisTopCard[$j] != $thisBotCard[$j]) { $tempStr .= "/" . faceval(@thisTopCard[$j]); }
 		  $tempStr .= " -> " . faceval(@thisBotCard[$i]);
 		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(); die; }
+  if ($debug) { printDebug("$i -> $j "); printLowCards(); }
 		  tryMove("$j$i", -1);
 		  if (!$quickStr) { $quickStr .= "AUTO: $tempStr"; } else { if ($totMove % 5 == 0) { $quickStr .= "\n      "; } else { $quickStr .= ", "; } $quickStr .= "$tempStr"; }
 		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
 		}
-	  }
+	  } else { printDebug("$i $j @thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i] = err $err\n"); }
 	}
   }
   }
@@ -2061,9 +2071,9 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 
 sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one. Ah, 8h, 9h would be yes, for instance.
 {
-  #printDebug("Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n");
-  if (suit($_[0]) != suit($_[2])) { return 0; }
-  if ($_[2] - $_[1] != 1) { return 0; }
+  printDebug("Trying $_[0]:$_[1] to $_[2], any moves = $anyMovesYet\n");
+  if (suit($_[0]) != suit($_[2])) { return -1; }
+  if ($_[2] - $_[1] != 1) { return -2; }
   if (!$anyMovesYet) { return 1; }
   
   #note that having, say, a 2H on the bottom must be safe as only the 1H can be placed and it does not matter where the 1H might show up later
@@ -2102,14 +2112,14 @@ sub canFlipQuick #can card 1 be moved onto card 3? card 2 is the top one. Ah, 8h
 	
 	while ($temp < $_[0])
 	{
-	#print "$temp: $inStack{$temp}\n";
-	if (!$inStack{$temp}) { return 0; }
+	#printDebug("$temp vs $_[0]: $inStack{$temp}\n");
+	if (!$inStack{$temp}) { return -3; }
 	$temp++;
 	}
 	return 1;
   }
   if ($autoOnes) { return 1; }
-  return 0;
+  return -4;
 }
 
 sub checkwin
@@ -2410,6 +2420,7 @@ ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not 
 sl=save last undo array (to undo-debug.txt)
 du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 uu=undo all the way to the start
+ue=toggle undo each turn (only debug)
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
 1s=auto ones safe (only bottom ones visible are matched up)

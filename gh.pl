@@ -4,23 +4,31 @@ use File::Compare;
 
 $ght = "c:/writing/scripts/gh.txt";
 
+$defaultString = "as";
+
 preProcessHashes();
 
+#these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the 
 $justPrint = 0;
+$verbose = 0;
 
 $gh = "c:\\users\\andrew\\Documents\\github";
 
-if (@ARGV[0] eq "-j") { shift(@ARGV); $justPrint = 1; }
-
-if (@ARGV[0])
+while ($count <= $#ARGV)
 {
-  if ($altHash{@ARGV[0]})
-  { $procString = $altHash{@ARGV[0]}; }
-  else
-  { $procString = @ARGV[0]; }
+  $a = @ARGV[$count];
+  for ($a)
+  {
+  /-j/ && do { $justPrint = 1; $count++; next; };
+  /-v/ && do { $justPrint = 1; $count++; next; };
+  /^[a-z]/ && do { if ($altHash{@ARGV[0]}) { print "@ARGV[0] => $altHash{@ARGV[0]}\n"; $procString = $altHash{@ARGV[0]}; } else { $procString = @ARGV[0]; } $count++; next; };
+  /^-\?/ && do { usage(); };
+  print "$a not recognized.\n";
+  usage();
+  }
 }
-else
-{ print "Default string: $procString\n"; }
+
+if (!$procString) { $procString = $defaultString; print "Default string: $procString\n"; }
 
 findTerms();
 
@@ -37,13 +45,16 @@ for (@procAry)
   }
 }
 
+if ($verbose)
+{
 for $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
+}
 
 processTerms();
 
 sub processTerms
 {
-  $copies = 0; $unchanged = 0;
+  $copies = 0; $unchanged = 0; $wildcards = 0;
   open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
@@ -52,15 +63,16 @@ sub processTerms
     $b =~ s/=.*//g;
     if ($do{$b})
     {
-	  $didOne = 1;
+	  $didOne = 1; $wc;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
 	  
 	  if (-d "$gh\\@d[1]") { $short = @d[0]; $short =~ s/.*[\\\/]//g; $outName = "$gh\\@d[1]\\$short"; } else { $outName = "$gh\\@d[1]"; }
 	  if (compare(@d[0], "$outName"))
 	  {
       $cmd = "copy \"@d[0]\" $gh\\@d[1]";
-	  if (@d[0] =~ /\*/) { $wildcards++; } else { $copies++; }
-	  if ($justPrint) { print "$cmd\n"; } else { `$cmd`; }
+	  if (@d[0] =~ /\*/) { $wildcards++; $thisWild = 1; } else { $copies++; }
+	  $fileList .= "@d[0]\n";
+	  if ($justPrint) { print "$cmd\n"; } else { $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } }
 	  }
 	  else
 	  {
@@ -70,7 +82,7 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged.\n"; }
+  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } }
 }
 
 ##########################
@@ -114,4 +126,15 @@ sub preProcessHashes
 	}
   }
   close(A);
+}
+
+sub usage
+{
+print<<EOT;
+========USAGE
+-v = verbose output
+-j = just print commands instead of executing
+-? = this
+EOT
+exit;
 }

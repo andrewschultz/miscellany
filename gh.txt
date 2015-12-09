@@ -3,6 +3,8 @@ pc~prob
 tpc~prob
 sts~shu,roi,stsu
 sa~shu
+sc~city
+as~pc,sc
 4~4d
 
 #Shuffling files
@@ -134,10 +136,10 @@ prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips 
 prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
 
 #Slicker City files to BitBucket (for now)
-sc=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
-sc=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
-sc=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
-sc=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city
+city=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
+city=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
+city=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
+city=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
@@ -145,6 +147,7 @@ rpg=c:\writing\scripts\mc.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
 rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 
 #misc stuff
+misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial Niceties.i7x,misc\i7x
 misc=c:\coding\perl\proj\al.pl,misc\autumn-leaves
 misc=c:\coding\perl\proj\al.txt,misc\autumn-leaves
 misc=c:\coding\perl\proj\alt.txt,misc\autumn-leaves
