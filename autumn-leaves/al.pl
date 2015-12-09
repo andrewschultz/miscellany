@@ -184,15 +184,20 @@ sub procCmd
 	}
 	if (botSuit($thisRow) == $fromSuit)
 	{
-	while (isEmpty(@rows[1]) + isEmpty(@rows[0]) + isEmpty($thisRow) < 2)
-	{
-	  $errPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
-	  my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
-	  printDebug ("Lowest is $from, of @rows[0] @rows[1] $thisRow\n");
-	  if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
-	  elsif ($from == @rows[1]) { if (botCard($thisRow) > botCard(@rows[0])) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); } else { autoShuffleExt(@rows[1], @rows[0], $thisRow); } }
-	  else { if (botCard(@rows[0]) < botCard(@rows[1])) { autoShuffleExt($thisRow, @rows[0], @rows[1]); } else { autoShuffleExt($thisRow, @rows[1], @rows[0]); } }
-	}
+	  my $count = 0;
+	  printDebug("Trying extra\n");
+      while ((isEmpty(@rows[1]) + isEmpty(@rows[0]) + isEmpty($thisRow) < 2) && suitsAligned(suit(botCard(@rows[0])), suit(botCard(@rows[1])), suit(botCard($thisRow)), $fromSuit))
+	  {
+		$count += 1; if ($count == 20) { print"Oops. This took too long, bailing.\n"; last; }
+	    printDebug ("Shift $count\n");
+	    $errPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
+	    my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
+  	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of @rows[0] @rows[1] $thisRow\n");
+	    if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
+	    elsif ($from == @rows[1]) { if (botCard($thisRow) > botCard(@rows[0])) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); } else { autoShuffleExt(@rows[1], @rows[0], $thisRow); } }
+	    else { if (botCard(@rows[0]) < botCard(@rows[1])) { autoShuffleExt($thisRow, @rows[0], @rows[1]); } else { autoShuffleExt($thisRow, @rows[1], @rows[0]); } }
+		if ($#undoArray = $beforeArray) { printDebug("Nothing turned over turn $count."); }
+	  }
 	}
 	$quickMove = 0;
 	printdeck();
@@ -1560,6 +1565,15 @@ sub topPosInSuit
   return $temp;
 }
 
+sub suitsAligned
+{
+  for my $z (0..2)
+  { printDebug("Comparing $z to 3: $_[$z] vs $_[3]\n");
+    if (($_[$z] != $_[3]) && ($_[$z] != -1)) { return 0; }
+  }
+  return 1;
+}
+
 sub botSuit
 {
   return suit(botCard($_[0]));
@@ -1708,7 +1722,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $didSafeShuffle = 0;
   my $suitToShuf = $_[3];
   if (!$suitToShuf)  { $suitToShuf = botSuit($_[0]); }
-  printDebug("before autoshuffle: $_[0] to $_[1] via $_[2]\n");
+  printDebug("before autoshuffle: $_[0] to $_[1] via $_[2], cards " . faceval($_[0]) . " to " . faceval($_[1]) . " via " . faceval($_[2]) . "\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
   my $emptyShufRow = firstEmptyRow();
