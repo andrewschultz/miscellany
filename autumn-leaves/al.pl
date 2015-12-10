@@ -89,7 +89,7 @@ sub procCmd
   $letters = $_[0]; $letters =~ s/[^a-z]//gi;
   $numbers = $_[0]; $numbers =~ s/[^0-9]//gi;
   @numArray = split(//, $numbers);
-
+  
   #meta commands first, or commands with equals
   if ($_[0] =~ /^%$/) { stats(); return; }
   if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
@@ -120,15 +120,17 @@ sub procCmd
     /^sd$/ && do { cmdNumWarn($numbers); saveDefault(); return; };
 	/^$/ && do
 	{
-	  if ($numbers eq "") { printdeck(); return; } # no error on blank input, just print out
+	  if ($numbers eq "") { printdeck(-1); return; } # no error on blank input, just print out. And -1 says don't try ones which removes a n-
 	  if ($#numArray > 2) { print "Too many numbers. You can use 1-3.\n"; return; }
 	  if (cmdBadNumWarn($numbers)) { return; }
 	  if ($#numArray == 1)
 	  {
+        $b4 = $#undoArray;
 	    if (@numArray[0] == @numArray[1]) { print "Can't move stack onto itself.\n"; return; }
 		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; return; }
 		tryMove("@numArray[0]@numArray[1]");
-  	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks have the same suit at the bottom.\n"; } } else { printdeck(); checkwin(); }
+  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
+		return;
 	  }
       if ($#numArray == 2)
       { # detect 2 ways
@@ -141,7 +143,7 @@ sub procCmd
 	    tryMove("@numArray[0]@numArray[2]");
 	    tryMove("@numArray[1]@numArray[2]");
 	    $quickMove = 0;
-  	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
+  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
 	    return;
       }
 	  if ($#numArray == 0)
@@ -255,9 +257,10 @@ sub procCmd
 	  checkwin();
 	  return;
     };
- 	/^ud$/ && do { if ($#numbers == -1) { undo(2); } else { undo(3); } return; };
-    /^ue$/ && do { $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; };
-    /^ul$/ && do { print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
+ 	/^ud$/ && do { cmdNumWarn($numbers); undo(2); return; };
+ 	/^ub$/ && do { cmdNumWarn($numbers); undo(3); return; };
+    /^ue$/ && do { cmdNumWarn($numbers); $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; };
+    /^ul$/ && do { cmdNumWarn($numbers); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
 	/^uu$/ && do { cmdNumWarn($numbers); $undidThisTurn = 1; undoToStart(); return; };
     /^x$/ && do
     {
@@ -414,14 +417,14 @@ sub expandOneColumn
 
 sub cmdNumWarn # called with 1 it requires numbers. Called without it it does not.
 {
-  if ((!$_[1]) && ($_[0] ne "")) { print "WARNING: command $_[0] does not require numbers.\n"; return 1; }
-  if ($_[1] && ($_[0] eq "")) { print "WARNING: command $_[0] requires numbers.\n"; return 1; }
+  if ((!$_[1]) && ($_[0] ne "")) { print "WARNING: command $letters does not require numbers.\n"; return 1; }
+  if ($_[1] && ($_[0] eq "")) { print "WARNING: command $letters requires numbers.\n"; return 1; }
   return 0;
 }
 
 sub cmdBadNumWarn
 {
-  if ($_[0] =~ /[0789]/) { print "WARNING: command $_[0] requires only numerals 1-6.\n"; return 1; }
+  if ($_[0] =~ /[0789]/) { print "WARNING: command $letters requires only numerals 1-6.\n"; return 1; }
   return 0;
 }
 
@@ -1019,6 +1022,11 @@ sub printdeckforce
   $testing = $testold;
 }
 
+sub ping
+{
+  if ($debug) { print("PING debug\n"); }
+}
+
 sub printDebugAnyway
 {
   if ($debug) { printAnyway(); }
@@ -1039,7 +1047,7 @@ sub printAnyway
   $testing = $te;
 }
 
-sub printdeck #-1 means don't print the ones
+sub printdeck #-1 means don't print the ones and also it avoids the ones-ish getting rid of the n- at the end
 {
   if ($testing) { return; }
   if ($undo) { return; }
@@ -1450,7 +1458,7 @@ sub tryMove
 
   if ($from==$to) { barMove("Oops, tried to switch a row with itself.\n"); return; }
 
-  if (!$stack[$from][0]) { barMove("Empty row/column.\n"); return; } # note: this needs a better error message.
+  if (!$stack[$from][0]) { barMove("Tried to move from empty row/column.\n"); return; } # note: this needs a better error message.
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -1476,6 +1484,7 @@ sub tryMove
 	  {
 	    barMove("$from-$to: Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n");
 	  }
+	  if ($undo) { print "WARNING: bad move tried during redo. Type UL for details.\n"; }
 	  return;
 	}
   }
@@ -2186,7 +2195,7 @@ sub checkwin
 	  {
 	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1]) && (suit(@x[$_]) == suit(@x[$_+1]))) { $_++; $inarow++; }
 	  }
-	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[$_/13+1]; } else { $suitlist .= " @sui[@x[$_]/13+1]"; } }
+	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[@x[$_]/13+1]; } else { $suitlist .= " @sui[@x[$_]/13+1]"; } }
 	}
   }
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
@@ -2461,8 +2470,8 @@ sw0=shows odds of points to start with
 sb=show blocked moves toggle
 u=undo
 u1=undo one move
-ud=undo to before last 6-card draw
-ud1=undo to last 6-card draw
+ud=undo to last 6-card draw
+ub=undo to before last 6-card draw
 ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not perfect yet.)
 sl=save last undo array (to undo-debug.txt)
 du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
