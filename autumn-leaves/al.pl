@@ -209,7 +209,7 @@ sub procCmd
     /^sol$/ && do { cmdNumWarn($numbers); $sinceLast = !$sinceLast; print "See overturned since last now @toggles[$sinceLast].\n"; return; };
     /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; };
     /^su$/ && do { cmdNumWarn($numbers); $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now @toggles[$showUndoBefore].\n"; return; };
-    /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); }};
+    /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
     /^sw/ && do { if (!$numbers) { printPoints(); return; }
     if (($numbers < 2) || ($numbers > 9)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; }
     $startWith = $numbers;
@@ -268,6 +268,7 @@ sub procCmd
 	  if ($#numArray == 0) { expandOneColumn($numbers); return; }
 	  if ($#numArray == 2)
       {
+	    if ((botSuit(@numArray[0]) != botSuit(@numArray[2])) && (!isEmpty(@numArray[2]))) { print "Wrong to-from suit.\n"; return; }
         $shouldMove = 1;
 	    $b4 = $#undoArray;
 	    $quickMove = 1;
@@ -276,7 +277,7 @@ sub procCmd
 	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(); checkwin(); }
 	    return;
       }
-	  if ($#numArray = 3) { print "Too many numbers. "; }
+	  if ($#numArray == 3) { print "Too many numbers. "; }
 	  print "x (1 number) spills a row. x (3 numbers) sends 1st to 3rd via 2nd.\n"; return;
 	};
     /^z/ && do { cmdNumWarn($numbers); print "Time passes more slowly than if you actually played the game.\n"; return; };
@@ -1935,6 +1936,8 @@ sub undoToStart
 
 sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
 {
+  my $tempUndoCmd = "";
+  my $lastNMinus = 0;
   $undo = 1; $undidThisTurn = 1;
   if ($showUndoBefore) { print "Undo array: @undoArray\n"; }
   if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
@@ -1951,6 +1954,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	if (-s "undo-debug.txt" > 100000) { print "WARNING trim undodebug file.\n"; }
   }
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
+  if (@undoArray[$#undoArray] eq "n-") { $lastNMinus = 1; }
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   @force = ();
@@ -1958,16 +1962,16 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
-  $temp = @undoArray[$x];
+  $tempUndoCmd = @undoArray[$x];
   #print "$x elts left\n";
   if ($x >= 0)
   {
-	while (($x > 0) && ($temp eq "n+")) { pop(@undoArray); $x--; $temp = @undoArray[$x]; }
-	if (($_[0] != 3) || ($temp ne "df")) # special case: Don't pop if we are near a DF anyway
+	while (($x > 0) && ($tempUndoCmd eq "n+")) { pop(@undoArray); $x--; $tempUndoCmd = @undoArray[$x]; }
+	if (($_[0] != 3) || ($tempUndoCmd ne "df")) # special case: Don't pop if we are near a DF anyway
 	{
-    $temp = pop(@undoArray);
+    $tempUndoCmd = pop(@undoArray);
 	$x--;
-	printDebug("Popped $temp\n");
+	printDebug("Popped $tempUndoCmd\n");
 	}
 	if ($_[0] == 1)
 	{
@@ -1975,7 +1979,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	{
 	while ((@undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
 	{
-	  $x--; $temp = pop(@undoArray);
+	  $x--; $tempUndoCmd = pop(@undoArray);
 	}
 	$undos++;
 	}
@@ -1992,17 +1996,17 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	  #print "2=============\n@undoArray\n";
 	if (($_[0] == 3) && ($x > 0))  # encountered df.
 	{
-	  $temp = 0;
+	  $tempUndoCmd = 0;
 	  pop(@undoArray); $x = $#undoArray;
 	  while ((@undoArray[$x] =~ /^f/) && ($x > 0))
 	  {
-	    $x--; pop(@undoArray); $temp++;
+	    $x--; pop(@undoArray); $tempUndoCmd++;
 	  }
-	  if ($temp != 6) { print "WARNING: popped wrong number of forces ($temp) in undo array. Push ul for full details.\n"; }
+	  if ($tempUndoCmd != 6) { print "WARNING: popped wrong number of forces ($tempUndoCmd) in undo array. Push ul for full details.\n"; }
 	}
 	if ($_[0] == 2) { push(@undoArray, "n-"); }
 	}
-	elsif (($temp eq "n-"))
+	elsif (($tempUndoCmd eq "n-"))
 	{
 	while ((@undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
@@ -2011,15 +2015,15 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	while ((@undoArray[$x] =~ /^(f|n\+)/) && ($x >= 0))
 	{
 	  $x--;
-	  $temp = pop(@undoArray);
-	  #print "extra-popped 1 $temp\n";
+	  $tempUndoCmd = pop(@undoArray);
+	  #print "extra-popped 1 $tempUndoCmd\n";
 	}
 	}
 	while ((@undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
 	{
 	  $x--;
-	  $temp = pop(@undoArray);
-	  #print "extra-popped 2 $temp\n";
+	  $tempUndoCmd = pop(@undoArray);
+	  #print "extra-popped 2 $tempUndoCmd\n";
 	}
   }
   #print "@undoArray\n";
@@ -2033,6 +2037,8 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   $undo = 0;
   @outSinceLast = ();
   printdeck(-1);
+  # allow for an undo on back regularly after a u1
+  if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+")) { push(@undoArray, "n-"); }
   printDebug(@undoArray);
 }
 
