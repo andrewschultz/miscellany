@@ -137,6 +137,8 @@ prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
 
 #Slicker City files to BitBucket (for now)
 city=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
+city=c:\games\inform\slicker-city Materials\Release\slicker-city-invisiclues.htm,slicker-city
+city=c:\games\inform\slicker-city Materials\Release\Slicker City.zblorb,slicker-city
 city=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
 city=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
 city=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city

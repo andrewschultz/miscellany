@@ -92,11 +92,11 @@ sub procCmd
   
   #meta commands first, or commands with equals
   if ($_[0] =~ /^%$/) { stats(); return; }
-  if ($_[0] =~ /^l=/i) { loadDeck($_[0]); return; }
-  if ($_[0] =~ /^lf=/i) { loadDeck($_[0], 1); return; }
+  if ($_[0] =~ /^l(i?)=/i) { loadDeck($_[0]); return; }
+  if ($_[0] =~ /^lf(i?)=/i) { loadDeck($_[0], 1); return; }
   if ($_[0] =~ /^lw=/i) { $avoidWin = 1; loadDeck($_[0]); $avoidWin = 0; return; }
-  if ($_[0] =~ /^s=/i) { saveDeck($_[0], 0); return; }
-  if ($_[0] =~ /^sf=/i) { saveDeck($_[0], 1); return; }
+  if ($_[0] =~ /^s(i?)=/i) { saveDeck($_[0], 0); return; }
+  if ($_[0] =~ /^sf(i?)=/i) { saveDeck($_[0], 1); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
@@ -545,12 +545,13 @@ sub saveDeck
   chomp($_[0]);
   my $filename = "al-sav.txt";
   my $overwrite = 0;
-
+  my $writeIgnore = 0;
 
   open(A, "$filename");
   open(B, ">$backupFile");
   $lastSearchCmd = $_[0];
-  if ($lastSearchCmd =~ /^sf=/) { $lastSearchCmd =~ s/^sf=/s=/g; }
+  if ($_[0] =~ /s(f?)i=/i) { $ignorePrintedCards = 1; }
+  if ($lastSearchCmd =~ /^s[a-z]+=/i) { $lastSearchCmd =~ s/^s[a-z]+=/s=/gi; }
 
   while ($a = <A>)
   {
@@ -565,6 +566,7 @@ sub saveDeck
 	  print B "$vertical,$collapse\n";
 	  print B "TC=" . join(",", @topCard) . "\n";
 	  print B "M=" . join(",", @undoArray) . "\n";
+	  if ($ignorePrintedCards) { print B "IGNORE\n"; }
 	  if ($fixedDeckOpt)
 	  {
 	    print B "FD=" . join(",", @oneDeck) . "\n";
@@ -583,6 +585,7 @@ sub saveDeck
 	print B "$vertical,$collapse\n";
 	print B "TC=" . join(",", @topCard) . "\n";
 	print B "M=" . join(",", @undoArray) . "\n";
+    if ($ignorePrintedCards) { print B "IGNORE\n"; }
 	if ($fixedDeckOpt)
 	{
 	  print B "FD=" . join(",", @oneDeck) . "\n";
@@ -615,6 +618,7 @@ sub loadDeck
   my @reconArray;
   my $loadFuzzy = 0;
   if ($_[1]) { $loadFuzzy = 1; }
+  if ($_[0] =~ /^l(f?)i/i) { $loadIgnore = 1; $_[0] =~ s/^([a-z])i=/$1=/g; }
 
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; # read in default values
   my $hidRow = 0;
@@ -625,6 +629,7 @@ sub loadDeck
     chomp($a);
 	$fixedDeckOpt = 0;
 	my $rowsRead = 0;
+	my $ignoreThis = 0;
 	if ($a =~ /;$/) { last; }
     if (("$a" eq "$search") || ($loadFuzzy && ($a =~ /$search/i)))
 	{
@@ -671,8 +676,12 @@ sub loadDeck
 		@{cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
+	  if ($a =~ /^ignore/) { $ignoreThis = 1; }
 	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
+	  if ($ignoreThis) { $undo = 1; reinitBoard(); for my $saveCmd (@undoArray) { procCmd($saveCmd); } $undo = 0; last; }
+	  else
+	  {
 	  @loadedArray = split(/,/, $a); # here we read in an array and process it for 3-7, etc., but initialize everything first of course
 	  $loadedIndex = 0;
 	  $outIndex = 0;
@@ -703,6 +712,7 @@ sub loadDeck
 		} elsif ($card == -1) { $cardsInPlay++; $hidCards++; }
 	    }
 	  $drawsLeft = (52-$cardsInPlay)/6;
+	  }
 	}
 	if ($#testArray > -1)
 	{
@@ -960,7 +970,10 @@ if (($autoOnes) || ($beginOnes) || ($autoOneSafe))
 sub drawSix
 {
 if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
-if ($drawsLeft != 6) { $anyMovesYet = 1; my $newBreak = breakScore(0) . "/" . breakScore(1); push (@pointsArray, $newBreak); printDebug("Draw six: $newBreak\n"); } # this is the initial draw so it can't count as a move.
+if ($drawsLeft != 6)
+{
+  $anyMovesYet = 1;
+  @q = breakScore(); push (@pointsArray, @q[0] . "/" . @q[1]); printDebug("Draw six: $newBreak\n"); } # this is the initial draw so it can't count as a move.
 for (1..6)
 {
   if ($fixedDeckOpt)
@@ -2459,10 +2472,10 @@ sub usageDet
 {
 print<<EOT;
 s=saves current deck (rejected if name is used)
-sf=save-forces if name exists
+sf=save-forces if name exists (sfi/si saves "ignore")
 h=shows hidden/left cards
 l=loads exact saved-deck name (e.g. s=me loaded be l=me)
-lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name)
+lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name) (li/lfi ignores the saved position)
 t=loads test
 tf=full test
 os/so=option save
