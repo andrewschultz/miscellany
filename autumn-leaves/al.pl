@@ -92,11 +92,11 @@ sub procCmd
   
   #meta commands first, or commands with equals
   if ($_[0] =~ /^%$/) { stats(); return; }
-  if ($_[0] =~ /^l(i?)=/i) { loadDeck($_[0]); return; }
-  if ($_[0] =~ /^lf(i?)=/i) { loadDeck($_[0], 1); return; }
+  if ($_[0] =~ /^l([bi]?)=/i) { loadDeck($_[0]); return; }
+  if ($_[0] =~ /^lf([bi]?)=/i) { loadDeck($_[0], 1); return; }
   if ($_[0] =~ /^lw=/i) { $avoidWin = 1; loadDeck($_[0]); $avoidWin = 0; return; }
-  if ($_[0] =~ /^s(i?)=/i) { saveDeck($_[0], 0); return; }
-  if ($_[0] =~ /^sf(i?)=/i) { saveDeck($_[0], 1); return; }
+  if ($_[0] =~ /^s([bi]?)=/i) { saveDeck($_[0], 0); return; }
+  if ($_[0] =~ /^sf([bi]?)=/i) { saveDeck($_[0], 1); return; }
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
@@ -189,6 +189,7 @@ sub procCmd
     /^debug/ && do { cmdNumWarn($numbers); printdeckraw(); return; };
     /^df/ && do { cmdNumWarn($numbers); drawSix(); printdeck(); checkwin(); return; };
     /^e$/ && do { cmdNumWarn($numbers); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; };
+	/^ib$/ && do { cmdNumWarn($numbers); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position @toggles[$ignoreBoardOnSave].\n"; return; };
     /^mr/ && do { cmdNumWarn($numbers); $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers); showOpts(); return; };
     /^pl$/ && do { cmdNumWarn($numbers); if ($#pointsArray > -1) { for $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print @pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
@@ -418,14 +419,18 @@ sub expandOneColumn
 
 sub cmdNumWarn # called with 1 it requires numbers. Called without it it does not.
 {
-  if ((!$_[1]) && ($_[0] ne "")) { print "WARNING: command $letters does not require numbers.\n"; return 1; }
-  if ($_[1] && ($_[0] eq "")) { print "WARNING: command $letters requires numbers.\n"; return 1; }
+  my $let = $letters;
+  if (!$let) { $let = "(empty)"; }
+  if ((!$_[1]) && ($_[0] ne "")) { print "WARNING: command $let does not require numbers.\n"; return 1; }
+  if ($_[1] && ($_[0] eq "")) { print "WARNING: command $let requires numbers.\n"; return 1; }
   return 0;
 }
 
 sub cmdBadNumWarn
 {
-  if ($_[0] =~ /[0789]/) { print "WARNING: command $letters requires only numerals 1-6.\n"; return 1; }
+  my $let = $letters;
+  if (!$let) { $let = "(empty)"; }
+  if ($_[0] =~ /[0789]/) { print "WARNING: command $let requires only numerals 1-6.\n"; return 1; }
   return 0;
 }
 
@@ -545,22 +550,29 @@ sub saveDeck
   chomp($_[0]);
   my $filename = "al-sav.txt";
   my $overwrite = 0;
-  my $writeIgnore = 0;
+  my $ignorePrintedCards = $ignoreBoardOnSave;
+  
+  $prefix = $_[0]; $prefix =~ s/=.*//g;
+  if ($prefix =~ /i/) { $ignorePrintedCards = 1; }
+  if ($prefix =~ /b/) { $ignorePrintedCards = 0; }
 
   open(A, "$filename");
   open(B, ">$backupFile");
   $lastSearchCmd = $_[0];
-  if ($_[0] =~ /s(f?)i=/i) { $ignorePrintedCards = 1; }
-  if ($lastSearchCmd =~ /^s[a-z]+=/i) { $lastSearchCmd =~ s/^s[a-z]+=/s=/gi; }
+  if ($lastSearchCmd =~ /^s[a-z]+=/i)
+  {  printDebug("Trimming $lastSearchCmd to ");
+    $lastSearchCmd =~ s/^s[a-z]+=/s=/gi;
+	printDebug("$lastSearchCmd\n");
+  } # get rid of that extra garbage
 
   while ($a = <A>)
   {
     print B $a;
 	if ($a =~ /^;/) { last; }
-    if ($a =~ /^$_[0]$/)
+    if ($a =~ /^$lastSearchCmd$/)
 	{
-	  if ($_[1] == 0) { print "Already an entry named $_[0]. Use so= to force.\n"; close(B); close(A); return; } #we don't care if the backup file is mashed. It'll be re-overwritten anyway
-      print "Overwriting entry $_[0]\n";
+	  if ($_[1] == 0) { print "Already an entry named $lastSearchCmd. Use sf= to force.\n"; close(B); close(A); return; } #we don't care if the backup file is mashed. It'll be re-overwritten anyway
+      print "Overwriting entry $lastSearchCmd\n";
 	  $overwrite = 1;
 	  <A>;
 	  print B "$vertical,$collapse\n";
@@ -617,8 +629,13 @@ sub loadDeck
   my @testArray;
   my @reconArray;
   my $loadFuzzy = 0;
+  my $overrideLoadIgnore = 0;
   if ($_[1]) { $loadFuzzy = 1; }
-  if ($_[0] =~ /^l(f?)i/i) { $loadIgnore = 1; $_[0] =~ s/^([a-z])i=/$1=/g; }
+
+  my $loadIgnore = $ignoreBoardOnSave;
+  $prefix = $_[0]; $prefix =~ s/=.*//g;
+  if ($prefix =~ /i/) { $loadIgnore = 1; }
+  if ($prefix =~ /b/) { $loadIgnore = 0; $overrideLoadIgnore = 1; }
 
   my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; # read in default values
   my $hidRow = 0;
@@ -676,7 +693,7 @@ sub loadDeck
 		@{cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
-	  if ($a =~ /^ignore/) { $ignoreThis = 1; }
+	  if (($a =~ /^ignore/) && (!$overrideLoadIgnore)) { $ignoreThis = 1; }
 	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
 	  if ($ignoreThis) { $undo = 1; reinitBoard(); for my $saveCmd (@undoArray) { procCmd($saveCmd); } $undo = 0; last; }
@@ -2332,7 +2349,7 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; $ignoreBoardOnSave = @opts[11]; close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
 
@@ -2349,7 +2366,7 @@ open(B, ">$backupFile");
 #first line is global settings
 <A>;
 
-print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd\n";
+print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave\n";
 
 while ($a = <A>)
 {
@@ -2472,10 +2489,10 @@ sub usageDet
 {
 print<<EOT;
 s=saves current deck (rejected if name is used)
-sf=save-forces if name exists (sfi/si saves "ignore")
+sf=save-forces if name exists (sfi/si saves "ignore", sfb/sb overrides "ignore")
 h=shows hidden/left cards
 l=loads exact saved-deck name (e.g. s=me loaded be l=me)
-lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name) (li/lfi ignores the saved position)
+lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name) (li/lfi ignores the saved position, lb/fb forces it)
 t=loads test
 tf=full test
 os/so=option save
