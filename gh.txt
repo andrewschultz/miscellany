@@ -9,6 +9,7 @@ as~pc,sc
 
 #Shuffling files
 shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
+shu=c:\games\inform\sa.inform\source\story.nt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\testcase.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\shuffling-logic.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\walkthrough.txt,stale-tales-slate\shuffling
@@ -23,6 +24,7 @@ shu=c:\games\inform\sa.inform\uuid.txt,stale-tales-slate\shuffling
 
 #Roiling files
 roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
+roi=c:\games\inform\roiling.inform\source\story.nt,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\testcase.txt,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\logic.htm,stale-tales-slate\roiling\roiling-logic.htm
 roi=c:\games\inform\roiling.inform\Source\dial.htm,stale-tales-slate\roiling\roiling-random.htm
@@ -39,11 +41,9 @@ roi=c:\games\inform\roiling.inform\source\bk2txt.pl,stale-tales-slate\roiling\tw
 roi=c:\games\inform\roiling.inform\source\bot-json.txt,stale-tales-slate\roiling\twitterbot
 roi=c:\games\inform\triz\mine\voltmaze.trizbort,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,stale-tales-slate\roiling
-roi=c:\games\inform\roiling.inform\source\ppl-scratch.txt,pdf,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\uuid.txt,stale-tales-slate\roiling
 
 #Stale Tales Slate scripts
-stsu=c:\writing\scripts\icl.pl,stale-tales-slate\
 stsu=c:\writing\dict\tsh.pl,stale-tales-slate\
 stsu=c:\writing\dict\weed.pl,stale-tales-slate\
 stsu=c:\writing\scripts\gq.pl,stale-tales-slate\
@@ -168,5 +168,6 @@ misc=c:\writing\scripts\wpb.pl,misc
 misc=c:\writing\scripts\rwi.pl,misc
 misc=c:\writing\scripts\invis.pl,misc
 misc=c:\writing\dict\hc.pl,misc\wordfun
+misc=c:\writing\dict\icl.pl,misc
 
 ;
