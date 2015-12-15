@@ -1317,8 +1317,8 @@ sub showLegalsAndStats
 			}
 		  }
 		}
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "+$moveStr"; $anySpecial = 1; $mbGood = "$from$to"; }
 		$moveStr = " $moveStr$from$to";
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "$moveStr+"; $anySpecial = 1; $mbGood = "$from$to"; }
 		if ($recThis) { $recc .= $moveStr; } else { $legal .= $moveStr; }
 	  }
 	  if (!$stack[$to][0] && $stack[$from][0]) { $legal .= " $from$to" . "e"; if (!$emptyIgnore) { $anySpecial = 1; } }

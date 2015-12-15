@@ -54,7 +54,7 @@ processTerms();
 
 sub processTerms
 {
-  $copies = 0; $unchanged = 0; $wildcards = 0;
+  $copies = 0; $unchanged = 0; $wildcards = 0; $badFiles = 0;
   open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
@@ -65,6 +65,8 @@ sub processTerms
     {
 	  $didOne = 1; $wc;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
+	  
+	  if ((! -f @d[0])  && (@d[0] !~ /\*/)) { print "Oops @d[0] can't be found.\n"; $badFiles .= "@d[0]\n"; next; }
 	  
 	  if (-d "$gh\\@d[1]") { $short = @d[0]; $short =~ s/.*[\\\/]//g; $outName = "$gh\\@d[1]\\$short"; } else { $outName = "$gh\\@d[1]"; }
 	  if (compare(@d[0], "$outName"))
@@ -82,7 +84,7 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } }
+  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFiles bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFiles) { print "====BAD FILES:\n$badFiles\n"; } }
 }
 
 ##########################
