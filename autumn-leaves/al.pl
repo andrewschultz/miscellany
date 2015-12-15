@@ -1272,17 +1272,18 @@ sub showLegalsAndStats
   print "Legal moves:";
   my $legal = "";
   my $recc = "";
+  my $moveStr = "";
   for $from (1..6)
   {
     for $to (1..6)
 	{
+	  $moveStr = "";
 	  $recThis = 0;
 	  if ($from == $to) { next; }
-	  elsif (@blank[$to] == 1) { print " $from$to"; }
+	  elsif (@blank[$to] == 1) { }
 	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]]))
 	  {
 	    $thisEl = @idx[$from];
-		my $moveStr = " ";
 	    while ($thisEl > 0)
 		{
 		  if (($stack[$from][$thisEl-1] == $stack[$from][$thisEl] + 1) && ($stack[$from][$thisEl-1] % 13))
@@ -1295,16 +1296,16 @@ sub showLegalsAndStats
 		{
 		if (suit($stack[$from][$thisEl-1]) != suit($stack[$from][$thisEl]))
 		  {
-		  print "*"; $anySpecial = 1; @circulars[$to]++;
+		  $moveStr .= "*"; $anySpecial = 1; @circulars[$to]++;
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
-		  print "<"; $anySpecial = 1;
+		  $moveStr .= "<"; $anySpecial = 1;
 		  }
 		}
 		else
 		{
-		  $moveStr .= "E"; $canMakeEmpty = 1;
+		  $moveStr .= "E"; $canMakeEmpty = 1; $recThis = 1;
 		}
 		if (suit($stack[$from][$thisEl-1]) == suit($stack[$from][$thisEl]))
 		{
@@ -1316,14 +1317,15 @@ sub showLegalsAndStats
 			}
 		  }
 		}
-		if ($recThis) $legal .= $moveStr;
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $moveStr .= "+"; $anySpecial = 1; $mbGood = "$from$to"; }
-		$moveStr .= "$from$to";
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "+$moveStr"; $anySpecial = 1; $mbGood = "$from$to"; }
+		$moveStr = " $moveStr$from$to";
 		if ($recThis) { $recc .= $moveStr; } else { $legal .= $moveStr; }
 	  }
 	  if (!$stack[$to][0] && $stack[$from][0]) { $legal .= " $from$to" . "e"; if (!$emptyIgnore) { $anySpecial = 1; } }
 	} #?? maybe if there is no descending, we can check for that and give a pass
   }
+  if ($recc) { print "$recc |"; }
+  print "$legal";
   for $toPile (1..6) { if (@circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x (@circulars[$toPile]-1)) . "$toPile"; } }
   if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty)) { print " (recommend drawing)"; }
   elsif ($drawsLeft)

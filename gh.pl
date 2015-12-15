@@ -21,7 +21,7 @@ while ($count <= $#ARGV)
   {
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
-  /^[a-z]/ && do { if ($altHash{@ARGV[0]}) { print "@ARGV[0] => $altHash{@ARGV[0]}\n"; $procString = $altHash{@ARGV[0]}; } else { $procString = @ARGV[0]; } $count++; next; };
+  /^[a-z34]/ && do { if ($altHash{@ARGV[0]}) { print "@ARGV[0] => $altHash{@ARGV[0]}\n"; $procString = $altHash{@ARGV[0]}; } else { $procString = @ARGV[0]; } $count++; next; };
   /^-\?/ && do { usage(); };
   print "$a not recognized.\n";
   usage();

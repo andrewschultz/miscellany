@@ -92,6 +92,7 @@ roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,stale-tales-slate\roil
 3d=c:\writing\scripts\threediopolis-invisiclues.htm,threediopolis
 3d=c:\writing\scripts\3d.txt,threediopolis
 3d=c:\games\inform\threediopolis.inform\uuid.txt,threediopolis
+3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,threediopolis
 
 #Fourdiopolis files to BitBucket
 4d=c:\games\inform\fourdiopolis.inform\source\story.ni,fourdiopolis
