@@ -273,7 +273,9 @@ sub procCmd
         $shouldMove = 1;
 	    $b4 = $#undoArray;
 	    $quickMove = 1;
+		printDebug(1);
         autoShuffleExt(@numArray[0], @numArray[2], @numArray[1]);
+		printDebug(2);
 	    $quickMove = 0;
 	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(); checkwin(); }
 	    return;
@@ -402,7 +404,7 @@ sub expandOneColumn
 	  {
 		$count += 1; if ($count == 20) { print"Oops. This took too long, bailing.\n"; last; }
 	    printDebug ("Shift $count\n");
-	    $errPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
+	    $errorPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
 	    my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
   	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of @rows[0] @rows[1] $thisRow\n");
 	    if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
@@ -1025,7 +1027,8 @@ sub randcard
   $rand = (keys %inStack)[rand keys %inStack];
   }
   delete $inStack{$rand};
-  #print "Returning $rand\n";
+  #printDebug("Returning $rand\n");
+  $errorPrintedYet = 1; # we have already made a successful move to get this to reveal, or we are just drawing. Anything else is okay. Drawing a card we sweep up later can throw misc errors
   push(@outSinceLast, $rand);
   return $rand;
 }
@@ -1267,16 +1270,19 @@ sub showLegalsAndStats
   #for $thi (0..5) { print "Stack $thi (@idx[$thi]): $stack[$thi][@idx[$thi]]\n"; }
   $anySpecial = 0;
   print "Legal moves:";
+  my $legal = "";
+  my $recc = "";
   for $from (1..6)
   {
     for $to (1..6)
 	{
+	  $recThis = 0;
 	  if ($from == $to) { next; }
 	  elsif (@blank[$to] == 1) { print " $from$to"; }
 	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]]))
 	  {
-	    print " ";
 	    $thisEl = @idx[$from];
+		my $moveStr = " ";
 	    while ($thisEl > 0)
 		{
 		  if (($stack[$from][$thisEl-1] == $stack[$from][$thisEl] + 1) && ($stack[$from][$thisEl-1] % 13))
@@ -1298,7 +1304,7 @@ sub showLegalsAndStats
 		}
 		else
 		{
-		  print "E"; $canMakeEmpty = 1;
+		  $moveStr .= "E"; $canMakeEmpty = 1;
 		}
 		if (suit($stack[$from][$thisEl-1]) == suit($stack[$from][$thisEl]))
 		{
@@ -1306,14 +1312,16 @@ sub showLegalsAndStats
 		  {
 		    if (($stack[$from][$thisEl] < $stack[$to][@idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
 			{
-			  print "C"; @circulars[$to]++;
+			  $moveStr .= "C"; @circulars[$to]++;
 			}
 		  }
 		}
-		print "$from$to";
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { print "+"; $anySpecial = 1; $mbGood = "$from$to"; }
+		if ($recThis) $legal .= $moveStr;
+		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $moveStr .= "+"; $anySpecial = 1; $mbGood = "$from$to"; }
+		$moveStr .= "$from$to";
+		if ($recThis) { $recc .= $moveStr; } else { $legal .= $moveStr; }
 	  }
-	  if (!$stack[$to][0]) { print "e"; if (!$emptyIgnore) { $anySpecial = 1; } }
+	  if (!$stack[$to][0] && $stack[$from][0]) { $legal .= " $from$to" . "e"; if (!$emptyIgnore) { $anySpecial = 1; } }
 	} #?? maybe if there is no descending, we can check for that and give a pass
   }
   for $toPile (1..6) { if (@circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x (@circulars[$toPile]-1)) . "$toPile"; } }
