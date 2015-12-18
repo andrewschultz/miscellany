@@ -51,6 +51,7 @@ if (@ARGV[0])
 	/^-?ez/ && do { fillInitArray("8,9,10,11,12,13"); $count++; next; };
 	/^-[rf]/ && do { if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
     /^sw[0-9]/ && do { procCmd($a); $count++; next; };
+	/^?-dd/ && do { $debug = 2; $count++; next; };
 	/^?-d/ && do { $debug = 1; $count++; next; };
 	cmdUse(); exit;
 	}
@@ -69,7 +70,7 @@ sub procCmdFromUser #this is so they can't use debug commands
   {
   splice(@undoArray, $beforeCmd+1, 0, "n+");
   push(@undoArray, "n-");
-  printDebug("pushing n+ to " . $beforeCmd + 1 . "\n");
+  printDebug("pushing n+ to " . ($beforeCmd + 1) . "\n");
   }
   $undidThisTurn = 0;
   if ((!$errorPrintedYet) && ($shouldMove) && ($beforeCmd == $afterCmd)) { print "NOTE: no moves were made, though no error message was thrown.\n"; }
@@ -186,8 +187,9 @@ sub procCmd
 	  return;
 	};
     /^cb/ && do { cmdNumWarn($numbers); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; };
-    /^debug/ && do { cmdNumWarn($numbers); printdeckraw(); return; };
+    /^deckraw/ && do { cmdNumWarn($numbers); printdeckraw(); return; };
     /^df/ && do { cmdNumWarn($numbers); drawSix(); printdeck(); checkwin(); return; };
+    /^dl/ && do { cmdNumWarn($numbers, 1); print "Debug level was $debug, is "; $debug = @numArray[0]; print "$debug now.\n"; return; };
     /^e$/ && do { cmdNumWarn($numbers); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; };
 	/^ib$/ && do { cmdNumWarn($numbers); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position @toggles[$ignoreBoardOnSave].\n"; return; };
     /^mr/ && do { cmdNumWarn($numbers); $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; };
@@ -274,9 +276,9 @@ sub procCmd
         $shouldMove = 1;
 	    $b4 = $#undoArray;
 	    $quickMove = 1;
-		printDebug(1);
+		#printDebug(1);
         autoShuffleExt(@numArray[0], @numArray[2], @numArray[1]);
-		printDebug(2);
+		#printDebug(2);
 	    $quickMove = 0;
 	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(); checkwin(); }
 	    return;
@@ -880,7 +882,7 @@ sub fillRandInitArray # anything in a row, but of course QH-KH-AD-2D-3D-4D needs
 {
   my $baseVal = 1 + rand(8);
   my $baseCard = rand(4) * 13 + $baseVal;
-  printDebug("$baseCard.." . $baseCard+5 . "\n");
+  #printDebug("$baseCard.." . $baseCard+5 . "\n");
   my $fillString = sprintf("%d,%d,%d,%d,%d,%d", $baseCard, $baseCard+1, $baseCard+2, $baseCard+3, $baseCard+4, $baseCard+5);
   fillInitArray($fillString);
 }
@@ -1394,6 +1396,7 @@ sub breakScore
   my $brkPoint = 0;
   for my $breakRow (1..6)
   {
+    $consecutives = 0;
     #we deserve credit for an empty row, but how much?
     if ($stack[$breakRow][0] > 0)
 	{
@@ -1405,6 +1408,7 @@ sub breakScore
 	  {
 	    if (($stack[$breakRow][$_] - $stack[$breakRow][$_+1] != 1) || (suit($stack[$breakRow][$_]) != suit($stack[$breakRow][$_+1])))
 		{
+		  $consecutives = 0;
 		  $breaks++;
 		  if (suit($stack[$breakRow][$_]) == suit($stack[$breakRow][$_+1]))
 		  {
@@ -1412,6 +1416,7 @@ sub breakScore
 		  }
 		  else { $brkPoint += 3; }
 		}
+		else { $consecutives++; if ($consecutives == 12) { $brkPoint--; } if ($consecutives > 11) { printDebug("$consecutives consecutives.\n"); } }
 	  }
 	  else { $brkPoint += 4; }
 	}
@@ -2451,6 +2456,17 @@ sub printNoTest
 sub printDebug
 {
   if ($debug) { print "(DEBUG) $_[0]"; }
+  #to track debugs we don't want
+  #my $trace = Devel::StackTrace->new;
+  #print $trace->as_string . "\n"; # like carp
+}
+
+sub printDeepDebug
+{
+  if ($debug > 1) { print "(DEBUG) $_[0]"; }
+  #to track debugs we don't want
+  #my $trace = Devel::StackTrace->new;
+  #print $trace->as_string . "\n"; # like carp
 }
 
 sub printPoints
