@@ -1,1 +1,2 @@
--f compound-full.trizbort -o compound.trizbort -r noregion,bad____ends,hypothetical,post-game____fun
+-f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,post-game fun"
+;

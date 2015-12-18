@@ -11,17 +11,20 @@ sub readFile
   print "Trying file $_[0]\n";
   open(CMD, "$_[0]") || die ("Can't open $_[0]");
 
-  while ($a = <CMD>)
+  while (($a = <CMD>) && (!$allDone))
   {
   chomp($a);
   readLine($a);
   }
+  close(CMD);
 }
 
 sub readLine
 {
-  my @ary = split(/ /, $_[0]);
-  readArray(@ary);
+  if ($_ =~ /^;/) { $allDone = 1; exit; }
+  if ($_ =~ /^#/) { return; }
+  my @array = ($_[0] =~ /(".*?"|\S+)/g);
+  readArray(@array);
 }
 
 sub readArray
@@ -33,7 +36,7 @@ sub readArray
   while ($count <= $#_)
   {
     my $a = $_[$count];
-	my $b = $_[$count+1];
+	my $b = $_[$count+1]; if ($b =~ /^\"/) { $b =~ s/\"//g; }
     for ($a)
 	{
 	/-k/ && do { $keep = 1; $count++; next; };
@@ -58,12 +61,15 @@ open(B, ">$outFile") || die ("Can't open $outFile");
 
 while ($a = <A>)
 {
+  if ($a =~ /<regions>/) { $regions = 1; next; }
+  if ($a =~ /<\/regions>/) { $regions = 0; next; }
+  if ($regions) { if ($redact{tag($a, "Name")}) { print "Ignoring $a region tag.\n"; next; } }
   if ($a =~ /<room id=/)
   {
     $reg = lc(tag($a, "region"));
 	$reg =~ s/ /____/g;
 	$id = tag($a, "id");
-	print tag($a, "name") . " in " . $reg . "\n";
+	#print tag($a, "name") . " in " . $reg . "\n";
     if ($redact{$reg})
 	{
 	  $blockId{$id} = 1;
@@ -76,7 +82,7 @@ while ($a = <A>)
 	  }
 	  else
 	  {
-	    print "Self closing $a";
+	    #print "Self closing $a";
 	    next;
 	  }
 	}
