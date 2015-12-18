@@ -1,0 +1,1 @@
+-f compound-full.trizbort -o compound.trizbort -r noregion,bad____ends,hypothetical,post-game____fun
