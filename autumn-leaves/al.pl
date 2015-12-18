@@ -269,6 +269,7 @@ sub procCmd
 	  if ($#numArray == 0) { expandOneColumn($numbers); return; }
 	  if ($#numArray == 2)
       {
+	    if ((botSuit(@numArray[0]) != botSuit(@numArray[1])) && (!isEmpty(@numArray[1]))) { print "Wrong middle suit.\n"; return; }
 	    if ((botSuit(@numArray[0]) != botSuit(@numArray[2])) && (!isEmpty(@numArray[2]))) { print "Wrong to-from suit.\n"; return; }
         $shouldMove = 1;
 	    $b4 = $#undoArray;
@@ -314,7 +315,7 @@ sub thereAndBack
     my $oldEmptyRows = emptyRows();
 	$b4 = $#undoArray;
 	my $wrongOrder = 0;
-	if (isEmpty(@numArray[2]))
+	if (isEmpty(@numArray[2]) && !isEmpty(@numArray[1]))
 	{
 	  $temp = @numArray[2]; @numArray[2] = @numArray[1]; @numArray[1] = $temp;
 	  $wrongOrder = 1;

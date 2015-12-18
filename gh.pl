@@ -8,7 +8,7 @@ $defaultString = "as";
 
 preProcessHashes();
 
-#these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the 
+#these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
 $justPrint = 0;
 $verbose = 0;
 
@@ -54,7 +54,8 @@ processTerms();
 
 sub processTerms
 {
-  $copies = 0; $unchanged = 0; $wildcards = 0; $badFiles = 0;
+  $copies = 0; $unchanged = 0; $wildcards = 0; $badFileCount = 0;
+  $dirName = "";
   open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
@@ -65,9 +66,11 @@ sub processTerms
     {
 	  $didOne = 1; $wc;
       $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
+
+	  if ((! -f @d[0])  && (@d[0] !~ /\*/)) { print "Oops @d[0] can't be found.\n"; $badFiles .= "@d[0]\n"; $badFileCount++; next; }
 	  
-	  if ((! -f @d[0])  && (@d[0] !~ /\*/)) { print "Oops @d[0] can't be found.\n"; $badFiles .= "@d[0]\n"; next; }
-	  
+	  if (@d[1]) { $dirName = @d[1]; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"@d[0] has no associated directory, using $dirName\n"; }
+
 	  if (-d "$gh\\@d[1]") { $short = @d[0]; $short =~ s/.*[\\\/]//g; $outName = "$gh\\@d[1]\\$short"; } else { $outName = "$gh\\@d[1]"; }
 	  if (compare(@d[0], "$outName"))
 	  {
@@ -84,7 +87,7 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFiles bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFiles) { print "====BAD FILES:\n$badFiles\n"; } }
+  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFiles\n"; } }
 }
 
 ##########################
