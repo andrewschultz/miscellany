@@ -1,4 +1,5 @@
 
+if (@ARGV[0] eq "-d") { $debug = 1; shift; }
 if (@ARGV[0] eq "-p")
 { readFile(@ARGV[1]); }
 elsif (@ARGV[0] eq "-pd")
@@ -21,9 +22,10 @@ sub readFile
 
 sub readLine
 {
-  if ($_ =~ /^;/) { $allDone = 1; exit; }
-  if ($_ =~ /^#/) { return; }
+  if ($_[0] =~ /^;/) { $allDone = 1; exit; }
+  if ($_[0] =~ /^#/) { return; }
   my @array = ($_[0] =~ /(".*?"|\S+)/g);
+  print "Trying $_[0].\n";
   readArray(@array);
 }
 
@@ -43,6 +45,8 @@ sub readArray
 	/-r/ && do { @redact = split(/,/, $b); for (@redact) { $redact{"$_"} = 1; } $count += 2; next; };
 	/-f/ && do { $inFile = $b; $count += 2; $runThis = 1; next; };
 	/-o/ && do { $outFile = $b; $count += 2; next; };
+	/-d/ && do { $debug = 1; $count++; next; };
+	/-nd/ && do { $debug = 0; $count++; next; };
 	print "$a ($count) unknown.\n";
 	usage();
 	}
@@ -61,22 +65,21 @@ open(B, ">$outFile") || die ("Can't open $outFile");
 
 while ($a = <A>)
 {
-  if ($a =~ /<regions>/) { $regions = 1; next; }
-  if ($a =~ /<\/regions>/) { $regions = 0; next; }
-  if ($regions) { if ($redact{tag($a, "Name")}) { print "Ignoring $a region tag.\n"; next; } }
+  if ($a =~ /<regions>/) { $regions = 1; print B $a; next; }
+  if ($a =~ /<\/regions>/) { $regions = 0; print B $a; next; }
+  if ($regions) { if ($redact{tag($a, "Name")}) { chomp($a); $a =~ s/^[ \t]+//g; printDebug("Ignoring $a region tag.\n"); next; } }
   if ($a =~ /<room id=/)
   {
     $reg = lc(tag($a, "region"));
-	$reg =~ s/ /____/g;
 	$id = tag($a, "id");
-	#print tag($a, "name") . " in " . $reg . "\n";
+	#printDebug(tag($a, "name") . " in " . $reg . "\n");
     if ($redact{$reg})
 	{
 	  $blockId{$id} = 1;
-	  print "Blocking ID $id in " . tag($a, "name") . "\n";
+	  printDebug("Blocking ID $id in " . tag($a, "name") . "\n");
 	  if ($a !~ /\/>/)
 	  {
-	    while (($b = <A>) !~ /<\/room>/)
+	    while (($junk = <A>) !~ /<\/room>/)
 		{ }
 		next;
 	  }
@@ -116,11 +119,18 @@ sub tag
   return lc($q);
 }
 
+sub printDebug
+{
+  if ($debug == 1) { print "$_[0]"; }
+}
+
 sub usage
 {
 print<<EOT;
 -p = specify parameter file
 -pd = default parameter file c:\\tech\\trizbort\\redact.txt
+-d = debug on
+-nd = debug off
 -c = clear hash
 -r = redactable regions
 -f = in file
