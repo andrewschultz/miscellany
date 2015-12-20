@@ -129,13 +129,16 @@ sub procCmd
         $b4 = $#undoArray;
 	    if (@numArray[0] == @numArray[1]) { print "Can't move stack onto itself.\n"; return; }
 		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; return; }
+		if (isEmpty(@numArray[1]) && (ascending(@numArray[0]))) { print "The stack you wish to twiddle is already in order!\n"; return; }
 		tryMove("@numArray[0]@numArray[1]");
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
 		return;
 	  }
       if ($#numArray == 2)
       { # detect 2 ways
+	    my $possConflict = 0;
 		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; return; }
+		if ((!canMove(@numArray[0], @numArray[1])) || (!canMove(@numArray[0], @numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
         if ((@numArray[0] == @numArray[1]) || (@numArray[0] == @numArray[2]) || (@numArray[2] == @numArray[1])) { print "Repeated number.\n"; return; }
         $b4 = $#undoArray;
         $shouldMove = 1;
@@ -144,7 +147,16 @@ sub procCmd
 	    tryMove("@numArray[0]@numArray[2]");
 	    tryMove("@numArray[1]@numArray[2]");
 	    $quickMove = 0;
-  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else { printdeck(); checkwin(); }
+  	    if (($b4 == $#undoArray) && (!$undo))
+		{
+		  if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; }
+		}
+		else
+		{
+		  printdeck();
+		  if ($possConflict) { print "I was able to move some despite suits and/or card values not matching up.\n"; }
+		  checkwin();
+		}
 	    return;
       }
 	  if ($#numArray == 0)
@@ -286,7 +298,7 @@ sub procCmd
 	  if ($#numArray == 3) { print "Too many numbers. "; }
 	  print "x (1 number) spills a row. x (3 numbers) sends 1st to 3rd via 2nd.\n"; return;
 	};
-    /^z/ && do { cmdNumWarn($numbers); print "Time passes more slowly than if you actually played the game.\n"; return; };
+    /^z$/ && do { cmdNumWarn($numbers); print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^\?\?/ && do { cmdNumWarn($numbers); usageDet(); return; };
     /^\?/ && do { cmdNumWarn($numbers); usage(); return; }; #anything below here needs sorting
     /^d$/ && do { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } };
@@ -793,6 +805,7 @@ sub loadDeck
 	printdeck();
 	if (!$avoidWin) { checkwin(); }
 	close(A);
+	checkWellForm(\@undoArray);
 	return;
 	}
   }
@@ -2086,6 +2099,22 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   # allow for an undo on back regularly after a u1
   if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+")) { push(@undoArray, "n-"); }
   printDebug(@undoArray);
+  checkWellForm(\@undoArray);
+}
+
+sub checkWellForm
+{
+  printDebug("Checking wellform\n");
+  my $plusses = 0;
+  my @a = @{$_[0]};
+  my $z;
+  my $minusNext = 0;
+  for $z (0..$#a)
+  {
+    if (@a[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
+    if (@a[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
+  }
+  if ($plusses != 0) { print "Last n+ in undo is not matched with n-.\n"; }
 }
 
 sub printLowCards
