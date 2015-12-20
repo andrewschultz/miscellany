@@ -62,19 +62,23 @@ if (@ARGV[0])
 sub procCmdFromUser #this is so they can't use debug commands
 {
   if (($_[0] eq "n-") || ($_[0] eq "n+")) { print "This is a debug command, so I'm ignoring it.\n"; return; }
-  my $beforeCmd = $#undoArray;
+  $beforeCmd = $#undoArray;
+  printDebug("$beforeCmd before command\n");
   $shouldMove = 0;
   procCmd($_[0]);
   my $afterCmd = $#undoArray;
-  if (($afterCmd - $beforeCmd > 1) && ($anyMovesYet) && (!$undidThisTurn))
+  printDebug("$afterCmd,$beforeCmd,$anyMovesYet,$undidOrLoadThisTurn\n");
+  if (($afterCmd - $beforeCmd > 1) && ($anyMovesYet) && (!$undidOrLoadThisTurn))
   {
   splice(@undoArray, $beforeCmd+1, 0, "n+");
   push(@undoArray, "n-");
   printDebug("pushing n+ to " . ($beforeCmd + 1) . "\n");
+  checkWellForm();
   }
-  $undidThisTurn = 0;
+  $undidOrLoadThisTurn = 0;
   if ((!$errorPrintedYet) && ($shouldMove) && ($beforeCmd == $afterCmd)) { print "NOTE: no moves were made, though no error message was thrown.\n"; }
   if ($undoEach) { print "Undo array: @undoArray\n"; }
+  $currentlyLoadingSaving = 0;
 }
 
 sub procCmd
@@ -128,13 +132,14 @@ sub procCmd
 	  {
         $b4 = $#undoArray;
 	    if (@numArray[0] == @numArray[1]) { print "Can't move stack onto itself.\n"; return; }
-		if (isEmpty(@numArray[0])) { print "Can't move from empty stack @isEmpty(@numArray[0]).\n"; }
-		if (isEmpty(@numArray[1]) && (perfAscending(@numArray[0]))) { print "The stack you wish to twiddle (@numArray[0]) is already in order!\n"; return; }
+		if (isEmpty(@numArray[0])) { print "Can't move from empty stack @isEmpty(@numArray[0]).\n"; return; }
+		if (isEmpty(@numArray[1]) && (perfAscending(@numArray[0])) && (!$undo)) { print "The stack you wish to twiddle (@numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
 		tryMove("@numArray[0]@numArray[1]");
+		
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
 		return;
 	  }
-      if ($#numArray == 2)
+      elsif ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
 		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
@@ -159,7 +164,7 @@ sub procCmd
 		}
 	    return;
       }
-	  if ($#numArray == 0)
+	  elsif ($#numArray == 0)
       {
         if ($_[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; return; }
   	    my $totalRows = 0;
@@ -276,7 +281,7 @@ sub procCmd
  	/^ub$/ && do { cmdNumWarn($numbers); undo(3); return; };
     /^ue$/ && do { cmdNumWarn($numbers); $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
-	/^uu$/ && do { cmdNumWarn($numbers); $undidThisTurn = 1; undoToStart(); return; };
+	/^uu$/ && do { cmdNumWarn($numbers); $undidOrLoadThisTurn = 1; undoToStart(); return; };
     /^x$/ && do
     {
 	  if (cmdBadNumWarn($numbers)) { return; }
@@ -298,6 +303,7 @@ sub procCmd
 	  if ($#numArray == 3) { print "Too many numbers. "; }
 	  print "x (1 number) spills a row. x (3 numbers) sends 1st to 3rd via 2nd.\n"; return;
 	};
+    /^wf$/ && do { checkWellForm(); return; };
     /^z$/ && do { cmdNumWarn($numbers); print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^\?\?/ && do { cmdNumWarn($numbers); usageDet(); return; };
     /^\?/ && do { cmdNumWarn($numbers); usage(); return; }; #anything below here needs sorting
@@ -331,6 +337,7 @@ sub perfAscending
   {
     if ($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1)
 	{
+	  print "OK, bad news $stack[$_[0]][$q] vs $stack[$_[0]][$q+1]\n";
 	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0)) { } else { return 0; }
 	}
   }
@@ -577,6 +584,7 @@ sub saveLastWon
 
 sub saveDeck
 {
+  $undidOrLoadThisTurn = 1; $currentlyLoadingSaving = 1;
   chomp($_[0]);
   my $filename = "al-sav.txt";
   my $overwrite = 0;
@@ -599,7 +607,7 @@ sub saveDeck
   {
     print B $a;
 	if ($a =~ /^;/) { last; }
-    if ($a =~ /^$lastSearchCmd$/)
+    if ($a =~ /^s=$lastSearchCmd$/i)
 	{
 	  if ($_[1] == 0) { print "Already an entry named $lastSearchCmd. Use sf= to force.\n"; close(B); close(A); return; } #we don't care if the backup file is mashed. It'll be re-overwritten anyway
       print "Overwriting entry $lastSearchCmd\n";
@@ -621,8 +629,8 @@ sub saveDeck
 
   if (!$overwrite)
   {
-    print "Saving new entry $_[0]\n";
-    print B "$_[0]\n";
+    print "Saving new entry $lastSearchCmd\n";
+    print B "$lastSearchCmd\n";
 	<A>;
 	print B "$vertical,$collapse\n";
 	print B "TC=" . join(",", @topCard) . "\n";
@@ -691,7 +699,7 @@ sub loadDeck
 	{
 	  $a = <A>; chomp($a); $a = lc($a);
 	  $b = $a; $b =~ s/^[a-z]+=//gi; #b = the data for a
-	  #print "Trying $a\n";
+	  printDebug("Trying $a\n");
 	  if ($a =~ /^tm=/)
 	  {
 	    $testing = 1;
@@ -726,7 +734,7 @@ sub loadDeck
 	  if (($a =~ /^ignore/) && (!$overrideLoadIgnore)) { $ignoreThis = 1; }
 	  if (($a !~ /m=/i) && ($a =~ /[a-z]/) && ($a =~ /=/)) { print "Unknown command in save-file. Skipping $a.\n"; next; }
 	  $rowsRead++;
-	  if ($ignoreThis) { $undo = 1; reinitBoard(); for my $saveCmd (@undoArray) { procCmd($saveCmd); } $undo = 0; last; }
+	  if ($ignoreThis) { $undo = 1; reinitBoard(); for my $saveCmd (@undoArray) { procCmd($saveCmd); print "$saveCmd\n"; } $undo = 0; last; }
 	  else
 	  {
 	  @loadedArray = split(/,/, $a); # here we read in an array and process it for 3-7, etc., but initialize everything first of course
@@ -815,11 +823,11 @@ sub loadDeck
 			  }
 			}
 		  }
+    $currentlyLoadingSaving = 1; # this is a hack and I can do better. But...if we don't see 
 	printdeck();
 	if (!$avoidWin) { checkwin(); }
 	close(A);
-	printUndoArray();
-	checkWellForm(-1);
+	$undidOrLoadThisTurn = 1;
 	return;
 	}
   }
@@ -2016,7 +2024,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 {
   my $tempUndoCmd = "";
   my $lastNMinus = 0;
-  $undo = 1; $undidThisTurn = 1;
+  $undo = 1; $undidOrLoadThisTurn = 1;
   if ($showUndoBefore) { print "Undo array: @undoArray\n"; }
   if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
   if ($_[0] == 2) { if ((@undoArray[$#undoArray] eq "n-") && (@undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
@@ -2117,7 +2125,6 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   printdeck(-1);
   # allow for an undo on back regularly after a u1
   if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+")) { push(@undoArray, "n-"); }
-  checkWellForm(-1);
 }
 
 sub checkWellForm
@@ -2126,13 +2133,11 @@ sub checkWellForm
   my $plusses = 0;
   my $z;
   my $minusNext = 0;
-  if ($_[0] == -1) { push(@undoArray, "n-"); }
   for $z (0..$#undoArray)
   {
     if (@undoArray[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
     if (@undoArray[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
   }
-  if ($_[0] == -1) { pop(@undoArray); }
   if ($plusses != 0) { print "Last n+ is not matched with n-.\n"; }
 }
 
@@ -2163,14 +2168,15 @@ sub showhidden
 
 sub ones # 0 means that you don't print the error message, 1 means that you do
 { # note we could try to do another round of safe shuffling after but then we do shuffling, ones, etc. & that can lose player control
-  if ($undo) { return 0; } # otherwise this is a big problem if we want to undo something automatic.
+  if (($undo) || ($currentlyLoadingSaving)) { return 0; } # otherwise this is a big problem if we want to undo something automatic.
   my $onesMove = 0;
   my $totMove = 0;
   my $localAnyMove = $anyMovesYet;
   my $insertNMinus;
   my $movesAtOnesStart = $#undoArray;
 
-  if (@undoArray[$#undoArray] eq "n-") { pop(@undoArray); $insertNMinus = 1; }
+  #eventually delete this if nothing goes boom
+  if (@undoArray[$#undoArray] eq "n-") { pop(@undoArray); $insertNMinus = 1; print "********************Popped an n-. This should not happen. Save the undo array to find why.\n"; }
 
   $moveBar = 0;
 
@@ -2303,7 +2309,14 @@ sub checkwin
   {
   if ($suitsDone == 4)
   {
-    if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game."; $x = <STDIN>; $youWon = 1;
+    if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
+	if ($x =~ /^u/i)
+	{
+	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
+	  push(@undoArray, "n-");
+	  undo(); $moveBar = 1; return;
+	}
+	$youWon = 1;
     if ($x =~ /^q/i) { exit; }
 	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
