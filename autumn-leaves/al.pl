@@ -128,8 +128,8 @@ sub procCmd
 	  {
         $b4 = $#undoArray;
 	    if (@numArray[0] == @numArray[1]) { print "Can't move stack onto itself.\n"; return; }
-		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; return; }
-		if (isEmpty(@numArray[1]) && (ascending(@numArray[0]))) { print "The stack you wish to twiddle is already in order!\n"; return; }
+		if (isEmpty(@numArray[0])) { print "Can't move from empty stack @isEmpty(@numArray[0]).\n"; }
+		if (isEmpty(@numArray[1]) && (perfAscending(@numArray[0]))) { print "The stack you wish to twiddle (@numArray[0]) is already in order!\n"; return; }
 		tryMove("@numArray[0]@numArray[1]");
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
 		return;
@@ -137,7 +137,7 @@ sub procCmd
       if ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
-		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; return; }
+		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove(@numArray[0], @numArray[1])) || (!canMove(@numArray[0], @numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
         if ((@numArray[0] == @numArray[1]) || (@numArray[0] == @numArray[2]) || (@numArray[2] == @numArray[1])) { print "Repeated number.\n"; return; }
         $b4 = $#undoArray;
@@ -311,7 +311,7 @@ sub procCmd
     /^g$/ && do { procCmd($lastCommand); };
     /^v/ && do { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; };
     /^af/ && do { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
-    /^ua/ && do { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves: " . join(",", @undoArray) . "\n"; return; };
+    /^ua/ && do { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves ($#undoArray): " . join(",", @undoArray) . "\n"; return; };
     /^lu/ && do { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
     /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; };
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
@@ -322,6 +322,19 @@ sub procCmd
     /^[yw]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(); return; };
   }; # end letters for-loop
   print "Command ($_[0]) ($letters/$numbers) wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
+}
+
+sub perfAscending
+{
+  my $q;
+  for $q (0..$#{$stack[$_[0]]}-1)
+  {
+    if ($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1)
+	{
+	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0)) { } else { return 0; }
+	}
+  }
+  return 1;
 }
 
 sub thereAndBack
@@ -805,12 +818,18 @@ sub loadDeck
 	printdeck();
 	if (!$avoidWin) { checkwin(); }
 	close(A);
-	checkWellForm(\@undoArray);
+	printUndoArray();
+	checkWellForm(-1);
 	return;
 	}
   }
 
   print "No $search found in $filename.\n";
+}
+
+sub printUndoArray
+{
+  if ($debug) { my $z; for $z (0..$#undoArray+1) { print "$z=@undoArray[$z], "; } print "\n"; }
 }
 
 sub runEachTest
@@ -2098,23 +2117,23 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   printdeck(-1);
   # allow for an undo on back regularly after a u1
   if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+")) { push(@undoArray, "n-"); }
-  printDebug(@undoArray);
-  checkWellForm(\@undoArray);
+  checkWellForm(-1);
 }
 
 sub checkWellForm
 {
   printDebug("Checking wellform\n");
   my $plusses = 0;
-  my @a = @{$_[0]};
   my $z;
   my $minusNext = 0;
-  for $z (0..$#a)
+  if ($_[0] == -1) { push(@undoArray, "n-"); }
+  for $z (0..$#undoArray)
   {
-    if (@a[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
-    if (@a[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
+    if (@undoArray[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
+    if (@undoArray[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
   }
-  if ($plusses != 0) { print "Last n+ in undo is not matched with n-.\n"; }
+  if ($_[0] == -1) { pop(@undoArray); }
+  if ($plusses != 0) { print "Last n+ is not matched with n-.\n"; }
 }
 
 sub printLowCards
@@ -2200,6 +2219,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   }
   }
   while ($anyYet);
+  printDebug("After outer: $#undoArray\n");
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
 
