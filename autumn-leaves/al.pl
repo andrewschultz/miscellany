@@ -337,8 +337,8 @@ sub perfAscending
   {
     if ($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1)
 	{
-	  print "OK, bad news $stack[$_[0]][$q] vs $stack[$_[0]][$q+1]\n";
-	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0)) { } else { return 0; }
+	  #print "OK, bad news $stack[$_[0]][$q] vs $stack[$_[0]][$q+1]\n";
+	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0) && ($stack[$_[0]][0] % 13 == 0)) { } else { return 0; }
 	}
   }
   return 1;
