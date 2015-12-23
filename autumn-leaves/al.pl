@@ -335,10 +335,11 @@ sub perfAscending
   my $q;
   for $q (0..$#{$stack[$_[0]]}-1)
   {
-    if ($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1)
+    print "$q: $stack[$_[0]][$q] - $stack[$_[0]][$q+1]\n";
+    if (($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1) || ($stack[$_[0]][$q] % 13 == 1))
 	{
-	  #print "OK, bad news $stack[$_[0]][$q] vs $stack[$_[0]][$q+1]\n";
-	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0) && ($stack[$_[0]][0] % 13 == 0)) { } else { return 0; }
+	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0) && ($stack[$_[0]][0] % 13 == 0)) { }
+	  else { return 0; }
 	}
   }
   return 1;
@@ -2407,6 +2408,7 @@ sub saveDefault
   close(B);
   `copy $backupFile al.txt`;
   `erase $backupFile`;
+  print "Defaults saved.\n";
 }
 
 sub initGlobal
