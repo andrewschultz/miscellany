@@ -335,7 +335,7 @@ sub perfAscending
   my $q;
   for $q (0..$#{$stack[$_[0]]}-1)
   {
-    print "$q: $stack[$_[0]][$q] - $stack[$_[0]][$q+1]\n";
+    #print "$q: $stack[$_[0]][$q] - $stack[$_[0]][$q+1]\n";
     if (($stack[$_[0]][$q] - $stack[$_[0]][$q+1] != 1) || ($stack[$_[0]][$q] % 13 == 1))
 	{
 	  if (($stack[$_[0]][$q] % 13 == 1) && ($stack[$_[0]][$q+1] % 13 == 0) && ($stack[$_[0]][0] % 13 == 0)) { }
@@ -2406,7 +2406,7 @@ sub saveDefault
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
-  `copy $backupFile al.txt`;
+  `copy $backupFile $filename`;
   `erase $backupFile`;
   print "Defaults saved.\n";
 }
