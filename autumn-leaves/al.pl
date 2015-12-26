@@ -317,7 +317,7 @@ sub procCmd
     /^g$/ && do { procCmd($lastCommand); };
     /^v/ && do { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; };
     /^af/ && do { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
-    /^ua/ && do { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves ($#undoArray): " . join(",", @undoArray) . "\n"; return; };
+    /^ua/ && do { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
     /^lu/ && do { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
     /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; };
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
@@ -1025,7 +1025,7 @@ elsif ($startWith > 2) { print "Succeeded on try $deckTry, starting with $thisSt
 if (($autoOnes) || ($beginOnes) || ($autoOneSafe))
 {
   $moveBar = 0; ones(0); $anyMovesYet = 0;
-  if ($#undoArray > 1) { splice(@undoArray, 0, 0, "n+"); push(@undoArray, "n-"); }
+  if ($#undoArray > 1) { splice(@undoArray, 0, 0, "n+"); push(@undoArray, "n-");  }
 }
 
 }
@@ -2125,7 +2125,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   @outSinceLast = ();
   printdeck(-1);
   # allow for an undo on back regularly after a u1
-  if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+")) { push(@undoArray, "n-"); }
+  if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+") && ($#undoArray != -1)) { push(@undoArray, "n-"); }
 }
 
 sub checkWellForm
@@ -2139,7 +2139,7 @@ sub checkWellForm
     if (@undoArray[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
     if (@undoArray[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
   }
-  if ($plusses != 0) { print "Last n+ is not matched with n-.\n"; }
+  if ($plusses == 1) { print "Last n+ is not matched with n-.\n"; }
 }
 
 sub printLowCards
