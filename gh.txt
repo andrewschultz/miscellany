@@ -10,6 +10,7 @@ as~pc,sc
 #Shuffling files
 shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\sa random text.i7x,stale-tales-slate\shuffling
+shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\sa nudges.i7x,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\testcase.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\shuffling-logic.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\source\walkthrough.txt,stale-tales-slate\shuffling
@@ -25,6 +26,7 @@ shu=c:\games\inform\sa.inform\uuid.txt,stale-tales-slate\shuffling
 #Roiling files
 roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling random text.i7x,stale-tales-slate\roiling
+roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling nudges.i7x,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\testcase.txt,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\source\logic.htm,stale-tales-slate\roiling\roiling-logic.htm
 roi=c:\games\inform\roiling.inform\Source\dial.htm,stale-tales-slate\roiling\roiling-random.htm

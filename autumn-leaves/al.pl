@@ -307,7 +307,7 @@ sub procCmd
     /^z$/ && do { cmdNumWarn($numbers); print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^\?\?/ && do { cmdNumWarn($numbers); usageDet(); return; };
     /^\?/ && do { cmdNumWarn($numbers); usage(); return; }; #anything below here needs sorting
-    /^d$/ && do { if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } };
+    /^d$/ && do { cmdNumWarn($numbers); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } };
     /^h$/ && do { cmdNumWarn(); showhidden(); return; };
     /^(os|so)$/ && do { cmdNumWarn(); saveOpts(); return; };
     /^du$/ && do { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; };
@@ -899,7 +899,7 @@ sub forceArray
 	if ($card =~ /[cdhs]/i)
 	{
 	  if (revCard($card) == -1) { print "Bad number value for card. (KQJA/1-10)(CDHS) is needed.\n"; return; }
-	  print "Card " . uc($card) . " now in queue.\n"; $card = revCard($card); }
+	}
 	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
 	if (($card <= 52) && ($card >= 1))
 	{
@@ -1340,7 +1340,8 @@ sub showLegalsAndStats
 		{
 		if (suit($stack[$from][$thisEl-1]) != suit($stack[$from][$thisEl]))
 		  {
-		  $moveStr .= "*"; $anySpecial = 1; @circulars[$to]++;
+		  $moveStr .= "*"; @circulars[$to]++;
+		  if (($stack[$from][$thisEl-1] % 13 == 1) && ($stack[$from][$thisEl] % 13 == 0) && ($thisEl % 13 == 0)) {} else { $anySpecial = 1; } # e.g KH=AH then KD is okay
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
@@ -1365,7 +1366,14 @@ sub showLegalsAndStats
 		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "$moveStr+"; $anySpecial = 1; $mbGood = "$from$to"; }
 		if ($recThis) { $recc .= $moveStr; } else { $legal .= $moveStr; }
 	  }
-	  if (!$stack[$to][0] && $stack[$from][0]) { $legal .= " $from$to" . "e"; if (!$emptyIgnore) { $anySpecial = 1; } }
+	  if (!$stack[$to][0] && $stack[$from][0])
+	  {
+	    $legal .= " $from$to" . "e";
+		if (!$emptyIgnore)
+		{
+		  if (!ascending($from)) { $anySpecial = 1; }
+		}
+	  }
 	} #?? maybe if there is no descending, we can check for that and give a pass
   }
   if ($recc) { print "$recc |"; }
@@ -1501,6 +1509,7 @@ sub ascending
   {
     $lower = $stack[$_[0]][$_];
     $upper = $stack[$_[0]][$_-1];
+	#printDebug("$_: $lower vs $upper\n");
 	if (suit($lower) != suit($upper))
 	{
 	  if (($_ % 13 == 0) && ($lower % 13 == 0) && ($upper % 13 == 1)) {} else { return 0; } # very special case KC=AC KH-etc.
@@ -1756,7 +1765,7 @@ sub isEmpty
   if ($stack[$_[0]][0]) { return 0; } else { return 1; }
 }
 
-sub ascending # sees if we have a fully ascending row
+sub ascendingOld # sees if we have a fully ascending row
 {
   for (0..$#{$stack[$_[0]]} - 1)
   {
@@ -2177,7 +2186,10 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   my $movesAtOnesStart = $#undoArray;
 
   #eventually delete this if nothing goes boom
-  if (@undoArray[$#undoArray] eq "n-") { pop(@undoArray); $insertNMinus = 1; print "********************Popped an n-. This should not happen. Save the undo array to find why.\n"; }
+  if ((@undoArray[$#undoArray] eq "n-") && ($movesAtStart != $#undoArray)) # in other words, only if we moved, we should see this error, and still we shouldn't.
+  {
+    pop(@undoArray); $insertNMinus = 1; print "********************Popped an n-. This should not happen. Save the undo array to find why.\n";
+  }
 
   $moveBar = 0;
 
