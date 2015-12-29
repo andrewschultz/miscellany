@@ -10,19 +10,25 @@
 #source at https://raw.githubusercontent.com/andrewschultz/miscellany/master/autumn-leaves/al.pl
 #project at https://github.com/andrewschultz/miscellany/blob/master/autumn-leaves/al.pl
 
+#use strict;
+#use warnings;
 use integer;
 use List::Util 'shuffle';
+use Algorithm::Permute; # for 720 test (cw)
+use Storable qw(dclone);
 use Devel::StackTrace;
 
-#my $trace = Devel::StackTrace->new;
-#print $trace->as_string . "\n"; # like carp
+#tracer
+#my $trace = Devel::StackTrace->new; print $trace->as_string . "\n";
 
+my $stack;
+my $blockedMoves = 0;
 my %inStack;
 @toggles = ( "off", "on", "random" ); # 2 = random for easy-array. This is a hack, but eh, well...
 
 readCmdLine(); readScoreFile(); initGlobal();
 
-initGame(); printdeck();
+initGame(); printdeck(0);
 
 while (1)
 {
@@ -34,13 +40,13 @@ exit;
 
 sub readCmdLine # some global commands like difficulty, debug flags, etc
 {
-if (@ARGV[0])
+if ($ARGV[0])
 {
   $count = 0;
   while ($count <= $#ARGV)
   {
-  $a = lc(@ARGV[$count]);
-  $b = lc(@ARGV[$count+1]);
+  $a = lc($ARGV[$count]);
+  $b = lc($ARGV[$count+1]);
     for ($a)
 	{
 	#print "Trying $a: $count\n";
@@ -108,11 +114,11 @@ sub procCmd
   if ($_[0] =~ /^q$/) { if ($_[0] ne "q") { print "If you want to exit, just type q."; return; } exit; } #don't want playr to quit accidentally if at all possible
 
   # toggles/commands with numbers that are hard to change
-  if ($_[0] =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw @toggles[$beginOnes].\n"; return; }
-  if ($_[0] =~ /^1a$/) { $autoOnes = !$autoOnes; print "AutoOnes on draw @toggles[$autoOnes].\n"; return; }
-  if ($_[0] =~ /^1s$/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on move @toggles[$autoOneSafe].\n"; return; }
-  if ($_[0] =~ /^1f$/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup @toggles[$autoOneFull].\n"; return; }
-  if ($_[0] =~ /^1p$/) { ones(1); printdeck(); return; }
+  if ($_[0] =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw $toggles[$beginOnes].\n"; return; }
+  if ($_[0] =~ /^1a$/) { $autoOnes = !$autoOnes; print "AutoOnes on draw $toggles[$autoOnes].\n"; return; }
+  if ($_[0] =~ /^1s$/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on move $toggles[$autoOneSafe].\n"; return; }
+  if ($_[0] =~ /^1f$/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup $toggles[$autoOneFull].\n"; return; }
+  if ($_[0] =~ /^1p$/) { ones(1); printdeck(0); return; }
 
   #remove spaces. Note garbage. Valid commands are above.
   $_[0] =~ s/ //g; $garbage = $_[0]; $garbage =~ s/[0-9a-z]//gi; if ($garbage) { print "Warning: excess characters in command\n"; }
@@ -129,10 +135,10 @@ sub procCmd
 	  if ($#numArray == 1)
 	  {
         $b4 = $#undoArray;
-	    if (@numArray[0] == @numArray[1]) { print "Can't move stack onto itself.\n"; return; }
-		if (isEmpty(@numArray[0])) { print "Can't move from empty stack @isEmpty(@numArray[0]).\n"; return; }
-		if (isEmpty(@numArray[1]) && (perfAscending(@numArray[0])) && (!$undo)) { print "The stack you wish to twiddle (@numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
-		tryMove("@numArray[0]@numArray[1]");
+	    if ($numArray[0] == $numArray[1]) { print "Can't move stack onto itself.\n"; return; }
+		if (isEmpty($numArray[0])) { print "Can't move from empty stack " . isEmpty($numArray[0]) . ".\n"; return; }
+		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
+		tryMove("$numArray[0]$numArray[1]");
 		
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
 		return;
@@ -140,15 +146,15 @@ sub procCmd
       elsif ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
-		if (isEmpty(@numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
-		if ((!canMove(@numArray[0], @numArray[1])) || (!canMove(@numArray[0], @numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
-        if ((@numArray[0] == @numArray[1]) || (@numArray[0] == @numArray[2]) || (@numArray[2] == @numArray[1])) { print "Repeated number.\n"; return; }
+		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
+		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
+        if (($numArray[0] == $numArray[1]) || ($numArray[0] == $numArray[2]) || ($numArray[2] == $numArray[1])) { print "Repeated number.\n"; return; }
         $b4 = $#undoArray;
         $shouldMove = 1;
 	    $quickMove = 1;
-	    tryMove("@numArray[0]@numArray[1]");
-	    tryMove("@numArray[0]@numArray[2]");
-	    tryMove("@numArray[1]@numArray[2]");
+	    tryMove("$numArray[0]$numArray[1]");
+	    tryMove("$numArray[0]$numArray[2]");
+	    tryMove("$numArray[1]$numArray[2]");
 	    $quickMove = 0;
   	    if (($b4 == $#undoArray) && (!$undo))
 		{
@@ -156,7 +162,7 @@ sub procCmd
 		}
 		else
 		{
-		  printdeck();
+		  printdeck(0);
 		  if ($possConflict) { print "I was able to move some despite suits and/or card values not matching up.\n"; }
 		  checkwin();
 		}
@@ -203,46 +209,48 @@ sub procCmd
 	};
     /^a$/ && do { $shouldMove = 1; $_[0] =~ s/[az]//g; altUntil($_[0]); return; };
     /^af/ && do { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
-    /^c/ && do { $collapse = !$collapse; print "Card collapsing @toggles[$collapse].\n"; return; };
-    /^cb/ && do { cmdNumWarn($numbers); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks @toggles[$chainBreaks].\n"; return; };
-    /^d$/ && do { cmdNumWarn($numbers); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(); checkwin(); return; } };
+    /^c$/ && do { $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
+    /^cb$/ && do { cmdNumWarn($numbers); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
+	/^cw$/ && do { cmdNumWarn($numbers); check720(); return; };
+    /^d$/ && do { cmdNumWarn($numbers); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers); printdeckraw(); return; };
-    /^df/ && do { cmdNumWarn($numbers); drawSix(); printdeck(); checkwin(); return; };
-    /^dl/ && do { cmdNumWarn($numbers, 1); print "Debug level was $debug, is "; $debug = @numArray[0]; print "$debug now.\n"; return; };
-    /^du$/ && do { $undoDebug = !$undoDebug; print "Undo debug now @toggles[$undoDebug].\n"; return; };
-    /^e$/ && do { cmdNumWarn($numbers); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move @toggles[$emptyIgnore].\n"; return; };
+    /^df/ && do { cmdNumWarn($numbers); drawSix(); printdeck(0); checkwin(); return; };
+    /^dl/ && do { cmdNumWarn($numbers, 1); print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
+    /^du$/ && do { $undoDebug = !$undoDebug; print "Undo debug now $toggles[$undoDebug].\n"; return; };
+    /^e$/ && do { cmdNumWarn($numbers); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move $toggles[$emptyIgnore].\n"; return; };
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
-    /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now @toggles[$easyDefault].\n"; return; };
+    /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
     /^g$/ && do { procCmd($lastCommand); };
     /^h$/ && do { cmdNumWarn(); showhidden(); return; };
-	/^ib$/ && do { cmdNumWarn($numbers); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position @toggles[$ignoreBoardOnSave].\n"; return; };
+	/^ib$/ && do { cmdNumWarn($numbers); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position $toggles[$ignoreBoardOnSave].\n"; return; };
     /^ll/i && do { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; };
     /^lu/ && do { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
     /^lw$/ && do { cmdNumWarn($numbers); printLastWon(); if ($_[0] =~ /^lw=/) { saveLastWon($_[0]); } return; };
-    /^mr/ && do { cmdNumWarn($numbers); $showMaxRows = !$showMaxRows; print "Show Max Rows @toggles[$showMaxRows].\n"; return; };
+    /^mr/ && do { cmdNumWarn($numbers); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers); showOpts(); return; };
     /^(os|so)$/ && do { cmdNumWarn(); saveOpts(); return; };
-    /^pl$/ && do { cmdNumWarn($numbers); if ($#pointsArray > -1) { for $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print @pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
+    /^pl$/ && do { cmdNumWarn($numbers); if ($#pointsArray > -1) { for $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
      /^r$/ && do {
       cmdNumWarn();
       if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
 	  doAnotherGame();
 	  return;
     };
-    /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under @toggles[$fixedDeckOpt].\n"; return; };
+    /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
     /^ry$/ && do {
       cmdNumWarn();
       if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
 	  doAnotherGame();
 	  return;
     };
-    /^sae$/ && do { cmdNumWarn($numbers); $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now @toggles[$saveAtEnd].\n"; return; };
-    /^sb/ && do { cmdNumWarn($numbers); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves @toggles[$showBlockedMoves].\n"; return; };
+	/^rct$/ && do { for $b ('c', 'd', 'h', 's') { for $a ('a', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'j', 'q', 'k') { print "$a$b = " . revCard("$a$b") . "\n"; } } return; };
+    /^sae$/ && do { cmdNumWarn($numbers); $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now $toggles[$saveAtEnd].\n"; return; };
+    /^sb/ && do { cmdNumWarn($numbers); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves $toggles[$showBlockedMoves].\n"; return; };
     /^sd$/ && do { cmdNumWarn($numbers); saveDefault(); return; };
-    /^sol$/ && do { cmdNumWarn($numbers); $sinceLast = !$sinceLast; print "See overturned since last now @toggles[$sinceLast].\n"; return; };
+    /^sol$/ && do { cmdNumWarn($numbers); $sinceLast = !$sinceLast; print "See overturned since last now $toggles[$sinceLast].\n"; return; };
     /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; };
-    /^su$/ && do { cmdNumWarn($numbers); $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now @toggles[$showUndoBefore].\n"; return; };
+    /^su$/ && do { cmdNumWarn($numbers); $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now $toggles[$showUndoBefore].\n"; return; };
     /^sw$/ && do { if (!$numbers) { printPoints(); return; }
     if (($numbers < 2) || ($numbers > 9)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; }
     $startWith = $numbers;
@@ -253,10 +261,10 @@ sub procCmd
       my $didAny;
 	  my $empties;
 	  my $localFrom, my $localTo, my $curMinToFlip;
-	  printNoTest("3-waying stacks @numArray[1], @numArray[2] and @numArray[3].\n");
+	  printNoTest("3-waying stacks $numArray[1], $numArray[2] and $numArray[3].\n");
       $shouldMove = 1;
 	  $quickMove = 1;
-      while (anyChainAvailable(@numArray[1], @numArray[2], @numArray[3]))
+      while (anyChainAvailable($numArray[1], $numArray[2], $numArray[3]))
 	  {
 	    $empties = 0;
 	    for (1..3) { if ($#{$stack[$_]} == -1) { $empties++; } }
@@ -268,15 +276,15 @@ sub procCmd
   	    {
 	      for $k (1..3)
 		  {
-		    if (canChain(@numArray[$j], @numArray[$k]))
+		    if (canChain($numArray[$j], $numArray[$k]))
 		    {
   		      $foundChain = 1;
-			  if (($stack[@numArray[$k]][$#{$stack[@numArray[$k]]}] < $curMinToFlip) || ($curMinToFlip == 0)) { $localFrom = $j; $localTo = $k; }
+			  if (($stack[$numArray[$k]][$#{$stack[$numArray[$k]]}] < $curMinToFlip) || ($curMinToFlip == 0)) { $localFrom = $j; $localTo = $k; }
 		    }
 		    else { }
 		  }
 	    }
-	    tryMove("@numArray[$localFrom]@numArray[$localTo]");
+	    tryMove("$numArray[$localFrom]$numArray[$localTo]");
 	    if ($foundChain)
 	    {
 	      $didAny = 1;
@@ -285,20 +293,20 @@ sub procCmd
 	  $quickMove = 0;
 	  if (!$testing)
 	  {
-	  if ($didAny) { printdeck(); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
+	  if ($didAny) { printdeck(0); print "$didAny total shifts.\n"; checkwin(); } else { print "No shifts available.\n"; }
 	  }
 	  checkwin();
 	  return;
     };
     /^tf/ && do { runEachTest(); return; };
     /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
-    /^ua/ && do { print "Top cards:"; for (1..6) { print " @topCard[$_](" . faceval(@topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
+    /^ua/ && do { print "Top cards:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers); undo(2); return; };
-    /^ue$/ && do { cmdNumWarn($numbers); $undoEach = !$undoEach; print "UndoEach now @toggles[$undoEach].\n"; return; };
+    /^ue$/ && do { cmdNumWarn($numbers); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
 	/^uu$/ && do { cmdNumWarn($numbers); $undidOrLoadThisTurn = 1; undoToStart(); return; };
-    /^v/ && do { $vertical = !$vertical; print "Vertical view @toggles[$vertical].\n"; return; };
+    /^v/ && do { $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
     /^[wy]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(); return; };
     /^x$/ && do
     {
@@ -306,16 +314,16 @@ sub procCmd
 	  if ($#numArray == 0) { expandOneColumn($numbers); return; }
 	  if ($#numArray == 2)
       {
-	    if ((botSuit(@numArray[0]) != botSuit(@numArray[1])) && (!isEmpty(@numArray[1]))) { print "Wrong middle suit.\n"; return; }
-	    if ((botSuit(@numArray[0]) != botSuit(@numArray[2])) && (!isEmpty(@numArray[2]))) { print "Wrong to-from suit.\n"; return; }
+	    if ((botSuit($numArray[0]) != botSuit($numArray[1])) && (!isEmpty($numArray[1]))) { print "Wrong middle suit.\n"; return; }
+	    if ((botSuit($numArray[0]) != botSuit($numArray[2])) && (!isEmpty($numArray[2]))) { print "Wrong to-from suit.\n"; return; }
         $shouldMove = 1;
 	    $b4 = $#undoArray;
 	    $quickMove = 1;
 		#printDebug(1);
-        autoShuffleExt(@numArray[0], @numArray[2], @numArray[1]);
+        autoShuffleExt($numArray[0], $numArray[2], $numArray[1]);
 		#printDebug(2);
 	    $quickMove = 0;
-	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(); checkwin(); }
+	    if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else { printdeck(0); checkwin(); }
 	    return;
       }
 	  if ($#numArray == 3) { print "Too many numbers. "; }
@@ -330,6 +338,38 @@ sub procCmd
   print "Command ($_[0]) ";
   if ($numbers && $letters) { print "($letters/$numbers) "; }
   print "wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
+}
+
+sub check720
+{
+  my @initArray = ();
+  if ($drawsLeft != 1) { print "You need to have 1 draw left.\n"; return; }
+  for (1..52) { if ($inStack{$_}) { push(@initArray, $_); } }
+  my $count = 0;
+  my $thiswin;
+  my $wins =0;
+  my $firstPermu = "";
+  Algorithm::Permute::permute {
+  my @array2 = @{dclone(\@stack)};
+  $count++;
+  @force = @initArray;
+  drawSix();
+  for (@initArray) { $inStack{$_} = 0; }
+  $drawsLeft = 1;
+  $printedThisTurn = 0;
+  $seventwenty = 1;
+  ones(0);
+  $thiswin = checkwin();
+  $seventwenty = 0;
+  if ($thiswin == 1) { if (!$firstPermu) { for (0..5) { $firstPermu .= " " . faceval(@initArray[$_]); } } $wins++; }
+  @stack = @{dclone(\@array2)};
+  } @initArray;
+  $seventwenty = 0;
+  if ($wins)
+  { print "$wins insta-win" . plur($wins) . ", first one is$firstPermu.\n"; }
+  @outSinceLast = ();
+  for (@initArray) { $inStack{$_} = 1; }
+  @force=();
 }
 
 sub perfAscending
@@ -352,30 +392,30 @@ sub thereAndBack
     my $oldEmptyRows = emptyRows();
 	$b4 = $#undoArray;
 	my $wrongOrder = 0;
-	if (isEmpty(@numArray[2]) && !isEmpty(@numArray[1]))
+	if (isEmpty($numArray[2]) && !isEmpty($numArray[1]))
 	{
-	  $temp = @numArray[2]; @numArray[2] = @numArray[1]; @numArray[1] = $temp;
+	  $temp = $numArray[2]; $numArray[2] = $numArray[1]; $numArray[1] = $temp;
 	  $wrongOrder = 1;
 	}
-	if (!canMove(@numArray[0], @numArray[2]) && !canMove(@numArray[2], @numArray[0])) { print "Can't move @numArray[0] onto @numArray[2].\n"; return; }
-	if (!canMove(@numArray[0], @numArray[1])) { print "Can't move @numArray[0] through @numArray[1].\n"; return; }
+	if (!canMove($numArray[0], $numArray[2]) && !canMove($numArray[2], $numArray[0])) { print "Can't move $numArray[0] onto $numArray[2].\n"; return; }
+	if (!canMove($numArray[0], $numArray[1])) { print "Can't move $numArray[0] through $numArray[1].\n"; return; }
     $shouldMove = 1;
 	$quickMove = 1;
 	do
 	{
 	$b4 = $#undoArray;
-	my $oldSuit = botSuit(@numArray[0]);
-    autoShuffleExt(@numArray[0], @numArray[2], @numArray[1], botSuit(@numArray[0]));
+	my $oldSuit = botSuit($numArray[0]);
+    autoShuffleExt($numArray[0], $numArray[2], $numArray[1], botSuit($numArray[0]));
 	if ($b4 != $#undoArray) { $errorPrintedYet = 1; } # this is a bit of a hack. No error is printed yet, but if we made a successful move, we may print a misleading error.
-	if ($oldSuit == botSuit(@numArray[2])) # don't even try a comeback if there's a different suit.
+	if ($oldSuit == botSuit($numArray[2])) # don't even try a comeback if there's a different suit.
 	{
-    autoShuffleExt(@numArray[2], @numArray[0], @numArray[1], botSuit(@numArray[0]));
+    autoShuffleExt($numArray[2], $numArray[0], $numArray[1], botSuit($numArray[0]));
 	}
-	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty(@numArray[0])) && (!isEmpty(@numArray[2])));
+	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty($numArray[0])) && (!isEmpty($numArray[2])));
 	$quickMove = 0;
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
 	{
-	  printdeck();
+	  printdeck(0);
 	  if ($wrongOrder)
 	  {
 	  print "NOTE: I switched the last two numbers, since you specified to an empty row. You can UNDO if it doesn't work for you.\n";
@@ -400,10 +440,10 @@ sub expandOneColumn
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
 	  if (!$stack[$emcheck][0])
 	  {
-	    if (@rows[0]) { @rows[1] = $emcheck; $fromrow = @rows[0]; last; }
+	    if ($rows[0]) { $rows[1] = $emcheck; $fromrow = $rows[0]; last; }
 	    else
 	    {
-	    @rows[0] = $emcheck; $fromrow = @rows[1];
+	    $rows[0] = $emcheck; $fromrow = $rows[1];
 	    }
 	  }
 	}
@@ -414,45 +454,45 @@ sub expandOneColumn
 
 	$errorPrintedYet = 1; # a bit fake, but we already error checked above.
 	$quickMove = 1;
-	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit(@rows[0]) . " (" . botCard(@rows[0]) . ", row @rows[0]) " . botSuit(@rows[1]) . " (" . botCard(@rows[1]) . ", row @rows[1])\n");
+	printDebug("Row $thisRow: " . botSuit($thisRow) . " " . botSuit($rows[0]) . " (" . botCard($rows[0]) . ", row $rows[0]) " . botSuit($rows[1]) . " (" . botCard($rows[1]) . ", row $rows[1])\n");
 	if (botSuit($thisRow) == $fromSuit)
 	{
-    if ((botSuit($thisRow) == botSuit(@rows[0])) || (botSuit(@rows[0]) == -1))
+    if ((botSuit($thisRow) == botSuit($rows[0])) || (botSuit($rows[0]) == -1))
 	{
 	  printDebug("x-command 1\n");
-	  autoShuffleExt($thisRow, @rows[0], @rows[1]);
+	  autoShuffleExt($thisRow, $rows[0], $rows[1]);
 	}
-	elsif ((botSuit($thisRow) == botSuit(@rows[1])) || (botSuit(@rows[1]) == -1))
+	elsif ((botSuit($thisRow) == botSuit($rows[1])) || (botSuit($rows[1]) == -1))
 	{
 	  printDebug("x-command 2\n");
-	  autoShuffleExt($thisRow, @rows[1], @rows[0]);
+	  autoShuffleExt($thisRow, $rows[1], $rows[0]);
 	}
 	}
 	if (emptyRows() > 1)
 	{
 	  my $thisRow = firstEmptyRow();
 	  printDebug("x-command 3\n");
-	  if (($thisRow != @rows[0]) && ($thisRow != @rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); autoShuffleExt(@rows[1], $thisRow, @rows[0]); }
+	  if (($thisRow != $rows[0]) && ($thisRow != $rows[1])) { autoShuffleExt($rows[0], $thisRow, $rows[1]); autoShuffleExt($rows[1], $thisRow, $rows[0]); }
 	}
 	if (botSuit($thisRow) == $fromSuit)
 	{
 	  my $count = 0;
 	  printDebug("Trying extra\n");
-      while ((isEmpty(@rows[1]) + isEmpty(@rows[0]) + isEmpty($thisRow) < 2) && suitsAligned(suit(botCard(@rows[0])), suit(botCard(@rows[1])), suit(botCard($thisRow)), $fromSuit))
+      while ((isEmpty($rows[1]) + isEmpty($rows[0]) + isEmpty($thisRow) < 2) && suitsAligned(suit(botCard($rows[0])), suit(botCard($rows[1])), suit(botCard($thisRow)), $fromSuit))
 	  {
 		$count += 1; if ($count == 20) { print"Oops. This took too long, bailing.\n"; last; }
 	    printDebug ("Shift $count\n");
 	    $errorPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
-	    my $from = lowestOf(@rows[0], $thisRow, @rows[1]);
-  	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of @rows[0] @rows[1] $thisRow\n");
-	    if ($from == @rows[0]) { if (botCard($thisRow) > botCard(@rows[1])) { autoShuffleExt(@rows[0], $thisRow, @rows[1]); } else { autoShuffleExt(@rows[0], @rows[1], $thisRow); } }
-	    elsif ($from == @rows[1]) { if (botCard($thisRow) > botCard(@rows[0])) { autoShuffleExt(@rows[1], $thisRow, @rows[0]); } else { autoShuffleExt(@rows[1], @rows[0], $thisRow); } }
-	    else { if (botCard(@rows[0]) < botCard(@rows[1])) { autoShuffleExt($thisRow, @rows[0], @rows[1]); } else { autoShuffleExt($thisRow, @rows[1], @rows[0]); } }
-		if ($#undoArray == $beforeArray) { printDebug("Nothing turned over turn $count."); }
+	    my $from = lowestOf($rows[0], $thisRow, $rows[1]);
+  	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of $rows[0] $rows[1] $thisRow\n");
+	    if ($from == $rows[0]) { if (botCard($thisRow) > botCard($rows[1])) { autoShuffleExt($rows[0], $thisRow, $rows[1]); } else { autoShuffleExt($rows[0], $rows[1], $thisRow); } }
+	    elsif ($from == $rows[1]) { if (botCard($thisRow) > botCard($rows[0])) { autoShuffleExt($rows[1], $thisRow, $rows[0]); } else { autoShuffleExt($rows[1], $rows[0], $thisRow); } }
+	    else { if (botCard($rows[0]) < botCard($rows[1])) { autoShuffleExt($thisRow, $rows[0], $rows[1]); } else { autoShuffleExt($thisRow, $rows[1], $rows[0]); } }
+		if ($#undoArray == $beforeCmd) { printDebug("Nothing turned over turn $count."); }
 	  }
 	}
 	$quickMove = 0;
-	printdeck();
+	printdeck(0);
 	checkwin();
 	return;
 }
@@ -522,7 +562,7 @@ sub anyChainAvailable
 	  for $back (0..12) { if ($stack[$_[$temp]][$sz] + $back != $stack[$_[$temp]][$sz-$back]) { $gotStraight = 0; } }
 	  if (($gotStraight == 1) && (!$testing)) { print "You got the whole suit straight on row $_[$temp].\n"; return 0; }
 	}
-	return  canChain(@x[1], @x[2], -1) || canChain(@x[1], @x[3], -1) || canChain(@x[2], @x[3], -1) || canChain(@x[2], @x[1], -1) || canChain(@x[3], @x[1], -1) || canChain(@x[3], @x[2], -1);
+	return  canChain($x[1], $x[2], -1) || canChain($x[1], $x[3], -1) || canChain($x[2], $x[3], -1) || canChain($x[2], $x[1], -1) || canChain($x[3], $x[1], -1) || canChain($x[3], $x[2], -1);
   }
 }
 
@@ -531,7 +571,7 @@ sub doAnotherGame
   $moveBar = 1;
   $quickMove = 0;
 
-  if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(); return; }
+  if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(0); return; }
   else
   {
   if ($#lastTen == 9) { shift(@lastTen); }
@@ -554,7 +594,7 @@ sub doAnotherGame
   close(B);
   }
 
-initGame(); printdeck();
+initGame(); printdeck(0);
 }
 
 sub copyAndErase
@@ -656,12 +696,12 @@ sub saveDeck
   copyAndErase($filename);
 
   print "OK, saved.\n";
-  printdeck();
+  printdeck(0);
 }
 
 sub loadDeck
 {
-  if ($_[1] =~ /debug/) { $filename = "al.txt"; printNoTest("DEBUG test\n"); } else { $filename="al-sav.txt"; }
+  if ($#_ > -1) { if ($_[0] =~ /debug/) { $filename = "al.txt"; printNoTest("DEBUG test\n"); } else { $filename="al-sav.txt"; } }
   chomp($_[0]);
   my $search = $_[0]; $search =~ s/^[lt]/s/gi;
   open(A, "$filename");
@@ -678,7 +718,7 @@ sub loadDeck
   if ($prefix =~ /i/) { $loadIgnore = 1; }
   if ($prefix =~ /b/) { $loadIgnore = 0; $overrideLoadIgnore = 1; }
 
-  my $q = <A>; chomp($q); @opts = split(/,/, $q); if (@opts[0] > 1) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; # read in default values
+  my $q = <A>; chomp($q); @opts = split(/,/, $q); if ($opts[0] > 1) { $startWith = $opts[0]; } $vertical = $opts[1]; $collapse = $opts[2]; $autoOnes = $opts[3]; $beginOnes = $opts[4]; $autoOneSafe = $opts[5]; $sinceLast = $opts[6]; if (!$easyDefault) { $easyDefault = $opts[7]; } $autoOneFull = $opts[8]; # read in default values
   my $hidRow = 0;
 
   while ($a = <A>)
@@ -827,7 +867,7 @@ sub loadDeck
 			}
 		  }
     $currentlyLoadingSaving = 1; # this is a hack and I can do better. But...if we don't see 
-	printdeck();
+	printdeck(0);
 	if (!$avoidWin) { checkwin(); }
 	close(A);
 	$undidOrLoadThisTurn = 1;
@@ -840,7 +880,7 @@ sub loadDeck
 
 sub printUndoArray
 {
-  if ($debug) { my $z; for $z (0..$#undoArray+1) { print "$z=@undoArray[$z], "; } print "\n"; }
+  if ($debug) { my $z; for $z (0..$#undoArray+1) { print "$z=$undoArray[$z], "; } print "\n"; }
 }
 
 sub runEachTest
@@ -893,32 +933,35 @@ sub hidCards
 
 sub forceArray
 {
-    my $card = $_[0]; $card =~ s/^(f|f=)//g; $card =~ s/\(.*//g;
+    my $card = $_[0]; $card =~ s/^(f|f\=)//g; $card =~ s/\(.*//g;
 
-	if ((!$hidden) && (!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
+	if ((!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }
 
 	if ($card eq "0") { push(@force, $card); print "Forcing null, which is usually just for testing purposes.\n"; return; }
 	if ($card =~ /[cdhs]/i)
 	{
-	  if (revCard($card) == -1) { print "Bad number value for card. (KQJA/1-10)(CDHS) is needed.\n"; return; }
+	  if (revCard($card) == -1) { print "Bad number value for card $card. (KQJA/1-10)(CDHS) is needed.\n"; return; }
+	  $cardNum = revCard($card);
 	}
-	if ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
-	if (($card <= 52) && ($card >= 1))
+	elsif ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
+	else { $cardNum = $card; }
+	if (($cardNum <= 52) && ($cardNum >= 1))
 	{
-	if (!$inStack{$card}) { print "$card (" . faceval($card) . ") already out on the board or in the force queue.\n"; return; }
-	push (@force, $card); delete ($inStack{$card}); if ((!$undo) && (!$quickMove)) { print faceval($card) . " successfully pushed.\n"; }
+	if (!$inStack{$cardNum}) { print "$card (" . faceval($cardNum) . ") already out on the board or in the force queue.\n"; return; }
+	push (@force, $cardNum); delete ($inStack{$cardNum}); if ((!$undo) && (!$quickMove)) { print faceval($cardNum) . " successfully pushed.\n"; }
 	return;
 	}
 
 	for $su (0..$#suit)
 	{
-	  if ($card =~ /$su/)
+	  if ($cardNum =~ /$su/)
 	  {
-	    $dumpVal = 13 * $_; $card =~ s/$su//g;
-		for $fv (0..$#vals) { if ($card =~ /$fv/) { $dumpVal += ($fv + 1); print "$_[0] successfully pushed.\n"; return; } }
+	    $dumpVal = 13 * $_; $cardNum =~ s/$su//g;
+		for $fv (0..$#vals) { if ($cardNum =~ /$fv/) { $dumpVal += ($fv + 1); print "$_[0] successfully pushed.\n"; return; } }
 	  }
 	}
-  if (!$gotFaceVal) { print "Card must be of the form [A23456789 10 JQK][CDHS], or the matching number.\nFace value = C=0 D=13 H=26 S=39.\n"; return; }
+  print "Card must be of the form [A23456789 10 JQK][CDHS], or the matching number.\nFace value = C=0 D=13 H=26 S=39.\n";
+  return;
 }
 
 sub fillRandInitArray # anything in a row, but of course QH-KH-AD-2D-3D-4D needs to be DQ'd
@@ -992,7 +1035,7 @@ for (1..52) { $inStack{$_} = 1; }
 
 drawSix(-1);
 
-my @suitcard = (0,0,0,0);
+my @suitcard = (0,0,0,0,0);
 
 for (1..6)
 {
@@ -1038,7 +1081,7 @@ if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
 if ($drawsLeft != 6)
 {
   $anyMovesYet = 1;
-  @q = breakScore(); push (@pointsArray, @q[0] . "/" . @q[1]); printDebug("Draw six: $newBreak\n"); } # this is the initial draw so it can't count as a move.
+  @q = breakScore(); push (@pointsArray, @q[0] . "/" . @q[1]); } # this is the initial draw so it can't count as a move.
 for (1..6)
 {
   if ($fixedDeckOpt)
@@ -1095,7 +1138,7 @@ sub printdeckforce
   my $qmold = $quickMove;
   $undo = $testing = $quickMove = 0;
   print "============start force print deck\n";
-  printdeck();
+  printdeck(0);
   print "============end force print deck\n";
   $quickMove = $qmold;
   $undo = $undoold;
@@ -1120,7 +1163,7 @@ sub printAnyway
   $testing = 0; $undo = 0; $quickMove = 0;
 
   $printedThisTurn = 0;
-  printdeck();
+  printdeck(0);
   $printedThisTurn = 0;
   $quickMove = $qm;
   $undo = $ud;
@@ -1301,8 +1344,8 @@ sub showLegalsAndStats
 {
   if (($undo) || ($quickMove)) { return; }
   my @idx;
-  my @blank = (0,0,0,0,0,0);
-  my @circulars = (0,0,0,0,0,0);
+  my @blank = (0,0,0,0,0,0,0);
+  my @circulars = (0,0,0,0,0,0,0);
   my $canMakeEmpty = 0;
   $mbGood = "";
 
@@ -1436,7 +1479,7 @@ sub showLegalsAndStats
   my ($brkPoint , $brkFull, $breaks) = breakScore();
   $visible = $cardsInPlay - $hidCards;
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chain) . ", $order in order, $breaks break" . plur($break) . ", $brkFull($brkPoint) break-remaining score.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 
@@ -1445,12 +1488,11 @@ sub breakScore
   my $brkPoint = 0;
   my $visible = $cardsInPlay - $hidCards;
   my $breaks = 0;
-  my $brkPoint = 0;
   for my $breakRow (1..6)
   {
     $consecutives = 0;
     #we deserve credit for an empty row, but how much?
-    if ($stack[$breakRow][0] > 0)
+    if (($#{$stack[$breakRow]} > -1) && ($stack[$breakRow][0] > 0))
 	{
 	  $brkPoint++;
 	}
@@ -1531,7 +1573,6 @@ sub suit
 sub cromu
 {
   if ($_[0] >= $_[1]) { return 0; }
-  if (!$_[0]) { return 0; }
   my $x = suit($_[0]);
   my $y = suit($_[1]);
   #print "$_[0] vs. $_[1]: $x =? $y\n";
@@ -1630,13 +1671,12 @@ sub tryMove
     push(@undoArray, "$from$to");
   } #-1 means that we are in the "ones" subroutine so it is not a player-move
 
-  printdeck();
+  printdeck(0);
   checkwin();
 }
 
 sub altUntil
 {
-  $altmoves = 0;
   my @cmds = split(//, $_[0]);
   my $from = @cmds[0];
   my $to = @cmds[1];
@@ -1666,7 +1706,7 @@ sub altUntil
 	$totalMoves++;
   }
   $quickMove = 0;
-  printdeck();
+  printdeck(0);
   print "Made $totalMoves moves.\n";
   checkwin();
 }
@@ -1813,7 +1853,7 @@ sub straightUp # this doesn't say that a row is ascending but rather if it can b
     if ($temp > $max) { return 0; }
 	if (($temp > $whatTo) && ($sui == suit($temp)) && ($fromBot < $whatTo))
 	{
-	  #$quickMove = 0; printdeck(); $quickMove = 1; print "Okay $_[0] to $_[1]: $temp > $whatTo and $sui is suit of $temp\n";
+	  #$quickMove = 0; printdeck(0); $quickMove = 1; print "Okay $_[0] to $_[1]: $temp > $whatTo and $sui is suit of $temp\n";
 	  printDebug("a\n");
 	  return 1;
 	}
@@ -1897,7 +1937,8 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
     for $j (1..6)
 	{
 	  #printDebug("Suit to shuffle $i $j is $suitToShuf\n");
-	  if (($errNum = safeShuffle($i, $j, $suitToShuf))==1)
+	  my $errNum = safeShuffle($i, $j, $suitToShuf);
+	  if ($errNum ==1)
 	  {
 	    #if ($debug) { printAnyway(); }
 		$moveBar = 0;
@@ -2030,7 +2071,7 @@ sub undoToStart
   @cardUnder = @backupCardUnder;
   @fixedDeck = @oneDeck;
   @undoArray = ();
-  printdeck();
+  printdeck(0);
 }
 
 sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to last cards-out (ud) 3 = undo last 6-card draw (ud1)
@@ -2039,8 +2080,8 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   my $lastNMinus = 0;
   $undo = 1; $undidOrLoadThisTurn = 1;
   if ($showUndoBefore) { print "Undo array: @undoArray\n"; }
-  if (($_[0] == 2) || ($_[0] ==3)) { if ($oldCardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
-  if ($_[0] == 2) { if ((@undoArray[$#undoArray] eq "n-") && (@undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
+  if (($_[0] == 2) || ($_[0] ==3)) { if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
+  if ($_[0] == 2) { if (($undoArray[$#undoArray] eq "n-") && ($undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
   if ($undoDebug)
   {
     print "Writing to debug...\n";
@@ -2053,7 +2094,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	if (-s "undo-debug.txt" > 100000) { print "WARNING trim undodebug file.\n"; }
   }
   #if ($#undoArray == -1) { print "Nothing to undo.\n"; return;}
-  if (@undoArray[$#undoArray] eq "n-") { $lastNMinus = 1; }
+  if ($undoArray[$#undoArray] eq "n-") { $lastNMinus = 1; }
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   @force = ();
@@ -2061,11 +2102,11 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
-  $tempUndoCmd = @undoArray[$x];
+  $tempUndoCmd = $undoArray[$x];
   #print "$x elts left\n";
   if ($x >= 0)
   {
-	while (($x > 0) && ($tempUndoCmd eq "n+")) { pop(@undoArray); $x--; $tempUndoCmd = @undoArray[$x]; }
+	while (($x > 0) && ($tempUndoCmd eq "n+")) { pop(@undoArray); $x--; $tempUndoCmd = $undoArray[$x]; }
 	if (($_[0] != 3) || ($tempUndoCmd ne "df")) # special case: Don't pop if we are near a DF anyway
 	{
     $tempUndoCmd = pop(@undoArray);
@@ -2076,28 +2117,28 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	{
 	while (($x >= 0) && ($undos < $_[1]))
 	{
-	while ((@undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
+	while (($undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
 	{
 	  $x--; $tempUndoCmd = pop(@undoArray);
 	}
 	$undos++;
 	}
 	}
-	elsif (($_[0] ==3) && (@undoArray[$x] eq "df"))
+	elsif (($_[0] ==3) && ($undoArray[$x] eq "df"))
 	{
 	  print "Already at a draw, so only going back one move.\n";
-	  while ((@undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray); }
+	  while (($undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
 	  #print "1=============\n@undoArray\n";
-	while ((@undoArray[$x] ne "df") && ($x >= 0)) { $x--; pop(@undoArray); }
+	while (($undoArray[$x] ne "df") && ($x >= 0)) { $x--; pop(@undoArray); }
 	  #print "2=============\n@undoArray\n";
 	if (($_[0] == 3) && ($x > 0))  # encountered df.
 	{
 	  $tempUndoCmd = 0;
 	  pop(@undoArray); $x = $#undoArray;
-	  while ((@undoArray[$x] =~ /^f/) && ($x > 0))
+	  while (($undoArray[$x] =~ /^f/) && ($x > 0))
 	  {
 	    $x--; pop(@undoArray); $tempUndoCmd++;
 	  }
@@ -2107,18 +2148,18 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	}
 	elsif (($tempUndoCmd eq "n-"))
 	{
-	while ((@undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
+	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	else
 	{
-	while ((@undoArray[$x] =~ /^(f|n\+)/) && ($x >= 0))
+	while (($undoArray[$x] =~ /^(f|n\+)/) && ($x >= 0))
 	{
 	  $x--;
 	  $tempUndoCmd = pop(@undoArray);
 	  #print "extra-popped 1 $tempUndoCmd\n";
 	}
 	}
-	while ((@undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
+	while (($undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
 	{
 	  $x--;
 	  $tempUndoCmd = pop(@undoArray);
@@ -2130,14 +2171,14 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   for (0..$#undoArray)
   {
 	#$undo = 0;
-    #print "@undoArray[$_]\n";
-    procCmd(@undoArray[$_]);
+    #print "$undoArray[$_]\n";
+    procCmd($undoArray[$_]);
   }
   $undo = 0;
   @outSinceLast = ();
   printdeck(-1);
   # allow for an undo on back regularly after a u1
-  if (($lastNMinus) && (@undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+") && ($#undoArray != -1)) { push(@undoArray, "n-"); }
+  if (($lastNMinus) && ($undoArray[$#undoArray] ne "n-") && ($tempUndoCmd ne "n+") && ($#undoArray != -1)) { push(@undoArray, "n-"); }
 }
 
 sub checkWellForm
@@ -2148,8 +2189,8 @@ sub checkWellForm
   my $minusNext = 0;
   for $z (0..$#undoArray)
   {
-    if (@undoArray[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
-    if (@undoArray[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
+    if ($undoArray[$z] eq "n+") { if ($minusNext) { print "Undo malformed at $z, unexpected n+.\n"; } $plusses++;  $minusNext = 1; }
+    if ($undoArray[$z] eq "n-") { if (!$minusNext) { print "Undo malformed at $z, unexpected n-.\n"; } $plusses--; $minusNext = 0; }
   }
   if ($plusses == 1) { print "Last n+ is not matched with n-.\n"; }
 }
@@ -2189,7 +2230,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   my $movesAtOnesStart = $#undoArray;
 
   #eventually delete this if nothing goes boom
-  if ((@undoArray[$#undoArray] eq "n-") && ($movesAtStart != $#undoArray)) # in other words, only if we moved, we should see this error, and still we shouldn't.
+  if (($undoArray[$#undoArray] eq "n-") && ($movesAtStart != $#undoArray)) # in other words, only if we moved, we should see this error, and still we shouldn't.
   {
     pop(@undoArray); $insertNMinus = 1; print "********************Popped an n-. This should not happen. Save the undo array to find why.\n";
   }
@@ -2230,7 +2271,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 		  $tempStr .= "$j->$i=" . faceval(@thisBotCard[$j]);
 		  if ($thisTopCard[$j] != $thisBotCard[$j]) { $tempStr .= "/" . faceval(@thisTopCard[$j]); }
 		  $tempStr .= " -> " . faceval(@thisBotCard[$i]);
-		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(); die; }
+		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(0); die; }
   if ($debug) { printDebug("$i -> $j "); printLowCards(); }
 		  tryMove("$j$i", -1);
 		  if (!$quickStr) { $quickStr .= "AUTO: $tempStr"; } else { if ($totMove % 5 == 0) { $quickStr .= "\n      "; } else { $quickStr .= ", "; } $quickStr .= "$tempStr"; }
@@ -2241,6 +2282,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   }
   }
   while ($anyYet);
+  if ($seventwenty) { return 0; }
   printDebug("After outer: $#undoArray\n");
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
@@ -2314,12 +2356,16 @@ sub checkwin
 	for (0..$#x)
 	{
 	  $inarow = 0;
-	  if ((@x[$_] > 0) && (@x[$_] % 13 == 0))
+	  if (($x[$_] > 0) && ($x[$_] % 13 == 0))
 	  {
-	    while ((@x[$_] - @x[$_+1] == 1) && (@x[$_+1]) && (suit(@x[$_]) == suit(@x[$_+1]))) { $_++; $inarow++; }
+	    while (($x[$_] - $x[$_+1] == 1) && ($x[$_+1]) && (suit($x[$_]) == suit($x[$_+1]))) { $_++; $inarow++; }
 	  }
-	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[@x[$_]/13+1]; } else { $suitlist .= " @sui[@x[$_]/13+1]"; } }
+	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[$x[$_]/13+1]; } else { $suitlist .= " @sui[$x[$_]/13+1]"; } }
 	}
+  }
+  if ($seventwenty)
+  {
+    if ($suitsDone == 4) { return 1; } return 0;
   }
   if ((!$undo) && (!$quickMove) && (!$inMassTest))
   {
@@ -2349,8 +2395,9 @@ sub checkwin
 
 sub plur
 {
-  if ($_[0] eq 1) { return ""; }
-  if ($_[1]) { return "$_[1]"; }
+  if ($#_ == 0) { return "s"; }
+  elsif ($_[0] eq 1) { return ""; }
+  elsif ($_[1]) { return "$_[1]"; }
   return "s";
 }
 
@@ -2444,7 +2491,7 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = @opts[0]; } $vertical = @opts[1]; $collapse = @opts[2]; $autoOnes = @opts[3]; $beginOnes = @opts[4]; $autoOneSafe = @opts[5]; $sinceLast = @opts[6]; if (!$easyDefault) { $easyDefault = @opts[7]; } $autoOneFull = @opts[8]; $showMaxRows = @opts[9]; $saveAtEnd = @opts[10]; $ignoreBoardOnSave = @opts[11]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = $opts[0]; } $vertical = $opts[1]; $collapse = $opts[2]; $autoOnes = $opts[3]; $beginOnes = $opts[4]; $autoOneSafe = $opts[5]; $sinceLast = $opts[6]; if (!$easyDefault) { $easyDefault = $opts[7]; } $autoOneFull = $opts[8]; $showMaxRows = $opts[9]; $saveAtEnd = $opts[10]; $ignoreBoardOnSave = $opts[11]; close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
 
@@ -2479,20 +2526,20 @@ print "Options saved.\n";
 sub showOpts
 {
   print "========OPTIONS SETTING========\n";
-  print "Vertical view (v) @toggles[$vertical].\n";
-  print "Collapsing (c) @toggles[$collapse].\n";
-  print "Fixed deck (ra) @toggles[$fixedDeckOpt].\n";
-  print "Ignore Empty on Force (e) @toggles[$emptyIgnore].\n";
-  print "Show Chain Breaks (cb) @toggles[$chainBreaks].\n";
-  print "Auto-Ones on Draw (1a) @toggles[$autoOnes].\n";
-  print "Begin with shuffling one-aparts (1b) @toggles[$beginOnes].\n";
-  print "Auto-Ones Safe (1s) @toggles[$autoOnesSafe].\n";
-  print "Auto-Ones Full Desc (1f) @toggles[$autoOneFull].\n";
-  print "Show blocked moves (sb) @toggles[$showBlockedMoves].\n";
-  print "Show max rows (mr) @toggles[$showMaxRows].\n";
-  print "Save undos at end (sae) @toggles[$saveAtEnd].\n";
-  print "Show cards pulled since last (sl) @toggles[$sinceLast].\n";
-  print "Easy default (ez) @toggles[$easyDefault].\n";
+  print "Vertical view (v) $toggles[$vertical].\n";
+  print "Collapsing (c) $toggles[$collapse].\n";
+  print "Fixed deck (ra) $toggles[$fixedDeckOpt].\n";
+  print "Ignore Empty on Force (e) $toggles[$emptyIgnore].\n";
+  print "Show Chain Breaks (cb) $toggles[$chainBreaks].\n";
+  print "Auto-Ones on Draw (1a) $toggles[$autoOnes].\n";
+  print "Begin with shuffling one-aparts (1b) $toggles[$beginOnes].\n";
+  print "Auto-Ones Safe (1s) $toggles[$autoOneSafe].\n";
+  print "Auto-Ones Full Desc (1f) $toggles[$autoOneFull].\n";
+  print "Show blocked moves (sb) $toggles[$showBlockedMoves].\n";
+  print "Show max rows (mr) $toggles[$showMaxRows].\n";
+  print "Save undos at end (sae) $toggles[$saveAtEnd].\n";
+  print "Show cards pulled since last (sl) $toggles[$sinceLast].\n";
+  print "Easy default (ez) $toggles[$easyDefault].\n";
 }
 
 sub readScoreFile
@@ -2506,12 +2553,12 @@ else
 {
 print "Reading scores...\n";
 $stats = <A>; chomp($stats); @pcts = split(/,/, $stats);
-$wins = @pcts[0];
-$losses = @pcts[1];
-$wstreak = @pcts[2];
-$lstreak = @pcts[3];
-$lwstreak = @pcts[4];
-$llstreak = @pcts[5];
+$wins = $pcts[0];
+$losses = $pcts[1];
+$wstreak = $pcts[2];
+$lstreak = $pcts[3];
+$lwstreak = $pcts[4];
+$llstreak = $pcts[5];
 $stats = <A>; chomp($stats);
 @lastTen = split(/,/, $stats);
 close(A);
