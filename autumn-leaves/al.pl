@@ -11,7 +11,7 @@
 #project at https://github.com/andrewschultz/miscellany/blob/master/autumn-leaves/al.pl
 
 #use strict;
-#use warnings;
+use warnings;
 use integer;
 use List::Util 'shuffle';
 use Algorithm::Permute; # for 720 test (cw)
@@ -23,6 +23,7 @@ use Devel::StackTrace;
 
 my $stack;
 my $blockedMoves = 0;
+my @topCard = ();
 my %inStack;
 @toggles = ( "off", "on", "random" ); # 2 = random for easy-array. This is a hack, but eh, well...
 
@@ -178,11 +179,12 @@ sub procCmd
 
 	    while (($fromCardTop > 0) && ($stack[$_[0]][$fromCardTop] == $stack[$_[0]][$fromCardTop-1] - 1) && ($stack[$_[0]][$fromCardTop] % 13)) { $fromCardTop--; } # see if we can move the whole stack
 
-        my $fromCard = $stack[$_[0]][$fromCardTop];
+        my $fromCard;
+		if ($#{$stack[$_[0]]} == -1) { $fromCard = -1; } else { $fromCard = $stack[$_[0]][$fromCardTop]; }
 
         for $tryRow (1..6)
 	    {
-	      my $toCard = $stack[$tryRow][$#{$stack[$tryRow]}];
+	      my $toCard = botCard($tryRow);
 	      if ($#{$stack[$tryRow]} < 0) { $anyEmpty++; }
 	      #print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
 	      if ((cromu($fromCard, $toCard)) || (($#{$stack[$tryRow]} < 0) && !$emptyIgnore))
@@ -361,7 +363,7 @@ sub check720
   ones(0);
   $thiswin = checkwin();
   $seventwenty = 0;
-  if ($thiswin == 1) { if (!$firstPermu) { for (0..5) { $firstPermu .= " " . faceval(@initArray[$_]); } } $wins++; }
+  if ($thiswin == 1) { if (!$firstPermu) { for (0..5) { $firstPermu .= " " . faceval($initArray[$_]); } } $wins++; }
   @stack = @{dclone(\@array2)};
   } @initArray;
   $seventwenty = 0;
@@ -411,7 +413,7 @@ sub thereAndBack
 	{
     autoShuffleExt($numArray[2], $numArray[0], $numArray[1], botSuit($numArray[0]));
 	}
-	} while (($#undoArray > $b4) && ($_[0] =~ /y/) && (!isEmpty($numArray[0])) && (!isEmpty($numArray[2])));
+	} while (($#undoArray > $b4) && ($lastCommand =~ /y/) && (!isEmpty($numArray[0])) && (!isEmpty($numArray[2])));
 	$quickMove = 0;
 	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
 	{
@@ -733,7 +735,7 @@ sub loadDeck
 	{
 	printNoTest("Found $search in $filename, line $li.\n");
 	$lastSearchCmd = $a;
-	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = @temp[0]; $collapse = @temp[1];
+	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = $temp[0]; $collapse = $temp[1];
 	#topCards line
     $hidCards = 0;
    $cardsInPlay = 0; $drawsLeft = 5;
@@ -770,8 +772,8 @@ sub loadDeck
 	  if ($a =~ /^hc=/)
 	  {
 	    $hidRow++;
-		@{backupCardUnder[$hidRow]} = split(/,/, $b);
-		@{cardUnder[$hidRow]} = split(/,/, $b);
+		${backupCardUnder[$hidRow]} = split(/,/, $b);
+		${cardUnder[$hidRow]} = split(/,/, $b);
 		next;
 	  }
 	  if (($a =~ /^ignore/) && (!$overrideLoadIgnore)) { $ignoreThis = 1; }
@@ -786,18 +788,18 @@ sub loadDeck
 	    @{$stack[$rowsRead]} = ();
 	    for (0..$#loadedArray)
 		{
-		if (@loadedArray[$loadedIndex] =~ /.[-=]/)
+		if ($loadedArray[$loadedIndex] =~ /.[-=]/)
 		{
-		  @fromTo = split(/[-=]/, @loadedArray[$loadedIndex]); $upper = revCard(@fromTo[0]); $lower = revCard(@fromTo[1]);
-		  #print "@fromTo[0] $upper <-> @fromTo[1] $lower\n";
+		  @fromTo = split(/[-=]/, $loadedArray[$loadedIndex]); $upper = revCard($fromTo[0]); $lower = revCard($fromTo[1]);
+		  #print "$fromTo[0] $upper <-> $fromTo[1] $lower\n";
 		  if (($lower < 0) || ($upper > 52)) { print "Uh oh bad bail, lower = $lower, upper = $upper in @fromTo.\n"; close(A); return; }
-		  if (suit($lower) != suit($upper)) { print "Uh oh suits are wrong, @fromTo[0] vs @fromTo[1].\n"; close(A); return; }
+		  if (suit($lower) != suit($upper)) { print "Uh oh suits are wrong, $fromTo[0] vs $fromTo[1].\n"; close(A); return; }
 		  if ($lower > $upper) { $temp = $lower; $lower = $upper; $upper = $temp; }
 		  for ($temp = $upper; $temp >= $lower; $temp--) { $stack[$rowsRead][$outIndex] = $temp; $outIndex++; delete ($inStack{$temp}); }
 		  $loadedIndex++;
 		}
-		elsif (@loadedArray[$loadedIndex] =~ /[cdhs]$/i) { $stack[$rowsRead][$outIndex] = revCard(@loadedArray[$loadedIndex]); $loadedIndex++; $outIndex++; }
-		else { $stack[$rowsRead][$outIndex] = @loadedArray[$loadedIndex]; $loadedIndex++; $outIndex++; }
+		elsif ($loadedArray[$loadedIndex] =~ /[cdhs]$/i) { $stack[$rowsRead][$outIndex] = revCard($loadedArray[$loadedIndex]); $loadedIndex++; $outIndex++; }
+		else { $stack[$rowsRead][$outIndex] = $loadedArray[$loadedIndex]; $loadedIndex++; $outIndex++; }
 		}
 		#print "$rowsRead: @{$stack[$rowsRead]}\n";
 	    for $card (@{$stack[$rowsRead]})
@@ -821,30 +823,30 @@ sub loadDeck
 	  my $expVal = 0;
 	  for (0..$#testArray)
 	  {
-	    if (@testArray[$_] =~ /=/)
+	    if ($testArray[$_] =~ /=/)
 		{
-		  @q = split(/=/, @testArray[$_]);
-		  @r = split(/-/, @q[0]);
-		  $expVal = $stack[@r[0]][@r[1]];
-		  printDebug("$expVal at @r[0] @r[1]\n");
+		  @q = split(/=/, $testArray[$_]);
+		  @r = split(/-/, $q[0]);
+		  $expVal = $stack[$r[0]][$r[1]];
+		  printDebug("$expVal at $r[0] $r[1]\n");
 		  if ($expVal >= 0)
 		  {
-		    if (@q[1] != $expVal) { $errs++; print "$search: @r[0],@r[1] should be @q[1] but is $expVal.\n"; }
+		    if ($q[1] != $expVal) { $errs++; print "$search: $r[0],$r[1] should be $q[1] but is $expVal.\n"; }
 			else
 			{
-			  printDebug("$search: @r[0],@r[1] should be $expVal and is.\n");
+			  printDebug("$search: $r[0],$r[1] should be $expVal and is.\n");
 			}
 		  }
 		  else
 		  {
 		    $expVal = 0 - $expVal;
-		    if ($q[1] == $expVal) { $errs++; print "$search: @r[0],@r[1] should not be $expVal but is.\n"; }
+		    if ($q[1] == $expVal) { $errs++; print "$search: $r[0],$r[1] should not be $expVal but is.\n"; }
 			else
 			{
-			  printDebug("$search: @r[0],@r[1] should not be $expVal and isn't.\n");
+			  printDebug("$search: $r[0],$r[1] should not be $expVal and isn't.\n");
 			}
 		  }
-    } else { procCmd(@testArray[$_]); }
+    } else { procCmd($testArray[$_]); }
 		}
 	  $quietMove = 0;
 	  $testing = 0;
@@ -978,12 +980,12 @@ sub fillInitArray
   my @cards = split(/,/, $_[0]);
   for (0..$#cards)
   {
-    $this = @cards[$_];
+    $this = $cards[$_];
     if ($this =~ /^[0-9]+/) { if (($this > 52) || ($this < 1)) { die ("Entry $_, $this, is not 1-52.\n"); } }
 	else
 	{
 	if (revCard($this) == -1) { die ("Entry $_, $this, is not a valid card format.\n"); }
-	@cards[$_] = revCard($this);
+	$cards[$_] = revCard($this);
 	}
   }
   @initArray = @cards;
@@ -994,6 +996,7 @@ sub initGame
 
 my $forced = 0;
 
+$undidOrLoadThisTurn = 0;
 $printedThisTurn = 0;
 
 $anyMovesYet = 0;
@@ -1035,23 +1038,23 @@ for (1..52) { $inStack{$_} = 1; }
 
 drawSix(-1);
 
-my @suitcard = (0,0,0,0,0);
+my @suitCard = (0,0,0,0,0);
 
 for (1..6)
 {
-  @suitcard[suit(@topCard[$_])]++;
+  $suitCard[suit($topCard[$_])]++;
 }
 
 for (1..4)
 {
-  if (@suitcard[$_] > 1) { $thisStartMoves += (@suitcard[$_] - 1); }
+  if ($suitCard[$_] > 1) { $thisStartMoves += ($suitCard[$_] - 1); }
 }
 
 for $x (1..6)
 {
   for $y(1..6)
   {
-    if (@topCard[$x] - @topCard[$y] == 1) { $thisStartMoves++; }
+    if ($topCard[$x] - $topCard[$y] == 1) { $thisStartMoves++; }
   }
 }
 
@@ -1081,12 +1084,12 @@ if ($drawsLeft == 0) { print "Can't draw any more!\n"; return; }
 if ($drawsLeft != 6)
 {
   $anyMovesYet = 1;
-  @q = breakScore(); push (@pointsArray, @q[0] . "/" . @q[1]); } # this is the initial draw so it can't count as a move.
+  @q = breakScore(); push (@pointsArray, $q[0] . "/" . $q[1]); } # this is the initial draw so it can't count as a move.
 for (1..6)
 {
   if ($fixedDeckOpt)
   {
-  push(@{$stack[$_]}, @fixedDeck[0]);
+  push(@{$stack[$_]}, $fixedDeck[0]);
   shift(@fixedDeck);
   }
   else
@@ -1095,7 +1098,7 @@ for (1..6)
   push (@{$stack[$_]}, $thiscard);
   if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "f$thiscard(" . faceval($thiscard) . ")" ); }
   }
-  if ($drawsLeft == 6) { @topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
+  if ($drawsLeft == 6) { $topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
   #print "Top cards: @topCard\n";
 if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "df"); }
@@ -1109,10 +1112,10 @@ if (($autoOnes) && ($_[0] != -1))
 
 sub randcard
 {
-  if (@force[0]) { $rand = @force[0]; shift(@force); }
+  while (($#force > -1) && ($force[0] eq "0")) { shift(@force); }
+  if ($force[0]) { $rand = $force[0]; shift(@force); }
   else
   {
-  if (@force[0] eq "0") { shift(@force); }
   $rand = (keys %inStack)[rand keys %inStack];
   }
   delete $inStack{$rand};
@@ -1222,14 +1225,14 @@ sub printdeckhorizontal
 	}
 
 	if ($collapse) { $thisLine =~ s/-[0-9AKQJCHDS-]+-/=/g; }
-	if ($showMaxRows) { my $tlt = $thisLine; $tlt =~ s/^[0-9]: //g; @tmpArray = split(/[=\-: ]/, $tlt); @rowLength[$d] = $#tmpArray + 1; }
-	if ($thisLine =~ [CDHS]) { @rowLength[$_]++; }
+	if ($showMaxRows) { my $tlt = $thisLine; $tlt =~ s/^[0-9]: //g; @tmpArray = split(/[=\-: ]/, $tlt); $rowLength[$d] = $#tmpArray + 1; }
+	if ($thisLine =~ [CDHS]) { $rowLength[$_]++; }
 	print "$thisLine\n";
   }
   if ($showMaxRows)
   {
     my $maxRows = 0;
-	for (1..6) { if (@rowLength[$_] > $maxRows) { $maxRows = @rowLength[$_]; } }
+	for (1..6) { if ($rowLength[$_] > $maxRows) { $maxRows = $rowLength[$_]; } }
 	print "($maxRows max row length) ";
   }
   showLegalsAndStats();
@@ -1277,7 +1280,7 @@ sub printdeckvertical
   for $row (1..6)
   {
     if ($temp = jumpsFromBottom($row)) { $myString .= "  ($temp)"; } else { $myString .= "     "; }
-    @lookAhead[$row] = 0;
+    $lookAhead[$row] = 0;
   }
   if ($myString =~ /[0-9]/) { print "$myString\n"; }
   }
@@ -1294,39 +1297,42 @@ sub printdeckvertical
   $thisLine = "";
   for $row (1..6)
   {
-    if ($stack[$row][@deckPos[$row]])
+    if ($stack[$row][$deckPos[$row]])
 	{
 	$thisLine .= " ";
 	$foundCard = 1;
-	#if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	#if ($stack[$row][$deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
 	if ($collapse)
 	{
-	if (@lookAhead[$row])
+	if ($lookAhead[$row])
 	{
-	while((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row] +1] % 13)) { @deckPos[$row]++; $eq = 1; }
-	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	while(($deckPos[$row] < $#{$stack[$row]}) && (($stack[$row][$deckPos[$row]] - $stack[$row][$deckPos[$row]+1]) == 1) && ($stack[$row][$deckPos[$row] +1] % 13)) { $deckPos[$row]++; $eq = 1; }
+	if ($stack[$row][$deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
 	if ($eq) { $thisLine .= "="; } else { $thisLine .= "-"; }
-	$thisLine .= faceval($stack[$row][@deckPos[$row]], 1);
-	@lookAhead[$row] = 0;
+	$thisLine .= faceval($stack[$row][$deckPos[$row]], 1);
+	$lookAhead[$row] = 0;
 	$eq = 0;
 	}
 	else
 	{
-	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
-	$thisLine .= " " . faceval($stack[$row][@deckPos[$row]], 1);
+	if ($stack[$row][$deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	$thisLine .= " " . faceval($stack[$row][$deckPos[$row]], 1);
 	}
-	if ((($stack[$row][@deckPos[$row]] - $stack[$row][@deckPos[$row]+1]) == 1) && ($stack[$row][@deckPos[$row] +1] % 13))
+	if ($deckPos[$row] < $#{$stack[$row]})
 	{
-	  @lookAhead[$row] = 1;
-	  #print "$row: $stack[$row][@deckPos[$row]] to $stack[$row][@deckPos[$row]+1]: DING!\n";
+	if ((($stack[$row][$deckPos[$row]] - $stack[$row][$deckPos[$row]+1]) == 1) && ($stack[$row][$deckPos[$row] +1] % 13))
+	{
+	  $lookAhead[$row] = 1;
+	  #print "$row: $stack[$row][$deckPos[$row]] to $stack[$row][$deckPos[$row]+1]: DING!\n";
 	}
-	@deckPos[$row]++;
+	}
+	$deckPos[$row]++;
 	}
 	else
 	{
-	if ($stack[$row][@deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
-	$thisLine .= " " . faceval($stack[$row][@deckPos[$row]], 1);
-	@deckPos[$row]++;
+	if ($stack[$row][$deckPos[$row]] % 13 != 10) { $thisLine .= " "; }
+	$thisLine .= " " . faceval($stack[$row][$deckPos[$row]], 1);
+	$deckPos[$row]++;
 	}
 	}
 	else { $thisLine .= "     "; }
@@ -1353,10 +1359,10 @@ sub showLegalsAndStats
   {
     $curEl = 0;
     while ($stack[$d][$curEl]) { $curEl++; }
-	@idx[$d] = $curEl - 1;
-	if (@idx[$d] < 0) { @blank [$d] = 1; @idx[$d] = 0; }
+	$idx[$d] = $curEl - 1;
+	if ($idx[$d] < 0) { $blank[$d] = 1; $idx[$d] = 0; }
   }
-  #for $thi (0..5) { print "Stack $thi (@idx[$thi]): $stack[$thi][@idx[$thi]]\n"; }
+  #for $thi (0..5) { print "Stack $thi ($idx[$thi]): $stack[$thi][$idx[$thi]]\n"; }
   $anySpecial = 0;
   print "Legal moves:";
   my $legal = "";
@@ -1369,10 +1375,10 @@ sub showLegalsAndStats
 	  $moveStr = "";
 	  $recThis = 0;
 	  if ($from == $to) { next; }
-	  elsif (@blank[$to] == 1) { }
-	  elsif (cromu($stack[$from][@idx[$from]], $stack[$to][@idx[$to]]))
+	  elsif ($blank[$to] == 1) { }
+	  elsif (($#{$stack[$from]} != -1) && (cromu($stack[$from][$idx[$from]], $stack[$to][$idx[$to]])))
 	  {
-	    $thisEl = @idx[$from];
+	    $thisEl = $idx[$from];
 	    while ($thisEl > 0)
 		{
 		  if (($stack[$from][$thisEl-1] == $stack[$from][$thisEl] + 1) && ($stack[$from][$thisEl-1] % 13))
@@ -1385,7 +1391,7 @@ sub showLegalsAndStats
 		{
 		if (suit($stack[$from][$thisEl-1]) != suit($stack[$from][$thisEl]))
 		  {
-		  $moveStr .= "*"; @circulars[$to]++;
+		  $moveStr .= "*"; $circulars[$to]++;
 		  if (($stack[$from][$thisEl-1] % 13 == 1) && ($stack[$from][$thisEl] % 13 == 0) && ($thisEl % 13 == 0)) {} else { $anySpecial = 1; } # e.g KH=AH then KD is okay
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
@@ -1399,16 +1405,16 @@ sub showLegalsAndStats
 		}
 		if (suit($stack[$from][$thisEl-1]) == suit($stack[$from][$thisEl]))
 		{
-		  if (suit($stack[$from][$thisEl]) == suit($stack[$to][@idx[$to]]))
+		  if (suit($stack[$from][$thisEl]) == suit($stack[$to][$idx[$to]]))
 		  {
-		    if (($stack[$from][$thisEl] < $stack[$to][@idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
+		    if (($stack[$from][$thisEl] < $stack[$to][$idx[$to]]) && ($stack[$from][$thisEl] < $stack[$from][$thisEl-1]))
 			{
-			  $moveStr .= "C"; @circulars[$to]++;
+			  $moveStr .= "C"; $circulars[$to]++;
 			}
 		  }
 		}
 		$moveStr = " $moveStr$from$to";
-		if (($stack[$from][$thisEl] == $stack[$to][@idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "$moveStr+"; $anySpecial = 1; $mbGood = "$from$to"; }
+		if (($stack[$from][$thisEl] == $stack[$to][$idx[$to]] - 1) && ($stack[$from][$thisEl] % 13)) { $recThis = 1; $moveStr = "$moveStr+"; $anySpecial = 1; $mbGood = "$from$to"; }
 		if ($recThis) { $recc .= $moveStr; } else { $legal .= $moveStr; }
 	  }
 	  if (!$stack[$to][0] && $stack[$from][0])
@@ -1424,7 +1430,7 @@ sub showLegalsAndStats
   if ($recc) { print "$recc"; }
   if ($recc && $legal) { print " |"; }
   print "$legal";
-  for $toPile (1..6) { if (@circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x (@circulars[$toPile]-1)) . "$toPile"; } }
+  for $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; print " " . (X x ($circulars[$toPile]-1)) . "$toPile"; } }
   if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty)) { print " (recommend drawing)"; }
   elsif ($drawsLeft)
   {
@@ -1523,7 +1529,7 @@ sub printOutSinceLast
   if (($#outSinceLast != -1) && $sinceLast)
   {
     print "(";
-	for (0..$#outSinceLast) { if ($_ > 0) { print ", "; } print faceval(@outSinceLast[$_]); }
+	for (0..$#outSinceLast) { if ($_ > 0) { print ", "; } print faceval($outSinceLast[$_]); }
 	print " out since last)\n";
   }
 }
@@ -1538,8 +1544,8 @@ sub oneRowPerSuit
     for $ind (0..$#{$stack[$st]})
 	{
 	  $temp = suit($stack[$st][$ind]);
-	  if ((@q[$temp] > 0) && (@q[$temp] != $st)) { return 0; }
-	  @q[$temp] = $st;
+	  if (($q[$temp] > 0) && ($q[$temp] != $st)) { return 0; }
+	  $q[$temp] = $st;
 	}
   }
   return 1;
@@ -1572,6 +1578,8 @@ sub suit
 
 sub cromu
 {
+  if ($#_ < 1) { return 0; }
+  #my $trace = Devel::StackTrace->new; print $trace->as_string . "\n";
   if ($_[0] >= $_[1]) { return 0; }
   my $x = suit($_[0]);
   my $y = suit($_[1]);
@@ -1589,8 +1597,8 @@ sub barMove #this is necessary in some cases where we need to run two moves with
 sub tryMove
 {
   my @q = split(/ */, $_[0]);
-  my $from = @q[0];
-  my $to = @q[1];
+  my $from = $q[0];
+  my $to = $q[1];
 
   #print "$_[0] becomes $from $to, $moveBar moves barred\n";
   if ($moveBar == 1) { if ($showBlockedMoves) { barMove("$from-$to blocked, as previous move failed.\n"); } else { $blockedMoves++; } return; }
@@ -1637,7 +1645,8 @@ sub tryMove
 	$fromEl--;
   }
   #print "Going from $from-$fromEl to $to-$toEl\n";
-  my $toCard = $stack[$to][$toEl];
+  my $toCard = -1;
+  if (!isEmpty($to)) { $toCard = $stack[$to][$toEl]; }
   my $fromCard = $stack[$from][$fromEl];
 
   while ($stack[$from][$fromEl])
@@ -1645,11 +1654,12 @@ sub tryMove
   push (@{$stack[$to]}, $stack[$from][$fromEl]);
   splice (@{$stack[$from]}, $fromEl, 1);
   }
-  if ($stack[$from][0] == -1) #see about turning a card over
+  if (!isEmpty($from) && ($stack[$from][0] == -1)) #see about turning a card over
   {
     $fromLook = 0;
-	while ($stack[$from][$fromLook] == -1) { $fromLook++; }
-	if ($stack[$from][$fromLook] == 0)
+	my $maxEnt = $#{$stack[$from]};
+	while (($fromLook <= $maxEnt) && ($stack[$from][$fromLook] == -1)) { $fromLook++; }
+	if ($fromLook > $maxEnt)
 	{
 	$fromLook--;
 	if ($fixedDeckOpt)
@@ -1665,7 +1675,7 @@ sub tryMove
 	$hidCards--;
 	}
   }
-  if ($_[1] != -1) { if ($toCard - $fromCard != 1) { $anyMovesYet = 1; } }
+  if (($#_ == 0) || ($_[1] != -1)) { if ($toCard - $fromCard != 1) { $anyMovesYet = 1; } }
   if (!$undo)
   {
     push(@undoArray, "$from$to");
@@ -1678,8 +1688,8 @@ sub tryMove
 sub altUntil
 {
   my @cmds = split(//, $_[0]);
-  my $from = @cmds[0];
-  my $to = @cmds[1];
+  my $from = $cmds[0];
+  my $to = $cmds[1];
   my $totalMoves = 0;
   if (($from < 1) || ($from > 6) || ($to < 1) || ($to > 6)) { print "From/to must be between 1 and 6.\n"; }
   #print "$from$to trying\n";
@@ -1805,7 +1815,8 @@ sub emptyRows
 
 sub isEmpty
 {
-  if ($stack[$_[0]][0]) { return 0; } else { return 1; }
+  if ($#{$stack[$_[0]]} == -1) { return 1; }
+  return 0;
 }
 
 sub ascendingOld # sees if we have a fully ascending row
@@ -2057,9 +2068,9 @@ sub reinitBoard
   for (1..6)
   {
     @{$stack[$_]} = ();
-    for $x (1..@depth[$_]) { push (@{$stack[$_]}, -1); }
-	push (@{$stack[$_]}, @topCard[$_]);
-	delete($inStack{@topCard[$_]});
+    for $x (1..$depth[$_]) { push (@{$stack[$_]}, -1); }
+	push (@{$stack[$_]}, $topCard[$_]);
+	delete($inStack{$topCard[$_]});
   }
 }
 
@@ -2211,12 +2222,12 @@ sub showhidden
   print "Still off the board:";
   for $j (sort { $a <=> $b } keys %inStack)
   {
-    @out[suit($j)]++;
-    if ($lastSuit != suit($j)) { if (@out[$lastSuit] > 0) { print " (@out[$lastSuit])"; } $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
+    $out[suit($j)]++;
+    if ($lastSuit != suit($j)) { if ($out[$lastSuit] > 0) { print " ($out[$lastSuit])"; } $lastSuit = suit($j); print "\n" . faceval($j); } else { print " " . faceval($j); }
   }
-  if (@out[$lastSuit]) { print " (@out[$lastSuit])"; }
+  if ($out[$lastSuit]) { print " ($out[$lastSuit])"; }
   print "\nTotal unrevealed: " . (keys %inStack) . "\n";
-  for (1..4) { if (!@out[$_]) { $outs .= "@sui[$_] OUT. "; } }
+  for (1..4) { if (!$out[$_]) { $outs .= "$sui[$_] OUT. "; } }
   if ($outs) { print "$outs\n"; }
 }
 
@@ -2230,7 +2241,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   my $movesAtOnesStart = $#undoArray;
 
   #eventually delete this if nothing goes boom
-  if (($undoArray[$#undoArray] eq "n-") && ($movesAtStart != $#undoArray)) # in other words, only if we moved, we should see this error, and still we shouldn't.
+  if (($#undoArray > -1) && ($undoArray[$#undoArray] eq "n-") && ($movesAtStart != $#undoArray)) # in other words, only if we moved, we should see this error, and still we shouldn't.
   {
     pop(@undoArray); $insertNMinus = 1; print "********************Popped an n-. This should not happen. Save the undo array to find why.\n";
   }
@@ -2246,7 +2257,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   for (1..6)
   {
   my $temp = $#{$stack[$_]};
-  if ($temp == -1) { @thisTopCard[$_] = -3; @thisBotCard[$_] = -3; next; }
+  if ($temp == -1) { $thisTopCard[$_] = -3; $thisBotCard[$_] = -3; next; }
   while ($temp > 0)
   {
   if (($stack[$_][$temp] == $stack[$_][$temp-1]-1) && (suit($stack[$_][$temp-1]) == suit($stack[$_][$temp])))
@@ -2254,30 +2265,30 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   else
   { last; }
   }
-  @thisTopCard[$_] = $stack[$_][$temp];
-  @thisBotCard[$_] = $stack[$_][$#{$stack[$_]}];
+  $thisTopCard[$_] = $stack[$_][$temp];
+  $thisBotCard[$_] = $stack[$_][$#{$stack[$_]}];
   }
   for $j (1..6)
   {
     for $i (1..6)
 	{
-	  $err = canFlipQuick(@thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i]);
+	  $err = canFlipQuick($thisBotCard[$j], $thisTopCard[$j], $thisBotCard[$i]);
 	  if ($err > 0)
 	  {
 	    if (!$anyYet)
 		{
 		  $tempStr = "";
 		  $quickMove = 1;
-		  $tempStr .= "$j->$i=" . faceval(@thisBotCard[$j]);
-		  if ($thisTopCard[$j] != $thisBotCard[$j]) { $tempStr .= "/" . faceval(@thisTopCard[$j]); }
-		  $tempStr .= " -> " . faceval(@thisBotCard[$i]);
-		  #if ((@thisBotCard[$j] == 27) && (@thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(0); die; }
+		  $tempStr .= "$j->$i=" . faceval($thisBotCard[$j]);
+		  if ($thisTopCard[$j] != $thisBotCard[$j]) { $tempStr .= "/" . faceval($thisTopCard[$j]); }
+		  $tempStr .= " -> " . faceval($thisBotCard[$i]);
+		  #if (($thisBotCard[$j] == 27) && ($thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(0); die; }
   if ($debug) { printDebug("$i -> $j "); printLowCards(); }
 		  tryMove("$j$i", -1);
 		  if (!$quickStr) { $quickStr .= "AUTO: $tempStr"; } else { if ($totMove % 5 == 0) { $quickStr .= "\n      "; } else { $quickStr .= ", "; } $quickStr .= "$tempStr"; }
 		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
 		}
-	  } #else { printDebug("$i $j @thisBotCard[$j], @thisTopCard[$j], @thisBotCard[$i] = err $err\n"); }
+	  } #else { printDebug("$i $j $thisBotCard[$j], $thisTopCard[$j], $thisBotCard[$i] = err $err\n"); }
 	}
   }
   }
@@ -2356,9 +2367,9 @@ sub checkwin
 	for (0..$#x)
 	{
 	  $inarow = 0;
-	  if (($x[$_] > 0) && ($x[$_] % 13 == 0))
+	  if (($x[$_] > 0) && ($x[$_] % 13 == 0) && ($_ < $#x))
 	  {
-	    while (($x[$_] - $x[$_+1] == 1) && ($x[$_+1]) && (suit($x[$_]) == suit($x[$_+1]))) { $_++; $inarow++; }
+	    while (($_ < $#x) && ($x[$_] - $x[$_+1] == 1) && ($x[$_+1]) && (suit($x[$_]) == suit($x[$_+1]))) { $_++; $inarow++; }
 	  }
 	  if ($inarow == 12) { $suitsDone++;  if (!$suitlist) { $suitlist = @sui[$x[$_]/13+1]; } else { $suitlist .= " @sui[$x[$_]/13+1]"; } }
 	}
@@ -2371,7 +2382,7 @@ sub checkwin
   {
   if ($suitsDone == 4)
   {
-    if ($_[0] == -1) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
+    if (($#_ > 0) && ($_[0] == -1)) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
 	if ($x =~ /^u/i)
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
@@ -2407,7 +2418,7 @@ sub peekAtCards
   for (0..$#fixedDeck)
   {
     if (($_) && ($_ % 6 == 0)) { print " |"; }
-    print " " . faceval(@fixedDeck[$_]);
+    print " " . faceval($fixedDeck[$_]);
   }
   print "\n";
   for $thisrow(1..6)
@@ -2431,7 +2442,7 @@ sub deckFix
   #print "$#oneDeck: @oneDeck\n";
 	for $thisrow(1..6)
 	{
-	  for (1..@blanks[$thisrow])
+	  for (1..$blanks[$thisrow])
 	  {
 	    $cardUnder[$thisrow][$_-1] = pop(@oneDeck);
 		$backupCardUnder[$thisrow][$_-1] = $cardUnder[$thisrow][$_-1];
@@ -2454,7 +2465,7 @@ sub stats
  elsif ($lstreak) { print "Current loss streak = $lstreak $los\n"; }
  print "Longest streaks $lwstreak $winsuf $llstreak $los\n";
  print "Last ten games:";
- for (0..$#lastTen) { $sum += @lastTen[$_]; print " @wl[@lastTen[$_]]"; } print ", $sum $winsuf, " . (10-$sum) . " $los\n";
+ for (0..$#lastTen) { $sum += $lastTen[$_]; print " $wl[$lastTen[$_]]"; } print ", $sum $winsuf, " . (10-$sum) . " $los\n";
  printf("Win percentage = %d.%02d\n", ((100*$wins)/($wins+$losses)), ((10000*$wins)/($wins+$losses)) % 100);
 }
 
