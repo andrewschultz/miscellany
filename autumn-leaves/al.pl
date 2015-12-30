@@ -397,20 +397,22 @@ sub check720
 {
   my @initArray = ();
   if ($drawsLeft != 1) { print "You need to have 1 draw left.\n"; return; }
+  if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40}) { print "With all aces out, no auto-wins are expected.\n"; }
   for (1..52) { if ($inStack{$_}) { push(@initArray, $_); } }
   my $count = 0;
   my $thiswin;
   my $wins =0;
   my $firstPermu = "";
+  my @backupArray = @undoArray;
   Algorithm::Permute::permute {
   my @array2 = @{dclone(\@stack)};
   $count++;
   @force = @initArray;
   drawSix();
+  $seventwenty = 1;
   for (@initArray) { $inStack{$_} = 0; }
   $drawsLeft = 1;
   $printedThisTurn = 0;
-  $seventwenty = 1;
   ones(0);
   $thiswin = checkwin();
   $seventwenty = 0;
@@ -419,10 +421,13 @@ sub check720
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins insta-win" . plur($wins) . ", first one is$firstPermu.\n"; }
+  { print "$wins of 720 insta-win" . plur($wins) . ", first one is$firstPermu.\n"; }
+  else
+  { print "No wins found.\n"; }
   @outSinceLast = ();
   for (@initArray) { $inStack{$_} = 1; }
   @force=();
+  @undoArray = @backupArray;
 }
 
 sub perfAscending
@@ -1545,7 +1550,7 @@ sub showLegalsAndStats
   my ($brkPoint , $brkFull, $breaks) = breakScore();
   my $visible = $cardsInPlay - $hidCards;
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draws left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
+  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 
@@ -2174,7 +2179,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
-  $tempUndoCmd = $undoArray[$x];
+  my $tempUndoCmd = $undoArray[$x];
   #print "$x elts left\n";
   if ($x >= 0)
   {
@@ -2453,7 +2458,7 @@ sub checkwin
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
 	  push(@undoArray, "n-");
-	  undo(); $moveBar = 1; return;
+	  undo(0); $moveBar = 1; return;
 	}
 	$youWon = 1;
     if ($x =~ /^q/i) { exit; }
