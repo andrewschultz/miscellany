@@ -396,9 +396,13 @@ sub procCmd
 sub check720
 {
   my @initArray = ();
+  my $couldWork = 0;
   if ($drawsLeft != 1) { print "You need to have 1 draw left.\n"; return; }
+  for (1..52) { if ($inStack{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40}) { print "With all aces out, no auto-wins are expected.\n"; }
-  for (1..52) { if ($inStack{$_}) { push(@initArray, $_); } }
+  elsif (!$couldWork) { print "No suit without an ace is missing more than one card. No auto-wins are expected.\n"; }
+  elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
+  else { print "A suit without an ace is missing another card, so there should be wins.\n"; }
   my $count = 0;
   my $thiswin;
   my $wins =0;
@@ -421,13 +425,14 @@ sub check720
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins of 720 insta-win" . plur($wins) . ", first one is$firstPermu.\n"; }
+  { print "$wins of 720 insta-win" . plur($wins) . ". The first one is$firstPermu.\n"; }
   else
   { print "No wins found.\n"; }
   @outSinceLast = ();
   for (@initArray) { $inStack{$_} = 1; }
   @force=();
   @undoArray = @backupArray;
+  $cardsInPlay = 46;
 }
 
 sub perfAscending
@@ -448,6 +453,7 @@ sub thereAndBack
 {
     my $oldEmptyRows = emptyRows();
 	my $b4 = $#undoArray;
+	my $wayb4 = $b4;
 	my $wrongOrder = 0;
 	if (isEmpty($_[2]) && !isEmpty($_[1]))
 	{
@@ -460,6 +466,7 @@ sub thereAndBack
 	$quickMove = 1;
 	do
 	{
+	print "Bingo bango bongo\n";
 	$b4 = $#undoArray;
 	my $oldSuit = botSuit($_[0]);
     autoShuffleExt($_[0], $_[2], $_[1], botSuit($_[0]));
@@ -470,7 +477,7 @@ sub thereAndBack
 	}
 	} while (($#undoArray > $b4) && ($lastCommand =~ /y/) && (!isEmpty($_[0])) && (!isEmpty($_[2])));
 	$quickMove = 0;
-	if ($b4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
+	if ($wayb4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
 	{
 	  printdeck(0);
 	  if ($wrongOrder)
