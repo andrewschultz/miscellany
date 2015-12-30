@@ -402,9 +402,12 @@ sub check720
   if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40}) { print "With all aces out, no auto-wins are expected.\n"; }
   elsif (!$couldWork) { print "No suit without an ace is missing more than one card. No auto-wins are expected.\n"; }
   elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
+  elsif ($cardsInPlay <= 44) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
+  elsif ($cardsInPlay == 45) { print "You may need a bit of luck for a win.\n"; }
   else { print "A suit without an ace is missing another card, so there should be wins.\n"; }
   my $count = 0;
   my $thiswin;
+  my $oldCardsInPlay = $cardsInPlay;
   my $wins =0;
   my $firstPermu = "";
   my @backupArray = @undoArray;
@@ -432,7 +435,7 @@ sub check720
   for (@initArray) { $inStack{$_} = 1; }
   @force=();
   @undoArray = @backupArray;
-  $cardsInPlay = 46;
+  $cardsInPlay = $oldCardsInPlay;
 }
 
 sub perfAscending
