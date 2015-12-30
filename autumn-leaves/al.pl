@@ -466,7 +466,6 @@ sub thereAndBack
 	$quickMove = 1;
 	do
 	{
-	print "Bingo bango bongo\n";
 	$b4 = $#undoArray;
 	my $oldSuit = botSuit($_[0]);
     autoShuffleExt($_[0], $_[2], $_[1], botSuit($_[0]));
@@ -711,6 +710,19 @@ sub saveDeck
     $lastSearchCmd =~ s/^s[a-z]+=/s=/gi;
 	printDebug("$lastSearchCmd\n");
   } # get rid of that extra garbage
+  
+  my $topCards = "";
+  if ($#topCard > -1) { $topCards = join(",", @topCard); }
+  my $undoArys = "";
+  if ($#undoArray > -1) { $undoArys = join(",", @undoArray); }
+  my $fullWriteString = "$vertical,$collapse\nTC=$topCards\nM=$undoArys\n";
+  if ($ignorePrintedCards) { $fullWriteString .= "IGNORE\n"; }
+  if ($fixedDeckOpt)
+  {
+    $fullWriteString .= "FD=" . join(",", @oneDeck) . "\n";
+    for (1..6) { $fullWriteString .= "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
+  }
+  for (1..6) { $fullWriteString .= join(",", @{$stack[$_]}) . "\n"; }
 
   while ($a = <A>)
   {
@@ -722,35 +734,15 @@ sub saveDeck
       print "Overwriting entry $lastSearchCmd\n";
 	  $overwrite = 1;
 	  <A>;
-	  print B "$vertical,$collapse\n";
-	  print B "TC=" . join(",", @topCard) . "\n";
-	  print B "M=" . join(",", @undoArray) . "\n";
-	  if ($ignorePrintedCards) { print B "IGNORE\n"; }
-	  if ($fixedDeckOpt)
-	  {
-	    print B "FD=" . join(",", @oneDeck) . "\n";
-		for (1..6) { print B "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
-	  }
-	  for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+	  print B $fullWriteString;
 	  for (1..6) { <A>; }
 	}
   }
 
   if (!$overwrite)
   {
-    print "Saving new entry $lastSearchCmd\n";
     print B "$lastSearchCmd\n";
-	<A>;
-	print B "$vertical,$collapse\n";
-	print B "TC=" . join(",", @topCard) . "\n";
-	print B "M=" . join(",", @undoArray) . "\n";
-    if ($ignorePrintedCards) { print B "IGNORE\n"; }
-	if ($fixedDeckOpt)
-	{
-	  print B "FD=" . join(",", @oneDeck) . "\n";
-	  for (1..6) { print B "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
-	}
-	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
+    print B $fullWriteString;
 	for (1..6) { <A>; }
   }
 
@@ -1632,12 +1624,13 @@ sub ascending
   {
     $lower = $stack[$_[0]][$_];
     $upper = $stack[$_[0]][$_-1];
-	#printDebug("$_: $lower vs $upper\n");
 	if (suit($lower) != suit($upper))
 	{
+	  printDebug("b4 $_: $lower vs $upper\n");
 	  if (($_ % 13 == 0) && ($lower % 13 == 0) && ($upper % 13 == 1)) {} else { return 0; } # very special case KC=AC KH-etc.
+	  printDebug("a $_: $lower vs $upper\n");
 	}
-    if ($stack[$_[0]][$_] > $stack[$_[0]][$_-1]) { return 0; }
+    elsif ($stack[$_[0]][$_] > $stack[$_[0]][$_-1]) { return 0; }
   }
   return 1;
 }
@@ -2186,7 +2179,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
   $x = $#undoArray;
-  my $tempUndoCmd = $undoArray[$x];
+  $tempUndoCmd = $undoArray[$x];
   #print "$x elts left\n";
   if ($x >= 0)
   {
