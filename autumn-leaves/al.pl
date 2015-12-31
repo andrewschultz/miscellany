@@ -197,6 +197,8 @@ sub procCmd
       elsif ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
+		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]$numArray[2]"); return; }
+		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
         if (($numArray[0] == $numArray[1]) || ($numArray[0] == $numArray[2]) || ($numArray[2] == $numArray[1])) { print "Repeated number.\n"; return; }
@@ -290,6 +292,11 @@ sub procCmd
 	  return;
     };
     /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
+	/^rd/ && do { if ($#undoLast <= $#undoArray) { print "Last redo array is no larger than current undo array. Aborting.\n"; return; }
+	for (0..$#undoArray) { if ($undoArray[$_] != $undoLast[$_]) { print "Redo array and undo array mismatch. Aborting.\n"; return; } }
+	@undoArray = @undoLast;
+	return;
+	};
     /^ry$/ && do {
       cmdNumWarn();
       if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
