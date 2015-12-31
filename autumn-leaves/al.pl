@@ -46,7 +46,7 @@ my $emptyIgnore;
 my @lastWonArray, my @lastTopCard, my @cardUnder, my @backupCardUnder; # meta info
 my @oneDeck, my @fixedDeck;
 
-my $undidOrLoadThisTurn, my $errorPrintedYet, my $printedThisTurn, my $moveBar, my $anyMovesYet, my $testing, my $shouldMove, my $currentlyLoadingSaving;
+my $undidOrLoadThisTurn, my $errorPrintedYet, my $printedThisTurn, my $moveBar, my $anyMovesYet = 0, my $testing, my $shouldMove, my $currentlyLoadingSaving;
 my $avoidWin, my $seventwenty;
 
 my $backupFile = "albak.txt";
@@ -189,24 +189,24 @@ sub procCmd
 	    if ($numArray[0] == $numArray[1]) { print "Can't move stack onto itself.\n"; return; }
 		if (isEmpty($numArray[0])) { print "Can't move from empty stack " . isEmpty($numArray[0]) . ".\n"; return; }
 		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
-		tryMove("$numArray[0]$numArray[1]");
+		tryMove("$numArray[0]", "$numArray[1]");
 		
-  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
+  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
 		return;
 	  }
       elsif ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
-		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]$numArray[2]"); return; }
-		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]$numArray[2]"); return; }
+		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
+		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
         if (($numArray[0] == $numArray[1]) || ($numArray[0] == $numArray[2]) || ($numArray[2] == $numArray[1])) { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
-	    tryMove("$numArray[0]$numArray[1]");
-	    tryMove("$numArray[0]$numArray[2]");
-	    tryMove("$numArray[1]$numArray[2]");
+	    tryMove("$numArray[0]", "$numArray[1]");
+	    tryMove("$numArray[0]", "$numArray[2]");
+	    tryMove("$numArray[1]", "$numArray[2]");
 	    $quickMove = 0;
   	    if (($b4 == $#undoArray) && (!$undo))
 		{
@@ -243,7 +243,7 @@ sub procCmd
 	      {
   	        if (($toCard - $fromCard == 1) && ($fromCard % 13))
 		    {
-		      tryMove("$_[0]$tryRow"); # force 4-3 if we have 4S, QS, 3S
+		      tryMove("$_[0]", "$tryRow"); # force 4-3 if we have 4S, QS, 3S
 		      return;
 		    }
 	        if ($tryRow != $_[0])
@@ -254,10 +254,10 @@ sub procCmd
 	    if ($totalRows == 0) { print "No row to move $_[0] to."; if ($anyEmpty) { print " There's an empty one, but you disabled it with e."; } print "\n"; return; }
 	    elsif ($totalRows > 1)
 	    {
-	      if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$_[0]" . firstEmptyRow()); return; }
+	      if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$_[0]" , firstEmptyRow()); return; }
   	      print "Too many rows ($totalRows) to move $_[0] to.\n"; return;
 	    }
-	    else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]$forceRow"); return; }
+	    else { print "Forcing $_[0] -> $forceRow.\n"; tryMove("$_[0]", "$forceRow"); return; }
       }
 	  return;
 	};
@@ -293,8 +293,9 @@ sub procCmd
     };
     /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
 	/^rd/ && do { if ($#undoLast <= $#undoArray) { print "Last redo array is no larger than current undo array. Aborting.\n"; return; }
-	for (0..$#undoArray) { if ($undoArray[$_] != $undoLast[$_]) { print "Redo array and undo array mismatch. Aborting.\n"; return; } }
-	@undoArray = @undoLast;
+	for (0..$#undoArray) { if ($undoArray[$_] ne $undoLast[$_]) { print "Redo array and undo array mismatch. Aborting.\n"; return; } }
+	$undo = 1; for my $rdmove ($#undoArray+1..$#undoLast) { procCmd($undoLast[$rdmove]); } $undo = 0;
+	printdeck(0);
 	return;
 	};
     /^ry$/ && do {
@@ -344,7 +345,7 @@ sub procCmd
 		    else { }
 		  }
 	    }
-	    tryMove("$numArray[$localFrom]$numArray[$localTo]");
+	    tryMove("$numArray[$localFrom]", "$numArray[$localTo]");
 	    if ($foundChain)
 	    {
 	      $didAny = 1;
@@ -1671,9 +1672,9 @@ sub barMove #this is necessary in some cases where we need to run two moves with
 
 sub tryMove
 {
-  my @q = split(/ */, $_[0]);
-  my $from = $q[0];
-  my $to = $q[1];
+  if ($#_ < 1) { print "Oops, don't have a to-row"; if ($#_ == 0) { print " for $_[0]"; } else { print " or from-row"; } print ".\n"; return; }
+  my $from = $_[0];
+  my $to = $_[1];
 
   #print "$_[0] becomes $from $to, $moveBar moves barred\n";
   if ($moveBar == 1) { if ($showBlockedMoves) { barMove("$from-$to blocked, as previous move failed.\n"); } else { $blockedMoves++; } return; }
@@ -1779,11 +1780,11 @@ sub altUntil
   {
     if (canChain($from, $to))
 	{
-    tryMove("$from$to"); #print "$to$from trying\n";
+    tryMove("$from", "$to"); #print "$to$from trying\n";
 	}
 	else
 	{
-    tryMove("$to$from"); #print "$to$from trying\n";
+    tryMove("$to", "$from"); #print "$to$from trying\n";
 	}
 	if ($quickMove == 0) { return; } # this means you won
     if ($moveBar == 1) { print "Move was blocked. This should never happen.\n"; last; }
@@ -2121,14 +2122,14 @@ sub autoShuffle # autoshuffle 0 to 1 via 2
   if (($count == 1) || ($count == 0))
   {
     #print "Trying (1 card) $_[0] to $_[1]\n";
-    if (!$moveBar) { tryMove("$_[0]$_[1]"); } return;
+    if (!$moveBar) { tryMove("$_[0]", "$_[1]"); } return;
   }
 
   #print "$_[0] to $_[1], then $_[0] to $_[2], then $_[1] to $_[2].\n";
   autoShuffle($_[0], $_[2], $_[1], $count - 1);
   if (!$moveBar)
   {
-    tryMove("$_[0]$_[1]");
+    tryMove("$_[0]", "$_[1]");
     autoShuffle($_[2], $_[1], $_[0], $count - 1);
   }
 }
@@ -2365,7 +2366,7 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
 		  $tempStr .= " -> " . faceval($thisBotCard[$i]);
 		  #if (($thisBotCard[$j] == 27) && ($thisBotCard[$i] == 28)) { $undo = 0; $quickMove = 0; $autoOneSafe = 0; printdeck(0); die; }
           printDebug("$i -> $j\n" . printLowCards());
-		  tryMove("$j$i", -1);
+		  tryMove("$j", "$i", -1);
 		  if (!$quickStr) { $quickStr .= "AUTO: $tempStr"; } else { if ($totMove % 5 == 0) { $quickStr .= "\n      "; } else { $quickStr .= ", "; } $quickStr .= "$tempStr"; }
 		  $quickMove = 0; $anyYet = 1; $totMove++; #print "Move $totMove = $j to $i\n";
 		}
