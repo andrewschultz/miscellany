@@ -69,6 +69,7 @@ stsu=c:\writing\dict\metrics.htm,stale-tales-slate\
 stsu=c:\writing\dict\badcap.pl,stale-tales-slate\
 stsu=c:\writing\dict\alfy.pl,stale-tales-slate\
 stsu=c:\games\inform\roiling.inform\source\rcl.pl,stale-tales-slate\
+stsu=c:\writing\dict\ac.pl,stale-tales-slate\
 
 #Stale Tales Slate data/utility files to GitHub
 stsu=c:\writing\dict\firsts.txt,stale-tales-slate\

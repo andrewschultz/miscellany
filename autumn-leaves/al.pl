@@ -438,7 +438,7 @@ sub check720
   if ($wins)
   { print "$wins of 720 insta-win" . plur($wins) . ". The first one is$firstPermu.\n"; }
   else
-  { print "No wins found.\n"; }
+  { print "No auto-wins found.\n"; }
   @outSinceLast = ();
   for (@initArray) { $inStack{$_} = 1; }
   @force=();
@@ -1413,7 +1413,7 @@ sub printdeckvertical
   } while ($foundCard);
   if ($showMaxRows)
   {
-    print "($maxRows max rows) ";
+    print "($maxRows max row length) ";
   }
   showLegalsAndStats();
 }
@@ -1515,6 +1515,10 @@ sub showLegalsAndStats
 	{
 	  if (oneRowPerSuit()) { print " (you're clear to draw)"; } else { print " (almost clear to draw)"; }
 	}
+	elsif (emptyRows())
+	{
+	  for my $q (1..6) { if (!ascending($q)) { print " (maybe fix $q)"; } }
+	}
   }
   print "\n";
 
@@ -1551,7 +1555,7 @@ sub showLegalsAndStats
 	{
 	  if (!$stack[$_][0]) { $gotEmpty = 1; }
 	}
-	 if (($gotEmpty) || ($canMakeEmpty)) { print "You can still create an empty slot.\n"; } else { print "You don't have any productive moves left. This position looks lost, unless you wish to UNDO.\n"; }
+	 if (($gotEmpty) || ($canMakeEmpty)) { if ($chains != 48) { print "You can still create an empty slot.\n"; } } else { print "You don't have any productive moves left. This position looks lost, unless you wish to UNDO.\n"; }
   }
 
   if ($chains != 48) # that means a win, no need to print stats
@@ -2469,7 +2473,7 @@ sub checkwin
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
 	  push(@undoArray, "n-");
-	  undo(0); $moveBar = 1; return;
+	  undo(0); $moveBar = 1; $shouldMove = 0; return;
 	}
 	$youWon = 1;
     if ($x =~ /^q/i) { exit; }
