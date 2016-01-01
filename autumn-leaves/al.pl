@@ -73,7 +73,7 @@ my $cardsInPlay;
 my $count = 0;
 my $stack;
 my $blockedMoves = 0;
-my @topCard = ();
+my @topCard = ("");
 my %inStack;
 
 
@@ -197,6 +197,7 @@ sub procCmd
       elsif ($#numArray == 2)
       { # detect 2 ways
 	    my $possConflict = 0;
+		if (isEmpty($numArray[0])) { print "From-row is empty.\n"; return; }
 		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
@@ -723,6 +724,7 @@ sub saveDeck
   } # get rid of that extra garbage
   
   my $topCards = "";
+  print "$#topCard\n";
   if ($#topCard > -1) { $topCards = join(",", @topCard); }
   my $undoArys = "";
   if ($#undoArray > -1) { $undoArys = join(",", @undoArray); }
@@ -1517,7 +1519,9 @@ sub showLegalsAndStats
 	}
 	elsif (emptyRows())
 	{
-	  for my $q (1..6) { if (!ascending($q)) { print " (maybe fix $q)"; } }
+	  my $fixYet = 0;
+	  for my $q (1..6) { if (!ascending($q)) { if ($fixYet) { print "/$q"; } else { print " (maybe fix $q"; $fixYet = 1; } } }
+	  if ($fixYet) { print ")"; }
 	}
   }
   print "\n";
@@ -1962,6 +1966,7 @@ sub straightUp # this doesn't say that a row is ascending but rather if it can b
 sub lowNonChain
 {
   my $temp = $#{$stack[$_[0]]};
+  if ($temp == -1) { return -1; }
   while ($stack[$_[0]][$temp-1] == $stack[$_[0]][$temp] + 1)
   { $temp--;  if ($temp == 0) { return -1; } }
   return $stack[$_[0]][$temp-1];
