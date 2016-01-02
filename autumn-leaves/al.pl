@@ -1515,7 +1515,23 @@ sub showLegalsAndStats
   if ($recc && $legal) { print " |"; }
   print "$legal";
   for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; print " " . ('X' x ($circulars[$toPile]-1)) . "$toPile"; } }
-  if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty)) { print " (recommend drawing)"; }
+  if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty))
+  {
+    if ((emptyRows() <= 1) && allAscending())
+	{
+	  my $foundDup = 0;
+	  for my $i (1..6)
+	  {
+		if (isEmpty($i)) { next; }
+	    for my $j ($i+1..6)
+		{
+		  if ($i == $j) { next; }
+		  if (suit($stack[$i][0]) == suit($stack[$j][0])) { if (!$foundDup) { $foundDup = 1; print " (close, but merge $i/$j?)" } }
+		}
+	  }
+	}
+    else { print " (recommend drawing)"; }
+  }
   elsif ($drawsLeft)
   {
     my $recDraw = 1;
@@ -1637,6 +1653,15 @@ sub oneRowPerSuit
 	  if (($q[$temp] > 0) && ($q[$temp] != $st)) { return 0; }
 	  $q[$temp] = $st;
 	}
+  }
+  return 1;
+}
+
+sub allAscending
+{
+  for my $i (1..6)
+  {
+    if (!ascending($i)) { return 0; }
   }
   return 1;
 }
