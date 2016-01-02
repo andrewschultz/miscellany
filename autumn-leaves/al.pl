@@ -1515,22 +1515,41 @@ sub showLegalsAndStats
   if ($recc && $legal) { print " |"; }
   print "$legal";
   for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; print " " . ('X' x ($circulars[$toPile]-1)) . "$toPile"; } }
-  if ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty))
+  if (allAscending() && ($drawsLeft) && (emptyRows() < 2))
   {
-    if ((emptyRows() <= 1) && allAscending())
+    my $foundDup = 0; my $otherDup = 0; my $gotOne = 0;
+    if (emptyRows() == 0)
 	{
-	  my $foundDup = 0;
 	  for my $i (1..6)
 	  {
 		if (isEmpty($i)) { next; }
 	    for my $j ($i+1..6)
 		{
-		  if ($i == $j) { next; }
-		  if (suit($stack[$i][0]) == suit($stack[$j][0])) { if (!$foundDup) { $foundDup = 1; print " (close, but merge $i/$j?)" } }
+		  if (($i == $j) || ($gotOne)) { next; }
+		  if (suit($stack[$i][0]) == suit($stack[$j][0])) { if (!$foundDup) { $foundDup = $i; $otherDup = $j; } elsif ($foundDup == $i) { print " (3 of a kind, you can merge)"; $gotOne = 1; } }
 		}
 	  }
+	  if ($gotOne && $foundDup) { print " (close, but merge $foundDup/$otherDup?)"; }
+	  else { print " (recommend drawing)"; }
 	}
-    else { print " (recommend drawing)"; }
+	else
+	{
+	  for my $i (1..6)
+	  {
+		if (isEmpty($i)) { next; }
+	    for my $j ($i+1..6)
+		{
+		  if (isEmpty($j)) { next; }
+		  if (($i == $j) || ($gotOne)) { next; }
+		  if (suit($stack[$i][0]) == suit($stack[$j][0])) { if (!$foundDup) { print " (close, but merge $i/$j?)"; $foundDup = $i; } $gotOne = 1; }
+		}
+	  }
+	  if (!$gotOne) { print " (recommend drawing)"; }
+	}
+  }  
+  elsif ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty))
+  {
+    print " (recommend drawing)";
   }
   elsif ($drawsLeft)
   {
@@ -1688,7 +1707,7 @@ sub ascending
 
 sub suit
 {
-  if ($_[0] == -1) { return -1; }
+  if (($#_ == -1) || ($_[0] == -1)) { return -1; }
   return ($_[0]+12) / 13;
 }
 
