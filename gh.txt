@@ -174,5 +174,6 @@ misc=c:\writing\scripts\rwi.pl,misc
 misc=c:\writing\scripts\invis.pl,misc
 misc=c:\writing\dict\hc.pl,misc\wordfun
 misc=c:\writing\scripts\icl.pl,misc
+misc=c:\writing\dict\say.pl,misc
 
 ;
