@@ -408,12 +408,12 @@ sub check720
   my $couldWork = 0;
   if ($drawsLeft != 1) { print "You need to have 1 draw left.\n"; return; }
   for (1..52) { if ($inStack{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
-  if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40}) { print "With all aces out, no auto-wins are expected.\n"; }
-  elsif (!$couldWork) { print "No suit without an ace is missing more than one card. No auto-wins are expected.\n"; }
+  if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40}) { print "With all aces out, no draw-to-wins are expected.\n"; }
+  elsif (!$couldWork) { print "No suit without an ace is missing more than one card. No draw-to-wins are expected.\n"; }
   elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
   elsif ($cardsInPlay <= 44) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
-  elsif ($cardsInPlay == 45) { print "You may need a bit of luck for a win.\n"; }
-  else { print "A suit without an ace is missing another card, so there should be wins.\n"; }
+  elsif ($cardsInPlay == 45) { print "You may need a bit of luck for a draw-to-win.\n"; }
+  else { print "A suit without an ace is missing another card, so there should be draw-to-wins.\n"; }
   my $count = 0;
   my $thiswin;
   my $oldCardsInPlay = $cardsInPlay;
@@ -437,9 +437,9 @@ sub check720
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins of 720 insta-win" . plur($wins) . ". The first one is$firstPermu.\n"; }
+  { print "$wins of 720 draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; }
   else
-  { print "No auto-wins found.\n"; }
+  { print "No draw-to-wins found.\n"; }
   @outSinceLast = ();
   for (@initArray) { $inStack{$_} = 1; }
   @force=();
@@ -643,7 +643,7 @@ sub anyChainAvailable
   }
 }
 
-sub doAnotherGame
+sub processGame
 {
   $moveBar = 1;
   $quickMove = 0;
@@ -671,7 +671,14 @@ sub doAnotherGame
   close(B);
   }
 
-initGame(); printdeck(0);
+}
+
+sub doAnotherGame
+{
+
+processGame();
+initGame();
+printdeck(0);
 }
 
 sub copyAndErase
@@ -2481,7 +2488,7 @@ sub checkwin
 	  undo(0); $moveBar = 1; $shouldMove = 0; return;
 	}
 	$youWon = 1;
-    if ($x =~ /^q/i) { exit; }
+    if ($x =~ /^q/i) { processGame(); exit; }
 	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
   }
