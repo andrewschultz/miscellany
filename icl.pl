@@ -81,6 +81,7 @@ while ($count <= $#ARGV)
   $count++;
   }
 }
+if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
 
 sub runProj
 {
