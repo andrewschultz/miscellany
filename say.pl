@@ -7,13 +7,14 @@
 use strict;
 use warnings;
 
-my %init, my %said;
+my %init, my %said, my %prefix, my %unused;
 
 my @defAry = ("sa", "roiling", "compound", "threediopolis", "uglyoafs" );
 
 if ($#ARGV == -1)
 {
 searchOne("story.ni", 1);
+printResults();
 }
 
 while ($#ARGV > -1)
@@ -39,6 +40,8 @@ sub searchSay
 {
   %init = ();
   %said = ();
+  %prefix = ();
+  %unused = ();
   print "Trying $_[0]\n";
   if (($_[0] eq "roiling") || ($_[0] eq "sa"))
   {
@@ -50,17 +53,24 @@ sub searchSay
   printResults();
 }
 
+###############################################
+#searchOne
+#just searches through one file
+#
+
 sub searchOne
 {
 open(A, "$_[0]") || do { print "Can't find $_[0].\n"; return; };
 
-print "$_[0]...\n";
+print "Going through $_[0]...\n";
 
 my $lineNum = 0;
 my $prefix = "";
 my $dup = 0;
 
-if ($#_ > 1) { $prefix = "$_[1]-"; }
+if ($#_ >= 1) { $prefix = "$_[1]-"; }
+
+print "SearchOne args: $#_ prefix = $prefix\n";
 
 while (my $a=<A>)
 {
@@ -68,12 +78,16 @@ while (my $a=<A>)
   if ($a =~ /^to say/)
   {
     my $b = $a; chomp($b); $b =~ s/^to say //g; $b =~ s/ of.*//g; $b =~ s/:.*//g;
+	if ($a =~ /\[unused\]/) { $unused{$b} = 1; }
 	if ($init{$b}) { $dup++; print "$dup: Duplicate to-say for $b, $prefix$lineNum to $init{$b}.\n"; }
     $init{$b} = "$lineNum";
+	$prefix{$b} = "$prefix";
   }
 }
 
 close(A);
+
+print "Finished $lineNum lines.\n";
 
 open(A, "$_[0]");
 
@@ -102,8 +116,13 @@ my $count = 0;
 my $uns = 0;
 
 foreach my $q (sort { $init{$a} <=> $init{$b} } keys %init)
-{
-  if (!$said{$q}) { $uns++; print "$q ($init{$q}) is not accessed (#$uns).\n"; }
+{# add prefix{$q} whenever...
+  if (!$said{$q})
+  {
+    if ($unused{$q}) { print "$q ($init{$q}) marked as unused but potentially useful.\n"; }
+	else
+    { $uns++; print "$q ($init{$q}) is not accessed (#$uns).\n"; }
+  }
 }
 
 foreach my $q (sort keys %said)
