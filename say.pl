@@ -13,6 +13,8 @@ my @defAry = ("sa", "roiling", "compound", "threediopolis", "uglyoafs" );
 
 if ($#ARGV == -1)
 {
+if (! -f "story.ni") { print "story.ni not found. Printing usage.\n"; usage(); exit; }
+print "Searching for story.ni in current directory.\n";
 searchOne("story.ni", 1);
 printResults();
 }
@@ -23,6 +25,10 @@ while ($#ARGV > -1)
   elsif ($ARGV[0] eq "-a")
   {
     for my $dir (@defAry) { searchSay($dir); }
+  }
+  elsif ($ARGV[0] eq "?")
+  {
+    usage();
   }
   else
   {
@@ -109,6 +115,12 @@ close(A);
 
 }
 
+####################################
+#sub printResults
+#
+#print the results
+#
+
 sub printResults
 {
 
@@ -130,4 +142,15 @@ foreach my $q (sort keys %said)
   #if (!$init{$q}) { print "$q is bracketed.\n"; }
 }
 
+}
+
+sub usage
+{
+print<<EOT;
+==================USAGE==================
+No argument given: say.pl tries story.ni in current directory
+sa=shuffling
+roiling=roiling
+-a=all my recent games, shuffling, oafs, threediopolis, compound
+EOT
 }
