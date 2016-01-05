@@ -1,14 +1,15 @@
 ####################################
 #al.pl: a PERL simulation of Autumn Leaves, solitaire card game invented (?) by Toby Ord
 #
-#featuring user conveniences, etc.
+#copyright 2015-16 and hopefully not 17 as I have other projects, but it was fun
+#by Andrew Schultz
+#
+#featuring user conveniences, hints, statistics, save games, etc.
 #
 #? in-line gives hints
 #
-#by Andrew Schultz
-#
 #source at https://raw.githubusercontent.com/andrewschultz/miscellany/master/autumn-leaves/al.pl
-#project at https://github.com/andrewschultz/miscellany/blob/master/autumn-leaves/al.pl
+#project, changes, etc. at https://github.com/andrewschultz/miscellany/blob/master/autumn-leaves/al.pl
 
 use strict;
 use warnings;
@@ -24,7 +25,9 @@ use Devel::StackTrace;
 my %sre, my %rev;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
-my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $easyDefault, my $autoOneFull, my $showMaxRows, my $saveAtEnd, my $ignoreBoardOnSave, my $chainBreaks; #options
+my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $easyDefault, my $autoOneFull, my $showMaxRows, my $saveAtEnd, my $ignoreBoardOnSave; #options
+
+ my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
 my $movesAtStart; # moves before making a command
 
@@ -41,8 +44,6 @@ my $youWon;
 
 my $lastSearchCmd;
 
-my $emptyIgnore;
-
 my @lastWonArray, my @lastTopCard, my @cardUnder, my @backupCardUnder; # meta info
 my @oneDeck, my @fixedDeck;
 
@@ -55,12 +56,10 @@ my @sui = ("-", "C", "D", "H", "S");
 my @vals = ("A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K");
 
 my $beforeCmd;
-my $showBlockedMoves, my $showUndoBefore;
+my $showUndoBefore;
 
 #testing global
 my @fail;
-
-my $fixedDeckOpt;
 
 my @force, my @initArray, my @pointsArray;
 my @stack, my @outSinceLast;
@@ -96,18 +95,17 @@ if ($ARGV[0])
   $count = 0;
   while ($count <= $#ARGV)
   {
-  $a = lc($ARGV[$count]);
-  $b = lc($ARGV[$count+1]);
+    $a = lc($ARGV[$count]);
+    if ($count < $#ARGV) { $b = lc($ARGV[$count+1]); } else { $b = ""; }
     for ($a)
 	{
 	#print "Trying $a: $count\n";
-    /^-?[0-9]/ && do { if ($a < 0) { $a = -$a; } procCmd("sw$a"); $count++; next; };
+    /^-?(sw)?[0-9]/ && do { $a =~ s/^[^0-9]*//g; if ($a < 0) { $a = -$a; } if ($a > 9) { print "That is too many points to start with. If you want 10, go with -ez.\n"; } else { procCmd("sw$a"); } $count++; next; };
 	/^-?erd/ && do { $easyDefault = 2; $count++; next; };
 	/^-?ezd/ && do { $easyDefault = 1; $count++; next; };
 	/^-?er/ && do { fillRandInitArray(); $count++; next; };
 	/^-?ez/ && do { fillInitArray("8,9,10,11,12,13"); $count++; next; };
-	/^-[rf]/ && do { if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
-    /^sw[0-9]/ && do { procCmd($a); $count++; next; };
+	/^-?[rf]/ && do { if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
 	/^?-dd/ && do { $debug = 2; $count++; next; };
 	/^?-d/ && do { $debug = 1; $count++; next; };
 	cmdUse(); exit;
@@ -365,7 +363,7 @@ sub procCmd
     };
     /^tf/ && do { runEachTest(); return; };
     /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
-    /^ua/ && do { print "Top cards:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
+    /^ua/ && do { print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
@@ -1220,7 +1218,6 @@ for (1..6)
   }
   if ($drawsLeft == 6) { $topCard[$_] = $stack[$_][$#{$stack[$_]}]; }
 }
-  #print "Top cards: @topCard\n";
 if ((!$undo) && ($drawsLeft < 6)) { push(@undoArray, "df"); }
 $drawsLeft--;
 $cardsInPlay += 6;
@@ -2109,7 +2106,7 @@ sub safeShuffle # this tries sane but robust safe shuffling
   printDebug("boop: $breaks vs " . emptyRows() . "\n");
   if ($breaks > emptyRows() && (!straightUp($_[0], $_[1]))) { return -7; }
   printDebug($stack[$_[0]][$x-1] . " vs " . botCard($_[1]) . " is the question.\n");
-  printDebug("$breaks, " . emptyRows() . " empty rows. $_[0] to $_[1] is OK.\n");
+  printDebug("$breaks, " . emptyRows() . " empty row" . plur(emptyRows()) . ". $_[0] to $_[1] is OK.\n");
   #printAnyway();
   return 1;
 }
@@ -2889,9 +2886,11 @@ sub cmdUse
 print<<EOT;
 You typed an invalid command line parameter.
 
-So far the main argument allowed is SW[0-9] or [0-9] to say what to start with.
+====others
+-sw(0-9) or (0-9)=tells you to start with that many points.
 -rf=(forced cards) or -rf (forced cards) can be used, if you want to be sneaky.
--ez=start easy game (8c-kc), -ezd is start as default, -er = random 6-in-a-row
+-ez=start easy game (8c-kc), -er = random 6-in-a-row, -e(zr)d sets defaults
 -d is used for debug, but you don't want to see those details.
+        And none should show up, I hope. Even with -dd, deep debug.
 EOT
 }
