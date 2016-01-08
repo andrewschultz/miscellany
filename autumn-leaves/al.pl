@@ -185,7 +185,7 @@ sub procCmd
 	  {
 	    if (($numArray[0] == $numArray[2]) && ($numArray[1] == $numArray[3])) { pop(@numArray); pop(@numArray); print "Removing duplicate number pair.\n"; }
 	  }
-	  if ($#numArray > 2) { print "Too many numbers. One number shifts a stack to an empty array, two moves a row to another.\nThree moves 1st-2nd 1st-3rd 2nd-3rd.\n"; return; }
+	  if ($#numArray > 2) { print "Too many numbers.\n--one number shifts a stack to an empty array\n--two moves a row to another.\n--Three moves 1st-2nd 1st-3rd 2nd-3rd.\n"; return; }
 	  if (cmdBadNumWarn($numbers)) { return; }
 	  if ($#numArray == 1)
 	  {
@@ -270,7 +270,7 @@ sub procCmd
     /^c$/ && do { $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^cw$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
-    /^{d|dd)$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
+    /^(d|dd)$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
     /^df/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
     /^dl/ && do { cmdNumWarn($numbers, $letters, 1); print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
