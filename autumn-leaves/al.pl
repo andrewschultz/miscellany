@@ -1425,7 +1425,7 @@ sub printdeckvertical
   for my $row (1..6)
   {
     print "   ";
-	if ($#{$stack[$row]} == -1) { print "!"; } elsif (ascending($row)) { print "^"; } else { print " "; }
+	if ($#{$stack[$row]} == -1) { print "!"; } elsif (ascending($row)) { print "^"; } elsif (onesuit($row)) { print "%"; } else { print " "; }
 	print "$row";
   }
   print "\n";
@@ -1740,6 +1740,19 @@ sub allAscending
   for my $i (1..6)
   {
     if (!ascending($i)) { return 0; }
+  }
+  return 1;
+}
+
+sub onesuit
+{
+  my $size = $#{$stack[$_[0]]};
+  if ($size == -1) { return 0; }
+  if ($size == 0) { return 1; }
+  my $mainSuit = suit($stack[$_[0]][0]);
+  for my $x (1..$size)
+  {
+   if (suit($stack[$_[0]][$x]) != $mainSuit) { return 0; }
   }
   return 1;
 }
