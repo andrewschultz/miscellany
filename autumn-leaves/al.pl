@@ -530,7 +530,9 @@ sub expandOneColumn
 	  }
 	}
 
-	if (ascending($thisRow)) { print "Row $thisRow is already in order.\n";  return; }
+	my $tempAsc = ascending($thisRow);
+	
+	if ($tempAsc == 1) { print "Row $thisRow is already in order.\n";  return; } elsif ($tempAsc > 1) { print "Row $thisRow is already in order, with a suit done. Moving the bottom suit would only clog up a row.\n"; return; }
 
     $shouldMove = 1;
 
@@ -1739,6 +1741,7 @@ sub allAscending
 
 sub ascending
 {
+  my $extra = 0;
   if ($#{$stack[$_[0]]} == -1) { return 1; } #empty stack ok
   if ($stack[$_[0]][0] == -1) { return 0; } #still to draw not OK
   my $lower, my $upper;
@@ -1749,12 +1752,12 @@ sub ascending
 	if (suit($lower) != suit($upper))
 	{
 	  printDebug("b4 $_: $lower vs $upper\n");
-	  if (($_ % 13 == 0) && ($lower % 13 == 0) && ($upper % 13 == 1)) {} else { return 0; } # very special case KC=AC KH-etc.
+	  if (($_ % 13 == 0) && ($lower % 13 == 0) && ($upper % 13 == 1)) { $extra = 1; } else { return 0; } # very special case KC=AC KH-etc.
 	  printDebug("a $_: $lower vs $upper\n");
 	}
     elsif ($stack[$_[0]][$_] > $stack[$_[0]][$_-1]) { return 0; }
   }
-  return 1;
+  return 1 + $extra;
 }
 
 sub suit

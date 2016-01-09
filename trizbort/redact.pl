@@ -1,18 +1,48 @@
+##################################################
+#
+#redact.pl
+#
+#redacts rooms with certain regions in Trizbort
+#
 
-if (@ARGV[0] eq "-d") { $debug = 1; shift; }
-if (@ARGV[0] eq "-p")
-{ readFile(@ARGV[1]); }
-elsif (@ARGV[0] eq "-pd")
-{ readFile("c:\\tech\\trizbort\\redact.txt"); }
-else
-{ readArray(@ARGV); }
+use warnings;
+use strict;
+my $debug = 0, my $inFile, my $outFile;
+my $keep = 0;
+my $allDone = 0;
+my @redact;
+my %redact;
+my %blockId;
+my $anythingRead = 0;
+
+my $count = 0;
+
+if ($#ARGV == -1) { usage(); }
+
+OUTER:
+while ($count <= $#ARGV)
+{
+  $a = $ARGV[$count];
+  if ($count < $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
+  for ($a)
+  {
+  /^-d$/ && do { $debug = 1; $count++; next; };
+  /^-p$/ && do  { readFile($b); $count+= 2; next; };
+  /^-pd$/ && do { readFile("c:\\tech\\trizbort\\redact.txt"); $count++; next; };
+  readArray($ARGV + $count);
+  last OUTER;
+  }
+}
+
+if (!$anythingRead) { print "Though the command line had arguments, nothing was processed.\n"; usage(); }
 
 sub readFile
 {
   print "Trying file $_[0]\n";
   open(CMD, "$_[0]") || die ("Can't open $_[0]");
+  my $a = "";
 
-  while (($a = <CMD>) && (!$allDone))
+  while (defined($a = <CMD>) && !$allDone)
   {
   chomp($a);
   readLine($a);
@@ -25,7 +55,7 @@ sub readLine
   if ($_[0] =~ /^;/) { $allDone = 1; exit; }
   if ($_[0] =~ /^#/) { return; }
   my @array = ($_[0] =~ /(".*?"|\S+)/g);
-  print "Trying $_[0].\n";
+  print "Trying line $_[0].\n";
   readArray(@array);
 }
 
@@ -62,6 +92,7 @@ sub runOneRedact
 {
 open(A, "$inFile") || die ("No $inFile");
 open(B, ">$outFile") || die ("Can't open $outFile");
+my $regions = 0;
 
 while ($a = <A>)
 {
@@ -70,8 +101,8 @@ while ($a = <A>)
   if ($regions) { if ($redact{tag($a, "Name")}) { chomp($a); $a =~ s/^[ \t]+//g; printDebug("Ignoring $a region tag.\n"); next; } }
   if ($a =~ /<room id=/)
   {
-    $reg = lc(tag($a, "region"));
-	$id = tag($a, "id");
+    my $reg = lc(tag($a, "region"));
+	my $id = tag($a, "id");
 	#printDebug(tag($a, "name") . " in " . $reg . "\n");
     if ($redact{$reg})
 	{
@@ -79,7 +110,7 @@ while ($a = <A>)
 	  printDebug("Blocking ID $id in " . tag($a, "name") . "\n");
 	  if ($a !~ /\/>/)
 	  {
-	    while (($junk = <A>) !~ /<\/room>/)
+	    while ((my $junk = <A>) !~ /<\/room>/)
 		{ }
 		next;
 	  }
@@ -92,9 +123,9 @@ while ($a = <A>)
   }
   elsif ($a =~ /<line id=/)
   {
-    $b = <A>;
-    $c = <A>;
-    $d = <A>;
+    my $b = <A>;
+    my $c = <A>;
+    my $d = <A>;
 	if ($blockId{tag($b, "id")} || $blockId{tag($c, "id")})
 	{
 	  #print "Line $b$c blocked.";
@@ -127,6 +158,7 @@ sub printDebug
 sub usage
 {
 print<<EOT;
+========USAGE========
 -p = specify parameter file
 -pd = default parameter file c:\\tech\\trizbort\\redact.txt
 -d = debug on
