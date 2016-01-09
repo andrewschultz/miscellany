@@ -194,7 +194,7 @@ sub procCmd
 		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
 		tryMove("$numArray[0]", "$numArray[1]");
 		
-  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; } }
+  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; $errorPrintedYet = 1; } }
 		return;
 	  }
       elsif ($#numArray == 2)
@@ -204,7 +204,7 @@ sub procCmd
 		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
-		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict.\n"); }
+		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict $numArray[0] $numArray[1] $numArray[2]\n"); }
         if (($numArray[0] == $numArray[1]) || ($numArray[0] == $numArray[2]) || ($numArray[2] == $numArray[1])) { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
@@ -214,12 +214,12 @@ sub procCmd
 	    $quickMove = 0;
   	    if (($b4 == $#undoArray) && (!$undo))
 		{
-		  if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; }
+		  if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; }
 		}
 		else
 		{
 		  printdeck(0);
-		  if ($possConflict) { print "I was able to move some despite suits and/or card values not matching up.\n"; }
+		  if ($possConflict) { print "I was able to move some despite suits and/or card values not matching up or the first column not being the lowest value.\n"; }
 		  checkwin();
 		}
 	    return;
@@ -494,7 +494,7 @@ sub thereAndBack
 	}
 	} while (($#undoArray > $b4) && ($lastCommand =~ /y/) && (!isEmpty($_[0])) && (!isEmpty($_[2])));
 	$quickMove = 0;
-	if ($wayb4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; } } else
+	if ($wayb4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else
 	{
 	  printdeck(0);
 	  if ($wrongOrder)
