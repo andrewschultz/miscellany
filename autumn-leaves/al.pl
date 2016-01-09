@@ -160,8 +160,10 @@ sub procCmd
   if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
   if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
   if ($_[0] =~ /^(ho|ho=)/) { holdArray($_[0]); return; }
+  if ($_[0] =~ /^(b|b=)/) { holdArray($_[0]); return; }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
-  if ($_[0] =~ /^q$/) { if ($_[0] ne "q") { print "If you want to exit, just type q."; return; } exit; } #don't want playr to quit accidentally if at all possible
+  if ($_[0] =~ /^q+$/) { exit; }
+  if ($_[0] =~ /^q/) { print "If you want to exit, just type q."; return; } #don't want playr to quit accidentally if at all possible
 
   # toggles/commands with numbers that are hard to change
   if ($_[0] =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw $toggles[$beginOnes].\n"; return; }
@@ -186,11 +188,11 @@ sub procCmd
 	    if (($numArray[0] == $numArray[2]) && ($numArray[1] == $numArray[3])) { pop(@numArray); pop(@numArray); print "Removing duplicate number pair.\n"; }
 	  }
 	  if ($#numArray > 2) { print "Too many numbers.\n--one number shifts a stack to an empty array\n--two moves a row to another.\n--Three moves 1st-2nd 1st-3rd 2nd-3rd.\n"; return; }
-	  if (cmdBadNumWarn($numbers)) { return; }
+	  if (cmdBadNumWarn($numbers, $letters)) { return; }
 	  if ($#numArray == 1)
 	  {
 	    if ($numArray[0] == $numArray[1]) { print "Can't move stack onto itself.\n"; return; }
-		if (isEmpty($numArray[0])) { print "Can't move from empty stack " . isEmpty($numArray[0]) . ".\n"; return; }
+		if (isEmpty($numArray[0])) { print "Can't move from empty stack $numArray[0].\n"; return; }
 		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
 		tryMove("$numArray[0]", "$numArray[1]");
 		
@@ -265,54 +267,54 @@ sub procCmd
       }
 	  return;
 	};
-    /^a$/ && do { $shouldMove = 1; $_[0] =~ s/[az]//g; altUntil($_[0]); return; };
+    /^a$/ && do { cmdNumWarn($numbers, $letters); $shouldMove = 1; $_[0] =~ s/[az]//g; altUntil($_[0]); return; };
     /^af/ && do { if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
     /^c$/ && do { $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^cw$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
     /^(d|dd)$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
-    /^df/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
-    /^dl/ && do { cmdNumWarn($numbers, $letters, 1); print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
-    /^du$/ && do { $undoDebug = !$undoDebug; print "Undo debug now $toggles[$undoDebug].\n"; return; };
+    /^df$/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
+    /^dl$/ && do { if (cmdNumWarn($numbers, $letters, 1)) { print "Need an argument for debuglevel, which is currently $debug.\n"; return; } print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
+    /^du$/ && do { cmdNumWarn($numbers, $letters); $undoDebug = !$undoDebug; print "Undo debug now $toggles[$undoDebug].\n"; return; };
     /^e$/ && do { cmdNumWarn($numbers, $letters); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move $toggles[$emptyIgnore].\n"; return; };
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
     /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
-    /^g$/ && do { procCmd($lastCommand); };
+    /^g$/ && do { if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
     /^h$/ && do { cmdNumWarn($numbers, $letters); showhidden(); return; };
     /^ha$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(0); return; };
 	/^ib$/ && do { cmdNumWarn($numbers, $letters); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position $toggles[$ignoreBoardOnSave].\n"; return; };
     /^is$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(1); return; };
-    /^ll/i && do { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; };
-    /^lu/ && do { if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
+    /^ll$/i && do { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; };
+    /^lu$/ && do { cmdNumWarn($numbers, $letters); if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
     /^lw$/ && do { cmdNumWarn($numbers, $letters); printLastWon(); if ($_[0] =~ /^lw=/) { saveLastWon($_[0]); } return; };
-    /^mr/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
+    /^mr$/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers, $letters); showOpts(); return; };
-    /^(os|so)$/ && do { cmdNumWarn(); saveOpts(); return; };
+    /^(os|so)$/ && do { cmdNumWarn($numbers, $letters); saveOpts(); return; };
     /^pl$/ && do { cmdNumWarn($numbers, $letters); if ($#pointsArray > -1) { for my $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
      /^r$/ && do {
-      cmdNumWarn();
+      cmdNumWarn($numbers, $letters);
       if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
 	  doAnotherGame();
 	  return;
     };
-    /^ra/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
-	/^rd/ && do { if ($#undoLast <= $#undoArray) { print "Last redo array is no larger than current undo array. Aborting.\n"; return; }
+    /^ra$/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
+	/^rct$/ && do { for my $b ('c', 'd', 'h', 's') { for my $a ('a', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'j', 'q', 'k') { print "$a$b = " . revCard("$a$b") . "\n"; } } return; };
+	/^rd$/ && do { if ($#undoLast <= $#undoArray) { print "Last redo array is no larger than current undo array. Aborting.\n"; return; }
 	for (0..$#undoArray) { if ($undoArray[$_] ne $undoLast[$_]) { print "Redo array and undo array mismatch. Aborting.\n"; return; } }
 	$undo = 1; for my $rdmove ($#undoArray+1..$#undoLast) { procCmd($undoLast[$rdmove]); } $undo = 0;
 	printdeck(0);
 	return;
 	};
     /^ry$/ && do {
-      cmdNumWarn();
+      cmdNumWarn($numbers, $letters);
       if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
 	  doAnotherGame();
 	  return;
     };
-	/^rct$/ && do { for my $b ('c', 'd', 'h', 's') { for my $a ('a', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'j', 'q', 'k') { print "$a$b = " . revCard("$a$b") . "\n"; } } return; };
     /^sae$/ && do { cmdNumWarn($numbers, $letters); $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now $toggles[$saveAtEnd].\n"; return; };
-    /^sb/ && do { cmdNumWarn($numbers, $letters); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves $toggles[$showBlockedMoves].\n"; return; };
+    /^sb$/ && do { cmdNumWarn($numbers, $letters); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves $toggles[$showBlockedMoves].\n"; return; };
     /^sd$/ && do { cmdNumWarn($numbers, $letters); saveDefault(); return; };
     /^sol$/ && do { cmdNumWarn($numbers, $letters); $sinceLast = !$sinceLast; print "See overturned since last now $toggles[$sinceLast].\n"; return; };
     /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; };
@@ -322,7 +324,7 @@ sub procCmd
     $startWith = $numbers;
     if ($startWith > 7) { print "WARNING: this may take a bit of time to set up, and it may ruin some of the game's challenge, as well.\n"; } print "Now $startWith points (consecutive cards or cards of the same suit) needed to start. sw0 prints the odds.\n"; return;
     };
-    /^[!t~`][0-9]{3}/ && do {
+    /^[!t~`]$/ && do {
     if (cmdBadNumWarn($numbers, $letters)) { return; }
       my $didAny;
 	  my $empties;
@@ -365,15 +367,15 @@ sub procCmd
 	  checkwin();
 	  return;
     };
-    /^tf/ && do { runEachTest(); return; };
+    /^tf$/ && do { runEachTest(); return; };
     /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
-    /^ua/ && do { print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
+    /^ua$/ && do { print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
 	/^uu$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
-    /^v/ && do { $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
+    /^v$/ && do { $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
     /^[wy]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(@numArray); return; };
     /^x$/ && do
     {
@@ -583,6 +585,7 @@ sub expandOneColumn
 
 sub cmdNumWarn # Arg: numbers, letters, (requires numbers?)
 {
+  if ($#_ < 1) { print "WARNING: wrong # of parameters called to cmdNumWarn.\n"; my $trace = Devel::StackTrace->new; print $trace->as_string . "\n"; return 0; }
   my $let = $_[1];
   if (!$let) { $let = "(empty)"; }
   if (($#_ < 2) && ($_[0] ne "")) { print "WARNING: command $let does not require numbers.\n"; return 1; }
@@ -592,6 +595,7 @@ sub cmdNumWarn # Arg: numbers, letters, (requires numbers?)
 
 sub cmdBadNumWarn
 {
+  if ($#_ < 1) { print "WARNING: wrong # of parameters called to cmdBadNumWarn.\n"; my $trace = Devel::StackTrace->new; print $trace->as_string . "\n"; return 0; }
   my $let = $_[1];
   if (!$let) { $let = "(empty)"; }
   if ($_[0] =~ /[0789]/) { print "WARNING: command $let requires only numerals 1-6.\n"; return 1; }
@@ -1039,9 +1043,10 @@ sub printHoldArray
 
 sub holdArray
 {
-    my $card = $_[0]; $card =~ s/^(ho|ho\=)//g; $card =~ s/\(.*//g;
+    my $card = $_[0]; $card =~ s/^(ho|ho\=|b|b\=)//g; $card =~ s/\(.*//g;
 	my $cardNum = revCard($card);
 	if ($cardNum == -1) { $cardNum = $card; }
+	printDebug("$card card $cardNum card num\n");
 	if (($cardNum > 52) || ($cardNum < 1)) { print "Need to input (A,2-9,JQK)(CDHS) or a number from 1 to 52, 1=clubs, 14=diamonds, 27=hearts, 40=spades."; }
 	if (revCard($card) != -1) { $cardNum = revCard($card); }
 	my $cardTxt = faceval($cardNum);
@@ -1051,7 +1056,7 @@ sub holdArray
 	if ($holds{$cardNum})
 	{ print "Removing $cardTxt from holds.\n"; delete($holds{$cardNum}); $inStack{$cardNum} = 1; }
 	else
-	{ $holds{$cardNum} = 1;  print "Adding $cardTxt to holds.\n"; delete($inStack{$cardNum}); push(@undoArray, "ho$cardNum"); }
+	{ $holds{$cardNum} = 1;  if (!$undo) { print "Adding $cardTxt to holds.\n"; delete($inStack{$cardNum}); push(@undoArray, "b$cardNum"); } }
 }
 
 sub forceArray
@@ -2426,7 +2431,11 @@ sub showhidden
 	}
   }
   if ($out[$lastSuit]) { print " ($out[$lastSuit])"; }
-  print "\nTotal unrevealed: " . (keys %inStack) . "\n";
+  my $is = keys %inStack;
+  my $ih = keys %holds;
+  print "\nTotal unrevealed: " . ($is + $ih);
+  if (keys %holds) { print " ($ih held to end)"; }
+  print "\n";
   for (1..4) { if (!$out[$_]) { $outs .= "$sui[$_] OUT. "; } }
   if ($outs) { print "$outs\n"; }
 }
@@ -2593,7 +2602,7 @@ sub checkwin
 	  undo(0); $moveBar = 1; $shouldMove = 0; return;
 	}
 	$youWon = 1;
-    if ($x =~ /^q/i) { processGame(); exit; }
+    if ($x =~ /^q+/i) { processGame(); exit; }
 	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
   }
@@ -2855,6 +2864,8 @@ print<<EOT;
 s=saves current deck (rejected if name is used)
 sf=save-forces if name exists (sfi/si saves "ignore", sfb/sb overrides "ignore")
 h=shows hidden/left cards
+b=push a card to the back (ho also, for hold)
+f=force card
 l=loads exact saved-deck name (e.g. s=me loaded be l=me)
 lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name) (li/lfi ignores the saved position, lb/fb forces it)
 t=loads test
