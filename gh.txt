@@ -5,6 +5,7 @@ sts~shu,roi,stsu
 sa~shu
 sc~city
 as~pc,sc
+3~3d
 4~4d
 
 #Shuffling files
