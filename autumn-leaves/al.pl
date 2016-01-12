@@ -285,12 +285,12 @@ sub procCmd
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
     /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
-    /^g$/ && do { print "Checking $lastCommand.\n"; if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
+    /^g$/ && do { if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
     /^h$/ && do { cmdNumWarn($numbers, $letters); showhidden(); return; };
     /^ha$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(0); return; };
 	/^ib$/ && do { cmdNumWarn($numbers, $letters); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position $toggles[$ignoreBoardOnSave].\n"; return; };
     /^is$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(1); return; };
-    /^ll$/i && do { if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; } loadDeck($lastSearchCmd); return; };
+    /^ll$/i && do { cmdNumWarn($numbers, $letters); if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; return; } loadDeck($lastSearchCmd); return; };
     /^lu$/ && do { cmdNumWarn($numbers, $letters); if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
     /^lw$/ && do { cmdNumWarn($numbers, $letters); printLastWon(); if ($_[0] =~ /^lw=/) { saveLastWon($_[0]); } return; };
     /^mr$/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
@@ -304,7 +304,7 @@ sub procCmd
 	  return;
     };
     /^ra$/ && do { if (($drawsLeft < 5) || ($hidCards < 16)) { print "Need to restart to toggle randomization.\n"; return; } $fixedDeckOpt = !$fixedDeckOpt; print "fixedDeck card-under $toggles[$fixedDeckOpt].\n"; return; };
-	/^rct$/ && do { for my $b ('c', 'd', 'h', 's') { for my $a ('a', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'j', 'q', 'k') { print "$a$b = " . revCard("$a$b") . "\n"; } } return; };
+	/^rct$/ && do { cmdNumWarn($numbers, $letters); for my $b ('c', 'd', 'h', 's') { for my $a ('a', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'j', 'q', 'k') { print "$a$b" . revCard("$a$b") . " "; } print "\n"; } return; };
 	/^rd$/ && do { if ($#undoLast <= $#undoArray) { print "Last redo array is no larger than current undo array. Aborting.\n"; return; }
 	for (0..$#undoArray) { if ($undoArray[$_] ne $undoLast[$_]) { print "Redo array and undo array mismatch. Aborting.\n"; return; } }
 	$undo = 1; for my $rdmove ($#undoArray+1..$#undoLast) { procCmd($undoLast[$rdmove]); } $undo = 0;
@@ -320,8 +320,8 @@ sub procCmd
     /^sae$/ && do { cmdNumWarn($numbers, $letters); $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now $toggles[$saveAtEnd].\n"; return; };
     /^sb$/ && do { cmdNumWarn($numbers, $letters); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves $toggles[$showBlockedMoves].\n"; return; };
     /^sd$/ && do { cmdNumWarn($numbers, $letters); saveDefault(); return; };
+    /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); print "Last undo array info saved to undo-debug.txt.\n"; return; };
     /^sol$/ && do { cmdNumWarn($numbers, $letters); $sinceLast = !$sinceLast; print "See overturned since last now $toggles[$sinceLast].\n"; return; };
-    /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); return; };
     /^su$/ && do { cmdNumWarn($numbers, $letters); $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now $toggles[$showUndoBefore].\n"; return; };
     /^sw$/ && do { if (!$numbers) { printPoints(); return; }
     if (($numbers < 2) || ($numbers > 9)) { print "You can only fix 2 through 9 to start. Typing sw0 gives odds of starting points,\n"; return; }
@@ -330,13 +330,14 @@ sub procCmd
     };
     /^[!t~`]$/ && do {
     if (cmdBadNumWarn($numbers, $letters)) { return; }
+    if (cmdNumWarn($numbers, $letters, 1)) { return; }
       my $didAny;
 	  my $empties;
 	  my $localFrom, my $localTo, my $curMinToFlip;
-	  printNoTest("3-waying stacks $numArray[1], $numArray[2] and $numArray[3].\n");
+	  printNoTest("3-waying stacks $numArray[0], $numArray[1] and $numArray[2].\n");
       $shouldMove = 1;
 	  $quickMove = 1;
-      while (anyChainAvailable($numArray[1], $numArray[2], $numArray[3]))
+      while (anyChainAvailable($numArray[0], $numArray[1], $numArray[2]))
 	  {
 	    $empties = 0;
 	    for (1..3) { if ($#{$stack[$_]} == -1) { $empties++; } }
@@ -373,13 +374,13 @@ sub procCmd
     };
     /^tf$/ && do { runEachTest(); return; };
     /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
-    /^ua$/ && do { print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
+    /^ua$/ && do { cmdNumWarn($numbers, $letters); print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
 	/^uu$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
-    /^v$/ && do { $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
+    /^v$/ && do { cmdNumWarn($numbers, $letters); $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
     /^[wy]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(@numArray); return; };
     /^x$/ && do
     {
@@ -664,7 +665,7 @@ sub processGame
   $moveBar = 1;
   $quickMove = 0;
 
-  if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; initGame(); printdeck(0); return; }
+  if (!$anyMovesYet) { print "No hand-typed moves yet, so stats aren't recorded.\n"; return; }
   else
   {
   if ($#lastTen == 9) { shift(@lastTen); }
@@ -2844,6 +2845,7 @@ close(A);
 
 sub printLastWon
 {
+  if ($#lastWonArray == -1) { print "No previously won game this session.\n"; return; }
   print "#printout of last win: undo to get the right alignment";
   print "s=last won\n1,1\n";
   print "TC=" . join(",", @lastTopCard) . "\n";
