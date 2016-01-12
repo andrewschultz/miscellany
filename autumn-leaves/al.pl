@@ -25,11 +25,11 @@ use Devel::StackTrace;
 my %sre, my %rev;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
-my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $easyDefault, my $autoOneFull, my $showMaxRows, my $saveAtEnd, my $ignoreBoardOnSave; #options
+my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull, my $showMaxRows, my $saveAtEnd, my $ignoreBoardOnSave; #options
 
- my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
+my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
- my $usrInit = 0;
+my $usrInit = 0;
  
 my $movesAtStart; # moves before making a command
 
@@ -79,7 +79,7 @@ my @topCard = ("");
 my %inStack;
 my %holds;
 
-readCmdLine(); readScoreFile(); initGlobal();
+readCmdLine(); readScoreFile(); initGlobal(); 
 
 initGame(); printdeck(0);
 
@@ -1150,7 +1150,6 @@ $anyMovesYet = 0;
 
 %holds = ();
 
-printDebug("Easy default = $easyDefault, array: @initArray\n");
 if ($usrInit) { @force = @initArray; $forced = 1; }
 elsif ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); $forced = 1; }
 elsif ($easyDefault == 2) { fillRandInitArray(); @force = @initArray; $forced = 1; }
@@ -2745,7 +2744,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">$backupFile");
-  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$showMaxRows,$saveAtEnd\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -2769,7 +2768,22 @@ sub initGlobal
   $rev{"k"} = 13;
 
   open(A, "al-sav.txt");
-  my $a = <A>; chomp($a); my @opts = split(/,/, $a); if (!$startWith) { $startWith = $opts[0]; } $vertical = $opts[1]; $collapse = $opts[2]; $autoOnes = $opts[3]; $beginOnes = $opts[4]; $autoOneSafe = $opts[5]; $sinceLast = $opts[6]; if (!$easyDefault) { $easyDefault = $opts[7]; } $autoOneFull = $opts[8]; $showMaxRows = $opts[9]; $saveAtEnd = $opts[10]; $ignoreBoardOnSave = $opts[11]; close(A); # note showmaxrows and saveatend are global as of now
+  my $a = <A>; chomp($a);
+  my @opts = split(/,/, $a);
+  if ($#opts < 11) { print "Note: not all options are present in al.pl.\n"; }
+  if (!$startWith) { $startWith = $opts[0]; }
+  $vertical = $opts[1];
+  $collapse = $opts[2];
+  $autoOnes = $opts[3];
+  $beginOnes = $opts[4];
+  $autoOneSafe = $opts[5];
+  $sinceLast = $opts[6];
+  if (!$easyDefault && ($#opts >= 7)) { $easyDefault = $opts[7]; }
+  if ($#opts > 8) { $autoOneFull = $opts[8]; }
+  if ($#opts >= 9) { $showMaxRows = $opts[9]; }
+  if ($#opts >= 10) { $saveAtEnd = $opts[10]; }
+  if ($#opts >= 11) { $ignoreBoardOnSave = $opts[11]; }
+  close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
 
