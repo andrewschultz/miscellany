@@ -25,7 +25,7 @@ use Devel::StackTrace;
 my %sre, my %rev;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
-my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull, my $showMaxRows, my $saveAtEnd, my $ignoreBoardOnSave; #options
+my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; #options
 
 my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
@@ -2675,7 +2675,7 @@ sub checkwin
 
 sub plur
 {
-  if ($#_ == 0) { return "s"; }
+  if ($#_ == -1) { return "s"; }
   elsif ($_[0] eq 1) { return ""; }
   elsif ($_[1]) { return "$_[1]"; }
   return "s";
