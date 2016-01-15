@@ -414,6 +414,18 @@ sub procCmd
   print "wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
 }
 
+sub checkTwoThree
+{
+  for (1..4)
+  {
+    if (!$inStack{$_*13_2} && !$inStack{$_*13+3})
+	{
+	  print "The 2's and 3's of a similar suit are out, though, so there may be something.\n";
+	  return;
+	}
+  }
+}
+
 sub check720
 {
   my @initArray = ();
@@ -421,8 +433,15 @@ sub check720
   if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
   for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40} && !$holds{1} && !$holds{14} && !$holds{27} && !$holds{40})
-  { print "With all aces out, no draw-to-wins are expected.\n"; }
-  elsif (!$couldWork) { print "No suit without an ace is missing more than one card. No draw-to-wins are expected.\n"; }
+  {
+    print "With all aces out, no easy draw-to-wins are expected.\n";
+	checkTwoThree();
+  }
+  elsif (!$couldWork)
+  {
+    print "No suit without an ace is missing more than one card. No draw-to-wins are expected.\n";
+	checkTwoThree();
+  }
   elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
   elsif ($cardsInPlay <= 44) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   elsif ($cardsInPlay == 45) { print "You may need a bit of luck for a draw-to-win.\n"; }
@@ -440,13 +459,13 @@ sub check720
   drawSix();
   $seventwenty = 1;
   for (@initArray) { $inStack{$_} = 0; $holds{$_} = 0; }
-  $drawsLeft = 1;
   $printedThisTurn = 0;
   ones(0);
   $thiswin = checkwin();
   $seventwenty = 0;
   if ($thiswin == 1) { if (!$firstPermu) { for (0..5) { $firstPermu .= " " . faceval($initArray[$_]); } } $wins++; }
   @stack = @{dclone(\@array2)};
+  $drawsLeft = 1;
   } @initArray;
   $seventwenty = 0;
   if ($wins)
