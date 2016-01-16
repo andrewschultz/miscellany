@@ -144,8 +144,8 @@ while ($a = <A>)
 	  $a =~ s/(description=|name=)(\"[^\"]*\")/$1 . redactRoomName($2)/eg;
 	  $a =~ s/(>[^<]+<)/redactRoomDetails($1)/eg;
 	  }
-      print B "$a";
 	}
+      print B "$a";
 }
 
 close(A);

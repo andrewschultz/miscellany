@@ -1725,7 +1725,19 @@ sub showLegalsAndStats
   my ($brkPoint , $brkFull, $breaks) = breakScore();
   my $visible = $cardsInPlay - $hidCards;
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
-  print "$cardsInPlay cards in play, $visible/$hidCards visible/hidden, $drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
+  print "$cardsInPlay cards in play";
+  my $allOut = "";
+  for (1..4)
+  {
+    my $thisDone = 1;
+    for my $idx($_ * 13 - 12 .. $_ * 13)
+	{
+	  if ($inStack{$idx} || $holds{$idx}) { $thisDone = 0; }
+	}
+	if ($thisDone) { $allOut .= @sui[$_]; }
+  }
+  if (($allOut) && ($visible < 52)) { print "($allOut out)"; }
+  print ", $visible/$hidCards visible/hidden, $drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 

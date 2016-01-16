@@ -1,2 +1,2 @@
--t -f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,post-game fun"
+-f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,post-game fun"
 ;
