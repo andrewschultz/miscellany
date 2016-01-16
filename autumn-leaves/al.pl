@@ -418,7 +418,7 @@ sub checkTwoThree
 {
   for (1..4)
   {
-    if (!$inStack{$_*13_2} && !$inStack{$_*13+3})
+    if ($inStack{$_*13+2} && $inStack{$_*13+3})
 	{
 	  print "The 2's and 3's of a similar suit are out, though, so there may be something.\n";
 	  return;
