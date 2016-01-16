@@ -14,6 +14,7 @@ my @redact;
 my %redact;
 my %blockId;
 my $anythingRead = 0;
+my $redactText = 0;
 
 my $count = 0;
 
@@ -71,12 +72,14 @@ sub readArray
 	my $b = $_[$count+1]; if ($b =~ /^\"/) { $b =~ s/\"//g; }
     for ($a)
 	{
-	/-k/ && do { $keep = 1; $count++; next; };
-	/-r/ && do { @redact = split(/,/, $b); for (@redact) { $redact{"$_"} = 1; } $count += 2; next; };
-	/-f/ && do { $inFile = $b; $count += 2; $runThis = 1; next; };
-	/-o/ && do { $outFile = $b; $count += 2; next; };
-	/-d/ && do { $debug = 1; $count++; next; };
-	/-nd/ && do { $debug = 0; $count++; next; };
+	/^-k$/ && do { $keep = 1; $count++; next; };
+	/^-t$/ && do { $redactText = 1; $count++; next; };
+	/^-st$/ && do { $redactText = 0; $count++; next; };
+	/^-r$/ && do { @redact = split(/,/, $b); for (@redact) { $redact{"$_"} = 1; } $count += 2; next; };
+	/^-f$/ && do { $inFile = $b; $count += 2; $runThis = 1; next; };
+	/^-o$/ && do { $outFile = $b; $count += 2; next; };
+	/^-d$/ && do { $debug = 1; $count++; next; };
+	/^-nd$/ && do { $debug = 0; $count++; next; };
 	print "$a ($count) unknown.\n";
 	usage();
 	}
@@ -134,7 +137,15 @@ while ($a = <A>)
 	$a = "$a$b$c$d";
 	#print "OK: $a";
   }
-    print B "$a";
+    if ($redactText)
+	{
+	  if ($a =~ /<(room|objects)/)
+	  {
+	  $a =~ s/(description=|name=)(\"[^\"]*\")/$1 . redactRoomName($2)/eg;
+	  $a =~ s/(>[^<]+<)/redactRoomDetails($1)/eg;
+	  }
+      print B "$a";
+	}
 }
 
 close(A);
@@ -148,6 +159,18 @@ sub tag
   $q =~ s/.*\b$_[1]=\"//g;
   $q =~ s/\".*//g;
   return lc($q);
+}
+
+sub redactRoomName
+{
+  my $x = $_[0]; $x =~ s/[^ \"\n]/./g;
+  return $x;
+}
+
+sub redactRoomDetails
+{
+  my $x = $_[0]; $x =~ s/[^<> \r\n\|]/./g;
+  return $x;
 }
 
 sub printDebug
