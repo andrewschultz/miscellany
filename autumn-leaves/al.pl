@@ -86,7 +86,7 @@ initGame(); printdeck(0);
 while (1)
 {
   my $oneline = <STDIN>;
-  @cmds = split(/;/, $oneline); for my $myCmd (@cmds) { procCmdFromUser($myCmd); }
+  @cmds = split(/;/, $oneline); for my $myCmd (@cmds) { procCmdFromUser($myCmd); if ($youWon == 1) { last; } }
   seeBlockedMoves();
 }
 exit;
@@ -711,6 +711,8 @@ sub processGame
 
 sub doAnotherGame
 {
+
+@cmds = ();
 
 processGame();
 initGame();
@@ -2460,7 +2462,14 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	while (($undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
 	{
 	  $x--;
-	  $tempUndoCmd = pop(@undoArray);
+	  if ($#undoArray > -1)
+	  {
+	    $tempUndoCmd = pop(@undoArray);
+	  }
+	  else
+	  {
+	    $tempUndoCmd = "";
+	  }
 	  #print "extra-popped 2 $tempUndoCmd\n";
 	}
   }

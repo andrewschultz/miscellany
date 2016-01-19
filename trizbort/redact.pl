@@ -65,6 +65,7 @@ sub readArray
   my $count = 0;
   my $runThis = 0;
   if (!$keep) { undef(%redact); } else { $keep = 0; }
+  $redactText = 0;
   
   while ($count <= $#_)
   {
