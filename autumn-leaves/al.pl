@@ -79,6 +79,13 @@ my @topCard = ("");
 my %inStack;
 my %holds;
 
+open(A, "altime.txt");
+my $timeLast = <A>; chomp($timeLast);
+my $time = time() - $timeLast;
+my $del = <A>; chomp($del);
+$time = $time - $del;
+if ($time < 0) { print "Wait a bit and stuff, like " . (0 - $time) . " seconds, or edit altime.txt.\n"; exit; } else { print "$time $del\n"; exit; }
+
 readCmdLine(); readScoreFile(); initGlobal(); 
 
 initGame(); printdeck(0);
@@ -166,7 +173,7 @@ sub procCmd
   if ($_[0] =~ /^(ho|ho=)/) { holdArray($_[0]); return; }
   if ($_[0] =~ /^(b|b=)/) { holdArray($_[0]); return; }
   if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
-  if ($_[0] =~ /^q+$/) { exit; }
+  if ($_[0] =~ /^q+$/) { writeTime(); exit; }
   if ($_[0] =~ /^q/) { print "If you want to exit, just type q."; return; } #don't want playr to quit accidentally if at all possible
 
   # toggles/commands with numbers that are hard to change
@@ -1736,7 +1743,7 @@ sub showLegalsAndStats
 	{
 	  if ($inStack{$idx} || $holds{$idx}) { $thisDone = 0; }
 	}
-	if ($thisDone) { $allOut .= @sui[$_]; }
+	if ($thisDone) { $allOut .= $sui[$_]; }
   }
   if (($allOut) && ($visible < 52)) { print "($allOut out)"; }
   print ", $visible/$hidCards visible/hidden, $drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
@@ -2905,6 +2912,14 @@ sub printLastWon
   print "TC=" . join(",", @lastTopCard) . "\n";
   print "M=" . join(",", @lastWonArray) . "\n";
   print "\n\n\n\n\n\n";
+}
+
+sub writeTime
+{
+  open (A, ">altime.txt");
+  print A time();
+  print A "\n$del\n";
+  close(A);
 }
 
 sub printNoTest

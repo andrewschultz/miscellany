@@ -159,6 +159,7 @@ misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial N
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Line Topical Hints.i7x,misc\i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Game Mapping.i7x,misc\i7x
 misc=c:\coding\perl\proj\al.pl,misc\autumn-leaves
+misc=c:\coding\perl\proj\altime.txt,misc\autumn-leaves
 misc=c:\coding\perl\proj\al.txt,misc\autumn-leaves
 misc=c:\coding\perl\proj\alt.txt,misc\autumn-leaves
 misc=c:\coding\perl\proj\pts.pl,misc\autumn-leaves
