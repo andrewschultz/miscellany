@@ -79,7 +79,7 @@ my @topCard = ("");
 my %inStack;
 my %holds;
 
-open(A, "altime.txt") || die ("No time lock file, no play.");
+open(A, "altime.txt") || die ("No time lock file altime.txt, no play.\nSample file can look like this:\n1453547368\n86400\n\nYou can make the first number ridiculously big to disable this feature or make the second small to allow more frequent play.");
 my $timeLast = <A>; chomp($timeLast);
 my $time = time() - $timeLast;
 my $del = <A>; chomp($del);
