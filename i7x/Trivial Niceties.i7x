@@ -55,6 +55,10 @@ to wfak:
 		else:
 			wait for any key;
 
+to say wfak-d:
+	if debug-state is false:
+		wfak;
+
 book style abbreviations
 
 to say r:
@@ -119,6 +123,16 @@ book footnotes on the fly
 
 to ital-say (x - text):
 	say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]";
+
+volume debug printing
+
+to d (myt - indexed text):
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
+
+to dn (myt - indexed text):
+	if debug-state is true:
+		say "[myt]";
 
 volume yes-no substitutes
 

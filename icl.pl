@@ -24,6 +24,7 @@ $proj{"-d"} = "dirk";
 $proj{"-r"} = "roiling";
 $proj{"-s"} = "sa";
 $proj{"-u"} = "uglyoafs";
+$proj{"-uo"} = "uglyoafs";
 $proj{"-12"} = "sa";
 $proj{"-13"} = "threediopolis";
 $proj{"-14"} = "uglyoafs";

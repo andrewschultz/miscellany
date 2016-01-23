@@ -5,6 +5,8 @@ sts~shu,roi,stsu
 sa~shu
 sc~city
 as~pc,sc
+u~oafs
+uo~oafs
 3~3d
 4~4d
 
@@ -156,6 +158,7 @@ rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 
 #misc stuff
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial Niceties.i7x,misc\i7x
+misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Object-Based Hinting.i7x,misc\i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Line Topical Hints.i7x,misc\i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Game Mapping.i7x,misc\i7x
 misc=c:\coding\perl\proj\al.pl,misc\autumn-leaves

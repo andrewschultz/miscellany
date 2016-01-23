@@ -84,7 +84,7 @@ my $timeLast = <A>; chomp($timeLast);
 my $time = time() - $timeLast;
 my $del = <A>; chomp($del);
 $time = $time - $del;
-if ($time < 0) { print "Wait a bit and stuff, like " . (0 - $time) . " seconds, or edit altime.txt.\n"; exit; } else { print "$time $del\n"; exit; }
+if ($time < 0) { print "Wait a bit and stuff, like " . (0 - $time) . " seconds, or edit altime.txt.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
 readCmdLine(); readScoreFile(); initGlobal(); 
