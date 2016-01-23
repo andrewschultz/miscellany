@@ -2707,7 +2707,7 @@ sub checkwin
 	  undo(0); $moveBar = 1; $shouldMove = 0; return;
 	}
 	$youWon = 1;
-    if ($x =~ /^q+/i) { processGame(); exit; }
+    if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
 	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
   }
