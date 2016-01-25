@@ -84,7 +84,7 @@ while (my $a=<A>)
   if ($a =~ /^to say/)
   {
     my $b = $a; chomp($b); $b =~ s/^to say //g; $b =~ s/ of.*//g; $b =~ s/:.*//g;
-	if ($a =~ /\[unused\]/) { $unused{$b} = 1; }
+	if ($a =~ /\[unused[^\]]*\]/) { $unused{$b} = 1; }
 	if ($init{$b}) { $dup++; print "$dup: Duplicate to-say for $b, $prefix$lineNum to $init{$b}.\n"; }
     $init{$b} = "$lineNum";
 	$prefix{$b} = "$prefix";
@@ -135,6 +135,7 @@ foreach my $q (sort { $init{$a} <=> $init{$b} } keys %init)
 	else
     { $uns++; print "$q ($init{$q}) is not accessed (#$uns).\n"; }
   }
+  if ($said{$q} && $unused{$q}) { print "$q ($init{$q}) marked as unused but actually used.\n"; }
 }
 
 foreach my $q (sort keys %said)

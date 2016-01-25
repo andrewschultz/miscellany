@@ -438,6 +438,13 @@ sub check720
 {
   my @initArray = ();
   my $couldWork = 0;
+  if ($hidCards >= 6) { print "Too many cards out. It's very doubtful you can win this unless the deck is rigged, and it'd take too much time.\n"; return; }
+  if ($hidCards > 2)
+  {
+    print "It may take a while to see all possibilities, and there's not likely to be a win. Tally anyway?"; my $q = <STDIN>; if ($q !~ /y/) { print "OK.\n"; return; }
+	my $fact = 720; for (1..$hidCards) { $fact = $fact * (6 + $_); }
+	print "Total possibilities = " . $fact . "\n";
+  }
   if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
   for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40} && !$holds{1} && !$holds{14} && !$holds{27} && !$holds{40})
@@ -451,8 +458,8 @@ sub check720
 	checkTwoThree();
   }
   elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
-  elsif ($cardsInPlay <= 44) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
-  elsif ($cardsInPlay == 45) { print "You may need a bit of luck for a draw-to-win.\n"; }
+  elsif ($hidCards <= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
+  elsif ($hidCards == 1) { print "You may need a bit of luck for a draw-to-win.\n"; }
   else { print "A suit without an ace is missing another card, so there should be draw-to-wins.\n"; }
   my $count = 0;
   my $thiswin;
@@ -463,6 +470,7 @@ sub check720
   Algorithm::Permute::permute {
   my @array2 = @{dclone(\@stack)};
   $count++;
+  if (($count >= 1000) && ($count % 1000 == 0)) { print "$count so far.\n"; }
   @force = @initArray;
   drawSix();
   $seventwenty = 1;
