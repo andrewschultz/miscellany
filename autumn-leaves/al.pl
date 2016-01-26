@@ -873,7 +873,13 @@ sub loadDeck
     for (1..52) { $inStack{$_} = 1; }
 	while ($rowsRead < 6)
 	{
-	  $a = <A>; chomp($a); $a = lc($a);
+	  $a = <A>;
+	  if (!defined($a))
+	  {
+	    print "File ended before read was complete. Hopefully, that just means " . (6-$rowsRead) . " empty row" . plur(6-$rowsRead) . ".\n"; for my $j ($rowsRead+1..6) { @{$stack[$j]} = (); }
+		last;
+	  }
+	  chomp($a); $a = lc($a);
 	  $b = $a; $b =~ s/^[a-z]+=//gi; #b = the data for a
 	  printDebug("Trying $a\n");
 	  if ($a =~ /^tm=/)
