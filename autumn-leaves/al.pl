@@ -874,7 +874,7 @@ sub loadDeck
 	while ($rowsRead < 6)
 	{
 	  $a = <A>;
-	  if (!defined($a))
+	  if (!defined($a) || ($a =~ /^s=/i))
 	  {
 	    print "File ended before read was complete. Hopefully, that just means " . (6-$rowsRead) . " empty row" . plur(6-$rowsRead) . ".\n"; for my $j ($rowsRead+1..6) { @{$stack[$j]} = (); }
 		last;
