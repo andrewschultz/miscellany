@@ -2427,7 +2427,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   #print "$x elts left\n";
   if ($x >= 0)
   {
-	while (($x > 0) && ($tempUndoCmd eq "n+")) { pop(@undoArray); $x--; $tempUndoCmd = $undoArray[$x]; }
+	while (($x > 0) && (($tempUndoCmd eq "n+") || ($tempUndoCmd eq "n-"))) { pop(@undoArray); $x--; $tempUndoCmd = $undoArray[$x]; }
 	if (($_[0] != 3) || ($tempUndoCmd ne "df")) # special case: Don't pop if we are near a DF anyway
 	{
     $tempUndoCmd = pop(@undoArray);
