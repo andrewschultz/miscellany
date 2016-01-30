@@ -108,7 +108,6 @@ if ($ARGV[0])
   {
     $a = lc($ARGV[$count]);
     if ($count <= $#ARGV) { $b = lc($ARGV[$count+1]); } else { $b = ""; }
-	print "$count: $a and next is $b\n";
     for ($a)
 	{
 	#print "Trying $a: $count\n";
@@ -396,7 +395,7 @@ sub procCmd
 	  if ($#numArray == 0)
 	  {
 	    expandOneColumn($numbers);
-		if (emptyRows() == 2)
+		if (emptyRows() == 2) #this checks if we can redo the command
 		{
 		while(onesuit($numbers) && !ascending($numbers))
 		{
@@ -798,7 +797,6 @@ sub saveDeck
   } # get rid of that extra garbage
   
   my $topCards = "";
-  print "$#topCard\n";
   if ($#topCard > -1) { $topCards = join(",", @topCard); }
   my $undoArys = "";
   if ($#undoArray > -1) { $undoArys = join(",", @undoArray); }
@@ -841,7 +839,7 @@ sub saveDeck
   copyAndErase($filename);
 
   print "OK, saved.\n";
-  printdeck(0);
+  if (!$youWon) { printdeck(0); }
 }
 
 sub loadDeck
@@ -2440,7 +2438,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   #print "$x elts left\n";
   if ($x >= 0)
   {
-	while (($x > 0) && (($tempUndoCmd eq "n+") || ($tempUndoCmd eq "n-"))) { pop(@undoArray); $x--; $tempUndoCmd = $undoArray[$x]; }
+	while (($x > 0) && ($tempUndoCmd eq "n+")) { pop(@undoArray); $x--; $tempUndoCmd = $undoArray[$x]; }
 	if (($_[0] != 3) || ($tempUndoCmd ne "df")) # special case: Don't pop if we are near a DF anyway
 	{
     $tempUndoCmd = pop(@undoArray);
@@ -2452,17 +2450,25 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	my $undos = 0;
 	while (($x >= 0) && ($undos < $_[1]))
 	{
-	while (($undoArray[$x] =~ /^(f|n-|n\+)/) && ($x >= 0))
+	while (($x >= 0) && ($undoArray[$x] =~ /^(f|n-|n\+)/))
 	{
 	  $x--; $tempUndoCmd = pop(@undoArray);
 	}
+	if (($x >= 0) && ($undoArray[$x] eq "df")) { for (1..6) { pop(@undoArray); } $x -= 6; }
+	pop(@undoArray); $x--;
 	$undos++;
+	}
+	$lastNMinus = 0;
+	for (0..$#undoArray)
+	{
+	  if ($undoArray[$_] eq "n-") { $lastNMinus = 0; }
+	  if ($undoArray[$_] eq "n+") { $lastNMinus = 1; }
 	}
 	}
 	elsif (($_[0] ==3) && ($undoArray[$x] eq "df"))
 	{
 	  print "Already at a draw, so only going back one move.\n";
-	  while (($undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray); }
+	  while (($undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray);  }
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
@@ -2483,7 +2489,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	}
 	elsif (($tempUndoCmd eq "n-"))
 	{
-	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
+	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); print "A\n"; }
 	}
 	else
 	{
@@ -2494,7 +2500,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	  #print "extra-popped 1 $tempUndoCmd\n";
 	}
 	}
-	while (($undoArray[$x] =~ /^n\+/) && ($x >= 0)) # this is to get rid of stray N+
+	while (($x >= 0) && ($undoArray[$x] =~ /^n\+/) ) # this is to get rid of stray N+
 	{
 	  $x--;
 	  if ($#undoArray > -1)
@@ -2726,7 +2732,12 @@ sub checkwin
   {
   if ($suitsDone == 4)
   {
-    if (($#_ > 0) && ($_[0] == -1)) { printdeck(-1); } printOutSinceLast(); print "You win! Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
+    if (($#_ > 0) && ($_[0] == -1)) { printdeck(-1); } printOutSinceLast();
+	
+	print "You win! ";
+	while (1)
+	{
+	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
 	if ($x =~ /^u/i)
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
@@ -2735,8 +2746,9 @@ sub checkwin
 	}
 	$youWon = 1;
     if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
-	while ($x =~ /^(s|sf)=/i) { if ($x =~ /^sf/i) { saveDeck($x, 1); } else { saveDeck($x, 0); } }
+	if ($x =~ /^sf/i) { saveDeck($x, 1); next; } else { saveDeck($x, 0); next; }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
+	}
   }
   my $er = emptyRows();
   if ($suitsDone || $er)
