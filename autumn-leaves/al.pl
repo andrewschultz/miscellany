@@ -393,7 +393,22 @@ sub procCmd
     /^x$/ && do
     {
 	  if (cmdBadNumWarn($numbers, $letters)) { return; }
-	  if ($#numArray == 0) { expandOneColumn($numbers); return; }
+	  if ($#numArray == 0)
+	  {
+	    expandOneColumn($numbers);
+		if (emptyRows() == 2)
+		{
+		while(onesuit($numbers) && !ascending($numbers))
+		{
+		my $oldmove = $#undoArray;
+		expandOneColumn($numbers);
+		if ($#undoArray == $oldmove) { print("Debug note: broke out of potential infinite loop."); last; }
+		}
+		}
+		printdeck(0);
+		checkwin();
+		return;
+	  }
 	  if ($#numArray == 2)
       {
 	    if ((botSuit($numArray[0]) != botSuit($numArray[1])) && (!isEmpty($numArray[1]))) { print "Wrong middle suit.\n"; return; }
@@ -618,8 +633,6 @@ sub expandOneColumn
 	  }
 	}
 	$quickMove = 0;
-	printdeck(0);
-	checkwin();
 	return;
 }
 
