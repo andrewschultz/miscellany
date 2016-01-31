@@ -25,6 +25,7 @@ shu=c:\games\inform\triz\mine\shuffling-around.trizbort,stale-tales-slate\shuffl
 shu=c:\games\inform\triz\mine\shuffling-around.pdf,stale-tales-slate\shuffling
 shu=c:\users\andrew\dropbox\notes\shuf*.txt,stale-tales-slate\shuffling
 shu=c:\games\inform\sa.inform\uuid.txt,stale-tales-slate\shuffling
+shu=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb,stale-tales-slate\shuffling
 
 #Roiling files
 roi=c:\games\inform\roiling.inform\source\story.ni,stale-tales-slate\roiling
@@ -47,6 +48,7 @@ roi=c:\games\inform\roiling.inform\source\bot-json.txt,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.trizbort,stale-tales-slate\roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,stale-tales-slate\roiling
 roi=c:\games\inform\roiling.inform\uuid.txt,stale-tales-slate\roiling
+roi=c:\games\inform\Roiling Materials\Release\A Roiling Original.gblorb,stale-tales-slate\roiling
 
 #Stale Tales Slate scripts
 stsu=c:\writing\dict\tsh.pl,stale-tales-slate\

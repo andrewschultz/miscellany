@@ -1762,17 +1762,19 @@ sub showLegalsAndStats
   @outSinceLast = (); #need to clear anyway and if it's toggled mid-game...
   print "$cardsInPlay cards in play";
   my $allOut = "";
+  my @cardCount = (0,0,0,0);
   for (1..4)
   {
     my $thisDone = 1;
     for my $idx($_ * 13 - 12 .. $_ * 13)
 	{
-	  if ($inStack{$idx} || $holds{$idx}) { $thisDone = 0; }
+	  if ($inStack{$idx} || $holds{$idx}) { $thisDone = 0; } else { $cardCount[($idx-1)/13]++; }
 	}
 	if ($thisDone) { $allOut .= $sui[$_]; }
   }
+  my $vis = join("-", @cardCount);
   if (($allOut) && ($visible < 52)) { print "($allOut out)"; }
-  print ", $visible/$hidCards visible/hidden, $drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
+  print ", $visible($vis)/$hidCards visible/hidden.\n$drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
   }
 }
 
@@ -2746,7 +2748,7 @@ sub checkwin
 	}
 	$youWon = 1;
     if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
-	if ($x =~ /^sf/i) { saveDeck($x, 1); next; } else { saveDeck($x, 0); next; }
+	if ($x =~ /^s=/i) { if ($x =~ /^sf=/) { saveDeck($x, 1); next; } else { saveDeck($x, 0); next; } }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
 	}
   }
