@@ -2491,7 +2491,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	}
 	elsif (($tempUndoCmd eq "n-"))
 	{
-	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); print "A\n"; }
+	while (($undoArray[$x] ne "n+") && ($x >= 0)) { $x--; pop(@undoArray); }
 	}
 	else
 	{

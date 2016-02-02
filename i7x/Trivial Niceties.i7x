@@ -70,6 +70,9 @@ to say i:
 to say b:
 	say "[bold type]";
 
+to say on-off of (t - a truth state):
+	say "[if t is true]on[else]off[end if]";
+
 book screenreading hooks
 
 to say 2da: [this is so people with screen readers won't be annoyed by dashes]
