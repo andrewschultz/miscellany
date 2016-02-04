@@ -438,7 +438,7 @@ sub procCmd
 
 sub checkTwoThree
 {
-  for (1..4)
+  for (0..3)
   {
     if ($inStack{$_*13+2} && $inStack{$_*13+3})
 	{
@@ -472,9 +472,13 @@ sub check720
 	checkTwoThree();
   }
   elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
-  elsif ($hidCards <= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   elsif ($hidCards == 1) { print "You may need a bit of luck for a draw-to-win.\n"; }
-  else { print "A suit without an ace is missing another card, so there should be draw-to-wins.\n"; }
+  elsif ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
+  else
+  {
+    if (allAscending()) { print "A suit without an ace is missing another card, so there should be draw-to-wins.\n"; }
+    else { print "Not everything's in order, yet. It looks like you can still do a bit more to maybe increase the number of draw-to-wins possible, but we'll try anyway.\n"; }
+  }
   my $count = 0;
   my $thiswin;
   my $oldCardsInPlay = $cardsInPlay;

@@ -18,6 +18,15 @@ section track memory used
 
 Include (- Switches z; -) after "ICL Commands" in "Output.i6t".
 
+section pronoun setting
+
+[This allows us to refer to a plural noun as it/them. Thanks to Climbingstars!]
+
+To set the/-- pronoun it to (O - an object): (- LanguagePronouns-->3 = {O}; -).
+To set the/-- pronoun him to (O - an object): (- LanguagePronouns-->6 = {O}; -).
+To set the/-- pronoun her to (O - an object): (- LanguagePronouns-->9 = {O}; -).
+To set the/-- pronoun them to (O - an object): (- LanguagePronouns-->12 = {O}; -).
+
 section transcripting stub
 
 [This makes a check for if the transcript is on. I use it to check if a person starts with * but transcripting is off. Thanks to Zarf!]
@@ -126,6 +135,10 @@ book footnotes on the fly
 
 to ital-say (x - text):
 	say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]";
+
+to score-now:
+	increment the score;
+	consider the notify score changes rule;
 
 volume debug printing
 
