@@ -1,0 +1,22 @@
+//1=only during quest 4=non NS critical quest 2=moon sign dependent 8=no fun turn burn 16=potential bounty 32=only L4/5 change double colons to tabs to test
+1	The Penultimate Fantasy Airship	16	0
+2	The "Fun" House	16	0
+3	The Enormous Greater-Than Sign	4	0
+4	The Hippy/Frat Battlefield	1	0
+5	The Arid, Extra-Dry Desert	8	0
+6	The Sleazy Back Alley	16	0
+7	Thugnderdome	2	0
+8	Belowdecks	0	0
+9	Camp Logging Camp	2	0
+10	The Bugbear Pen	2	0
+11	The Defiled Nook	1	0
+12	The Poker Room	8	0
+13	The Road to White Citadel	4	0
+14	Noob Cave	8	0
+15	Cobb's Knob Menagerie, Level 3	0	0
+16	The Limerick Dungeon	8	0
+17	The Lair of the Ninja Snowmen	16	0
+18	The Unquiet Garves	0	0
+19	The Cola Wars Battlefield	32	0
+20	The eXtreme Slope	16	0
+//21::The Bogus Nonexistent Area for Testing::17::0
