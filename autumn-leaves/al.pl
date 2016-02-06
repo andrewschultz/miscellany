@@ -30,7 +30,7 @@ my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $auto
 my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
 my $usrInit = 0;
- 
+
 my $movesAtStart; # moves before making a command
 
 my $undoEach; #unsaveable option
@@ -87,7 +87,7 @@ $time = $time - $del;
 if ($time < 0) { print "Wait a bit and stuff, like " . (0 - $time) . " seconds, or edit altime.txt.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
-readCmdLine(); readScoreFile(); initGlobal(); 
+readCmdLine(); readScoreFile(); initGlobal();
 
 initGame(); printdeck(0);
 
@@ -160,7 +160,7 @@ sub procCmd
   my $letters = $_[0]; $letters =~ s/[^a-z]//gi;
   my $numbers = $_[0]; $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
-  
+
   #meta commands first, or commands with equals
   if ($_[0] =~ /^%$/) { stats(); return; }
   if ($_[0] =~ /^l([bi]?)=/i) { loadDeck($_[0]); return; }
@@ -206,7 +206,7 @@ sub procCmd
 		if (isEmpty($numArray[0])) { print "Can't move from empty stack $numArray[0].\n"; return; }
 		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
 		tryMove("$numArray[0]", "$numArray[1]");
-		
+
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; $errorPrintedYet = 1; } }
 		return;
 	  }
@@ -591,7 +591,7 @@ sub expandOneColumn
 	}
 
 	my $tempAsc = ascending($thisRow);
-	
+
 	if ($tempAsc == 1) { print "Row $thisRow is already in order.\n";  return; } elsif ($tempAsc > 1) { print "Row $thisRow is already in order, with a suit done. Moving the bottom suit would only clog up a row.\n"; return; }
 
     $shouldMove = 1;
@@ -624,6 +624,7 @@ sub expandOneColumn
 	  printDebug("Trying extra\n");
       while ((isEmpty($rows[1]) + isEmpty($rows[0]) + isEmpty($thisRow) < 2) && suitsAligned(suit(botCard($rows[0])), suit(botCard($rows[1])), suit(botCard($thisRow)), $fromSuit))
 	  {
+	    $beforeCmd = $#undoArray;
 		$count += 1; if ($count == 20) { print"Oops. This took too long, bailing.\n"; last; }
 	    printDebug ("Shift $count\n");
 	    $errorPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
@@ -632,11 +633,37 @@ sub expandOneColumn
 	    if ($from == $rows[0]) { if (botCard($thisRow) > botCard($rows[1])) { autoShuffleExt($rows[0], $thisRow, $rows[1]); } else { autoShuffleExt($rows[0], $rows[1], $thisRow); } }
 	    elsif ($from == $rows[1]) { if (botCard($thisRow) > botCard($rows[0])) { autoShuffleExt($rows[1], $thisRow, $rows[0]); } else { autoShuffleExt($rows[1], $rows[0], $thisRow); } }
 	    else { if (botCard($rows[0]) < botCard($rows[1])) { autoShuffleExt($thisRow, $rows[0], $rows[1]); } else { autoShuffleExt($thisRow, $rows[1], $rows[0]); } }
-		if ($#undoArray == $beforeCmd) { printDebug("Nothing turned over turn $count."); }
+		if ($#undoArray == $beforeCmd) { printDebug("Nothing turned over turn $count."); last; }
+	  }
+	}
+	if (isEmpty($rows[1]) + isEmpty($rows[0]) == 1)
+	{
+	  my $eRow = $rows[0];
+	  if (isEmpty($rows[1])) { $eRow = $rows[1]; }
+	  my $oRow = $rows[0] + $rows[1] - $eRow;
+	  if (botSuit($thisRow) == botSuit($oRow) && (topish($oRow) < topish($thisRow))) #special case if a you have, say, JS and KS-9S-7S left
+	  {
+	  #autoShuffleExt($thisRow, $eRow, $oRow);
+	  $moveBar = 0;
+	  autoShuffleExt($thisRow, $oRow, $eRow);
 	  }
 	}
 	$quickMove = 0;
 	return;
+}
+
+sub topish
+{
+  if (isEmpty($_[0])) { return -1; }
+  my $temp = $#{$stack[$_[0]]};
+  my $sui = suit($stack[$_[0]][$temp]);
+
+  while (($temp >= 0) && (suit($stack[$_[0]][$temp]) == $sui))
+  {
+    $temp--;
+  }
+  $temp++;
+  return ($stack[$_[0]][$temp]);
 }
 
 sub cmdNumWarn # Arg: numbers, letters, (requires numbers?)
@@ -786,7 +813,7 @@ sub saveDeck
   my $filename = "al-sav.txt";
   my $overwrite = 0;
   my $ignorePrintedCards = $ignoreBoardOnSave;
-  
+
   my $prefix = $_[0]; $prefix =~ s/=.*//g;
   if ($prefix =~ /i/) { $ignorePrintedCards = 1; }
   if ($prefix =~ /b/) { $ignorePrintedCards = 0; }
@@ -799,7 +826,7 @@ sub saveDeck
     $lastSearchCmd =~ s/^s[a-z]+=/s=/gi;
 	printDebug("$lastSearchCmd\n");
   } # get rid of that extra garbage
-  
+
   my $topCards = "";
   if ($#topCard > -1) { $topCards = join(",", @topCard); }
   my $undoArys = "";
@@ -1029,7 +1056,7 @@ sub loadDeck
 			  }
 			}
 		  }
-    $currentlyLoadingSaving = 1; # this is a hack and I can do better. But...if we don't see 
+    $currentlyLoadingSaving = 1; # this is a hack and I can do better. But...if we don't see
 	printdeck(0);
 	if (!$avoidWin) { checkwin(); }
 	close(A);
@@ -1103,7 +1130,7 @@ sub printHoldArray
   if ($_[0] == 0) { return; }
   print "InStack:";
   for my $x (sort { $a <=> $b } keys %inStack) { print " " . faceval($x); }
-  print "\n";  
+  print "\n";
 }
 
 sub holdArray
@@ -1700,7 +1727,7 @@ sub showLegalsAndStats
 	  }
 	  if (!$gotOne) { print " (recommend drawing)"; }
 	}
-  }  
+  }
   elsif ((!$anySpecial) && ($drawsLeft) && (!$canMakeEmpty))
   {
     print " (recommend drawing)";
@@ -2153,7 +2180,7 @@ sub ascendingOld # sees if we have a fully ascending row
 
 sub straightUp # this doesn't say that a row is ascending but rather if it can be swapped
 {
-  my $max = $stack[$_[0]][0];
+  my $max = $stack[$_[0]][0]; # in other words--we expect this row to be the same suit all the way down
   #print "Testing $_[0] to $_[1]\n";
   my $fromH = $#{$stack[$_[0]]};
   if ($fromH == -1) { return 0; }
@@ -2257,7 +2284,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $didSafeShuffle = 0;
   my $suitToShuf = $_[3];
   if (!$suitToShuf)  { $suitToShuf = botSuit($_[0]); }
-  printDebug("before autoshuffle: $_[0] to $_[1] via $_[2], cards " . faceval($_[0]) . " to " . faceval($_[1]) . " via " . faceval($_[2]) . "\n");
+  printDebug("before autoshuffle: $_[0] to $_[1] via $_[2], cards " . faceval(botCard($_[0])) . " to " . faceval(botCard($_[1])) . " via " . faceval(botCard($_[2])) . "\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
   my $emptyShufRow = firstEmptyRow();
@@ -2739,7 +2766,7 @@ sub checkwin
   if ($suitsDone == 4)
   {
     if (($#_ > 0) && ($_[0] == -1)) { printdeck(-1); } printOutSinceLast();
-	
+
 	print "You win! ";
 	while (1)
 	{
