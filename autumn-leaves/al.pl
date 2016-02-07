@@ -158,7 +158,15 @@ sub procCmd
   $_[0] =~ s/^\s+//g;
 
   my $letters = $_[0]; $letters =~ s/[^a-z]//gi;
-  my $numbers = $_[0]; $numbers =~ s/[^0-9]//gi;
+  my $numbers = $_[0];
+
+  if ((length($letters) > 0) && (length($letters) % 2 == 0))
+  {
+  my $halfLet = substr($letters, 0, length($letters)/2);
+  if ($letters eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $letters = $halfLet; }
+  }
+  
+  $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
 
   #meta commands first, or commands with equals
@@ -274,7 +282,7 @@ sub procCmd
 	      if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$numArray[0]" , firstEmptyRow()); return; }
   	      print "Too many rows ($totalRows) to move $numArray[0] to.\n"; return;
 	    }
-	    else { print "Forcing $numArray[0] -> $forceRow.\n"; tryMove("$numArray[0]", "$forceRow"); return; }
+	    else { if (isEmpty($numArray[0])) { print("Nothing to move."); return; } print "Forcing $numArray[0] -> $forceRow.\n"; tryMove("$numArray[0]", "$forceRow"); return; }
       }
 	  return;
 	};
@@ -283,7 +291,7 @@ sub procCmd
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^cw$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
-    /^(d|dd)$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
+    /^d$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
     /^df$/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
     /^dl$/ && do { if (cmdNumWarn($numbers, $letters, 1)) { print "Need an argument for debuglevel, which is currently $debug.\n"; return; } if (($numArray[0] > 2)) { print "Debug must be between 0 and 2.\n"; return; } print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
@@ -386,7 +394,7 @@ sub procCmd
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
-	/^uu$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
+	/^us$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
     /^v$/ && do { cmdNumWarn($numbers, $letters); $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
     /^[wy]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(@numArray); return; };
     /^x$/ && do
@@ -2444,7 +2452,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   my $lastNMinus = 0;
   $undo = 1; $undidOrLoadThisTurn = 1;
   if ($showUndoBefore) { print "Undo array: @undoArray\n"; }
-  if (($_[0] == 2) || ($_[0] ==3)) { if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use uu instead.\n"; $undo = 0; return; } }
+  if (($_[0] == 2) || ($_[0] ==3)) { if ($cardsInPlay == 22) { print "Note--there were no draws, so you should use us instead.\n"; $undo = 0; return; } }
   if ($_[0] == 2) { if (($undoArray[$#undoArray] eq "n-") && ($undoArray[$#undoArray-1] eq "df")) { print "Already just past a draw.\n"; $undo = 0; return; } }
   if ($undoDebug)
   {
@@ -3087,7 +3095,7 @@ ub=undo to before last 6-card draw
 ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not perfect yet.)
 sl=save last undo array (to undo-debug.txt)
 du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
-uu=undo all the way to the start
+us=undo all the way to the start
 ue=toggle undo each turn (only debug)
 1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
 1b=begin ones (this is safe, as no card stacks are out of order yet)
