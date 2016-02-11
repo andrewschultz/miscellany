@@ -8,6 +8,8 @@ map-room-height is a number that varies. map-room-height is usually 1.
 
 map-room-width is a number that varies. map-room-width is usually 1.
 
+a room can be map-pinged. a room is usually not map-pinged.
+
 chapter maping
 
 maping is an action out of world.
@@ -106,12 +108,18 @@ to decide what number is ymax:
 	decide on temp;
 
 definition: a room (called rm) is mappable:
+	if rm is a rm listed in table of map coordinates:
+		if there is a view-rule entry:
+			consider the view-rule entry;
+			if the rule succeeded, decide yes;
+			decide no;
 	if rm is visited, decide yes;
+	if rm is map-pinged, decide yes;
 	decide no;
 
 table of map coordinates
-rm	x	y	l1	l2	indir	outdir	updir	downdir
-room	number	number	text	text	direction	direction	direction	direction
+rm	x	y	l1	l2	indir	outdir	updir	downdir	view-rule
+room	number	number	text	text	direction	direction	direction	direction	rule
 
 In-Game Mapping ends here.
 

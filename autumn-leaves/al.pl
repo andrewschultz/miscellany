@@ -444,16 +444,23 @@ sub procCmd
   print "wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
 }
 
-sub checkTwoThree
+sub canDraw
 {
-  for (0..3)
+  return $inStack{$_[0]} || $holds{$_[0]};
+}
+
+sub suitstat
+{
+  my $base = $_[0] * 13 + 1;
+  my $leftInSuit = 0;
+  for my $card ($base..$base+12) { $leftInSuit += canDraw($card); }
+  if ($leftInSuit == 2)
   {
-    if ($inStack{$_*13+2} && $inStack{$_*13+3})
-	{
-	  print "The 2's and 3's of a similar suit are out, though, so there may be something.\n";
-	  return;
-	}
+    if (canDraw($base+1) && canDraw($base+2)) { return 2; } #3h-2h missing, can win
+    if (canDraw($base) && canDraw($base+12)) { return 1; } #kh-ah missing, trickier
   }
+  if (($leftInSuit > 1) && canDraw($base)) { return 3; } #7h-ah missing, always doable I think/hope
+  return 0;
 }
 
 sub check720
@@ -468,24 +475,31 @@ sub check720
 	print "Total possibilities = " . $fact . "\n";
   }
   if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
+  my @suitStatus = (0, 0, 0, 0);
+  for (0..3) { $suitStatus[suitstat($_)]++; }
   for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
-  if (!$inStack{1} && !$inStack{14} && !$inStack{27} && !$inStack{40} && !$holds{1} && !$holds{14} && !$holds{27} && !$holds{40})
+  if (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
+  elsif ($suitStatus[0] == 4)
   {
     print "With all aces out, no easy draw-to-wins are expected.\n";
-	checkTwoThree();
   }
-  elsif (!$couldWork)
-  {
-    print "No suit without an ace is missing more than one card. No draw-to-wins are expected.\n";
-	checkTwoThree();
-  }
-  elsif (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
-  elsif ($hidCards == 1) { print "You may need a bit of luck for a draw-to-win.\n"; }
-  elsif ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   else
+  {
+  if ($suitStatus[3])
   {
     if (allAscending()) { print "A suit without an ace is missing another card, so there should be draw-to-wins.\n"; }
     else { print "Not everything's in order, yet. It looks like you can still do a bit more to maybe increase the number of draw-to-wins possible, but we'll try anyway.\n"; }
+  }
+  elsif ($suitStatus[2])
+  {
+    print "A 2 and a 3 of the same suit are missing, so you may have a chance, here.\n";
+  }
+  elsif ($suitStatus[3])
+  {
+    print("You're missing the K and A of a suit, which can in rare cases help a bit, but probably not.\n");
+  }
+  if ($hidCards == 1) { print "With a card still to pull, you may need a bit of luck for a draw-to-win.\n"; }
+  if ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   }
   my $count = 0;
   my $thiswin;
