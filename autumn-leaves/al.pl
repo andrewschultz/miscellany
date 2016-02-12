@@ -446,7 +446,8 @@ sub procCmd
 
 sub canDraw
 {
-  return $inStack{$_[0]} || $holds{$_[0]};
+  my $x = $inStack{$_[0]} || $holds{$_[0]}; if (!$x) { $x = 0; }
+  return $x;
 }
 
 sub suitstat
@@ -454,12 +455,12 @@ sub suitstat
   my $base = $_[0] * 13 + 1;
   my $leftInSuit = 0;
   for my $card ($base..$base+12) { $leftInSuit += canDraw($card); }
+  if (canDraw($base+1) && canDraw($base+2) && !canDraw($base)) { return 2; } #3h & 2h but not ah missing, can win
   if ($leftInSuit == 2)
   {
-    if (canDraw($base+1) && canDraw($base+2)) { return 2; } #3h-2h missing, can win
-    if (canDraw($base) && canDraw($base+12)) { return 1; } #kh-ah missing, trickier
+    if (canDraw($base) && canDraw($base+12)) { return 1; } #kh & ah missing, trickier
   }
-  if (($leftInSuit > 1) && canDraw($base)) { return 3; } #7h-ah missing, always doable I think/hope
+  if (($leftInSuit > 1) && canDraw($base)) { return 3; } #7h & ah missing, always doable I think/hope
   return 0;
 }
 
@@ -492,9 +493,9 @@ sub check720
   }
   elsif ($suitStatus[2])
   {
-    print "A 2 and a 3 of the same suit are missing, so you may have a chance, here.\n";
+    print "A 2 and a 3 of the same suit are missing, so the final auto-sweep may have them pick up the Ace for a possible win.\n";
   }
-  elsif ($suitStatus[3])
+  elsif ($suitStatus[1])
   {
     print("You're missing the K and A of a suit, which can in rare cases help a bit, but probably not.\n");
   }
@@ -564,6 +565,9 @@ sub thereAndBack
 	if (!canMove($_[0], $_[1])) { print "Can't move $_[0] through $_[1].\n"; return; }
     $shouldMove = 1;
 	$quickMove = 1;
+	
+	my $thiscount = 0;
+	
 	do
 	{
 	$b4 = $#undoArray;
@@ -574,6 +578,9 @@ sub thereAndBack
 	{
     autoShuffleExt($_[2], $_[0], $_[1], botSuit($_[0]));
 	}
+	
+	$thiscount++; if ($thiscount == 25) { print"Loop took too many times. Breaking. Suggest undo-save to figure why.\n"; last; }
+	
 	} while (($#undoArray > $b4) && ($lastCommand =~ /y/) && (!isEmpty($_[0])) && (!isEmpty($_[2])));
 	$quickMove = 0;
 	if ($wayb4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else
@@ -1968,7 +1975,6 @@ sub tryMove
   my $from = $_[0];
   my $to = $_[1];
 
-  #print "$_[0] becomes $from $to, $moveBar moves barred\n";
   if ($moveBar == 1) { if ($showBlockedMoves) { barMove("$from-$to blocked, as previous move failed.\n"); } else { $blockedMoves++; } return; }
 
   if (($from > 6) || ($from < 1) || ($to > 6) || ($to < 1)) { barMove("$from-$to is not valid. Rows range from 1 to 6.\n"); return; }
@@ -1976,6 +1982,9 @@ sub tryMove
   if ($from==$to) { barMove("Oops, tried to switch a row with itself.\n"); return; }
 
   if (!$stack[$from][0]) { barMove("Tried to move from empty row/column.\n"); return; } # note: this needs a better error message.
+
+  #print("$_[0] to $_[1]\n");
+  #my $trace = Devel::StackTrace->new; print $trace->as_string . "\n";
 
   my $toEl = 0;
   my $fromEl = 0;
@@ -2306,6 +2315,7 @@ sub autoShuffleExt #autoshuffle 0 to 1 via 2, but check if there's a 3rd open if
   my $didSafeShuffle = 0;
   my $suitToShuf = $_[3];
   if (!$suitToShuf)  { $suitToShuf = botSuit($_[0]); }
+  if (!isEmpty($_[1]) && (botSuit($_[0]) != botSuit($_[1]))) { return; }
   printDebug("before autoshuffle: $_[0] to $_[1] via $_[2], cards " . faceval(botCard($_[0])) . " to " . faceval(botCard($_[1])) . " via " . faceval(botCard($_[2])) . "\n");
   autoShuffle($_[0], $_[1], $_[2]);
   printDebug("after autoshuffle\n");
