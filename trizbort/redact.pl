@@ -55,6 +55,7 @@ sub readLine
 {
   if ($_[0] =~ /^;/) { $allDone = 1; exit; }
   if ($_[0] =~ /^#/) { return; }
+  if ($_[0] =~ /^-c/) { my $temp = $_[0]; $temp =~ s/^-c +//g; `$temp`; return; }
   my @array = ($_[0] =~ /(".*?"|\S+)/g);
   print "Trying line $_[0].\n";
   readArray(@array);
