@@ -10,6 +10,7 @@ use strict;
 my $debug = 0, my $inFile, my $outFile;
 my $keep = 0;
 my $allDone = 0;
+my $runC = 0;
 my @redact;
 my %redact;
 my %blockId;
@@ -55,7 +56,8 @@ sub readLine
 {
   if ($_[0] =~ /^;/) { $allDone = 1; exit; }
   if ($_[0] =~ /^#/) { return; }
-  if ($_[0] =~ /^-c/) { my $temp = $_[0]; $temp =~ s/^-c +//g; `$temp`; return; }
+  if ($_[0] =~ /^-c /) { if ($runC) { my $temp = $_[0]; $temp =~ s/^-c +//g; `$temp`; } else { print "Skipping $_[0]\n"; } return; } # run this only if -c flag is flipped
+  if ($_[0] =~ /^-cf/) { my $temp = $_[0]; $temp =~ s/^-cf +//g; `$temp`; return; } # force no matter what
   my @array = ($_[0] =~ /(".*?"|\S+)/g);
   print "Trying line $_[0].\n";
   readArray(@array);
@@ -75,6 +77,7 @@ sub readArray
     for ($a)
 	{
 	/^-k$/ && do { $keep = 1; $count++; next; };
+	/^-c$/ && do { $runC = 1; $count++; next; };
 	/^-t$/ && do { $redactText = 1; $count++; next; };
 	/^-st$/ && do { $redactText = 0; $count++; next; };
 	/^-r$/ && do { @redact = split(/,/, $b); for (@redact) { $redact{"$_"} = 1; } $count += 2; next; };

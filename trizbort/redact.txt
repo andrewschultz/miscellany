@@ -1,5 +1,7 @@
 -f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,post-game fun"
 -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound-directors-cut.trizbort
--c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound.trizbort
+-cf \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound.trizbort
 -t -f c:/games/inform/triz/mine/slicker-city.trizbort -o c:/games/inform/triz/mine/slicker-city-redacted.trizbort
+-c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\slicker-city.trizbort
+-c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\slicker-city-redacted.trizbort
 ;
