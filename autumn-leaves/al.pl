@@ -157,15 +157,15 @@ sub procCmd
   $moveBar = 0;
   $_[0] =~ s/^\s+//g;
 
+  if ((length($_[0]) > 0) && (length($_[0]) % 2 == 0))
+  {
+  my $halfLet = substr($_[0], 0, length($_[0])/2);
+  if ($_[0] eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $_[0] = $halfLet; }
+  }
+
   my $letters = $_[0]; $letters =~ s/[^a-z]//gi;
   my $numbers = $_[0];
 
-  if ((length($letters) > 0) && (length($letters) % 2 == 0))
-  {
-  my $halfLet = substr($letters, 0, length($letters)/2);
-  if ($letters eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $letters = $halfLet; }
-  }
-  
   $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
 
@@ -202,11 +202,12 @@ sub procCmd
 	/^$/ && do
 	{
 	  if ($numbers eq "") { printdeck(-1); return; } # no error on blank input, just print out. And -1 says don't try ones which removes a n-
-	  if ($#numArray == 3)
+	  if ($#numArray == 4)
 	  {
 	    if (($numArray[0] == $numArray[2]) && ($numArray[1] == $numArray[3])) { pop(@numArray); pop(@numArray); print "Removing duplicate number pair.\n"; }
 	  }
 	  if ($#numArray > 2) { print "Too many numbers.\n--one number shifts a stack to an empty array\n--two moves a row to another.\n--Three moves 1st-2nd 1st-3rd 2nd-3rd.\n"; return; }
+	  if (($#numArray == 2) && isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order."); return; }
 	  if (cmdBadNumWarn($numbers, $letters)) { return; }
 	  if ($#numArray == 1)
 	  {
@@ -226,7 +227,7 @@ sub procCmd
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict $numArray[0] $numArray[1] $numArray[2]\n"); }
-        if (($numArray[0] == $numArray[1]) || ($numArray[0] == $numArray[2]) || ($numArray[2] == $numArray[1])) { print "Repeated number.\n"; return; }
+        if ($numArray[0] == $numArray[1] { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
 	    tryMove("$numArray[0]", "$numArray[1]");
@@ -396,7 +397,13 @@ sub procCmd
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
 	/^us$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
     /^v$/ && do { cmdNumWarn($numbers, $letters); $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
-    /^[wy]$/ && do { if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; } thereAndBack(@numArray); return; };
+    /^[wy]$/ && do
+	{
+	  if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; }
+	  thereAndBack(@numArray);
+	  if (isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order."); return; }
+	  return;
+	};
     /^x$/ && do
     {
 	  if (cmdBadNumWarn($numbers, $letters)) { return; }

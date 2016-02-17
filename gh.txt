@@ -144,6 +144,7 @@ prob=c:\games\inform\Compound Materials\Small Cover.png,the-problems-compound
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conversation Modified.i7x,the-problems-compound
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips Modified.i7x,the-problems-compound
 prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
+prob=c:\users\andrew\dropbox\notes\prob*.txt,the-problems-compound
 
 #Slicker City files to BitBucket (for now)
 city=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city

@@ -191,7 +191,7 @@ print<<EOT;
 -pd = default parameter file c:\\tech\\trizbort\\redact.txt
 -d = debug on
 -nd = debug off
--c = clear hash
+-c = force all commands
 -r = redactable regions
 -f = in file
 -o = out file
