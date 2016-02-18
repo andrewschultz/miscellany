@@ -227,7 +227,7 @@ sub procCmd
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict $numArray[0] $numArray[1] $numArray[2]\n"); }
-        if ($numArray[0] == $numArray[1] { print "Repeated number.\n"; return; }
+        if ($numArray[0] == $numArray[1]) { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
 	    tryMove("$numArray[0]", "$numArray[1]");
@@ -400,8 +400,8 @@ sub procCmd
     /^[wy]$/ && do
 	{
 	  if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; }
-	  thereAndBack(@numArray);
 	  if (isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order."); return; }
+	  thereAndBack(@numArray);
 	  return;
 	};
     /^x$/ && do
@@ -660,7 +660,7 @@ sub expandOneColumn
 	  printDebug("Trying extra\n");
       while ((isEmpty($rows[1]) + isEmpty($rows[0]) + isEmpty($thisRow) < 2) && suitsAligned(suit(botCard($rows[0])), suit(botCard($rows[1])), suit(botCard($thisRow)), $fromSuit))
 	  {
-	    $beforeCmd = $#undoArray;
+	    my $beforeCmd = $#undoArray;
 		$count += 1; if ($count == 20) { print"Oops. This took too long, bailing.\n"; last; }
 	    printDebug ("Shift $count\n");
 	    $errorPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
