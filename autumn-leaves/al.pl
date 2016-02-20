@@ -15,7 +15,7 @@ use strict;
 use warnings;
 use integer;
 use List::Util 'shuffle';
-use Algorithm::Permute; # for 720 test (cw)
+use Algorithm::Permute; # for 720 test (cw/d)
 use Storable qw(dclone);
 use Devel::StackTrace;
 
@@ -291,7 +291,7 @@ sub procCmd
     /^af/ && do { cmdNumWarn($numbers, $letters); if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
-	/^cw$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
+	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
     /^d$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
     /^df$/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
@@ -468,13 +468,16 @@ sub suitstat
     if (canDraw($base) && canDraw($base+12)) { return 1; } #kh & ah missing, trickier
   }
   if (($leftInSuit > 1) && canDraw($base)) { return 3; } #7h & ah missing, always doable I think/hope
+  if (canDraw($base)) { return 4; }
   return 0;
 }
 
 sub check720
 {
+  if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
   my @initArray = ();
   my $couldWork = 0;
+  print "Checking for draw-to-win/win-on-draw...\n";
   if ($hidCards >= 6) { print "Too many cards out. It's very doubtful you can win this unless the deck is rigged, and it'd take too much time.\n"; return; }
   if ($hidCards > 2)
   {
@@ -482,8 +485,7 @@ sub check720
 	my $fact = 720; for (1..$hidCards) { $fact = $fact * (6 + $_); }
 	print "Total possibilities = " . $fact . "\n";
   }
-  if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
-  my @suitStatus = (0, 0, 0, 0);
+  my @suitStatus = (0, 0, 0, 0, 0);
   for (0..3) { $suitStatus[suitstat($_)]++; }
   for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
@@ -504,7 +506,11 @@ sub check720
   }
   elsif ($suitStatus[1])
   {
-    print("You're missing the K and A of a suit, which can in rare cases help a bit, but probably not.\n");
+    print "You're missing the K and A of a suit, which can in rare cases help a bit, but probably not.\n";
+  }
+  elsif ($suitStatus[4])
+  {
+    print "You're missing an ace in a suit, but nothing else, so you don't have enough.\n";
   }
   if ($hidCards == 1) { print "With a card still to pull, you may need a bit of luck for a draw-to-win.\n"; }
   if ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
@@ -3135,6 +3141,7 @@ ue=toggle undo each turn (only debug)
 1p=push ones once
 %=prints stats
 o=prints options' current settings
+cw/cd=check for win-on-draw (1 draw left)
 debug shows debug text
 EOT
 }
