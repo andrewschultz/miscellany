@@ -126,6 +126,7 @@ ect=c:\games\inform\heezy-park.inform\source\story.ni,ectocomp\2015
 
 #Problems files to BitBucket
 prob=c:\games\inform\Compound.inform\source\story.ni,the-problems-compound
+prob=c:\games\inform\Compound.inform\source\item-ordering.htm,the-problems-compound
 prob=c:\games\inform\Compound.inform\source\termpuz.pl,the-problems-compound
 prob=c:\games\inform\Compound.inform\source\problems-compound-walkthrough.htm,the-problems-compound
 prob=c:\games\inform\triz\mine\compound.trizbort,the-problems-compound
@@ -134,6 +135,7 @@ prob=c:\games\inform\triz\mine\compound-walkthrough.trizbort,the-problems-compou
 prob=c:\games\inform\triz\mine\compound-walkthrough.pdf,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-directors-cut.trizbort,the-problems-compound
 prob=c:\games\inform\triz\mine\compound-directors-cut.pdf,the-problems-compound
+prob=c:\games\inform\triz\mine\compound-ordering.trizbort,the-problems-compound
 prob=c:\writing\scripts\pc.txt,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,the-problems-compound
 prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,the-problems-compound

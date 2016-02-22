@@ -389,12 +389,13 @@ sub procCmd
 	  return;
     };
     /^tf$/ && do { runEachTest(); return; };
-    /^u$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
+    /^u$/ && do { if (!$numbers) { undo(0); } else { if ($numbers > 10) { print "Use um for mass undo--this is to avoid u351 or something by mistake.\n"; return; } undo(1, $numbers); } return; };
     /^ua$/ && do { cmdNumWarn($numbers, $letters); print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
+    /^um$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
 	/^us$/ && do { cmdNumWarn($numbers, $letters); $undidOrLoadThisTurn = 1; undoToStart(); return; };
     /^v$/ && do { cmdNumWarn($numbers, $letters); $vertical = !$vertical; print "Vertical view $toggles[$vertical].\n"; return; };
     /^[wy]$/ && do
@@ -3125,7 +3126,8 @@ sl=show overturned since last move
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 sw0=shows odds of points to start with
 sb=show blocked moves toggle
-u=undo
+u=undo (to last block, or # for x moves back, x < 10)
+um=undo 10+ moves
 u1=undo one move
 ud=undo to last 6-card draw
 ub=undo to before last 6-card draw
