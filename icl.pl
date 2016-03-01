@@ -32,6 +32,7 @@ $proj{"-15"} = "compound";
 $proj{"-tpc"} = "compound";
 $proj{"-pc"} = "compound";
 $proj{"-p"} = "compound";
+$proj{"-sc"} = "slicker-city";
 
 #which projects are z machine? Default is glulx
 $zmac{"compound"} = 0;

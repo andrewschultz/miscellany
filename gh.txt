@@ -147,14 +147,18 @@ prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conve
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips Modified.i7x,the-problems-compound
 prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
 prob=c:\users\andrew\dropbox\notes\prob*.txt,the-problems-compound
+prob=c:\writing\dict\wfl.pl,the-problems-compound\utils
+prob=c:\games\inform\Compound.inform\source\flip.txt,the-problems-compound\utils
 
 #Slicker City files to BitBucket (for now)
 city=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
 city=c:\games\inform\slicker-city Materials\Release\slicker-city-invisiclues.htm,slicker-city
 city=c:\games\inform\slicker-city Materials\Release\Slicker City.zblorb,slicker-city
+city=c:\games\inform\slicker-city Materials\Release\Slicker City.gblorb,slicker-city
 city=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
 city=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
 city=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city
+city=c:\writing\scripts\sc.txt,slicker-city
 
 #RPG mapping files to GitHub
 rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools

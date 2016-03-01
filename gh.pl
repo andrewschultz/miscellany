@@ -19,6 +19,7 @@ while ($count <= $#ARGV)
   $a = @ARGV[$count];
   for ($a)
   {
+  /^(-e|e)$/ && do { `start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  c:\\writing\\scripts\\gh.txt`; $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
   /^[a-z34]/ && do { if ($altHash{@ARGV[0]}) { print "@ARGV[0] => $altHash{@ARGV[0]}\n"; $procString = $altHash{@ARGV[0]}; } else { $procString = @ARGV[0]; } $count++; next; };
@@ -137,6 +138,7 @@ sub usage
 {
 print<<EOT;
 ========USAGE
+-e edits gh.txt
 -v = verbose output
 -j = just print commands instead of executing
 -? = this
