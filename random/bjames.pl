@@ -1,5 +1,10 @@
+use strict;
+use warnings;
 
 my $count = 0;
+my $dif = 0;
+my $secs = 0;
+my $haveBall = -1;
 
 while ($count <= $#ARGV)
 {
@@ -7,23 +12,27 @@ while ($count <= $#ARGV)
 
   for ($a)
   {
-    /-/ && do { @score = split(/-/, $a); $dif = @score[0] - @score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
-    /:/ && do { @time = split(/:/, $a); $secs = @time[0]*60 + @time[1]; $count++; next; };
+    /-/ && do { my @score = split(/-/, $a); $dif = $score[0] - $score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
+    /:/ && do { my @time = split(/:/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
     /[ny]/i && do { $haveBall = ($a =~ /y/i); $count++; next; };
     usage();
   }
 }
 
+if ($haveBall == -1) { $haveBall = 0; print "Possession not specified, assuming THEM\n"; }
+
+if ($secs < 0) { die("Can't have negative seconds!"); }
+
 $dif = $dif - 2.5;
 
 if ($haveBall) { $dif++; }
 
-$formula = 100 * $dif**2 / $secs;
+my $safeness = 100 * $dif**2 / $secs;
 
-if ($formula > 100) { print "SAFE LEAD: actually, $formula.\n"; }
-else { print "NOT SAFE: $formula\n"; }
+if ($safeness > 100) { print "SAFE LEAD: actually, $safeness.\n"; }
+else { print "NOT SAFE: $safeness\n"; }
 
-sub usage()
+sub usage
 {
 print "Bad argument $a\n";
 print<<EOT;
