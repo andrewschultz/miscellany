@@ -191,5 +191,6 @@ misc=c:\writing\dict\hc.pl,misc\wordfun
 misc=c:\writing\scripts\icl.pl,misc
 misc=c:\writing\dict\say.pl,misc
 misc=c:\writing\scripts\ru.pl,misc
+misc=c:\coding\perl\proj\bjames.pl,misc\random
 misc=c:\coding\perl\kol\relay\hobo_code_file.txt,misc\kol
 misc=c:\coding\perl\kol\relay\relay_hobocode.ash,misc\kol
