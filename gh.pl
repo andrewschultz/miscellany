@@ -6,7 +6,8 @@ use File::Compare;
 my $alph = 1;
 my $procString="shu,roi,sts";
 
-my $ght = "c:/writing/scripts/gh.txt";
+my $ght = "c:\\writing\\scripts\\gh.txt";
+my $ghs = "c:\\writing\\scripts\\gh.pl";
 
 my $defaultString = "as";
 
@@ -15,6 +16,7 @@ preProcessHashes();
 #these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
 my $justPrint = 0;
 my $verbose = 0;
+my $myBase = "";
 
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
@@ -26,8 +28,8 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
-  /^(-e|e)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  c:\\writing\\scripts\\gh.txt"); $count++; exit; };
-  /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  c:\\writing\\scripts\\gh.pl"); $count++; exit; };
+  /^(-e|e)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); $count++; exit; };
+  /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
   /^[a-z34]/ && do { if ($altHash{$ARGV[0]}) { print "$ARGV[0] => $altHash{$ARGV[0]}\n"; $procString = $altHash{$ARGV[0]}; } else { $procString = $ARGV[0]; } $count++; next; };
@@ -61,36 +63,50 @@ for my $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps
 
 processTerms();
 
+##########################################
+#the main function
+
 sub processTerms
 {
   my @d;
   my $copies = 0; my $unchanged = 0; my $wildcards = 0; my $badFileCount = 0; my $didOne = 0;
-  my $badFiles = 0;
+  my $badFileList = "";
   my $outName;
   my $fileList = "";
   my $dirName = "";
+  my $fromBase="", my $toBase="";
   open(A, $ght) || die ("No $ght");
   while ($a = <A>)
   {
     chomp($a);
     my $b = $a;
+	 if ($a =~ /FROMBASE=/) { $fromBase = $a; $fromBase =~ s/^FROMBASE=//g; }
+	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; }
+
     $b =~ s/=.*//g;
-    if ($do{$b})
+
+    if (hasHash($b))
     {
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
-
-	  if ((! -f $d[0])  && ($d[0] !~ /\*/)) { print "Oops $d[0] can't be found.\n"; $badFiles .= "$d[0]\n"; $badFileCount++; next; }
+	  my $fromFile = $d[0];
+	  my $toFile = $d[1];
 	  
-	  if ($d[1]) { $dirName = $d[1]; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$d[0] has no associated directory, using $dirName\n"; }
+	  if ($fromFile !~ /:/) { $fromFile = "$fromBase\\$fromFile"; }
+	  if ($toBase) { $toFile = "$toBase\\$d[1]"; }
+	  
 
-	  if (-d "$gh\\$d[1]") { my $short = $d[0]; $short =~ s/.*[\\\/]//g; $outName = "$gh\\$d[1]\\$short"; } else { $outName = "$gh\\$d[1]"; }
-	  if (compare($d[0], "$outName"))
+	  if ((! -f $fromFile)  && ($fromFile !~ /\*/)) { print "Oops $fromFile can't be found.\n"; $badFileList .= "$fromFile\n"; $badFileCount++; next; }
+	  
+	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
+
+	  if (-d "$gh\\$toFile") { my $short = $fromFile; $short =~ s/.*[\\\/]//g; $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
+	  if (compare($fromFile, "$outName"))
 	  {
 	  my $thisWild = 0;
-      my $cmd = "copy \"$d[0]\" $gh\\$d[1]";
-	  if ($d[0] =~ /\*/) { $wildcards++; $thisWild = 1; } else { $copies++; }
-	  $fileList .= "$d[0]\n";
+      my $cmd = "copy \"$fromFile\" $gh\\$toFile";
+	  if ($fromFile =~ /\*/) { $wildcards++; $thisWild = 1; } else { $copies++; }
+	  $fileList .= "$fromFile\n";
 	  if ($justPrint) { print "$cmd\n"; } else { $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } }
 	  }
 	  else
@@ -101,15 +117,16 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFiles\n"; } }
+  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; } }
 }
 
 ##########################
-# finds all valid terms
+# finds all valid terms in gh.txt
+# not individual files, just pc, sa, etc
 
 sub findTerms
 {
-open(A, $ght) || die ("Oops, couldn't open gh.txt.");
+open(A, $ght) || die ("Oops, couldn't open $ght.");
 
 while ($a = <A>)
 {
@@ -125,6 +142,9 @@ while ($a = <A>)
 
 close(A);
 }
+
+###############################
+# this finds similarities e.g. pc~tpc
 
 sub preProcessHashes
 {
@@ -145,6 +165,13 @@ sub preProcessHashes
 	}
   }
   close(A);
+}
+
+sub hasHash
+{
+  if ($do{$_[0]}) { return 1; }
+  if (($altHash{$_[0]}) && ($do{$altHash{$_[0]}})) { return 1; }
+  return 0;
 }
 
 sub usage

@@ -9,6 +9,8 @@ u~oafs
 uo~oafs
 3~3d
 4~4d
+rmt~rpg-mapping-tools
+rpg~rpg-mapping-tools
 
 #Shuffling files
 shu=c:\games\inform\sa.inform\source\story.ni,stale-tales-slate\shuffling
@@ -149,6 +151,7 @@ prob=c:\games\inform\Compound.inform\uuid.txt,the-problems-compound
 prob=c:\users\andrew\dropbox\notes\prob*.txt,the-problems-compound
 prob=c:\writing\dict\wfl.pl,the-problems-compound\utils
 prob=c:\games\inform\Compound.inform\source\flip.txt,the-problems-compound\utils
+prob=c:\games\inform\Compound.inform\source\fliptrack.txt,the-problems-compound\utils
 
 #Slicker City files to BitBucket (for now)
 city=c:\games\inform\slicker-city.inform\source\story.ni,slicker-city
@@ -159,11 +162,6 @@ city=c:\games\inform\triz\mine\slicker-city.trizbort,slicker-city
 city=c:\games\inform\triz\mine\slicker-city.pdf,slicker-city
 city=c:\games\inform\slicker-city.inform\uuid.txt,slicker-city
 city=c:\writing\scripts\sc.txt,slicker-city
-
-#RPG mapping files to GitHub
-rpg=c:\writing\scripts\cg.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
-rpg=c:\writing\scripts\mc.bat,rpg-mapping-tools\stubs,rpg-mapping-tools
-rpg=c:\coding\games\stubs\ReadMe.txt,rpg-mapping-tools\stubs,rpg-mapping-tools
 
 #misc stuff
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial Niceties.i7x,misc\i7x
@@ -194,3 +192,29 @@ misc=c:\writing\scripts\ru.pl,misc
 misc=c:\coding\perl\proj\bjames.pl,misc\random
 misc=c:\coding\perl\kol\relay\hobo_code_file.txt,misc\kol
 misc=c:\coding\perl\kol\relay\relay_hobocode.ash,misc\kol
+
+#rpg mapping tools
+FROMBASE=c:\coding\games
+TOBASE=rpg-mapping-tools
+rmt=mapconv\mapconv.c,mapconv
+rmt=mapconv\mapconv.exe,mapconv
+rmt=mapconv\readme.txt,mapconv
+rmt=mapcpy\mapcpy.c,mapcpy
+rmt=mapcpy\mapcpy.exe,mapcpy
+rmt=mapcpy\readme.txt,mapcpy
+rmt=editor\icons.bmp,editor
+rmt=c:\coding\games\editor\walls.bmp,editor
+rmt=c:\coding\games\editor\readme.txt,editor
+rmt=c:\coding\games\editor\editor.cpp,editor
+rmt=c:\coding\games\editor\editor.dsp,editor
+rmt=c:\coding\games\editor\editor.dsw,editor
+rmt=c:\coding\games\editor\editor.exe,editor
+rmt=c:\coding\games\editor\editor.h,editor
+rmt=c:\coding\games\editor\editor.rc,editor
+rmt=c:\coding\games\editor\skeep1.map,editor\samples
+rmt=c:\coding\games\editor\skeep2.map,editor\samples
+rmt=c:\writing\scripts\cg.bat,stubs
+rmt=c:\writing\scripts\mc.bat,stubs
+rmt=stubs\ReadMe.txt,stubs
+
+;
