@@ -88,7 +88,7 @@ sub processTerms
     if (hasHash($b))
     {
 	  $didOne = 1; my $wc = "";
-      my $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c);
+      my $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
 	  my $toFile = $d[1];
 	  
