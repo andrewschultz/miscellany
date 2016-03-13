@@ -54,7 +54,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
   print "$count of $#ARGV: $a\n";
-  /beta/ && do { $runBeta = 1 - $runBeta; $count++; next; };
+  /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
   /^-bo/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
   /^-do/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
   /^-ro/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
@@ -70,7 +70,13 @@ while ($count <= $#ARGV)
   /-nd/ && do { $debug = 0; $count++; next; };
   /-yd/ && do { $debug = 1; $count++; next; };
   /-x/ && do { $execute = 1; $count++; next; };
-  /-a/ && do { for $entry(@allProj) { runProj($entry); } $count++; next; };
+  /-a/ && do { for $entry(@allProj) { push(@compileList, $a); } $count++; next; };
+  push(@compileList, $a); $count++; next;
+  }
+}
+
+for $a (@compileList)
+{
   if ($proj{$a}) { $myProj = $proj{$a}; }
   elsif ($proj{"-$a"}) { $myProj = $proj{"-$a"}; }
   else {
@@ -81,8 +87,8 @@ while ($count <= $#ARGV)
   $infDir = @inDirs[$v6l];
   runProj($myProj);
   $count++;
-  }
 }
+
 if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
 
 sub runProj
