@@ -11,11 +11,14 @@ my $debug = 0, my $inFile, my $outFile;
 my $keep = 0;
 my $allDone = 0;
 my $runC = 0;
-my @redact;
+my @regionRedact;
 my %redact;
 my %blockId;
 my $anythingRead = 0;
 my $redactText = 0;
+my %runThisGroup;
+my @temp;
+my $myReadFile = "";
 
 my $count = 0;
 
@@ -28,19 +31,24 @@ while ($count <= $#ARGV)
   if ($count < $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
   for ($a)
   {
+  /^-g$/ && do { @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
   /^-d$/ && do { $debug = 1; $count++; next; };
-  /^-p$/ && do  { readFile($b); $count+= 2; next; };
-  /^-pd$/ && do { readFile("c:\\tech\\trizbort\\redact.txt"); $count++; next; };
+  /^-c$/ && do { $runC = 1; $count++; next; };
+  /^-p$/ && do  { $myReadFile = $b; $count+= 2; next; };
+  /^-pd$/ && do { $myReadFile = "c:\\tech\\trizbort\\redact.txt"; $count++; next; };
+  /^-fs$/ && do { showParameterFileSyntax(); };
   readArray($ARGV + $count);
   last OUTER;
   }
 }
 
+if ($myReadFile) { readFile($myReadFile); }
+
 if (!$anythingRead) { print "Though the command line had arguments, nothing was processed.\n"; usage(); }
 
 sub readFile
 {
-  print "Trying file $_[0]\n";
+  if ($debug) { print "Trying file $_[0]\n"; }
   open(CMD, "$_[0]") || die ("Can't open $_[0]");
   my $a = "";
 
@@ -56,10 +64,9 @@ sub readLine
 {
   if ($_[0] =~ /^;/) { $allDone = 1; exit; }
   if ($_[0] =~ /^#/) { return; }
-  if ($_[0] =~ /^-c /) { if ($runC) { my $temp = $_[0]; $temp =~ s/^-c +//g; `$temp`; } else { print "Skipping $_[0]\n"; } return; } # run this only if -c flag is flipped
   if ($_[0] =~ /^-cf/) { my $temp = $_[0]; $temp =~ s/^-cf +//g; `$temp`; return; } # force no matter what
   my @array = ($_[0] =~ /(".*?"|\S+)/g);
-  print "Trying line $_[0].\n";
+  if ($debug) { print "Trying line $_[0].\n"; }
   readArray(@array);
 }
 
@@ -69,18 +76,27 @@ sub readArray
   my $runThis = 0;
   if (!$keep) { undef(%redact); } else { $keep = 0; }
   $redactText = 0;
+  my @lineGroupList = ();
+  my $skipThis = 0;
+  my $commandToRun = "";
+  my $commandSearch = 0;
   
+  MYWHILE:
   while ($count <= $#_)
   {
     my $a = $_[$count];
 	my $b = $_[$count+1]; if ($b =~ /^\"/) { $b =~ s/\"//g; }
+	MYFOR:
     for ($a)
 	{
+	if (($commandSearch) && ($a !~ /^-/)) { last MYWHILE; }
 	/^-k$/ && do { $keep = 1; $count++; next; };
-	/^-c$/ && do { $runC = 1; $count++; next; };
+	/^-c$/ && do { $commandToRun = join(" ", @_[$count+1..$#_]); last MYWHILE; };
 	/^-t$/ && do { $redactText = 1; $count++; next; };
 	/^-st$/ && do { $redactText = 0; $count++; next; };
-	/^-r$/ && do { @redact = split(/,/, $b); for (@redact) { $redact{"$_"} = 1; } $count += 2; next; };
+	/^-r$/ && do { @regionRedact = split(/,/, $b); for (@regionRedact) { $redact{"$_"} = 1; } $count += 2; next; };
+	/-g$/ && do { $skipThis = 1; @lineGroupList = split(/,/, $b); for (@lineGroupList) { if ($runThisGroup{$_}) { $skipThis = 0; } } $count += 2; next; };
+	/-gn$/ && do { $skipThis = 0; @lineGroupList = split(/,/, $b); for (@lineGroupList) { if ($runThisGroup{$_}) { $skipThis = 1; } } $count += 2; next; };
 	/^-f$/ && do { $inFile = $b; $count += 2; $runThis = 1; next; };
 	/^-o$/ && do { $outFile = $b; $count += 2; next; };
 	/^-d$/ && do { $debug = 1; $count++; next; };
@@ -89,6 +105,8 @@ sub readArray
 	usage();
 	}
   }
+  if ($skipThis) { return; }
+  if ($commandToRun) { if ($runC) { print "Running $commandToRun.\n"; `$commandToRun`; } else { print "Use -c to run $commandToRun.\n"; return; } }
   if ($runThis)
   {
     if (!$outFile) { $outFile = $inFile; $outFile =~ s/\.trizbort/-redact\.trizbort/g; if ($outFile eq $inFile) { die ("Need an output file, or a .trizbort input file."); } }
@@ -183,6 +201,25 @@ sub printDebug
   if ($debug == 1) { print "$_[0]"; }
 }
 
+sub showParameterFileSyntax
+{
+print<<EOT;
+===========redaction file syntax===========
+# for comments
+; to end the test
+-g says which group of files should run something, e.g. -g b,c will run only if the command line has -g b or -g c
+-gn is the opposite. If -g or -gn is not specified, the line is run
+-d/-nd toggles debug on/off
+-t/-rt redacts text, -st shows it
+-r region redact
+-f to establish in file
+-o to establish out file
+-c says to run the remaining line text as a command. BE SURE ANY FLAGS ARE SET BEFORE RUNNING -c.
+-k keeps what to redact for the next line
+EOT
+exit
+}
+
 sub usage
 {
 print<<EOT;
@@ -191,10 +228,14 @@ print<<EOT;
 -pd = default parameter file c:\\tech\\trizbort\\redact.txt
 -d = debug on
 -nd = debug off
--c = force all commands
+-c = command to run e.g. trizbort -qs (file) for quick-save
+-cf = force to run no matter what
 -r = redactable regions
 -f = in file
 -o = out file
+-t = redact text
+-g = group of commands to run (eg if the file has -g pc, -g pc or -g pc,sc for -g pc and -g sc)
+-fs = show parameter file syntax
 EOT
 exit
 }
