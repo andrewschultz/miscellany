@@ -2817,7 +2817,7 @@ sub checkwin
 	while (1)
 	{
 	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
-	if ($x =~ /^u/i)
+	if (($x =~ /^u/i) && ($x !~ /;/))
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
 	  push(@undoArray, "n-");

@@ -115,9 +115,6 @@ to ask-screenread:
 		now screenread is false;
 	say "Screen reading support will be [on-off of screenread] for this session. Toggle it with SCREEN.";
 
-to say on-off of (ts - a truth state):
-	say "[if ts is true]on[else]off[end if]"
-
 chapter screening
 
 screening is an action out of world.
