@@ -1,12 +1,19 @@
+######################default
 d:pc
-pc~prob
-tpc~prob
+
+######################similarities
+###alec smart
+as~pc,sc
+com,pc,tpc~prob
+sc~city
+###stale tales slate
 sts~shu,roi,stsu
 sa~shu
-sc~city
-as~pc,sc
+r,ro~roi
+###OAFS
 u~oafs
 uo~oafs
+###puzzles
 3~3d
 4~4d
 rmt~rpg-mapping-tools

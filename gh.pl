@@ -4,12 +4,11 @@ use warnings;
 use File::Compare;
 
 my $alph = 1;
-my $procString="shu,roi,sts";
+my $procString;
+my $defaultString;
 
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
-
-my $defaultString = "as";
 
 preProcessHashes();
 
@@ -39,7 +38,7 @@ while ($count <= $#ARGV)
   }
 }
 
-if (!$procString) { $procString = $defaultString; print "Default string: $procString\n"; }
+if (!$procString) { $procString = $defaultString; print "Using default string: $procString\n"; }
 
 findTerms();
 
@@ -154,13 +153,14 @@ sub preProcessHashes
     chomp($a);
     if ($a =~ /^d:/)
 	{
-	  $procString = $a;
-	  $procString =~ s/^d://gi;
+	  $defaultString = $a;
+	  $defaultString =~ s/^d://gi;
 	}
 	if ($a =~ /~/)
 	{
 	  my @b = split(/~/, $a);
-	  $altHash{$b[0]} = $b[1];
+	  my @c = split(/,/, $b[0]);
+	  for (@c) { if ($altHash{$_}) { print "$_ has duplicate hash: was $altHash{$_}, becoming $b[1].\n"; } $altHash{$_} = $b[1]; }
 	  #print "@b[0] -> @b[1]\n";
 	}
   }
