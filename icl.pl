@@ -109,10 +109,12 @@ $base = "c:\\games\\inform\\$_[0].inform";
 if ($use6l{$_[0]})
 {
 $mat = "c:\\games\\inform\\$_[0].materials";
+$bmat = "c:\\games\\inform\\beta.materials";
 }
 else
 {
 $mat = "c:\\games\\inform\\$_[0] materials";
+$bmat = "c:\\games\\inform\\beta materials";
 }
 
 $bdir = "$base\\Build";
@@ -121,31 +123,18 @@ $bdir = "$base\\Build";
 `cd c:/games/inform/$_[0].inform/Build`;
 if ($runBeta)
 {
+
 print("set HOME=c:\\games\\inform\\beta.inform");
 print "****BETA BUILD****\n";
 
 system("copy $base\\Release.blurb $beta\\Release.blurb");
 system("copy $base\\uuid.txt $beta\\uuid.txt");
 print "Searching for cover....\n";
-if (-f "c:/games/inform/$_[0] materials/Cover.png")
-{
-system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.png\" \"$mat\"");
-if (-f "c:/games/inform/beta materials/Cover.jpg")
-{
-print "Erasing jpg\n";
-system("erase \"c:\\games\\inform\\beta materials/Cover.jpg\"");
-}
-}
-else
-{
-system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.jpg\" \"$mat\"");
-if (-f "c:/games/inform/beta materials/Cover.png")
-{
-print "Erasing png\n";
-system("erase \"c:\\games\\inform\\beta materials/Cover.png\"");
-}
-}
-print "5\n";
+if (-f "c:\\games\\inform\\beta materials/Cover.jpg") { print "Erasing old jpg.\n"; system("erase \"c:\\games\\inform\\beta materials/Cover.jpg\""); }
+if (-f "c:\\games\\inform\\beta materials/Cover.png") { print "Erasing old png.\n"; system("erase \"c:\\games\\inform\\beta materials/Cover.png\""); }
+
+if (-f "c:/games/inform/$_[0] materials/Cover.png") { print "Copying png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.png\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.jpg\" \"$bmat\""); }
 
 modifyBeta("$base\\source\\story.ni", "$beta\\source\\story.ni");
 
