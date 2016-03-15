@@ -12,6 +12,8 @@
 
 #I can and should expand this to do more than one at once
 
+my @defaultCompileList = ("pc");
+
 @allProj = ("-s", "-r", "-u", "-p", "-15", "-d");
 
 $v6l = 0;
@@ -75,6 +77,8 @@ while ($count <= $#ARGV)
   }
 }
 
+if ($#compileList == -1) { print "Nothing in compile list. Using default: @defaultCompileList.\n"; @compileList = @defaultCompileList; }
+
 for $a (@compileList)
 {
   if ($proj{$a}) { $myProj = $proj{$a}; }
@@ -130,11 +134,21 @@ print "****BETA BUILD****\n";
 system("copy $base\\Release.blurb $beta\\Release.blurb");
 system("copy $base\\uuid.txt $beta\\uuid.txt");
 print "Searching for cover....\n";
-if (-f "c:\\games\\inform\\beta materials/Cover.jpg") { print "Erasing old jpg.\n"; system("erase \"c:\\games\\inform\\beta materials/Cover.jpg\""); }
-if (-f "c:\\games\\inform\\beta materials/Cover.png") { print "Erasing old png.\n"; system("erase \"c:\\games\\inform\\beta materials/Cover.png\""); }
+
+$cover = "$beta\\Cover";
+$covr = "$beta\\Release\\Cover";
+$smcov = "$beta\\Small Cover";
+if (-f "$cover.jpg") { print "Erasing old jpg.\n"; system("erase \"$cover.jpg\""); }
+if (-f "$cover.png") { print "Erasing old png.\n"; system("erase \"$cover.png\""); }
+if (-f "$covr.png") { print "Erasing old Release\png.\n"; system("erase \"$covr.png\""); }
+if (-f "$covr.jpg") { print "Erasing old Release\jpg.\n"; system("erase \"$covr.jpg\""); }
+if (-f "$smcov.jpg") { print "Erasing old small jpg.\n"; system("erase \"$smcov.jpg\""); }
+if (-f "$smcov.png") { print "Erasing old small png.\n"; system("erase \"$smcov.png\""); }
 
 if (-f "c:/games/inform/$_[0] materials/Cover.png") { print "Copying png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.png\" \"$bmat\""); }
 if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.jpg\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Small Cover.png") { print "Copying small png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.png\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.jpg\" \"$bmat\""); }
 
 modifyBeta("$base\\source\\story.ni", "$beta\\source\\story.ni");
 
