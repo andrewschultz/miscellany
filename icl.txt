@@ -1,0 +1,28 @@
+############################
+#what's the default project?
+default=pc
+
+############################
+#project shortcuts
+12,s=sa
+3,3d,13=threediopolis
+4,4d=fourdiopolis
+u,uo,14=uglyoafs
+15,p,pc,tpc=compound
+sc=slicker-city
+d=dirk
+r,ro=roiling
+
+##############################
+#all projects
+allproj=s,r,u,p,d,15
+
+########################
+#which projects require the z-machine?
+z:dirk
+z:threediopolis
+
+#######################
+#using 6l is below here
+
+;

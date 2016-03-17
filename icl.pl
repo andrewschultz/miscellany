@@ -12,29 +12,25 @@
 
 #I can and should expand this to do more than one at once
 
-my @defaultCompileList = ("pc");
-
-@allProj = ("-s", "-r", "-u", "-p", "-15", "-d");
-
 $v6l = 0;
-$myProj = "roiling";
 
+open(X, "c:/writing/scripts/icl.txt") || die ("Need icl.txt.");
+
+while ($x = <X>)
+{
+  chomp($x);
+  if ($x =~ /^;/) { last; }
+  if ($x =~ /^#/) { next; }
+
+  my @cmd = split(/=/, $x);
+  if (lc(@cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, @cmd[1]); }
+  elsif (lc(@cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
+  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
+  elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
+  elsif ($#cmd > -1) { @froms = split(/,/, @cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } #print "$_ to $cmd[1].\n";
+  }
+}
 #sensible abbreviations
-$proj{"-3"} = "threediopolis";
-$proj{"-3d"} = "threediopolis";
-$proj{"-d"} = "dirk";
-$proj{"-r"} = "roiling";
-$proj{"-s"} = "sa";
-$proj{"-u"} = "uglyoafs";
-$proj{"-uo"} = "uglyoafs";
-$proj{"-12"} = "sa";
-$proj{"-13"} = "threediopolis";
-$proj{"-14"} = "uglyoafs";
-$proj{"-15"} = "compound";
-$proj{"-tpc"} = "compound";
-$proj{"-pc"} = "compound";
-$proj{"-p"} = "compound";
-$proj{"-sc"} = "slicker-city";
 
 #which projects are z machine? Default is glulx
 $zmac{"compound"} = 0;

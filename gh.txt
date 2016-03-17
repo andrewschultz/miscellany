@@ -207,6 +207,7 @@ misc=c:\writing\scripts\rwi.pl,
 misc=c:\writing\scripts\invis.pl,
 misc=c:\writing\dict\hc.pl,wordfun
 misc=c:\writing\scripts\icl.pl,
+misc=c:\writing\scripts\icl.txt,
 misc=c:\writing\dict\say.pl,
 misc=c:\writing\scripts\ru.pl,
 misc=c:\coding\perl\proj\bjames.pl,random
