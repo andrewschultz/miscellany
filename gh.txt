@@ -214,6 +214,8 @@ misc=c:\coding\perl\proj\bjames.pl,random
 misc=c:\coding\perl\kol\relay\hobo_code_file.txt,kol
 misc=c:\coding\perl\kol\relay\relay_hobocode.ash,kol
 misc=c:\coding\python\ho.py,python
+misc=c:\writing\scripts\a.pl,dailywri
+misc=c:\writing\scripts\dsort.pl,dailywri
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

@@ -1,0 +1,426 @@
+use File::Copy;
+use Win32::Clipboard;
+
+$clip = Win32::Clipboard::new();
+
+setGlobals();
+
+%mapTo = ();
+%sortOrd = ();
+
+$elog = "c:\\writing\daily\errlog.txt";
+
+processTabs();
+
+while (@ARGV[$count])
+{
+  $a = @ARGV[$count];
+  for ($a)
+  {
+    /^-?[0-9]/ && do { $howFar = $a; if ($howFar le 0) { $howFar = - $howFar; } $count++; next; };
+	/^-a$/ && do { $allBack = 1; $count++; next; };
+	/^-b$/ && do { $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
+	/^-c$/ && do { $justCheck = 1; $count++; next; };
+	/^-cb$/ && do { $clipboard = 1; $count++; next; };
+	/^-d$/ && do { $debug = 1; $count++; next; };
+	/^-le$/ && do { `$elog`; exit; };
+	/^-ef$/ && do { $printToErrorFile = 1; $count++; next; };
+	/^-ev$/ && do { $printToErrorFile = 1; $viewErrorFile = 1; $count++; next; };
+	/^-eo$/ && do { $justCheck = 1; $verifyHeadings = 0; $howFar = 200; $allBack = 1; $showOk = $showProc = 0; $openFile = 1; $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
+	/^-eh$/ && do { $justCheck = 1; $verifyHeadings = 0; $howFar = 200; $allBack = 1; $showOk = $showProc = 0; $openFile = 1; $inDir="c:/writing/daily"; $count++; next; };
+	/^-f$/ && do { $justCheck = 0; $count++; next; };
+	/^-h$/ && do { $checkHeaders = 1; $allBack = 1; $headString = @ARGV[$count+1]; if (!$headString) { die ("Need a string to check.\n"); } $count+=2; next; };
+	/^-l$/ && do { $onlyLim = 1; $count++; next; };
+	/^-n$/ && do { $openFile = 0; $count++; next; };
+	/^-nh$/ && do { $verifyHeadings = 0; $count++; next; };
+	/^-nw$/ && do { $showWarn = 0; $count++; next; };
+	/^-q$/ && do { $showOk = $showWarn = 0; $count++; next; };
+	/^-o$/ && do { $openFile = 1; $count++; next; };
+	/^-u$/ && do { $allBack = 1; $count++; if ($howFar == $defFar) { $howFar = 90; } next; };
+	/^-sp$/ && do { $showProc = 1; $count++; next; };
+	/^-[hn]p$/ && do { $showProc = 0; $count++; next; };
+	/^-w$/ && do { $showOk = 0; $count++; next; };
+	/^-v(h)?$/ && do { $verifyHeadings = 1; $count++; next; };
+	usage();
+  }  
+}
+
+if ($printToErrorFile) { open(EL, ">$elog"); }
+
+if ($justCheck == 1) { print ("Run with -f to clean any file(s) up. Or -a for all. (-)# for a specific # of days, default = $defFar.\n"); }
+
+if ($verifyHeadings)
+{
+  open(A, "c:/writing/ideahash.txt");
+  while ($a = <A>)
+  {
+    chomp($a); $a =~ s/ +=.*//g; $vh{"\\$a"} = 1;
+  }
+  close(A);
+}
+
+  for $thisDay (0..$howFar)
+  {
+    $thisFile = daysAgo($thisDay);
+	if (-f $thisFile) { $numDailyFiles++; $lastDay = $thisDay+1; processDaily($thisFile); if (!$allBack) { exit; } }
+  }
+
+if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
+else { print "$numDailyFiles daily files in $lastDay days.\n"; }
+
+if (EL) { close(EL); } if ($viewErrorFile) { `$elog`; }
+
+exit;
+
+sub daysAgo
+{
+my $temp = time();
+
+$curIdx = 0;
+
+$i = @ARGV[0];
+
+($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime($temp - 86400*$_[0]);
+
+$c = sprintf("$inDir/%s%02d%02d.txt", $yearOffset+1900, $month+1, $dayOfMonth);
+
+return $c;
+
+}
+
+sub processTabs
+{
+  open(T, "c:/writing/scripts/a.txt") || die ("Can't find c:/writing/scripts/a.txt");
+  while ($a = <T>)
+  { chomp($a);
+    @b = split(/\t/, $a);
+	@c = split(/,/, @b[0]);
+	for $me (@c) { $mapTo{"\\$me"} = @c[0]; $sortOrd{"\\$me"} = @b[1]; }
+  } ##for $x (sort keys %mapTo) { print "$mapTo{$x} =~ $sortOrd{$x}\n"; } for $x (sort keys %sortOrd) { print "$mapTo{$x} =~ $sortOrd{$x}\n"; } die;
+  close(T);
+}
+
+sub processDaily
+{
+  if ($checkHeaders)
+  {
+    findHeader($_[0]);
+	return;
+  }
+  my $betterDie = 0;
+  
+  if (! -f $_[0]) { return; }
+  if ($debug) { print ("$_[0] exists.\n"); }
+
+  if (isUnix($_[0])) { printExt("$_[0] is probably a unix file.\n"); return; }
+  if (-s $_[0] == 0) { printExt("Zero byte file $_[0], skipping.\n"); return; }
+
+  my $shortName = $_[0]; $shortName =~ s/.*[\\\/]//g;
+  
+  my %startLine;
+
+  open(A, "$_[0]");
+ 
+  my @myAry = (); $lines = 0;
+  my @myHdr = ();
+ 
+  $gotNames = 0;
+ 
+ $warning = "";
+ 
+ $limericks = 0;
+ 
+ if ($showProc) { print "Processing $_[0]...\n"; }
+ 
+ if ($onlyLim) { processLim($_[0]); return; }
+ 
+my $hasSomething = 0;
+ 
+ while ($a = <A>)
+{
+  if (($a =~ /[a-z]/i) && ($a !~ /^\\/)) { $hasSomething = 1; }
+  $b = $a; chomp($b);
+  $lines++;
+  if ($a =~ /====/) { $limericks = 1; }
+  if ($a =~ /\\nam/) { $gotNames = 1; }
+  if (($curIdx > 0) && (@myAry[$curIdx] eq "") && ($a !~ /\\/))
+  {
+    if (($a !~ /[a-z]/) && ($showWarn)) { $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; next; } #this is to make sure that double carriage returns don't bomb out;
+    printExt("You don't have a header in $shortName: $a");
+    if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+	$betterDie = 1;
+  }
+  if ($a =~ /^\\/)
+  { if (lc($b) ne $b) { if ($showWarn) { $warning .= "WARNING header $b not in lower case.\n"; } }
+    $b = lc($b);
+    if (@myAry[$curIdx]) { printExt("Header needs spacing: $a"); $betterDie = 1;   $fileToOpen = $_[0]; }
+	else { if ($startLine{$b}) { printExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie = 1; if (!$lineToGo) { $lineToGo = $lines; }
+      if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+	} else { $startLine{$b} = $lines; } @myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warning .= "  $shortName BAD HEADER: $b\n"; } }
+  }
+  @myAry[$curIdx] .= $a;
+  if ($a !~ /[a-z=]/i) { $curIdx++; next; }
+}
+
+close(A);
+
+if (!$hasSomething) { printExt("$_[0] has no text."); }
+
+$count = 0;
+
+if ($limericks)
+{
+  open(A, "$_[0]");
+  $lastLimerick = 0;
+  while ($a = <A>)
+  {
+    $count++;
+    if ($a =~ /====/)
+	{
+	  $lastLimerick = $count;
+	  $inLimerick = 1;
+	  $lastEq = $count;
+	  while (($a = <A>)=~ /[a-z=]/)
+	  {
+	  $count++;
+	  if ($a =~ /=/) { limPan($curLines, $lastEq, $count, $_[0]);  $curLines = 0; $lastEq = $count; }
+	  $countPre = $count;
+	  if ($a !~ /^=/) { $curLines++; }
+	  }
+	  if ($curLines != 5) { limPan($curLines, $lastEq, $count, $_[0]); }
+	  $curLines = 0;
+	}
+  }
+  close(A);
+}
+
+
+if ((@myAry[0] !~ /[a-z]/) && ($showWarn)) { $warning .= "  WARNING: No main ideas in $_[0].\n"; }
+for (1..$#myAry)
+{
+  if (@myAry[$_] !~ /\n[a-z0-9\t]/i)
+  {
+    if ($showWarn)
+	{
+	  $warning .= "  WARNING: @myHdr[$_] ($shortName) has no content.\n";
+	  if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+	}
+  }
+}
+
+if ((!$gotNames) && (-s $_[0] > 0)) { printExt("No names, but no big deal in $shortName.\n"); } else
+{
+  @namelist0 = split(/\t/, @myAry[$curIdx]);
+  @namelist = sort(@namelist0);
+  if (!@namelist[1]) { printExt("$_[0] Claimed name list with no names.\n"); if (($openFile) && (!$fileToOpen)) { $betterDie = 1; $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); } }
+  else
+  {
+  for (0..$#namelist)
+  {
+    if (@namelist[$_] eq @namelist[$_-1])
+	{
+	  for $i (0..$#namelist) { if ((@namelist[$_] eq @namelist0[$i])) { $orig = $i + 1;
+	  printExt("Duplicate @namelist[$_] # $i in names for $shortName, " . ($_ + 1) . " of " . ($#namelist+1) . " in alphabetized.\n"); last;
+	  }
+	  }
+	}
+  }
+  }
+}
+
+@r = sort(@myAry); for (@r) { $_ =~ s/\n.*//g; }
+
+for (0..$#r)
+{
+  #if (@r[$_] eq @r[$_+1]) { print "@r[$_] listed twice in $_[0]...\n"; $betterDie = 1; }
+  if ($found{$mapTo{@r[$_]}} ) { printExt("    @r[$_] -> $mapTo{@r[$_]} overlaps in $_[0].\n"); $betterDie = 1; }
+ }
+ 
+ ##for $x (keys %sortOrd) { print "$x $sortOrd{$x}\n"; } die;
+@q = sort {
+  my $a2, $b2;
+  if ($a !~ /^\\/) { return -1; }
+  if ($b !~ /^\\/) { return 1; }
+  if (sortOrd($a) < sortOrd($b)) { return -1; }
+  if (sortOrd($a) > sortOrd($b)) { return 1; }
+  if ($a =~ /^\\nam/) { return 1; }
+  if ($b =~ /^\\nam/) { return -1; }
+  return $a cmp $b;
+} (@myAry);
+
+if ($betterDie)
+{
+  print ("Fix stuff in $_[0] before sorting.\n");
+  if ($openFile)
+  {
+    $fileOpenCmd = "start \"\" \"c:\\program files (x86)\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; exit;
+  }
+  if ($clipboard)
+  {
+    $filesToTry .= "$_[0]\n";
+  }
+  if ($openFile && !$fileToOpen)
+  { $fileToOpen = $_[0]; print "Tagging $fileToOpen.\n"; }
+  return;
+}
+
+if ($justCheck)
+{
+  if ($debug)
+  { print ("Returning after checking $_[0]--this is a debug try with -d.\n"); }
+  else
+  {
+    if ($showOk) { printExt("$_[0] checked okay.\n"); }
+	if ($warning) { print "$warning"; } }
+	return;
+  }
+else { if ($showProc) { printExt ("Processing $_[0]."); } }
+
+#print @q;
+
+open(B, ">$c.bak");
+
+for (@q) { print B "$_"; }
+
+close(B);
+
+ if (-s "$c.bak" != -s "$c") { die "Uh oh, size of $c and $c.bak aren't equal. Not copying over."; }
+move("$c.bak", "$c");
+
+}
+
+sub findHeader
+{
+  open(THISDAY, $_[0]) || die ("No file $_[0].\n");
+  
+  my $thisFileYet = 0;
+  my $processHeader = 0;
+  my $headString = $_[0];
+
+  while ($a = <THISDAY>)
+  {
+    if ($a =~ /^\\$headString/)
+	{
+	  $processHeader = 1;
+	  print "Header $headString in $_[0]:\n";
+	  if ($a =~ /\\lim/) { $isLim = 1; } else { $isLim = 0; }
+	  next;
+	}
+	if ($processHeader)
+	{
+	  print $a;
+	  if ($isLim)
+	  {
+	    $limLines++;
+		if ($a =~ /^=/) { $limLines = 0; }
+	    if (($a =~ /^=/) && ($limChar > 0))
+		{
+		  procLimChar($limChar, $limLines);
+		}
+	  }
+	}
+	if ($a !~ /[a-z=]/) { $processHeader = 0; if ($isLim) { procLimChar($limChar, $limLines); } }
+  }
+}
+
+sub procLimChar
+{
+  if ($_[1] != 5) { printExt("Bad # of lines in limerick.\n"); }
+  elsif (($_[0] < 120) || ($_[0] > 200)) { printExt("$_[0] characters in limerick. Probably bad.\n"); }
+  else { printExt("Nothing bad.\n"); }
+}
+
+sub sortOrd
+{
+  my $stub = $_[0];
+  $stub =~ s/\n.*//g;
+  #print "$stub $sortOrd{$stub}\n";
+  return $sortOrd{$stub};
+}
+
+sub isUnix
+{
+  open(XYZ, $_[0]);
+  binmode(XYZ);
+  read(XYZ, $buffer, 1000, 0);
+  close(XYZ);
+  
+  foreach (split(//, $buffer)) {
+    if ($_ eq chr(13)) { return 0;}
+    if ($_ eq chr(10)) { return 1;}
+	}
+  return $retval;
+}
+
+sub processLim
+{
+  open(A, "$_[0]");
+  while ($a = <A>)
+  {
+    if ($a =~ /====/)
+	{
+	  $numLim++;
+	  print "================ $_[0]\n";
+	  while ($b = <A>)
+	  {
+	  if ($b =~ /[a-z=]/i) { print $b; if ($b =~ /====/) { $numLim++; } } else { last; }
+	  }
+	}
+  }
+  close(A);
+}
+
+sub limPan
+{
+if ($_[0] != 5) { print "******$_[3]: Bad limerick $_[0]-$_[1], $_[2]\n"; }
+#else { print "Ok limerick $_[0] to $_[1]\n"; }
+}
+
+sub setGlobals
+{
+$filesToTry = "";
+
+$inDir = "c:/writing/daily";
+$checkHeaders = 0;
+$count = 0;
+$howFar = $defFar = 7;
+$justCheck = 1;
+$debug = 0;
+$showWarn = 1;
+$showOk = 1;
+$showProc = 1;
+$verifyHeadings = 1;
+$onlyLim = 0;
+
+}
+
+sub printExt
+{
+  if ($printToErrorFile) { print EL $_[0]; }
+  print $_[0];
+}
+
+sub usage
+{
+print<<EOT;
+-a all back not just 1
+-b dropbox folder
+-c just check (default) vs -f
+-d debug text
+-f full check and sort
+-l check limericks
+-n don't open file
+-np/-sp hide/show what's processing (default = show)
+-o open file
+-q keep quiet about successes/warnings (default = show)
+-v verify headings (default) vs -nh don't verify
+-w show only warnings
+-# # of days back
+SAMPLE USES:
+    a.pl -h lim -b 200 shows limericks in dropbox
+    a.pl -c -a -200 -nh -b -w -np -o shows just the errors (Dropbox) and opens on the way (-eo)
+    a.pl -c -a -200 -nh -w -np -o shows just the errors (Local) and opens on the way (-eh)
+EOT
+
+exit;
+}
