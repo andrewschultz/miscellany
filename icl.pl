@@ -51,7 +51,7 @@ while ($count <= $#ARGV)
   $a = @ARGV[$count];
   for ($a)
   {
-  print "$count of $#ARGV: $a\n";
+  #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
   /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
   /^-bo/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
   /^-do/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };

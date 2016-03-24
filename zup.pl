@@ -20,6 +20,8 @@ $count = 0;
 while ($a = <A>)
 {
   chomp($a);
+  
+  $a =~ s/\%/$version/g;
 
   #print "$a: ";
 
@@ -44,6 +46,7 @@ while ($a = <A>)
   for ($a)
   {
 
+  /^v=/ && do { $a =~ s/^v=//g; $version = $a; next; };
   /^!/ && do { processCmd($zipcmd); $zipUp = 0; next; };
   /^out=/ && do { $a =~ s/^out=//g; $zipcmd .= " \"c:\\games\\inform\\zip\\$a\""; next; };
   /^>>/ && do { $cmd = $a; $cmd =~ s/^>>//g; `$cmd`; print "Running $cmd\n"; next; };

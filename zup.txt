@@ -64,16 +64,17 @@ F=c:\games\inform\dirk Materials\Release\Dirk.zblorb
 !
 
 name=pc,15
-out=problems-compound.zip
-#v=0
+v=2
+out=problems-compound_release_%.zip
 >>invis.pl pc
 F=c:\games\inform\Compound.inform\Source\story.ni
 F=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb
-F=c:\games\inform\Compound Materials\Release\*
+F=c:\games\inform\Compound Materials\Release\Cover.png
 F=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm
 F=c:\games\inform\triz\mine\compound.pdf
 F=c:\games\inform\triz\mine\compound-directors-cut.pdf
 F=c:\games\inform\triz\mine\compound-walkthrough.pdf
+F=c:\Users\Andrew\Dropbox\notes\problems_compound_release_%_notes.txt
 !
 
 ;

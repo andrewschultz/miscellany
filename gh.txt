@@ -98,6 +98,7 @@ stsu=c:\writing\dict\brit-1word.txt,
 stsu=c:\writing\dict\sts.txt,
 stsu=c:\writing\dict\stsx.pl,
 stsu=c:\writing\dict\myan.pl,
+stsu=c:\writing\dict\nitely.pl,
 
 #Roiling utils to GitHub
 TOBASE=stale-tales-slate
@@ -143,7 +144,7 @@ ect=c:\games\inform\ghost.inform\source\story.ni,2013
 ect=c:\games\inform\Candy Rush Saga.inform\source\story.ni,2014
 ect=c:\games\inform\heezy-park.inform\source\story.ni,2015
 
-#Problems files to BitBucket
+#Problems files to GitHub
 TOBASE=the-problems-compound
 prob=c:\games\inform\Compound.inform\source\story.ni,
 prob=c:\games\inform\Compound.inform\source\item-ordering.htm,
@@ -170,6 +171,8 @@ prob=c:\users\andrew\dropbox\notes\prob*.txt,
 prob=c:\writing\dict\wfl.pl,\utils
 prob=c:\games\inform\Compound.inform\source\flip.txt,\utils
 prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
+#concept tracker
+prob=c:\writing\dict\conc.pl,\utils
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
