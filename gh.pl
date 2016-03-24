@@ -17,6 +17,9 @@ my $justPrint = 0;
 my $verbose = 0;
 my $myBase = "";
 
+my $copyAuxiliary = 0;
+my $copyBinary = 0;
+
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
 my $a;
@@ -31,6 +34,9 @@ while ($count <= $#ARGV)
   /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
+  /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
+  /^-b$/ && do { $copyBinary = 1; $count++; next; };
+  /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do { if ($altHash{$ARGV[0]}) { print "$ARGV[0] => $altHash{$ARGV[0]}\n"; $procString = $altHash{$ARGV[0]}; } else { $procString = $ARGV[0]; } $count++; next; };
   /^-\?/ && do { usage(); };
   print "$a not recognized.\n";
@@ -72,6 +78,7 @@ sub processTerms
   my $badFileList = "";
   my $outName;
   my $fileList = "";
+  my $uncopiedList = "";
   my $dirName = "";
   my $fromBase="", my $toBase="";
   open(A, $ght) || die ("No $ght");
@@ -79,6 +86,13 @@ sub processTerms
   {
     chomp($a);
     my $b = $a;
+	
+	##################note prefix like -a (auxiliary) and -b (build)
+	#this is because auxiliary or binary files could be quite large
+	#format is -a:
+	#-b:
+	my $prefix = "";
+	my $c = $a; if ($c =~ /^-.:/) { $c =~ s/(^..).*/$1/g; $prefix = $c; $b =~ s/^-.://g; }
 	 if ($a =~ /FROMBASE=/) { $fromBase = $a; $fromBase =~ s/^FROMBASE=//g; }
 	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; }
 
@@ -105,8 +119,11 @@ sub processTerms
 	  my $thisWild = 0;
       my $cmd = "copy \"$fromFile\" $gh\\$toFile";
 	  if ($fromFile =~ /\*/) { $wildcards++; $thisWild = 1; } else { $copies++; }
-	  $fileList .= "$fromFile\n";
-	  if ($justPrint) { print "$cmd\n"; } else { $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } }
+	  if ($justPrint) { print "$cmd\n"; $fileList .= "$fromFile\n"; }
+	  else
+	  {
+	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; }
+      }
 	  }
 	  else
 	  {
@@ -116,7 +133,13 @@ sub processTerms
     }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
-  else { print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files.\n"; if ($fileList) { print "====FILE LIST:\n$fileList"; } if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; } }
+  else
+  {
+    print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files.\n";
+	if ($fileList) { print "====FILE LIST:\n$fileList"; }
+	if ($uncopiedList) { print "====UNCOPIED FILES:\n$uncopiedList"; }
+	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
+  }
 }
 
 ##########################
@@ -165,6 +188,14 @@ sub preProcessHashes
 	}
   }
   close(A);
+}
+
+sub shouldRun
+{
+if ($_[0] eq "") { return 1; }
+if (($_[0] eq "-a") && ($copyAuxiliary)) { return 1; }
+if (($_[0] eq "-b") && ($copyBinary)) { return 1; }
+return 0;
 }
 
 sub hasHash

@@ -159,8 +159,8 @@ prob=c:\games\inform\triz\mine\compound-directors-cut.pdf,
 prob=c:\games\inform\triz\mine\compound-ordering.trizbort,
 prob=c:\writing\scripts\pc.txt,
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,
-prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,
-prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,
+-b:prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,
+-b:prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,
 prob=c:\writing\scripts\pc.txt,
 prob=c:\games\inform\Compound Materials\Cover.png,
 prob=c:\games\inform\Compound Materials\Small Cover.png,
@@ -169,8 +169,8 @@ prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips 
 prob=c:\games\inform\Compound.inform\uuid.txt,
 prob=c:\users\andrew\dropbox\notes\prob*.txt,
 prob=c:\writing\dict\wfl.pl,\utils
-prob=c:\games\inform\Compound.inform\source\flip.txt,\utils
-prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
+-a:prob=c:\games\inform\Compound.inform\source\flip.txt,\utils
+-a:prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
 #concept tracker
 prob=c:\writing\dict\conc.pl,\utils
 
