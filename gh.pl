@@ -36,6 +36,7 @@ while ($count <= $#ARGV)
   /-v/ && do { $justPrint = 1; $count++; next; };
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
+  /^-c$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
   /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do { if ($altHash{$ARGV[0]}) { print "$ARGV[0] => $altHash{$ARGV[0]}\n"; $procString = $altHash{$ARGV[0]}; } else { $procString = $ARGV[0]; } $count++; next; };
   /^-\?/ && do { usage(); };
@@ -213,6 +214,9 @@ print<<EOT;
 -v = verbose output
 -j = just print commands instead of executing
 -? = this
+-a = copy auxiliary files
+-b = copy binary files
+-c = -a + -b
 EOT
 exit;
 }

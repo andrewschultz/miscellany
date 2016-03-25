@@ -35,7 +35,8 @@ shu=c:\games\inform\triz\mine\shuffling-around.trizbort,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.pdf,shuffling
 shu=c:\users\andrew\dropbox\notes\shuf*.txt,shuffling
 shu=c:\games\inform\sa.inform\uuid.txt,shuffling
-shu=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb,shuffling
+-b:shu=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb,shuffling
+-b:shu=c:\games\inform\beta Materials\Release\beta-Shuffling Around.gblorb,shuffling
 
 #Roiling files
 TOBASE=stale-tales-slate
@@ -52,14 +53,15 @@ roi=C:\games\inform\roiling.inform\Source\thru.txt,roiling\thru.txt
 roi=c:\games\inform\triz\mine\roiling.trizbort,roiling
 roi=c:\games\inform\triz\mine\roiling.pdf,roiling
 roi=c:\users\andrew\dropbox\notes\roiling*.txt,roiling
-roi=c:\games\inform\roiling.inform\source\alfies.txt,roiling\twitterbot
+-a:roi=c:\games\inform\roiling.inform\source\alfies.txt,roiling\twitterbot
 roi=c:\games\inform\roiling.inform\source\anagram-bot-pic.png,roiling\twitterbot
 roi=c:\games\inform\roiling.inform\source\bk2txt.pl,roiling\twitterbot
-roi=c:\games\inform\roiling.inform\source\bot-json.txt,roiling\twitterbot
+-a:roi=c:\games\inform\roiling.inform\source\bot-json.txt,roiling\twitterbot
 roi=c:\games\inform\triz\mine\voltmaze.trizbort,roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,roiling
 roi=c:\games\inform\roiling.inform\uuid.txt,roiling
-roi=c:\games\inform\Roiling Materials\Release\A Roiling Original.gblorb,roiling
+-b:roi=c:\games\inform\Roiling Materials\Release\A Roiling Original.gblorb,roiling
+-b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
 
 #Stale Tales Slate scripts
 TOBASE=stale-tales-slate
@@ -95,7 +97,7 @@ stsu=c:\writing\dict\firsts.txt,
 stsu=c:\writing\dict\lasts.txt,
 stsu=c:\writing\dict\brit-1word.txt,
 #below are ones I edit and add to the source files
-stsu=c:\writing\dict\sts.txt,
+-a:stsu=c:\writing\dict\sts.txt,
 stsu=c:\writing\dict\stsx.pl,
 stsu=c:\writing\dict\myan.pl,
 stsu=c:\writing\dict\nitely.pl,
@@ -107,7 +109,7 @@ roi=c:\writing\dict\ti.pl,roiling
 roi=c:\games\inform\roiling.inform\Source\ti.bat,roiling
 roi=c:\writing\dict\settler.pl,roiling
 roi=c:\writing\dict\settler.txt,roiling
-roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,roiling
+-a:roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,roiling
 
 #Threediopolis files to GitHub
 TOBASE=threediopolis
