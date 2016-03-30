@@ -118,6 +118,7 @@ sub runOneRedact
 {
 open(A, "$inFile") || die ("No $inFile");
 open(B, ">$outFile") || die ("Can't open $outFile");
+print "$inFile to $outFile.\n";
 my $regions = 0;
 
 while ($a = <A>)
