@@ -23,6 +23,15 @@ F=c:\games\inform\threediopolis.inform\Source\logic.txt
 F=c:/games/inform/threediopolis Materials/Release\threediopolis-invisiclues.htm
 !
 
+name=4dop,4d,4
+out=fourdiopolis.zip
+v=1
+F=c:\games\inform\fourdiopolis Materials\Release\Fourdiopolis.gblorb
+F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-logic.txt
+F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt
+F=c:\games\inform\fourdiopolis.inform\source\story.ni
+!
+
 name=uglyoafs,uo,14
 v=3
 out=ugly_oafs_release_%.zip

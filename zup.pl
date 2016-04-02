@@ -1,9 +1,14 @@
 $zup = "c:/writing/scripts/zup.txt";
+$zupl = "c:/writing/scripts/zup.pl";
 open(A, $zup) || die ("$zup not available, bailing.");
 
 while ($count <= $#ARGV)
 {
-  if ($count =~ /,/)
+  $a = @ARGV[$count];
+  if ($a =~ /\?/) { usage(); }
+  if ($a =~ /^e$/) { print "Opening commands file.\n"; `$zup`; exit; }
+  if ($a =~ /^ee$/) { print "Opening script file.\n"; `$zupl`; exit; }
+  if ($a =~ /,/)
   {
     @commas = split(/,/, $count);
 	for (@commas) { $here{$_} = 1; }
@@ -83,4 +88,12 @@ sub processCmd
 {
   print "$_[0]\n";
   `$_[0]`;
+}
+
+sub usage
+{
+print<<EOT;
+USAGE: zup.pl (project)
+EOT
+exit;
 }

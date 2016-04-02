@@ -35,6 +35,7 @@ while ($x = <X>)
 #which projects are z machine? Default is glulx
 $zmac{"compound"} = 0;
 $zmac{"threediopolis"} = 1;
+$zmac{"fourdiopolis"} = 0; #Needed to save states
 $zmac{"dirk"} = 1;
 
 $use6l{"compound"} = 0;
