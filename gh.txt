@@ -124,7 +124,8 @@ TOBASE=threediopolis
 #Fourdiopolis files to BitBucket
 TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\story.ni,
-4d=c:\games\inform\fourdiopolis.inform\source\logic.txt,
+4d=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-logic.txt,
+4d=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt,
 4d=c:\games\inform\fourdiopolis.inform\uuid.txt,
 
 #Ugly Oafs files to GitHub
@@ -221,6 +222,7 @@ misc=c:\coding\perl\kol\relay\relay_hobocode.ash,kol
 misc=c:\coding\python\ho.py,python
 misc=c:\writing\scripts\a.pl,dailywri
 misc=c:\writing\scripts\dsort.pl,dailywri
+misc=c:\writing\scripts\ni.bat,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
