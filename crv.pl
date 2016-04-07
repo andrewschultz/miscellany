@@ -1,0 +1,123 @@
+print "Starting code testing.\n";
+
+$dir = ".";
+
+$long{"roil"} = "roiling";
+$long{"roi"} = "roiling";
+$long{"ro"} = "roiling";
+$long{"r"} = "roiling";
+$long{"s"} = "sa";
+$long{"sa"} = "sa";
+$long{"12"} = "sa";
+$long{"13"} = "threediopolis";
+$long{"3"} = "threediopolis";
+$long{"3d"} = "threediopolis";
+$long{"14"} = "uglyoafs";
+$long{"15"} = "compound";
+$long{"compound"} = "compound";
+$long{"4d"} = "fourdiopolis";
+$long{"sc"} = "compound";
+
+#1st argument can be either one of the abbrevs above or something longer
+if (@ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/@ARGV[0].inform/source"); tryDir("c:/games/inform/$long{@ARGV[0]}.inform/source"); }
+
+open(A, "$dir/story.ni") || die ("Can't open $dir/story.ni or any other files I tried.");
+open(C, ">crv.txt");
+
+while ($a = <A>)
+{
+  chomp($a);
+  $lines++;
+
+  if ($a =~ /^volume/i)
+  {
+    checkForComments();
+    $newHeader = "";
+    $newVol = lc($a);
+    $newVol =~ s/^volume *//g;
+    $inBeta = 0;
+    $inTest = 0;
+	$foundComments = 0;
+	
+	if ($newVol =~ /^stubs/)
+	{
+	$foundStubs = 1;
+	$inTest = 1;
+	}
+	
+    if ($newVol =~ /^beta testing/)
+    {
+	if ($newVol !~ /- not for release/) { print "WARNING! Mark $a as Not For Release.\n"; $betaBomb = 1; } else { print "Yay, $a is NFR.\n"; $NFRB = 1; }
+	print "========$a\n";
+    $foundBeta = 1;
+    $inBeta = 1;
+	print C "========BEGIN BETA\n";
+    }
+    if ($newVol =~ /^testing/)
+    {
+	if ($newVol !~ /- not for release/) { print "WARNING! Mark $a as Not For Release.\n"; } else { print "Yay, $a is NFR.\n"; $NFRB = 1; }
+	print "========$a\n";
+    $inTest = 1;
+    $foundTest = 1;
+	print C "========BEGIN TESTING\n";
+    }
+  }
+  #if ($a =~ /\[ *\*/) { print "$inBeta/$inTest/$a\n"; }
+  if (($inBeta) || ($inTest))
+  {
+    if ($a =~ /^(book|part|chapter|section)/)
+    {
+      if ($newHeader)
+      {
+      if (!$foundComments)
+	  {
+	  checkForComments();
+      $newHeader = $a;
+	  }
+      $foundComments = 0;
+      }
+	if ($a =~ /not for release/) { print "********$a should not be NFR with a really good reason.\n"; }
+	$newHeader = $a;
+    $lastChap = $lines;
+    }
+	#print "$a----\n";
+    if ($a =~ /^\[ *\*/)
+    {
+      $debugString = "$newHeader: $a";
+      print C "$debugString\n";
+      if ($foundComments) { print "========DUPLICATE BELOW\n$debugString\n========DUPLICATE ABOVE\n"; }
+	  $foundComments = 1;
+    }
+  }
+}
+
+checkForComments();
+
+close(C);
+
+if (!$foundBeta) { print "Need beta testing volume.\n"; }
+if (!$foundTest) { print "Need regular testing volume.\n"; }
+if (!$foundStubs) { print "Need stubs volume.\n"; }
+
+if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
+
+if ($needComment) { print "Needs comments: $needComment area(s).\n"; } else { print "========HOORAY! Everything is commented!========\n"; }
+if ($betaBomb) { print "COMMENT BETA TESTING OUT BEFORE RELEASE\n" x 5; }
+if (!$NFRB) { print "FORGOT A BETA TEST SECTION\n" x 3; }
+sub tryDir
+{
+  if (-f "$_[0]/story.ni") { $dir = $_[0]; }
+  if ($_[0] eq "(-?)r") { $dir = "c:/games/inform/roiling.inform/Source"; }
+  if ($_[0] eq "(-?)s") { $dir = "c:/games/inform/sa.inform/Source"; }
+}
+
+sub checkForComments
+{
+    if (($newHeader) && (!$foundComments))
+	{
+	  $fullStr = "NEEDS COMMENTS ($lastChap) : $newHeader\n";
+	  print C "$fullStr";
+	  print "$fullStr";
+	  $needComment++;
+	}
+}

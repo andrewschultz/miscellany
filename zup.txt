@@ -30,6 +30,10 @@ F=c:\games\inform\fourdiopolis Materials\Release\Fourdiopolis.gblorb
 F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-logic.txt
 F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt
 F=c:\games\inform\fourdiopolis.inform\source\story.ni
+####below is for Spring Thing
+F=C:\games\inform\fourdiopolis Materials\Release\Cover.jpg
+F=C:\games\inform\fourdiopolis Materials\Release\Small Cover.jpg
+F=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt
 tree:c:/games/inform/fourdiopolis materials/Release,play_online
 !
 

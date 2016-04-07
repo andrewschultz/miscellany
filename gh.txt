@@ -127,6 +127,7 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-logic.txt,
 4d=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt,
 4d=c:\games\inform\fourdiopolis.inform\uuid.txt,
+4d=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt,
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
@@ -223,6 +224,8 @@ misc=c:\coding\python\ho.py,python
 misc=c:\writing\scripts\a.pl,dailywri
 misc=c:\writing\scripts\dsort.pl,dailywri
 misc=c:\writing\scripts\ni.bat,
+misc=c:\writing\scripts\crv.pl,
+misc=c:\writing\scripts\i7t.pl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
