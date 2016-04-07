@@ -1,5 +1,6 @@
 @echo off
 
+set NOTES=c:\users\andrew\dropbox\notes
 set EXT=.inform
 set PROJ=compound
 set SOREL=source
@@ -10,6 +11,11 @@ echo r = roiling
 echo sa = shuffling
 echo ni r nu = roiling nudges
 echo ni sa ra = shuffling random
+goto end
+)
+
+if "%1" EQU "ni" (
+cd \writing\dict\nightly
 goto end
 )
 
@@ -205,7 +211,17 @@ set PROJ=%1
 )
 
 if "%1" EQU "rr" (
-\users\andrew\dropbox\roiling_release_5_notes.txt
+%NOTES%\roiling_release_4_notes.txt
+goto end
+)
+
+if "%1" EQU "sr" (
+%NOTES%\shuffling_release_5_notes.txt
+goto end
+)
+
+if "%1" EQU "pr" (
+%NOTES%\problems_compound_release_3_notes.txt
 goto end
 )
 

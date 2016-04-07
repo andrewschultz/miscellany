@@ -1,3 +1,7 @@
+use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+
+my $zip = Archive::Zip->new();
+
 $zup = "c:/writing/scripts/zup.txt";
 $zupl = "c:/writing/scripts/zup.pl";
 open(A, $zup) || die ("$zup not available, bailing.");
@@ -36,12 +40,11 @@ while ($a = <A>)
     @b = split(/,/, $a);
 	for $idx(@b)
 	{
-	  print "$idx\n";
+	  #print "$idx\n";
 	  if ($here{$idx}==1)
 	  {
 	    $triedSomething = 1;
 	    $zipUp = 1;
-	    $zipcmd = "7z a";
 	  }
 	}
   }
@@ -50,29 +53,28 @@ while ($a = <A>)
 
   for ($a)
   {
-
   /^v=/ && do { $a =~ s/^v=//g; $version = $a; next; };
-  /^!/ && do { processCmd($zipcmd); $zipUp = 0; next; };
-  /^out=/ && do { $a =~ s/^out=//g; $zipcmd .= " \"c:\\games\\inform\\zip\\$a\""; next; };
+  /^!/ && do { print "Writing to c:/games/inform/zip/$outFile...\n"; die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK; print "Writing successful.\n"; exit; };
+  /^out=/ && do { $a =~ s/^out=//g; $outFile = $a; $zip = Archive::Zip->new(); next; };
+  /^tree:/ && do { $a =~ s/^tree://g; @b = split(/,/, $a); $zip->addTree("@b[0]", "@b[1]" ); #print "Added tree: @b[0] to @b[1].\n";
+  next; };
   /^>>/ && do { $cmd = $a; $cmd =~ s/^>>//g; `$cmd`; print "Running $cmd\n"; next; };
-  /^>/ && do { $fileName = $a; $fileName =~ s/^>//g; $zipcmd = "$zipcmd "; $needFile = 1; next; };
   /^F=/i && do
   {
     $a =~ s/^F=//gi;
     #$fileName =~ s/\./_release_$a\./g;
     $needFile = 0;
 	if ((! -f "$a") && (! -d "$a") && ($a !~ /\*/)) { print "No file/directory $a.\n"; }
-	else
-	{
-    $zipcmd .= " \"$a\"";
-	}
-	#print "Add $a, **$zipcmd\n";
+	$b = $a; $b =~ s/.*[\\\/]//g;
+    $zip->addFile("$a", "$b");
+	#print "Writing $a to $b.\n";
     next;
   };
   /^c:/ && do
   {
     $cmd .= " \"$a\"";
     if ((! -f "$a") && (! -d "$a")) { print "WARNING: $a doesn't exist.\n"; }
+    $zip->addFile("$a");
     next;
   };
   /^;/ && do { last; next; };

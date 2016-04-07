@@ -30,6 +30,7 @@ F=c:\games\inform\fourdiopolis Materials\Release\Fourdiopolis.gblorb
 F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-logic.txt
 F=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt
 F=c:\games\inform\fourdiopolis.inform\source\story.ni
+tree:c:/games/inform/fourdiopolis materials/Release,play_online
 !
 
 name=uglyoafs,uo,14
@@ -47,7 +48,7 @@ F=C:\games\inform\uglyoafs Materials\Release\ugly-oafs-invisiclues.htm
 
 name=roiling,r,ro,aro,s13
 >>c:/games/inform/roiling.inform/Source/bma.pl > roil-log.txt
->>tsh.pl -r > roil-log.txt
+>>tsh.pl -r >> roil-log.txt
 >>punc.pl r >> roil-log.txt
 >>crv.pl -r >> roil-log.txt
 out=roiling.zip
@@ -73,7 +74,7 @@ F=c:\games\inform\dirk Materials\Release\Dirk.zblorb
 !
 
 name=pc,15
-v=2
+v=3
 out=problems-compound_release_%.zip
 >>invis.pl pc
 F=c:\games\inform\Compound.inform\Source\story.ni
