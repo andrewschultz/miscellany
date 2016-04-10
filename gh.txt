@@ -120,6 +120,7 @@ TOBASE=threediopolis
 3d=c:\writing\scripts\3d.txt,
 3d=c:\games\inform\threediopolis.inform\uuid.txt,
 3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,
+3d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
 
 #Fourdiopolis files to BitBucket
 TOBASE=fourdiopolis
@@ -128,6 +129,8 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\fourdiopolis-walkthrough.txt,
 4d=c:\games\inform\fourdiopolis.inform\uuid.txt,
 4d=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt,
+4d=c:\games\inform\fourdiopolis.inform\source\locs.pl,
+4d=c:\games\inform\fourdiopolis.inform\source\logcheck.pl,
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs

@@ -88,10 +88,12 @@ if ($time < 0)
 {
   my $t = 0 - $time;
   print "Wait a bit and stuff, like ";
+  no integer;
   if ($t <  60) { print "$t seconds"; }
   elsif ($t < 3600) { printf("%.2f minutes", $t/60); }
-  elsif ($t < 86400) { print("%.2f hours", $t/3600); }
+  elsif ($t < 86400) { printf("%.2f hours", $t/3600); }
   else { printf("%.2f days", $t/86400); }
+  use integer;
   print ", or edit altime.txt like a big ol' cheater.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
