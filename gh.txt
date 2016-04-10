@@ -229,6 +229,7 @@ misc=c:\writing\scripts\dsort.pl,dailywri
 misc=c:\writing\scripts\ni.bat,
 misc=c:\writing\scripts\crv.pl,
 misc=c:\writing\scripts\i7t.pl,
+misc=c:\writing\scripts\glk.bat,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
