@@ -1,0 +1,53 @@
+############################
+#what to test
+#
+opo~3d,4d
+sts~sa,roi
+as~pc,sc
+ec~e11,e13,e14,e15
+
+e11=dash
+>icl.pl $$
+
+e13=ghost
+>icl.pl $$
+
+e14=candy rush saga
+>icl.pl $$
+
+e15=heezy-park
+>icl.pl $$
+
+3d=threediopolis
+>crv.pl $$
+>qq.pl $l
+>$d\logcheck.pl
+#>icl.pl $$
+
+4d=fourdiopolis
+>crv.pl $$
+>qq.pl $l
+>$d\logcheck.pl
+#>icl.pl $$
+
+sa=sa
+>crv.pl $$
+>qq.pl $$
+#>icl.pl $$
+
+roi=roiling
+>crv.pl $$
+>qq.pl $$
+#>icl.pl $$
+
+sc=slicker-city
+>conc.pl $$
+>crv.pl $$
+>qq.pl $l
+>icl.pl $$
+
+pc=compound
+>conc.pl $$
+>crv.pl $$
+>qq.pl $l
+>icl.pl $$
