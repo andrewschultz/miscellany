@@ -14,6 +14,26 @@ echo ni sa ra = shuffling random
 goto end
 )
 
+if "%1" EQU "e11" (
+set PROJ=dash
+goto nodef
+)
+
+if "%1" EQU "e13" (
+set PROJ=ghost
+goto nodef
+)
+
+if "%1" EQU "e14" (
+set PROJ=candy rush saga
+goto nodef
+)
+
+if "%1" EQU "e15" (
+set PROJ=heezy-park
+goto nodef
+)
+
 if "%1" EQU "ni" (
 cd \writing\dict\nightly
 goto end

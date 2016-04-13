@@ -18,6 +18,9 @@ uo~oafs
 4~4d
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
+###ecto
+ec~ecto
+ect~ecto
 
 #Shuffling files
 TOBASE=stale-tales-slate
@@ -146,10 +149,14 @@ dirk=c:\games\inform\dirk.inform\source\uuid.txt,
 
 #EctoComp files to GitHub
 TOBASE=ectocomp
-ect=c:\games\inform\dash.inform\source\story.ni,2011
-ect=c:\games\inform\ghost.inform\source\story.ni,2013
-ect=c:\games\inform\Candy Rush Saga.inform\source\story.ni,2014
-ect=c:\games\inform\heezy-park.inform\source\story.ni,2015
+ecto=c:\games\inform\dash.inform\source\story.ni,2011
+ecto=c:\games\inform\dash.inform\source\walkthrough.txt,2011
+ecto=c:\games\inform\ghost.inform\source\story.ni,2013
+ecto=c:\games\inform\ghost.inform\source\walkthrough.txt,2013
+ecto=c:\games\inform\Candy Rush Saga.inform\source\story.ni,2014
+ecto=c:\games\inform\Candy Rush Saga.inform\source\walkthrough.txt,2014
+ecto=c:\games\inform\heezy-park.inform\source\story.ni,2015
+ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
 
 #Problems files to GitHub
 TOBASE=the-problems-compound

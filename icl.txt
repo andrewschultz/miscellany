@@ -9,9 +9,9 @@ default=pc
 4,4d=fourdiopolis
 u,uo,14=uglyoafs
 15,p,pc,tpc=compound
-sc=slicker-city
+16,sc=slicker-city
 d=dirk
-r,ro=roiling
+r,ro,roi=roiling
 
 ##############################
 #all projects

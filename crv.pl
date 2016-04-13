@@ -1,3 +1,7 @@
+use POSIX;
+
+my $needComment = 0;
+
 print "Starting code testing.\n";
 
 $dir = ".";
@@ -14,15 +18,18 @@ $long{"3"} = "threediopolis";
 $long{"3d"} = "threediopolis";
 $long{"14"} = "uglyoafs";
 $long{"15"} = "compound";
-$long{"compound"} = "compound";
+$long{"pc"} = "compound";
 $long{"4d"} = "fourdiopolis";
-$long{"sc"} = "compound";
+$long{"sc"} = "slicker-city";
 
 #1st argument can be either one of the abbrevs above or something longer
 if (@ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/@ARGV[0].inform/source"); tryDir("c:/games/inform/$long{@ARGV[0]}.inform/source"); }
 
 open(A, "$dir/story.ni") || die ("Can't open $dir/story.ni or any other files I tried.");
 open(C, ">crv.txt");
+
+if ($dir eq ".") { $shortDir = getcwd(); } else { $shortDir = $dir; }
+$shortDir =~ s/\.inform.*//gi; $shortDir =~ s/.*[\/\\]//g; $shortDir = lc($shortDir);
 
 while ($a = <A>)
 {
@@ -83,6 +90,7 @@ while ($a = <A>)
 	#print "$a----\n";
     if ($a =~ /^\[ *\*/)
     {
+	  $testSuccess++;
       $debugString = "$newHeader: $a";
       print C "$debugString\n";
       if ($foundComments) { print "========DUPLICATE BELOW\n$debugString\n========DUPLICATE ABOVE\n"; }
@@ -101,9 +109,14 @@ if (!$foundStubs) { print "Need stubs volume.\n"; }
 
 if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
 
-if ($needComment) { print "Needs comments: $needComment area(s).\n"; } else { print "========HOORAY! Everything is commented!========\n"; }
+if (!$linesToFix) { $linesToFix = "No lines"; }
+
+print "TEST RESULTS:$shortDir Code Comments,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
+if (!$needComment) { print "Yay! Success!\n"; }
+
 if ($betaBomb) { print "COMMENT BETA TESTING OUT BEFORE RELEASE\n" x 5; }
 if (!$NFRB) { print "FORGOT A BETA TEST SECTION\n" x 3; }
+
 sub tryDir
 {
   if (-f "$_[0]/story.ni") { $dir = $_[0]; }
@@ -116,6 +129,7 @@ sub checkForComments
     if (($newHeader) && (!$foundComments))
 	{
 	  $fullStr = "NEEDS COMMENTS ($lastChap) : $newHeader\n";
+	  if ($linesToFix) { $linesToFix = "$linesToFix/$lines"; } else { $linesToFix = "LINES $lines"; }
 	  print C "$fullStr";
 	  print "$fullStr";
 	  $needComment++;
