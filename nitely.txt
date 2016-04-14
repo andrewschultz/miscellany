@@ -22,17 +22,18 @@ e15=heezy-park
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
-#>icl.pl $$
+>icl.pl $$
 
 4d=fourdiopolis
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
-#>icl.pl $$
+>icl.pl $$
 
 sa=sa
 >punc.pl $$
 >stsx.pl
+>lov.pl g s
 >sts.pl $$
 >crv.pl $$
 >qq.pl $$
@@ -42,11 +43,12 @@ sa=sa
 roi=roiling
 >punc.pl $$
 >sts.pl $$
+>log.pl g
 >crv.pl $$
 >qq.pl $$
 >$d/bma.pl 
 >tsh.pl $$
-#>icl.pl $$
+>icl.pl $$
 
 sc=slicker-city
 >conc.pl $$

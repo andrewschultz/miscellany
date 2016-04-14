@@ -24,16 +24,24 @@ my $before;
 
 my @projs = ();
 my $proj;
+my $errFile = "c:/writing/dict/nightly/errs.htm";
 
 print "NOTE: To run from the command line, schtasks /Run /TN \"Nightly Build\"\n";
 
 projMap();
 getArgs();
 
+open(C, ">$errFile");
+print C "<html><title>Total errors</title><body><center><font size=+4>TOTAL ERRORS</font><br \/><table border=1><tr><td>Test Name</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+
 for $proj (@projs)
 {
   runProj($proj);
 }
+
+print C "</table></center></body></html>";
+close(C);
+`$errFile`;
 
 my $boxMsg = "";
 
@@ -96,6 +104,8 @@ sub procIt
   my @c;
   my $thisfail = 0;
   my $thissucc = 0;
+  my $bkgd;
+  my $threshold = 0;
   
   my @parseAry = split(/\n/, $_[1]);
 
@@ -105,11 +115,17 @@ sub procIt
   {
     if ($a =~ /^TEST ?RESULT(S?):/)
     {
+	  my $printErr = 1;
 	  $b = $a; $b =~ s/.*RESULT(S?)://; @c = split(/,/, $b);
 	  print "@c from $b\n";
-	  print B "<tr><td ";
-	  if ($c[1] == 0) { print B "bgcolor=green"; $thissucc++; } else { print B "bgcolor=red"; $thisfail++; }
-	  print B ">" . join("</td><td>", @c) . "</td></tr>\n";
+	  if ($c[1] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; } else
+	  {
+	    $thisfail++;
+        if ($c[1] < 0) { $bkgd = "grey"; } elsif ($c[1] < $threshold) { $bkgd = "yellow"; } else { $bkgd = "red"; }
+	  }
+	  my $myLine = "<tr><td bgcolor=$bkgd>" . join ("</td><td>", @c) . "</td></tr>\n";
+	  print B $myLine;
+	  if ($printErr) { print C $myLine; }
 	}
   }
   print B "</table border=1></center>\n";
@@ -148,117 +164,6 @@ $boxMsg .= "No Opolis files modified in the last day.\n"; return;
 }
 
 procIt($outfile);
-}
-
-sub alecNightly
-{
-
-my $q;
-my $outfile = "c:/writing/dict/nightly/alec-latest.txt";
-my $datefile = strftime "c:/writing/dict/nightly/alec-errs-%m-%d-%Y.txt", localtime;
-
-my $pcMain = "c:/games/inform/compound.inform/source/story.ni";
-my $scMain = "c:/games/inform/slicker-city.inform/source/story.ni";
-
-my $pmod = (-M "$pcMain") < 1;
-my $smod = (-M "$scMain") < 1;
-
-if ($pmod || $smod || $force)
-{
-open(OUTFILE, ">$outfile");
-if ($pmod) { $q = `icl.pl pc 2>&1`; $boxMsg .= "Built Problems Compound.\n"; printboth($q); }
-if ($smod) { $q = `icl.pl sc 2>&1`; $boxMsg .= "Built Slicker City.\n"; printboth($q); }
-$boxMsg .= "Results in $outfile or $datefile.\n";
-my $command = "copy $outfile $datefile";
-$command =~ s/\//\\/g;
-`$command`;
-$q = `conc.pl`;
-printboth("Concept match checking:\n$q");
-
-printboth("Source code checking:");
-sourceCheck("compound");
-sourceCheck("slicker-city");
-}
-else
-{
-$boxMsg .= "No Alec Smart files modified in the last day.\n"; return;
-}
-
-}
-
-sub stsNightly
-{
-
-my $outfile = "c:/writing/dict/nightly/sts-latest.txt";
-
-my $datefile = strftime "c:/writing/dict/nightly/sts-errs-%m-%d-%Y.txt", localtime;
-
-my $rMain = "c:/games/inform/roiling.inform/source/story.ni";
-my $sMain = "c:/games/inform/sa.inform/source/story.ni";
-
-my $new = "c:/writing/dict/sts.txt";
-
-my $rrand = "c:/program files (x86)/inform 7/inform7/extensions/andrew schultz/Roiling random text.i7x";
-my $srand = "c:/program files (x86)/inform 7/inform7/extensions/andrew schultz/Sa random text.i7x";
-
-my $rmod = (-M "$rrand") < 1;
-my $smod = (-M "$srand") < 1;
-my $nmod = (-M "$new") < 1;
-
-if (!($force || $rmod || $smod)) { $boxMsg .= "No STS files modified in the past day.\n"; return; }
-
-open(OUTFILE, ">$outfile") || die ("Can't make $outfile");
-
-if (newIdeas()) { printboth("Wrote in new ideas, so I'm sending them to random files."); `stsx.pl`; }
-else { print "No new ideas written in, but there's still stuff to sort.\n"; }
-
-printboth("Source code checking:");
-sourceCheck("sa");
-sourceCheck("roiling");
-
-printboth("Hash value checking:");
-
-my $q = `sts.pl`;
-
-print OUTFILE $q;
-
-printboth("Punctuation checking:");
-
-$q = `punc.pl b`;
-
-print OUTFILE $q;
-
-printboth("Table duplication checking:");
-
-$q = `tsh.pl b`;
-
-print OUTFILE $q;
-
-printboth("Book anagram checking:");
-
-$q = `c:/games/inform/roiling.inform/source/bma.pl`;
-
-print OUTFILE $q;
-
-close(OUTFILE);
-
-if ($nmod) { print "Taking anagram list data.\n"; `lov.pl g`; `lov.pl g s`; }
-
-my $command = "copy $outfile $datefile";
-$command =~ s/\//\\/g;
-`$command`;
-
-print "Running $command\n";
-
-if ($build != -1)
-{
-print "Building Roiling.";
-`icl.pl ro 2>&1`;
-print "Building Shuffling.";
-`icl.pl sa 2>&1`;
-}
-
-$boxMsg .= "Nightly Stale Tales Slate Script wrote over a debug log to $outfile with a copy to $datefile.\n";
 }
 
 ###################################
