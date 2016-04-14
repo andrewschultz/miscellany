@@ -2,7 +2,8 @@
 # Nitely.pl
 # does nightly build/check of my (major in-progress) projects
 #
-# usage nitely.pl -a -s (for Alec and Stale Tales Slate)
+# usage nitely.pl -a (for Alec and Stale Tales Slate and -opolis, the active ones)
+# nitely.pl -aa (for *everything*)
 #
 
 use Win32;
@@ -23,6 +24,8 @@ my $before;
 
 my @projs = ();
 my $proj;
+
+print "NOTE: To run from the command line, schtasks /Run /TN \"Nightly Build\"\n";
 
 projMap();
 getArgs();
@@ -97,7 +100,7 @@ sub procIt
   my @parseAry = split(/\n/, $_[1]);
 
   open(B, ">$x");
-  print B "<html><title>$_[0] Test Results</title><body><center><table border=1><tr><td>Test Name</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0]</font><br \/><table border=1><tr><td>Test Name</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
   for $a (@parseAry)
   {
     if ($a =~ /^TEST ?RESULT(S?):/)
@@ -273,10 +276,11 @@ sub getArgs
 	for ($a)
 	{
 	  /-f/ && do { $force = 1; $count++; next; };
+	  /-e/ && do { `c:/writing/dict/nitely.txt`; $count++; next; };
 	  /-b/ && do { $build = 1; $count++; next; };
 	  /-nb/ && do { $build = -1; $count++; next; };
 	  /-aa/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
-	  /-a/ && do { @projs = ("3d", "4d", "pc", "sc", "roi", "sa"); $count++; next; };
+	  /-a/ && do { @projs = ("3d", "4d", "pc", "sc", "sa", "roi"); $count++; next; };
 	  /-t/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { if ($subs{$x}) { @projs = (@projs, split(/,/, $subs{$x})); } else { @projs = (@projs, $x); } } $count += 2; next; };
 	  /-q/ && do { $quiet = 1; $count++; next; };
 	  /-\?/ && do { usage(); exit; };

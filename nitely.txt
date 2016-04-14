@@ -21,23 +21,31 @@ e15=heezy-park
 3d=threediopolis
 >crv.pl $$
 >qq.pl $l
->$d\logcheck.pl
+>$d/logcheck.pl
 #>icl.pl $$
 
 4d=fourdiopolis
 >crv.pl $$
 >qq.pl $l
->$d\logcheck.pl
+>$d/logcheck.pl
 #>icl.pl $$
 
 sa=sa
+>punc.pl $$
+>stsx.pl
+>sts.pl $$
 >crv.pl $$
 >qq.pl $$
-#>icl.pl $$
+>tsh.pl $$
+>icl.pl $$
 
 roi=roiling
+>punc.pl $$
+>sts.pl $$
 >crv.pl $$
 >qq.pl $$
+>$d/bma.pl 
+>tsh.pl $$
 #>icl.pl $$
 
 sc=slicker-city
