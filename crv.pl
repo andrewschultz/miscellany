@@ -111,7 +111,7 @@ if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
 
 if (!$linesToFix) { $linesToFix = "No lines"; }
 
-print "TEST RESULTS:$shortDir Code Comments,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
+print "TEST RESULTS:$shortDir Code Comments,1,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
 if (!$needComment) { print "Yay! Success!\n"; }
 
 if ($betaBomb) { print "COMMENT BETA TESTING OUT BEFORE RELEASE\n" x 5; }

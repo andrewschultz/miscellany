@@ -43,7 +43,7 @@ sa=sa
 roi=roiling
 >punc.pl $$
 >sts.pl $$
->log.pl g
+>lov.pl g
 >crv.pl $$
 >qq.pl $$
 >$d/bma.pl 

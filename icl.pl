@@ -159,8 +159,8 @@ $outFile = "$betm/Release/beta-$betaFileShort";
 delIfThere($outFile);
 print("\"$infDir/Compilers/cblorb\" -windows $beta/Release.blurb $outFile");
 system("\"$infDir/Compilers/cblorb\" -windows \"$beta/Release.blurb\" \"$outFile\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] BETA,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] BETA,1,0,$outFile failed\n"); }
+if (-f "$outFile") { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); }
+else { print ("TEST RESULTS:$_[0] BETA,0,1,0,$outFile failed\n"); }
 if ($execute) { $execute = 0; `$beta/Release.blurb $beta/Build/output.$gz`; }
 }
 if ($debug)
@@ -172,8 +172,8 @@ $outFile = "$bdir/output.$ex";
 delIfThere($outFile);
 system("\"$infDir/Compilers/ni\" -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
 system("\"$infDir/Compilers/$i6x\" -kwSD$iflag +include_path=$base,$bdir $bdir/auto.inf \"$bdir/output.$ex\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] DEBUG,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] DEBUG,1,0,$outFile failed\n"); }
+if (-f "$outFile") { print ("TEST RESULTS:$_[0] DEBUG,0,0,0,$outFile built\n"); }
+else { print ("TEST RESULTS:$_[0] DEBUG,0,1,0,$outFile failed\n"); }
 if ($execute) { $execute = 0; `$bdir/output.$ex`; }
 }
 if ($release)
@@ -191,14 +191,14 @@ printf "Generating blorb.$ex.\n";
 $outFile = "$bdir/output.$ex";
 delIfThere($outFile);
 system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$base,$bdir $bdir/auto.inf \"$outFile\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,0,$outFile built\n");
+if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,0,0,$outFile built\n");
 #the below doesn't work as in the Windows compiler, so we have to explicitly set paths
 #system("\"C:/Program Files (x86)/Inform 7/Compilers/cblorb\" -windows Release.blurb Build/output.gblorb");
 printf "Bundling for release.\n";
 $outFile = "$bdir/output.$gz";
 system("\"$infDir/Compilers/cblorb\" -windows $base/Release.blurb $bdir/output.$gz");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] BLORB RELEASE,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] BLORB RELEASE,1,0,$outFile failed\n"); }
+if (-f "$outFile") { print ("TEST RESULTS:$_[0] BLORB RELEASE,0,0,0,$outFile built\n"); }
+else { print ("TEST RESULTS:$_[0] BLORB RELEASE,0,1,0,$outFile failed\n"); }
 $fileShort = getFile("$base/Release.blurb");
 $rdir = "$base\\Release";
 $rdir =~ s/\.inform/ Materials/g;
@@ -207,8 +207,8 @@ if ($execute) { $execute = 0; `$bdir/output.$gz`; }
 }
 else
 {
-  print ("TEST RESULTS:$_[0] RELEASE,1,0,$outFile failed\n");
-  print ("TEST RESULTS:$_[0] BLORB RELEASE,-1,0,$outFile failed\n");
+  print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile failed\n");
+  print ("TEST RESULTS:$_[0] BLORB RELEASE,0,-1,0,$outFile failed\n");
 }
 }
 }

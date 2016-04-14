@@ -105,12 +105,11 @@ sub procIt
   my $thisfail = 0;
   my $thissucc = 0;
   my $bkgd;
-  my $threshold = 0;
   
   my @parseAry = split(/\n/, $_[1]);
 
   open(B, ">$x");
-  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0]</font><br \/><table border=1><tr><td>Test Name</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0]</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
   for $a (@parseAry)
   {
     if ($a =~ /^TEST ?RESULT(S?):/)
@@ -118,10 +117,10 @@ sub procIt
 	  my $printErr = 1;
 	  $b = $a; $b =~ s/.*RESULT(S?)://; @c = split(/,/, $b);
 	  print "@c from $b\n";
-	  if ($c[1] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; } else
+	  if ($c[2] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; } else
 	  {
 	    $thisfail++;
-        if ($c[1] < 0) { $bkgd = "grey"; } elsif ($c[1] < $threshold) { $bkgd = "yellow"; } else { $bkgd = "red"; }
+        if ($c[2] < 0) { $bkgd = "grey"; } elsif ($c[2] <= $c[1]) { $bkgd = "yellow"; } else { $bkgd = "red"; }
 	  }
 	  my $myLine = "<tr><td bgcolor=$bkgd>" . join ("</td><td>", @c) . "</td></tr>\n";
 	  print B $myLine;
