@@ -39,6 +39,11 @@ cd \writing\dict\nightly
 goto end
 )
 
+if "%1" EQU "n" (
+cd \writing\dict\nightly
+goto end
+)
+
 if "%1" EQU "m" (
 set EXT= Materials
 set SOREL=release

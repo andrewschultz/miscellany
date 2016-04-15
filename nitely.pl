@@ -4,13 +4,17 @@
 #
 # usage nitely.pl -a (for Alec and Stale Tales Slate and -opolis, the active ones)
 # nitely.pl -aa (for *everything*)
-#
+# nitely.pl -e to edit the TXT file
 
 use Win32;
 use POSIX qw(strftime);
 
 use warnings;
 use strict;
+
+#########################
+#change this to debug if anything goes wrong
+my $debug = 0;
 
 my $alec = 0;
 my $force = 0;
@@ -32,7 +36,7 @@ projMap();
 getArgs();
 
 open(C, ">$errFile");
-print C "<html><title>Total errors</title><body><center><font size=+4>TOTAL ERRORS</font><br \/><table border=1><tr><td>Test Name</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+print C "<html><title>Total errors</title><body><center><font size=+4>TOTAL ERRORS</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
 
 for $proj (@projs)
 {
@@ -80,7 +84,7 @@ sub projMap
 	  if ($cmd{$curProj}) { $cmd{$curProj} .= "\n"; }
 	  $cmd{$curProj} .= $a;
 	  #print "Command: $a\n";
-	  print "$curProj added command $a.\n";
+	  if ($debug) { print "$curProj added command $a.\n"; }
 	  next;
 	}
   }
@@ -179,6 +183,7 @@ sub getArgs
 	if ($count <= $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
 	for ($a)
 	{
+	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
 	  /-f/ && do { $force = 1; $count++; next; };
 	  /-e/ && do { `c:/writing/dict/nitely.txt`; $count++; next; };
 	  /-b/ && do { $build = 1; $count++; next; };
@@ -202,6 +207,7 @@ sub openLatest
 sub usage
 {
 print <<EOT;
+-e = edit the nightly test text file
 -f = force a nightly check
 -b = force a build (individual projects turn it off and on: on for Alec, off for Stale Tales Slate, off for opolis)
 -nb = force no build

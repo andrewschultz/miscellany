@@ -41,20 +41,22 @@ sa=sa
 >icl.pl $$
 
 roi=roiling
->punc.pl $$
->sts.pl $$
->lov.pl g
->crv.pl $$
->qq.pl $$
+#>punc.pl $$
+#>sts.pl $$
+#>lov.pl g
+#>crv.pl $$
+#>qq.pl $$
 >$d/bma.pl 
->tsh.pl $$
->icl.pl $$
+#>tsh.pl $$
+#>icl.pl $$
 
 sc=slicker-city
 >conc.pl $$
 >crv.pl $$
 >qq.pl $l
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
 
 pc=compound
 >conc.pl $$

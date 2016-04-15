@@ -54,9 +54,9 @@ while ($count <= $#ARGV)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
   /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
-  /^-bo/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
-  /^-do/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
-  /^-ro/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-?bo/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
+  /^-?do/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
+  /^-?ro/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
   /-f/ && do { $release = $debug = $beta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
@@ -149,11 +149,17 @@ if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small
 
 modifyBeta("$base\\source\\story.ni", "$beta\\source\\story.ni");
 
+$outFile = "$beta/Build/output.$ex";
+delIfThere($outFile);
+
 system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$beta\" -extension=$ex");
 system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$beta,$beta $beta/Build/auto.inf $beta/Build/output.$ex");
 
 $betaFileShort = getFile("$beta/Release.blurb");
 
+if (! -f $outFile) { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); print ("TEST RESULTS:$_[0] BETA BLORB,-1,0,0,Blorb build not attempted\n"); }
+else
+{
 $outFile = "$betm/Release/beta-$betaFileShort";
 
 delIfThere($outFile);
@@ -162,6 +168,8 @@ system("\"$infDir/Compilers/cblorb\" -windows \"$beta/Release.blurb\" \"$outFile
 if (-f "$outFile") { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); }
 else { print ("TEST RESULTS:$_[0] BETA,0,1,0,$outFile failed\n"); }
 if ($execute) { $execute = 0; `$beta/Release.blurb $beta/Build/output.$gz`; }
+}
+
 }
 if ($debug)
 {

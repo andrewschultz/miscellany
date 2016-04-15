@@ -60,7 +60,7 @@ while ($a = <A>)
     $inBeta = 1;
 	print C "========BEGIN BETA\n";
     }
-    if ($newVol =~ /^testing/)
+    if ($newVol =~ /^(programmer )?testing/)
     {
 	if ($newVol !~ /- not for release/) { print "WARNING! Mark $a as Not For Release.\n"; } else { print "Yay, $a is NFR.\n"; $NFRB = 1; }
 	print "========$a\n";
@@ -81,8 +81,8 @@ while ($a = <A>)
 	  checkForComments();
       $newHeader = $a;
 	  }
-      $foundComments = 0;
       }
+      $foundComments = 0;
 	if ($a =~ /not for release/) { print "********$a should not be NFR with a really good reason.\n"; }
 	$newHeader = $a;
     $lastChap = $lines;
