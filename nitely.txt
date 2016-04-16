@@ -28,6 +28,8 @@ e15=heezy-park
 >qq.pl $l
 >$d/logcheck.pl
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
 
 4d=fourdiopolis
 >tts.pl $$ y
@@ -35,6 +37,8 @@ e15=heezy-park
 >qq.pl $l
 >$d/logcheck.pl
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
 
 sa=sa
 >tts.pl $$ y
@@ -43,9 +47,11 @@ sa=sa
 >lov.pl g s
 >sts.pl $$
 >crv.pl $$
->qq.pl $$
+>qq.pl $l
 >tsh.pl $$
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
 
 roi=roiling
 >tts.pl $$ y
@@ -53,10 +59,12 @@ roi=roiling
 >sts.pl $$
 >lov.pl g
 >crv.pl $$
->qq.pl $$
+>qq.pl $l
 >$d/bma.pl 
 >tsh.pl $$
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
 
 sc=slicker-city
 >tts.pl $$ y
@@ -73,3 +81,5 @@ pc=compound
 >crv.pl $$
 >qq.pl $l
 >icl.pl $$
+>icl.pl -bo $$
+>icl.pl -do $$
