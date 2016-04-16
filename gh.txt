@@ -238,6 +238,7 @@ misc=c:\writing\scripts\glk.bat,
 misc=c:\writing\dict\nitely.pl,
 misc=c:\writing\dict\nitely.txt,
 misc=c:\writing\scripts\gq.pl,
+misc=c:\writing\scripts\tts.pl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

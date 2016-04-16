@@ -7,30 +7,37 @@ as~pc,sc
 ec~e11,e13,e14,e15
 
 e11=dash
+>tts.pl $$ y
 >icl.pl $$
 
 e13=ghost
+>tts.pl $$ y
 >icl.pl $$
 
 e14=candy rush saga
+>tts.pl $$ y
 >icl.pl $$
 
 e15=heezy-park
+>tts.pl $$ y
 >icl.pl $$
 
 3d=threediopolis
+>tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
 >icl.pl $$
 
 4d=fourdiopolis
+>tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
 >icl.pl $$
 
 sa=sa
+>tts.pl $$ y
 >punc.pl $$
 >stsx.pl
 >lov.pl g s
@@ -41,16 +48,18 @@ sa=sa
 >icl.pl $$
 
 roi=roiling
-#>punc.pl $$
-#>sts.pl $$
-#>lov.pl g
-#>crv.pl $$
-#>qq.pl $$
+>tts.pl $$ y
+>punc.pl $$
+>sts.pl $$
+>lov.pl g
+>crv.pl $$
+>qq.pl $$
 >$d/bma.pl 
-#>tsh.pl $$
-#>icl.pl $$
+>tsh.pl $$
+>icl.pl $$
 
 sc=slicker-city
+>tts.pl $$ y
 >conc.pl $$
 >crv.pl $$
 >qq.pl $l
@@ -59,6 +68,7 @@ sc=slicker-city
 >icl.pl -do $$
 
 pc=compound
+>tts.pl $$ y
 >conc.pl $$
 >crv.pl $$
 >qq.pl $l

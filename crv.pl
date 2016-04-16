@@ -2,6 +2,8 @@ use POSIX;
 
 my $needComment = 0;
 
+my $testStubs = 1;
+
 print "Starting code testing.\n";
 
 $dir = ".";
@@ -49,7 +51,10 @@ while ($a = <A>)
 	if ($newVol =~ /^stubs/)
 	{
 	$foundStubs = 1;
+	if ($testStubs)
+	{
 	$inTest = 1;
+	}
 	}
 	
     if ($newVol =~ /^beta testing/)
@@ -109,7 +114,7 @@ if (!$foundStubs) { print "Need stubs volume.\n"; }
 
 if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
 
-if (!$linesToFix) { $linesToFix = "No lines"; }
+if ($#commentNeed == -1) { $linesToFix = "No lines"; } else { $linesToFix = join(" / ", @commentNeed); }
 
 print "TEST RESULTS:$shortDir Code Comments,1,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
 if (!$needComment) { print "Yay! Success!\n"; }
@@ -129,7 +134,7 @@ sub checkForComments
     if (($newHeader) && (!$foundComments))
 	{
 	  $fullStr = "NEEDS COMMENTS ($lastChap) : $newHeader\n";
-	  if ($linesToFix) { $linesToFix = "$linesToFix/$lines"; } else { $linesToFix = "LINES $lines"; }
+	  push(@commentNeed, $lastChap);
 	  print C "$fullStr";
 	  print "$fullStr";
 	  $needComment++;
