@@ -16,6 +16,8 @@ use strict;
 #change this to debug if anything goes wrong
 my $debug = 0;
 
+my $showSuccesses = 0;
+my $anyTestsRun = 0;
 my $alec = 0;
 my $force = 0;
 my $sts = 0;
@@ -45,11 +47,11 @@ for $proj (@projs)
 
 print C "</table></center></body></html>";
 close(C);
-`$errFile`;
+if ($anyTestsRun) { `$errFile`; } else { print "No tests run, so I'm not showing the log file.\n"; }
 
 my $boxMsg = "";
 
-if (!$quiet) { Win32::MsgBox("$boxMsg"); }
+if ((!$quiet) && ($anyTestsRun)) { Win32::MsgBox("$boxMsg"); }
 
 sub projMap
 {
@@ -93,8 +95,9 @@ sub projMap
 sub runProj
 {
   $before = time();
-  print "Running $_[0].\n";
   my $logtext = "";
+  if (!$cmd{$_[0]}) { print "$_[0] had no associated project/folder.\n"; return; }
+  print "Running $_[0].\n";
   my @cmds = split(/\n/, $cmd{$_[0]});
   for (@cmds) { print "RUNNING $_\n"; $logtext .= `$_`; }
   procIt($_[0], $logtext);
@@ -107,10 +110,13 @@ sub procIt
   open(B, ">$y"); print B $_[1]; close(B);
   my @c;
   my $thisfail = 0;
+  my $thiswarn = 0;
   my $thissucc = 0;
   my $bkgd;
   
-  my @parseAry = split(/\n/, $_[1]);
+  my @parseAry = split(/\n/, $_[1]); if ($#parseAry == -1) { print ("$_[0] had nothing to parse in the command array.\n"); return; }
+  
+  $anyTestsRun = 1;
 
   open(B, ">$x");
   print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0]</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
@@ -123,8 +129,7 @@ sub procIt
 	  print "@c from $b\n";
 	  if ($c[2] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; } else
 	  {
-	    $thisfail++;
-        if ($c[2] < 0) { $bkgd = "grey"; } elsif ($c[2] <= $c[1]) { $bkgd = "yellow"; } else { $bkgd = "red"; }
+	    if ($c[2] < 0) { $bkgd = "grey"; $thisfail++; } elsif ($c[2] <= $c[1]) { $bkgd = "yellow"; $thiswarn++; } else { $bkgd = "red"; $thisfail++; }
 	  }
 	  my $myLine = "<tr><td bgcolor=$bkgd>" . join ("</td><td>", @c) . "</td></tr>\n";
 	  print B $myLine;
@@ -132,12 +137,12 @@ sub procIt
 	}
   }
   print B "</table border=1></center>\n";
-  print B "<center><font size=+3>$thisfail failures, $thissucc successes.</font><br \/>\n";
+  print B "<center><font size=+3>$thisfail failures, $thiswarn warnings, $thissucc successes.</font><br \/>\n";
   my $secs = time() - $before;
   print B $secs . " seconds taken.";
   print B "</center>\n</body></html>";
   close(B);
-  `$x`;
+  if (($thisfail > 0) || ($showSuccesses)) { `$x`; }
 }
 
 sub opoNightly
@@ -185,9 +190,9 @@ sub getArgs
 	{
 	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
 	  /-f/ && do { $force = 1; $count++; next; };
-	  /-e/ && do { `c:/writing/dict/nitely.txt`; $count++; next; };
 	  /-b/ && do { $build = 1; $count++; next; };
 	  /-nb/ && do { $build = -1; $count++; next; };
+	  /-s/ && do { $showSuccesses = 1; $count++; next; };
 	  /-aa/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
 	  /-a/ && do { @projs = ("3d", "4d", "pc", "sc", "sa", "roi"); $count++; next; };
 	  /-t/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { if ($subs{$x}) { @projs = (@projs, split(/,/, $subs{$x})); } else { @projs = (@projs, $x); } } $count += 2; next; };
@@ -208,14 +213,13 @@ sub usage
 {
 print <<EOT;
 -e = edit the nightly test text file
--f = force a nightly check
+-f = force a nightly check even if there haven't been any daily changes
 -b = force a build (individual projects turn it off and on: on for Alec, off for Stale Tales Slate, off for opolis)
 -nb = force no build
--3|4|34 = Opolis (Threediopolis, Fourdiopolis)
--a = Alec (Slicker city, Problems Compound)
--s = Stale Tales Slate (Shuffling Around, Roiling Original)
--oa = open latest Alec file
--oa = open latest STS file
+-a = all projects
+-t (comma list) = projects with commas
+-q = no pop-up windows box on finish
+-s = show successes
 EOT
 exit;
 }

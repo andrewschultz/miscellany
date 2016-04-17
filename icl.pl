@@ -54,9 +54,9 @@ while ($count <= $#ARGV)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
   /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
-  /^-?bo/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
-  /^-?do/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
-  /^-?ro/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-jb/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
+  /^-jd/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
+  /^-jr/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
   /-f/ && do { $release = $debug = $beta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
