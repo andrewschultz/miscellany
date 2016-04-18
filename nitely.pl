@@ -16,6 +16,8 @@ use strict;
 #change this to debug if anything goes wrong
 my $debug = 0;
 
+my $succString = "";
+my $justRelease = 0;
 my $showSuccesses = 0;
 my $anyTestsRun = 0;
 my $alec = 0;
@@ -37,6 +39,8 @@ print "NOTE: To run from the command line, schtasks /Run /TN \"Nightly Build\"\n
 projMap();
 getArgs();
 
+chdir("c:/writing/dict/nightly");
+
 open(C, ">$errFile");
 print C "<html><title>Total errors</title><body><center><font size=+4>TOTAL ERRORS</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
 
@@ -45,7 +49,7 @@ for $proj (@projs)
   runProj($proj);
 }
 
-print C "</table></center></body></html>";
+print C "</table>$succString</center></body></html>";
 close(C);
 if ($anyTestsRun) { `$errFile`; } else { print "No tests run, so I'm not showing the log file.\n"; }
 
@@ -59,7 +63,7 @@ sub projMap
   my $curLong = "";
   my $curProj = "";
   open(A, "c:/writing/dict/nitely.txt");
-  
+
   while ($a = <A>)
   {
     chomp($a);
@@ -99,8 +103,26 @@ sub runProj
   if (!$cmd{$_[0]}) { print "$_[0] had no associated project/folder.\n"; return; }
   print "Running $_[0].\n";
   my @cmds = split(/\n/, $cmd{$_[0]});
-  for (@cmds) { print "RUNNING $_\n"; $logtext .= `$_`; }
+  for (@cmds)
+  {
+    print "RUNNING $_\n";
+	if (!blockBuild($_))
+	{
+	$logtext .= `$_`;
+	}
+  }
   procIt($_[0], $logtext);
+}
+
+sub blockBuild # may be expanded to blockActivity
+{
+  if ($_ !~ /icl.pl/i) { return 0; }
+  if ($build == -1) { return 1; }
+  if ($justRelease)
+  {
+    if ($_ =~ /-jr/) { return 0; } else { return 1; }
+  }
+  return 0;
 }
 
 sub procIt
@@ -113,9 +135,9 @@ sub procIt
   my $thiswarn = 0;
   my $thissucc = 0;
   my $bkgd;
-  
-  my @parseAry = split(/\n/, $_[1]); if ($#parseAry == -1) { print ("$_[0] had nothing to parse in the command array.\n"); return; }
-  
+
+  my @parseAry = split(/\n/, $_[1]); if ($#parseAry == -1) { print ("$_[0] had nothing to parse in the log array.\n"); return; }
+
   $anyTestsRun = 1;
 
   open(B, ">$x");
@@ -142,7 +164,7 @@ sub procIt
   print B $secs . " seconds taken.";
   print B "</center>\n</body></html>";
   close(B);
-  if (($thisfail > 0) || ($showSuccesses)) { `$x`; }
+  if (($thisfail + $thiswarn > 0) || ($showSuccesses)) { `$x`; } else { $succString .= "<br>$_[0] passed all tests\n"; }
 }
 
 sub opoNightly
@@ -189,9 +211,11 @@ sub getArgs
 	for ($a)
 	{
 	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
+	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
 	  /-f/ && do { $force = 1; $count++; next; };
 	  /-b/ && do { $build = 1; $count++; next; };
 	  /-nb/ && do { $build = -1; $count++; next; };
+	  /-jr/ && do { $justRelease = -1; $count++; next; };
 	  /-s/ && do { $showSuccesses = 1; $count++; next; };
 	  /-aa/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
 	  /-a/ && do { @projs = ("3d", "4d", "pc", "sc", "sa", "roi"); $count++; next; };
@@ -215,11 +239,15 @@ print <<EOT;
 -e = edit the nightly test text file
 -f = force a nightly check even if there haven't been any daily changes
 -b = force a build (individual projects turn it off and on: on for Alec, off for Stale Tales Slate, off for opolis)
+-or = only release
 -nb = force no build
 -a = all projects
 -t (comma list) = projects with commas
 -q = no pop-up windows box on finish
 -s = show successes
+EXAMPLES: nitely.pl -a -q
+nitely.pl -nb -t sts (runs Stale Tales Slate without building)
+nitely.pl -jr -t pc (runs Problems Compound only building release)
 EOT
 exit;
 }

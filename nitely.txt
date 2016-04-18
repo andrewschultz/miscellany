@@ -8,26 +8,26 @@ ec~e11,e13,e14,e15
 
 e11=dash
 >tts.pl $$ y
->icl.pl $$
+>icl.pl -jr $$
 
 e13=ghost
 >tts.pl $$ y
->icl.pl $$
+>icl.pl -jr $$
 
 e14=candy rush saga
 >tts.pl $$ y
->icl.pl $$
+>icl.pl -jr $$
 
 e15=heezy-park
 >tts.pl $$ y
->icl.pl $$
+>icl.pl -jr $$
 
 3d=threediopolis
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
->icl.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
 
@@ -36,11 +36,12 @@ e15=heezy-park
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
->icl.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
 
 sa=sa
+>hv.pl -c
 >tts.pl $$ y
 >punc.pl $$
 >stsx.pl
@@ -49,7 +50,8 @@ sa=sa
 >crv.pl $$
 >qq.pl $l
 >tsh.pl $$
->icl.pl $$
+>weed.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
 
@@ -62,7 +64,8 @@ roi=roiling
 >qq.pl $l
 >$d/bma.pl 
 >tsh.pl $$
->icl.pl $$
+>weed.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
 
@@ -71,7 +74,7 @@ sc=slicker-city
 >conc.pl $$
 >crv.pl $$
 >qq.pl $l
->icl.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
 
@@ -80,6 +83,6 @@ pc=compound
 >conc.pl $$
 >crv.pl $$
 >qq.pl $l
->icl.pl $$
+>icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
