@@ -111,6 +111,7 @@ roi=c:\games\inform\roiling.inform\Source\ti.bat,roiling
 roi=c:\writing\dict\settler.pl,roiling
 roi=c:\writing\dict\settler.txt,roiling
 -a:roi=c:\games\inform\roiling.inform\Source\ppl-scratch.txt,roiling
+-a:roi=c:\games\inform\roiling.inform\Source\ppl-done.txt,roiling
 
 #Threediopolis files to GitHub
 TOBASE=threediopolis

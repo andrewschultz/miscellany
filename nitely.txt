@@ -56,6 +56,7 @@ sa=sa
 >icl.pl -jd $$
 
 roi=roiling
+>ti.pl -w
 >tts.pl $$ y
 >punc.pl $$
 >sts.pl $$
