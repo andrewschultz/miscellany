@@ -2,7 +2,7 @@
 #what to test
 #
 opo~3d,4d
-sts~sa,roi
+sts~ana,sa,roi
 as~pc,sc
 ec~e11,e13,e14,e15
 
@@ -40,6 +40,10 @@ e15=heezy-park
 >icl.pl -jb $$
 >icl.pl -jd $$
 
+ana=anagrams
+>stsx.pl
+>weed.pl -2
+
 sa=sa
 >hv.pl -c
 >tts.pl $$ y
@@ -50,7 +54,6 @@ sa=sa
 >crv.pl $$
 >qq.pl $l
 >tsh.pl $$
->weed.pl $$
 >icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
@@ -65,7 +68,6 @@ roi=roiling
 >qq.pl $l
 >$d/bma.pl 
 >tsh.pl $$
->weed.pl $$
 >icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$

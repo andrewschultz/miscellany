@@ -210,18 +210,18 @@ sub getArgs
 	if ($count <= $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
 	for ($a)
 	{
+	  /^-?\?$/ && do { usage(); exit; };
+	  /^-a$/ && do { @projs = ("opo", "as", "sts"); $count++; next; };
+	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
+	  /^-b$/ && do { $build = 1; $count++; next; };
 	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
+	  /^-f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
-	  /-f/ && do { $force = 1; $count++; next; };
-	  /-b/ && do { $build = 1; $count++; next; };
-	  /-nb/ && do { $build = -1; $count++; next; };
-	  /-jr/ && do { $justRelease = -1; $count++; next; };
-	  /-s/ && do { $showSuccesses = 1; $count++; next; };
-	  /-aa/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
-	  /-a/ && do { @projs = ("3d", "4d", "pc", "sc", "sa", "roi"); $count++; next; };
-	  /-t/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { if ($subs{$x}) { @projs = (@projs, split(/,/, $subs{$x})); } else { @projs = (@projs, $x); } } $count += 2; next; };
-	  /-q/ && do { $quiet = 1; $count++; next; };
-	  /-\?/ && do { usage(); exit; };
+	  /^-jr$/ && do { $justRelease = -1; $count++; next; };
+	  /^-nb$/ && do { $build = -1; $count++; next; };
+	  /^-q$/ && do { $quiet = 1; $count++; next; };
+	  /^-s$/ && do { $showSuccesses = 1; $count++; next; };
+	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { if ($subs{$x}) { @projs = (@projs, split(/,/, $subs{$x})); } else { @projs = (@projs, $x); } } $count += 2; next; };
 	  print "Invalid flag $a specified.\n";
 	  usage();
 	}
@@ -233,16 +233,21 @@ sub openLatest
 `c:\\writing\\dict\\nightly\\$_[0]-latest.txt`;
 }
 
+######################################################
+#basic usage stuff
+#
 sub usage
 {
 print <<EOT;
 -e = edit the nightly test text file
 -f = force a nightly check even if there haven't been any daily changes
+-h = open HTML file
 -b = force a build (individual projects turn it off and on: on for Alec, off for Stale Tales Slate, off for opolis)
--or = only release
+-jr = only release
 -nb = force no build
--a = all projects
--t (comma list) = projects with commas
+-t (comma list) = projects with commas. OPO=3d+4d, AS=PC+SC, STS+SA+ROI+ANA
+-a = all major projects (STS, AS and OPO)
+-aa = all projects in nitely.txt (includes EctoComp, for instance)
 -q = no pop-up windows box on finish
 -s = show successes
 EXAMPLES: nitely.pl -a -q

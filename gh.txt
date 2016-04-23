@@ -101,7 +101,9 @@ stsu=c:\writing\dict\brit-1word.txt,
 #below are ones I edit and add to the source files
 -a:stsu=c:\writing\dict\sts.txt,
 stsu=c:\writing\dict\stsx.pl,
+-a:stsu=c:\writing\dict\sts-undone.txt,
 stsu=c:\writing\dict\myan.pl,
+stsu=c:\writing\dict\aq.pl,
 
 #Roiling utils to GitHub
 TOBASE=stale-tales-slate
