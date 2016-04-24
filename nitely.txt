@@ -73,6 +73,11 @@ roi=roiling
 >icl.pl -jd $$
 
 sc=slicker-city
+>i7t.pl $d xadd
+c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city-redacted.trizbort
+\tech\trizbort\redact.pl -sc
+c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city.pdf
+CHECK
 >tts.pl $$ y
 >conc.pl $$
 >crv.pl $$
@@ -82,6 +87,9 @@ sc=slicker-city
 >icl.pl -jd $$
 
 pc=compound
+>i7t.pl $d hb,hs,xadd
+c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/mine/compound.trizbort
+\tech\trizbort\redact.pl -pc
 >tts.pl $$ y
 >conc.pl $$
 >crv.pl $$

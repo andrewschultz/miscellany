@@ -24,6 +24,7 @@ while ($count <= $#ARGV)
   {
   /-l/ && do { $launchAfter = 1; $count++; next; };
   /-r/ && do { $launchRaw = 1; $count++; next; };
+  /^-?e$/ && do { `c:/writing/scripts/@ARGV[$count+1].txt`; exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }

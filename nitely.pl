@@ -9,6 +9,9 @@
 use Win32;
 use POSIX qw(strftime);
 
+use File::stat;
+use Time::localtime;
+
 use warnings;
 use strict;
 
@@ -16,6 +19,7 @@ use strict;
 #change this to debug if anything goes wrong
 my $debug = 0;
 
+my $linkBack = "";
 my $succString = "";
 my $justRelease = 0;
 my $showSuccesses = 0;
@@ -49,7 +53,7 @@ for $proj (@projs)
   runProj($proj);
 }
 
-print C "</table>$succString</center></body></html>";
+print C "</table>$succString$linkBack</center></body></html>";
 close(C);
 if ($anyTestsRun) { `$errFile`; } else { print "No tests run, so I'm not showing the log file.\n"; }
 
@@ -70,6 +74,7 @@ sub projMap
     if ($a =~ /~/)
 	{
 	  my @b = split(/~/, $a);
+	  printDebug ("$b[0] ~~ $b[1]\n");
 	  $subs{$b[0]} = $b[1];
 	  next;
 	}
@@ -90,10 +95,28 @@ sub projMap
 	  if ($cmd{$curProj}) { $cmd{$curProj} .= "\n"; }
 	  $cmd{$curProj} .= $a;
 	  #print "Command: $a\n";
-	  if ($debug) { print "$curProj added command $a.\n"; }
+	  printDebug("$curProj added command $a.\n");
 	  next;
 	}
+	elsif ($a =~ />/)
+	{
+	  my @b = split(/>/, $a);
+	  my $cmd = <A>;
+	  if (-M "$b[0]" < -M "$b[1]")
+	  {
+	  if ($cmd{$curProj}) { $cmd{$curProj} .= "\n"; }
+	  $cmd{$curProj} .= $cmd;
+	  } else
+	  {
+	    printDebug("Skipping $cmd\n");
+	  }
+	}
   }
+}
+
+sub printDebug
+{
+  if ($debug) { print "$_[0]"; }
 }
 
 sub runProj
@@ -137,6 +160,8 @@ sub procIt
   my $bkgd;
 
   my @parseAry = split(/\n/, $_[1]); if ($#parseAry == -1) { print ("$_[0] had nothing to parse in the log array.\n"); return; }
+  
+  $linkBack .= "<br /><a href=\"$_[0].htm\">$_[0].htm</a>\n";
 
   $anyTestsRun = 1;
 
@@ -204,6 +229,7 @@ sub getArgs
   my $a, my $b;
   my $x;
   my $count = 0;
+  my @raw = ();
   while ($count <= $#ARGV)
   {
     $a = $ARGV[$count];
@@ -211,9 +237,10 @@ sub getArgs
 	for ($a)
 	{
 	  /^-?\?$/ && do { usage(); exit; };
-	  /^-a$/ && do { @projs = ("opo", "as", "sts"); $count++; next; };
-	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@projs, $x); } $count++; next; };
+	  /^-a$/ && do { @raw = ("opo", "as", "sts"); $count++; next; };
+	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
 	  /^-b$/ && do { $build = 1; $count++; next; };
+	  /^-d$/ && do { $debug = 1; $count++; next; };
 	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
 	  /^-f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
@@ -221,10 +248,19 @@ sub getArgs
 	  /^-nb$/ && do { $build = -1; $count++; next; };
 	  /^-q$/ && do { $quiet = 1; $count++; next; };
 	  /^-s$/ && do { $showSuccesses = 1; $count++; next; };
-	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { if ($subs{$x}) { @projs = (@projs, split(/,/, $subs{$x})); } else { @projs = (@projs, $x); } } $count += 2; next; };
+	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  print "Invalid flag $a specified.\n";
 	  usage();
 	}
+  }
+  for my $k (@raw)
+  {
+    my $zz;
+    if ($subs{$k})
+	{
+	  my @plist = split(/,/, $subs{$k});
+	  for $zz (@plist) { push(@projs, $zz); }
+	} else { push(@projs, $k); }
   }
 }
 
@@ -239,6 +275,7 @@ sub openLatest
 sub usage
 {
 print <<EOT;
+-d = debug
 -e = edit the nightly test text file
 -f = force a nightly check even if there haven't been any daily changes
 -h = open HTML file
