@@ -71,6 +71,7 @@ sub projMap
   while ($a = <A>)
   {
     chomp($a);
+	if ($a =~ /^#/) { next; }
     if ($a =~ /~/)
 	{
 	  my @b = split(/~/, $a);

@@ -40,15 +40,18 @@ e15=heezy-park
 >icl.pl -jb $$
 >icl.pl -jd $$
 
+#no specific program but it comprises Stale Tales Slate tests that don't fit into either
 ana=anagrams
 >stsx.pl
 >weed.pl -2
+#first has no tests but dumps my progress
+>ac.pl -df
+>ac.pl -t
 
 sa=sa
 >hv.pl -c
 >tts.pl $$ y
 >punc.pl $$
->stsx.pl
 >lov.pl g s
 >sts.pl $$
 >crv.pl $$
@@ -62,7 +65,6 @@ roi=roiling
 >ti.pl -w
 >tts.pl $$ y
 >punc.pl $$
->sts.pl $$
 >lov.pl g
 >crv.pl $$
 >qq.pl $l
@@ -73,7 +75,8 @@ roi=roiling
 >icl.pl -jd $$
 
 sc=slicker-city
->i7t.pl $d xadd
+>wfl.pl -t
+>i7t.pl $d -t xadd -p $$
 c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city-redacted.trizbort
 \tech\trizbort\redact.pl -sc
 c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city.pdf
@@ -87,7 +90,7 @@ CHECK
 >icl.pl -jd $$
 
 pc=compound
->i7t.pl $d hb,hs,xadd
+>i7t.pl $d -t hb,hs,xadd -p $$
 c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/mine/compound.trizbort
 \tech\trizbort\redact.pl -pc
 >tts.pl $$ y
