@@ -13,8 +13,6 @@
 
 use POSIX;
 
-@thisAry = @ARGV;
-
 $count = 0;
 
 $printTabbed = 1;
@@ -22,12 +20,12 @@ $printUntabbed = 1;
 
 $pwd = getcwd();
 
-if ($pwd =~ /oafs/) { $oafs = 1; $roiling = 0; }
-elsif ($pwd =~ /(threed|fourd)/) { $threed = 1; $roiling = 0; $compound = 0; }
-elsif ($pwd =~ /Compound/) { $compound = 1; $roiling = 0; $threed = 0; }
-elsif ($pwd =~ /slicker/) { $compound = 1; $roiling = 0; $threed = 0; }
-else
-{ $roiling = 1; }
+if ($pwd =~ /oafs/) { @runs = ("oafs"); }
+elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
+elsif ($pwd =~ /Compound/i) { @runs = ("as"); }
+elsif ($pwd =~ /slicker/i) { @runs = ("as"); }
+else # default = Roiling
+{ @runs = ("sts"); }
 
 while (@ARGV[$count])
 {
@@ -35,52 +33,128 @@ while (@ARGV[$count])
   
   for ($a)
   {
-  if (@thisAry[0] =~ /^\//) { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
-  if (@thisAry[0] eq "-a") { $threed = 1; $roiling = 1; $oafs = 1; $compound = 1; shift(@thisAry); $count++; next; }; # oafs?
-  if (@thisAry[0] eq "-o") { $oafs = 1; shift(@thisAry); $count++; next; }; # oafs?
-  if ((@thisAry[0] eq "-3") || (@thisAry[0] eq "-4")) { $threed = 1; shift(@thisAry); $count++; next; }; # oafs?
-  if (@thisAry[0] =~ /^-?(as|sc|pc)/i) { $compound = 1; $roiling = 0; $threed = 0; shift(@thisAry); $count++; next; }; # oafs?
-  if ((@thisAry[0] eq "-r") || (@thisAry[0] eq "r")) { $compound = 0; $roiling = 1; $threed = 0; shift(@thisAry); $count++; next; }; # roiling original? (default)
-  if ((@thisAry[0] eq "-sa") || (@thisAry[0] eq "sa")) { $compound = 0; $roiling = 1; $threed = 0; shift(@thisAry); $count++; next; }; # roiling original? (default)
-  if (@thisAry[0] eq "-h") { $showHeaders = 1; shift(@thisAry); $count++; next; };
-  if (@thisAry[0] eq "-p") { $headersToo = 1; shift(@thisAry); $count++; next; };
-  if (@thisAry[0] eq "-nt") { $printTabbed = 0; shift(@thisAry); $count++; next; };
-  if (@thisAry[0] eq "-ft") { $printUntabbed = 0; shift(@thisAry); $count++; next; };
-  if (@thisAry[0] eq "-m") { $maxFind = @thisAry[1]; @thisAry = @thisAry[2..$#thisAry]; $count+= 2; next; };
-  if (@thisAry[0] eq "-t") { $onlyTables = 1; shift(@thisAry); $count++; next; }; #not perfect, -h + -t = conflict
-  if (@thisAry[0] eq "-tb") { $onlyTables = 1; $onlyRand = 1; shift(@thisAry); $count++; next; }; #not perfect, -h + -t = conflict
-  if (@thisAry[0] eq "-tb1") { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; shift(@thisAry); $count++; next; }; #not perfect, -h + -t = conflict
-  if (@thisAry[0] =~ /^[a-z]/i) { $count++; } else { print "Argument @thisAry[0] failed.\n"; usage(); }
+  /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
+  /^-a$/ && do { $runAll = 1; $count++; next; }; # run all
+  /^-o$/ && do { $oafs = 1; $count++; next; }; # oafs?
+  /,/ && do { @runs = split(/,/, $a); $count++; next; };
+  /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
+  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # oafs?
+  /^-?(r|roi|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
+  /^-h$/ && do { $showHeaders = 1; $count++; next; };
+  /^-p$/ && do { $headersToo = 1; $count++; next; };
+  /^-nt$/ && do { $printTabbed = 0; $count++; next; };
+  /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
+  /^-m$/ && do { $maxFind = @thisAry[1]; @thisAry = @thisAry[2..$#thisAry]; $count+= 2; next; };
+  /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
+  /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
+  /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
+  /^[a-z]/i && do { push(@thisAry, $a); $count++; next; };
+  print "Argument $a failed.\n"; usage();
   }
 
 }
 if (!@thisAry[0]) { die ("Need an argument."); }
 
-if ($oafs)
+processListFile();
+
+if ($runAll)
 {
-processStory("uglyoafs");
+  foreach $myrun (@availRuns)
+  {
+    processFiles($myrun);
+  }
 }
-elsif ($threed)
+else
 {
-processStory("threediopolis");
-processStory("fourdiopolis");
+  foreach $myrun (@runs)
+  {
+    processFiles($myrun);
+  }
 }
-elsif ($compound)
+
+sub processListFile
 {
-processStory("compound");
-processStory("c:/games/inform/triz/mine/compound-directors-cut.trizbort");
-processStory("slicker-city");
-processStory("c:/games/inform/triz/mine/slicker-city.trizbort");
+  open(A, "c:/writing/scripts/gq.txt");
+  while ($a = <A>)
+  {
+    if ($a =~ /^#/) { next; }
+    if ($a =~ /^;/) { last; }
+    if ($a =~ /^run=/)
+	{
+      chomp($a);
+	  $a =~ s/.*=//g;
+	  $currentLedger = $a;
+	  push(@availRuns, $a);
+	  next;
+	}
+	if ($a !~ /[a-z]/i) { $currentLedger = ""; next; }
+	if ($currentLedger)
+	{
+	$cmds{$currentLedger} .= $a;
+	}
+	
+  }
+  close(A);
 }
-elsif ($roiling)
+
+sub processFiles
 {
-processStory("sa", 0);
-processStory("sa", 1);
-processStory("roiling", 0);
-processStory("roiling", 1);
-processNotes("games.otl");
-processNotes("sts.txt");
-#processNotes("lists.otl");
+  @x = split(/\n/, $cmds{$_[0]});
+  foreach $cmd (@x)
+  {
+	@fileAndMarkers = split(/\t/, $cmd);
+	processOneFile(@fileAndMarkers);
+  }
+}
+
+sub processOneFile
+{
+  my $inImportant = 1;
+  my $alwaysImportant = 1;
+  my $inTable = 0;
+  my $line = 0;
+  my $currentTable = "";
+  my $foundOne = 0;
+
+  if ($_[1])
+  {
+    $inImportant = 0;
+	$alwaysImportant = 0;
+	@importants = split(/,/, $_[1]);
+  }
+  my $modFile = $_[0];
+  if ($modFile =~ /story.ni/)
+  {
+    $modFile =~ s/\.inform.*/ MAIN/;
+	$modFile =~ s/.*[\\\/]//;
+  }
+  open(A, "$_[0]") || die ("No $_[0]");
+  while ($a = <A>)
+  {
+    if ($inImportant) { $idx++; }
+    if ($_[1])
+	{
+	  if ($a =~ /^\\/)
+	  {
+	    for (@importants) { if ($a =~ /^\\$_[=\|]/) { $idx = 0; $inImportant = 1; $thisImportant = $a; chomp($thisImportant); $thisImportant =~ s/[\|=].*//g; } }
+	  }
+	}
+    $line++;
+	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; chomp($currentTable); $inTable = 1; }
+	if ($a !~ /[a-z]/) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; } }
+    if ($inImportant && cromu($a))
+	{
+	  if (!$foundOne) { print "Results for $modFile:\n"; }
+	  $foundOne++;
+	  print "$modFile($line";
+	  if ($currentTable) { print ",$currentTable"; }
+	  if ($thisImportant) { print ",$thisImportant"; }
+	  if ($thisImportant) { print ",L$idx"; }
+	  print "): $a";
+	}
+  }
+  close(A);
+  if (!$foundOne) { print "Nothing found in $modFile/$_[1]\n"; }
 }
 
 sub processNotes
