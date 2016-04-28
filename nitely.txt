@@ -1,4 +1,16 @@
 ############################
+#usage
+#a~b defines a list-map
+#> = command to run
+#$$ = short value
+#$l = long value (pc => compound)
+#$d = directory
+#a > b = if one file has a later date than the next, run the below
+#CHECK means this is just a timestamp check to throw an error
+#D: (if file modified in last day, run the line below)
+#x = cut off the test right away (use when something goes wrong)
+
+############################
 #what to test
 #
 opo~3d,4d
@@ -103,8 +115,6 @@ pc=compound
 >lnct.pl $$
 >invis.pl -u $$
 >i7t.pl $d -t hb,hs,xadd -p $l
-
-xxx=xxxx
 c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/mine/compound.trizbort
 \tech\trizbort\redact.pl -pc
 >tts.pl $$ y
