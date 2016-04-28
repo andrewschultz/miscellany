@@ -11,6 +11,7 @@ echo r = roiling
 echo sa = shuffling
 echo ni r nu = roiling nudges
 echo ni sa ra = shuffling random
+echo pr sr rr = problems, shuffling or roiling releases
 goto end
 )
 

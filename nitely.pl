@@ -86,6 +86,7 @@ sub projMap
 	  $curLong = $b[1];
 	  next;
 	}
+	if ($a =~ /^D:/i) { $a =~ s/^d://gi; if (-M $a < 1.01) { $a = <A>; $cmd{$curProj} .= "$a"; } next; }
 	if ($a =~ /^>/)
 	{
 	  $a =~ s/^>//g;

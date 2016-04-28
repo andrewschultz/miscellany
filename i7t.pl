@@ -5,6 +5,8 @@ my $project = "Project";
 $tables = 0;
 $count = 0;
 
+my $countMismatch = 0;
+
 if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; }
 
 while ($count <= $#ARGV)
@@ -58,6 +60,7 @@ while ($a = <A>)
 {
   chomp($a);
   @b = split(/\t/, $a);
+  
   if (lc(@b[0]) ne lc($project)) { next; }
   open(F, @b[2]) || die ("Can't find @b[2].");
   
@@ -70,14 +73,27 @@ while ($a = <A>)
   my $success = 0;
   while ($f = <F>)
   {
-    #print "@b[3] =~ $f";
+    #print "@b[3] =~? $f";
     if ($f =~ /@b[3]/) { $success = 1; last; }
   }
   close(F);
-  if ($success) { print "@b[2] search for @b[3]PASSED:\n  $f\n"; } else { print "TEST RESULTS:$project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n"; }
+  if ($success)
+  {
+    print "@b[2] search for @b[3] PASSED:\n  $f\n";
+  }
+  else
+  {
+    $countMismatch++;
+	print "@b[2] search for @b[3] FAILED\n";
+	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n";
+  }
 }
 
-if ($majorList) { $majorList =~ s/,//g; print "TEST RESULTS:$project table count,0,0,0,$majorList\n"; }
+if ($majorList)
+{
+  $majorList =~ s/,//g;
+  print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
+}
 
 sub usage
 {

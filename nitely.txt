@@ -23,6 +23,8 @@ e15=heezy-park
 >icl.pl -jr $$
 
 3d=threediopolis
+>lnct.pl $$
+>invis.pl -u $$
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
@@ -32,6 +34,8 @@ e15=heezy-park
 >icl.pl -jd $$
 
 4d=fourdiopolis
+>lnct.pl $$
+>invis.pl -u $$
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
@@ -49,6 +53,8 @@ ana=anagrams
 >ac.pl -t
 
 sa=sa
+>lnct.pl $$
+>invis.pl -u $$
 >hv.pl -c
 >tts.pl $$ y
 >punc.pl $$
@@ -62,6 +68,8 @@ sa=sa
 >icl.pl -jd $$
 
 roi=roiling
+>lnct.pl $$
+>invis.pl -u $$
 >ti.pl -w
 >tts.pl $$ y
 >punc.pl $$
@@ -75,6 +83,8 @@ roi=roiling
 >icl.pl -jd $$
 
 sc=slicker-city
+>lnct.pl $$
+>invis.pl -u $$
 >wfl.pl -t
 >i7t.pl $d -t xadd -p $$
 c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city-redacted.trizbort
@@ -90,7 +100,11 @@ CHECK
 >icl.pl -jd $$
 
 pc=compound
->i7t.pl $d -t hb,hs,xadd -p $$
+>lnct.pl $$
+>invis.pl -u $$
+>i7t.pl $d -t hb,hs,xadd -p $l
+
+xxx=xxxx
 c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/mine/compound.trizbort
 \tech\trizbort\redact.pl -pc
 >tts.pl $$ y

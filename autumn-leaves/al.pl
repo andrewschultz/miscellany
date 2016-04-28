@@ -485,7 +485,13 @@ sub suitstat
 
 sub check720
 {
-  if ($drawsLeft != 1) { print "You need to have 1 draw left to use the check-auto-win command.\n"; return; }
+  my @suitStatus = (0, 0, 0, 0, 0);
+  for (0..3) { $suitStatus[suitstat($_)]++; }
+  if ($drawsLeft != 1)
+  {
+    if ($suitStatus[0] ==4) { print "Even with >1 draw left, you're still pretty blocked.\n"; return; }
+    print "You probably have a chance, but you need to have 1 draw left to use the check-auto-win command.\n"; return;
+  }
   my @initArray = ();
   my $couldWork = 0;
   print "Checking for draw-to-win/win-on-draw...\n";
@@ -496,8 +502,6 @@ sub check720
 	my $fact = 720; for (1..$hidCards) { $fact = $fact * (6 + $_); }
 	print "Total possibilities = " . $fact . "\n";
   }
-  my @suitStatus = (0, 0, 0, 0, 0);
-  for (0..3) { $suitStatus[suitstat($_)]++; }
   for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
   elsif ($suitStatus[0] == 4)

@@ -22,6 +22,7 @@ while ($count <= $#ARGV)
   $a = @ARGV[$count];
   for ($a)
   {
+  /-u/ && do { $updateOnly = 1; $count++; next; };
   /-l/ && do { $launchAfter = 1; $count++; next; };
   /-r/ && do { $launchRaw = 1; $count++; next; };
   /^-?e$/ && do { `c:/writing/scripts/@ARGV[$count+1].txt`; exit; };
@@ -32,6 +33,8 @@ while ($count <= $#ARGV)
 $outname = "c:/writing/scripts/invis-$filename";
 $outname =~ s/txt$/htm/gi;
 
+$fileShort = $filename;
+
 if (! -f $filename) { $filename = "c:/writing/scripts/$filename"; }
 
 open(A, "$filename") || die ("Can't open input file " . $filename);
@@ -39,7 +42,16 @@ open(A, "$filename") || die ("Can't open input file " . $filename);
 $a = <A>;
 
 if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:/writing/scripts/$a"; $a = <A>; }
-if ($a !~ /^!/) { print ("The first line must begin with a (!). That's a bit rough, but it's how it is."); exit; }
+
+if ($updateOnly)
+{
+  #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
+  #die ((-M $filename) . " $filename | $outname " . (-M $outname));
+  if (-M $filename > -M $outname) { print "$outname is already up to date. Run without -u to fix.\n"; exit; }
+  else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
+}
+
+if ($a !~ /^!/) { print ("The first line (other than out=) must begin with a (!). That's a bit rough, but it's how it is."); exit; }
 
 $a =~ s/^!//g;
 
@@ -135,7 +147,7 @@ close(B);
 
 open(B, "$outname");
 
-$rawFile = "c:/writing/scripts/invraw-$filename.htm";
+$rawFile = "c:/writing/scripts/invraw-$filename"; $raw =~ s/\.txt/\.htm/g;
 
 open(C, ">$rawFile");
 
