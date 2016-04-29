@@ -34,7 +34,11 @@ e15=heezy-park
 >tts.pl $$ y
 >icl.pl -jr $$
 
+misc=miscellaneous
+>gh.pl $$
+
 3d=threediopolis
+>gh.pl $$
 >lnct.pl $$
 >invis.pl -u $$
 >tts.pl $$ y
@@ -46,6 +50,7 @@ e15=heezy-park
 >icl.pl -jd $$
 
 4d=fourdiopolis
+>gh.pl $$
 >lnct.pl $$
 >invis.pl -u $$
 >tts.pl $$ y
@@ -58,6 +63,7 @@ e15=heezy-park
 
 #no specific program but it comprises Stale Tales Slate tests that don't fit into either
 ana=anagrams
+>gh.pl sts
 >stsx.pl
 >weed.pl -2
 #first has no tests but dumps my progress
@@ -95,6 +101,7 @@ roi=roiling
 >icl.pl -jd $$
 
 sc=slicker-city
+>gh.pl $$
 >lnct.pl $$
 >invis.pl -u $$
 >wfl.pl -t
@@ -112,6 +119,7 @@ CHECK
 >icl.pl -jd $$
 
 pc=compound
+>gh.pl $$
 >lnct.pl $$
 >invis.pl -u $$
 >i7t.pl $d -t hb,hs,xadd -p $l
@@ -124,3 +132,11 @@ c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/m
 >icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
+
+uo=uglyoafs
+>gh.pl uo
+>icl.pl -jr $$
+>icl.pl -jb $$
+>icl.pl -jd $$
+
+;

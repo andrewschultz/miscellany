@@ -13,6 +13,8 @@
 
 use POSIX;
 
+my $gqfile = "c:/writing/scripts/gq.txt";
+
 $count = 0;
 
 $printTabbed = 1;
@@ -33,6 +35,7 @@ while (@ARGV[$count])
   
   for ($a)
   {
+  /^-?e/ && do { `$gqfile`; exit; };
   /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-a$/ && do { $runAll = 1; $count++; next; }; # run all
   /^-o$/ && do { $oafs = 1; $count++; next; }; # oafs?
@@ -74,7 +77,7 @@ else
 
 sub processListFile
 {
-  open(A, "c:/writing/scripts/gq.txt");
+  open(A, $gqfile);
   while ($a = <A>)
   {
     if ($a =~ /^#/) { next; }
@@ -105,6 +108,7 @@ sub processFiles
 	@fileAndMarkers = split(/\t/, $cmd);
 	processOneFile(@fileAndMarkers);
   }
+  if ($#blanks > -1) { print "EMPTY FILES: " . join(", ", @blanks) . "\n"; }
 }
 
 sub processOneFile
@@ -128,6 +132,7 @@ sub processOneFile
     $modFile =~ s/\.inform.*/ MAIN/;
 	$modFile =~ s/.*[\\\/]//;
   }
+  if ($modFile =~ /(trizbort|i7x)/) { $modFile =~ s/.*[\\\/]//g; }
   open(A, "$_[0]") || die ("No $_[0]");
   while ($a = <A>)
   {
@@ -154,7 +159,7 @@ sub processOneFile
 	}
   }
   close(A);
-  if (!$foundOne) { print "Nothing found in $modFile/$_[1]\n"; }
+  if (!$foundOne) { push (@blanks, $modFile); }
 }
 
 sub processNotes

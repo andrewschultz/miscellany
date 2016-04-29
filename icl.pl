@@ -178,6 +178,7 @@ printf "Debug build.\n";
 
 $outFile = "$bdir/output.$ex";
 delIfThere($outFile);
+delIfThere("$bdir\\auto.inf");
 system("\"$infDir/Compilers/ni\" -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
 system("\"$infDir/Compilers/$i6x\" -kwSD$iflag +include_path=$base,$bdir $bdir/auto.inf \"$bdir/output.$ex\"");
 if (-f "$outFile") { print ("TEST RESULTS:$_[0] DEBUG,0,0,0,$outFile built\n"); }
@@ -191,12 +192,15 @@ printf "Release build.\n";
 
 $outFile = "$bdir\\output.$ex";
 delIfThere($outFile);
+delIfThere("$bdir\\auto.inf");
 
 printf "Generating output.$ex.\n";
 #die("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
 system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
+if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile failed to build\n"); }
+else { print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile built\n"); }
 printf "Generating blorb.$ex.\n";
-$outFile = "$bdir/output.$ex";
+$outFile = "$bdir/blorb.$ex";
 delIfThere($outFile);
 system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$base,$bdir $bdir/auto.inf \"$outFile\"");
 if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,0,0,$outFile built\n");
@@ -273,5 +277,5 @@ sub getFile
 
 sub delIfThere
 {
-  if (-f "$_[0]") { system("erase \"$_[0]\""); }
+  if (-f "$_[0]") { print "Deleting $_[0]\n"; system("erase \"$_[0]\""); } else { print "No $_[0]\n"; }
 }
