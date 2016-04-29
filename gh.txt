@@ -123,7 +123,7 @@ TOBASE=threediopolis
 3d=c:\writing\scripts\threediopolis-invisiclues.htm,
 3d=c:\writing\scripts\3d.txt,
 3d=c:\games\inform\threediopolis.inform\uuid.txt,
-3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,
+-b:3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,
 3d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
 
 #Fourdiopolis files to BitBucket
@@ -135,6 +135,7 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt,
 4d=c:\games\inform\fourdiopolis.inform\source\locs.pl,
 4d=c:\games\inform\fourdiopolis.inform\source\logcheck.pl,
+-b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
@@ -244,6 +245,7 @@ misc=c:\writing\dict\nitely.txt,
 misc=c:\writing\scripts\gq.pl,
 misc=c:\writing\scripts\tts.pl,
 misc=c:\writing\scripts\lnct.pl,
+misc=c:\scripts\ghgo.bat,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

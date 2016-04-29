@@ -157,7 +157,7 @@ system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$beta,$beta $beta
 
 $betaFileShort = getFile("$beta/Release.blurb");
 
-if (! -f $outFile) { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); print ("TEST RESULTS:$_[0] BETA BLORB,-1,0,0,Blorb build not attempted\n"); }
+if (! -f $outFile) { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); print ("TEST RESULTS:$_[0] BETA BLORB,grey,0,0,Blorb build not attempted\n"); }
 else
 {
 $outFile = "$betm/Release/beta-$betaFileShort";
@@ -220,7 +220,7 @@ if ($execute) { $execute = 0; `$bdir/output.$gz`; }
 else
 {
   print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile failed\n");
-  print ("TEST RESULTS:$_[0] BLORB RELEASE,0,-1,0,$outFile failed\n");
+  print ("TEST RESULTS:$_[0] BLORB RELEASE,grey,0,0,$outFile failed\n");
 }
 }
 }

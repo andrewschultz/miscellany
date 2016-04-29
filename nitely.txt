@@ -63,8 +63,10 @@ misc=miscellaneous
 
 #no specific program but it comprises Stale Tales Slate tests that don't fit into either
 ana=anagrams
+>hv.pl -c
 >gh.pl sts
 >stsx.pl
+x
 >weed.pl -2
 #first has no tests but dumps my progress
 >ac.pl -df
@@ -73,7 +75,6 @@ ana=anagrams
 sa=sa
 >lnct.pl $$
 >invis.pl -u $$
->hv.pl -c
 >tts.pl $$ y
 >punc.pl $$
 >lov.pl g s

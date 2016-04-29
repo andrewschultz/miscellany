@@ -87,7 +87,7 @@ sub projMap
 	  next;
 	}
 	if ($a =~ /^D:/i) { $a =~ s/^d://gi; if (-M $a < 1.01) { $a = <A>; $cmd{$curProj} .= "$a"; } next; }
-	if ($a =~ /^x/) { while ($a =~ /[a-z]/) { $a = <A>; } next; }
+	if ($a =~ /^x/i) { while ($a =~ /[a-z]/i) { $a = <A>; print "Skipping $a"; } next; }
 	if ($a =~ /^>/)
 	{
 	  $a =~ s/^>//g;
@@ -177,10 +177,10 @@ sub procIt
 	  my $printErr = 1;
 	  $b = $a; $b =~ s/.*RESULT(S?)://; @c = split(/,/, $b);
 	  print "@c from $b\n";
-	  if ($c[2] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; } else
-	  {
-	    if ($c[2] < 0) { $bkgd = "grey"; $thisfail++; } elsif ($c[2] <= $c[1]) { $bkgd = "yellow"; $thiswarn++; } else { $bkgd = "red"; $thisfail++; }
-	  }
+	  if ($c[1] !~ /^[0-9]/) { $bkgd = $c[1]; $c[1] = "N/A"; if (!$c[4]) { $c[4] = "TEST NOT RUN"; } }
+	  elsif ($c[2] == 0) { $bkgd = "green"; $printErr = 0; $thissucc++; }
+	  elsif ($c[2] <= $c[1]) { $bkgd = "yellow"; $thiswarn++; }
+	  else { $bkgd = "red"; $thisfail++; }
 	  my $myLine = "<tr><td bgcolor=$bkgd>" . join ("</td><td>", @c) . "</td></tr>\n";
 	  print B $myLine;
 	  if ($printErr) { print C $myLine; }

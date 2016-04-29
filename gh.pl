@@ -151,7 +151,8 @@ sub processTerms
   {
     print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
 	my $cbf = $copies+$badFileCount;
-	if ($cbf) { print "TEST RESULTS:$procString file-copies,0,$cbf,0,gh.pl $procString\n"; }
+	my $proc2 = join("/", split(/,/, $procString));
+	if ($cbf) { print "TEST RESULTS:$proc2 file-copies,0,$cbf,0,gh.pl $procString\n"; }
 	if ($fileList) { print "====FILE LIST:\n$fileList"; }
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
