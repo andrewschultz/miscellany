@@ -23,6 +23,8 @@ cd ..\ugly-oafs
 git status -s
 cd ..\ectocomp
 git status -s
+cd ..\dirk
+git status -s
 echo TRIZBORT
 cd ..\trizbort
 git status -s

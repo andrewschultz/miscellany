@@ -10,6 +10,7 @@ while ($count <= $#ARGV)
 {
   $a = @ARGV[$count];
   if ($a =~ /\?/) { usage(); }
+  if ($a =~ /^-o$/) { $openAfter = 1; $count++; next; }
   if ($a =~ /^e$/) { print "Opening commands file.\n"; `$zup`; exit; }
   if ($a =~ /^ee$/) { print "Opening script file.\n"; `$zupl`; exit; }
   if ($a =~ /,/)
@@ -54,7 +55,14 @@ while ($a = <A>)
   for ($a)
   {
   /^v=/ && do { $a =~ s/^v=//g; $version = $a; next; };
-  /^!/ && do { print "Writing to c:/games/inform/zip/$outFile...\n"; die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK; print "Writing successful.\n"; exit; };
+  /^!/ && do
+  {
+    print "Writing to c:/games/inform/zip/$outFile...\n";
+	die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK;
+	print "Writing successful.\n";
+	if ($openAfter) { print "Opening...\n"; `c:\\games\\inform\\zip\\$outFile`; }
+	exit;
+  };
   /^out=/ && do { $a =~ s/^out=//g; $outFile = $a; $zip = Archive::Zip->new(); next; };
   /^tree:/ && do { $a =~ s/^tree://g; @b = split(/,/, $a); $zip->addTree("@b[0]", "@b[1]" ); #print "Added tree: @b[0] to @b[1].\n";
   next; };
