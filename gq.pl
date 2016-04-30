@@ -35,7 +35,7 @@ while (@ARGV[$count])
   
   for ($a)
   {
-  /^-?e/ && do { `$gqfile`; exit; };
+  /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-a$/ && do { $runAll = 1; $count++; next; }; # run all
   /^-o$/ && do { $oafs = 1; $count++; next; }; # oafs?

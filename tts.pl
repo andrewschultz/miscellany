@@ -31,7 +31,7 @@ while ($a = <A>)
 }
 close(A);
 
-print "TEST RESULTS:$long{@ARGV[0]} whitespace,$endspace,0,0,none\n";
+print "TEST RESULTS:$long{@ARGV[0]} whitespace,orange,$endspace,0,none\n";
 
 if ($endspace == 0) { exit; }
 
