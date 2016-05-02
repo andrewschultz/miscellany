@@ -46,7 +46,7 @@ if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:/writing/script
 if ($updateOnly)
 {
   #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
-  #die ((-M $filename) . " $filename | $outname " . (-M $outname));
+  print ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n";
   if (-M $filename > -M $outname) { print "$outname is already up to date. Run without -u to fix.\n"; exit; }
   else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
 }
@@ -144,6 +144,8 @@ for (1..$lastLev) { print B "</div>\n"; }
 print B $footer;
 
 close(B);
+
+close(A);
 
 open(B, "$outname");
 

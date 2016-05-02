@@ -31,7 +31,14 @@ while ($a = <A>)
 }
 close(A);
 
+if ($endspace)
+{
 print "TEST RESULTS:$long{@ARGV[0]} whitespace,orange,$endspace,0,none\n";
+}
+else
+{
+print "TEST RESULTS:$long{@ARGV[0]} whitespace,0,$endspace,0,none\n";
+}
 
 if ($endspace == 0) { exit; }
 

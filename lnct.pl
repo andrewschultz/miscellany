@@ -20,7 +20,7 @@ while ($a = <A>)
     $counting = 0; next;
   }
   if ($a =~ /^\\$lookFor[=\|]/i) { print "Start with $a"; $everFound = 1; $counting = 1; next; }
-  if ($counting) { $totalLines++; }
+  if (($counting) && ($a !~ /^#/)) { $totalLines++; }
 }
 
 if (!$everFound) { die "Oops! Never tripped \\$lookFor.\n"; }

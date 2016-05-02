@@ -46,12 +46,13 @@ while (@ARGV[$count])
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
+  /^-nd$/ && do { newDefault(@ARGV[$count+1]); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-m$/ && do { $maxFind = @thisAry[1]; @thisAry = @thisAry[2..$#thisAry]; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-  /^[a-z]/i && do { push(@thisAry, $a); $count++; next; };
+  /^[0-9a-z]/i && do { push(@thisAry, $a); $count++; next; };
   print "Argument $a failed.\n"; usage();
   }
 
@@ -82,6 +83,10 @@ sub processListFile
   {
     if ($a =~ /^#/) { next; }
     if ($a =~ /^;/) { last; }
+	if ($a =~ /^DEFAULT=/)
+	{
+	  $defaultString = $a; chomp($defaultString); $defaultString =~ s/DEFAULT=//;
+	}
     if ($a =~ /^run=/)
 	{
       chomp($a);
@@ -309,6 +314,27 @@ sub processList
   }
   print "$a\n";
   if (!$yep) { print "$shortName had @ARGV[0]/@ARGV[1] but not in same entry.\n"; }
+}
+
+sub newDefault
+{
+open(A, "$gqfile");
+my $newDefLine = "DEFAULT=$_[1]";
+while ($a = <A>)
+{
+  if ($a =~ /^DEFAULT/)
+  {
+    push (@array, $newDefLine);
+  }
+  else
+  {
+    push(@array, $a);
+  }
+}
+close(A);
+open(A, ">$gqfile");
+print A join("\n", @array);
+
 }
 
 sub usage

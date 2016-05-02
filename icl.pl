@@ -100,31 +100,85 @@ $gz = "gblorb";
 $iflag = "G";
 if ($zmac{$_[0]}) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
 
+$bdir = "c:\\games\\inform\\$_[0].inform";
+
 $infDir = buildDir($_[0]);
 $i6x = i6exe($_[0]);
 
-$beta = "c:\\games\\inform\\beta.inform";
-$betm = "c:\\games\\inform\\beta Materials";
-$base = "c:\\games\\inform\\$_[0].inform";
-
-if ($use6l{$_[0]})
+if ($beta)
 {
-$mat = "c:\\games\\inform\\$_[0].materials";
-$bmat = "c:\\games\\inform\\beta.materials";
-}
-else
-{
-$mat = "c:\\games\\inform\\$_[0] materials";
-$bmat = "c:\\games\\inform\\beta materials";
+  #copyToBeta();
+  $mat = "c:\\games\\inform\\$_[0].materials";
+  $bmat = "c:\\games\\inform\\beta.materials";
+  #if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
+  #doOneBuild("c:\\games\\inform\\beta.inform", "c:\\games\\inform\\beta Materials", "c:\\games\\inform\\$_[0].inform", "-kw~S~D$iflag");
 }
 
-$bdir = "$base\\Build";
-
-#die ("$runBeta $debug $release");
-`cd c:/games/inform/$_[0].inform/Build`;
-if ($runBeta)
+if ($release)
 {
+  doOneBuild("$bdir", "~D", "c:\\games\\inform\\$_[0] Materials", "release");
+}
 
+if ($debug)
+{
+  #doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug");
+}
+
+}
+
+sub doOneBuild
+{
+  $outFile = "$_[0]/Build/output.$ex";
+  $dflag = "$_[1]";
+  $infOut = "$_[0]/Build/auto.inf";
+  
+  delIfThere($infOut);
+  system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex");
+
+  if (! -f $infOut)
+  {
+    print "TEST RESULTS:$_[3] $_[0] i7->i6 failed,0,1,0\n";
+    print "TEST RESULTS:$_[3] $_[0] i6->binary untested,grey,0,0\n";
+    print "TEST RESULTS:$_[3] $_[0] blorb creation untested,grey,0,0\n";
+	return;
+  }
+
+  delIfThere($outFile);
+  system("\"$infDir/Compilers/$i6x\" -kw~S$dflag$iflag +include_path=$_[0] $infOut $outFile");
+  
+  if (! -f $outFile)
+  {
+    print "TEST RESULTS:$_[3] $_[0] i6->binary failed,0,1,0\n";
+    print "TEST RESULTS:$_[3] $_[0] blorb creation untested,grey,0,0\n";
+	return;
+  }
+
+  $blorbFileShort = getFile("$_[0]/Release.blurb");
+
+  if ($_[3] eq "debug") { $blorbFileShort = "debug-$blorbFileShort"; }
+  $outFinal = "$_[2]\\Release\\$blorbFileShort";
+  delIfThere("$outFinal");
+  sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
+  
+  if ((! -f $outFinal) || (-s "\"$outFinal\"" < -s "\"$outFile\""))
+  {
+    print "TEST RESULTS:$_[3] $_[0] blorb creation failed,0,1,0\n";
+	return;
+  }
+
+    print "TEST RESULTS:$_[3] $_[0] blorb creation passed,0,0,0\n";
+  
+  return;
+}
+
+sub sysprint
+{
+  print "$_[0]\n";
+  system("$_[0]");
+}
+
+sub copyToBeta
+{
 print("set HOME=c:\\games\\inform\\beta.inform");
 print "****BETA BUILD****\n";
 
@@ -135,12 +189,12 @@ print "Searching for cover....\n";
 $cover = "$beta\\Cover";
 $covr = "$beta\\Release\\Cover";
 $smcov = "$beta\\Small Cover";
-if (-f "$cover.jpg") { print "Erasing old jpg.\n"; system("erase \"$cover.jpg\""); }
-if (-f "$cover.png") { print "Erasing old png.\n"; system("erase \"$cover.png\""); }
-if (-f "$covr.png") { print "Erasing old Release\png.\n"; system("erase \"$covr.png\""); }
-if (-f "$covr.jpg") { print "Erasing old Release\jpg.\n"; system("erase \"$covr.jpg\""); }
-if (-f "$smcov.jpg") { print "Erasing old small jpg.\n"; system("erase \"$smcov.jpg\""); }
-if (-f "$smcov.png") { print "Erasing old small png.\n"; system("erase \"$smcov.png\""); }
+if (-f "$cover.jpg") { print "BETA: Erasing old jpg.\n"; system("Erase \"$cover.jpg\""); }
+if (-f "$cover.png") { print "BETA: Erasing old png.\n"; system("Erase \"$cover.png\""); }
+if (-f "$covr.png") { print "BETA: Erasing old Release\png.\n"; system("Erase \"$covr.png\""); }
+if (-f "$covr.jpg") { print "BETA: Erasing old Release\jpg.\n"; system("Erase \"$covr.jpg\""); }
+if (-f "$smcov.jpg") { print "BETA: Erasing old small jpg.\n"; system("Erase \"$smcov.jpg\""); }
+if (-f "$smcov.png") { print "BETA: Erasing old small png.\n"; system("erase \"$smcov.png\""); }
 
 if (-f "c:/games/inform/$_[0] materials/Cover.png") { print "Copying png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.png\" \"$bmat\""); }
 if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.jpg\" \"$bmat\""); }
@@ -149,80 +203,6 @@ if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small
 
 modifyBeta("$base\\source\\story.ni", "$beta\\source\\story.ni");
 
-$outFile = "$beta/Build/output.$ex";
-delIfThere($outFile);
-
-system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$beta\" -extension=$ex");
-system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$beta,$beta $beta/Build/auto.inf $beta/Build/output.$ex");
-
-$betaFileShort = getFile("$beta/Release.blurb");
-
-if (! -f $outFile) { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); print ("TEST RESULTS:$_[0] BETA BLORB,grey,0,0,Blorb build not attempted\n"); }
-else
-{
-$outFile = "$betm/Release/beta-$betaFileShort";
-
-delIfThere($outFile);
-print("\"$infDir/Compilers/cblorb\" -windows $beta/Release.blurb $outFile");
-system("\"$infDir/Compilers/cblorb\" -windows \"$beta/Release.blurb\" \"$outFile\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] BETA,0,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] BETA,0,1,0,$outFile failed\n"); }
-if ($execute) { $execute = 0; `$beta/Release.blurb $beta/Build/output.$gz`; }
-}
-
-}
-if ($debug)
-{
-system("set HOME=c:\\games\\inform\\beta.inform");
-printf "Debug build.\n";
-
-$outFile = "$bdir/output.$ex";
-delIfThere($outFile);
-delIfThere("$bdir\\auto.inf");
-system("\"$infDir/Compilers/ni\" -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
-system("\"$infDir/Compilers/$i6x\" -kwSD$iflag +include_path=$base,$bdir $bdir/auto.inf \"$bdir/output.$ex\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] DEBUG,0,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] DEBUG,0,1,0,$outFile failed\n"); }
-if ($execute) { $execute = 0; `$bdir/output.$ex`; }
-}
-if ($release)
-{
-system("cd $base");
-printf "Release build.\n";
-
-$outFile = "$bdir\\output.$ex";
-delIfThere($outFile);
-delIfThere("$bdir\\auto.inf");
-
-printf "Generating output.$ex.\n";
-#die("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
-system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$base\" -extension=$ex");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile failed to build\n"); }
-else { print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile built\n"); }
-printf "Generating blorb.$ex.\n";
-$outFile = "$bdir/blorb.$ex";
-delIfThere($outFile);
-system("\"$infDir/Compilers/$i6x\" -kw~S~D$iflag +include_path=$base,$bdir $bdir/auto.inf \"$outFile\"");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] RELEASE,0,0,0,$outFile built\n");
-#the below doesn't work as in the Windows compiler, so we have to explicitly set paths
-#system("\"C:/Program Files (x86)/Inform 7/Compilers/cblorb\" -windows Release.blurb Build/output.gblorb");
-printf "Bundling for release.\n";
-$outFile = "$bdir/output.$gz";
-system("\"$infDir/Compilers/cblorb\" -windows $base/Release.blurb $bdir/output.$gz");
-if (-f "$outFile") { print ("TEST RESULTS:$_[0] BLORB RELEASE,0,0,0,$outFile built\n"); }
-else { print ("TEST RESULTS:$_[0] BLORB RELEASE,0,1,0,$outFile failed\n"); }
-$fileShort = getFile("$base/Release.blurb");
-$rdir = "$base\\Release";
-$rdir =~ s/\.inform/ Materials/g;
-$cpString = "copy $bdir\\output.$gz \"$rdir\\$fileShort\""; `$cpString`;
-if ($execute) { $execute = 0; `$bdir/output.$gz`; }
-}
-else
-{
-  print ("TEST RESULTS:$_[0] RELEASE,0,1,0,$outFile failed\n");
-  print ("TEST RESULTS:$_[0] BLORB RELEASE,grey,0,0,$outFile failed\n");
-}
-}
 }
 
 sub modifyBeta
@@ -256,12 +236,16 @@ else
 
 sub buildDir
 {
-if (!$use6l{$_[0]})
-{
-  return "c:/program files (x86)/Inform 7";
-}
-my @altDir = ("c:/program files (x86)/Inform 76L", "d:/program files (x86)/Inform 7");
-for (0..$#altDir) { if (-d "@altDir[$_]") { return @altDir[$_]; } }
+  if (!$use6l{$_[0]})
+  {
+    return "c:/program files (x86)/Inform 7";
+  }
+  my @altDir = ("c:/program files (x86)/Inform 76L", "d:/program files (x86)/Inform 7");
+  for (0..$#altDir)
+  {
+    if (-d "@altDir[$_]")
+    { return @altDir[$_]; }
+  }
 }
 
 sub getFile

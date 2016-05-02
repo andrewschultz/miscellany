@@ -6,6 +6,7 @@ use File::Compare;
 my $alph = 1;
 my $procString;
 my $defaultString;
+my $testResults = 0;
 
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
@@ -34,6 +35,7 @@ while ($count <= $#ARGV)
   /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
+  /^-t$/ && do { $testResults = 1; $count++; next; };
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
   /^-c$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
@@ -152,7 +154,7 @@ sub processTerms
     print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
 	my $cbf = $copies+$badFileCount;
 	my $proc2 = join("/", split(/,/, $procString));
-	if ($cbf) { print "TEST RESULTS:$proc2 file-copies,0,$cbf,0,gh.pl $procString\n"; }
+	if ($testResults && $cbf) { print "TEST RESULTS:$proc2 file-copies,orange,$cbf,0,gh.pl $procString\n"; }
 	if ($fileList) { print "====FILE LIST:\n$fileList"; }
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }

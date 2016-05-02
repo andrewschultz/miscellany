@@ -240,7 +240,7 @@ sub getArgs
 	for ($a)
 	{
 	  /^-?\?$/ && do { usage(); exit; };
-	  /^-a$/ && do { @raw = ("opo", "as", "sts"); $count++; next; };
+	  /^-a$/ && do { @raw = ("gen", "opo", "as", "sts"); $count++; next; };
 	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
 	  /^-b$/ && do { $build = 1; $count++; next; };
 	  /^-d$/ && do { $debug = 1; $count++; next; };
@@ -248,9 +248,10 @@ sub getArgs
 	  /^-f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
 	  /^-jr$/ && do { $justRelease = -1; $count++; next; };
-	  /^-nb$/ && do { $build = -1; $count++; next; };
-	  /^-q$/ && do { $quiet = 1; $count++; next; };
+	  /^-n(b?)$/ && do { $build = -1; $count++; next; };
+	  /^-w$/ && do { $quiet = 1; $count++; next; };
 	  /^-s$/ && do { $showSuccesses = 1; $count++; next; };
+	  /^-q$/ && do { $build = -1; my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  print "Invalid flag $a specified.\n";
 	  usage();
@@ -288,7 +289,7 @@ print <<EOT;
 -t (comma list) = projects with commas. OPO=3d+4d, AS=PC+SC, STS+SA+ROI+ANA
 -a = all major projects (STS, AS and OPO)
 -aa = all projects in nitely.txt (includes EctoComp, for instance)
--q = no pop-up windows box on finish
+-w = no pop-up windows box on finish
 -s = show successes
 EXAMPLES: nitely.pl -a -q
 nitely.pl -nb -t sts (runs Stale Tales Slate without building)

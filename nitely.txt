@@ -34,11 +34,14 @@ e15=heezy-park
 >tts.pl $$ y
 >icl.pl -jr $$
 
+gen=general tests
+>unch.pl -t
+
 misc=miscellaneous
->gh.pl $$
+>gh.pl -t $$
 
 3d=threediopolis
->gh.pl $$
+>gh.pl -t $$
 >lnct.pl $$
 >invis.pl -u $$
 >tts.pl $$ y
@@ -50,7 +53,7 @@ misc=miscellaneous
 >icl.pl -jd $$
 
 4d=fourdiopolis
->gh.pl $$
+>gh.pl -t $$
 >lnct.pl $$
 >invis.pl -u $$
 >tts.pl $$ y
@@ -102,7 +105,7 @@ roi=roiling
 >icl.pl -jd $$
 
 sc=slicker-city
->gh.pl $$
+>gh.pl -t $$
 >lnct.pl $$
 >invis.pl -u $$
 >wfl.pl -t
@@ -120,7 +123,7 @@ CHECK
 >icl.pl -jd $$
 
 pc=compound
->gh.pl $$
+>gh.pl -t $$
 >lnct.pl $$
 >invis.pl -u $$
 >i7t.pl $d -t hb,hs,xadd -p $l

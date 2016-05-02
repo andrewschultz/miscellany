@@ -15,6 +15,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
+    /^-e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $count+= 2; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
@@ -68,13 +69,17 @@ while ($a = <A>)
   
   if ($rows{@b[1]}) { $size = $rows{@b[1]}; } else { print "@b[1] has nothing.\n"; }
   
+  my $almost = @b[3]; $almost =~ s/\$\$//g;
+
   @b[3] =~ s/\$\$/$size/g;
   print "Trying @b[3]\n";
   my $success = 0;
+  my $nearSuccess = "";
   while ($f = <F>)
   {
     #print "@b[3] =~? $f";
     if ($f =~ /@b[3]/) { $success = 1; last; }
+	if ($f =~ /$almost/) { $nearSuccess .= $f; }
   }
   close(F);
   if ($success)
@@ -85,6 +90,7 @@ while ($a = <A>)
   {
     $countMismatch++;
 	print "@b[2] search for @b[3] FAILED\n";
+	if ($nearSuccess) { print "Likely suspect(s): $nearSuccess"; }
 	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n";
   }
 }

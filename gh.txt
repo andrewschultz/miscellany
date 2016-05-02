@@ -246,6 +246,7 @@ misc=c:\writing\scripts\gq.pl,
 misc=c:\writing\scripts\tts.pl,
 misc=c:\writing\scripts\lnct.pl,
 misc=c:\scripts\ghgo.bat,
+misc=c:\scripts\unch.pl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
