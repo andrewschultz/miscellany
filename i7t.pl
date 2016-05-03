@@ -16,6 +16,7 @@ while ($count <= $#ARGV)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
     /^-e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
+	/^-o$/ && do { $openPost = 1; $count++; next; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $count+= 2; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
@@ -90,6 +91,7 @@ while ($a = <A>)
   {
     $countMismatch++;
 	print "@b[2] search for @b[3] FAILED\n";
+	if (!$fileToOpen) { $fileToOpen = @b[2]; }
 	if ($nearSuccess) { print "Likely suspect(s): $nearSuccess"; }
 	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n";
   }
@@ -99,6 +101,13 @@ if ($majorList)
 {
   $majorList =~ s/,//g;
   print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
+}
+
+print "1 $openPost 2 $fileToOpen";
+if (($openPost) && ($fileToOpen))
+{
+  print "Opening $fileToOpen\n";
+  `$fileToOpen`;
 }
 
 sub usage

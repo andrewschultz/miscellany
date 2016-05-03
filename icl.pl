@@ -14,6 +14,8 @@
 
 $v6l = 0;
 
+my $betaDir = "c:\\games\\inform\\beta.inform";
+
 open(X, "c:/writing/scripts/icl.txt") || die ("Need icl.txt.");
 
 while ($x = <X>)
@@ -57,7 +59,7 @@ while ($count <= $#ARGV)
   /^-jb/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
   /^-jd/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
   /^-jr/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
-  /-f/ && do { $release = $debug = $beta = 0;
+  /-f/ && do { $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
     if ($a =~ /b/) { $runbeta = 1; }
@@ -105,13 +107,13 @@ $bdir = "c:\\games\\inform\\$_[0].inform";
 $infDir = buildDir($_[0]);
 $i6x = i6exe($_[0]);
 
-if ($beta)
+if ($runBeta)
 {
-  #copyToBeta();
+  copyToBeta($bdir);
   $mat = "c:\\games\\inform\\$_[0].materials";
   $bmat = "c:\\games\\inform\\beta.materials";
-  #if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
-  #doOneBuild("c:\\games\\inform\\beta.inform", "c:\\games\\inform\\beta Materials", "c:\\games\\inform\\$_[0].inform", "-kw~S~D$iflag");
+  if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
+  doOneBuild("c:\\games\\inform\\beta.inform", "~D", "c:\\games\\inform\\beta Materials", "beta");
 }
 
 if ($release)
@@ -121,7 +123,7 @@ if ($release)
 
 if ($debug)
 {
-  #doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug");
+  doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug");
 }
 
 }
@@ -133,15 +135,20 @@ sub doOneBuild
   $infOut = "$_[0]/Build/auto.inf";
   
   delIfThere($infOut);
-  system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex");
-
-  if (! -f $infOut)
+  
+  $compileCheck = `\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex"`;
+  print "BUILD RESULTS\n=================\n$compileCheck";
+  #system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex");
+  if ($compileCheck =~ /has finished/i)
   {
     print "TEST RESULTS:$_[3] $_[0] i7->i6 failed,0,1,0\n";
     print "TEST RESULTS:$_[3] $_[0] i6->binary untested,grey,0,0\n";
     print "TEST RESULTS:$_[3] $_[0] blorb creation untested,grey,0,0\n";
 	return;
   }
+
+  ####probably not necessary
+  #print "TEST RESULTS:$_[3] $_[0] i7->i6 succeeded,0,0,0\n";
 
   delIfThere($outFile);
   system("\"$infDir/Compilers/$i6x\" -kw~S$dflag$iflag +include_path=$_[0] $infOut $outFile");
@@ -153,9 +160,12 @@ sub doOneBuild
 	return;
   }
 
+  ####probably not necessary
+  #print "TEST RESULTS:$_[3] $_[0] i6->binary succeeded,0,0,0\n";
+
   $blorbFileShort = getFile("$_[0]/Release.blurb");
 
-  if ($_[3] eq "debug") { $blorbFileShort = "debug-$blorbFileShort"; }
+  if ($_[3] ne "debug") { $blorbFileShort = "$_[3]-$blorbFileShort"; }
   $outFinal = "$_[2]\\Release\\$blorbFileShort";
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
@@ -182,13 +192,13 @@ sub copyToBeta
 print("set HOME=c:\\games\\inform\\beta.inform");
 print "****BETA BUILD****\n";
 
-system("copy $base\\Release.blurb $beta\\Release.blurb");
-system("copy $base\\uuid.txt $beta\\uuid.txt");
+system("copy $_[0]\\Release.blurb $betaDir\\Release.blurb");
+system("copy $_[0]\\uuid.txt $betaDir\\uuid.txt");
 print "Searching for cover....\n";
 
-$cover = "$beta\\Cover";
-$covr = "$beta\\Release\\Cover";
-$smcov = "$beta\\Small Cover";
+$cover = "$betaDir\\Cover";
+$covr = "$betaDir\\Release\\Cover";
+$smcov = "$betaDir\\Small Cover";
 if (-f "$cover.jpg") { print "BETA: Erasing old jpg.\n"; system("Erase \"$cover.jpg\""); }
 if (-f "$cover.png") { print "BETA: Erasing old png.\n"; system("Erase \"$cover.png\""); }
 if (-f "$covr.png") { print "BETA: Erasing old Release\png.\n"; system("Erase \"$covr.png\""); }
@@ -201,7 +211,7 @@ if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n
 if (-f "c:/games/inform/$_[0] materials/Small Cover.png") { print "Copying small png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.png\" \"$bmat\""); }
 if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.jpg\" \"$bmat\""); }
 
-modifyBeta("$base\\source\\story.ni", "$beta\\source\\story.ni");
+modifyBeta("$_[0]\\source\\story.ni", "$betaDir\\source\\story.ni");
 
 }
 
