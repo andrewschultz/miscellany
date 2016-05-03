@@ -152,7 +152,8 @@ sub processOneFile
     $line++;
 	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; chomp($currentTable); $inTable = 1; }
 	if ($a !~ /[a-z]/) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; } }
-    if ($inImportant && cromu($a))
+	my $crom = cromu($a);
+    if ($inImportant && $crom)
 	{
 	  if (!$foundOne) { print "Results for $modFile:\n"; }
 	  $foundOne++;
@@ -160,7 +161,10 @@ sub processOneFile
 	  if ($currentTable) { print ",$currentTable"; }
 	  if ($thisImportant) { print ",$thisImportant"; }
 	  if ($thisImportant) { print ",L$idx"; }
+	  chomp($a);
 	  print "): $a";
+	  if ($crom == 2) { print " **PLURAL**"; }
+	  print "\n";
 	}
   }
   close(A);
@@ -197,7 +201,7 @@ sub cromu
     if (($_[0] !~ /^\"@thisAry[0]/i) && ($_[0] !~ /'@thisAry[0]'/i)){ return 0; }
   }
   
-  if ($_[0] =~ /^test|volume|chapter|book|part|section/) { return 0; }
+  if ($_[0] =~ /^(test|volume|chapter|book|part|section)/) { return 0; }
   #lumped together
   if ($#thisAry)
   {
