@@ -113,17 +113,17 @@ if ($runBeta)
   $mat = "c:\\games\\inform\\$_[0].materials";
   $bmat = "c:\\games\\inform\\beta.materials";
   if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
-  doOneBuild("c:\\games\\inform\\beta.inform", "~D", "c:\\games\\inform\\beta Materials", "beta");
+  doOneBuild("c:\\games\\inform\\beta.inform", "~D", "c:\\games\\inform\\beta Materials", "beta", "$_[0]");
 }
 
 if ($release)
 {
-  doOneBuild("$bdir", "~D", "c:\\games\\inform\\$_[0] Materials", "release");
+  doOneBuild("$bdir", "~D", "c:\\games\\inform\\$_[0] Materials", "release", "$_[0]");
 }
 
 if ($debug)
 {
-  doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug");
+  doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug", "$_[0]");
 }
 
 }
@@ -141,27 +141,27 @@ sub doOneBuild
   #system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex");
   if ($compileCheck =~ /has finished/i)
   {
-    print "TEST RESULTS:$_[3] $_[0] i7->i6 failed,0,1,0\n";
-    print "TEST RESULTS:$_[3] $_[0] i6->binary untested,grey,0,0\n";
-    print "TEST RESULTS:$_[3] $_[0] blorb creation untested,grey,0,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 failed,0,1,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary untested,grey,0,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation untested,grey,0,0\n";
 	return;
   }
 
   ####probably not necessary
-  #print "TEST RESULTS:$_[3] $_[0] i7->i6 succeeded,0,0,0\n";
+  #print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 succeeded,0,0,0\n";
 
   delIfThere($outFile);
   system("\"$infDir/Compilers/$i6x\" -kw~S$dflag$iflag +include_path=$_[0] $infOut $outFile");
   
   if (! -f $outFile)
   {
-    print "TEST RESULTS:$_[3] $_[0] i6->binary failed,0,1,0\n";
-    print "TEST RESULTS:$_[3] $_[0] blorb creation untested,grey,0,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary failed,0,1,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation untested,grey,0,0\n";
 	return;
   }
 
   ####probably not necessary
-  #print "TEST RESULTS:$_[3] $_[0] i6->binary succeeded,0,0,0\n";
+  #print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary succeeded,0,0,0\n";
 
   $blorbFileShort = getFile("$_[0]/Release.blurb");
 
@@ -172,11 +172,11 @@ sub doOneBuild
   
   if ((! -f $outFinal) || (-s "\"$outFinal\"" < -s "\"$outFile\""))
   {
-    print "TEST RESULTS:$_[3] $_[0] blorb creation failed,0,1,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation failed,0,1,0\n";
 	return;
   }
 
-    print "TEST RESULTS:$_[3] $_[0] blorb creation passed,0,0,0\n";
+    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation passed,0,0,0\n";
   
   return;
 }

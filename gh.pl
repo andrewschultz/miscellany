@@ -154,7 +154,11 @@ sub processTerms
     print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
 	my $cbf = $copies+$badFileCount;
 	my $proc2 = join("/", split(/,/, $procString));
-	if ($testResults && $cbf) { print "TEST RESULTS:$proc2 file-copies,orange,$cbf,0,gh.pl $procString\n"; }
+	if ($testResults && $cbf)
+	{
+	  $fileList =~ s/\n/<br \/>/g;
+	  print "TEST RESULTS:$proc2 file-copies,orange,$cbf,0,gh.pl $procString<br>$fileList\n";
+	}
 	if ($fileList) { print "====FILE LIST:\n$fileList"; }
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
