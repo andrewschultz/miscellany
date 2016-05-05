@@ -63,7 +63,12 @@ while ($a = <A>)
   chomp($a);
   @b = split(/\t/, $a);
   
+  if ($#b == 1) { $failCmd = @b[1]; next; }
+  
   if (lc(@b[0]) ne lc($project)) { next; }
+  
+  $ranOneTest = 1;
+
   open(F, @b[2]) || die ("Can't find @b[2].");
   
   my $size = "";
@@ -94,6 +99,7 @@ while ($a = <A>)
 	if (!$fileToOpen) { $fileToOpen = @b[2]; }
 	if ($nearSuccess) { print "Likely suspect(s): $nearSuccess"; }
 	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n";
+	$printFail = 1;
   }
 }
 
@@ -103,7 +109,10 @@ if ($majorList)
   print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
 }
 
-print "1 $openPost 2 $fileToOpen";
+if ($printFail && $failCmd) { print "RUN THIS:\n$failCmd\n"; }
+
+if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
+
 if (($openPost) && ($fileToOpen))
 {
   print "Opening $fileToOpen\n";

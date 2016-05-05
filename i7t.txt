@@ -1,4 +1,5 @@
 Compound	xadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$. from 66
-Compound	table of hs	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ horrible songs
+Compound	table of hs	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$, up from 13
 Compound	table of hb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$. up from 38
 Compound	table of bad guy worries	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ random important administrative matters
+Compound	ni pr
