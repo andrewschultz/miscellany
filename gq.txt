@@ -1,0 +1,52 @@
+########################################
+#gq.txt
+#config file
+#
+#this tells what files to search, where, for a set of projects
+
+#this is the default value.
+DEFAULT=sts
+
+#these map values to projects
+MAP:3,4,3d,4d=opo
+MAP:ro,roi,sa=sts
+MAP:pc,sc=as
+
+#stale tales slate
+run=sts
+c:\games\inform\roiling.inform\source\story.ni
+c:\games\inform\sa.inform\source\story.ni
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Roiling Nudges.i7x
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Roiling Random Text.i7x
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Sa Nudges.i7x
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Sa Random Text.i7x
+c:\writing\games.otl	sa,ifbrave,if-manor,if-towers,if-troves,if-oyster,if-routes,if-presto,if-otters,roi
+c:\writing\dict\sts.txt	ro3
+c:\writing\dict\sts.txt
+c:\games\inform\triz\mine\shuffling-around.trizbort
+c:\games\inform\triz\mine\roiling.trizbort
+c:\games\inform\triz\mine\voltmaze.trizbort
+
+#opolises
+run=opo
+c:\games\inform\threediopolis.inform\source\story.ni
+c:\games\inform\fourdiopolis.inform\source\story.ni
+c:\writing\games.otl	3d,4d
+
+#alec smart
+run=as
+c:\games\inform\compound.inform\source\story.ni
+c:\games\inform\slicker-city.inform\source\story.ni
+c:\writing\games.otl	pc,sc,scfarm,sce,scd,scc,scb,sca
+c:\games\inform\triz\mine\compound-directors-cut.trizbort
+c:\games\inform\triz\mine\compound-walkthrough.trizbort
+c:\games\inform\triz\mine\compound.trizbort
+c:\games\inform\triz\mine\slicker-city.trizbort
+
+#OAFS!!!!
+run=oafs
+c:\games\inform\uglyoafs.inform\source\story.ni
+c:\writing\games.otl	uo
+c:\games\inform\triz\mine\ugly-oafs.trizbort
+
+;
