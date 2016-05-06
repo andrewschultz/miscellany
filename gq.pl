@@ -38,10 +38,10 @@ while (@ARGV[$count])
   /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-a$/ && do { $runAll = 1; $count++; next; }; # run all
-  /^-o$/ && do { $oafs = 1; $count++; next; }; # oafs?
+  /^-o$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
-  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # oafs?
+  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
   /^-?(r|roi|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
@@ -52,7 +52,8 @@ while (@ARGV[$count])
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-  /^[0-9a-z]/i && do { push(@thisAry, $a); $count++; next; };
+  /,/ && do { @runs = split(/,/, $a); $count++; next; };
+  /^[0-9a-z]/ && do { if ($map{$a}) { print "$a -> $map{$a}, use upper case to avoid\n"; push(@thisAry, $map{$a}); } else { push(@thisAry, $a); } $count++; next; }; # if we want to use AS as a word, it would be in upper case
   print "Argument $a failed.\n"; usage();
   }
 
@@ -83,6 +84,13 @@ sub processListFile
   {
     if ($a =~ /^#/) { next; }
     if ($a =~ /^;/) { last; }
+	if ($a =~ /^MAP=/)
+	{
+	  chomp($a); $a =~ s/^MAP=//;
+	  @b = split(/:/, $a);
+	  @c = split(/,/, @b);
+	  for (@c) { $map{$_} = @b[1]; }
+	}
 	if ($a =~ /^DEFAULT=/)
 	{
 	  $defaultString = $a; chomp($defaultString); $defaultString =~ s/DEFAULT=//;
@@ -151,7 +159,7 @@ sub processOneFile
 	}
     $line++;
 	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; chomp($currentTable); $inTable = 1; }
-	if ($a !~ /[a-z]/) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; } }
+	if ($a !~ /[a-z]/i) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; } }
 	my $crom = cromu($a);
     if ($inImportant && $crom)
 	{
