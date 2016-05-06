@@ -200,6 +200,7 @@ city=c:\games\inform\triz\mine\slicker-city.trizbort,
 city=c:\games\inform\triz\mine\slicker-city.pdf,
 city=c:\games\inform\slicker-city.inform\uuid.txt,
 city=c:\writing\scripts\sc.txt,
+city=c:\games\inform\slicker-city.inform\source\excl.pl,
 
 #misc stuff
 TOBASE=misc
@@ -247,6 +248,8 @@ misc=c:\writing\scripts\gq.txt,
 misc=c:\writing\scripts\tts.pl,
 misc=c:\writing\scripts\lnct.pl,
 misc=c:\scripts\unch.pl,
+misc=c:\writing\scripts\salf.pl,wrifi
+misc=c:\writing\scripts\noter.pl,wrifi
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
