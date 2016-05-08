@@ -21,6 +21,8 @@ rpg~rpg-mapping-tools
 ###ecto
 ec~ecto
 ect~ecto
+###writing
+wri~writing
 
 #Shuffling files
 TOBASE=stale-tales-slate
@@ -250,6 +252,11 @@ misc=c:\writing\scripts\lnct.pl,
 misc=c:\scripts\unch.pl,
 misc=c:\writing\scripts\salf.pl,wrifi
 misc=c:\writing\scripts\noter.pl,wrifi
+
+TOBASE=writing
+writing=c:\writing\hthws.otl,
+writing=c:\writing\notes9.otl,
+writing=c:\writing\games.otl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

@@ -9,9 +9,11 @@ my $defaultString;
 my $testResults = 0;
 
 my $ght = "c:\\writing\\scripts\\gh.txt";
+my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
 
-preProcessHashes();
+preProcessHashes($ght);
+preProcessHashes($ghp);
 
 #these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
 my $justPrint = 0;
@@ -31,6 +33,7 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
+  /^(-p|p)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghp"); $count++; exit; };
   /^(-e|e)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); $count++; exit; };
   /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
@@ -38,7 +41,7 @@ while ($count <= $#ARGV)
   /^-t$/ && do { $testResults = 1; $count++; next; };
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
-  /^-c$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
+  /^-d$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
   /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do
   {
@@ -62,7 +65,8 @@ while ($count <= $#ARGV)
 
 if (!$procString) { $procString = $defaultString; print "Using default string: $procString\n"; }
 
-findTerms();
+findTerms($ght);
+findTerms($ghp);
 
 my @procAry = split(/,/, $procString);
 
@@ -82,7 +86,8 @@ if ($verbose)
 for my $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
 }
 
-processTerms();
+processTerms($ght);
+processTerms($ghp);
 
 ##########################################
 #the main function
@@ -97,7 +102,7 @@ sub processTerms
   my $uncopiedList = "";
   my $dirName = "";
   my $fromBase="", my $toBase="";
-  open(A, $ght) || die ("No $ght");
+  open(A, $_[0]) || die ("No $_[0]");
   while ($a = <A>)
   {
     chomp($a);
@@ -166,12 +171,12 @@ sub processTerms
 }
 
 ##########################
-# finds all valid terms in gh.txt
+# finds all valid terms in gh.txt or gh-private.txt
 # not individual files, just pc, sa, etc
 
 sub findTerms
 {
-open(A, $ght) || die ("Oops, couldn't open $ght.");
+open(A, $_[0]) || die ("Oops, couldn't open $_[0].");
 
 while ($a = <A>)
 {
@@ -193,7 +198,7 @@ close(A);
 
 sub preProcessHashes
 {
-  open(A, "$ght") || die ("Can't open $ght.");
+  open(A, "$_[0]") || die ("Can't open $_[0].");
   while ($a = <A>)
   {
     chomp($a);

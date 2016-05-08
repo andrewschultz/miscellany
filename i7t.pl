@@ -15,7 +15,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
-    /^-e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $count+= 2; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } next; };
@@ -124,6 +124,12 @@ sub usage
 print<<EOT;
 directory
 csv = tables to highlight
+-t specifies a CSV of important tables to track
+-e opens the i7t.txt file
+-o opens the offending file post-test
+-p specifies the project
+-s specifies the project in shorthand
+(directory) looks for story.ni in a different directory
 EOT
 exit;
 }
