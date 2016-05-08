@@ -107,6 +107,7 @@ roi=roiling
 sc=slicker-city
 >gq.pl $$ -x search.string
 >gh.pl -t $$
+>conc.pl -t -o -$$
 >lnct.pl 10 $$,sc1,sc2,sc3,sc4,scfarm,sca,scb,scc,scd,sce
 >invis.pl -u $$
 >wfl.pl -t
@@ -125,6 +126,7 @@ CHECK
 
 pc=compound
 >gh.pl -t $$
+>conc.pl -t -o -$$
 >lnct.pl $$
 >invis.pl -u $$
 >i7t.pl $d -t hb,hs,xadd -p $l
