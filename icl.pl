@@ -130,15 +130,14 @@ if ($debug)
 
 sub doOneBuild
 {
-  $outFile = "$_[0]/Build/output.$ex";
+  $outFile = "$_[0]\\Build\\output.$ex";
   $dflag = "$_[1]";
-  $infOut = "$_[0]/Build/auto.inf";
+  $infOut = "$_[0]\\Build\\auto.inf";
   
   delIfThere($infOut);
   
-  $compileCheck = `\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex"`;
+  $compileCheck = `\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
   print "BUILD RESULTS\n=================\n$compileCheck";
-  #system("\"$infDir/Compilers/ni\" -release -rules \"$infDir/Inform7/Extensions\" -package \"$_[0]\" -extension=$ex");
   if ($compileCheck =~ /has finished/i)
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 failed,0,1,0\n";
