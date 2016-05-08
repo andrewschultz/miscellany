@@ -46,6 +46,7 @@ while (@ARGV[$count])
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
+  /^-x/ && do { $dontWant = 1; $count++; next; };
   /^-nd$/ && do { newDefault(@ARGV[$count+1]); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-m$/ && do { $maxFind = @thisAry[1]; @thisAry = @thisAry[2..$#thisAry]; $count+= 2; next; };
@@ -122,6 +123,7 @@ sub processFiles
 	processOneFile(@fileAndMarkers);
   }
   if ($#blanks > -1) { print "EMPTY FILES: " . join(", ", @blanks) . "\n"; }
+  if (@errStuff[0]) { print "TEST RESULTS: $_[0],0," . $#errStuff+1 . ",0," . join("<br />", @errStuff) . "\n"; }
 }
 
 sub processOneFile
@@ -163,6 +165,7 @@ sub processOneFile
 	my $crom = cromu($a);
     if ($inImportant && $crom)
 	{
+	  if ($dontWant) { push (@errStuff, "$modFile L$idx"); }
 	  if (!$foundOne) { print "Results for $modFile:\n"; }
 	  $foundOne++;
 	  print "$modFile($line";
