@@ -5,7 +5,7 @@
 
 use POSIX;
 
-@projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort");
+@projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing");
 
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";

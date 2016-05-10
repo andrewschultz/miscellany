@@ -86,8 +86,7 @@ if ($verbose)
 for my $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
 }
 
-processTerms($ght);
-processTerms($ghp);
+processTerms($ght, $ghp);
 
 ##########################################
 #the main function
@@ -102,7 +101,9 @@ sub processTerms
   my $uncopiedList = "";
   my $dirName = "";
   my $fromBase="", my $toBase="";
-  open(A, $_[0]) || die ("No $_[0]");
+  for my $thisFile (@_)
+  {
+  open(A, $thisFile) || die ("No $thisFile");
   while ($a = <A>)
   {
     chomp($a);
@@ -152,6 +153,7 @@ sub processTerms
 	  }
 #      `$cmd`;
     }
+  }
   }
   if (!$didOne) { print "Didn't find anything for $procString."; }
   else

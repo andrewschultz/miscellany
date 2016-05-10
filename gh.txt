@@ -252,6 +252,7 @@ misc=c:\writing\scripts\lnct.pl,
 misc=c:\scripts\unch.pl,
 misc=c:\writing\scripts\salf.pl,wrifi
 misc=c:\writing\scripts\noter.pl,wrifi
+misc=c:\writing\dict\aadd.pl,
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,

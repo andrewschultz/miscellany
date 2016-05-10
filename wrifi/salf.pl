@@ -48,8 +48,6 @@ if ((-s $infile) != (-s $outfile))
   exit;
 }
 
-die;
-
 $cmd = "copy $outfile $infile";
 print "$cmd\n";
 `$cmd`;
