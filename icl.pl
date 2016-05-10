@@ -15,6 +15,7 @@
 $v6l = 0;
 
 my $betaDir = "c:\\games\\inform\\beta.inform";
+my $baseDir = "c:\\games\\inform";
 
 open(X, "c:/writing/scripts/icl.txt") || die ("Need icl.txt.");
 
@@ -27,6 +28,7 @@ while ($x = <X>)
   my @cmd = split(/=/, $x);
   if (lc(@cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, @cmd[1]); }
   elsif (lc(@cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
+  elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  @z = split(/=/, $y); $forceDir{@z[0]} = @z[1]; }
   elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
   elsif ($#cmd > -1) { @froms = split(/,/, @cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } #print "$_ to $cmd[1].\n";
@@ -66,12 +68,16 @@ while ($count <= $#ARGV)
 	$count++; next;
   };
   /-l/ && do { $v6l = 1 - $v6l; $informDir = @inDirs[$v6l]; $count++; next; };
+  /-ba/ && do { $informBase = @ARGV[$count+1]; $count++; next; };
+  /-be/ && do { $betaDir = @ARGV[$count+1]; $count++; next; };
   /-nr/ && do { $release = 0; $count++; next; };
   /-yr/ && do { $release = 1; $count++; next; };
   /-nd/ && do { $debug = 0; $count++; next; };
   /-yd/ && do { $debug = 1; $count++; next; };
   /-x/ && do { $execute = 1; $count++; next; };
   /-a/ && do { for $entry(@allProj) { push(@compileList, $a); } $count++; next; };
+  /^-\?/ && do { usage(); exit; };
+  /^-/ && do { print "Not a valid option.\n"; usage(); exit; };
   push(@compileList, $a); $count++; next;
   }
 }
@@ -85,7 +91,7 @@ for $a (@compileList)
   else {
   $myProj = "";
   for $q (keys %proj) { if ($proj{$q} eq "$a") { $myProj = $a; } }
-  if (!$myProj) { die("No project for $proj.\n"); }
+  if (!$myProj) { die("No project for $proj. If you wanted an option, try -?.\n"); }
   }
   $infDir = @inDirs[$v6l];
   runProj($myProj);
@@ -102,7 +108,14 @@ $gz = "gblorb";
 $iflag = "G";
 if ($zmac{$_[0]}) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
 
-$bdir = "c:\\games\\inform\\$_[0].inform";
+if ($forceDir{$_[0]})
+{
+$bdir = $forceDir{$_[0]};
+}
+else
+{
+$bdir = "$baseDir\\$_[0].inform";
+}
 
 $infDir = buildDir($_[0]);
 $i6x = i6exe($_[0]);
@@ -110,20 +123,20 @@ $i6x = i6exe($_[0]);
 if ($runBeta)
 {
   copyToBeta($bdir);
-  $mat = "c:\\games\\inform\\$_[0].materials";
-  $bmat = "c:\\games\\inform\\beta.materials";
+  $mat = "$baseDir\\$_[0].materials";
+  $bmat = "$baseDir\\beta.materials";
   if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
-  doOneBuild("c:\\games\\inform\\beta.inform", "~D", "c:\\games\\inform\\beta Materials", "beta", "$_[0]");
+  doOneBuild($betaDir, "~D", "$baseDir\\beta Materials", "beta", "$_[0]");
 }
 
 if ($release)
 {
-  doOneBuild("$bdir", "~D", "c:\\games\\inform\\$_[0] Materials", "release", "$_[0]");
+  doOneBuild("$bdir", "~D", "$baseDir\\$_[0] Materials", "release", "$_[0]");
 }
 
 if ($debug)
 {
-  doOneBuild("$bdir", "D", "c:\\games\\inform\\$_[0] Materials", "debug", "$_[0]");
+  doOneBuild("$bdir", "D", "$baseDir\\$_[0] Materials", "debug", "$_[0]");
 }
 
 }
@@ -188,7 +201,7 @@ sub sysprint
 
 sub copyToBeta
 {
-print("set HOME=c:\\games\\inform\\beta.inform");
+print("set HOME=$betaDir");
 print "****BETA BUILD****\n";
 
 system("copy $_[0]\\Release.blurb $betaDir\\Release.blurb");
@@ -205,10 +218,10 @@ if (-f "$covr.jpg") { print "BETA: Erasing old Release\jpg.\n"; system("Erase \"
 if (-f "$smcov.jpg") { print "BETA: Erasing old small jpg.\n"; system("Erase \"$smcov.jpg\""); }
 if (-f "$smcov.png") { print "BETA: Erasing old small png.\n"; system("erase \"$smcov.png\""); }
 
-if (-f "c:/games/inform/$_[0] materials/Cover.png") { print "Copying png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.png\" \"$bmat\""); }
-if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Cover.jpg\" \"$bmat\""); }
-if (-f "c:/games/inform/$_[0] materials/Small Cover.png") { print "Copying small png over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.png\" \"$bmat\""); }
-if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small jpg over.\n"; system("copy \"c:\\games\\inform\\$_[0] materials\\Small Cover.jpg\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Cover.png") { print "Copying png over.\n"; system("copy \"$baseDir\\$_[0] materials\\Cover.png\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Cover.jpg") { print "Copying jpg over.\n"; system("copy \"$baseDir\\$_[0] materials\\Cover.jpg\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Small Cover.png") { print "Copying small png over.\n"; system("copy \"$baseDir\\$_[0] materials\\Small Cover.png\" \"$bmat\""); }
+if (-f "c:/games/inform/$_[0] materials/Small Cover.jpg") { print "Copying small jpg over.\n"; system("copy \"$baseDir\\$_[0] materials\\Small Cover.jpg\" \"$bmat\""); }
 
 modifyBeta("$_[0]\\source\\story.ni", "$betaDir\\source\\story.ni");
 
@@ -271,4 +284,15 @@ sub getFile
 sub delIfThere
 {
   if (-f "$_[0]") { print "Deleting $_[0]\n"; system("erase \"$_[0]\""); } else { print "No $_[0]\n"; }
+}
+
+sub usage
+{
+print<<EOT;
+USAGE
+-ba = base dir specified default c:/games/inform/(project name).inform
+-bd = base dir specified, default c:/games/inform/beta
+-jb -jd -jr just build/release/debug
+EOT
+exit
 }

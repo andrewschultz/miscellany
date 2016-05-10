@@ -3,6 +3,10 @@
 default=pc
 
 ############################
+#force directories
+#syntax FORCE proj=dir
+
+############################
 #project shortcuts
 12,s=sa
 3,3d,13=threediopolis
