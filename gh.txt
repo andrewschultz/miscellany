@@ -1,6 +1,8 @@
 ######################default
 d:pc
 
+POSTPROC=prob
+
 ######################similarities
 ###alec smart
 as~pc,sc
@@ -191,6 +193,9 @@ prob=c:\writing\dict\wfl.pl,\utils
 -a:prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
 #concept tracker
 prob=c:\writing\dict\conc.pl,\utils
+>prob=conc.pl -o -pc
+>prob=conc.pl -pc
+>prob=i7t.pl -q -s pc | grep -iE "failed|likely|run this"
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city

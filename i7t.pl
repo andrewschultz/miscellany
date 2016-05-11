@@ -5,6 +5,8 @@ my $project = "Project";
 $tables = 0;
 $count = 0;
 
+$exp{"pc"} = "Compound";
+
 my $countMismatch = 0;
 
 if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; }
@@ -12,13 +14,15 @@ if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; 
 while ($count <= $#ARGV)
 {
   $a = @ARGV[$count];
+  $b = @ARGV[$count+1];
   for ($a)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
+	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
-    /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $count+= 2; next; };
-	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } next; };
+    /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
+	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
 	usage();
   }
@@ -43,14 +47,16 @@ while ($a = <A>)
   if ($table) { print B $a; $count++; $tableCount++; }
   if ($a !~ /[a-z]/)
   {
-    if ($table) { $tableList .= "$curTable: $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
+    if (($table) && (!$quietTables)) { $tableList .= "$curTable: $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
 	if ($majorTable) { $majorList .= "$curTable: $tableCount rows<br />"; } $majorTable = 0;
   }
 }
 
+if (!$quietTables)
+{
 $sum = "$tables tables, $count lines.\n$tableList";
-
 print $sum;
+}
 
 print B $sum;
 close(A);
@@ -109,7 +115,7 @@ if ($majorList)
   print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
 }
 
-if ($printFail && $failCmd) { print "RUN THIS:\n$failCmd\n"; }
+if ($printFail && $failCmd) { print "RUN THIS: $failCmd\n"; }
 
 if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
 

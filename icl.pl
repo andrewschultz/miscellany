@@ -67,6 +67,7 @@ while ($count <= $#ARGV)
     if ($a =~ /b/) { $runbeta = 1; }
 	$count++; next;
   };
+  /-inf/ && do { $infOnly = 1; $count++; next; };
   /-l/ && do { $v6l = 1 - $v6l; $informDir = @inDirs[$v6l]; $count++; next; };
   /-ba/ && do { $informBase = @ARGV[$count+1]; $count++; next; };
   /-be/ && do { $betaDir = @ARGV[$count+1]; $count++; next; };
@@ -154,10 +155,14 @@ sub doOneBuild
   if ($compileCheck =~ /has finished/i)
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 failed,0,1,0\n";
+	if (!$infOnly)
+	{
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary untested,grey,0,0\n";
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation untested,grey,0,0\n";
+	}
 	return;
   }
+  if ($infOnly) { return; }
 
   ####probably not necessary
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 succeeded,0,0,0\n";
@@ -204,8 +209,14 @@ sub copyToBeta
 print("set HOME=$betaDir");
 print "****BETA BUILD****\n";
 
+my $mtr = $_[0]; $mtr =~ s/\.inform/ materials/g;
+
 system("copy $_[0]\\Release.blurb $betaDir\\Release.blurb");
 system("copy $_[0]\\uuid.txt $betaDir\\uuid.txt");
+system("copy $_[0]\\uuid.txt $betaDir\\uuid.txt");
+system("erase \"$bmat\\Figures\"*");
+system("copy \"$mtr\\Figures\\*\" \"$bmat\\Figures\"");
+
 print "Searching for cover....\n";
 
 $cover = "$betaDir\\Cover";
@@ -292,6 +303,7 @@ print<<EOT;
 USAGE
 -ba = base dir specified default c:/games/inform/(project name).inform
 -bd = base dir specified, default c:/games/inform/beta
+-inf = create INF file only, no binary build
 -jb -jd -jr just build/release/debug
 EOT
 exit

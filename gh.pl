@@ -7,6 +7,7 @@ my $alph = 1;
 my $procString;
 my $defaultString;
 my $testResults = 0;
+my $runTrivialTests = 0;
 
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
@@ -26,7 +27,7 @@ my $copyBinary = 0;
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
 my $a;
-my %altHash, my %do, my %poss;
+my %altHash, my %do, my %poss, my %postproc;
 
 while ($count <= $#ARGV)
 {
@@ -38,6 +39,8 @@ while ($count <= $#ARGV)
   /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
+  /^-rt$/ && do { $runTrivialTests = 1; $count++; next; };
+  /^-nrt$/ && do { $runTrivialTests = -1; $count++; next; };
   /^-t$/ && do { $testResults = 1; $count++; next; };
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
@@ -97,6 +100,7 @@ sub processTerms
   my $copies = 0; my $unchanged = 0; my $wildcards = 0; my $badFileCount = 0; my $didOne = 0; my $uncop = 0;
   my $badFileList = "";
   my $outName;
+  my $quickCheck = "";
   my $fileList = "";
   my $uncopiedList = "";
   my $dirName = "";
@@ -109,6 +113,19 @@ sub processTerms
     chomp($a);
     my $b = $a;
 	
+    if ($a =~ /^#/) { next; }
+	if ($a =~ /^>/)
+	{
+	  if ($runTrivialTests == -1) { next; }
+	  $b =~ s/^>//g; $b =~ s/=.*//g;
+	  if (!hasHash($b)) { next; }
+	  if (($runTrivialTests == 1) || ($postproc{$b}))
+	  {
+	  $b = $a; $b =~ s/.*=//g;
+	  $quickCheck .= `$b`;
+	  }
+	  next;
+    }
 	##################note prefix like -a (auxiliary) and -b (build)
 	#this is because auxiliary or binary files could be quite large
 	#format is -a:
@@ -117,6 +134,7 @@ sub processTerms
 	my $c = $a; if ($c =~ /^-.:/) { $c =~ s/(^..).*/$1/g; $prefix = $c; $b =~ s/^-.://g; }
 	 if ($a =~ /FROMBASE=/) { $fromBase = $a; $fromBase =~ s/^FROMBASE=//g; }
 	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; }
+	 if ($a =~ /POSTPROC=/i) { $a =~ s/^POSTPROC=//g; my @as = split(/,/, $a); for (@as) { $postproc{$_} = 1; } }
 
     $b =~ s/=.*//g;
 
@@ -170,6 +188,7 @@ sub processTerms
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
   }
+  if ($quickCheck) { print "\n========quick verifications\n$quickCheck"; }
 }
 
 ##########################
