@@ -1,3 +1,11 @@
+#############################################
+#i7t.pl
+#reads in i7 source and sees all the tables
+#and potentially matches them up with a log file
+#i7t.pl -s pc
+#or run it in a directory with story.ni
+#
+
 use POSIX;
 
 my $newDir = ".";
@@ -75,7 +83,15 @@ while ($a = <A>)
   
   $ranOneTest = 1;
 
+  if (@b[2] ne "\"")
+  {
   open(F, @b[2]) || die ("Can't find @b[2].");
+  $thisFile = $lastOpen = @b[2];
+  }
+  else
+  {
+  open(F, $lastOpen) || die ("Can't re-open $lastOpen.");
+  }
   
   my $size = "";
   
@@ -96,15 +112,15 @@ while ($a = <A>)
   close(F);
   if ($success)
   {
-    print "@b[2] search for @b[3] PASSED:\n  $f\n";
+    print "$thisFile search for @b[3] PASSED:\n  $f\n";
   }
   else
   {
     $countMismatch++;
-	print "@b[2] search for @b[3] FAILED\n";
-	if (!$fileToOpen) { $fileToOpen = @b[2]; }
+	print "$thisFile search for @b[3] FAILED\n";
+	if (!$fileToOpen) { $fileToOpen = $thisFile; }
 	if ($nearSuccess) { print "Likely suspect(s): $nearSuccess"; }
-	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///@b[2]\">here</a>\n";
+	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///$thisFile\">here</a>\n";
 	$printFail = 1;
   }
 }
