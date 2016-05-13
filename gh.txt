@@ -138,7 +138,9 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\uuid.txt,
 4d=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt,
 4d=c:\games\inform\fourdiopolis.inform\source\locs.pl,
-4d=c:\games\inform\fourdiopolis.inform\source\logcheck.pl,
+#the logcheck.pl are now merged and equivalent
+4d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
+4d=c:\games\inform\fourdiopolis.inform\source\talf.pl,
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 
 #Ugly Oafs files to GitHub
@@ -258,6 +260,7 @@ misc=c:\scripts\unch.pl,
 misc=c:\writing\scripts\salf.pl,wrifi
 misc=c:\writing\scripts\noter.pl,wrifi
 misc=c:\writing\dict\aadd.pl,
+misc=c:\writing\scripts\ide.au3,au3
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
