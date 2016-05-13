@@ -1,7 +1,7 @@
 ######################default
 d:pc
 
-POSTPROC=prob
+POSTPROC=prob,city
 
 ######################similarities
 ###alec smart
@@ -210,6 +210,9 @@ city=c:\games\inform\triz\mine\slicker-city.pdf,
 city=c:\games\inform\slicker-city.inform\uuid.txt,
 city=c:\writing\scripts\sc.txt,
 city=c:\games\inform\slicker-city.inform\source\excl.pl,
+>city=conc.pl -o -sc
+>city=conc.pl -sc
+>city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
 
 #misc stuff
 TOBASE=misc

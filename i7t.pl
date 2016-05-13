@@ -14,6 +14,7 @@ $tables = 0;
 $count = 0;
 
 $exp{"pc"} = "Compound";
+$exp{"sc"} = "Slicker-City";
 
 my $countMismatch = 0;
 

@@ -43,6 +43,7 @@ while (@ARGV[$count])
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
   /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
   /^-?(r|roi|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
+  /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
@@ -134,6 +135,7 @@ sub processOneFile
   my $line = 0;
   my $currentTable = "";
   my $foundOne = 0;
+  my $latestRule;
 
   if ($_[1])
   {
@@ -151,6 +153,7 @@ sub processOneFile
   open(A, "$_[0]") || die ("No $_[0]");
   while ($a = <A>)
   {
+    if (($a =~ /^[a-z]/) && ($a !~ /\t/)) { $latestRule = "$a"; }
     if ($inImportant) { $idx++; }
     if ($_[1])
 	{
@@ -176,6 +179,7 @@ sub processOneFile
 	  print "): $a";
 	  if ($crom == 2) { print " **PLURAL**"; }
 	  print "\n";
+	  if ($showRules) { print "RULE=$latestRule"; }
 	}
   }
   close(A);

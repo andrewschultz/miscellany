@@ -5,3 +5,5 @@ Compound	table of hb	"	$$. up from 38
 Compound	table of bad guy worries	"	$$ random important administrative and philosophical matters
 Compound	table of jerk-girl-talk	"	jerks now have $$ girls they talk about
 Compound	ni pr
+Slicker-City	table of life shelf books	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ important, useful self-help books!
+Slicker-City	ni sr

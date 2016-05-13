@@ -2,11 +2,23 @@ Local $project = "Compound";
 
 if $CmdLine[0] > 0 Then
   $project = $CmdLine[1];
+  if $CmdLine[1] == "d" Then
+    $project = "dirk";
+  Endif
+  if $CmdLine[1] == "s" Then
+    $project = "sa";
+  Endif
+  if $CmdLine[1] == "r" Then
+    $project = "roiling";
+  Endif
+  if $CmdLine[1] == "roi" Then
+    $project = "roiling";
+  Endif
   if $CmdLine[1] == "pc" Then
     $project = "Compound";
   Endif
   if $CmdLine[1] == "sc" Then
-    $project = "Compound";
+    $project = "slicker-city";
   Endif
   if $CmdLine[1] == "3d" Then
     $project = "threediopolis";
@@ -24,9 +36,9 @@ Send("!O");
 
 WinWaitActive("Open a project");
 
-Send("c:\games\inform\" & $project & ".inform!O");
+Send("ames\inform\" & $project & ".inform!O");
 
-WinWaitActive($project & ".inform - Inform");
+WinWaitActive($project & ".inform");
 
 Send("{F5}");
 
