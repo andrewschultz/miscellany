@@ -78,10 +78,10 @@ while ($a = <A>)
   chomp($a);
   @b = split(/\t/, $a);
   
-  if ($#b == 1) { $failCmd = @b[1]; next; }
-  
   if (lc(@b[0]) ne lc($project)) { next; }
   
+  if ($#b == 1) { $failCmd{$project} = @b[1]; next; }
+
   $ranOneTest = 1;
 
   if (@b[2] ne "\"")
@@ -132,7 +132,7 @@ if ($majorList)
   print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
 }
 
-if ($printFail && $failCmd) { print "RUN THIS: $failCmd\n"; }
+if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
 
 if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
 

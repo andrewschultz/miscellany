@@ -236,6 +236,16 @@ if "%1" NEQ "" (
 set PROJ=%1
 )
 
+if "%1" EQU "scr" (
+%NOTES%\slicker_city_release_1_notes.txt
+goto end
+)
+
+if "%1" EQU "cr" (
+%NOTES%\slicker_city_release_1_notes.txt
+goto end
+)
+
 if "%1" EQU "rr" (
 %NOTES%\roiling_release_4_notes.txt
 goto end

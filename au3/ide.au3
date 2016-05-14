@@ -34,9 +34,9 @@ WinWaitActive("Welcome to Inform 7");
 
 Send("!O");
 
-WinWaitActive("Open a project");
+WinWaitActive("Open a project", "Project &name");
 
-Send("ames\inform\" & $project & ".inform!O");
+Send("c:\games\inform\" & $project & ".inform!O");
 
 WinWaitActive($project & ".inform");
 
