@@ -32,7 +32,7 @@ while ($a = <A>)
     #if ($counting) { print "Last line $a"; }
 	if ($counting)
 	{
-    print "TEST RESULTS:games.otl lines for $sec,3,$totalLines,0,<a href=\"file:///c:/writing/games.otl\">OTL file</a>\n";
+    print "TEST RESULTS:games.otl lines for $sec,3,$totalLines,0,<a href=\"file:///c:/writing/games-otl.htm#$sec\">OTL file</a>\n";
 	}
 	$totalLines = 0;
     $counting = 0; next;

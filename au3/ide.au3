@@ -2,6 +2,9 @@ Local $project = "Compound";
 
 if $CmdLine[0] > 0 Then
   $project = $CmdLine[1];
+  if $CmdLine[1] == "b" Then
+    $project = "basic";
+  Endif
   if $CmdLine[1] == "d" Then
     $project = "dirk";
   Endif
@@ -42,5 +45,12 @@ WinWaitActive($project & ".inform");
 
 Send("{F5}");
 
-
-
+#comments-start
+if ($CmdLine[0] > 1) Then
+  Sleep(1000);
+  Do
+    Sleep(100);
+  Until ControlCommand (".inform", "", 59392, "IsEnabled", "");
+  WinClose($project & ".inform");
+Endif
+#comments-end
