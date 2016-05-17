@@ -2,7 +2,7 @@
 
 set NOTES=c:\users\andrew\dropbox\notes
 set EXT=.inform
-set PROJ=compound
+set PROJ=slicker-city
 set SOREL=source
 
 if "%1" EQU "?" (

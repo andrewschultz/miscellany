@@ -1,3 +1,5 @@
+#include <MsgBoxConstants.au3>
+
 Local $project = "Compound";
 
 if $CmdLine[0] > 0 Then
@@ -45,12 +47,24 @@ WinWaitActive($project & ".inform");
 
 Send("{F5}");
 
+$x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+
+; MsgBox(4096, '', @AutoItVersion) ; 4096 = $MB_SYSTEMMODAL
+; MsgBox($MB_OK, $x, $x);
+
+#comments-start
+if ($CmdLine[0] > 1) Then
+  Sleep($CmdLine[2]);
+  Send("test win" & @CRLF);
+endif
+#comments-end
+
 #comments-start
 if ($CmdLine[0] > 1) Then
   Sleep(1000);
   Do
     Sleep(100);
   Until ControlCommand (".inform", "", 59392, "IsEnabled", "");
-  WinClose($project & ".inform");
+  Send("test win" & @CRLF);
 Endif
 #comments-end
