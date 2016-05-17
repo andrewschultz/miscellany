@@ -82,6 +82,21 @@ if "%1" EQU "t" (
 goto story
 )
 
+if "%1" EQU "t2" (
+set PROJ=Compound
+goto story
+)
+
+if "%1" EQU "t3" (
+set PROJ=threediopolis
+goto story
+)
+
+if "%1" EQU "t4" (
+set PROJ=fourdiopolis
+goto story
+)
+
 if "%1" EQU "gr" (
 set PROJ=grubbyville
 goto nodef
