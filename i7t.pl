@@ -98,9 +98,12 @@ while ($a = <A>)
   
   if ($rows{@b[1]}) { $size = $rows{@b[1]}; } else { print "@b[1] has nothing.\n"; }
   
+  $sizeX = $size+1;
+  
   my $almost = @b[3]; $almost =~ s/\$\$//g;
 
   @b[3] =~ s/\$\$/$size/g;
+  @b[3] =~ s/\$\+/$sizeX/g;
   print "Trying @b[3]\n";
   my $success = 0;
   my $nearSuccess = "";

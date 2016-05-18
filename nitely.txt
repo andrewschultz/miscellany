@@ -108,6 +108,7 @@ sc=slicker-city
 >gq.pl $$ -x search.string
 >gh.pl -t $$
 >conc.pl -t -o -$$
+>conc.pl $$
 >lnct.pl 10 $$,sc1,sc2,sc3,sc4,scfarm,sca,scb,scc,scd,sce,sc-dis
 >invis.pl -u $$
 >wfl.pl -t
@@ -117,7 +118,6 @@ c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicke
 c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city.pdf
 CHECK
 >tts.pl $$ y
->conc.pl $$
 >crv.pl $$
 >qq.pl $l
 >icl.pl -jr $$
@@ -127,13 +127,13 @@ CHECK
 pc=compound
 >gh.pl -t $$
 >conc.pl -t -o -$$
+>conc.pl $$
 >lnct.pl $$
 >invis.pl -u $$
 >i7t.pl $d -t hb,hs,xadd -p $l
 c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/mine/compound.trizbort
 \tech\trizbort\redact.pl -pc
 >tts.pl $$ y
->conc.pl $$
 >crv.pl $$
 >qq.pl $l
 >icl.pl -jr $$

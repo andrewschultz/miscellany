@@ -3,5 +3,5 @@
 -g pc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound.trizbort
 -g sc -t -f c:/games/inform/triz/mine/slicker-city.trizbort -o c:/games/inform/triz/mine/slicker-city-redacted.trizbort
 -g sc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\slicker-city.trizbort -q
--g sc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\slicker-city-redacted.trizbort
+-g sc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\slicker-city-redacted.trizbort -q
 ;
