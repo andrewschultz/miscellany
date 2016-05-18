@@ -265,6 +265,8 @@ misc=c:\writing\scripts\salf.pl,wrifi
 misc=c:\writing\scripts\noter.pl,wrifi
 misc=c:\writing\dict\aadd.pl,
 misc=c:\writing\scripts\ide.au3,au3
+misc=c:\writing\scripts\pch.pl
+misc=c:\writing\scripts\pch.txt
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
