@@ -12,6 +12,11 @@ MAP:3,4,3d,4d=opo
 MAP:ro,roi,sa=sts
 MAP:pc,sc=as
 
+#names
+run=names
+c:\writing\dict\lasts.txt
+c:\writing\dict\firsts.txt
+
 #stale tales slate
 run=sts
 c:\games\inform\roiling.inform\source\story.ni

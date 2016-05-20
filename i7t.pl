@@ -27,7 +27,8 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
-    /^-?e$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?e$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl");; exit; };
+    /^-?f$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
@@ -53,7 +54,7 @@ while ($a = <A>)
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
 	}
   }
-  if ($table) { print B $a; $count++; $tableCount++; }
+  if ($table) { print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; } }
   if ($a !~ /[a-z]/)
   {
     if (($table) && (!$quietTables)) { $tableList .= "$curTable: $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
@@ -75,6 +76,8 @@ open(A, "c:/writing/scripts/i7t.txt");
 
 while ($a = <A>)
 {
+  if ($a =~ /^#/) { next; }
+  if ($a =~ /^;/) { last; }
   chomp($a);
   @b = split(/\t/, $a);
   
@@ -94,7 +97,7 @@ while ($a = <A>)
   open(F, $lastOpen) || die ("Can't re-open $lastOpen.");
   }
   
-  my $size = "";
+  my $size = 0;
   
   if ($rows{@b[1]}) { $size = $rows{@b[1]}; } else { print "@b[1] has nothing.\n"; }
   
@@ -110,7 +113,7 @@ while ($a = <A>)
   while ($f = <F>)
   {
     #print "@b[3] =~? $f";
-    if ($f =~ /@b[3]/) { $success = 1; last; }
+    if ($f =~ /\b@b[3]/) { $success = 1; last; }
 	if ($f =~ /$almost/) { $nearSuccess .= $f; }
   }
   close(F);
@@ -151,7 +154,8 @@ print<<EOT;
 directory
 csv = tables to highlight
 -t specifies a CSV of important tables to track
--e opens the i7t.txt file
+-e opens the i7t.pl file
+-f opens the i7t.txt file
 -o opens the offending file post-test
 -p specifies the project
 -s specifies the project in shorthand

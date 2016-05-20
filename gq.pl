@@ -37,12 +37,13 @@ while (@ARGV[$count])
   {
   /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
-  /^-a$/ && do { $runAll = 1; $count++; next; }; # run all
+  /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
   /^-o$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
+  /^-?n$/ && do { @runs = ("names"); $count++; next; }; # names
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
-  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
-  /^-?(r|roi|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
+  /^-?(c|as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
+  /^-?(r|roi|s|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
   /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
