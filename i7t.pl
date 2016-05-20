@@ -17,6 +17,7 @@ $exp{"pc"} = "Compound";
 $exp{"sc"} = "Slicker-City";
 
 my $countMismatch = 0;
+my $writeDir = "c:\\writing\\dict";
 
 if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; }
 
@@ -27,10 +28,12 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
-    /^-?e$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl");; exit; };
+    /^-?e$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?f$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
+	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
+	/^-c$/ && do { $writeDir = "."; $count++; next; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
@@ -39,7 +42,8 @@ while ($count <= $#ARGV)
 }
 
 open(A, "$newDir/story.ni") || die ("$newDir/story.ni doesn't exist.");
-open(B, ">tables.i7");
+$tableFile = "$writeDir\\tables-$project.i7";
+open(B, ">$tableFile");
 
 while ($a = <A>)
 {
@@ -142,11 +146,17 @@ if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; 
 
 if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
 
-if (($openPost) && ($fileToOpen))
+if ($openPost)
 {
-  print "Opening $fileToOpen\n";
-  `$fileToOpen`;
+  if ($fileToOpen)
+  {
+    print "Opening $fileToOpen\n";
+    `$fileToOpen`;
+  }
+  else { print "No error files to open!\n"; }
 }
+
+if ($openTableFile) { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile"); }
 
 sub usage
 {
@@ -154,9 +164,11 @@ print<<EOT;
 directory
 csv = tables to highlight
 -t specifies a CSV of important tables to track
+-c specifies the writedir for tables.i7 as the current directory (default is writing\dict)
 -e opens the i7t.pl file
 -f opens the i7t.txt file
 -o opens the offending file post-test
+-ot opens the table file
 -p specifies the project
 -s specifies the project in shorthand
 (directory) looks for story.ni in a different directory
