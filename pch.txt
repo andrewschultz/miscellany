@@ -3,13 +3,14 @@ odd-machine of*The Witness Eye
 paragraph break->
 wfk->
 PROJECT=sc=slicker-city
+jb->Man
 go1984->George Orwell's 1984
 table of room explanations
 :endpunc,sentcase
 table of explanations
 :endpunc,sentcase
 table of life shelf books
-titlecase::endpunc,nocaps
+titlecase:::endpunc,nocaps
 table of retro annos
 :sentcase,endpunc
 table of unvisiteds

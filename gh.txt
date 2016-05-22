@@ -210,9 +210,11 @@ city=c:\games\inform\triz\mine\slicker-city.pdf,
 city=c:\games\inform\slicker-city.inform\uuid.txt,
 city=c:\writing\scripts\sc.txt,
 city=c:\games\inform\slicker-city.inform\source\excl.pl,
+city=c:\games\inform\slicker-city.inform\source\talf.pl,
+city=c:\games\inform\slicker-city.inform\source\scbk.pl,
 city=c:\users\andrew\dropbox\notes\slicker_city*,
+>city=talf.pl
 >city=conc.pl -o -sc
->city=conc.pl -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
 
 #misc stuff
@@ -272,6 +274,9 @@ TOBASE=writing
 writing=c:\writing\hthws.otl,
 writing=c:\writing\notes9.otl,
 writing=c:\writing\games.otl,
+writing=c:\writing\starter.htm,
+writing=c:\writing\cheatsheet.txt,
+writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

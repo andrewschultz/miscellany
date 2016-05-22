@@ -11,7 +11,9 @@
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq);
 
-if (!@ARGV[0]) { print ("Need alphabetical to sort, or -pc for all of PC"); }
+my $dupBytes = 0;
+
+if (!@ARGV[0]) { print ("Need alphabetical to sort, or -pc for all of PC"); exit; }
 
 @sects = split(/,/, @ARGV[0]);
 
@@ -19,6 +21,8 @@ if (@ARGV[0] eq "-pc")
 {
   @sects=split(/,/, "pc,sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca");
 }
+
+if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp.\n"; exit; }
 
 $infile = "c:\\writing\\games.otl";
 $outfile = "c:\\writing\\temp\\games.otl";
@@ -41,9 +45,11 @@ while ($a = <A>)
 close(A);
 close(B);
 
-if ((-s $infile) != (-s $outfile))
+if (!$didSomething) { print "Didn't sort anything!\n"; exit; }
+
+if ((-s $infile) != ((-s $outfile) + $dupBytes))
 {
-  print "Uh oh, $infile and $outfile didn't match sizes. Bailing.\n";
+  print "Uh oh, $infile and $outfile(+$dupBytes) didn't match sizes. Bailing.\n";
   print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile.\n";
   exit;
 }
@@ -54,8 +60,10 @@ print "$cmd\n";
 
 sub alfThis
 {
+  $didSomething = 1;
   my @lines = ();
   my @uniq_no_case = ();
+  %got = ();
   
   while ($a = <A>)
   {
@@ -68,16 +76,18 @@ sub alfThis
     push(@lines, $a);
   }
   @x = sort { "\L$a" cmp "\L$b" } @lines;
+  #@x = @lines;
 
   for $y (@x)
   {
-    if ($got{lc($y)} == 1) { print "Duplicate $y\n"; next; }
+    #if ($got{lc($y)} == 1) { print "Duplicate $y\n"; $dupBytes += length(lc($y))+1; $dupes++; print "$dupBytes/$dupes total.\n"; next; }
 	$got{lc($y)} = 1;
 	push(@uniq_no_case, $y);
   }
 
 
-  print B join("\n", @uniq_no_case) . "\n";
+  print B join("\n", @uniq_no_case);
+  if ($#uniq_no_case > -1) { print B "\n"; }
   print B "$a\n";
   print "$#lines ($#uniq_no_case unique) shuffled\n";
   return;

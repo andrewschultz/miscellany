@@ -15,6 +15,12 @@ echo pr sr rr = problems, shuffling or roiling releases
 goto end
 )
 
+if "%1" EQU "h" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
+goto end
+)
+
+
 if "%1" EQU "e11" (
 set PROJ=dash
 goto nodef

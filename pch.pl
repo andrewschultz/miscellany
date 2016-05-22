@@ -1,4 +1,12 @@
-open(B, "c:/writing/scripts/pch.txt");
+##########################################
+#pch.pl
+#
+#punctuation checker for my Inform and data files
+#
+
+$datFile = "c:/writing/scripts/pch.txt";
+
+open(B, $datFile);
 
 my $debug = 0;
 
@@ -13,10 +21,11 @@ while ($count <= $#ARGV)
   $a = @ARGV[$count];
   for ($a)
   {
-    /-t/ && do { $test = 1; $count++; next; };
-    /-d/ && do { $debug = 1; $count++; next; };
+    /^-?t$/ && do { $test = 1; $count++; next; };
+    /^-?d$/ && do { $debug = 1; $count++; next; };
+    /^-?e$/ && do { `$datFile`; exit; };
 	if ($gotProj) { print "Only one project allowed.\n"; usage(); }
-	$proj = @ARGV[0];
+	$proj = @ARGV[$count];
 	$gotProj = 1;
 	$count++;
   }
@@ -56,7 +65,7 @@ while ($b = <B>)
 
 close(B);
 
-open(A, "c:/games/inform/$proj.inform/Source/story.ni") || die ("No $proj.");
+open(A, "c:/games/inform/$proj.inform/Source/story.ni") || die ("No $proj. -t, -d and -e are the only options.");
 
 $line = 0; $success = 0; $fail = 0;
 
@@ -113,6 +122,7 @@ sub seeOkay
     $tempVal = @sepCols[$_];
     $tempVal =~ s/^\"//g;
     $tempVal =~ s/\".*//g;
+	if ($tempVal =~ /\"/) { failReg("Hosed quotes for $tempVal, line $line\n"); next; }
 	for $r (keys %repl) { if ($tempVal =~ /\[$r\]/) { $tempVal =~ s/(\[$r\])/$repl{$r}/g; } }
 	for $r (keys %wcard) { if ($tempVal =~ /\[$r[^\]]+\]/) { $tempVal =~ s/\[$r[^]]+\]/$wcard{$r}/g; } }
 	if (($tempDir =~ /ignore-blank/i) && ($tempVal eq "--")) { next; }

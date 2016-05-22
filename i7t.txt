@@ -17,7 +17,7 @@ Compound	ni pr
 #
 #############
 #table of life shelf books
-Slicker-City	xxlsp	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$+ important, useful self-help books
+Slicker-City	xxlsb	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$+ important, useful self-help books
 #authors for life shelf books
 Slicker-City	xxauth	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ insightful authors
 #ideas not in game proper
