@@ -1,3 +1,13 @@
+###########################################
+#tts.pl
+#
+#trim trailing spaces
+#
+#argument = directory
+#
+#does not rewrite file if everything is ok
+#
+
 $long{"roil"} = "roiling";
 $long{"roi"} = "roiling";
 $long{"ro"} = "roiling";

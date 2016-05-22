@@ -267,12 +267,14 @@ misc=c:\writing\scripts\salf.pl,wrifi
 misc=c:\writing\scripts\noter.pl,wrifi
 misc=c:\writing\dict\aadd.pl,
 misc=c:\writing\scripts\ide.au3,au3
-misc=c:\writing\scripts\pch.pl
-misc=c:\writing\scripts\pch.txt
+misc=c:\writing\scripts\pch.pl,
+misc=c:\writing\scripts\pch.txt,
+misc=c:\writing\scripts\naz.pl,
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
 writing=c:\writing\notes9.otl,
+writing=c:\writing\notes-a-z.otl,
 writing=c:\writing\games.otl,
 writing=c:\writing\starter.htm,
 writing=c:\writing\cheatsheet.txt,

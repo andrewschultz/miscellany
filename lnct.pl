@@ -26,7 +26,7 @@ open(A, $inFile) || die ("No $inFile.");
 OUTER:
 while ($a = <A>)
 {
-  $lines++;
+  if ($a !~ /^#/) { $lines++; }
   if ($a !~ /[a-z]/i)
   {
     #if ($counting) { print "Last line $a"; }
