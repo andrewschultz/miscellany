@@ -5,7 +5,7 @@
 #this tells what files to search, where, for a set of projects
 
 #this is the default value.
-DEFAULT=sts
+DEFAULT=as
 
 #these map values to projects
 MAP:3,4,3d,4d=opo

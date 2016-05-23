@@ -26,8 +26,6 @@ if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
 elsif ($pwd =~ /Compound/i) { @runs = ("as"); }
 elsif ($pwd =~ /slicker/i) { @runs = ("as"); }
-else # default = Roiling
-{ @runs = ("sts"); }
 
 while (@ARGV[$count])
 {
@@ -82,7 +80,7 @@ else
 
 sub processListFile
 {
-  open(A, $gqfile);
+  open(A, $gqfile) || die ("Can't find $gqfile.");
   while ($a = <A>)
   {
     if ($a =~ /^#/) { next; }
@@ -114,6 +112,14 @@ sub processListFile
 	
   }
   close(A);
+  if ($#runs == -1)
+  {
+    if ($defaultString) { @runs = ($defaultString); }
+    else
+    {
+      die("No default string specified in $gqfile, and no project specified in the command line. Bailing.\n");
+    }
+  }
 }
 
 sub processFiles
