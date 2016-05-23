@@ -107,7 +107,7 @@ while ($a = <A>)
   
   $sizeX = $size+1;
   
-  my $almost = @b[3]; $almost =~ s/\$\$//g;
+  my $almost = @b[3]; $almost =~ s/\$[\+\$]//g;
 
   @b[3] =~ s/\$\$/$size/g;
   @b[3] =~ s/\$\+/$sizeX/g;

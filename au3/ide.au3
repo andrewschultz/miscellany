@@ -5,49 +5,54 @@ Local $project = "Compound";
 if $CmdLine[0] > 0 Then
   $project = $CmdLine[1];
   if $CmdLine[1] == "b" Then
-    $project = "basic";
-  Endif
-  if $CmdLine[1] == "d" Then
-    $project = "dirk";
-  Endif
-  if $CmdLine[1] == "s" Then
-    $project = "sa";
-  Endif
-  if $CmdLine[1] == "r" Then
-    $project = "roiling";
-  Endif
-  if $CmdLine[1] == "roi" Then
-    $project = "roiling";
-  Endif
-  if $CmdLine[1] == "pc" Then
-    $project = "Compound";
-  Endif
-  if $CmdLine[1] == "sc" Then
-    $project = "slicker-city";
-  Endif
-  if $CmdLine[1] == "3d" Then
-    $project = "threediopolis";
-  Endif
-  if $CmdLine[1] == "4d" Then
-    $project = "fourdiopolis";
+    call("openIDE", "basic");
+  ElseIf $CmdLine[1] == "d" Then
+    call("openIDE", "dirk");
+  ElseIf $CmdLine[1] == "s" Then
+    call("openIDE", "sa");
+  ElseIf $CmdLine[1] == "r" Then
+    call("openIDE", "roiling");
+  ElseIf $CmdLine[1] == "roi" Then
+    call("openIDE", "roiling");
+  ElseIf $CmdLine[1] == "pc" Then
+    call("openIDE", "Compound");
+  ElseIf $CmdLine[1] == "sc" Then
+    call("openIDE", "slicker-city");
+  ElseIf $CmdLine[1] == "3d" Then
+    call("openIDE", "threediopolis");
+  ElseIf $CmdLine[1] == "4d" Then
+    call("openIDE", "fourdiopolis");
+  ElseIf $CmdLine[1] == "as" Then
+    call("openIDE", "Compound");
+	call("openIDE", "slicker-city");
+  ElseIf $CmdLine[1] == "opo" Then
+    call("openIDE", "threediopolis");
+	call("openIDE", "fourdiopolis");
+  ElseIf $CmdLine[1] == "sts" Then
+    call("openIDE", "roiling");
+	call("openIDE", "sa");
+  Else
+    call("openIDE", "slicker-city");
   Endif
 Endif
 
-run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
+Func OpenIDE($project)
+  run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
 
-WinWaitActive("Welcome to Inform 7");
+  WinWaitActive("Welcome to Inform 7");
 
-Send("!O");
+  Send("!O");
 
-WinWaitActive("Open a project", "Project &name");
+  WinWaitActive("Open a project", "Project &name");
 
-Send("c:\games\inform\" & $project & ".inform!O");
+  Send("c:\games\inform\" & $project & ".inform!O");
 
-WinWaitActive($project & ".inform");
+  WinWaitActive($project & ".inform");
 
-Send("{F5}");
+  Send("{F5}");
 
-$x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+  $x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+EndFunc
 
 ; MsgBox(4096, '', @AutoItVersion) ; 4096 = $MB_SYSTEMMODAL
 ; MsgBox($MB_OK, $x, $x);
