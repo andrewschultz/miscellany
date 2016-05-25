@@ -47,12 +47,17 @@ open(B, ">$tableFile");
 
 while ($a = <A>)
 {
-  if ($a =~ /^table /)
+  if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
+    if ($a =~ /^\[/) { $a =~ s/[\[\]]//g; print "--$a"; }
+	$a =~ s/ \(continued\)//g;
+    $a =~ s/^\[//g;
     $table = 1; $tables++; $curTable = $a; chomp($curTable); $tableShort = $curTable;
 	$curTable =~ s/ *\[.*//g; $tableCount = -3;
 	$curTable =~ s/ - .*//g;
-	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; } else { $tableShort = $curTable; }
+	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
+	if ($tableShort =~ / \[/) { $tableShort =~ s/ \[.*//g; }
+	$tableShort =~ s/ - .*//g;
 	for $x (@important)
 	{
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
@@ -61,7 +66,11 @@ while ($a = <A>)
   if ($table) { print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; } }
   if ($a !~ /[a-z]/)
   {
-    if (($table) && (!$quietTables)) { $tableList .= "$curTable: $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
+    if (($table) && (!$quietTables))
+	{
+	  $tableList .= "$curTable";
+	  if ($curTable ne $tableShort) { $tableList .= "($tableShort)"; }
+	  $tableList .= ": $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
 	if ($majorTable) { $majorList .= "$curTable: $tableCount rows<br />"; } $majorTable = 0;
   }
 }
