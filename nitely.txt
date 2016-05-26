@@ -74,6 +74,8 @@ x
 #first has no tests but dumps my progress
 >ac.pl -df
 >ac.pl -t
+#how many anagrams to look through?
+>myan.pl -t
 
 sa=sa
 >lnct.pl $$

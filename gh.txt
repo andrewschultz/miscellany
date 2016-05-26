@@ -96,6 +96,7 @@ stsu=c:\writing\dict\alfy.pl,
 stsu=c:\games\inform\roiling.inform\source\rcl.pl,
 stsu=c:\writing\dict\ac.pl,
 stsu=c:\writing\dict\nud.pl,
+stsu=c:\writing\dict\anin.pl,
 
 #Stale Tales Slate data/utility files to GitHub
 TOBASE=stale-tales-slate
@@ -213,6 +214,7 @@ city=c:\games\inform\slicker-city.inform\source\excl.pl,
 city=c:\games\inform\slicker-city.inform\source\talf.pl,
 city=c:\games\inform\slicker-city.inform\source\scbk.pl,
 city=c:\users\andrew\dropbox\notes\slicker_city*,
+city=c:\games\inform\slicker-city.inform\source\technotes.txt,
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"

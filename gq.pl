@@ -59,7 +59,7 @@ while (@ARGV[$count])
   }
 
 }
-if (!@thisAry[0]) { die ("Need an argument."); }
+if (!@thisAry[0]) { die ("Need a process-able word for an argument."); }
 
 processListFile();
 
