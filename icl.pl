@@ -58,26 +58,27 @@ while ($count <= $#ARGV)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
   /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
-  /^-jb/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
-  /^-jd/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
-  /^-jr/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
-  /-f/ && do { $release = $debug = $runBeta = 0;
+  /^-?jb$/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
+  /^-?jd$/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
+  /^-?jr$/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-?f$/ && do { $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
     if ($a =~ /b/) { $runbeta = 1; }
 	$count++; next;
   };
-  /-inf/ && do { $infOnly = 1; $count++; next; };
-  /-l/ && do { $v6l = 1 - $v6l; $informDir = @inDirs[$v6l]; $count++; next; };
-  /-ba/ && do { $informBase = @ARGV[$count+1]; $count++; next; };
-  /-be/ && do { $betaDir = @ARGV[$count+1]; $count++; next; };
-  /-nr/ && do { $release = 0; $count++; next; };
-  /-yr/ && do { $release = 1; $count++; next; };
-  /-nd/ && do { $debug = 0; $count++; next; };
-  /-yd/ && do { $debug = 1; $count++; next; };
-  /-x/ && do { $execute = 1; $count++; next; };
-  /-a/ && do { for $entry(@allProj) { push(@compileList, $a); } $count++; next; };
-  /^-\?/ && do { usage(); exit; };
+  /^-?inf$/ && do { $infOnly = 1; $count++; next; };
+  /^-?l$/ && do { $v6l = 1 - $v6l; $informDir = @inDirs[$v6l]; $count++; next; };
+  /^-?ba$/ && do { $informBase = @ARGV[$count+1]; $count++; next; };
+  /^-?be$/ && do { $betaDir = @ARGV[$count+1]; $count++; next; };
+  /^-?nr$/ && do { $release = 0; $count++; next; };
+  /^-?yr$/ && do { $release = 1; $count++; next; };
+  /^-?nd$/ && do { $debug = 0; $count++; next; };
+  /^-?yd$/ && do { $debug = 1; $count++; next; };
+  /^-?x$/ && do { $execute = 1; $count++; next; };
+  /^-?e$/ && do { `c:\\writing\\scripts\\icl.txt`; exit; };
+  /^-?a$/ && do { for $entry(@allProj) { push(@compileList, $a); } $count++; next; };
+  /^-\?$/ && do { usage(); exit; };
   /^-/ && do { print "Not a valid option.\n"; usage(); exit; };
   push(@compileList, $a); $count++; next;
   }
@@ -92,7 +93,7 @@ for $a (@compileList)
   else {
   $myProj = "";
   for $q (keys %proj) { if ($proj{$q} eq "$a") { $myProj = $a; } }
-  if (!$myProj) { die("No project for $proj. If you wanted an option, try -?.\n"); }
+  if (!$myProj) { die("No project for $a. If you wanted an option, try -?.\n"); }
   }
   $infDir = @inDirs[$v6l];
   runProj($myProj);
@@ -305,6 +306,7 @@ USAGE
 -bd = base dir specified, default c:/games/inform/beta
 -inf = create INF file only, no binary build
 -jb -jd -jr just build/release/debug
+-e edits the icl.txt file
 EOT
 exit
 }
