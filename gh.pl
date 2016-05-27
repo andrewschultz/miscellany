@@ -48,14 +48,15 @@ while ($count <= $#ARGV)
   /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do
   {
-    if ($altHash{$ARGV[$count]})
+    if ($a =~ /-$/) { $a =~ s/-$//g; $runTrivialTests = -1; } # sc- means you don't run trivials
+    if ($altHash{$a})
 	{
-	  print "$ARGV[$count] => $altHash{$ARGV[$count]}\n";
-	  $procString = $altHash{$ARGV[$count]};
+	  print "$a => $altHash{$a}\n";
+	  $procString = $altHash{$a};
 	}
 	else
 	{
-	  $procString = $ARGV[$count];
+	  $procString = $a;
 	}
 	$count++;
 	next;
