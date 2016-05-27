@@ -5,6 +5,7 @@
 #redacts rooms with certain regions in Trizbort
 #
 
+my $defRead = "c:\\tech\\trizbort\\redact.txt";
 use warnings;
 use strict;
 my $debug = 0, my $inFile, my $outFile;
@@ -34,8 +35,9 @@ while ($count <= $#ARGV)
   /^-g$/ && do { @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
   /^-d$/ && do { $debug = 1; $count++; next; };
   /^-c$/ && do { $runC = 1; $count++; next; };
-  /^-p$/ && do  { $myReadFile = $b; $count+= 2; next; };
-  /^-pd$/ && do { $myReadFile = "c:\\tech\\trizbort\\redact.txt"; $count++; next; };
+  /^-p$/ && do { $myReadFile = $b; $count+= 2; next; };
+  /^-q$/ && do { $myReadFile = $defRead; $runC = 1; @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
+  /^-pd$/ && do { $myReadFile = $defRead; $count++; next; };
   /^-fs$/ && do { showParameterFileSyntax(); };
   readArray($ARGV + $count);
   last OUTER;
@@ -237,6 +239,7 @@ print<<EOT;
 -t = redact text
 -g = group of commands to run (eg if the file has -g pc, -g pc or -g pc,sc for -g pc and -g sc)
 -fs = show parameter file syntax
+-q = quickly run everything on a project e.g. -q pc
 EOT
 exit
 }

@@ -3,6 +3,8 @@ use warnings;
 
 use File::Compare;
 
+my $warnCanRun = 0;
+
 my $alph = 1;
 my $procString;
 my $defaultString;
@@ -48,7 +50,8 @@ while ($count <= $#ARGV)
   /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do
   {
-    if ($a =~ /-$/) { $a =~ s/-$//g; $runTrivialTests = -1; } # sc- means you don't run trivials
+    if ($a =~ /-$/) { $a =~ s/-$//g; if ($altHash{$a}) { $postproc{$altHash{$a}} = 0; } else { $postproc{$a} = 0; } } # sc- means you do run trivials
+    if ($a =~ /=$/) { $a =~ s/=$//g; if ($altHash{$a}) { $postproc{$altHash{$a}} = 1; } else { $postproc{$a} = 1; } } # sc= means you do run trivials
     if ($altHash{$a})
 	{
 	  print "$a => $altHash{$a}\n";
@@ -117,7 +120,7 @@ sub processTerms
     if ($a =~ /^#/) { next; }
 	if ($a =~ /^>/)
 	{
-	  if ($runTrivialTests == -1) { next; }
+	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
 	  $b =~ s/^>//g; $b =~ s/=.*//g;
 	  if (!hasHash($b)) { next; }
 	  if (($runTrivialTests == 1) || ($postproc{$b}))
@@ -125,6 +128,7 @@ sub processTerms
 	  $b = $a; $b =~ s/.*=//g;
 	  $quickCheck .= `$b`;
 	  }
+	  else { $warnCanRun = 1; next; }
 	  next;
     }
 	##################note prefix like -a (auxiliary) and -b (build)
@@ -190,6 +194,7 @@ sub processTerms
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
   }
   if ($quickCheck) { print "\n========quick verifications\n$quickCheck"; }
+  if ($warnCanRun) { print "\nYou could have run code checking by tacking on an =."; }
 }
 
 ##########################
