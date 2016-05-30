@@ -27,7 +27,8 @@ while ($count <= $#ARGV)
   $b = @ARGV[$count+1];
   for ($a)
   {
-    /-t/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
+    /^-tt$/ && do { $tableTab = 1; $count++; next; };
+    /^-t$/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?f$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
@@ -49,6 +50,7 @@ while ($a = <A>)
 {
   if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
+    @tableCount = ();
     if ($a =~ /^\[/) { $a =~ s/[\[\]]//g; print "--$a"; }
 	$a =~ s/ \(continued\)//g;
     $a =~ s/^\[//g;
@@ -63,9 +65,14 @@ while ($a = <A>)
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
 	}
   }
-  if ($table) { print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; } }
+  if ($table)
+  {
+    print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
+	if ($a =~ /[a-z]/) { my @tempAry = split(/\t/, $a); @tableCount[$#tempAry]++; }
+  }
   if ($a !~ /[a-z]/)
   {
+    if (($table) && ($tableTab)) { print "$tableShort: "; for (0..$#tableCount) { if (@tableCount[$_]) { print "$_ tabs: @tableCount[$_] "; } } print "\n"; }
     if (($table) && (!$quietTables))
 	{
 	  $tableList .= "$curTable";

@@ -125,6 +125,7 @@ CHECK
 >icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
+>$d/scbk.pl -t
 
 pc=compound
 >gh.pl -t $$

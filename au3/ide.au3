@@ -34,6 +34,8 @@ if $CmdLine[0] > 0 Then
   Else
     call("openIDE", "slicker-city");
   Endif
+Else
+  call("openIDE", $project);
 Endif
 
 Func OpenIDE($project)
