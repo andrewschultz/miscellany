@@ -142,6 +142,8 @@ TOBASE=fourdiopolis
 #the logcheck.pl are now merged and equivalent
 4d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
 4d=c:\games\inform\fourdiopolis.inform\source\talf.pl,
+4d=c:\games\inform\fourdiopolis.inform\source\4drand.txt,testing
+4d=c:\games\inform\fourdiopolis.inform\source\rtest.pl,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 
 #Ugly Oafs files to GitHub
@@ -192,6 +194,8 @@ prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips 
 prob=c:\games\inform\Compound.inform\uuid.txt,
 prob=c:\users\andrew\dropbox\notes\prob*.txt,
 prob=c:\writing\dict\wfl.pl,\utils
+prob=c:\games\inform\Compound.inform\source\regpc.bat,\testing
+prob=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
 -a:prob=c:\games\inform\Compound.inform\source\flip.txt,\utils
 -a:prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
 #concept tracker
@@ -216,6 +220,9 @@ city=c:\games\inform\slicker-city.inform\source\scbk.pl,
 city=c:\users\andrew\dropbox\notes\slicker_city*,
 city=c:\games\inform\slicker-city.inform\source\technotes.txt,
 city=c:\games\inform\slicker-city.inform\source\reg-sc-*,\testing
+city=c:\games\inform\slicker-city.inform\source\scdir.pl,\testing
+city=c:\games\inform\slicker-city.inform\source\regsc.bat,\testing
+city=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
@@ -273,6 +280,7 @@ misc=c:\writing\scripts\ide.au3,au3
 misc=c:\writing\scripts\pch.pl,
 misc=c:\writing\scripts\pch.txt,
 misc=c:\writing\scripts\naz.pl,
+misc=c:\writing\scripts\noway.py,python
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
