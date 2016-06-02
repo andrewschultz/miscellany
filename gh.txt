@@ -287,6 +287,7 @@ misc=c:\writing\scripts\pch.pl,
 misc=c:\writing\scripts\pch.txt,
 misc=c:\writing\scripts\naz.pl,
 misc=c:\writing\scripts\noway.py,python
+misc=c:\writing\scripts\trizrm.py,python
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
