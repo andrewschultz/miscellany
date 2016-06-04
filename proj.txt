@@ -1,0 +1,8 @@
+pc=compound
+sa=sa
+roi=roiling
+sc=slicker-city
+3,3d=threediopolis
+4,4d=fourdiopolis
+d=dirk
+uo=ugly-oafs

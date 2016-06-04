@@ -288,6 +288,10 @@ misc=c:\writing\scripts\pch.txt,
 misc=c:\writing\scripts\naz.pl,
 misc=c:\writing\scripts\noway.py,python
 misc=c:\writing\scripts\trizrm.py,python
+#################3 files for copying regr suite over
+misc=c:\writing\scripts\proj.txt,
+misc=c:\writing\scripts\i7proj.pm,
+misc=c:\writing\scripts\prt.pl,
 
 TOBASE=writing
 writing=c:\writing\hthws.otl,
