@@ -162,16 +162,17 @@ sub processOneFile
   {
     if (($a =~ /^[a-z]/) && ($a !~ /\t/)) { $latestRule = "$a"; }
     if ($inImportant) { $idx++; }
-    if ($_[1])
+    if ($a =~ /^\\/)
 	{
-	  if ($a =~ /^\\/)
+      if ($_[1])
 	  {
-	    for (@importants) { if ($a =~ /^\\$_[=\|]/) { $idx = 0; $inImportant = 1; $thisImportant = $a; chomp($thisImportant); $thisImportant =~ s/[\|=].*//g; } }
+        for (@importants) { if ($a =~ /^\\$_[=\|]/) { $idx = 0; $inImportant = 1; $thisImportant = $a; chomp($thisImportant); $thisImportant =~ s/[\|=].*//g; } }
 	  }
+	  else { $thisImportant = $a; $thisImportant =~ s/^\\//g; $thisImportant =~ s/[=\\].*//g; chomp($thisImportant); }
 	}
     $line++;
 	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; chomp($currentTable); $inTable = 1; }
-	if ($a !~ /[a-z]/i) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; } }
+	if ($a !~ /[a-z]/i) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; $thisImportant = ""; } }
 	my $crom = cromu($a);
     if ($inImportant && $crom)
 	{
@@ -180,8 +181,7 @@ sub processOneFile
 	  $foundOne++;
 	  print "$modFile($line";
 	  if ($currentTable) { print ",$currentTable"; }
-	  if ($thisImportant) { print ",$thisImportant"; }
-	  if ($thisImportant) { print ",L$idx"; }
+	  if ($thisImportant) { print ",$thisImportant,L$idx"; }
 	  chomp($a);
 	  print "): $a";
 	  if ($crom == 2) { print " **PLURAL**"; }

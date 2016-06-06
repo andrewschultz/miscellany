@@ -7,9 +7,9 @@ v=5
 F=c:/games/inform/shuffling.inform/Source/story.ni
 F=c:/games/inform/shuffling.inform/Source/walkthrough.txt
 F=c:\games\inform\roiling.inform\Source\metrics.htm
-F=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb
+F=c:\games\inform\shuffling Materials\Release\Shuffling Around.gblorb
 F=c:\games\inform\triz\shuffling-around.pdf
-F=c:\games\inform\sa.inform\Source\shuffling-logic.txt
+F=c:\games\inform\shuffling.inform\Source\shuffling-logic.txt
 F=c:\writing\scripts\shuffling-invisiclues.htm
 F=c:\Users\Andrew\Dropbox\notes\shuffling_around_release_%_notes.txt
 !

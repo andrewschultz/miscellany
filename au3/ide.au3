@@ -9,7 +9,9 @@ if $CmdLine[0] > 0 Then
   ElseIf $CmdLine[1] == "d" Then
     call("openIDE", "dirk");
   ElseIf $CmdLine[1] == "s" Then
-    call("openIDE", "sa");
+    call("openIDE", "shuffling");
+  ElseIf $CmdLine[1] == "sa" Then
+    call("openIDE", "shuffling");
   ElseIf $CmdLine[1] == "r" Then
     call("openIDE", "roiling");
   ElseIf $CmdLine[1] == "roi" Then
@@ -31,8 +33,10 @@ if $CmdLine[0] > 0 Then
   ElseIf $CmdLine[1] == "sts" Then
     call("openIDE", "roiling");
 	call("openIDE", "sa");
-  Else
+  ElseIf $CmdLine[1] == "" Then
     call("openIDE", "slicker-city");
+  Else
+    call("openIDE", $CmdLine[1]);
   Endif
 Else
   call("openIDE", $project);

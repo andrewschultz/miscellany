@@ -77,7 +77,7 @@ x
 #how many anagrams to look through?
 >myan.pl -t
 
-sa=sa
+sa=shuffling
 >lnct.pl $$
 >invis.pl -u $$
 >tts.pl $$ y

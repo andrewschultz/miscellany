@@ -134,7 +134,7 @@ goto nodef
 )
 
 if "%1" EQU "12" (
-set PROJ=sa
+set PROJ=shuffling
 goto nodef
 )
 
@@ -164,6 +164,11 @@ goto end
 )
 
 if "%1" EQU "ro" (
+set PROJ=roiling
+goto nodef
+)
+
+if "%1" EQU "roi" (
 set PROJ=roiling
 goto nodef
 )
@@ -219,12 +224,12 @@ goto nodef
 )
 
 if "%1" EQU "s" (
-set PROJ=sa
+set PROJ=shuffling
 goto nodef
 )
 
 if "%1" EQU "sa" (
-set PROJ=sa
+set PROJ=shuffling
 goto nodef
 )
 

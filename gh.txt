@@ -28,22 +28,23 @@ wri~writing
 
 #Shuffling files
 TOBASE=stale-tales-slate
-shu=c:\games\inform\sa.inform\source\story.ni,shuffling
-shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\sa random text.i7x,shuffling
-shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\sa nudges.i7x,shuffling
-shu=c:\games\inform\sa.inform\source\testcase.txt,shuffling
-shu=c:\games\inform\sa.inform\source\shuffling-logic.txt,shuffling
-shu=c:\games\inform\sa.inform\source\walkthrough.txt,shuffling
-shu=c:\games\inform\sa.inform\Source\dial.htm,shuffling\shuffling-random.htm
+shu=c:\games\inform\shuffling.inform\source\story.ni,shuffling
+shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling random text.i7x,shuffling
+shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling nudges.i7x,shuffling
+shu=c:\games\inform\shuffling.inform\source\testcase.txt,shuffling
+shu=c:\games\inform\shuffling.inform\source\shuffling-logic.txt,shuffling
+shu=c:\games\inform\shuffling.inform\source\walkthrough.txt,shuffling
+shu=c:\games\inform\shuffling.inform\Source\dial.htm,shuffling\shuffling-random.htm
 shu=c:\writing\scripts\shuffling-invisiclues.htm,shuffling
-shu=c:\writing\scripts\sa.txt,shuffling
-shu=c:\games\inform\sa Materials\Release\Cover.jpg,shuffling
+shu=c:\writing\scripts\shuffling.txt,shuffling
+shu=c:\games\inform\shuffling Materials\Release\Cover.jpg,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.trizbort,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.pdf,shuffling
 shu=c:\users\andrew\dropbox\notes\shuf*.txt,shuffling
-shu=c:\games\inform\sa.inform\uuid.txt,shuffling
-shu=c:\games\inform\sa.inform\source\roomlist.txt,shuffling
--b:shu=c:\games\inform\sa Materials\Release\Shuffling Around.gblorb,shuffling
+shu=c:\games\inform\shuffling.inform\uuid.txt,shuffling
+shu=c:\games\inform\shuffling.inform\source\roomlist.txt,shuffling
+shu=c:\games\inform\shuffling.inform\source\reg-sa-*,\shuffling\testing
+-b:shu=c:\games\inform\shuffling Materials\Release\Shuffling Around.gblorb,shuffling
 -b:shu=c:\games\inform\beta Materials\Release\beta-Shuffling Around.gblorb,shuffling
 
 #Roiling files
@@ -68,7 +69,8 @@ roi=c:\games\inform\roiling.inform\source\bk2txt.pl,roiling\twitterbot
 roi=c:\games\inform\triz\mine\voltmaze.trizbort,roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,roiling
 roi=c:\games\inform\roiling.inform\uuid.txt,roiling
-roi=c:\games\inform\sa.inform\source\roomlist.txt,roiling
+roi=c:\games\inform\roiling.inform\source\roomlist.txt,roiling
+roi=c:\games\inform\roiling.inform\source\reg-roi-*,\roiling\testing
 -b:roi=c:\games\inform\Roiling Materials\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
 
@@ -203,7 +205,6 @@ prob=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
 #concept tracker
 prob=c:\writing\dict\conc.pl,\utils
 prob=c:\games\inform\Compound.inform\source\reg-pc-*,\testing
-prob=c:\games\inform\Compound.inform\source\reg-noway.txt,\testing
 >prob=conc.pl -o -pc
 >prob=conc.pl -pc
 >prob=i7t.pl -q -s pc | grep -iE "failed|likely|run this"
@@ -228,7 +229,7 @@ city=c:\games\inform\slicker-city.inform\source\reg-sc-*,\testing
 city=c:\games\inform\slicker-city.inform\source\scdir.pl,\testing
 city=c:\games\inform\slicker-city.inform\source\regsc.bat,\testing
 city=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
-city=c:\games\inform\slicker-city.inform\source\reg-noway.txt,\testing
+city=c:\games\inform\slicker-city.inform\source\reg-sc-*.txt,\testing
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"

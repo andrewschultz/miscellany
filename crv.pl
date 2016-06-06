@@ -12,9 +12,9 @@ $long{"roil"} = "roiling";
 $long{"roi"} = "roiling";
 $long{"ro"} = "roiling";
 $long{"r"} = "roiling";
-$long{"s"} = "sa";
-$long{"sa"} = "sa";
-$long{"12"} = "sa";
+$long{"s"} = "shuffling";
+$long{"sa"} = "shuffling";
+$long{"12"} = "shuffling";
 $long{"13"} = "threediopolis";
 $long{"3"} = "threediopolis";
 $long{"3d"} = "threediopolis";
@@ -126,7 +126,7 @@ sub tryDir
 {
   if (-f "$_[0]/story.ni") { $dir = $_[0]; }
   if ($_[0] eq "(-?)r") { $dir = "c:/games/inform/roiling.inform/Source"; }
-  if ($_[0] eq "(-?)s") { $dir = "c:/games/inform/sa.inform/Source"; }
+  if ($_[0] eq "(-?)s") { $dir = "c:/games/inform/shuffling.inform/Source"; }
 }
 
 sub checkForComments

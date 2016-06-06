@@ -8,7 +8,7 @@ default=sc
 
 ############################
 #project shortcuts
-12,s=sa
+12,s,sa=shuffling
 3,3d,13=threediopolis
 4,4d=fourdiopolis
 u,uo,14=uglyoafs
@@ -19,7 +19,7 @@ r,ro,roi=roiling
 
 ##############################
 #all projects
-allproj=s,r,u,p,d,15
+allproj=s,r,u,p,d,15,16
 
 ########################
 #which projects require the z-machine?
