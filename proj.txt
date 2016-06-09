@@ -1,5 +1,5 @@
 pc=compound
-sa=sa
+sa=shuffling
 roi=roiling
 sc=slicker-city
 3,3d=threediopolis

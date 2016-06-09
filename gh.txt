@@ -36,7 +36,7 @@ shu=c:\games\inform\shuffling.inform\source\shuffling-logic.txt,shuffling
 shu=c:\games\inform\shuffling.inform\source\walkthrough.txt,shuffling
 shu=c:\games\inform\shuffling.inform\Source\dial.htm,shuffling\shuffling-random.htm
 shu=c:\writing\scripts\shuffling-invisiclues.htm,shuffling
-shu=c:\writing\scripts\shuffling.txt,shuffling
+shu=c:\writing\scripts\sa.txt,shuffling
 shu=c:\games\inform\shuffling Materials\Release\Cover.jpg,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.trizbort,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.pdf,shuffling
@@ -134,6 +134,7 @@ TOBASE=threediopolis
 3d=c:\games\inform\threediopolis.inform\uuid.txt,
 -b:3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,
 3d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
+3d=c:\games\inform\threediopolis.inform\source\rtest3.txt,testing
 
 #Fourdiopolis files to BitBucket
 TOBASE=fourdiopolis
@@ -146,8 +147,9 @@ TOBASE=fourdiopolis
 #the logcheck.pl are now merged and equivalent
 4d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
 4d=c:\games\inform\fourdiopolis.inform\source\talf.pl,
-4d=c:\games\inform\fourdiopolis.inform\source\4drand.txt,testing
-4d=c:\games\inform\fourdiopolis.inform\source\rtest.pl,testing
+4d=c:\writing\scripts\opotst.pl,testing
+4d=c:\games\inform\fourdiopolis.inform\source\rtest4.txt,testing
+4d=c:\games\inform\fourdiopolis.inform\source\rtest4s.txt,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 
 #Ugly Oafs files to GitHub
