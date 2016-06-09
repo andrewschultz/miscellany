@@ -78,6 +78,8 @@ my $blockedMoves = 0;
 my @topCard = ("");
 my %inStack;
 my %holds;
+my $timesAuto = 0;
+my $stillNeedWin = 0;
 
 open(A, "altime.txt") || die ("No time lock file altime.txt, no play.\nSample file can look like this:\n1453547368\n86400\n\nYou can make the first number ridiculously big to disable this feature or make the second small to allow more frequent play.");
 my $timeLast = <A>; chomp($timeLast);
@@ -159,52 +161,53 @@ sub procCmdFromUser #this is so they can't use debug commands
 
 sub procCmd
 {
+  my $modCmd = $_[0];
   $errorPrintedYet = 0;
   $printedThisTurn = 0;
   $movesAtStart = $#undoArray;
-  chomp($_[0]);
-  $_[0] = lc($_[0]);
+  chomp($modCmd);
+  $modCmd = lc($modCmd);
   $moveBar = 0;
-  $_[0] =~ s/^\s+//g;
+  $modCmd =~ s/^\s+//g;
 
-  if ((length($_[0]) > 0) && (length($_[0]) % 2 == 0))
+  if ((length($modCmd) > 0) && (length($modCmd) % 2 == 0))
   {
-  my $halfLet = substr($_[0], 0, length($_[0])/2);
-  if ($_[0] eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $_[0] = $halfLet; }
+  my $halfLet = substr($modCmd, 0, length($modCmd)/2);
+  if ($modCmd eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $modCmd = $halfLet; }
   }
 
-  my $letters = $_[0]; $letters =~ s/[^a-z]//gi;
-  my $numbers = $_[0];
+  my $letters = $modCmd; $letters =~ s/[^a-z]//gi;
+  my $numbers = $modCmd;
 
   $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
 
   #meta commands first, or commands with equals
-  if ($_[0] =~ /^%$/) { stats(); return; }
-  if ($_[0] =~ /^l([bi]?)=/i) { loadDeck($_[0]); return; }
-  if ($_[0] =~ /^lf([bi]?)=/i) { loadDeck($_[0], 1); return; }
-  if ($_[0] =~ /^lw=/i) { $avoidWin = 1; loadDeck($_[0]); $avoidWin = 0; return; }
-  if ($_[0] =~ /^s([bi]?)=/i) { saveDeck($_[0], 0); return; }
-  if ($_[0] =~ /^sf([bi]?)=/i) { saveDeck($_[0], 1); return; }
-  if ($_[0] =~ /^t=/i) { loadDeck($_[0], "debug"); return; }
-  if ($_[0] =~ /^(f|f=)/) { forceArray($_[0]); return; }
-  if ($_[0] =~ /^(ho|ho=)/) { holdArray($_[0]); return; }
-  if ($_[0] =~ /^(b|b=)/) { holdArray($_[0]); return; }
-  if ($_[0] =~ /^n[-\+]$/) { return; } # null move for debugging purposes
-  if ($_[0] =~ /^q+$/) { writeTime(); exit; }
-  if ($_[0] =~ /^q/) { print "If you want to exit, just type q."; return; } #don't want playr to quit accidentally if at all possible
+  if ($modCmd =~ /^%$/) { stats(); return; }
+  if ($modCmd =~ /^l([bi]?)=/i) { loadDeck($modCmd); return; }
+  if ($modCmd =~ /^lf([bi]?)=/i) { loadDeck($modCmd, 1); return; }
+  if ($modCmd =~ /^lw=/i) { $avoidWin = 1; loadDeck($modCmd); $avoidWin = 0; return; }
+  if ($modCmd =~ /^s([bi]?)=/i) { saveDeck($modCmd, 0); return; }
+  if ($modCmd =~ /^sf([bi]?)=/i) { saveDeck($modCmd, 1); return; }
+  if ($modCmd =~ /^t=/i) { loadDeck($modCmd, "debug"); return; }
+  if ($modCmd =~ /^(f|f=)/) { forceArray($modCmd); return; }
+  if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; }
+  if ($modCmd =~ /^(b|b=)/) { holdArray($modCmd); return; }
+  if ($modCmd =~ /^n[-\+]$/) { return; } # null move for debugging purposes
+  if ($modCmd =~ /^q+$/) { writeTime(); exit; }
+  if ($modCmd =~ /^q/) { print "If you want to exit, just type q."; return; } #don't want playr to quit accidentally if at all possible
 
   # toggles/commands with numbers that are hard to change
-  if ($_[0] =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw $toggles[$beginOnes].\n"; return; }
-  if ($_[0] =~ /^1a$/) { $autoOnes = !$autoOnes; print "AutoOnes on draw $toggles[$autoOnes].\n"; return; }
-  if ($_[0] =~ /^1s$/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on move $toggles[$autoOneSafe].\n"; return; }
-  if ($_[0] =~ /^1f$/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup $toggles[$autoOneFull].\n"; return; }
-  if ($_[0] =~ /^1p$/) { ones(1); printdeck(0); return; }
+  if ($modCmd =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw $toggles[$beginOnes].\n"; return; }
+  if ($modCmd =~ /^1a$/) { $autoOnes = !$autoOnes; print "AutoOnes on draw $toggles[$autoOnes].\n"; return; }
+  if ($modCmd =~ /^1s$/) { $autoOneSafe = !$autoOneSafe; print "AutoOneSafe on move $toggles[$autoOneSafe].\n"; return; }
+  if ($modCmd =~ /^1f$/) { $autoOneFull = !$autoOneFull; print "AutoOneFull writeup $toggles[$autoOneFull].\n"; return; }
+  if ($modCmd =~ /^1p$/) { ones(1); printdeck(0); return; }
 
   #remove spaces. Note garbage. Valid commands are above.
-  $_[0] =~ s/ //g; my $garbage = $_[0]; $garbage =~ s/[0-9a-z]//gi; if ($garbage) { print "Warning: excess text ($garbage) in command\n"; }
+  $modCmd =~ s/ //g; my $garbage = $modCmd; $garbage =~ s/[0-9a-z]//gi; if ($garbage) { print "Warning: excess text ($garbage) in command\n"; }
 
-  if ($letters ne "g") { $lastCommand = $_[0]; }
+  if ($letters ne "g") { $lastCommand = $modCmd; }
 
   for ($letters)
   {
@@ -297,11 +300,12 @@ sub procCmd
       }
 	  return;
 	};
-    /^a$/ && do { if ($#numArray < 1) { print "Need 2 row numbers.\n"; return; } $shouldMove = 1; $_[0] =~ s/[a]//g; altUntil($_[0]); return; };
+    /^a$/ && do { if ($#numArray < 1) { print "Need 2 row numbers.\n"; return; } $shouldMove = 1; $modCmd =~ s/[a]//g; altUntil($modCmd); return; };
     /^af/ && do { cmdNumWarn($numbers, $letters); if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
-	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(); return; };
+	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
+	/^c[wd]x$/ && do { cmdNumWarn($numbers, $letters); check720(1); return; };
     /^d$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
     /^df$/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
@@ -318,14 +322,14 @@ sub procCmd
     /^is$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(1); return; };
     /^ll$/i && do { cmdNumWarn($numbers, $letters); if (!$lastSearchCmd) { print "Can't load last--we haven't loaded a game in the first place.\n"; return; } loadDeck($lastSearchCmd); return; };
     /^lu$/ && do { cmdNumWarn($numbers, $letters); if ($fixedDeckOpt) { peekAtCards(); } else { print "Must have fixed-deck card set.\n"; } return; };
-    /^lw$/ && do { cmdNumWarn($numbers, $letters); printLastWon(); if ($_[0] =~ /^lw=/) { saveLastWon($_[0]); } return; };
+    /^lw$/ && do { cmdNumWarn($numbers, $letters); printLastWon(); if ($modCmd =~ /^lw=/) { saveLastWon($modCmd); } return; };
     /^mr$/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers, $letters); showOpts(); return; };
     /^(os|so)$/ && do { cmdNumWarn($numbers, $letters); saveOpts(); return; };
     /^pl$/ && do { cmdNumWarn($numbers, $letters); if ($#pointsArray > -1) { for my $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
      /^r$/ && do {
       cmdNumWarn($numbers, $letters);
-      if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
+      if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } if ($modCmd =~ /^ry=/) { $modCmd =~ s/^ry=//g; fillInitArray($modCmd); }
 	  doAnotherGame();
 	  return;
     };
@@ -339,7 +343,7 @@ sub procCmd
 	};
     /^ry$/ && do {
       cmdNumWarn($numbers, $letters);
-      if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($_[0] =~ /^ry=/) { $_[0] =~ s/^ry=//g; fillInitArray($_[0]); }
+      if ($drawsLeft) { print "Forcing restart despite draws left.\n"; } if ($modCmd =~ /^ry=/) { $modCmd =~ s/^ry=//g; fillInitArray($modCmd); }
 	  doAnotherGame();
 	  return;
     };
@@ -455,9 +459,9 @@ sub procCmd
     /^z$/ && do { cmdNumWarn($numbers, $letters); print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^\?\?/ && do { cmdNumWarn($numbers, $letters); usageDet(); return; };
     /^\?/ && do { cmdNumWarn($numbers, $letters); usage(); return; }; #anything below here needs sorting
-  #if ($_[0] =~ /^[0-9]{2}[^0-9]/) { $shouldMove = 1; $_[0] = substr($_[0], 0, 2); tryMove($_[0]); tryMove(reverse($_[0])); return; }
+  #if ($modCmd =~ /^[0-9]{2}[^0-9]/) { $shouldMove = 1; $modCmd = substr($modCmd, 0, 2); tryMove($modCmd); tryMove(reverse($modCmd)); return; }
   }; # end letters for-loop
-  print "Command ($_[0]) ";
+  print "Command ($modCmd) ";
   if ($numbers && $letters) { print "($letters/$numbers) "; }
   print "wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
 }
@@ -486,6 +490,7 @@ sub suitstat
 sub check720
 {
   my @suitStatus = (0, 0, 0, 0, 0);
+  $stillNeedWin = $_[0];
   for (0..3) { $suitStatus[suitstat($_)]++; }
   if ($drawsLeft != 1)
   {
@@ -562,6 +567,19 @@ sub check720
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
+  if (($stillNeedWin) && ($wins))
+  {
+    $timesAuto = 0;
+     while ($stillNeedWin)
+	 {
+	   $timesAuto++;
+        procCmdFromUser("d");
+		if ($stillNeedWin)
+		{
+		procCmdFromUser("u");
+		}
+	 }
+  }
 }
 
 sub perfAscending
@@ -2827,15 +2845,19 @@ sub checkwin
   {
     if (($#_ > 0) && ($_[0] == -1)) { printdeck(-1); } printOutSinceLast();
 
+	$stillNeedWin = 0;
 	print "You win! ";
+	if ($timesAuto) { print "(took $timesAuto times) "; }
 	while (1)
 	{
 	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
+	if (($x eq "d;u") || ($x eq "u;d")) { print ("You already won. No need to button bash. Try cwx, actually.\n"); }
 	if (($x =~ /^u/i) && ($x !~ /;/))
 	{
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
 	  push(@undoArray, "n-");
-	  undo(0); $moveBar = 1; $shouldMove = 0; return;
+	  undo(0); $moveBar = 1; $shouldMove = 0;
+	  return;
 	}
 	$youWon = 1;
     if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
