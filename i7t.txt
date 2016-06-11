@@ -27,4 +27,11 @@ Slicker-City	table of insightful authors	C:/Users/Andrew/Dropbox/notes/slicker_c
 #ideas not in game proper
 Slicker-City	xxadd	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ off-the-wall
 Slicker-City	ni cr / ni scr
+######################################
+#fourdiopolis searching
+#
+#############
+#table of scenery
+fourdiopolis	table of scenery	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ pieces of scenery
+fourdiopolis	ni 4r
 ;

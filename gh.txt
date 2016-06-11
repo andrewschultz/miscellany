@@ -155,7 +155,7 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\reg-4d-misc.txt,testing
 4d=c:\games\inform\fourdiopolis.inform\source\reg-4d-scens.txt,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
-roi=c:\users\andrew\dropbox\notes\fourd*.txt,
+4d=c:\users\andrew\dropbox\notes\fourd*.txt,
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
