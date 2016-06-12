@@ -135,6 +135,7 @@ TOBASE=threediopolis
 -b:3d=c:\games\inform\threediopolis Materials\Release\threediopolis.zblorb,
 3d=c:\games\inform\threediopolis.inform\source\logcheck.pl,
 3d=c:\games\inform\threediopolis.inform\source\rtest3.txt,testing
+3d=c:\games\inform\threediopolis.inform\source\reg-3d-misc.txt,testing
 3d=c:\users\andrew\dropbox\notes\threed*.txt,
 
 #Fourdiopolis files to BitBucket
@@ -156,6 +157,7 @@ TOBASE=fourdiopolis
 4d=c:\games\inform\fourdiopolis.inform\source\reg-4d-scens.txt,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 4d=c:\users\andrew\dropbox\notes\fourd*.txt,
+>4d=i7t.pl -q -s 4d | grep -iE "failed|likely|run this"
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
