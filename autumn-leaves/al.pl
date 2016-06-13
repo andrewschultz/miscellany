@@ -22,6 +22,7 @@ use Devel::StackTrace;
 #tracer
 #my $trace = Devel::StackTrace->new; print $trace->as_string . "\n";
 
+my $expected = 0;
 my %sre, my %rev;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
@@ -567,6 +568,7 @@ sub check720
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
+  $expected = 720 / $wins;
   if (($stillNeedWin) && ($wins))
   {
     $timesAuto = 0;
@@ -1513,6 +1515,7 @@ sub printdeck #-1 means don't print the ones and also it avoids the ones-ish get
   if ($testing) { return; }
   if ($undo) { return; }
   if ($quickMove) { return; }
+  if ($stillNeedWin) { ones(0); checkwin(); return; }
   if (($autoOneSafe) && ($_[0] != -1) && ($anyMovesYet)) { ones(0); } # there has to be a better way to do this
   if ($printedThisTurn) { print "Warning tried to print this turn.\n"; return; }
   $printedThisTurn = 1;
@@ -2756,8 +2759,11 @@ sub ones # 0 means that you don't print the error message, 1 means that you do
   while ($anyYet);
   if ($seventwenty) { return 0; }
   printDebug("After outer: $#undoArray\n");
+  if (!$stillNeedWin)
+  {
   if (($quickStr) && ($autoOneFull)) { print "$quickStr\n"; }
   if (!$totMove) { if ($_[0] == 1) { print "No moves found.\n"; } } else { print "$totMove auto-move" . plur($totMove) . " made.\n"; }
+  }
 
   #checkwin(-1);
 }
@@ -2847,7 +2853,7 @@ sub checkwin
 
 	$stillNeedWin = 0;
 	print "You win! ";
-	if ($timesAuto) { print "(took $timesAuto times) "; }
+	if ($timesAuto) { print "(took $timesAuto times, expected $expected) "; $timesAuto = 0; }
 	while (1)
 	{
 	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
@@ -2866,7 +2872,7 @@ sub checkwin
 	}
   }
   my $er = emptyRows();
-  if ($suitsDone || $er)
+  if (($suitsDone || $er) && (!$stillNeedWin))
   {
   if ($suitsDone) { print "$suitsDone suit" . plur($suitsDone) . " completed ($suitlist)"; }
   if ($er) { if ($suitsDone) { print ", "; } print $er . " empty row" . plur($er); }
