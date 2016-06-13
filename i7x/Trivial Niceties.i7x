@@ -156,6 +156,13 @@ volume yes-no substitutes
 
 debug-auto-yes is a truth state that varies.
 
+to decide whether the player test-consents:
+	if debug-state is true:
+		say "[line break]> ";
+	if the player consents:
+		decide yes;
+	decide no;
+		
 to decide whether the player yes-consents:
 	(- YesOrNoExt(1) -).
 
