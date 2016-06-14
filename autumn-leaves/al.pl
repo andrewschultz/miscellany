@@ -568,9 +568,11 @@ sub check720
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
-  $expected = 720 / $wins;
   if (($stillNeedWin) && ($wins))
   {
+    if (720 % $wins) { no integer; $expected = sprintf("%2f", 720 / $wins); } else { $expected = 720 / $wins; }
+    
+	if (720 % $wins) { print "Rounding $expected to "; $expected = sprintf("%.2f", $expected); print "$expected.\n"; }
     $timesAuto = 0;
      while ($stillNeedWin)
 	 {
@@ -2853,7 +2855,7 @@ sub checkwin
 
 	$stillNeedWin = 0;
 	print "You win! ";
-	if ($timesAuto) { print "(took $timesAuto times, expected $expected) "; $timesAuto = 0; }
+	if ($timesAuto) { printf "(took $timesAuto times, expected $expected) "; use integer; $timesAuto = 0; }
 	while (1)
 	{
 	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;

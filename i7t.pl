@@ -13,6 +13,7 @@ my $project = "Project";
 $tables = 0;
 $count = 0;
 
+$exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
 $exp{"pc"} = "Compound";
 $exp{"sc"} = "Slicker-City";

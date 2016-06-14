@@ -33,5 +33,13 @@ Slicker-City	ni cr / ni scr
 #############
 #table of scenery
 fourdiopolis	table of scenery	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ pieces of scenery
+fourdiopolis	table of silly randoms	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ silly events
 fourdiopolis	ni 4r
+######################################
+#threediopolis searching
+#
+#############
+#table of scenery
+threediopolis	table of observies	C:/Users/Andrew/Dropbox/notes/threediopolis_release_4_notes.txt	$$ silly random events, up from 72
+threediopolis	ni 3r
 ;

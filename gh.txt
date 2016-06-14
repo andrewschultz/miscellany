@@ -137,6 +137,7 @@ TOBASE=threediopolis
 3d=c:\games\inform\threediopolis.inform\source\rtest3.txt,testing
 3d=c:\games\inform\threediopolis.inform\source\reg-3d-misc.txt,testing
 3d=c:\users\andrew\dropbox\notes\threed*.txt,
+>3d=i7t.pl -q -s 3d | grep -iE "failed|likely|run this"
 
 #Fourdiopolis files to BitBucket
 TOBASE=fourdiopolis
