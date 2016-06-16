@@ -34,6 +34,7 @@ Slicker-City	ni cr / ni scr
 #table of scenery
 fourdiopolis	table of scenery	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ pieces of scenery
 fourdiopolis	table of silly randoms	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ silly events
+fourdiopolis	table of last names	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ last names now,
 fourdiopolis	ni 4r
 ######################################
 #threediopolis searching

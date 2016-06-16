@@ -69,7 +69,7 @@ my @force, my @initArray, my @pointsArray;
 my @stack, my @outSinceLast;
 my $debug = 0;
 my $inMassTest, my $undo, my $quickMove;
-my $wins, my $losses, my $lwstreak, my $llstreak, my $wstreak, my $lstreak, my @lastTen; #stat variables
+my $wins=0, my $losses=0, my $lwstreak=0, my $llstreak=0, my $wstreak=0, my $lstreak=0, my @lastTen; #stat variables
 my @cmds, my @pcts, my @undoArray, my @undoLast, my @toggles = ( "off", "on", "random" ); # 2 = random for easy-array. This is a hack, but eh, well...
 my $hidCards;
 my $cardsInPlay;
@@ -227,7 +227,7 @@ sub procCmd
 	  {
 	    if ($numArray[0] == $numArray[1]) { print "Can't move stack onto itself.\n"; return; }
 		if (isEmpty($numArray[0])) { print "Can't move from empty stack $numArray[0].\n"; return; }
-		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automaticall shift it but we block the player from doing so because computers are perfect
+		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automatically shift it but we block the player from doing so because computers are perfect
 		tryMove("$numArray[0]", "$numArray[1]");
 
   	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; $errorPrintedYet = 1; } }
@@ -237,8 +237,10 @@ sub procCmd
       { # detect 2 ways
 	    my $possConflict = 0;
 		if (isEmpty($numArray[0])) { print "From-row is empty.\n"; return; }
-		if (perfAscending($numArray[0]) && isEmpty($numArray[1])) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
-		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2]))) { print "Don't need a third row to move from $numArray[0] to $numArray[2].\n"; tryMove("$numArray[0]", "$numArray[2]"); return; }
+		if (perfAscending($numArray[0]) && isEmpty($numArray[1]))
+		{ jumpSecondRow($numArray[0], $numArray[2]); return; }
+		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2])))
+		{ jumpSecondRow($numArray[0], $numArray[2]); return; }
 		if (isEmpty($numArray[0])) { print "Can't move from an empty stack.\n"; printAnyway(); return; }
 		if ((!canMove($numArray[0], $numArray[1])) || (!canMove($numArray[0], $numArray[2]))) { $possConflict = 1; printDebug ("Possible conflict $numArray[0] $numArray[1] $numArray[2]\n"); }
         if ($numArray[0] == $numArray[1]) { print "Repeated number.\n"; return; }
@@ -488,6 +490,12 @@ sub suitstat
   return 0;
 }
 
+sub jumpSecondRow
+{
+  if (isEmpty($_[1]) && (perfAscending($_[0])) && (!$undo)) { print "Flipping to another empty row wouldn't do anyting. Stack $_[0] is already in order.\n"; return;  }
+  print "Don't need a third row to move from $_[0] to $_[1].\n"; tryMove("$_[0]", "$_[1]"); return;
+}
+
 sub check720
 {
   my @suitStatus = (0, 0, 0, 0, 0);
@@ -570,9 +578,8 @@ sub check720
   $cardsInPlay = $oldCardsInPlay;
   if (($stillNeedWin) && ($wins))
   {
-    if (720 % $wins) { no integer; $expected = sprintf("%2f", 720 / $wins); } else { $expected = 720 / $wins; }
+    if (720 % $wins) { no integer; $expected = sprintf("%.2f", 720 / $wins); } else { $expected = 720 / $wins; }
     
-	if (720 % $wins) { print "Rounding $expected to "; $expected = sprintf("%.2f", $expected); print "$expected.\n"; }
     $timesAuto = 0;
      while ($stillNeedWin)
 	 {
@@ -584,6 +591,7 @@ sub check720
 		}
 	 }
   }
+  $stillNeedWin = 0;
 }
 
 sub perfAscending
@@ -2061,7 +2069,7 @@ sub tryMove
 	  {
 	    barMove("$from-$to: Card needs to be placed on empty stack or a same-suit card of greater value (kings high).\n");
 	  }
-	  if ($undo) { print "WARNING: bad move tried during redo. Type UL for details.\n"; }
+	  if ($undo) { print "WARNING: bad move tried during redo. Type UL for details.\n"; if ($stillNeedWin) { print "Bailing because the undo array appears corrupted.\n"; } $stillNeedWin = 0; }
 	  return;
 	}
   }
@@ -3055,12 +3063,12 @@ else
 {
 print "Reading scores...\n";
 my $stats = <A>; chomp($stats); @pcts = split(/,/, $stats);
-$wins = $pcts[0];
-$losses = $pcts[1];
-$wstreak = $pcts[2];
-$lstreak = $pcts[3];
-$lwstreak = $pcts[4];
-$llstreak = $pcts[5];
+if (defined($pcts[0])) { $wins = $pcts[0]; }
+if (defined($pcts[1])) { $losses = $pcts[1]; }
+if (defined($pcts[2])) { $wstreak = $pcts[2]; }
+if (defined($pcts[3])) { $lstreak = $pcts[3]; }
+if (defined($pcts[4])) { $lwstreak = $pcts[4]; }
+if (defined($pcts[5])) { $llstreak = $pcts[5]; }
 $stats = <A>; chomp($stats);
 @lastTen = split(/,/, $stats);
 close(A);
