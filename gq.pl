@@ -27,12 +27,13 @@ elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
 elsif ($pwd =~ /Compound/i) { @runs = ("as"); }
 elsif ($pwd =~ /slicker/i) { @runs = ("as"); }
 
-while (@ARGV[$count])
+while ($count <= $#ARGV)
 {
   $a = @ARGV[$count];
   
   for ($a)
   {
+  /^0$/ && do { processNameConditionals(); exit; };
   /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
@@ -363,9 +364,43 @@ print A join("\n", @array);
 
 }
 
+sub processNameConditionals
+{
+open(A, "C:/games/inform/roiling.inform/Source/story.ni") || die ("Can't open Roiling source.");
+
+while ($a = <A>)
+{
+  if ($a =~ /section gender specific stubs/) { print "List of gender-says:\n"; $processTo = 1; next; }
+  if ($processTo)
+  {
+    if ($a =~ /^section/) { last; }
+	if ($a =~ /^to /)
+	{
+	  $b = $a; chomp($b); $b =~ s/to say //g; $b =~ s/:.*//g;
+	  $c = <A>;
+	  if ($c =~ /\[one of\]/)
+	  {
+	    $c =~ s/.*one of\]//g;
+		$c =~ s/\[in random.*//g;
+		$c =~ s/\[or\]/\//g;
+	  }
+	  else
+	  {
+	    $c =~ s/\[end if.*//g; $c =~ s/.*if [^\]]*\]//g; $c =~ s/\[else\]/\//g;
+	  }
+	  print "$b = $c";
+	}
+  }
+
+}
+close(A);
+
+}
+
 sub usage
 {
 print<<EOT;
+0 = process Roiling name conditionals
 -h = show headers
 -p = headers too
 -nt = print tabbed

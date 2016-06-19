@@ -43,11 +43,6 @@ return (gg_scriptstr ~= 0);
 
 To decide whether currently transcripting: (- CheckTranscriptStatus() -)
 
-book favorite abbreviations
-
-to decide what region is mrlp:
-	decide on map region of location of player.
-
 book waiting stubs
 
 waited-yet is a truth state that varies.
@@ -154,8 +149,43 @@ volume yes-no substitutes
 
 [this lets the programmer skip over yes/no decides]
 
+chapter complex consents
+
 debug-auto-yes is a truth state that varies.
 
+yn-auto is a number that varies.
+
+to decide whether the player dir-consents:
+	if debug-state is true:
+		if yn-auto is 1, decide yes;
+		if yn-auto is -1, decide no;
+	if the player consents:
+		decide yes;
+	decide no;
+
+chapter auing
+
+auing is an action applying to one number.
+
+understand the command "au" as something new.
+
+understand "au [number]" as auing.
+
+carry out auing:
+	if number understood > 1 or number understood < -1:
+		say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
+	if number understood is yn-auto:
+		say "It's already set to [auto-set]." instead;
+	say "Y/N responses changed from [auto-set] to ";
+	now yn-auto is number understood;
+	say "[auto-set].";
+	the rule succeeds;
+
+to say auto-set:
+	say "[if yn-auto is 1]auto-yes[else if yn-auto is -1]auto-no[else]no auto[end if]";
+
+chapter basic consents
+	
 to decide whether the player test-consents:
 	if debug-state is true:
 		say "[line break]> ";
