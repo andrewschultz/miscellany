@@ -237,6 +237,13 @@ sub procCmd
       { # detect 2 ways
 	    my $possConflict = 0;
 		if (isEmpty($numArray[0])) { print "From-row is empty.\n"; return; }
+		if (ascending($numArray[0]) && isEmpty($numArray[2]) && (suit(botCard($numArray[1])) == suit(botCard($numArray[0]))))
+		{
+		  my $temp = $numArray[1];
+		  $numArray[1] = $numArray[2];
+		  $numArray[2] = $temp;
+		  print "Switching last two rows.\n";
+		}		
 		if (perfAscending($numArray[0]) && isEmpty($numArray[1]))
 		{ jumpSecondRow($numArray[0], $numArray[2]); return; }
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2])))
@@ -246,6 +253,7 @@ sub procCmd
         if ($numArray[0] == $numArray[1]) { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
+		print "x\n";
 	    tryMove("$numArray[0]", "$numArray[1]");
 	    tryMove("$numArray[0]", "$numArray[2]");
 	    tryMove("$numArray[1]", "$numArray[2]");

@@ -192,7 +192,15 @@ sub procIt
   print B $secs . " seconds taken.";
   print B "</center>\n</body></html>";
   close(B);
-  if (($thisfail + $thiswarn > 0) || ($showSuccesses)) { `$x`; } else { $succString .= "<br>$_[0] passed all tests\n"; }
+  if (($thisfail + $thiswarn > 0) || ($showSuccesses))
+  {
+    my $cmd = "start \"\" \"c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe\" $x";
+	`$cmd`;
+  }
+  else
+  {
+    $succString .= "<br>$_[0] passed all tests\n";
+  }
 }
 
 sub opoNightly

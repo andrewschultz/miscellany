@@ -36,6 +36,10 @@ while ($count <= $#ARGV)
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
+	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x"; $count++; next; };
+	/^ras$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Random Text.i7x"; $count++; next; };
+	/^nur$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Nudges.i7x"; $count++; next; };
+	/^nus$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x"; $count++; next; };
 	/^-c$/ && do { $writeDir = "."; $count++; next; };
     /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
@@ -44,7 +48,9 @@ while ($count <= $#ARGV)
   }
 }
 
-open(A, "$newDir/story.ni") || die ("$newDir/story.ni doesn't exist.");
+if (!$fileName) { $fileName = "$newDir/story.ni"; }
+
+open(A, "$fileName") || die ("$fileName doesn't exist.");
 $tableFile = "$writeDir\\tables-$project.i7";
 open(B, ">$tableFile");
 
@@ -70,11 +76,22 @@ while ($a = <A>)
   if ($table)
   {
     print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
-	if ($a =~ /[a-z]/) { my @tempAry = split(/\t/, $a); @tableCount[$#tempAry]++; }
+	if ($a =~ /[a-z]/)
+	{
+	  my @tempAry = split(/\t/, $a);
+	  if ($#tempAry > $#tableCount) { $maxString = $a; }
+	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
+	  @tableCount[$#tempAry]++;
+	}
   }
   if ($a !~ /[a-z]/)
   {
-    if (($table) && ($tableTab)) { print "$tableShort: "; for (0..$#tableCount) { if (@tableCount[$_]) { print "$_ tabs: @tableCount[$_] "; } } print "\n"; }
+    if (($table) && ($tableTab))
+	{
+	  print "$tableShort: ";
+	  for (0..$#tableCount) { if (@tableCount[$_]) { print "$_ tabs: @tableCount[$_] "; } }
+	  print "\n";
+	  if (($maxString) && (@tableCount[$#tableCount] < @tableCount[$#tableCount - 1])) { print "Max string: $maxString"; } }
     if (($table) && (!$quietTables))
 	{
 	  $tableList .= "$curTable";
@@ -190,6 +207,7 @@ csv = tables to highlight
 -p specifies the project
 -s specifies the project in shorthand
 (directory) looks for story.ni in a different directory
+(ra|nu)(r|s) does random text or nudges for roiling or shuffling
 EOT
 exit;
 }

@@ -14,6 +14,8 @@ if $CmdLine[0] > 0 Then
     call("openIDE", "shuffling");
   ElseIf $CmdLine[1] == "r" Then
     call("openIDE", "roiling");
+  ElseIf $CmdLine[1] == "ro" Then
+    call("openIDE", "roiling");
   ElseIf $CmdLine[1] == "roi" Then
     call("openIDE", "roiling");
   ElseIf $CmdLine[1] == "pc" Then
