@@ -46,6 +46,7 @@ c:\games\inform\triz\mine\compound-directors-cut.trizbort
 c:\games\inform\triz\mine\compound-walkthrough.trizbort
 c:\games\inform\triz\mine\compound.trizbort
 c:\games\inform\triz\mine\slicker-city.trizbort
+c:\games\inform\slicker-city.inform\source\books.txt
 
 #OAFS!!!!
 run=oafs

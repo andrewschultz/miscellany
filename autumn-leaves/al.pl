@@ -253,7 +253,6 @@ sub procCmd
         if ($numArray[0] == $numArray[1]) { print "Repeated number.\n"; return; }
         $shouldMove = 1;
 	    $quickMove = 1;
-		print "x\n";
 	    tryMove("$numArray[0]", "$numArray[1]");
 	    tryMove("$numArray[0]", "$numArray[2]");
 	    tryMove("$numArray[1]", "$numArray[2]");

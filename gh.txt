@@ -104,6 +104,7 @@ stsu=c:\games\inform\roiling.inform\source\rcl.pl,
 stsu=c:\writing\dict\ac.pl,
 stsu=c:\writing\dict\nud.pl,
 stsu=c:\writing\dict\anin.pl,
+stsu=c:\games\inform\shuffling.inform\source\nucut.pl,testing
 
 #Stale Tales Slate data/utility files to GitHub
 TOBASE=stale-tales-slate

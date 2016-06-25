@@ -55,7 +55,7 @@ for $proj (@projs)
 
 print C "</table>$succString$linkBack</center></body></html>";
 close(C);
-if ($anyTestsRun) { `$errFile`; } else { print "No tests run, so I'm not showing the log file.\n"; }
+if ($anyTestsRun) { ffox("$errFile"); } else { print "No tests run, so I'm not showing the log file.\n"; }
 
 my $boxMsg = "";
 
@@ -194,7 +194,7 @@ sub procIt
   close(B);
   if (($thisfail + $thiswarn > 0) || ($showSuccesses))
   {
-    my $cmd = "start \"\" \"c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe\" $x";
+    ffox($x);
 	`$cmd`;
   }
   else
@@ -332,4 +332,10 @@ sub newIdeas
   }
 
   return 0;
+}
+
+sub ffox
+{
+  my $cmd = "start \"\" \"c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe\" \"file:///$_[0]\"";
+  `$cmd`;
 }
