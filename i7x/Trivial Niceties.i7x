@@ -126,6 +126,19 @@ carry out screening:
 	say "Screen reader support is now [on-off of screenread].";		
 	the rule succeeds;
 
+chapter banishing
+
+banishing is an action applying to one visible thing.
+
+understand the command "banish" as something new.
+
+understand "banish [any thing]" as banishing.
+
+carry out banishing:
+	now noun is off-stage;
+	say "Now [the noun] is off-stage.";
+	the rule succeeds;
+
 book footnotes on the fly
 
 to ital-say (x - text):

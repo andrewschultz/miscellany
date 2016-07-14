@@ -235,8 +235,8 @@ sub cromu
   if ($_[0] =~ /\b@thisAry[1]@thisAry[0]\b/i) { return 1; }
   if ($_[0] =~ /\b@thisAry[0]@thisAry[1]s\b/i) { return 2; }
   if ($_[0] =~ /\b@thisAry[1]@thisAry[0]s\b/i) { return 2; }
-  if (($_[0] =~ /\b@thisAry[0]/) && ($_[0] =~ /@thisAry[1]s\b/i)) { return 2; }
-  if (($_[0] =~ /\b@thisAry[0]s/) && ($_[0] =~ /@thisAry[1]\b/i)) { return 2; }
+  if (($_[0] =~ /\b@thisAry[0]\b/i) && ($_[0] =~ /\b@thisAry[1]s\b/i)) { return 2; }
+  if (($_[0] =~ /\b@thisAry[0]s\b/i) && ($_[0] =~ /\b@thisAry[1](s)?\b/i)) { return 2; }
   }
   elsif ($#thisAry == 0)
   {

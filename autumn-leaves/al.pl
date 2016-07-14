@@ -174,10 +174,10 @@ sub procCmd
   if ((length($modCmd) > 0) && (length($modCmd) % 2 == 0))
   {
   my $halfLet = substr($modCmd, 0, length($modCmd)/2);
-  if ($modCmd eq "$halfLet$halfLet") { print "Duplicate command detected. Using $halfLet.\n"; $modCmd = $halfLet; }
+  if (($modCmd eq "$halfLet$halfLet") && ($modCmd ne "??")) { print "Duplicate command detected. Using $halfLet.\n"; $modCmd = $halfLet; }
   }
 
-  my $letters = $modCmd; $letters =~ s/[^a-z]//gi;
+  my $letters = $modCmd; $letters =~ s/[^a-z?=]//gi;
   my $numbers = $modCmd;
 
   $numbers =~ s/[^0-9]//gi;
@@ -206,7 +206,7 @@ sub procCmd
   if ($modCmd =~ /^1p$/) { ones(1); printdeck(0); return; }
 
   #remove spaces. Note garbage. Valid commands are above.
-  $modCmd =~ s/ //g; my $garbage = $modCmd; $garbage =~ s/[0-9a-z]//gi; if ($garbage) { print "Warning: excess text ($garbage) in command\n"; }
+  $modCmd =~ s/ //g; my $garbage = $modCmd; $garbage =~ s/[0-9a-z?]//gi; if ($garbage) { print "Warning: excess text ($garbage) in command\n"; }
 
   if ($letters ne "g") { $lastCommand = $modCmd; }
 
@@ -215,13 +215,14 @@ sub procCmd
     my $b4 = $#undoArray;
 	/^$/ && do
 	{
+	  if ($numbers =~ /[0789]/) { print "Invalid column specified. Only 1-6 are valid.\n"; return; }
 	  if ($numbers eq "") { printdeck(-1); return; } # no error on blank input, just print out. And -1 says don't try ones which removes a n-
 	  if ($#numArray == 4)
 	  {
 	    if (($numArray[0] == $numArray[2]) && ($numArray[1] == $numArray[3])) { pop(@numArray); pop(@numArray); print "Removing duplicate number pair.\n"; }
 	  }
 	  if ($#numArray > 2) { print "Too many numbers.\n--one number shifts a stack to an empty array\n--two moves a row to another.\n--Three moves 1st-2nd 1st-3rd 2nd-3rd.\n"; return; }
-	  if (($#numArray == 2) && isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order."); return; }
+	  if (($#numArray == 2) && isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order.\n"); return; }
 	  if (cmdBadNumWarn($numbers, $letters)) { return; }
 	  if ($#numArray == 1)
 	  {
@@ -235,6 +236,7 @@ sub procCmd
 	  }
       elsif ($#numArray == 2)
       { # detect 2 ways
+	    if (($numArray[0] == $numArray[1]) ||($numArray[0] == $numArray[2]) || ($numArray[1] == $numArray[2])) { print "Duplicate rows in switch. Use x or w instead.\n"; return;}
 	    my $possConflict = 0;
 		if (isEmpty($numArray[0])) { print "From-row is empty.\n"; return; }
 		if (ascending($numArray[0]) && isEmpty($numArray[2]) && (suit(botCard($numArray[1])) == suit(botCard($numArray[0]))))
@@ -425,7 +427,7 @@ sub procCmd
     /^[wy]$/ && do
 	{
 	  if ($#numArray != 2) { print "Y/W requires 3 numbers: from, middle, to.\n"; return; }
-	  if (isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order."); return; }
+	  if (isEmpty($numArray[2]) && isEmpty($numArray[1]) && ascending($numArray[0])) { print ("No need, already in order.\n"); return; }
 	  thereAndBack(@numArray);
 	  return;
 	};
@@ -575,7 +577,7 @@ sub check720
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins of 720 draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; }
+  { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; %holds = (); }
   else
   { print "No draw-to-wins found.\n"; }
   @outSinceLast = ();
@@ -585,7 +587,7 @@ sub check720
   $cardsInPlay = $oldCardsInPlay;
   if (($stillNeedWin) && ($wins))
   {
-    if (720 % $wins) { no integer; $expected = sprintf("%.2f", 720 / $wins); } else { $expected = 720 / $wins; }
+    if ($count % $wins) { no integer; $expected = sprintf("%.2f", $count / $wins); } else { $expected = $count / $wins; }
     
     $timesAuto = 0;
      while ($stillNeedWin)
@@ -596,6 +598,7 @@ sub check720
 		{
 		procCmdFromUser("u");
 		}
+		%holds = ();
 	 }
   }
   $stillNeedWin = 0;
@@ -1230,11 +1233,11 @@ sub printHoldArray
 sub holdArray
 {
     my $card = $_[0]; $card =~ s/^(ho|ho\=|b|b\=)//g; $card =~ s/\(.*//g;
+	if (!$card) { print "Need argument for card to hold.\n"; return; }
 	my $cardNum = revCard($card);
-	if ($cardNum == -1) { $cardNum = $card; }
+	if (revCard($card) != -1) { $cardNum = revCard($card); }
 	printDebug("$card card $cardNum card num\n");
 	if (($cardNum > 52) || ($cardNum < 1)) { print "Need to input (A,2-9,JQK)(CDHS) or a number from 1 to 52, 1=clubs, 14=diamonds, 27=hearts, 40=spades."; }
-	if (revCard($card) != -1) { $cardNum = revCard($card); }
 	my $cardTxt = faceval($cardNum);
 	for my $q (@force) { if ($cardNum == $q) { print "$cardTxt already in force array.\n"; return; } }
 	if (keys %inStack == 0) { print "Can't hold any more cards.\n"; }
@@ -1250,7 +1253,7 @@ sub holdArray
 
 sub forceArray
 {
-    my $card = $_[0]; $card =~ s/^(f|f\=)//g; $card =~ s/\(.*//g;
+    my $card = $_[0]; $card =~ s/^f(=?)//gi; $card =~ s/\(.*//g;
 	my $cardNum = $card;
 
 	if ((!$undo) && ($cardsInPlay == 52)) { print "Too many cards out.\n"; return; }

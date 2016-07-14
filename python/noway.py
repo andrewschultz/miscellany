@@ -61,14 +61,21 @@ with open('roomlist.txt') as f:
             if line[1] == '#':
                 f1.write(line)
             continue
+        if line[0] == '*':
+            if line[1] == ' ':
+                f1.write(line);
+                continue;
+        if line[0] == '>':
+            f1.write(line);
+            continue;
         emptyLine = line.replace(" ", "-")
-        f1.write('* _dirtest-noway-')
+        f1.write('# _dirtest-noway-')
         f1.write(emptyLine)
         f1.write('\n')
         f1.write('> gonear ' + line + '\n')
         f1.write('!Which do you mean,\n')
         f1.write('!' + reject + '\n\n')
-        longTestString = longTestString + ">{INCLUDE} _dirtest-noway-" + emptyLine
+        longTestString = longTestString + ">{include} _dirtest-noway-" + emptyLine
         for q in dirs:
             f1.write('> ' + q + '\n')
             f1.write('!You can\'t go that way.\n\n> undo\n\n')

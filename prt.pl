@@ -13,6 +13,7 @@ my %fileCopy;
 
 findProj();
 
+my $ignoreBinary = 0;
 my $prt = "c:\\games\\inform\\prt";
 my $projToRead = "";
 my $projName = getcwd();
@@ -20,9 +21,12 @@ my $projName = getcwd();
 $projName =~ s/\.inform.*//g;
 $projName =~ s/.*[\\\/]//g;
 
-if (($#ARGV >= 0) && ($proj{$ARGV[0]}))
+if ($#ARGV >= 0)
 {
-  $projToRead = $proj{$ARGV[0]};
+  my $arg = $ARGV[0];
+  if ($arg =~ /^-/) { $arg =~ s/^-//g; $ignoreBinary = 1; }
+  $projToRead = $proj{$arg};
+  if (!$projToRead) { die ("Couldn't find any project for $arg.\n"); }
 }
 elsif ($gotProj{$projName}) { $projToRead = $projName; }
 elsif ($projName) { $projToRead = $projName; }
@@ -46,6 +50,8 @@ if ($projToRead)
   print "Copying over regression test suite\n";
   my $q = `copy $infBase\\Source\\reg-*.txt c:\\games\\inform\\prt`;
   print $q;
+  if (!$ignoreBinary)
+  {
   print "Looking for build file in $infBase\\Build.\n";
   if (-f "$infBase\\Build\\output.ulx")
   {
@@ -66,6 +72,8 @@ if ($projToRead)
   print $q;
   }
   else { print "Couldn't find any output binaries.\n"; }
+  }
+  else { print "Ignoring output binary.\n"; }
   if ($fileCopy{$projToRead})
   {
     my @c = split(/,/, $fileCopy{$projToRead});

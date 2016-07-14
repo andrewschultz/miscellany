@@ -195,7 +195,6 @@ sub procIt
   if (($thisfail + $thiswarn > 0) || ($showSuccesses))
   {
     ffox($x);
-	`$cmd`;
   }
   else
   {
