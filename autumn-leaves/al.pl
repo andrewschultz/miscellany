@@ -25,6 +25,8 @@ use Devel::StackTrace;
 my $expected = 0;
 my %sre, my %rev;
 
+my $winsThisTime = 0, my $maxWins = 0;
+
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
 my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; #options
 
@@ -127,6 +129,7 @@ if ($ARGV[0])
     /^-?(sw)?[0-9]/ && do { $a =~ s/^[^0-9]*//g; if ($a < 0) { $a = -$a; } if ($a > 9) { print "That is too many points to start with. If you want 10, go with -ez.\n"; } else { procCmd("sw$a"); } $count++; next; };
 	/^-?erd/ && do { $easyDefault = 2; $count++; next; };
 	/^-?ezd/ && do { $easyDefault = 1; $count++; next; };
+	/^-m(w)?/ && do { $maxWins = $b; $count += 2; next; };
 	/^-?er/ && do { fillRandInitArray(); $count++; next; };
 	/^-?ez/ && do { fillInitArray("8,9,10,11,12,13"); $count++; next; };
 	/^-?[rf]/ && do { $usrInit = 1; if ($a =~ /^-[rf]=/) { $a =~ s/^-[rf]=//g; fillInitArray($a); $count++; } else { fillInitArray($b); $count += 2; } next; };
@@ -2873,6 +2876,7 @@ sub checkwin
 
 	$stillNeedWin = 0;
 	print "You win! ";
+	$winsThisTime++;
 	if ($timesAuto) { printf "(took $timesAuto times, expected $expected) "; use integer; $timesAuto = 0; }
 	while (1)
 	{
@@ -2880,6 +2884,7 @@ sub checkwin
 	if (($x eq "d;u") || ($x eq "u;d")) { print ("You already won. No need to button bash. Try cwx, actually.\n"); }
 	if (($x =~ /^u/i) && ($x !~ /;/))
 	{
+	  $winsThisTime--;
 	  splice(@undoArray, $beforeCmd + 1, 0, "n+");
 	  push(@undoArray, "n-");
 	  undo(0); $moveBar = 1; $shouldMove = 0;
@@ -2888,6 +2893,7 @@ sub checkwin
 	$youWon = 1;
     if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
 	if ($x =~ /^s=/i) { if ($x =~ /^sf=/) { saveDeck($x, 1); next; } else { saveDeck($x, 0); next; } }
+	if ($winsThisTime == $maxWins) { print "Oops, I lied, that was your last one.\n"; die; } elsif ($maxWins) { print "Played $winsThisTime of $maxWins games now.\n"; }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
 	}
   }
