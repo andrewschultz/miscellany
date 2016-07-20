@@ -154,6 +154,10 @@ to d (myt - indexed text):
 	if debug-state is true:
 		say "DEBUG: [myt][line break]";
 
+to dl (myt - indexed text): [this is for stuff you really want to delete]
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
+
 to dn (myt - indexed text):
 	if debug-state is true:
 		say "[myt]";

@@ -25,7 +25,7 @@ use Devel::StackTrace;
 my $expected = 0;
 my %sre, my %rev;
 
-my $winsThisTime = 0, my $maxWins = 0;
+my $winsThisTime = 0, my $maxWins = 5;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
 my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; #options
@@ -89,6 +89,10 @@ my $timeLast = <A>; chomp($timeLast);
 my $time = time() - $timeLast;
 my $del = <A>; chomp($del);
 $time = $time - $del;
+my $r1 = <A>;
+my $r2 = <A>;
+if (($r1 < 10001) || ($r1 > 19999)) { print "Save file corrupted.\n"; die; }
+if (($timeLast % $r1) != $r2) { print "Save file corrupted.\n"; die; }
 if ($time < 0)
 {
   my $t = 0 - $time;
@@ -515,6 +519,7 @@ sub check720
   for (0..3) { $suitStatus[suitstat($_)]++; }
   if ($drawsLeft != 1)
   {
+    $stillNeedWin = 0;
     if ($suitStatus[0] ==4) { print "Even with >1 draw left, you're still pretty blocked.\n"; return; }
     print "You probably have a chance, but you need to have 1 draw left to use the check-auto-win command.\n"; return;
   }
@@ -2880,7 +2885,9 @@ sub checkwin
 	if ($timesAuto) { printf "(took $timesAuto times, expected $expected) "; use integer; $timesAuto = 0; }
 	while (1)
 	{
-	print "Push enter to restart, q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
+	print "Push ";
+	if ($winsThisTime != $maxWins) { print "enter to restart, "; }
+	print "q to exit, or s= to save an editable game, or u to undo."; $x = <STDIN>;
 	if (($x eq "d;u") || ($x eq "u;d")) { print ("You already won. No need to button bash. Try cwx, actually.\n"); }
 	if (($x =~ /^u/i) && ($x !~ /;/))
 	{
@@ -2893,7 +2900,7 @@ sub checkwin
 	$youWon = 1;
     if ($x =~ /^q+/i) { processGame(); writeTime(); exit; }
 	if ($x =~ /^s=/i) { if ($x =~ /^sf=/) { saveDeck($x, 1); next; } else { saveDeck($x, 0); next; } }
-	if ($winsThisTime == $maxWins) { print "Oops, I lied, that was your last one.\n"; die; } elsif ($maxWins) { print "Played $winsThisTime of $maxWins games now.\n"; }
+	if ($winsThisTime == $maxWins) { print "Take care! That was your last game.\n"; processGame(); writeTime(); exit; } elsif ($maxWins) { print "Played $winsThisTime of $maxWins games now.\n"; }
 	@lastWonArray = @undoArray; @lastTopCard = @topCard; doAnotherGame(); return;
 	}
   }
@@ -3103,9 +3110,11 @@ sub printLastWon
 
 sub writeTime
 {
+  my $randDenom = rand(9999) + 10001;
+  my $time = time();
+  my $remainder = $time % $randDenom;
   open (A, ">altime.txt");
-  print A time();
-  print A "\n$del\n";
+  print A "$time\n$del\n$randDenom\n$remainder\n";
   close(A);
 }
 

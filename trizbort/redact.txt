@@ -1,4 +1,4 @@
--g pc -f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,post-game fun"
+-g pc -f c:/games/inform/triz/mine/compound-directors-cut.trizbort -o c:/games/inform/triz/mine/compound.trizbort -r "noregion,bad ends,hypothetical,just ideas now, rejected"
 -g pc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound-directors-cut.trizbort
 -g pc -c \users\andrew\documents\github\trizbort\bin\debug\trizbort -qs c:\games\inform\triz\mine\compound.trizbort
 -g sc -t -f c:/games/inform/triz/mine/slicker-city.trizbort -o c:/games/inform/triz/mine/slicker-city-redacted.trizbort
