@@ -2711,9 +2711,18 @@ sub showhidden
   }
   if ($out[$lastSuit]) { print " ($out[$lastSuit])"; }
   my $is = keys %inStack;
-  my $ih = keys %holds;
+  my $ih = $#force + 1;
   print "\nTotal unrevealed: " . ($is + $ih);
-  if (keys %holds) { print " ($ih held to end)"; }
+  if ($ih)
+  {
+    print " ($ih held to end:";
+	for (0..$#force)
+	{
+	  if ($_) { print ","; }
+	  print " " . faceval($force[$_]);
+	}
+	print ")";
+  }
   print "\n";
   for (1..4) { if (!$out[$_]) { $outs .= "$sui[$_] OUT. "; } }
   if ($outs) { print "$outs\n"; }
