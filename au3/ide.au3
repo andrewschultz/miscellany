@@ -37,6 +37,8 @@ if $CmdLine[0] > 0 Then
 	call("openIDE", "sa");
   ElseIf $CmdLine[1] == "" Then
     call("openIDE", "slicker-city");
+  ElseIf $CmdLine[1] == "in" Then
+    call("openIDE", "grubbyville");
   Else
     call("openIDE", $CmdLine[1]);
   Endif

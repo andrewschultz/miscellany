@@ -216,7 +216,7 @@ prob=c:\games\inform\Compound.inform\uuid.txt,
 prob=c:\users\andrew\dropbox\notes\prob*.txt,
 prob=c:\writing\dict\wfl.pl,\utils
 prob=c:\games\inform\Compound.inform\source\regpc.bat,\testing
-prob=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
+prob=c:\games\inform\Compound.inform\source\roomlist.txt,\testing
 -a:prob=c:\games\inform\Compound.inform\source\flip.txt,\utils
 -a:prob=c:\games\inform\Compound.inform\source\fliptrack.txt,\utils
 #concept tracker
