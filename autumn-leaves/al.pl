@@ -1601,7 +1601,7 @@ sub printdeckhorizontal
 	for (1..6) { if ($rowLength[$_] > $maxRows) { $maxRows = $rowLength[$_]; } }
 	print "($maxRows max row length) ";
   }
-  showLegalsAndStats();
+  showLegalsAndStats(0);
 }
 
 sub printdeckraw
@@ -1612,7 +1612,7 @@ sub printdeckraw
     for my $q (0..$#{$stack[$d]}) { if ($stack[$d][$q]) { print faceval($stack[$d][$q]) . " "; } }
 	print "\n";
   }
-  showLegalsAndStats();
+  showLegalsAndStats(0);
   print "Left: "; for my $j (sort { $a <=> $b } keys %inStack) { print " $j"; } print "\n";
 
   print "$cardsInPlay cards in play, $drawsLeft draw" . plur($drawsLeft) . " left.\n";
@@ -1711,7 +1711,7 @@ sub printdeckvertical
   {
     print "($maxRows max row length) ";
   }
-  showLegalsAndStats();
+  showLegalsAndStats(0);
 }
 
 sub showLegalsAndStats
@@ -1798,10 +1798,21 @@ sub showLegalsAndStats
 	  }
 	} #?? maybe if there is no descending, we can check for that and give a pass
   }
+  my @botCount = (0, 0, 0, 0, 0, 0, 0);
+  for (1..6)
+  {
+    my $temp = suit($stack[$_][$#{$stack[$_]}]);
+    @botCount[$temp]++;
+	if (@botCount[$temp] == 3) { $anySpecial = 1; }
+  }
+
+  for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; } }
+  
+  if ($_[0] == -1) { return; }
   if ($recc) { print "$recc"; }
   if ($recc && $legal) { print " |"; }
   print "$legal";
-  for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; print " " . ('X' x ($circulars[$toPile]-1)) . "$toPile"; } }
+  for my $toPile (1..6) { if ($circulars[$toPile] > 1) { print " " . ('X' x ($circulars[$toPile]-1)) . "$toPile"; } }
   if (allAscending() && ($drawsLeft) && (emptyRows() < 2))
   {
     my $foundDup = 0; my $otherDup = 0; my $gotOne = 0;
