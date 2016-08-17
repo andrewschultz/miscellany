@@ -1802,8 +1802,8 @@ sub showLegalsAndStats
   for (1..6)
   {
     my $temp = suit($stack[$_][$#{$stack[$_]}]);
-    @botCount[$temp]++;
-	if (@botCount[$temp] == 3) { $anySpecial = 1; }
+    $botCount[$temp]++;
+	if ($botCount[$temp] == 3) { $anySpecial = 1; }
   }
 
   for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; } }

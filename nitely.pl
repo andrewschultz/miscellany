@@ -2,7 +2,7 @@
 # Nitely.pl
 # does nightly build/check of my (major in-progress) projects
 #
-# usage nitely.pl -a (for Alec and Stale Tales Slate and -opolis, the active ones)
+# usage nitely.pl -a (for Alec and Stale Tales Slate, the active ones)
 # nitely.pl -aa (for *everything*)
 # nitely.pl -e to edit the TXT file
 
@@ -247,7 +247,7 @@ sub getArgs
 	for ($a)
 	{
 	  /^-?\?$/ && do { usage(); exit; };
-	  /^-a$/ && do { @raw = ("gen", "opo", "as", "sts"); $count++; next; };
+	  /^-a$/ && do { @raw = ("gen", "as", "sts"); $count++; next; }; # -opo is inactive
 	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
 	  /^-b$/ && do { $build = 1; $count++; next; };
 	  /^-d$/ && do { $debug = 1; $count++; next; };
