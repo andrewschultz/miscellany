@@ -189,6 +189,11 @@ sub procCmd
 
   $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
+  
+  if (($letters eq "z") && ($numbers)) #mistaken Z
+  {
+    if (length($numbers) >= 3) { $letters = "x"; print "Changing z -> x.\n"; } else { print "Getting rid of z.\n"; $letters = ""; }
+  }
 
   #meta commands first, or commands with equals
   if ($modCmd =~ /^%$/) { stats(); return; }
@@ -335,6 +340,7 @@ sub procCmd
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
     /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
     /^g$/ && do { if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
+	/^gw$/ && do { cmdNumWarn($numbers, $letters); print "$winsThisTime out of $maxWins so far.\n"; return; };
     /^h$/ && do { cmdNumWarn($numbers, $letters); showhidden(); return; };
     /^ha$/ && do { cmdNumWarn($numbers, $letters); printHoldArray(0); return; };
 	/^ib$/ && do { cmdNumWarn($numbers, $letters); $ignoreBoardOnSave = !$ignoreBoardOnSave; print "Adding IGNORE to save-position $toggles[$ignoreBoardOnSave].\n"; return; };
@@ -438,6 +444,7 @@ sub procCmd
 	  thereAndBack(@numArray);
 	  return;
 	};
+    /^z$/ && do { print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^x$/ && do
     {
 	  if (cmdBadNumWarn($numbers, $letters)) { return; }
@@ -475,7 +482,6 @@ sub procCmd
 	  print "x (1 number) spills a row. x (3 numbers) sends 1st to 3rd via 2nd.\n"; return;
 	};
     /^wf$/ && do { checkWellForm(); return; };
-    /^z$/ && do { cmdNumWarn($numbers, $letters); print "Time passes more slowly than if you actually played the game.\n"; return; };
     /^\?\?/ && do { cmdNumWarn($numbers, $letters); usageDet(); return; };
     /^\?/ && do { cmdNumWarn($numbers, $letters); usage(); return; }; #anything below here needs sorting
   #if ($modCmd =~ /^[0-9]{2}[^0-9]/) { $shouldMove = 1; $modCmd = substr($modCmd, 0, 2); tryMove($modCmd); tryMove(reverse($modCmd)); return; }
