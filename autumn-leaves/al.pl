@@ -1773,7 +1773,6 @@ sub showLegalsAndStats
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
-		  $moveStr .= "<"; $anySpecial = 1;
 		  }
 		}
 		else
@@ -1808,7 +1807,7 @@ sub showLegalsAndStats
   for (1..6)
   {
     my $temp = suit($stack[$_][$#{$stack[$_]}]);
-    $botCount[$temp]++;
+    if ($temp != -1) { $botCount[$temp]++; }
 	if ($botCount[$temp] == 3) { $anySpecial = 1; }
   }
 
