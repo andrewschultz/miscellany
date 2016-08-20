@@ -28,7 +28,7 @@ my %sre, my %rev;
 my $winsThisTime = 0, my $maxWins = 5;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
-my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; #options
+my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; my $pushLeft = 0; #options
 
 my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
@@ -351,7 +351,8 @@ sub procCmd
     /^mr$/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers, $letters); showOpts(); return; };
     /^(os|so)$/ && do { cmdNumWarn($numbers, $letters); saveOpts(); return; };
-    /^pl$/ && do { cmdNumWarn($numbers, $letters); if ($#pointsArray > -1) { for my $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
+	/^pl$/ && do { cmdNumWarn($numbers, $letters); $pushLeft = !$pushLeft; print "Push-Left $toggles[$pushLeft].\n"; return; };
+    /^po$/ && do { cmdNumWarn($numbers, $letters); if ($#pointsArray > -1) { for my $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
      /^r$/ && do {
       cmdNumWarn($numbers, $letters);
       if ($drawsLeft) { print "Use RY to clear the board with draws left.\n"; return; } if ($modCmd =~ /^ry=/) { $modCmd =~ s/^ry=//g; fillInitArray($modCmd); }
@@ -716,11 +717,13 @@ sub expandOneColumn
 	{
 	  printDebug("x-command 1\n");
 	  autoShuffleExt($thisRow, $rows[0], $rows[1]);
+	  if ($rows[0] > $thisRow) { autoShuffleExt($rows[0], $thisRow, $rows[1]); }
 	}
 	elsif ((botSuit($thisRow) == botSuit($rows[1])) || (botSuit($rows[1]) == -1))
 	{
 	  printDebug("x-command 2\n");
 	  autoShuffleExt($thisRow, $rows[1], $rows[0]);
+	  if ($rows[1] > $thisRow) { autoShuffleExt($rows[1], $thisRow, $rows[0]); }
 	}
 	}
 	if (emptyRows() > 1)
@@ -758,6 +761,11 @@ sub expandOneColumn
 	  $moveBar = 0;
 	  autoShuffleExt($thisRow, $oRow, $eRow);
 	  }
+	}
+	if ($pushLeft)
+	{
+	  if (isEmpty($_[0]) && (!isEmpty($rows[0]))) { autoShuffleExt($rows[0], $_[0], $rows[1]); }
+	  elsif (isEmpty($_[1]) && (!isEmpty($rows[1]))) { autoShuffleExt($rows[1], $_[0], $rows[0]); }
 	}
 	$quickMove = 0;
 	return;
@@ -1773,6 +1781,7 @@ sub showLegalsAndStats
 		  }
 		elsif (($stack[$from][$thisEl-1] < $stack[$from][$thisEl]) && ($stack[$from][$thisEl-1] != -1))
 		  {
+		    $moveStr .= "<"; $anySpecial = 1;
 		  }
 		}
 		else
@@ -3010,7 +3019,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">$backupFile");
-  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -3049,6 +3058,7 @@ sub initGlobal
   if ($#opts >= 9) { $showMaxRows = $opts[9]; }
   if ($#opts >= 10) { $saveAtEnd = $opts[10]; }
   if ($#opts >= 11) { $ignoreBoardOnSave = $opts[11]; }
+  if ($#opts >= 12) { $pushLeft = $opts[11]; }
   close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
@@ -3066,7 +3076,7 @@ open(B, ">$backupFile");
 #first line is global settings
 <A>;
 
-print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave\n";
+print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft\n";
 
 while ($a = <A>)
 {
@@ -3098,6 +3108,7 @@ sub showOpts
   print "Save undos at end (sae) $toggles[$saveAtEnd].\n";
   print "Show cards pulled since last (sl) $toggles[$sinceLast].\n";
   print "Easy default (ez) $toggles[$easyDefault].\n";
+  print "Push left (pl) $toggles[$pushLeft].\n";
 }
 
 sub readScoreFile
@@ -3243,6 +3254,8 @@ ue=toggle undo each turn (only debug)
 1s=auto ones safe (only bottom ones visible are matched up)
 1f=ones full description (default is off) tells all the hidden moves the computer makes with 1s
 1p=push ones once
+pl=push-left on
+po=show points left
 %=prints stats
 o=prints options' current settings
 cw/cd=check for win-on-draw (1 draw left)
