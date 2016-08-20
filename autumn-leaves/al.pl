@@ -192,7 +192,7 @@ sub procCmd
   
   if (($letters eq "z") && ($numbers)) #mistaken Z
   {
-    if (length($numbers) >= 3) { $letters = "x"; print "Changing z -> x.\n"; } else { print "Getting rid of z.\n"; $letters = ""; }
+    if (length($numbers) != 2) { $letters = "x"; print "Changing z -> x.\n"; } else { print "Getting rid of z.\n"; $letters = ""; }
   }
 
   #meta commands first, or commands with equals
@@ -320,7 +320,7 @@ sub procCmd
 	      if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$numArray[0]" , firstEmptyRow()); return; }
   	      print "Too many rows ($totalRows) to move $numArray[0] to.\n"; return;
 	    }
-	    else { if (isEmpty($numArray[0])) { print("Nothing to move."); return; } print "Forcing $numArray[0] -> $forceRow.\n"; tryMove("$numArray[0]", "$forceRow"); return; }
+	    else { if (isEmpty($numArray[0])) { print("Nothing to move.\n"); return; } print "Forcing $numArray[0] -> $forceRow.\n"; tryMove("$numArray[0]", "$forceRow"); return; }
       }
 	  return;
 	};
@@ -764,8 +764,14 @@ sub expandOneColumn
 	}
 	if ($pushLeft)
 	{
-	  if (isEmpty($_[0]) && (!isEmpty($rows[0]))) { autoShuffleExt($rows[0], $_[0], $rows[1]); }
-	  elsif (isEmpty($_[1]) && (!isEmpty($rows[1]))) { autoShuffleExt($rows[1], $_[0], $rows[0]); }
+	  #print "Row stuff: $_[0], $rows[0], $rows[1]\n";
+	  #print "Empties: " . isEmpty($_[0]) . " " . isEmpty($rows[0]) . " " . isEmpty($rows[1]) . "\n";
+	  my @shufs = sort ($_[0], $rows[0], $rows[1]);
+	  if (isEmpty($shufs[0]))
+	  {
+	    if (!isEmpty($shufs[1])) { autoShuffleExt($shufs[1], $shufs[0], $shufs[2]); }
+		else { autoShuffleExt($shufs[2], $shufs[0], $shufs[1]); }
+	  }
 	}
 	$quickMove = 0;
 	return;
@@ -3058,7 +3064,7 @@ sub initGlobal
   if ($#opts >= 9) { $showMaxRows = $opts[9]; }
   if ($#opts >= 10) { $saveAtEnd = $opts[10]; }
   if ($#opts >= 11) { $ignoreBoardOnSave = $opts[11]; }
-  if ($#opts >= 12) { $pushLeft = $opts[11]; }
+  if ($#opts >= 12) { $pushLeft = $opts[12]; }
   close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
