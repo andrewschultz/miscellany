@@ -208,7 +208,7 @@ sub procCmd
   if ($modCmd =~ /^(b|b=)/) { holdArray($modCmd); return; }
   if ($modCmd =~ /^n[-\+]$/) { return; } # null move for debugging purposes
   if ($modCmd =~ /^q+$/) { writeTime(); exit; }
-  if ($modCmd =~ /^q/) { print "If you want to exit, just type q."; return; } #don't want playr to quit accidentally if at all possible
+  if ($modCmd =~ /^q/) { print "If you want to exit, just type q.\n"; return; } #don't want playr to quit accidentally if at all possible
 
   # toggles/commands with numbers that are hard to change
   if ($modCmd =~ /^1b$/) { $beginOnes = !$beginOnes; print "BeginOnes on draw $toggles[$beginOnes].\n"; return; }
@@ -350,6 +350,7 @@ sub procCmd
     /^lw$/ && do { cmdNumWarn($numbers, $letters); printLastWon(); if ($modCmd =~ /^lw=/) { saveLastWon($modCmd); } return; };
     /^mr$/ && do { cmdNumWarn($numbers, $letters); $showMaxRows = !$showMaxRows; print "Show Max Rows $toggles[$showMaxRows].\n"; return; };
     /^o$/ && do { cmdNumWarn($numbers, $letters); showOpts(); return; };
+    /^oh/ && do { cmdNumWarn($numbers, $letters); usageOpt(); return; };
     /^(os|so)$/ && do { cmdNumWarn($numbers, $letters); saveOpts(); return; };
 	/^pl$/ && do { cmdNumWarn($numbers, $letters); $pushLeft = !$pushLeft; print "Push-Left $toggles[$pushLeft].\n"; return; };
     /^po$/ && do { cmdNumWarn($numbers, $letters); if ($#pointsArray > -1) { for my $z (0..$#pointsArray) { if ($z > 0) { print ", "; } print ($z+1); print "="; print $pointsArray[$z]; } print "\n"; } else { print "No draws yet.\n"; } return; };
@@ -3100,21 +3101,21 @@ print "Options saved.\n";
 sub showOpts
 {
   print "========OPTIONS SETTING========\n";
-  print "Vertical view (v) $toggles[$vertical].\n";
-  print "Collapsing (c) $toggles[$collapse].\n";
-  print "Fixed deck (ra) $toggles[$fixedDeckOpt].\n";
-  print "Ignore Empty on Force (e) $toggles[$emptyIgnore].\n";
-  print "Show Chain Breaks (cb) $toggles[$chainBreaks].\n";
   print "Auto-Ones on Draw (1a) $toggles[$autoOnes].\n";
   print "Begin with shuffling one-aparts (1b) $toggles[$beginOnes].\n";
-  print "Auto-Ones Safe (1s) $toggles[$autoOneSafe].\n";
   print "Auto-Ones Full Desc (1f) $toggles[$autoOneFull].\n";
-  print "Show blocked moves (sb) $toggles[$showBlockedMoves].\n";
-  print "Show max rows (mr) $toggles[$showMaxRows].\n";
-  print "Save undos at end (sae) $toggles[$saveAtEnd].\n";
-  print "Show cards pulled since last (sl) $toggles[$sinceLast].\n";
+  print "Auto-Ones Safe (1s) $toggles[$autoOneSafe].\n";
+  print "Collapsing (c) $toggles[$collapse].\n";
+  print "Show Chain Breaks (cb) $toggles[$chainBreaks].\n";
+  print "Ignore Empty on Force (e) $toggles[$emptyIgnore].\n";
   print "Easy default (ez) $toggles[$easyDefault].\n";
+  print "Show max rows (mr) $toggles[$showMaxRows].\n";
   print "Push left (pl) $toggles[$pushLeft].\n";
+  print "Fixed deck (ra) $toggles[$fixedDeckOpt].\n";
+  print "Save undos at end (sae) $toggles[$saveAtEnd].\n";
+  print "Show blocked moves (sb) $toggles[$showBlockedMoves].\n";
+  print "Show cards pulled since last (sl) $toggles[$sinceLast].\n";
+  print "Vertical view (v) $toggles[$vertical].\n";
 }
 
 sub readScoreFile
@@ -3211,22 +3212,43 @@ a[1-6][1-6] moves stack a to b and back. If you end with 8h-2h-kh-qh, the kh-qh 
 [1-6][1-6][1-6]x moves column a to column c via column b, extended. It may cause a blockage.
 [1-6][1-6][1-6]w moves a to c via b, then c to a via b. It is useful for, say, kh-jh-9h-7h and qh. Y repeats w.
 [~!t][1-6][1-6][1-6] triages 3 columns with the same suit. It may cause a blockage.
-v toggles vertical view (default is horizontal)
-c toggles collapsed view (8h-7h-6h vs 8h=6h)
-cb shows chain breaks e.g. KH-JH-9H-7H has 3
-e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
 r restarts, ry forces if draws are left. You can specify =(#s or cards, comma separated) to force starting cards.
 ez starts with 8C-KC across the top, and ezd sets it as default. er/erd sets randomized six-in-a-row.
 (blank) or - reprints the deck.
 d draws 6 cards (you get 5 of these), df forces if noncircular moves are left or you can move between AB, AC and BC.
+o prints options' current settings, with commands (oh lists them as well)
 q/x quits.
+u undo (to last block, or # for x moves back, x < 10)
+  um=undo 10+ moves, u1=undo one move, ud=undo to last 6-card draw, ub=undo to before last 6-card draw
 ?? has more detailed usage, with u/undo, l/load and s/save
+EOT
+}
+
+sub usageOpt
+{
+print<<EOT;
+1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
+1b=begin ones (this is safe, as no card stacks are out of order yet)
+1f=ones full description (default is off) tells all the hidden moves the computer makes with 1s
+1s=auto ones safe (only bottom ones visible are matched up)
+c toggles collapsed view (8h-7h-6h vs 8h=6h)
+cb shows chain breaks e.g. KH-JH-9H-7H has 3
+e toggles empty-ignore on eg if 2H can go to an empty cell or 6H, with it on, 1-move goes to 6H.
+ez starts with easy default
+mr toggles showing maximum rows, or cards in a row
+pl toggles push left, which moves a string of cards left after an X operation
+ra toggles fixed deck
+sae toggles save undos at end
+sb toggles show blocked moves
+sl toggles show cards pulled since last
+v toggles vertical view (default is horizontal)
 EOT
 }
 
 sub usageDet
 {
 print<<EOT;
+1p=push ones once
 s=saves current deck (rejected if name is used)
 sf=save-forces if name exists (sfi/si saves "ignore", sfb/sb overrides "ignore")
 h=shows hidden/left cards
@@ -3237,7 +3259,6 @@ lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with 
 t=loads test
 tf=full test
 os/so=option save
-mr = show max rows
 sd=save default
 af=show force array
 lw=show last won array
@@ -3245,26 +3266,16 @@ sl=show overturned since last move
 sw=start with a minimum # of points (x-1 points for x-suits where x >=2, 1 point for adjacent cards, can start with 2-6)
 sw0=shows odds of points to start with
 sb=show blocked moves toggle
-u=undo (to last block, or # for x moves back, x < 10)
-um=undo 10+ moves
-u1=undo one move
-ud=undo to last 6-card draw
-ub=undo to before last 6-card draw
 ul=last undo array (best used for debugging if undo goes wrong. Sorry, it's not perfect yet.)
 sl=save last undo array (to undo-debug.txt)
 du=hidden undo debug (print undos to undo-debug.txt, probably better to use ul)
 us=undo all the way to the start
 ue=toggle undo each turn (only debug)
-1a=auto ones (move cards 1 away from each other on each other: not strictly optimal)
-1b=begin ones (this is safe, as no card stacks are out of order yet)
-1s=auto ones safe (only bottom ones visible are matched up)
-1f=ones full description (default is off) tells all the hidden moves the computer makes with 1s
-1p=push ones once
 pl=push-left on
 po=show points left
 %=prints stats
-o=prints options' current settings
 cw/cd=check for win-on-draw (1 draw left)
+cwx/cdx=keep checking until you win
 debug shows debug text
 EOT
 }
