@@ -1,3 +1,11 @@
+############################################################
+#gh.pl
+#This copies over changed files to the github directory from various sources.
+#It uses gh.txt.
+#
+#commands: gh.pl sts (stale tales slate) or gh.pl e (edit the list file)
+#
+
 use strict;
 use warnings;
 
@@ -225,6 +233,7 @@ close(A);
 
 sub preProcessHashes
 {
+  my $bail = 0;
   open(A, "$_[0]") || die ("Can't open $_[0].");
   while ($a = <A>)
   {
@@ -238,11 +247,12 @@ sub preProcessHashes
 	{
 	  my @b = split(/~/, $a);
 	  my @c = split(/,/, $b[0]);
-	  for (@c) { if ($altHash{$_}) { print "$_ has duplicate hash: was $altHash{$_}, becoming $b[1].\n"; } $altHash{$_} = $b[1]; }
+	  for (@c) { if ($altHash{$_}) { print "$_ has duplicate hash: was $altHash{$_}, also found $b[1].\n"; $bail = 1; } $altHash{$_} = $b[1]; }
 	  #print "@b[0] -> @b[1]\n";
 	}
   }
   close(A);
+  if ($bail > 0) { print "Fix duplicate hashes before continuing.\n"; exit; }
 }
 
 sub shouldRun

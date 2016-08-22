@@ -18,6 +18,9 @@ uo~oafs
 ###puzzles
 3~3d
 4~4d
+###grubbyville
+g,gr~gru
+###rpg stuff
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
 ###ecto
@@ -35,7 +38,7 @@ shu=c:\games\inform\shuffling.inform\source\testcase.txt,shuffling
 shu=c:\games\inform\shuffling.inform\source\shuffling-logic.txt,shuffling
 shu=c:\games\inform\shuffling.inform\source\walkthrough.txt,shuffling
 shu=c:\games\inform\shuffling.inform\Source\dial.htm,shuffling\shuffling-random.htm
-shu=c:\writing\scripts\shuffling-invisiclues.htm,shuffling
+shu=c:\games\inform\shuffling Materials\Release\shuffling-invisiclues.htm,shuffling
 shu=c:\writing\scripts\sa.txt,shuffling
 shu=c:\games\inform\shuffling Materials\Release\Cover.jpg,shuffling
 shu=c:\games\inform\triz\mine\shuffling-around.trizbort,shuffling
@@ -55,7 +58,7 @@ roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling nu
 roi=c:\games\inform\roiling.inform\source\testcase.txt,roiling
 roi=c:\games\inform\roiling.inform\source\logic.htm,roiling\roiling-logic.htm
 roi=c:\games\inform\roiling.inform\Source\dial.htm,roiling\roiling-random.htm
-roi=c:\writing\scripts\roiling-invisiclues.htm,roiling
+roi=c:\games\inform\roiling Materials\Release\roiling-invisiclues.htm,roiling
 roi=c:\writing\scripts\roi.txt,roiling
 roi=c:\games\inform\roiling Materials\Release\Cover.png,roiling
 roi=C:\games\inform\roiling.inform\Source\thru.txt,roiling\thru.txt
@@ -250,6 +253,15 @@ city=c:\games\inform\slicker-city.inform\source\reg-sc-*.txt,\testing
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
+
+#Grubbyville files
+TOBASE=grubbyville
+gru=c:\games\inform\grubbyville.inform\source\intro-thru.txt,
+gru=c:\games\inform\grubbyville.inform\source\walkthru.txt,
+gru=c:\games\inform\grubbyville.inform\source\story.ni,
+gru=c:\games\inform\grubbyville Materials\Cover.png,
+gru=c:\games\inform\grubbyville Materials\Release\grubbyville-invisiclues.htm,
+gru=c:\writing\scripts\gru.txt
 
 #misc stuff
 FROMBASE=c:\writing\scripts

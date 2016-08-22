@@ -103,7 +103,17 @@ set PROJ=fourdiopolis
 goto story
 )
 
+if "%1" EQU "g" (
+set PROJ=grubbyville
+goto nodef
+)
+
 if "%1" EQU "gr" (
+set PROJ=grubbyville
+goto nodef
+)
+
+if "%1" EQU "gru" (
 set PROJ=grubbyville
 goto nodef
 )
