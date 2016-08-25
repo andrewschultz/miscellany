@@ -54,7 +54,7 @@ my @oneDeck, my @fixedDeck;
 my @holdAry;
 
 my $undidOrLoadThisTurn, my $errorPrintedYet, my $printedThisTurn, my $moveBar, my $anyMovesYet = 0, my $testing, my $shouldMove, my $currentlyLoadingSaving;
-my $avoidWin, my $seventwenty;
+my $avoidWin, my $seventwenty; my $global720;
 
 my $backupFile = "albak.txt";
 
@@ -330,7 +330,17 @@ sub procCmd
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
 	/^c[wd]x$/ && do { cmdNumWarn($numbers, $letters); check720(1); return; };
-    /^d$/ && do { cmdNumWarn($numbers, $letters); if (($anySpecial) && ($drawsLeft)) { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; } else { drawSix(); printdeck(0); checkwin(); return; } };
+    /^d$/ && do {
+	  cmdNumWarn($numbers, $letters);
+	  if (($anySpecial) && ($drawsLeft) && ($seventwenty))
+	  {
+	    if (!$global720) { print "Global 720 warning. Look in the code, save the game.\n"; $global720 = 1; }
+	  }
+	  if (($anySpecial) && ($drawsLeft) && (!$seventwenty))
+	  { print "Push df to force--there are still potentially productive moves."; if ($mbGood) { print " $mbGood is one."; } print "\n"; return; }
+	  else
+	  { drawSix(); printdeck(0); checkwin(); return; }
+	};
     /^deckraw/ && do { cmdNumWarn($numbers, $letters); printdeckraw(); return; };
     /^df$/ && do { cmdNumWarn($numbers, $letters); drawSix(); printdeck(0); checkwin(); return; };
     /^dl$/ && do { if (cmdNumWarn($numbers, $letters, 1)) { print "Need an argument for debuglevel, which is currently $debug.\n"; return; } if (($numArray[0] > 2)) { print "Debug must be between 0 and 2.\n"; return; } print "Debug level was $debug, is "; $debug = $numArray[0]; print "$debug now.\n"; return; };
@@ -580,8 +590,8 @@ sub check720
   $count++;
   if (($count >= 1000) && ($count % 1000 == 0)) { print "$count so far.\n"; }
   @force = @initArray;
-  drawSix();
   $seventwenty = 1;
+  drawSix();
   for (@initArray) { $inStack{$_} = 0; $holds{$_} = 0; }
   $printedThisTurn = 0;
   ones(0);
@@ -1263,8 +1273,8 @@ sub holdArray
 {
     my $card = $_[0]; $card =~ s/^(ho|ho\=|b|b\=)//g; $card =~ s/\(.*//g;
 	if (!$card) { print "Need argument for card to hold.\n"; return; }
-	my $cardNum = revCard($card);
-	if (revCard($card) != -1) { $cardNum = revCard($card); }
+	my $cardNum = $card;
+	if ($card !~ /^[0-9]+$/) { $cardNum = revCard($card); }
 	printDebug("$card card $cardNum card num\n");
 	if (($cardNum > 52) || ($cardNum < 1)) { print "Need to input (A,2-9,JQK)(CDHS) or a number from 1 to 52, 1=clubs, 14=diamonds, 27=hearts, 40=spades."; }
 	my $cardTxt = faceval($cardNum);
@@ -2604,6 +2614,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   @force = ();
+  %holds = ();
   @pointsArray = ();
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
@@ -2624,7 +2635,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	my $undos = 0;
 	while (($x >= 0) && ($undos < $_[1]))
 	{
-	while (($x >= 0) && ($undoArray[$x] =~ /^(f|n-|n\+)/))
+	while (($x >= 0) && ($undoArray[$x] =~ /^(b|f|n-|n\+)/))
 	{
 	  $x--; $tempUndoCmd = pop(@undoArray);
 	}
@@ -2642,7 +2653,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	elsif (($_[0] ==3) && ($undoArray[$x] eq "df"))
 	{
 	  print "Already at a draw, so only going back one move.\n";
-	  while (($undoArray[$x] =~ /^[fd]/) && ($x >= 0)) { $x--; pop(@undoArray);  }
+	  while (($undoArray[$x] =~ /^[fdb]/) && ($x >= 0)) { $x--; pop(@undoArray);  }
 	}
 	elsif (($_[0] == 2) || ($_[0] == 3))
 	{
@@ -2667,7 +2678,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
 	}
 	else
 	{
-	while (($undoArray[$x] =~ /^(f|n\+)/) && ($x >= 0))
+	while (($undoArray[$x] =~ /^(b|f|n\+)/) && ($x >= 0))
 	{
 	  $x--;
 	  $tempUndoCmd = pop(@undoArray);
@@ -2743,15 +2754,28 @@ sub showhidden
   }
   if ($out[$lastSuit]) { print " ($out[$lastSuit])"; }
   my $is = keys %inStack;
-  my $ih = $#force + 1;
-  print "\nTotal unrevealed: " . ($is + $ih);
-  if ($ih)
+  my $if = $#force + 1;
+  print "\nTotal unrevealed: " . ($is + $if);
+  if ($if)
   {
-    print " ($ih held to end:";
+    print " ($if in force-queue:";
 	for (0..$#force)
 	{
 	  if ($_) { print ","; }
 	  print " " . faceval($force[$_]);
+	}
+	print ")";
+  }
+  my $ih = keys %holds;
+  if ($ih)
+  {
+    print " ($if in hold-queue:";
+	my $count = 0;
+	for my $hk (sort keys %holds)
+	{
+	  if ($count) { print ","; }
+	  $count++;
+	  print " " . faceval($hk);
 	}
 	print ")";
   }
