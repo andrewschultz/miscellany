@@ -1288,7 +1288,9 @@ sub holdArray
 	  for my $idx (0..$#holdAry) { if ($holdAry[$idx] == $cardNum) { splice(@holdAry,$idx,1); last; } }
 	}
 	else
-	{ $holds{$cardNum} = 1; delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds.\n"; push(@undoArray, "b$cardNum"); } push(@holdAry, $cardNum); }
+	{ $holds{$cardNum} = 1; delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . (scalar keys %holds);
+	 for (keys %holds) { print " " . faceval($_); }
+	 print ")\n"; push(@undoArray, "b$cardNum"); } push(@holdAry, $cardNum); }
 }
 
 sub forceArray
@@ -1310,7 +1312,10 @@ sub forceArray
 	{
 	if ($holds{$cardNum}) { print "$card (" . faceval($cardNum) . ") being held to the end.\n"; return; }
 	if (!$inStack{$cardNum}) { print "$card (" . faceval($cardNum) . ") already out on the board or in the force queue.\n"; return; }
-	push (@force, $cardNum); delete ($inStack{$cardNum}); if ((!$undo) && (!$quickMove)) { print faceval($cardNum) . " successfully pushed.\n"; }
+	push (@force, $cardNum); delete ($inStack{$cardNum}); if ((!$undo) && (!$quickMove)) { print faceval($cardNum) . " successfully pushed. (" . ($#force+1);
+	print " total:";
+	for (0..$#force) { print " " . faceval($force[$_]); }
+	print ")\n"; }
 	return;
 	}
 
