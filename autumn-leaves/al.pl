@@ -398,6 +398,7 @@ sub procCmd
     /^[!t~`]$/ && do {
     if (cmdBadNumWarn($numbers, $letters)) { return; }
     if (cmdNumWarn($numbers, $letters, 1)) { return; }
+	if (length($numbers) != 3) { print "Command t requires 3 numbers.\n"; return; }
       my $didAny;
 	  my $empties;
 	  my $localFrom, my $localTo, my $curMinToFlip;
@@ -440,7 +441,7 @@ sub procCmd
 	  return;
     };
     /^tf$/ && do { runEachTest(); return; };
-    /^u$/ && do { if (!$numbers) { undo(0); } else { if ($numbers > 10) { print "Use um for mass undo--this is to avoid u351 or something by mistake.\n"; return; } undo(1, $numbers); } return; };
+    /^u$/ && do { if (!$numbers) { undo(0); } else { if (length($numbers) > 1) { print "Use um for mass undo--this is to avoid u351 or something by mistake.\n"; return; } undo(1, $numbers); } return; }; # note we need length and not < / > as we are working with integers, which roll over
     /^ua$/ && do { cmdNumWarn($numbers, $letters); print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
