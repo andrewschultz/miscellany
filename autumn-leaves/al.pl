@@ -536,6 +536,7 @@ sub check720
   my @suitStatus = (0, 0, 0, 0, 0);
   $stillNeedWin = $_[0];
   for (0..3) { $suitStatus[suitstat($_)]++; }
+  if ($drawsLeft == 0) { print "You need to push UB or some undo command to try CW/CWX.\n"; return; }
   if ($drawsLeft != 1)
   {
     $stillNeedWin = 0;
