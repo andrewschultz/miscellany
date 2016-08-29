@@ -203,6 +203,7 @@ sub procCmd
   if ($modCmd =~ /^s([bi]?)=/i) { saveDeck($modCmd, 0); return; }
   if ($modCmd =~ /^sf([bi]?)=/i) { saveDeck($modCmd, 1); return; }
   if ($modCmd =~ /^t=/i) { loadDeck($modCmd, "debug"); return; }
+  if ($modCmd =~ /^(uf|fu)=?/) { unforceArray($modCmd); return; } # must come first or otherwise fu => forceArray
   if ($modCmd =~ /^(f|f=)/) { forceArray($modCmd); return; }
   if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; }
   if ($modCmd =~ /^(b|b=)/) { holdArray($modCmd); return; }
@@ -1292,6 +1293,33 @@ sub holdArray
 	{ $holds{$cardNum} = 1; delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . (scalar keys %holds);
 	 for (keys %holds) { print " " . faceval($_); }
 	 print ")\n"; push(@undoArray, "b$cardNum"); } push(@holdAry, $cardNum); }
+}
+
+sub unforceArray
+{
+  my $card = $_[0]; $card =~ s/^(fu|uf)=?//gi; 
+  my $cval = revCard($card);
+  if ($cval == -1) { $cval = $card; }
+  if (($cval > 52) || ($cval < 1)) { print "Invalid card number.\n"; return; }
+  if ($cval > -1)
+  {
+    for (0..$#force)
+	{
+	  if ($force[$_] == $cval)
+	  {
+	    splice(@force, $_, 1); $inStack{$cval} = 1;
+		if ($#force == -1) { print "Force array now empty.\n"; return; }
+		print "New force array:";
+		for my $idx (0..$#force)
+		{
+		  print " " . faceval($force[$idx]);
+		  print "\n";
+		}
+		return;
+	  }
+	}
+	print "No $card in the force queue.\n"; return;
+  }
 }
 
 sub forceArray
@@ -3284,7 +3312,7 @@ s=saves current deck (rejected if name is used)
 sf=save-forces if name exists (sfi/si saves "ignore", sfb/sb overrides "ignore")
 h=shows hidden/left cards
 b=push a card to the back (ho also, for hold)
-f=force card
+f=force card, uf/fu=unforce it
 l=loads exact saved-deck name (e.g. s=me loaded be l=me)
 lf=loads approximate saved-deck name (fuzzy, e.g. s=1 loads the first deck with a 1 in its name) (li/lfi ignores the saved position, lb/fb forces it)
 t=loads test
