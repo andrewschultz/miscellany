@@ -349,7 +349,8 @@ sub procCmd
     /^e$/ && do { cmdNumWarn($numbers, $letters); $emptyIgnore = !$emptyIgnore; print "Ignoring empty cell for one-number move $toggles[$emptyIgnore].\n"; return; };
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
-    /^ezd$/ && do { $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
+    /^ezd$/ && do { cmdNumWarn($numbers, $letters); $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
+	/^fd$/ && do { cmdNumWarn($numbers, $letters); clearForceArray(); return; };
     /^g$/ && do { if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
 	/^gw$/ && do { cmdNumWarn($numbers, $letters); print "$winsThisTime out of $maxWins so far.\n"; return; };
     /^h$/ && do { cmdNumWarn($numbers, $letters); showhidden(); return; };
@@ -1313,13 +1314,24 @@ sub unforceArray
 		for my $idx (0..$#force)
 		{
 		  print " " . faceval($force[$idx]);
-		  print "\n";
 		}
+		print "\n";
 		return;
 	  }
 	}
 	print "No $card in the force queue.\n"; return;
   }
+}
+
+sub clearForceArray
+{
+  if ($#force == -1) { print "Force array already cleared.\n"; return; }
+  print "Deleting elements in force array (" . ($#force+1) . ")\n";
+  for (0..$#force)
+  {
+    $inStack{$force[$_]} = 1;
+  }
+  @force = ();
 }
 
 sub forceArray

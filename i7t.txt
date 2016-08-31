@@ -8,7 +8,7 @@ Compound	table of dutch-blab	"	$$ bits of wisdom, up from 8
 #horrible books and horrible songs
 Compound	table of hs	"	$$, up from 13
 Compound	xxhb	"	$$. up from 38
-Compound	table of bad guy worries	"	$$ random important administrative and philosophical matters
+Compound	xxbgw	"	$$ random important administrative and philosophical matters
 Compound	table of jerk-girl-talk	"	jerks now have $$ "romantic"
 Compound	table of sleep stories	"	$$ sleep stories
 Compound	table of incisive sid viewpoints	"	To be precise, $+

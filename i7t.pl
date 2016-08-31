@@ -76,7 +76,7 @@ while ($a = <A>)
   if ($table)
   {
     print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
-	if ($a =~ /[a-z]/)
+	if ($a =~ /[a-z]/i)
 	{
 	  my @tempAry = split(/\t/, $a);
 	  if ($#tempAry > $#tableCount) { $maxString = $a; }
@@ -86,17 +86,23 @@ while ($a = <A>)
   }
   if ($a !~ /[a-z]/)
   {
-    if (($table) && ($tableTab))
+    if (!$table) { next; }
+	$table = 0;
+    if ($tableTab)
 	{
 	  print "$tableShort: ";
 	  for (0..$#tableCount) { if (@tableCount[$_]) { print "$_ tabs: @tableCount[$_] "; } }
 	  print "\n";
-	  if (($maxString) && (@tableCount[$#tableCount] < @tableCount[$#tableCount - 1])) { print "Max string: $maxString"; } }
-    if (($table) && (!$quietTables))
+	  if (($maxString) && (@tableCount[$#tableCount] < @tableCount[$#tableCount - 1])) { print "Max string: $maxString"; }
+	}
+    if (!$quietTables)
 	{
 	  $tableList .= "$curTable";
 	  if ($curTable ne $tableShort) { $tableList .= "($tableShort)"; }
-	  $tableList .= ": $tableCount rows\n"; } $table = 0; $rows{$tableShort} = $tableCount;
+	  $tableList .= ": $tableCount rows\n";
+	}
+	if ($rows{$tableShort}) { print "Tacking on $tableCount to $tableShort, up from $rows{$tableShort}.\n"; }
+	$rows{$tableShort} += $tableCount;
 	if ($majorTable) { $majorList .= "$curTable: $tableCount rows<br />"; } $majorTable = 0;
   }
 }
