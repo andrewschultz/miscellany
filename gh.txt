@@ -323,6 +323,9 @@ misc=trizrm.py,python
 misc=proj.txt,
 misc=i7proj.pm,
 misc=prt.pl,
+##############ppp = perl python port
+misc=c:\coding\perl\proj\sok.pl,ppp
+misc=c:\coding\perl\proj\sok.py,ppp
 
 #PlotEx
 FROMBASE=c:\games\inform
@@ -337,6 +340,8 @@ writing=notes-a-z.otl,
 writing=games.otl,
 writing=starter.htm,
 writing=cheatsheet.txt,
+writing=limericks.otl,
+writing=limwork.txt,
 writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
 
 #rpg mapping tools
