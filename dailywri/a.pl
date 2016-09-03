@@ -69,7 +69,12 @@ if ($verifyHeadings)
 if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
 else { print "$numDailyFiles daily files in $lastDay days.\n"; }
 
-if ($testing) { print "TEST RESULTS: daily file big errors,$bigErrs,0,\n"; }
+if ($testing)
+{
+  print "TEST RESULTS: daily file big errors,$bigErrs,0,$testErrList";
+  $bigWarn =~ s/\n/<br \/>\n/g;
+  print "TEST RESULTS: daily file warning,$warns,10,$bigWarn";
+}
 
 if (EL) { close(EL); } if ($viewErrorFile) { `$elog`; }
 
@@ -129,6 +134,7 @@ sub processDaily
  
   $gotNames = 0;
  
+ $bigWarn .= $warning;
  $warning = "";
  
  $limericks = 0;
@@ -148,24 +154,26 @@ my $hasSomething = 0;
   if ($a =~ /\\nam/) { $gotNames = 1; }
   if (($curIdx > 0) && (@myAry[$curIdx] eq "") && ($a !~ /\\/))
   {
-    if (($a !~ /[a-z]/) && ($showWarn)) { $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; next; } #this is to make sure that double carriage returns don't bomb out;
-    printExt("You don't have a header in $shortName: $a");
+    if (($a !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; next; } #this is to make sure that double carriage returns don't bomb out;
+    printErrExt("You don't have a header in $shortName: $a");
     if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
 	$betterDie++;
   }
   if ($a =~ /^\\/)
-  { if (lc($b) ne $b) { if ($showWarn) { $warning .= "WARNING header $b not in lower case.\n"; } }
+  { if (lc($b) ne $b) { if ($showWarn) { $warns++; $warning .= "WARNING header $b not in lower case.\n"; } }
     $b = lc($b);
-    if (@myAry[$curIdx]) { printExt("Header needs spacing: $a"); $betterDie++;   $fileToOpen = $_[0]; }
-	else { if ($startLine{$b}) { printExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $lines; }
+    if (@myAry[$curIdx]) { printErrExt("Header needs spacing: $a"); $betterDie++;   $fileToOpen = $_[0]; }
+	else { if ($startLine{$b}) { printErrExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $lines; }
       if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
-	} else { $startLine{$b} = $lines; } @myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warning .= "  $shortName BAD HEADER: $b\n"; } }
+	} else { $startLine{$b} = $lines; } @myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; } }
   }
   @myAry[$curIdx] .= $a;
   if ($a !~ /[a-z=]/i) { $curIdx++; next; }
 }
 
 close(A);
+
+$bigErrs += $betterDie;
 
 if (!$hasSomething) { printExt("$_[0] has no text.\n"); }
 
@@ -195,18 +203,17 @@ if ($limericks)
 	}
   }
   close(A);
-  $bigErrs += $betterDie;
 }
 
 
-if ((@myAry[0] !~ /[a-z]/) && ($showWarn)) { $warning .= "  WARNING: No main ideas in $_[0].\n"; }
+if ((@myAry[0] !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING: No main ideas in $_[0].\n"; }
 for (1..$#myAry)
 {
   if (@myAry[$_] !~ /\n[a-z0-9\t]/i)
   {
     if ($showWarn)
 	{
-	  $warning .= "  WARNING: @myHdr[$_] ($shortName) has no content.\n";
+	  $warns++; $warning .= "  WARNING: @myHdr[$_] ($shortName) has no content.\n";
 	  if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
 	}
   }
@@ -397,6 +404,12 @@ $verifyHeadings = 1;
 $onlyLim = 0;
 
 }
+
+sub printErrExt
+{
+  $testErrList .= "$_[0]<br />\n";
+  printExt($_[0]);
+ }
 
 sub printExt
 {
