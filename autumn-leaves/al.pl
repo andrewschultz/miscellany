@@ -183,12 +183,18 @@ sub procCmd
   if (($modCmd eq "$halfLet$halfLet") && ($modCmd ne "??")) { print "Duplicate command detected. Using $halfLet.\n"; $modCmd = $halfLet; }
   }
 
+  if ($modCmd =~ /f-[0-9]+/) { zapForce($modCmd); return; }
+  if ($modCmd =~ /h-[0-9]+/) { zapHolds($modCmd); return; }
+
+  if ($modCmd =~ /f[0-9]+,[0-9]+/) { switchForce($modCmd); return; }
+  if ($modCmd =~ /h[0-9]+,[0-9]+/) { switchHolds($modCmd); return; }
+
   my $letters = $modCmd; $letters =~ s/[^a-z?=]//gi;
   my $numbers = $modCmd;
 
   $numbers =~ s/[^0-9]//gi;
   my @numArray = split(//, $numbers);
-  
+
   if (($letters eq "z") && ($numbers)) #mistaken Z
   {
     if (length($numbers) != 2) { $letters = "x"; print "Changing z -> x.\n"; } else { print "Getting rid of z.\n"; $letters = ""; }
@@ -257,7 +263,7 @@ sub procCmd
 		  $numArray[1] = $numArray[2];
 		  $numArray[2] = $temp;
 		  print "Switching last two rows.\n";
-		}		
+		}
 		if (perfAscending($numArray[0]) && isEmpty($numArray[1]))
 		{ jumpSecondRow($numArray[0], $numArray[2]); return; }
 		if (perfAscending($numArray[0]) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[1])) && (lowNonChain($numArray[0]) + 1 != botCard($numArray[2])))
@@ -326,7 +332,7 @@ sub procCmd
 	};
     /^a$/ && do { if ($#numArray < 1) { print "Need 2 row numbers.\n"; return; } $shouldMove = 1; $modCmd =~ s/[a]//g; altUntil($modCmd); return; };
     /^af/ && do { cmdNumWarn($numbers, $letters); if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
-	
+
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
@@ -624,7 +630,7 @@ sub check720
   if (($stillNeedWin) && ($wins))
   {
     if ($count % $wins) { no integer; $expected = sprintf("%.2f", $count / $wins); } else { $expected = $count / $wins; }
-    
+
     $timesAuto = 0;
      while ($stillNeedWin)
 	 {
@@ -668,9 +674,9 @@ sub thereAndBack
 	if (!canMove($_[0], $_[1])) { print "Can't move $_[0] through $_[1].\n"; return; }
     $shouldMove = 1;
 	$quickMove = 1;
-	
+
 	my $thiscount = 0;
-	
+
 	do
 	{
 	$b4 = $#undoArray;
@@ -681,9 +687,9 @@ sub thereAndBack
 	{
     autoShuffleExt($_[2], $_[0], $_[1], botSuit($_[0]));
 	}
-	
+
 	$thiscount++; if ($thiscount == 25) { print"Loop took too many times. Breaking. Suggest undo-save to figure why.\n"; last; }
-	
+
 	} while (($#undoArray > $b4) && ($lastCommand =~ /y/) && (!isEmpty($_[0])) && (!isEmpty($_[2])));
 	$quickMove = 0;
 	if ($wayb4 == $#undoArray) { if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; } } else
@@ -1302,7 +1308,7 @@ sub holdArray
 
 sub unforceArray
 {
-  my $card = $_[0]; $card =~ s/^(fu|uf)=?//gi; 
+  my $card = $_[0]; $card =~ s/^(fu|uf)=?//gi;
   my $cval = revCard($card);
   if ($cval == -1) { $cval = $card; }
   if (($cval > 52) || ($cval < 1)) { print "Invalid card number.\n"; return; }
@@ -1374,6 +1380,81 @@ sub forceArray
 	}
   print "Card must be of the form [A23456789 10 JQK][CDHS], or the matching number.\nFace value = C=0 D=13 H=26 S=39.\n";
   return;
+}
+
+sub bad1
+{
+  if ($_[0] == 1) { print "Bad 1st argument, must be 1.\n"; }
+  else { print "Bad 1st argument, must be between 1 and $_[0].\n"; }
+}
+
+sub zapForce
+{
+  my $x = $_[0]; $x =~ s/^f-//g;
+  my $sz = $#force + 1;
+  if (($x < 1) || ($x > $sz)) { bad1($sz); return; }
+  $inStack{$force[$x-1]} = 1;
+  splice(@force, $x-1, 1);
+  if ($#force == -1) { print "Force array empty.\n"; }
+  else
+  {
+  print "New force array:";
+  for (@force) { print " " . faceval($_); }
+  print ".\n";
+  }
+  #push (@undoArray, $_[0]);
+}
+
+sub zapHold
+{
+  my $x = $_[0]; $x =~ s/^h-//g;
+  my $sz = $#holdAry + 1;
+  if (($x < 1) || ($x > $sz)) { bad1($sz); return; }
+  splice(@holdAry, $x-1, 1);
+  if ($#force == -1) { print "Hold array empty.\n"; }
+  else
+  {
+  print "New hold array:";
+  for (@holdAry) { print " " . faceval($_); }
+  print ".\n";
+  }
+  #push (@undoArray, $_[0]);
+}
+
+sub switchForce
+{
+  my $x = $_[0]; $x =~ s/^f//g;
+  my @sa = split(/,/, $x);
+  my $sz = $#force + 1;
+  if (($sa[0] < 1) || ($sa[0] > $sz)) { bad1($sz); return; }
+  if (($sa[1] < 1) || ($sa[1] > $sz)) { bad1($sz); return; }
+  if ($sa[0] == $sa[1]) { print "Switching an index with itself doesn't do anything.\n"; }
+  $sa[0]--; $sa[1]--;
+  my $temp = $force[$sa[0]];
+  $force[$sa[0]] = $force[$sa[1]];
+  $force[$sa[1]] = $temp;
+  print "New force array:";
+  for (@force) { print " " . faceval($_); }
+  print ".\n";
+  #push(@undoArray, $_[0]);
+}
+
+sub switchHold
+{
+  my $x = $_[0]; $x =~ s/^h//g;
+  my @sa = split(/,/, $x);
+  my $sz = $#holdAry + 1;
+  if (($sa[0] < 1) || ($sa[0] > $sz)) { bad1($sz); return; }
+  if (($sa[1] < 1) || ($sa[1] > $sz)) { bad1($sz); return; }
+  if ($sa[0] == $sa[1]) { print "Switching an index with itself doesn't do anything.\n"; }
+  $sa[0]--; $sa[1]--;
+  my $temp = $holdAry[$sa[0]];
+  $holdAry[$sa[0]] = $holdAry[$sa[1]];
+  $holdAry[$sa[1]] = $temp;
+  print "New hold array:";
+  for (@holdAry) { print " " . faceval($_); }
+  print ".\n";
+  #push(@undoArray, $_[0]);
 }
 
 sub fillRandInitArray # anything in a row, but of course QH-KH-AD-2D-3D-4D needs to be DQ'd
@@ -1888,7 +1969,7 @@ sub showLegalsAndStats
   }
 
   for my $toPile (1..6) { if ($circulars[$toPile] > 1) { $anySpecial = 1; } }
-  
+
   if ($_[0] == -1) { return; }
   if ($recc) { print "$recc"; }
   if ($recc && $legal) { print " |"; }
