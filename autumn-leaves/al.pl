@@ -80,7 +80,6 @@ my $stack;
 my $blockedMoves = 0;
 my @topCard = ("");
 my %inStack;
-my %holds;
 my $timesAuto = 0;
 my $stillNeedWin = 0;
 
@@ -327,6 +326,7 @@ sub procCmd
 	};
     /^a$/ && do { if ($#numArray < 1) { print "Need 2 row numbers.\n"; return; } $shouldMove = 1; $modCmd =~ s/[a]//g; altUntil($modCmd); return; };
     /^af/ && do { cmdNumWarn($numbers, $letters); if ($#force == -1) { print "Nothing in force array.\n"; } else { print "Force array: " . join(",", @force) . "\n"; } return; };
+	
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
@@ -506,9 +506,15 @@ sub procCmd
   print "wasn't recognized. Push ? for basic usage and ?? for in-depth usage.\n";
 }
 
+sub isHeld
+{
+  for (@holdAry) { if ($_ == $_[0]) { return 1; } }
+  return 0;
+}
+
 sub canDraw
 {
-  my $x = $inStack{$_[0]} || $holds{$_[0]}; if (!$x) { $x = 0; }
+  my $x = $inStack{$_[0]} || isHeld($_[0]); if (!$x) { $x = 0; }
   return $x;
 }
 
@@ -555,7 +561,7 @@ sub check720
   }
   my @initArray = ();
   my $couldWork = 0;
-  for (1..52) { if ($inStack{$_} || $holds{$_}) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
+  for (1..52) { if ($inStack{$_} || isHeld($_)) { push(@initArray, $_); if (($_ % 13 != 1) && ($inStack{13*(($_-1)/13)+1})) { $couldWork = 1; } } }
   if (emptyRows() < 2) { print "You don't seem to have enough empty rows for an easy forced win, except in extreme circumstances.\n"; }
   elsif ($suitStatus[0] == 4)
   {
@@ -596,7 +602,7 @@ sub check720
   @force = @initArray;
   $seventwenty = 1;
   drawSix();
-  for (@initArray) { $inStack{$_} = 0; $holds{$_} = 0; }
+  for (@initArray) { $inStack{$_} = 0; }
   $printedThisTurn = 0;
   ones(0);
   $thiswin = checkwin();
@@ -607,11 +613,11 @@ sub check720
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; %holds = (); }
+  { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; @holdAry = (); }
   else
   { print "No draw-to-wins found.\n"; }
   @outSinceLast = ();
-  for (@initArray) { if (!$holds{$_}) { $inStack{$_} = 1; } else { $holds{$_} = 1; } }
+  for (@initArray) { if (!isHeld($_)) { $inStack{$_} = 1; } else { push(@holdAry, $_); } }
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
@@ -628,7 +634,6 @@ sub check720
 		{
 		procCmdFromUser("u");
 		}
-		%holds = ();
 	 }
   }
   $stillNeedWin = 0;
@@ -1085,7 +1090,7 @@ sub loadDeck
 	  if ($a =~ /^h=/i)
 	  {
 		my @tempAry = split(/,/, $b);
-		for my $holdEl (@tempAry) { if ($holdEl) { $holds{$holdEl} = 1; $inStack{$holdEl} = 0; } }
+		for my $holdEl (@tempAry) { if ($holdEl) { push(@holdAry, $holdEl); $inStack{$holdEl} = 0; } }
 		next;
 	  }
 	  if ($a =~ /^m=/i)
@@ -1107,7 +1112,6 @@ sub loadDeck
 	  if ($ignoreThis) { $undo = 1; reinitBoard(); for my $saveCmd (@undoArray) { procCmd($saveCmd); print "$saveCmd\n"; } $undo = 0; last; }
 	  else
 	  {
-	  %holds = ();
 	  @holdAry = ();
 	  my @loadedArray = split(/,/, $a); # here we read in an array and process it for 3-7, etc., but initialize everything first of course
 	  my $loadedIndex = 0;
@@ -1263,9 +1267,9 @@ sub hidCards
 
 sub printHoldArray
 {
-  if (keys %holds == 0) { print "No holds.\n"; return; }
+  if ($#holdAry == -1) { print "No holds.\n"; return; }
   print "Holds:";
-  for my $x (sort { $a <=> $b } keys %holds) { print " " . faceval($x); }
+  for (@holdAry) { print " " . faceVal($_); }
   print "\n";
   if ($_[0] == 0) { return; }
   print "InStack:";
@@ -1284,16 +1288,16 @@ sub holdArray
 	my $cardTxt = faceval($cardNum);
 	for my $q (@force) { if ($cardNum == $q) { print "$cardTxt already in force array.\n"; return; } }
 	if (keys %inStack == 0) { print "Can't hold any more cards.\n"; }
-	if ((!$inStack{$cardNum}) && (!$holds{$cardNum})) { print "$cardNum not in stack or holds.\n"; return; }
-	if ($holds{$cardNum})
+	if ((!$inStack{$cardNum}) && (!isHeld($cardNum))) { print "$cardNum not in stack or holds.\n"; return; }
+	if (isHeld($cardNum))
 	{
-	  print "Removing $cardTxt from holds.\n"; delete($holds{$cardNum}); $inStack{$cardNum} = 1;
+	  print "Removing $cardTxt from holds.\n"; $inStack{$cardNum} = 1;
 	  for my $idx (0..$#holdAry) { if ($holdAry[$idx] == $cardNum) { splice(@holdAry,$idx,1); last; } }
 	}
 	else
-	{ $holds{$cardNum} = 1; delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . (scalar keys %holds);
-	 for (keys %holds) { print " " . faceval($_); }
-	 print ")\n"; push(@undoArray, "b$cardNum"); } push(@holdAry, $cardNum); }
+	{ push(@holdAry, $cardNum); delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . ($#holdAry + 1);
+	 for (@holdAry) { print " " . faceval($_); }
+	 print ")\n"; push(@undoArray, "b$cardNum"); } }
 }
 
 sub unforceArray
@@ -1351,7 +1355,7 @@ sub forceArray
 	elsif ($card =~ /[^0-9]/) { print "You need to put in a numerical or card value. $card can't be evaluated.\n"; return; }
 	if (($cardNum <= 52) && ($cardNum >= 1))
 	{
-	if ($holds{$cardNum}) { print "$card (" . faceval($cardNum) . ") being held to the end.\n"; return; }
+	if (isHeld($cardNum)) { print "$card (" . faceval($cardNum) . ") being held to the end.\n"; return; }
 	if (!$inStack{$cardNum}) { print "$card (" . faceval($cardNum) . ") already out on the board or in the force queue.\n"; return; }
 	push (@force, $cardNum); delete ($inStack{$cardNum}); if ((!$undo) && (!$quickMove)) { print faceval($cardNum) . " successfully pushed. (" . ($#force+1);
 	print " total:";
@@ -1416,7 +1420,7 @@ $anyMovesYet = 0;
 
 @pointsArray = ();
 
-%holds = ();
+@holdAry = ();
 
 if ($usrInit) { @force = @initArray; $forced = 1; }
 elsif ($easyDefault == 1) { @force = (8, 9, 10, 11, 12, 13); $forced = 1; }
@@ -1538,7 +1542,7 @@ sub randcard
   print "Stack:";
   foreach $q (keys %inStack) { print " $q"; }
   print " Holds:";
-  foreach $q (keys %holds) { print " $q"; }
+  for (@holdAry) { print " $_"; }
   print "\n";
   }
   if ((keys %inStack) > 0)
@@ -1557,12 +1561,11 @@ sub randcard
   else
   {
   print "Deleting random $rand\n";
-  $rand = (keys %holds)[rand keys %holds];
-  }
-  delete $holds{$rand};
+  $rand = rand($#holdAry);
   }
   }
-  printDebug("Returning $rand. Left: " . (keys %inStack) . ", " . (keys %holds) . " holds.\n");
+  }
+  printDebug("Returning $rand. Left: " . (keys %inStack) . ", " . (1 + $#holdAry) . " holds.\n");
   $errorPrintedYet = 1; # we have already made a successful move to get this to reveal, or we are just drawing. Anything else is okay. Drawing a card we sweep up later can throw misc errors
   push(@outSinceLast, $rand);
   return $rand;
@@ -1994,7 +1997,7 @@ sub showLegalsAndStats
     my $thisDone = 1;
     for my $idx($_ * 13 - 12 .. $_ * 13)
 	{
-	  if ($inStack{$idx} || $holds{$idx}) { $thisDone = 0; } else { $cardCount[($idx-1)/13]++; }
+	  if ($inStack{$idx} || isHeld($idx)) { $thisDone = 0; } else { $cardCount[($idx-1)/13]++; }
 	}
 	if ($thisDone) { $allOut .= $sui[$_]; }
   }
@@ -2613,7 +2616,7 @@ sub reinitBoard
   $drawsLeft = 5;
   $hidCards = 16;
   $anyMovesYet = 0;
-  for (1..52) { if (!$holds{$_}) { $inStack{$_} = 1; } }
+  for (1..52) { if (!isHeld($_)) { $inStack{$_} = 1; } }
   for (1..6)
   {
     @{$stack[$_]} = ();
@@ -2621,7 +2624,6 @@ sub reinitBoard
 	push (@{$stack[$_]}, $topCard[$_]);
 	delete($inStack{$topCard[$_]});
   }
-  %holds = ();
   @holdAry = ();
 }
 
@@ -2649,7 +2651,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
     print "Writing to debug...\n";
     open(B, ">>undo-debug.txt");
 	print B "========\n";
-	if (keys %holds) { print B "H="; for my $el (sort {$a <=> $b} keys %holds) { print B ",$el"; } print B "\n"; }
+	if ($#holdAry > -1) { print B "H="; for (@holdAry) { print B ",$_"; } print B "\n"; }
 	print B "TC=" . join(",", @topCard) . "\n";
 	print B "M=" . join (",", @undoArray) . "\n";
 	for (1..6) { print B join(",", @{$stack[$_]}); print B "\n"; }
@@ -2661,7 +2663,7 @@ sub undo # 1 = undo # of moves (u1, u2, u3 etc.) specified in $_[1], 2 = undo to
   @undoLast = @undoArray;
   my $oldCardsInPlay = $cardsInPlay;
   @force = ();
-  %holds = ();
+  @holdAry = ();
   @pointsArray = ();
   reinitBoard();
   #print "$cardsInPlay cards in play.\n";
@@ -2792,11 +2794,11 @@ sub showhidden
   print "Still off the board:";
   for my $cardnum (1..52)
   {
-    if ($inStack{$cardnum} || $holds{$cardnum})
+    if ($inStack{$cardnum} || isHeld($cardnum))
 	{
     if ($lastSuit != suit($cardnum)) { if ($out[$lastSuit] > 0) { print " ($out[$lastSuit])"; } $lastSuit = suit($cardnum); print "\n"; }
     if ($inStack{$cardnum}) { print " " . faceval($cardnum); $out[suit($cardnum)]++; }
-	elsif ($holds{$cardnum}) { print " -" . faceval($cardnum); $out[suit($cardnum)]++; }
+	elsif (isHeld($cardnum)) { print " -" . faceval($cardnum); $out[suit($cardnum)]++; }
 	}
   }
   if ($out[$lastSuit]) { print " ($out[$lastSuit])"; }
@@ -2813,12 +2815,12 @@ sub showhidden
 	}
 	print ")";
   }
-  my $ih = keys %holds;
-  if ($ih)
+  my $ih = $#holdAry;
+  if ($ih > -1)
   {
-    print " ($if in hold-queue:";
+    print " ($ih in hold-queue:";
 	my $count = 0;
-	for my $hk (sort keys %holds)
+	for my $hk (@holdAry)
 	{
 	  if ($count) { print ","; }
 	  $count++;
