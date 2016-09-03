@@ -36,6 +36,7 @@ while (@ARGV[$count])
 	/^-nw$/ && do { $showWarn = 0; $count++; next; };
 	/^-q$/ && do { $showOk = $showWarn = 0; $count++; next; };
 	/^-o$/ && do { $openFile = 1; $count++; next; };
+	/^-t$/ && do { $testing = 1; $count++; next; };
 	/^-u$/ && do { $allBack = 1; $count++; if ($howFar == $defFar) { $howFar = 90; } next; };
 	/^-sp$/ && do { $showProc = 1; $count++; next; };
 	/^-[hn]p$/ && do { $showProc = 0; $count++; next; };
@@ -67,6 +68,8 @@ if ($verifyHeadings)
 
 if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
 else { print "$numDailyFiles daily files in $lastDay days.\n"; }
+
+if ($testing) { print "TEST RESULTS: daily file big errors,$bigErrs,0,\n"; }
 
 if (EL) { close(EL); } if ($viewErrorFile) { `$elog`; }
 
@@ -148,13 +151,13 @@ my $hasSomething = 0;
     if (($a !~ /[a-z]/) && ($showWarn)) { $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; next; } #this is to make sure that double carriage returns don't bomb out;
     printExt("You don't have a header in $shortName: $a");
     if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
-	$betterDie = 1;
+	$betterDie++;
   }
   if ($a =~ /^\\/)
   { if (lc($b) ne $b) { if ($showWarn) { $warning .= "WARNING header $b not in lower case.\n"; } }
     $b = lc($b);
-    if (@myAry[$curIdx]) { printExt("Header needs spacing: $a"); $betterDie = 1;   $fileToOpen = $_[0]; }
-	else { if ($startLine{$b}) { printExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie = 1; if (!$lineToGo) { $lineToGo = $lines; }
+    if (@myAry[$curIdx]) { printExt("Header needs spacing: $a"); $betterDie++;   $fileToOpen = $_[0]; }
+	else { if ($startLine{$b}) { printExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $lines; }
       if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
 	} else { $startLine{$b} = $lines; } @myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warning .= "  $shortName BAD HEADER: $b\n"; } }
   }
@@ -164,7 +167,7 @@ my $hasSomething = 0;
 
 close(A);
 
-if (!$hasSomething) { printExt("$_[0] has no text."); }
+if (!$hasSomething) { printExt("$_[0] has no text.\n"); }
 
 $count = 0;
 
@@ -192,6 +195,7 @@ if ($limericks)
 	}
   }
   close(A);
+  $bigErrs += $betterDie;
 }
 
 
@@ -212,7 +216,7 @@ if ((!$gotNames) && (-s $_[0] > 0)) { printExt("No names, but no big deal in $sh
 {
   @namelist0 = split(/\t/, @myAry[$curIdx]);
   @namelist = sort(@namelist0);
-  if (!@namelist[1]) { printExt("$_[0] Claimed name list with no names.\n"); if (($openFile) && (!$fileToOpen)) { $betterDie = 1; $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); } }
+  if (!@namelist[1]) { printExt("$_[0] Claimed name list with no names.\n"); if (($openFile) && (!$fileToOpen)) { $betterDie++; $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); } }
   else
   {
   for (0..$#namelist)
@@ -232,8 +236,8 @@ if ((!$gotNames) && (-s $_[0] > 0)) { printExt("No names, but no big deal in $sh
 
 for (0..$#r)
 {
-  #if (@r[$_] eq @r[$_+1]) { print "@r[$_] listed twice in $_[0]...\n"; $betterDie = 1; }
-  if ($found{$mapTo{@r[$_]}} ) { printExt("    @r[$_] -> $mapTo{@r[$_]} overlaps in $_[0].\n"); $betterDie = 1; }
+  #if (@r[$_] eq @r[$_+1]) { print "@r[$_] listed twice in $_[0]...\n"; $betterDie++; }
+  if ($found{$mapTo{@r[$_]}} ) { printExt("    @r[$_] -> $mapTo{@r[$_]} overlaps in $_[0].\n"); $betterDie++; }
  }
  
  ##for $x (keys %sortOrd) { print "$x $sortOrd{$x}\n"; } die;

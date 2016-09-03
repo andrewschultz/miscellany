@@ -247,7 +247,7 @@ sub getArgs
 	for ($a)
 	{
 	  /^-?\?$/ && do { usage(); exit; };
-	  /^-a$/ && do { @raw = ("gen", "as", "sts"); $count++; next; }; # -opo is inactive
+	  /^-a$/ && do { @raw = ("gen", "as", "sts", "wri"); $count++; next; }; # -opo is inactive
 	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
 	  /^-b$/ && do { $build = 1; $count++; next; };
 	  /^-d$/ && do { $debug = 1; $count++; next; };
