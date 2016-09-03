@@ -288,6 +288,7 @@ misc=wpb.pl,
 misc=rwi.pl,
 misc=invis.pl,
 misc=c:\writing\dict\hc.pl,wordfun
+misc=c:\writing\dict\alfit.pl,wordfun
 misc=icl.pl,
 misc=icl.txt,
 misc=c:\writing\dict\say.pl,
