@@ -32,6 +32,8 @@ my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $auto
 
 my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
+my $printDiff = 0; my $lastScore = 0;
+
 my $usrInit = 0;
 
 my $movesAtStart; # moves before making a command
@@ -1058,6 +1060,7 @@ sub loadDeck
     if (("$a" eq "$search") || ($loadFuzzy && ($a =~ /$search/i)))
 	{
 	printNoTest("Found $search in $filename, line $li.\n");
+	$printDiff = 0;
 	$lastSearchCmd = $a;
 	$a = <A>; chomp($a); $a = lc($a); @temp = split(/,/, $a); $vertical = $temp[0]; $collapse = $temp[1];
 	#topCards line
@@ -2084,7 +2087,10 @@ sub showLegalsAndStats
   }
   my $vis = join("-", @cardCount);
   if (($allOut) && ($visible < 52)) { print "($allOut out)"; }
-  print ", $visible($vis)/$hidCards visible/hidden.\n$drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score.\n";
+  print ", $visible($vis)/$hidCards visible/hidden.\n$drawsLeft draw" . plur($drawsLeft) . " left, $chains chain" . plur($chains) . ", $order in order, $breaks break" . plur($breaks) . ", $brkFull($brkPoint) break-remaining score";
+  if (($printDiff) && ($lastScore > $brkFull)) { print " (" . ($lastScore - $brkFull) . " down)"; }
+  print ".\n";
+  $printDiff = 1; $lastScore = $brkFull;
   }
 }
 
