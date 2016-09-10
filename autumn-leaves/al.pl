@@ -109,15 +109,16 @@ if ($time < 0)
   print ", or edit altime.txt like a big ol' cheater.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
+print "Type I feel like wasting time right now to proceed. Case insensitive.\n";
+
+my $password = <STDIN>; chomp($password);
+
+if (lc($password) ne "i feel like wasting time right now")  { die "OK, do something else.\n"; }
+
 readCmdLine(); readScoreFile(); initGlobal();
 
 initGame(); printdeck(0);
 
-print "Type I feel like wasting time right now to proceed. Case insensitive.\n";
-
-my $password = <STDIN>;
-
-if (lc($password) ne "i feel like wasting time right now")  { di "OK, do something else.\n"; }
 while (1)
 {
   my $oneline = <STDIN>;
@@ -631,7 +632,7 @@ sub check720
   ones(0);
   $thiswin = checkwin();
   $seventwenty = 0;
-  if ($thiswin == 1) 
+  if ($thiswin == 1)
   {
     if (!$firstPermu) { $firstPermu = join(" ", map { faceval($_) } @initArray); }
 	$wins++;
@@ -1298,12 +1299,10 @@ sub hidCards
 sub printHoldArray
 {
   if ($#holdAry == -1) { print "No holds.\n"; return; }
-  print "Holds:";
-  for (@holdAry) { print " " . faceVal($_); }
-  print "\n";
+  print "Holds: " . join(" ", map { faceval($_) } @holdAry) . "\n";
   if ($_[0] == 0) { return; }
-  print "InStack:";
-  for my $x (sort { $a <=> $b } keys %inStack) { print " " . faceval($x); }
+  print "InStack: ";
+  print join(" ", map { faceval($_) } (sort { $a <=> $b } keys %inStack));
   print "\n";
 }
 
@@ -1326,7 +1325,7 @@ sub holdArray
 	}
 	else
 	{ push(@holdAry, $cardNum); delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . ($#holdAry + 1);
-	 for (@holdAry) { print " " . faceval($_); }
+	 print join(" ", map { faceval($_) } @holdAry);
 	 print ")\n"; push(@undoArray, "b$cardNum"); } }
 }
 
@@ -1344,11 +1343,8 @@ sub unforceArray
 	  {
 	    splice(@force, $_, 1); $inStack{$cval} = 1;
 		if ($#force == -1) { print "Force array now empty.\n"; return; }
-		print "New force array:";
-		for my $idx (0..$#force)
-		{
-		  print " " . faceval($force[$idx]);
-		}
+		print "New force array: ";
+		print join(" ", map { faceval($_) } @force);
 		print "\n";
 		return;
 	  }
@@ -1389,7 +1385,7 @@ sub forceArray
 	if (!$inStack{$cardNum}) { print "$card (" . faceval($cardNum) . ") already out on the board or in the force queue.\n"; return; }
 	push (@force, $cardNum); delete ($inStack{$cardNum}); if ((!$undo) && (!$quickMove)) { print faceval($cardNum) . " successfully pushed. (" . ($#force+1);
 	print " total:";
-	for (0..$#force) { print " " . faceval($force[$_]); }
+	print join(" ", map { faceval($_) } @force);
 	print ")\n"; }
 	return;
 	}
@@ -1423,7 +1419,7 @@ sub zapForce
   else
   {
   print "New force array:";
-  for (@force) { print " " . faceval($_); }
+  print join(" ", map { faceval($_) } @force);
   print ".\n";
   }
   #push (@undoArray, $_[0]);
@@ -1439,7 +1435,7 @@ sub zapHold
   else
   {
   print "New hold array:";
-  for (@holdAry) { print " " . faceval($_); }
+  print join(" ", map { faceval($_) } @holdAry);
   print ".\n";
   }
   #push (@undoArray, $_[0]);
@@ -1457,9 +1453,7 @@ sub switchForce
   my $temp = $force[$sa[0]];
   $force[$sa[0]] = $force[$sa[1]];
   $force[$sa[1]] = $temp;
-  print "New force array:";
-  for (@force) { print " " . faceval($_); }
-  print ".\n";
+  print "New force array: " . join(" ", map { faceval($_) } @force) . ".\n";
   #push(@undoArray, $_[0]);
 }
 
@@ -1475,9 +1469,7 @@ sub switchHold
   my $temp = $holdAry[$sa[0]];
   $holdAry[$sa[0]] = $holdAry[$sa[1]];
   $holdAry[$sa[1]] = $temp;
-  print "New hold array:";
-  for (@holdAry) { print " " . faceval($_); }
-  print ".\n";
+  print "New hold array:" . join(" ", map { faceval($_) } @force) . ".\n";
   #push(@undoArray, $_[0]);
 }
 
@@ -2915,26 +2907,14 @@ sub showhidden
   print "\nTotal unrevealed: " . ($is + $if);
   if ($if)
   {
-    print " ($if in force-queue:";
-	for (0..$#force)
-	{
-	  if ($_) { print ","; }
-	  print " " . faceval($force[$_]);
-	}
+    print " ($if in force-queue: ";
+	print join(", ", map { faceval($_) } @force);
 	print ")";
   }
   my $ih = $#holdAry;
   if ($ih > -1)
   {
-    print " ($ih in hold-queue:";
-	my $count = 0;
-	for my $hk (@holdAry)
-	{
-	  if ($count) { print ","; }
-	  $count++;
-	  print " " . faceval($hk);
-	}
-	print ")";
+    print " ($ih in hold-queue: " . join(", ", map {faceval($_)} @holdAry) . ")";
   }
   print "\n";
   for (1..4) { if (!$out[$_]) { $outs .= "$sui[$_] OUT. "; } }
