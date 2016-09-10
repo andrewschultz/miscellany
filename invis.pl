@@ -9,33 +9,52 @@
 #(no punctuation) = each successive clue
 #>>, >>>, >>>> = level 2/3/4 etc. headings
 
+use strict;
+use warnings;
+
 my @levels = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
+my %exp;
+
+###flags and such
+my $updateOnly = 1;
+my $launchAfter = 1;
+my $launchRaw = 1;
+my $count = 0;
+
+###trickier variables
+my $cmd = "";
+my $invDir = "c:\\writing\\scripts\\invis";
+my $filename = "";
+
 #$exp{"pc"} = "compound";
-$default = "pc";
+my $default = "pc";
 $exp{"1"} = "sa";
 $exp{"2"} = "roi";
 $exp{"3"} = "3d";
 
 while ($count <= $#ARGV)
 {
-  $a = @ARGV[$count];
+  $a = $ARGV[$count];
   for ($a)
   {
+  /-a/ && do { printAllFiles(); exit; };
   /-u/ && do { $updateOnly = 1; $count++; next; };
   /-l/ && do { $launchAfter = 1; $count++; next; };
   /-r/ && do { $launchRaw = 1; $count++; next; };
-  /^-?e$/ && do { `c:/writing/scripts/@ARGV[$count+1].txt`; exit; };
+  /^-?e$/ && do { `$invDir\\$ARGV[$count+1].txt`; exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }
 
-$outname = "c:/writing/scripts/invis-$filename";
+if (! -f "$invDir/$filename") { print "No filename, going to usage.\n"; usage(); }
+
+my $outname = "$invDir\\invis-$filename";
 $outname =~ s/txt$/htm/gi;
 
-$fileShort = $filename;
+my $fileShort = $filename;
 
-if (! -f $filename) { $filename = "c:/writing/scripts/$filename"; }
+if (! -f $filename) { $filename = "$invDir\\$filename"; }
 
 open(A, "$filename") || die ("Can't open input file " . $filename);
 
@@ -46,7 +65,7 @@ if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:/writing/script
 if ($updateOnly)
 {
   #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
-  print ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n";
+  print "" . ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n";
   if (-M $filename > -M $outname) { print "$outname is already up to date. Run without -u to fix.\n"; exit; }
   else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
 }
@@ -55,7 +74,7 @@ if ($a !~ /^!/) { print ("The first line (other than out=) must begin with a (!)
 
 $a =~ s/^!//g;
 
-$header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -76,13 +95,15 @@ $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 <center>[NOTE: tab/enter may be quicker to reveal clues than futzing with the mouse.]</center>
 ';
 
-$footer = '</body>
+my $footer = '</body>
 </html>';
 
 open(B, ">$outname") || die ("Can't write to $outname.");
 print B $header;
 
-$lastLev = $temp = 0;
+my $lastLev = 0; my $temp = 0; my $otl = 0;
+my $lastWasInvisiclue = 0;
+my $theDir = "";
 
 while ($a = <A>)
 {
@@ -92,7 +113,7 @@ while ($a = <A>)
   if ($a =~ /;/) { last; }
   if ($a !~ /^[\?>]/)
   {
-    @levels[$lastLev]++;
+    $levels[$lastLev]++;
     $otl = currentOutline(@levels);
     print B "<a href=\"#\" onclick=\"document.getElementById('$otl').style.display = 'block'; this.style.display = 'none'; return false;\">" . cbr() . "Click to show next hint</a></div>
 <div id=\"$otl\" style=\"display:none;\">$a\n";
@@ -103,9 +124,9 @@ while ($a = <A>)
   $lastWasInvisiclue = 0;
   if ($a =~ /^\?/)
   {
-    $ll = $lastLev + 1;
+    my $ll = $lastLev + 1;
     $a =~ s/^.//g;
-    @levels[$lastLev]++;
+    $levels[$lastLev]++;
     $otl = currentOutline(@levels);
     print B "<h$ll>$a</h$ll>\n<div>\n";
     next;
@@ -115,11 +136,11 @@ while ($a = <A>)
   my $times = $temp =~ tr/>//;
   $temp =~ s/>//g;
   #print "1 $a\n2 $temp\n";
-  @levels[$times]++;
+  $levels[$times]++;
   for ($times+1 .. 9) { @levels[$_] = 0; }
   $otl = currentOutline(@levels);
   print "$otl!!\n";
-  $t2 = $lastLev - $times;
+  my $t2 = $lastLev - $times;
 
   print "Current level $times Last level $lastLev\n";
 
@@ -149,7 +170,7 @@ close(A);
 
 open(B, "$outname");
 
-$rawFile = "c:/writing/scripts/invraw-$filename"; $raw =~ s/\.txt/\.htm/g;
+my $rawFile = "c:/writing/scripts/invraw-$filename"; $rawFile =~ s/\.txt/\.htm/g;
 
 open(C, ">$rawFile");
 
@@ -173,7 +194,7 @@ if ($launchRaw) { `$rawFile`; }
 if ($theDir)
 {
   print "Copying to $theDir.\n";
-  $outshort = $outname; $outshort =~ s/.*[\\\/]//g;
+  my $outshort = $outname; $outshort =~ s/.*[\\\/]//g;
   $cmd = "copy $outname \"$theDir/$outshort\"";
   $cmd =~ s/\//\\/g;
   print "$cmd\n";
@@ -182,12 +203,13 @@ if ($theDir)
 
 sub currentOutline
 {
+  my $retString;
   #print "@_ is the current level.\n";
-  for $q (1..9)
+  for my $q (1..9)
   {
-    if (@_[$q] == 0) { return $retString; }
-    elsif ($q == 1) { $retString = "@_[$q]"; } else
-    { $retString .= ".@_[$q]"; }
+    if ($_[$q] == 0) { return $retString; }
+    elsif ($q == 1) { $retString = "$_[$q]"; } else
+    { $retString .= ".$_[$q]"; }
   }
   print "Oops missed.\n";
 }
@@ -196,4 +218,16 @@ sub cbr
 {
   if ($lastWasInvisiclue) { return "<br>"; }
   return "";
+}
+
+sub printAllFiles
+{
+  opendir(DIR, "c:\\writing\\scripts\\invis");
+}
+
+sub usage
+{
+print<<EOT;
+EOT
+exit;
 }

@@ -27,7 +27,7 @@ if (($haveBall == -1) && (!$boths)) { $haveBall = 0; print "Possession not speci
 
 if ($secs < 0) { die("Can't have negative seconds!"); }
 
-$dif = $dif - 2.5;
+$dif = $dif - 3.5;
 
 if ($boths) { print "WITH: "; bjames($dif+1); print "WITHOUT: "; bjames($dif); }
 elsif ($haveBall) { bjames($dif+1); }
