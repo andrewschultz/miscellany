@@ -30,6 +30,8 @@ my $winsThisTime = 0, my $maxWins = 5;
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
 my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; my $pushLeft = 0; #options
 
+my $strictSolve = 0;
+
 my $easyDefault = 0, my $fixedDeckOpt = 0, my $emptyIgnore = 0, my $chainBreaks = 0, my $showBlockedMoves = 0,; #options to init
 
 my $printDiff = 0; my $lastScore = 0;
@@ -203,6 +205,8 @@ sub procCmd
   }
 
   #meta commands first, or commands with equals
+  if ($modCmd =~ /^ab/) { allBut($modCmd); return; }
+  if ($modCmd =~ /^ap/) { allPlow(); return; }
   if ($modCmd =~ /^%$/) { stats(); return; }
   if ($modCmd =~ /^l([bi]?)=/i) { loadDeck($modCmd); return; }
   if ($modCmd =~ /^lf([bi]?)=/i) { loadDeck($modCmd, 1); return; }
@@ -629,6 +633,7 @@ sub check720
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
+  if ($strictSolve) { return; }
   if (($stillNeedWin) && ($wins))
   {
     if ($count % $wins) { no integer; $expected = sprintf("%.2f", $count / $wins); } else { $expected = $count / $wins; }
@@ -3193,6 +3198,85 @@ sub saveDefault
   `copy $backupFile $filename`;
   `erase $backupFile`;
   print "Defaults saved.\n";
+}
+
+sub allPlow
+{
+  $strictSolve = 1;
+  my @toDraw = (1, 2, 3, 4, 5, 6);
+  my $thisDraw = 0;
+  allBut(@toDraw);
+  while ($toDraw[0] < 47)
+  {
+
+    $thisDraw++;
+    for my $drawidx (0..5)
+	{
+	  if (($drawidx == 5) || ($toDraw[$drawidx] < $toDraw[$drawidx+1] - 1))
+	  {
+	    $toDraw[$drawidx]++;
+		for my $inner (0..$drawidx-1)
+		{
+		  $toDraw[$inner] = $inner + 1;
+		}
+		allBut(@toDraw);
+		last;
+	  }
+	}
+  }
+  $strictSolve = 0;
+  
+}
+
+sub allBut
+{
+  my $temp;
+  my @cardArray;
+  if ($_[0] =~ /^ab/)
+  {
+  $temp = $_[0];
+  $temp =~ s/^ab[^0-9]*//g;
+  @cardArray = split(/,/, $temp);
+  }
+  else
+  {
+  @cardArray = @_;
+  }
+  if ($#cardArray != 5) { print "ab1,2,3,4,5,6 = usage\n"; return; }
+  my %tempStack = ();
+  my @suitArray = (0, 0, 0, 0);
+  for (@cardArray) { @suitArray[suit($_)-1]++; $tempStack{$_} = 1; }
+  for (0..2) { if (($suitArray[$_] < $suitArray[$_+1]) && ($strictSolve)) { print "@cardArray Suits must be in order, most cards on left. @suitArray\n"; return; } }
+  my $anyPass = 0;
+  for (0..3)
+  {
+    if (defined($tempStack{13*$_+2}) && defined($tempStack{13*$_+3})) { $anyPass = 1; last; }
+	$temp = $suitArray[$_];
+	if (defined($tempStack{13*$_+1}))
+	{
+	if (defined($tempStack{13*$_+13})) { $temp--; }
+	if ($temp > 1) { $anyPass = 1; }
+	}
+  }
+  if ((!$anyPass) && ($strictSolve)) { print "@cardArray Not solvable enough.\n"; return; }
+  %inStack = ();
+  for (@cardArray) { $inStack{$_} = 1; }
+  $stack = ();
+  my $thisRow = 0;
+  my $thisIdx = 0;
+  for (1..6) { $stack[$_] = (); }
+  $drawsLeft = 1;
+  $hidCards = 0;
+  for (my $thisCard = 52; $thisCard >= 1; $thisCard--)
+  {
+    if ($thisCard % 13 == 0) { $thisRow++; $thisIdx = 0; }
+	if ($inStack{$thisCard}) { next; }
+	#print "$thisCard: $thisRow, $thisIdx\n";
+	$stack[$thisRow][$thisIdx] = $thisCard;
+	$thisIdx++;
+  }
+  @undoArray = ($_[0]);
+  check720(1);
 }
 
 sub initGlobal
