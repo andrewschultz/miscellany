@@ -113,6 +113,11 @@ readCmdLine(); readScoreFile(); initGlobal();
 
 initGame(); printdeck(0);
 
+print "Type I feel like wasting time right now to proceed. Case insensitive.\n";
+
+my $password = <STDIN>;
+
+if (lc($password) ne "i feel like wasting time right now")  { di "OK, do something else.\n"; }
 while (1)
 {
   my $oneline = <STDIN>;
@@ -456,7 +461,14 @@ sub procCmd
     };
     /^tf$/ && do { runEachTest(); return; };
     /^u$/ && do { if (!$numbers) { undo(0); } else { if (length($numbers) > 1) { print "Use um for mass undo--this is to avoid u351 or something by mistake.\n"; return; } undo(1, $numbers); } return; }; # note we need length and not < / > as we are working with integers, which roll over
-    /^ua$/ && do { cmdNumWarn($numbers, $letters); print "Top cards to start:"; for (1..6) { print " $topCard[$_](" . faceval($topCard[$_]) . ")"; } print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n"; return; };
+    /^ua$/ && do
+	{
+	  cmdNumWarn($numbers, $letters);
+	  print "Top cards to start: ";
+	  print join(" ", map { "$_(" . faceval($_) . ")" } @topCard);
+	  print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n";
+	  return;
+    };
  	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
  	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
@@ -563,7 +575,7 @@ sub check720
     if ($suitStatus[0] ==4) { print "Even with >1 draw left, you're still pretty blocked.\n"; return; }
     print "You probably have a chance, but you need to have 1 draw left to use the check-auto-win command.\n"; return;
   }
-  print "Checking for draw-to-win/win-on-draw...\n";
+  if (!$strictSolve) { print "Checking for draw-to-win/win-on-draw...\n"; }
   if ($hidCards >= 6) { print "Too many cards out. It's very doubtful you can win this unless the deck is rigged, and it'd take too much time.\n"; return; }
   if ($hidCards > 2)
   {
@@ -579,7 +591,7 @@ sub check720
   {
     print "With all aces out, no easy draw-to-wins are expected.\n";
   }
-  else
+  elsif (!$strictSolve)
   {
   if ($suitStatus[3])
   {
@@ -619,13 +631,17 @@ sub check720
   ones(0);
   $thiswin = checkwin();
   $seventwenty = 0;
-  if ($thiswin == 1) { if (!$firstPermu) { for (0..5) { $firstPermu .= " " . faceval($initArray[$_]); } } $wins++; }
+  if ($thiswin == 1) 
+  {
+    if (!$firstPermu) { $firstPermu = join(" ", map { faceval($_) } @initArray); }
+	$wins++;
+  }
   @stack = @{dclone(\@array2)};
   $drawsLeft = 1;
   } @initArray;
   $seventwenty = 0;
   if ($wins)
-  { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is$firstPermu.\n"; @holdAry = (); }
+  { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is $firstPermu.\n"; @holdAry = (); }
   else
   { print "No draw-to-wins found.\n"; }
   @outSinceLast = ();
@@ -3200,8 +3216,12 @@ sub saveDefault
   print "Defaults saved.\n";
 }
 
+my $howMany = 0;
+my %classFound;
+
 sub allPlow
 {
+  %classFound = ();
   $strictSolve = 1;
   my @toDraw = (1, 2, 3, 4, 5, 6);
   my $thisDraw = 0;
@@ -3223,15 +3243,18 @@ sub allPlow
 		last;
 	  }
 	}
+	#if (!($thisDraw % 20000)) { print "$howMany of $thisDraw\n"; }
   }
   $strictSolve = 0;
-  
+  if ($howMany) { die ("$howMany of $thisDraw\n"); }
 }
 
 sub allBut
 {
+  my $theClass;
   my $temp;
   my @cardArray;
+  my $sui;
   if ($_[0] =~ /^ab/)
   {
   $temp = $_[0];
@@ -3245,8 +3268,60 @@ sub allBut
   if ($#cardArray != 5) { print "ab1,2,3,4,5,6 = usage\n"; return; }
   my %tempStack = ();
   my @suitArray = (0, 0, 0, 0);
-  for (@cardArray) { @suitArray[suit($_)-1]++; $tempStack{$_} = 1; }
-  for (0..2) { if (($suitArray[$_] < $suitArray[$_+1]) && ($strictSolve)) { print "@cardArray Suits must be in order, most cards on left. @suitArray\n"; return; } }
+  my @suitBin = (0, 0, 0, 0);
+  for (@cardArray)
+  {
+    $sui = ($_-1) / 13;
+	$suitArray[$sui]++;
+	$suitBin[$sui] += (1 << ($_-1) % 13);
+	$tempStack{$_} = 1;
+  }
+  if ($strictSolve)
+  {
+  for (0..2)
+  {
+    if ($suitArray[$_] > $suitArray[$_+1]) { next; }
+    if ($suitArray[$_] < $suitArray[$_+1])
+    {
+    #print "@cardArray Suits must be in order, most cards on left. @suitArray\n";
+	return;
+	}
+    elsif ($suitBin[$_] < $suitBin[$_+1])
+    {
+    #print "@cardArray Suits must be in order (tiebreak lost), most/highest cards on left. @suitArray\n";
+	return;
+	}
+  }
+  my @class = (0, 0, 0, 0);
+  my $x;
+  for (0..3)
+  {
+    if ($tempStack{$_*13+1})
+	{
+	  $class[$_] += 100;
+	  $x  = $_*13+2;
+	  while ($tempStack{$x}) { $class[$_] += 100; $x++; }
+	}
+    elsif (($tempStack{$_*13+2}) && ($tempStack{$_*13+3}))
+	{
+	  $class[$_] += 10;
+	  $x  = $_*13+4;
+	  while ($tempStack{$x}) { $class[$_] += 10; $x++; }
+	}
+	if ($tempStack{$_*13+13})
+	{
+	  $class[$_] += 1;
+	  my $x = $_*13+12;
+	  while ($tempStack{$x}) { $class[$_] += 1; $x--; }
+	}
+  }
+  $theClass = join("-", @class);
+  if ($classFound{$theClass})
+  {
+    #print "$theClass already found for @cardArray.\n";
+	return;
+  } else { $classFound{$theClass} = 1; }
+  }
   my $anyPass = 0;
   for (0..3)
   {
@@ -3258,7 +3333,11 @@ sub allBut
 	if ($temp > 1) { $anyPass = 1; }
 	}
   }
-  if ((!$anyPass) && ($strictSolve)) { print "@cardArray Not solvable enough.\n"; return; }
+  if ((!$anyPass) && ($strictSolve))
+  {
+    #print "@cardArray Not solvable enough.\n";
+	return;
+  }
   %inStack = ();
   for (@cardArray) { $inStack{$_} = 1; }
   $stack = ();
@@ -3276,6 +3355,8 @@ sub allBut
 	$thisIdx++;
   }
   @undoArray = ($_[0]);
+  $howMany++;
+  print "Trying " . join(" ", map { "$_(" . faceval($_) . ")" } @cardArray) . " ($theClass): ";
   check720(1);
 }
 
