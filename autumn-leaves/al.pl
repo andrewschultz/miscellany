@@ -348,6 +348,7 @@ sub procCmd
     /^c$/ && do { cmdNumWarn($numbers, $letters); $collapse = !$collapse; print "Card collapsing $toggles[$collapse].\n"; return; };
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
+	/^c[wd]v$/ && do { cmdNumWarn($numbers, $letters); check720(2); return; };
 	/^c[wd]x$/ && do { cmdNumWarn($numbers, $letters); check720(1); return; };
     /^d$/ && do {
 	  cmdNumWarn($numbers, $letters);
@@ -569,7 +570,7 @@ sub check720
   my @suitStatus = (0, 0, 0, 0, 0);
   $stillNeedWin = $_[0];
   for (0..3) { $suitStatus[suitstat($_)]++; }
-  if ($drawsLeft == 0) { print "You need to push UB or some undo command to try CW/CWX.\n"; return; }
+  if ($drawsLeft == 0) { $stillNeedWin = 0; print "You need to push UB or some undo command to try CW/CWX/CWV.\n"; return; }
   if ($drawsLeft != 1)
   {
     $stillNeedWin = 0;
@@ -577,7 +578,7 @@ sub check720
     print "You probably have a chance, but you need to have 1 draw left to use the check-auto-win command.\n"; return;
   }
   if (!$strictSolve) { print "Checking for draw-to-win/win-on-draw...\n"; }
-  if ($hidCards >= 6) { print "Too many cards out. It's very doubtful you can win this unless the deck is rigged, and it'd take too much time.\n"; return; }
+  if ($hidCards >= 6) { $stillNeedWin = 0; print "Too many cards out. It's very doubtful you can win this unless the deck is rigged, and it'd take too much time.\n"; return; }
   if ($hidCards > 2)
   {
     print "It may take a while to see all possibilities, and there's not likely to be a win. Tally anyway?"; my $q = <STDIN>; if ($q !~ /y/) { print "OK.\n"; return; }
@@ -614,6 +615,7 @@ sub check720
   if ($hidCards == 1) { print "With a card still to pull, you may need a bit of luck for a draw-to-win.\n"; }
   if ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   }
+  my $verbose = ($_[0] == 2);
   my $count = 0;
   my $thiswin;
   my $oldCardsInPlay = $cardsInPlay;
@@ -635,8 +637,10 @@ sub check720
   if ($thiswin == 1)
   {
     if (!$firstPermu) { $firstPermu = join(" ", map { faceval($_) } @initArray); }
+	if ($verbose) { print join(" ", map { faceval($_) } @initArray) . " WINS.\n"; }
 	$wins++;
   }
+  elsif ($verbose) { print join(" ", map { faceval($_) } @initArray) . " DOESN'T WIN.\n"; }
   @stack = @{dclone(\@array2)};
   $drawsLeft = 1;
   } @initArray;
@@ -3580,7 +3584,7 @@ pl=push-left on
 po=show points left
 %=prints stats
 cw/cd=check for win-on-draw (1 draw left)
-cwx/cdx=keep checking until you win
+cwx/cdx=keep checking until you win (cwv forces)
 debug shows debug text
 EOT
 }
