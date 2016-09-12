@@ -173,7 +173,12 @@ TOBASE=fourdiopolis
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
 oafs=c:\games\inform\uglyoafs.inform\source\story.ni,
-oafs=c:\writings\scripts\invis\uo.txt
+oafs=c:\writing\scripts\invis\uo.txt
+oafs=c:\games\inform\triz\mine\uoup.pdf
+oafs=c:\games\inform\triz\mine\uoup.trizbort
+oafs=c:\games\inform\triz\mine\uodn.pdf
+oafs=c:\games\inform\triz\mine\uodn.trizbort
+oafs=c:\games\inform\uglyoafs Materials\Release\ugly-oafs-invisiclues.htm
 
 #Dirk files to GitHub
 TOBASE=dirk
