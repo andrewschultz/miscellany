@@ -27,6 +27,8 @@ my %sre, my %rev;
 
 my $winsThisTime = 0, my $maxWins = 5;
 
+my $considerPiledRows = 0;
+
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
 my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; my $pushLeft = 0; #options
 
@@ -212,7 +214,8 @@ sub procCmd
 
   #meta commands first, or commands with equals
   if ($modCmd =~ /^ab/) { allBut($modCmd); return; }
-  if ($modCmd =~ /^ap/) { allPlow(); return; }
+  if ($modCmd =~ /^app/) { allPlow(1); return; }
+  if ($modCmd =~ /^ap/) { allPlow(0); return; }
   if ($modCmd =~ /^%$/) { stats(); return; }
   if ($modCmd =~ /^l([bi]?)=/i) { loadDeck($modCmd); return; }
   if ($modCmd =~ /^lf([bi]?)=/i) { loadDeck($modCmd, 1); return; }
@@ -3205,6 +3208,7 @@ my %classFound;
 
 sub allPlow
 {
+  $considerPiledRows = $_[0]; # this is so we look at kh-ahkc-2c as one row
   %classFound = ();
   $strictSolve = 1;
   my @toDraw = (1, 2, 3, 4, 5, 6);
@@ -3253,6 +3257,7 @@ sub allBut
   my %tempStack = ();
   my @suitArray = (0, 0, 0, 0);
   my @suitBin = (0, 0, 0, 0);
+  my @class = (0, 0, 0, 0);
   for (@cardArray)
   {
     $sui = ($_-1) / 13;
@@ -3276,7 +3281,6 @@ sub allBut
 	return;
 	}
   }
-  my @class = (0, 0, 0, 0);
   my $x;
   for (0..3)
   {
@@ -3330,6 +3334,7 @@ sub allBut
   for (1..6) { $stack[$_] = (); }
   $drawsLeft = 1;
   $hidCards = 0;
+  my $missCards = join(" ", map { "$_(" . faceval($_) . ")" } @cardArray);
   for (my $thisCard = 52; $thisCard >= 1; $thisCard--)
   {
     if ($thisCard % 13 == 0) { $thisRow++; $thisIdx = 0; }
@@ -3339,9 +3344,58 @@ sub allBut
 	$thisIdx++;
   }
   @undoArray = ($_[0]);
+  if (!$strictSolve) { printdeck(0); return; }
   $howMany++;
-  print "Trying " . join(" ", map { "$_(" . faceval($_) . ")" } @cardArray) . " ($theClass): ";
+  print "Trying $missCards ($theClass): ";
   check720(1);
+  if (!$considerPiledRows) { return; }
+  if ($class[3])
+  {
+    return;
+  }
+  elsif ($class[2])
+  {
+    my @tempRow = $stack[4];
+    for (1..3)
+	{
+	  @{$stack[$thisRow]} = (@{$stack[4]}, @{$stack[$thisRow]});
+	  @{$stack[4]} = ();
+	  for (@cardArray) { $inStack{$_} = 1; }
+	  @undoArray = ($_[0]);
+	  $drawsLeft = 1; $hidCards = 0;
+	  printdeck(1);
+	  #print "Trying $missCards ($theClass), extra in row $_: "; check720(1);
+	  @{$stack[$thisRow]} = splice(@{$stack[$thisRow]}, 13, $#{$stack[$thisRow]} - 13);
+	  @{$stack[4]} = @tempRow;
+	  return;
+	}
+  }
+  elsif ($class[1])
+  {
+    my @t1 = @{$stack[1]};
+    my @t2 = @{$stack[2]};
+    my @t3 = @{$stack[3]};
+	my @t4 = @{$stack[4]};
+	$stack[4] = (); @{$stack[2]} = (@t4, @{$stack[2]});	for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-2: "; check720(1);
+	$stack[3] = (); @{$stack[2]} = (@t3, @{$stack[2]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-2: "; check720(1);
+	$stack[4] = @t4; $stack[3] = @t3; $stack[2] = @t2; $stack[3] = @t1; 
+	$stack[4] = (); @{$stack[1]} = (@t4, $stack[1]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-1: "; check720(1);
+	$stack[3] = (); @{$stack[1]} = (@t3, $stack[1]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-1: "; check720(1);
+	$stack[4] = @t4; @{$stack[3]} = @t3; $stack[2] = @t2; $stack[3] = @t1; 
+	$stack[4] = (); $stack[3] = (); @stack[1] = (@t3, $stack[1]);  @stack[2] = (@t4, $stack[2]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 3-under-1, 4-under-2: "; check720(1);
+	return;
+  }
+  else
+  {
+    for my $delrow (1..3)
+	{
+	  @{$stack[4]} = (@{$stack[$delrow]}, @{$stack[4]});
+	  @{$stack[$delrow]} = ();
+	  for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), extra from row $delrow..4: ";
+	  check720(1);
+	}
+    return;
+  }
 }
 
 sub initGlobal
