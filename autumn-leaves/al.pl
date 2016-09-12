@@ -355,6 +355,7 @@ sub procCmd
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
 	/^c[wd]v$/ && do { cmdNumWarn($numbers, $letters); check720(2); return; };
 	/^c[wd]x$/ && do { cmdNumWarn($numbers, $letters); check720(1); return; };
+	/^cheat$/ && do { cardCheat($numbers); return; };
     /^d$/ && do {
 	  cmdNumWarn($numbers, $letters);
 	  if (($anySpecial) && ($drawsLeft) && ($seventwenty))
@@ -568,6 +569,29 @@ sub jumpSecondRow
 {
   if (isEmpty($_[1]) && (perfAscending($_[0])) && (!$undo)) { print "Flipping to another empty row wouldn't do anyting. Stack $_[0] is already in order.\n"; return;  }
   print "Don't need a third row to move from $_[0] to $_[1].\n"; tryMove("$_[0]", "$_[1]"); return;
+}
+
+sub cardCheat
+{
+  my @cheatos = split(//, $_[0]);
+  if ($#cheatos != 1) { print "Need 2 columns.\n"; return; }
+  if (botSuit($cheatos[0]) != botSuit($cheatos[1])) { print "Need columns with matching suits.\n"; return; }
+  if (botCard($cheatos[0]) > botCard($cheatos[1])) { print "Switching the rows.\n"; ($cheatos[0], $cheatos[1]) = ($cheatos[1], $cheatos[0]); }
+  my $temp = $#{$stack[$cheatos[0]]};
+  my $temp2 = $#{$stack[$cheatos[1]]};
+  do
+  {
+    $temp--;
+  } while (($temp > 0) && ($stack[$cheatos[0]][$temp-1] < $stack[$cheatos[1]][$temp2]) && (suit($stack[$cheatos[1]][$temp2]) == suit($stack[$cheatos[0]][$temp-1])) );
+  my @x = @{$stack[$cheatos[0]]}[$temp..$#{$stack[$cheatos[0]]}];
+  @{$stack[$cheatos[1]]} = (@{$stack[$cheatos[1]]}, @x);
+  if ($temp)
+  {
+  @{$stack[$cheatos[0]]} = @{$stack[$cheatos[0]]}[0..$temp-1];
+  } else { @{$stack[$cheatos[0]]} = (); }
+  printdeck(0);
+  push (@undoArray, "cheat$cheatos[0]$cheatos[1]");
+  return;
 }
 
 sub check720
