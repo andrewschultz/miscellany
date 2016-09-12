@@ -213,6 +213,8 @@ sub procCmd
   }
 
   #meta commands first, or commands with equals
+  if ($modCmd =~ /^abbb/) { $considerPiledRows = 1; $strictSolve = 1; allBut($modCmd); $strictSolve = 0; $quickMove = 0; $considerPiledRows = 0; return; }
+  if ($modCmd =~ /^abb/) { $strictSolve = 1; allBut($modCmd); $strictSolve = 0; $quickMove = 0; return; }
   if ($modCmd =~ /^ab/) { allBut($modCmd); return; }
   if ($modCmd =~ /^app/) { allPlow(1); return; }
   if ($modCmd =~ /^ap/) { allPlow(0); return; }
@@ -657,7 +659,7 @@ sub check720
   @force=();
   @undoArray = @backupArray;
   $cardsInPlay = $oldCardsInPlay;
-  if ($strictSolve) { return; }
+  if ($strictSolve) { $stillNeedWin = 0; return; }
   if (($stillNeedWin) && ($wins))
   {
     if ($count % $wins) { no integer; $expected = sprintf("%.2f", $count / $wins); } else { $expected = $count / $wins; }
@@ -1733,6 +1735,11 @@ sub printdeck #-1 means don't print the ones and also it avoids the ones-ish get
   if ($printedThisTurn) { print "Warning tried to print this turn.\n"; return; }
   $printedThisTurn = 1;
   if (!$anyMovesYet) { print "========NO MANUAL MOVES MADE YET========\n"; }
+  pdq();
+}
+
+sub pdq
+{
   if ($vertical)
   { printdeckvertical(); }
   else
@@ -3237,6 +3244,8 @@ sub allPlow
   if ($howMany) { die ("$howMany of $thisDraw\n"); }
 }
 
+## test abbb with 1,2,3,4,5,8 1,2,3,4,14,27 1,2,3,14,15,16
+
 sub allBut
 {
   my $theClass;
@@ -3355,20 +3364,20 @@ sub allBut
   }
   elsif ($class[2])
   {
-    my @tempRow = $stack[4];
-    for (1..3)
+    my @tempRow = @{$stack[1]};
+    @{$stack[1]} = ();
+    for $thisRow (2..4)
 	{
-	  @{$stack[$thisRow]} = (@{$stack[4]}, @{$stack[$thisRow]});
-	  @{$stack[4]} = ();
+	  @{$stack[$thisRow]} = (@tempRow, @{$stack[$thisRow]});
 	  for (@cardArray) { $inStack{$_} = 1; }
 	  @undoArray = ($_[0]);
 	  $drawsLeft = 1; $hidCards = 0;
-	  printdeck(1);
-	  #print "Trying $missCards ($theClass), extra in row $_: "; check720(1);
-	  @{$stack[$thisRow]} = splice(@{$stack[$thisRow]}, 13, $#{$stack[$thisRow]} - 13);
-	  @{$stack[4]} = @tempRow;
-	  return;
+	  pdq();
+	  print "Trying $missCards ($theClass), extra in row $_: "; check720(1);
+	  @{$stack[$thisRow]} = splice(@{$stack[$thisRow]}, 13, $#{$stack[$thisRow]} - 12);
 	}
+	@{$stack[1]} = @tempRow;
+	return;
   }
   elsif ($class[1])
   {
@@ -3376,13 +3385,13 @@ sub allBut
     my @t2 = @{$stack[2]};
     my @t3 = @{$stack[3]};
 	my @t4 = @{$stack[4]};
-	$stack[4] = (); @{$stack[2]} = (@t4, @{$stack[2]});	for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-2: "; check720(1);
-	$stack[3] = (); @{$stack[2]} = (@t3, @{$stack[2]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-2: "; check720(1);
-	$stack[4] = @t4; $stack[3] = @t3; $stack[2] = @t2; $stack[3] = @t1; 
-	$stack[4] = (); @{$stack[1]} = (@t4, $stack[1]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-1: "; check720(1);
-	$stack[3] = (); @{$stack[1]} = (@t3, $stack[1]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-1: "; check720(1);
-	$stack[4] = @t4; @{$stack[3]} = @t3; $stack[2] = @t2; $stack[3] = @t1; 
-	$stack[4] = (); $stack[3] = (); @stack[1] = (@t3, $stack[1]);  @stack[2] = (@t4, $stack[2]); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 3-under-1, 4-under-2: "; check720(1);
+	$stack[1] = (); @{$stack[4]} = (@t1, @{$stack[4]});	for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-2: "; solve720(1);
+	$stack[2] = (); @{$stack[4]} = (@t2, @{$stack[4]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-2: "; solve720(1);
+	@{$stack[4]} = @t4; @{$stack[3]} = @t3; @{$stack[2]} = @t2; @{$stack[1]} = @t1;
+	$stack[1] = (); @{$stack[3]} = (@t1, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-1: "; solve720(1);
+	$stack[2] = (); @{$stack[3]} = (@t2, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-1: "; solve720(1);
+	@{$stack[4]} = @t4; @{$stack[3]} = @t3; @{$stack[2]} = @t2; @{$stack[1]} = @t1; 
+	$stack[1] = (); $stack[2] = (); @{$stack[4]} = (@t2, @{$stack[4]});  @{$stack[3]} = (@t1, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 3-under-1, 4-under-2: "; solve720(1);
 	return;
   }
   else
