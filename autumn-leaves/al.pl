@@ -111,11 +111,23 @@ if ($time < 0)
   print ", or edit altime.txt like a big ol' cheater.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
-print "Type I feel like wasting time right now to proceed. Case insensitive.\n";
+my @pwds = ("I FEEL LIKE WASTING TIME RIGHT NOW", "I HAVE BETTER THINGS TO DO BUT SO WHAT", "I FEEL LIKE NO RISK NO REWARD AT THE MOMENT", "HEY IT'S SLIGHTLY BETTER THAN FREECELL OR KLONDIKE", "A GREAT WAY TO DISTRACT MYSELF FROM ANNOYING PEOPLE NOW OUT OF MY LIFE", "PLAYING IS LESS MINDLESS THAN TYPING A PASSWORD");
+
+my $ran = rand($#pwds+1);
+
+print "Type $pwds[$ran] to continue. It can be case insensitive.\n";
 
 my $password = <STDIN>; chomp($password);
 
-if (lc($password) ne "i feel like wasting time right now")  { die "OK, do something else.\n"; }
+if (lc($password) =~ /i am debugging the program/) { print "OK, debugging. You're on your honor here.\n"; }
+elsif (lc($password) !~ /$pwds[$ran]/i)  { die "OK, do something else.\n"; }
+else
+{
+  my $caps = $password =~ tr/A-Z//;
+  if ($caps > 10) { die "OK, not that case insensitive. Keep it in MOSTLY lower case.\n"; }
+  print "You can type i am debugging the program to debug it and use the left arrow. But no sneaky lying.\n";
+}
+
 
 readCmdLine(); readScoreFile(); initGlobal();
 
