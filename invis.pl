@@ -21,6 +21,7 @@ my $updateOnly = 1;
 my $launchAfter = 1;
 my $launchRaw = 1;
 my $count = 0;
+my $forceRunThrough = 0;
 
 ###trickier variables
 my $cmd = "";
@@ -39,6 +40,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
   /-a/ && do { printAllFiles(); exit; };
+  /-f/ && do { $forceRunThrough = 1; $count++; next; };
   /-u/ && do { $updateOnly = 1; $count++; next; };
   /-l/ && do { $launchAfter = 1; $count++; next; };
   /-r/ && do { $launchRaw = 1; $count++; next; };
@@ -66,7 +68,7 @@ if ($updateOnly)
 {
   #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
   print "" . ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n";
-  if (-M $filename > -M $outname) { print "$outname is already up to date. Run without -u to fix.\n"; exit; }
+  if ((-M $filename > -M $outname) && (!$forceRunThrough)) { print "$outname is already up to date. Run with -f to force things.\n"; exit; }
   else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
 }
 
@@ -170,7 +172,9 @@ close(A);
 
 open(B, "$outname");
 
-my $rawFile = "c:/writing/scripts/invraw-$filename"; $rawFile =~ s/\.txt/\.htm/g;
+my $rawFile = $filename;
+$rawFile =~ s/.*[\\\/]//g;
+$rawFile = "c:/writing/scripts/invis/invraw-$rawFile"; $rawFile =~ s/\.txt/\.htm/g;
 
 open(C, ">$rawFile");
 
@@ -223,6 +227,8 @@ sub cbr
 sub printAllFiles
 {
   opendir(DIR, "c:\\writing\\scripts\\invis");
+  my @dfi = readdir DIR;
+  for my $fi (@dfi) { if ($fi =~ /\.txt/) { print "$fi\n"; } }
 }
 
 sub usage

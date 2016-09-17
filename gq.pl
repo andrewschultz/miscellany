@@ -172,7 +172,7 @@ sub processOneFile
 	  else { $thisImportant = $a; $thisImportant =~ s/^\\//g; $thisImportant =~ s/[=\\].*//g; chomp($thisImportant); }
 	}
     $line++;
-	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; chomp($currentTable); $inTable = 1; }
+	if ($a =~ /^table/) { $idx = -1; $currentTable = $a; $currentTable =~ s/ *\[.*//g; $currentTable =~ s/\t//g; chomp($currentTable); $inTable = 1; }
 	if ($a !~ /[a-z]/i) { $currentTable = ""; $inTable = 0; if (!$alwaysImportant) { $inImportant = 0; $thisImportant = ""; } }
 	my $crom = cromu($a);
     if ($inImportant && $crom)

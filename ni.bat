@@ -12,6 +12,12 @@ echo sa = shuffling
 echo ni r nu = roiling nudges
 echo ni sa ra = shuffling random
 echo pr sr rr = problems, shuffling or roiling releases
+echo e1 1-5 = ectoComp n/ni = nightly
+echo m as 1st argument = materials
+echo tr = trizbort
+echo gr = grubbyville, ua = ugly oafs
+echo current project = SC, pc/t2 = problems compound
+echo rt = daily stuff, an = anagram list
 goto end
 )
 
@@ -178,6 +184,11 @@ set PROJ=roiling
 goto nodef
 )
 
+if "%1" EQU "an" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "C:\games\inform\roiling.inform\Source\tosort.txt"
+goto end
+)
+
 if "%1" EQU "roi" (
 set PROJ=roiling
 goto nodef
@@ -317,7 +328,7 @@ if "%2" EQU "x" (
 
 if "%2" EQU "t" (
 :story
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\games\inform\%PROJ%%EXT%\source\story.ni
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\%PROJ%%EXT%\source\story.ni"
 )
 
 if "%2" EQU "ra" (
