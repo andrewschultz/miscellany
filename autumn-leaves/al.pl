@@ -366,6 +366,8 @@ sub procCmd
     /^cb$/ && do { cmdNumWarn($numbers, $letters); $chainBreaks = !$chainBreaks; print "Showing bottom chain breaks $toggles[$chainBreaks].\n"; return; };
 	/^c[wd]$/ && do { cmdNumWarn($numbers, $letters); check720(0); return; };
 	/^c[wd]v$/ && do { cmdNumWarn($numbers, $letters); check720(2); return; };
+	/^c[wd]b$/ && do { cmdNumWarn($numbers, $letters); check720(6); return; };
+	/^c[wd]f$/ && do { cmdNumWarn($numbers, $letters); check720(4); return; };
 	/^c[wd]x$/ && do { cmdNumWarn($numbers, $letters); check720(1); return; };
 	/^cheat$/ && do { cardCheat($numbers); return; };
     /^d$/ && do {
@@ -656,7 +658,10 @@ sub check720
   if ($hidCards == 1) { print "With a card still to pull, you may need a bit of luck for a draw-to-win.\n"; }
   if ($hidCards >= 2) { print "Draws may appear in random order, so the tally may not be exact or consistent.\n"; }
   }
-  my $verbose = ($_[0] == 2);
+  my $verbose = (($_[0] & 2) == 2);
+  my $toFile = (($_[0] & 4) == 4);
+  print "$_[0], $verbose, $toFile\n";
+  if ($toFile) { open(FI, ">>al-results.txt"); }
   my $count = 0;
   my $thiswin;
   my $oldCardsInPlay = $cardsInPlay;
@@ -679,12 +684,18 @@ sub check720
   {
     if (!$firstPermu) { $firstPermu = join(" ", map { faceval($_) } @initArray); }
 	if ($verbose) { print join(" ", map { faceval($_) } @initArray) . " WINS.\n"; }
+	if ($toFile) { print FI join(" ", map { faceval($_) } @initArray) . " WINS.\n"; }
 	$wins++;
   }
-  elsif ($verbose) { print join(" ", map { faceval($_) } @initArray) . " DOESN'T WIN.\n"; }
+  else
+  {
+    if ($verbose) { print join(" ", map { faceval($_) } @initArray) . " DOESN'T WIN.\n"; }
+	if ($toFile) { print FI join(" ", map { faceval($_) } @initArray) . " DOESN'T WINS.\n"; }
+  }
   @stack = @{dclone(\@array2)};
   $drawsLeft = 1;
   } @initArray;
+  if ($toFile) { close(FI); }
   $seventwenty = 0;
   if ($wins)
   { print "$wins of $count draw-to-win" . plur($wins) . ". The first one is $firstPermu.\n"; @holdAry = (); }
