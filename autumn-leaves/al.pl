@@ -1072,6 +1072,8 @@ sub saveDeck
     $fullWriteString .= "FD=" . join(",", @oneDeck) . "\n";
     for (1..6) { $fullWriteString .= "HC=" . join(",", @{$backupCardUnder[$_]}) . "\n"; }
   }
+  if ($#force > -1) { $fullWriteString = "FORCE=" . join(",", @force) . "\n"; }
+  if ($#holdAry > -1) { $fullWriteString = "HOLDS=" . join(",", @holdAry) . "\n"; }
   for (1..6) { $fullWriteString .= join(",", @{$stack[$_]}) . "\n"; }
 
   while ($a = <A>)
@@ -1118,6 +1120,8 @@ sub loadDeck
   my @temp;
   my @testArray;
   my @reconArray;
+  my @tempHold = ();
+  my @tempForce = ();
   my $loadFuzzy = 0;
   my $overrideLoadIgnore = 0;
   if ($_[1]) { $loadFuzzy = 1; }
@@ -1165,6 +1169,11 @@ sub loadDeck
 	    @testArray=split(/,/, $b);
 		$anyMovesYet = 1;
 		next;
+	  }
+	  if ($a =~ /^force=/i)
+	  {
+	    @tempForce = split(/,/, $b);
+	    @tempHold = split(/,/, $b);
 	  }
 	  if ($a =~ /^fd=/i)
 	  {
@@ -1236,6 +1245,8 @@ sub loadDeck
 	  $drawsLeft = (52-$cardsInPlay)/6;
 	  }
 	}
+	if ($#tempForce > -1) { @force = @tempForce; }
+	if ($#tempHold > -1) { @holdAry = @tempHold; }
 	if ($#testArray > -1)
 	{
       @undoArray = ();
@@ -1394,9 +1405,14 @@ sub holdArray
 	  for my $idx (0..$#holdAry) { if ($holdAry[$idx] == $cardNum) { splice(@holdAry,$idx,1); last; } }
 	}
 	else
-	{ push(@holdAry, $cardNum); delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . ($#holdAry + 1) . " in hold-queue: ";
-	 print join(" ", map { faceval($_) } @holdAry);
-	 print ")\n"; push(@undoArray, "b$cardNum"); } }
+	{ push(@holdAry, $cardNum); delete($inStack{$cardNum});
+	if (!$undo)
+	{
+	  print "Adding $cardTxt to holds. (" . ($#holdAry + 1) . " in hold-queue: ";
+	  print join(" ", map { faceval($_) } @holdAry);
+	  print ")\n";
+    }
+    }
 }
 
 sub unforceArray
@@ -1492,7 +1508,6 @@ sub zapForce
   print join(" ", map { faceval($_) } @force);
   print ".\n";
   }
-  #push (@undoArray, $_[0]);
 }
 
 sub zapHold
@@ -1508,7 +1523,6 @@ sub zapHold
   print join(" ", map { faceval($_) } @holdAry);
   print ".\n";
   }
-  #push (@undoArray, $_[0]);
 }
 
 sub switchForce
