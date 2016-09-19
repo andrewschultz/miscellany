@@ -239,7 +239,8 @@ sub procCmd
   if ($modCmd =~ /^t=/i) { loadDeck($modCmd, "debug"); return; }
   if ($modCmd =~ /^(uf|fu)=?/) { unforceArray($modCmd); return; } # must come first or otherwise fu => forceArray
   if ($modCmd =~ /^(f|f=)/) { forceArray($modCmd); return; }
-  if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; }
+  if ($modCmd =~ /^(hc|ch)=?/) { clearHoldArray($modCmd); return; }
+  if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; } #holdArray puts into and out of the hold array
   if ($modCmd =~ /^(b|b=)/) { holdArray($modCmd); return; }
   if ($modCmd =~ /^n[-\+]$/) { return; } # null move for debugging purposes
   if ($modCmd =~ /^q+$/) { writeTime(); exit; }
@@ -611,6 +612,8 @@ sub cardCheat
 sub check720
 {
   my @suitStatus = (0, 0, 0, 0, 0);
+  if ($#force > 1) { print "Still something in force array. Try again once it's gone. Use fd to clear it.\n"; return; }
+  if ($#holdAry > 1) { print "Still something in force array. Try again once it's gone.\n"; return; }
   $stillNeedWin = $_[0];
   for (0..3) { $suitStatus[suitstat($_)]++; }
   if ($drawsLeft == 0) { $stillNeedWin = 0; print "You need to push UB or some undo command to try CW/CWX/CWV.\n"; return; }
@@ -1362,6 +1365,17 @@ sub printHoldArray
   print "\n";
 }
 
+sub clearHoldArray
+{
+  if ($#holdAry == -1) { print "No hold array.\n"; return; }
+  print "" . ($#holdAry + 1) . " holds cleared, " . join(" ", map { faceval($_) } @holdAry) . ".\n";
+  for my $c (@holdAry)
+  {
+	$inStack{$c} = 1;
+  }
+  @holdAry = ();
+}
+
 sub holdArray
 {
     my $card = $_[0]; $card =~ s/^(ho|ho\=|b|b\=)//g; $card =~ s/\(.*//g;
@@ -1380,7 +1394,7 @@ sub holdArray
 	  for my $idx (0..$#holdAry) { if ($holdAry[$idx] == $cardNum) { splice(@holdAry,$idx,1); last; } }
 	}
 	else
-	{ push(@holdAry, $cardNum); delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . ($#holdAry + 1);
+	{ push(@holdAry, $cardNum); delete($inStack{$cardNum}); if (!$undo) { print "Adding $cardTxt to holds. (" . ($#holdAry + 1) . " in hold-queue: ";
 	 print join(" ", map { faceval($_) } @holdAry);
 	 print ")\n"; push(@undoArray, "b$cardNum"); } }
 }

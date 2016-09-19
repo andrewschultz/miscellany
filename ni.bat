@@ -214,6 +214,11 @@ set PROJ=compound
 goto nodef
 )
 
+if "%1" EQU "sb" (
+set PROJ=see-why-burg
+goto nodef
+)
+
 if "%1" EQU "sc" (
 set PROJ=slicker-city
 goto nodef
