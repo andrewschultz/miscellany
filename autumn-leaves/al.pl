@@ -22,6 +22,8 @@ use Devel::StackTrace;
 #tracer
 #my $trace = Devel::StackTrace->new; print $trace->as_string . "\n";
 
+my $mySillyOpt = 0;
+
 my $expected = 0;
 my %sre, my %rev;
 
@@ -30,7 +32,7 @@ my $winsThisTime = 0, my $maxWins = 5;
 my $considerPiledRows = 0;
 
 my $i, my $j, my $k, my $x, my $y; # maybe a good idea to define locally too
-my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; my $pushLeft = 0; #options
+my $startWith, my $vertical, my $collapse, my $autoOnes, my $beginOnes, my $autoOneSafe, my $sinceLast, my $autoOneFull = 0, my $showMaxRows = 0, my $saveAtEnd = 0, my $ignoreBoardOnSave = 0; my $pushLeft = 0; my $sillyFlag = 0; #options
 
 my $strictSolve = 0;
 
@@ -111,7 +113,7 @@ if ($time < 0)
   print ", or edit altime.txt like a big ol' cheater.\n"; exit; } # else { print "$time $del\n"; exit; }
 close(A);
 
-my @pwds = ("I FEEL LIKE WASTING TIME RIGHT NOW", "I HAVE BETTER THINGS TO DO BUT SO WHAT", "I FEEL LIKE NO RISK NO REWARD AT THE MOMENT", "HEY IT'S SLIGHTLY BETTER THAN FREECELL OR KLONDIKE", "A GREAT WAY TO DISTRACT MYSELF FROM ANNOYING PEOPLE NOW OUT OF MY LIFE", "PLAYING IS LESS MINDLESS THAN TYPING A PASSWORD");
+my @pwds = ("I FEEL LIKE WASTING TIME RIGHT NOW", "I HAVE BETTER THINGS TO DO BUT SO WHAT", "I FEEL LIKE NO RISK NO REWARD AT THE MOMENT", "HEY IT'S SLIGHTLY BETTER THAN FREECELL OR KLONDIKE", "A GREAT WAY TO DISTRACT MYSELF FROM ANNOYING PEOPLE NOW OUT OF MY LIFE", "PLAYING IS LESS MINDLESS THAN TYPING A PASSWORD", "IS THERE AN EBOOK I CAN READ INSTEAD", "USING STRICT OR WARNING ON PERL CODE IS MORE FUN AND PRODUCTIVE");
 
 my $ran = rand($#pwds+1);
 
@@ -429,6 +431,7 @@ sub procCmd
     /^sae$/ && do { cmdNumWarn($numbers, $letters); $saveAtEnd = !$saveAtEnd; print "Save at end to undo-debug.txt now $toggles[$saveAtEnd].\n"; return; };
     /^sb$/ && do { cmdNumWarn($numbers, $letters); $showBlockedMoves = !$showBlockedMoves; print "Show blocked moves $toggles[$showBlockedMoves].\n"; return; };
     /^sd$/ && do { cmdNumWarn($numbers, $letters); saveDefault(); return; };
+	/^si$/ && do { $sillyFlag = !$sillyFlag; print "Silly details flag now $toggles[$sillyFlag].\n"; return; };
     /^sl$/ && do { open(B, ">>undo-debug.txt"); print B "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; close(B); print "Last undo array info saved to undo-debug.txt.\n"; return; };
     /^sol$/ && do { cmdNumWarn($numbers, $letters); $sinceLast = !$sinceLast; print "See overturned since last now $toggles[$sinceLast].\n"; return; };
     /^su$/ && do { cmdNumWarn($numbers, $letters); $showUndoBefore = !$showUndoBefore; print "ShowUndoBefore now $toggles[$showUndoBefore].\n"; return; };
@@ -663,7 +666,6 @@ sub check720
   }
   my $verbose = (($_[0] & 2) == 2);
   my $toFile = (($_[0] & 4) == 4);
-  print "$_[0], $verbose, $toFile\n";
   if ($toFile) { open(FI, ">>al-results.txt"); }
   my $count = 0;
   my $thiswin;
@@ -787,6 +789,20 @@ sub thereAndBack
 	return;
 }
 
+sub columnHasKing
+{
+  my $stackSize = $#{$stack[$_[0]]};
+  my $thissuit = suit($stack[$_[0]][$stackSize]);
+  for ($x = $stackSize; $x >= 0; $x--)
+  {
+    if ($stack[$_[0]][$x] == -1) { return 1; }
+    print "$x $stack[$_[0]][$x] " . suit($stack[$_[0]][$x]) . "\n";
+    if (suit($stack[$_[0]][$x]) != $thissuit) { print "a.\n"; return 0; }
+	if (suit($stack[$_[0]][$x]) % 13 == 0) { print "b.\n"; return 1; }
+  }
+  return 0;
+}
+
 sub expandOneColumn
 {
     my $oldEmptyRows = emptyRows();
@@ -799,17 +815,12 @@ sub expandOneColumn
 	if (($thisRow < 1) || ($thisRow > 6)) { print "Not a valid row to shuffle. Please choose 1-6.\n"; die; }
 	for my $emcheck (1..6)
 	{
-	  my $fromrow;
 	  #print "$emcheck: $stack[$emcheck][0], @{$stack[$emcheck]}\n";
 	  if (!$stack[$emcheck][0])
-	  {
-	    if ($rows[0]) { $rows[1] = $emcheck; $fromrow = $rows[0]; last; }
-	    else
-	    {
-	    $rows[0] = $emcheck; $fromrow = $rows[1];
-	    }
-	  }
+	  { if ($rows[0]) { $rows[1] = $emcheck; } else { $rows[0] = $emcheck; } }
 	}
+	
+	if (($mySillyOpt) && (!columnHasKing($_[0]))) { ($rows[1], $rows[0]) = ($rows[0], $rows[1]); }
 
 	my $tempAsc = ascending($thisRow);
 
@@ -838,8 +849,13 @@ sub expandOneColumn
 	if (emptyRows() > 1)
 	{
 	  my $thisRow = firstEmptyRow();
-	  printDebug("x-command 3\n");
-	  if (($thisRow != $rows[0]) && ($thisRow != $rows[1])) { autoShuffleExt($rows[0], $thisRow, $rows[1]); autoShuffleExt($rows[1], $thisRow, $rows[0]); }
+	  printDebug("$thisRow $rows[0] $rows[1]\n");
+	  if (($thisRow != $rows[0]) && ($thisRow != $rows[1]))
+	  {
+	    autoShuffleExt($rows[1], $thisRow, $rows[0]);
+		autoShuffleExt($rows[0], $thisRow, $rows[1]);
+      }
+	  if ($mySillyOpt && (!columnHasKing($_[0]))) { autoShuffleExt($rows[0], $thisRow, $rows[1]); }
 	}
 	if (botSuit($thisRow) == $fromSuit)
 	{
@@ -2536,12 +2552,21 @@ sub botCard
 
 sub firstEmptyRow
 {
-  my $retVal = 0;
   for my $rv (1..6)
   {
     if ($#{$stack[$rv]} == -1) { return $rv; }
   }
   return 0;
+}
+
+sub lastEmptyRow
+{
+  my $retVal = 0;
+  for my $rv (1..6)
+  {
+    if ($#{$stack[$rv]} == -1) { $retVal = $rv; }
+  }
+  return $retVal;
 }
 
 sub emptyRows
@@ -3276,7 +3301,7 @@ sub saveDefault
   open(A, "$filename");
   <A>;
   open(B, ">$backupFile");
-  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft\n";
+  print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft,$sillyFlag\n";
   while ($a = <A>) { print B $a; }
   close(A);
   close(B);
@@ -3513,6 +3538,7 @@ sub initGlobal
   if ($#opts >= 10) { $saveAtEnd = $opts[10]; }
   if ($#opts >= 11) { $ignoreBoardOnSave = $opts[11]; }
   if ($#opts >= 12) { $pushLeft = $opts[12]; }
+  if ($#opts >= 13) { $sillyFlag = $opts[12]; }
   close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
