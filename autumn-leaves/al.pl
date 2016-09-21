@@ -3524,7 +3524,7 @@ sub initGlobal
   open(A, "al-sav.txt");
   my $a = <A>; chomp($a);
   my @opts = split(/,/, $a);
-  if ($#opts < 11) { print "Note: not all options are present in al.pl.\n"; }
+  if ($#opts < 13) { print "Note: not all options are present in al.pl.\n"; for ($#opts..13) { push (@opts, 0); } }
   if (!$startWith) { $startWith = $opts[0]; }
   $vertical = $opts[1];
   $collapse = $opts[2];
@@ -3532,13 +3532,13 @@ sub initGlobal
   $beginOnes = $opts[4];
   $autoOneSafe = $opts[5];
   $sinceLast = $opts[6];
-  if (!$easyDefault && ($#opts >= 7)) { $easyDefault = $opts[7]; }
-  if ($#opts > 8) { $autoOneFull = $opts[8]; }
-  if ($#opts >= 9) { $showMaxRows = $opts[9]; }
-  if ($#opts >= 10) { $saveAtEnd = $opts[10]; }
-  if ($#opts >= 11) { $ignoreBoardOnSave = $opts[11]; }
-  if ($#opts >= 12) { $pushLeft = $opts[12]; }
-  if ($#opts >= 13) { $sillyFlag = $opts[12]; }
+  if (!$easyDefault) { $easyDefault = $opts[7]; }
+  $autoOneFull = $opts[8];
+  $showMaxRows = $opts[9];
+  $saveAtEnd = $opts[10];
+  $ignoreBoardOnSave = $opts[11];
+  $pushLeft = $opts[12];
+  $sillyFlag = $opts[13];
   close(A); # note showmaxrows and saveatend are global as of now
 
   if (!$startWith) { $startWith = 2; }
@@ -3556,7 +3556,7 @@ open(B, ">$backupFile");
 #first line is global settings
 <A>;
 
-print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft\n";
+print B "$startWith,$vertical,$collapse,$autoOnes,$beginOnes,$autoOneSafe,$sinceLast,$easyDefault,$autoOneFull,$showMaxRows,$saveAtEnd,$ignoreBoardOnSave,$pushLeft,$sillyFlag\n";
 
 while ($a = <A>)
 {
