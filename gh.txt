@@ -5,9 +5,10 @@ d:sc
 
 ######################similarities
 ###alec smart
-as~pc,sc
+as~pc,sc,btp
 com,pc,tpc~prob
 sc~city
+btp~past
 ###stale tales slate
 sts~shu,roi,stsu
 sa~shu
@@ -259,6 +260,9 @@ city=c:\games\inform\slicker-city.inform\source\reg-sc-*.txt,\testing
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
+
+TOBASE=buck-the-past
+past=c:\games\inform\buck-the-past.inform\Source\story.ni
 
 #Grubbyville files
 TOBASE=grubbyville

@@ -25,6 +25,7 @@ allproj=s,r,u,p,d,15,16
 #which projects require the z-machine?
 z:dirk
 z:threediopolis
+z:slicker-city
 
 #######################
 #using 6l is below here

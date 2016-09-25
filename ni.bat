@@ -17,7 +17,9 @@ echo m as 1st argument = materials
 echo tr = trizbort
 echo gr = grubbyville, ua = ugly oafs
 echo current project = SC, pc/t2 = problems compound
+echo btp/bp/17 = Buck the Past
 echo rt = daily stuff, an = anagram list
+echo b = build
 goto end
 )
 
@@ -221,6 +223,26 @@ goto nodef
 
 if "%1" EQU "sc" (
 set PROJ=slicker-city
+goto nodef
+)
+
+if "%1" EQU "16" (
+set PROJ=slicker-city
+goto nodef
+)
+
+if "%1" EQU "17" (
+set PROJ=buck-the-past
+goto nodef
+)
+
+if "%1" EQU "bp" (
+set PROJ=buck-the-past
+goto nodef
+)
+
+if "%1" EQU "btp" (
+set PROJ=buck-the-past
 goto nodef
 )
 
