@@ -199,7 +199,7 @@ sub processTerms
 	}
 	if ($fileList) { print "====FILE LIST:\n$fileList"; }
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
-	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList\n"; }
+	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList"; }
   }
   if ($quickCheck) { print "\n========quick verifications\n$quickCheck"; }
   if ($warnCanRun) { print "\nYou could have run code checking by tacking on an =."; }

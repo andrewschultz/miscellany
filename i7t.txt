@@ -19,14 +19,14 @@ Compound	ni pr
 #
 #############
 #table of life shelf books
-Slicker-City	xxlsb	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$+ first-rate self-help books
+Buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
 #table of book jungle books
-Slicker-City	xxjb	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$+ second-rate self-help books
+Buck-the-past	xxjb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ second-rate self-help books
 #authors for the books
-Slicker-City	table of insightful authors	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$+ insightful authors
+Buck-the-past	table of insightful authors	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ insightful authors
 #ideas not in game proper
-Slicker-City	xxadd	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ off-the-wall
-Slicker-City	ni cr / ni scr
+Buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
+Buck-the-past	ni cr / ni scr
 ######################################
 #fourdiopolis searching
 #
