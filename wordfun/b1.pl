@@ -1,6 +1,15 @@
+#####################################
+#b1.pl
+#
+#this takes a sequence of hangman letters with correctly guessed places
+#along with incorrect guesses and then looks through a dictionary
+#
+#then prints out results, with the most likely letters left
+#
 
 use strict;
 use warnings;
+use List::MoreUtils qw(uniq);
 
 my $misses = "c:/writing/dict/b1.txt";
 my %miss;
@@ -8,6 +17,7 @@ my $wrongString;
 my $endString = "";
 my $missFound = 0;
 my %freq;
+my %f2;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
 
@@ -78,9 +88,10 @@ if ($endString) { print "MISSED BEFORE:\n$endString"; }
 if ($count + $missFound)
 {
 print "FREQUENCIES:";
-for (sort keys %freq)
+foreach my $val ( sort { $freq{$b} <=> $freq{$a}  or $f2{$b} <=> $f2{$a} } keys %freq)
 {
-  print " $_:$freq{$_}";
+  if ($f2{$val} == ($count + $missFound)) { print " **$val**"; next; }
+  print " $val:$f2{$val}/$freq{$val}";
 }
 print "\n";
 }
@@ -112,6 +123,8 @@ sub checkForRepeats
     }
   }
   for (@a2) { if ($_) { $freq{$_}++; } }
+  my @a2a = uniq(@a2);
+  for (@a2a) { if ($_) { $f2{$_}++; } }
 
   if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line\n"; } else { $count++; print "$count $line\n"; }
 }
