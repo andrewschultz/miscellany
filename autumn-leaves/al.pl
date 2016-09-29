@@ -240,6 +240,7 @@ sub procCmd
   if ($modCmd =~ /^sf([bi]?)=/i) { saveDeck($modCmd, 1); return; }
   if ($modCmd =~ /^t=/i) { loadDeck($modCmd, "debug"); return; }
   if ($modCmd =~ /^(uf|fu)=?/) { unforceArray($modCmd); return; } # must come first or otherwise fu => forceArray
+  if ($modCmd =~ /^f[cdhs]s$/) { my $theShort = $letters; $theShort =~ s/^.(.).$/$1/g; print "$theShort\n"; forceSuit($sre{$theShort}, 6); return; }
   if ($modCmd =~ /^(f|f=)/) { forceArray($modCmd); return; }
   if ($modCmd =~ /^(hc|ch)=?/) { clearHoldArray($modCmd); return; }
   if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; } #holdArray puts into and out of the hold array
@@ -1464,6 +1465,20 @@ sub clearForceArray
     $inStack{$force[$_]} = 1;
   }
   @force = ();
+}
+
+sub forceSuit
+{
+  my $toGet = $_[1];
+  my $gotNow = 0;
+  my @forcedHere = ();
+  for ($_[0] + 1 ... $_[0] + 13)
+  {
+    if ($inStack{$_}) { $inStack{$_} = 0; push(@forcedHere, $_); $gotNow++; if ($toGet == $gotNow) { last; } }
+  }
+  if ($gotNow == 0) { print "Couldn't force anything with that suit.\n"; return; }
+  @force = (@force, @forcedHere);
+  print "Forced: " . join(" ", map { faceval($_) } @forcedHere) . ", now " . join(" ", map { faceval($_) } @force) . "\n";
 }
 
 sub forceArray

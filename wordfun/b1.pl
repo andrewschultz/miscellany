@@ -21,7 +21,7 @@ my %f2;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
 
-if ($ARGV[0] =~ /^\+/) { my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g; open(B, ">>b1.txt"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit; }
+if ($ARGV[0] =~ /^\+/) { my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g; open(B, ">>$misses.txt"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit; }
 
 my @right = split(//, $ARGV[0]);
 if (!defined($ARGV[1])) { $wrongString = ""; }
@@ -85,7 +85,7 @@ while ($line = <A>)
 
 if ($endString) { print "MISSED BEFORE:\n$endString"; }
 
-if ($count + $missFound)
+if ($count + $missFound > 1)
 {
 print "FREQUENCIES:";
 foreach my $val ( sort { $freq{$b} <=> $freq{$a}  or $f2{$b} <=> $f2{$a} } keys %freq)
@@ -94,7 +94,7 @@ foreach my $val ( sort { $freq{$b} <=> $freq{$a}  or $f2{$b} <=> $f2{$a} } keys 
   print " $val:$f2{$val}/$freq{$val}";
 }
 print "\n";
-}
+} elsif ($count + $missFound == 0) { print "Uh oh no matches.\n"; } else { print "Only one match found.\n"; }
 
 sub checkForRepeats
 {

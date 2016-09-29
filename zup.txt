@@ -93,13 +93,14 @@ F=c:\Users\Andrew\Dropbox\notes\problems_compound_release_%_notes.txt
 
 name=sc,16
 v=1
-out=slicker-city_release_%.zip
+out=slicker-city.zip
 >>invis.pl sc
 F=c:\games\inform\slicker-city.inform\Source\story.ni
 F=c:\games\inform\slicker-city Materials\Release\Slicker City.zblorb
 F=c:\games\inform\slicker-city Materials\Release\slicker-city-invisiclues.htm
 F=c:\games\inform\triz\mine\slicker-city.pdf
 F=c:\Users\Andrew\Dropbox\notes\slicker_city_release_%_notes.txt
+tree:c:/games/inform/slicker-city materials/Release,play_online
 !
 
 name=scb
