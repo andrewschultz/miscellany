@@ -62,7 +62,7 @@ open(A, "$filename") || die ("Can't open input file " . $filename);
 
 $a = <A>;
 
-if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:/writing/scripts/$a"; $a = <A>; }
+if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:\\writing\\scripts\\invis\\$a"; $a = <A>; }
 
 if ($updateOnly)
 {

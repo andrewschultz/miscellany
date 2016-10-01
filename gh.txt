@@ -250,6 +250,7 @@ city=c:\writing\scripts\invis\sc.txt,
 city=c:\games\inform\slicker-city.inform\source\excl.pl,
 city=c:\writing\dict\talf.pl,
 city=c:\games\inform\slicker-city.inform\source\scbk.pl,
+city=c:\games\inform\slicker-city.inform\source\walkthru.txt,
 city=c:\users\andrew\dropbox\notes\slicker_city*,
 city=c:\games\inform\slicker-city.inform\source\technotes.txt,
 city=c:\games\inform\slicker-city.inform\source\reg-sc-*,\testing
@@ -263,6 +264,12 @@ city=c:\games\inform\slicker-city.inform\source\reg-sc-*.txt,\testing
 
 TOBASE=buck-the-past
 past=c:\games\inform\buck-the-past.inform\Source\story.ni
+past=c:\games\inform\buck-the-past.inform\Source\walkthru.txt
+past=c:\games\inform\buck-the-past.inform\uuid.txt,
+past=c:\games\inform\triz\mine\buck-the-past.trizbort,
+past=c:\games\inform\triz\mine\buck-the-past.pdf,
+past=c:\games\inform\buck-the-past Materials\Release\buck-the-past-invisiclues.htm,
+past=c:\writing\scripts\invis\btp.txt,
 
 #Grubbyville files
 TOBASE=grubbyville
