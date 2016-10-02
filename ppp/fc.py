@@ -23,6 +23,11 @@ def checkFound():
     for y in range (1,9):
         if len(elements[y]) > 0:
             while elements[y][len(elements[y])-1] % 13 == (1 + found[(elements[y][len(elements[y])-1]-1)/13]) % 13:
+                basesuit = (elements[y][len(elements[y])-1]-1)/13
+                if found[(basesuit+1) % 4] < found[basesuit] - 1:
+                    break;
+                if found[(basesuit+3) % 4] < found[basesuit] - 1:
+                    break;
                 retval = 1;
                 print tocard(elements[y][len(elements[y])-1]), 'to foundation.'
                 found[(elements[y][len(elements[y])-1]-1)/13] = found[(elements[y][len(elements[y])-1]-1)/13] + 1
@@ -39,7 +44,7 @@ def checkFound():
 
 def checkWin():
     for y in range (0,4):
-        print y,found[y]
+        #print y,found[y]
         if found[y] != 13:
             return 0;
     print 'You win!'
@@ -155,6 +160,4 @@ while win == 0:
             spares[ord(name[1]) - 97] = elements[myRow].pop()
             checkFound()
             printCards()
-        print name[0]
-        print name[1]
 endwhile

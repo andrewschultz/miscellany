@@ -240,7 +240,8 @@ sub procCmd
   if ($modCmd =~ /^sf([bi]?)=/i) { saveDeck($modCmd, 1); return; }
   if ($modCmd =~ /^t=/i) { loadDeck($modCmd, "debug"); return; }
   if ($modCmd =~ /^(uf|fu)=?/) { unforceArray($modCmd); return; } # must come first or otherwise fu => forceArray
-  if ($modCmd =~ /^f[cdhs]s$/) { my $theShort = $letters; $theShort =~ s/^.(.).$/$1/g; print "$theShort\n"; forceSuit($sre{$theShort}, 6); return; }
+  if ($modCmd =~ /^f[cdhs]s$/) { my $theShort = $letters; $theShort =~ s/^.(.).$/$1/g; forceSuit($sre{$theShort}, 6); return; }
+  if ($modCmd =~ /^fd/) { clearForceArray(); return; };
   if ($modCmd =~ /^(f|f=)/) { forceArray($modCmd); return; }
   if ($modCmd =~ /^(hc|ch)=?/) { clearHoldArray($modCmd); return; }
   if ($modCmd =~ /^(ho|ho=)/) { holdArray($modCmd); return; } #holdArray puts into and out of the hold array
@@ -393,7 +394,6 @@ sub procCmd
     /^er(d?)$/ && do { $easyDefault = 2; print "Easy default is now 6-in-a-row but random.\n"; return; };
     /^ez$/ && do { print "Wiping out move array and restarting the easiest possible start.\n"; $anyMovesYet = 0; if ($easyDefault == 2) { fillRandInitArray(); } else { fillInitArray("8,9,10,11,12,13"); } doAnotherGame(); return; };
     /^ezd$/ && do { cmdNumWarn($numbers, $letters); $easyDefault = !$easyDefault; print "Easy default is now $toggles[$easyDefault].\n"; return; };
-	/^fd$/ && do { cmdNumWarn($numbers, $letters); clearForceArray(); return; };
     /^g$/ && do { if (!defined($lastCommand)) { print "No last command.\n"; return; } cmdNumWarn($numbers, $letters); print "Retrying $lastCommand.\n"; procCmd($lastCommand); return; };
 	/^gw$/ && do { cmdNumWarn($numbers, $letters); print "$winsThisTime out of $maxWins so far.\n"; return; };
     /^h$/ && do { cmdNumWarn($numbers, $letters); showhidden(); return; };
@@ -616,8 +616,8 @@ sub cardCheat
 sub check720
 {
   my @suitStatus = (0, 0, 0, 0, 0);
-  if ($#force > 1) { print "Still something in force array. Try again once it's gone. Use fd to clear it.\n"; return; }
-  if ($#holdAry > 1) { print "Still something in force array. Try again once it's gone.\n"; return; }
+  if ($#force > -1) { print "Still something in force array. Try again once it's gone. Use fd to clear it.\n"; return; }
+  if ($#holdAry > -1) { print "Still something in force array. Try again once it's gone.\n"; return; }
   $stillNeedWin = $_[0];
   for (0..3) { $suitStatus[suitstat($_)]++; }
   if ($drawsLeft == 0) { $stillNeedWin = 0; print "You need to push UB or some undo command to try CW/CWX/CWV.\n"; return; }
