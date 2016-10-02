@@ -21,7 +21,7 @@ my %f2;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
 
-if ($ARGV[0] =~ /^\+/) { my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g; open(B, ">>$misses.txt"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit; }
+if ($ARGV[0] =~ /^\+/) { my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g; open(B, ">>$misses"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit; }
 
 my @right = split(//, $ARGV[0]);
 if (!defined($ARGV[1])) { $wrongString = ""; }

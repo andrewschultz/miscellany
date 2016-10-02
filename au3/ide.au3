@@ -29,6 +29,7 @@ if $CmdLine[0] > 0 Then
   ElseIf $CmdLine[1] == "as" Then
     call("openIDE", "Compound");
 	call("openIDE", "slicker-city");
+	call("openIDE", "buck-the-past");
   ElseIf $CmdLine[1] == "opo" Then
     call("openIDE", "threediopolis");
 	call("openIDE", "fourdiopolis");
@@ -37,6 +38,8 @@ if $CmdLine[0] > 0 Then
 	call("openIDE", "sa");
   ElseIf $CmdLine[1] == "" Then
     call("openIDE", "slicker-city");
+  ElseIf $CmdLine[1] == "btp" Then
+    call("openIDE", "buck-the-past");
   ElseIf $CmdLine[1] == "in" Then
     call("openIDE", "grubbyville");
   Else
@@ -48,15 +51,18 @@ Endif
 
 Func OpenIDE($project)
   run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
+  sleep(1);
 
   WinWaitActive("Welcome to Inform 7");
 
   Send("!O");
 
+  sleep(1);
   WinWaitActive("Open a project", "Project &name");
 
   Send("c:\games\inform\" & $project & ".inform!O");
 
+  sleep(1);
   WinWaitActive($project & ".inform");
 
   Send("{F5}");

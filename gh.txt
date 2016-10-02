@@ -346,6 +346,7 @@ misc=prt.pl,
 ##############ppp = perl python port
 misc=c:\coding\perl\proj\sok.pl,ppp
 misc=c:\coding\perl\proj\sok.py,ppp
+misc=c:\coding\perl\proj\fc.py,ppp
 
 #PlotEx
 FROMBASE=c:\games\inform
