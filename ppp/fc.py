@@ -1,3 +1,9 @@
+######################################
+#fc.py
+#
+#no frills Python Freecell game
+#
+
 import sys
 from random import shuffle
 
@@ -39,28 +45,43 @@ def canPut(lower, higher):
     return 0;
 
 def checkFound():
-    retval = 0;
-    for y in range (1,9):
-        if len(elements[y]) > 0:
-            while elements[y][len(elements[y])-1] % 13 == (1 + found[(elements[y][len(elements[y])-1]-1)/13]) % 13:
-                basesuit = (elements[y][len(elements[y])-1]-1)/13
-                if found[(basesuit+1) % 4] < found[basesuit] - 1:
-                    break;
-                if found[(basesuit+3) % 4] < found[basesuit] - 1:
-                    break;
-                retval = 1;
-                print tocard(elements[y][len(elements[y])-1]), 'to foundation.'
-                found[(elements[y][len(elements[y])-1]-1)/13] = found[(elements[y][len(elements[y])-1]-1)/13] + 1
-                elements[y].pop();
-                if len(elements[y]) == 0:
-                    break;
-    for y in range (0,4):
-        if spares[y] > 0:
-            if spares[y] % 13 == 1 + found[(spares[y]-1)/13]:
-                found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
-                spares[y] = 0
-                print 'Popped', str(y+1), 'from spares.'
-    return retval
+    retval = 0
+    needToCheck = 1
+    totalFoundThisTime = 0
+    cardlist = '';
+    while needToCheck:
+        needToCheck = 0
+        for y in range (1,9):
+            if len(elements[y]) > 0:
+                while elements[y][len(elements[y])-1] % 13 == (1 + found[(elements[y][len(elements[y])-1]-1)/13]) % 13:
+                    basesuit = (elements[y][len(elements[y])-1]-1)/13
+                    if found[(basesuit+1) % 4] < found[basesuit] - 1:
+                        break
+                    if found[(basesuit+3) % 4] < found[basesuit] - 1:
+                        break
+                    needToCheck = 1;
+                    totalFoundThisTime += 1
+                    found[(elements[y][len(elements[y])-1]-1)/13] = found[(elements[y][len(elements[y])-1]-1)/13] + 1
+                    cardlist = cardlist + tocardX(elements[y][len(elements[y])-1])
+                    elements[y].pop();
+                    if len(elements[y]) == 0:
+                        break
+        for y in range (0,4):
+            if spares[y] > 0:
+                if (spares[y]-1) % 13 == found[(spares[y]-1)/13]:
+                    sparesuit = (spares[y]-1)/13
+                    if found[(sparesuit+3)%4] < found[sparesuit] - 1:
+                        break
+                    if found[(sparesuit+1)%4] < found[sparesuit] - 1:
+                        break
+                    cardlist = cardlist + tocardX(spares[y])
+                    found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
+                    spares[y] = 0
+                    needToCheck = 1
+    if totalFoundThisTime == 1:
+        print totalFoundThisTime, 'card safely to foundation:',cardlist
+    elif totalFoundThisTime > 0:
+        print totalFoundThisTime, 'cards safely to foundation:',cardlist
 
 def checkWin():
     for y in range (0,4):
@@ -76,7 +97,7 @@ def initCards():
     for y in range(0,7):
         for z in range(1,9):
             if len(x) == 0:
-                break;
+                break
             elements[z].append(x.pop())
 
 def tocard( cardnum ):
@@ -85,6 +106,11 @@ def tocard( cardnum ):
     temp = cardnum - 1
     retval = '' + cards[temp % 13] + suits[temp / 13]
     return retval;
+
+def tocardX (cnum):
+    if (cnum % 13 == 10):
+        return ' ' + tocard(cnum)
+    return tocard(cnum)
 
 def printCards():
     if vertical == 1:
@@ -99,15 +125,16 @@ def printVertical():
     print
     oneMoreTry = 1
     while oneMoreTry:
+        thisline = ''
         oneMoreTry = 0;
         for y in range (1,9):
             if len(elements[y]) > count:
-                sys.stdout.write(' ' + str(tocard(elements[y][count])))
+                thisline += (' ' + str(tocard(elements[y][count])))
                 oneMoreTry = 1
             else:
-                sys.stdout.write('    ')
+                thisline += '    '
         if oneMoreTry:
-            print
+            print thisline
         count+=1
     printOthers()
 
@@ -123,7 +150,7 @@ def printOthers():
     sys.stdout.write('Empty slots:')
     for y in range (0,4):
         sys.stdout.write(' ' + tocard(spares[y]))
-    sys.stdout.write('\nFoundation:')
+    sys.stdout.write('\nFoundation: ')
     for y in [0, 2, 1, 3]:
         if found[y] == 0:
             sys.stdout.write(' ---');
@@ -132,36 +159,34 @@ def printOthers():
     print
     checkWin()
 
-def doable (r1, tr2):
+def doable (r1, r2):
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
-    if len(elements[t1]) == 0:
+    if len(elements[r1]) == 0:
         print 'Tried to move from empty.'
         return 0
-    if len(elements[t2]) == 0:
+    if len(elements[r2]) == 0:
         locmaxmove /= 2
         print 'Only half moves here down to', locmaxmove
-        for n in range(len(elements[t1])-1, 0, -1):
+        for n in range(len(elements[r1])-1, 0, -1):
             fromline += 1
             if n == 0:
                 break
-            if canPut(elements[t1][n], elements[t1][n-1]) == 0:
+            if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 break
     else:
-        toTopCard = elements[t2][len(elements[t2])-1]
-        print 1
-        for n in range(len(elements[t1])-1, -1, -1):
-            print 'n=',n
+        toTopCard = elements[r2][len(elements[r2])-1]
+        for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
-            if canPut(elements[t1][n], toTopCard):
+            if canPut(elements[r1][n], toTopCard):
                 break
             if n == 0:
                 return 0
-            if canPut(elements[t1][n], elements[t1][n-1]) == 0:
+            if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
     if fromline > locmaxmove:
-        print 'Not enough open. Need', locmaxmove
+        print 'Not enough open. Have',locmaxmove,'need', fromline
         return -1
     return fromline
     return 0
@@ -211,9 +236,18 @@ while win == 0:
     if len(name) < 2:
         print 'Must have 2 chars per command.'
         continue
-    if name[0] == 'r':
+    if name[0] == 'r' or name[1] == 'r':
+        tofound = name.replace("r", "")
+        temprow = -1
         if name[1].isdigit():
             temprow = int(name[1])
+        elif name[0].isdigit():
+            temprow = int(name[0])
+        elif (ord(name[0]) > 96) and (ord(name[0]) < 101):
+            tempspare = ord(name[0]) - 96
+        elif (ord(name[1]) > 96) and (ord(name[1]) < 101):
+            tempspare = ord(name[1]) - 96
+        if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print 'Not a valid row.'
                 continue
@@ -228,12 +262,13 @@ while win == 0:
                 continue
             print 'Sorry, found nothing.'
             continue
-        if (ord(name[0]) > 96) and (ord(name[0]) < 101):
-            tempspare = ord(name[0]) - 96
+        if tempspare > -1:
             if foundable(spares[tempspare]):
                 found[(spares[tempspare]-1)/13]+= 1
                 spares[tempspare] = 0;
-            print 'Moving from foundation.'
+                print 'Moving from spares.'
+            else:
+                print 'Can\'t move from spares.'
             continue
         print 'Must move 1-8 or a-d.'
         continue
@@ -251,6 +286,7 @@ while win == 0:
             print 'Those cards don\'t match up.'
             continue
         shiftcards(t1, t2, tempdoab)
+        checkFound()
         printCards()
         continue
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
@@ -265,6 +301,7 @@ while win == 0:
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
             spares[mySpare] = 0
+            checkFound()
             printCards()
             continue
         print 'Can\'t put ', spares[mySpare], 'on', elements[myRow][len(elements[myRow])-1]
