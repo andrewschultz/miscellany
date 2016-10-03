@@ -15,6 +15,12 @@ win = 0
 
 vertical = 0
 
+def initSide():
+    global spares
+    spares = [0, 0, 0, 0]
+    global found
+    found = [0, 0, 0, 0]
+
 def maxmove():
     base = 1
     myexp = 1
@@ -152,6 +158,25 @@ def printHorizontal():
     printOthers()
     
 def printOthers():
+    canmove = ''
+    for z1 in range (1,9):
+        if len(elements[z1]) == 0:
+            canmove = canmove + ' E' + str(z1)
+            continue
+        for z2 in range (1,9):
+            if z2 == z1:
+                continue
+            if len(elements[z2]) == 0:
+                continue
+            if doable(z1,z2,0):
+                canmove = canmove + ' ' + str(z1)+str(z2)
+    for z1 in range (0,4):
+        if spares[z1] == 0:
+            canmove = canmove + ' r' + chr(z1+97)
+    if canmove:
+        print 'Possible moves:', canmove
+    else:
+        print 'Uh oh. You\'re probably lost.'
     sys.stdout.write('Empty slots:')
     for y in range (0,4):
         sys.stdout.write(' ' + tocard(spares[y]))
@@ -164,16 +189,18 @@ def printOthers():
     print
     checkWin()
 
-def doable (r1, r2):
+def doable (r1, r2, showDeets):
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
     if len(elements[r1]) == 0:
-        print 'Tried to move from empty.'
+        if showDeets:
+            print 'Tried to move from empty.'
         return 0
     if len(elements[r2]) == 0:
         locmaxmove /= 2
-        print 'Only half moves here down to', locmaxmove
+        if showDeets:
+            print 'Only half moves here down to', locmaxmove
         for n in range(len(elements[r1])-1, 0, -1):
             fromline += 1
             if n == 0:
@@ -191,7 +218,8 @@ def doable (r1, r2):
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
     if fromline > locmaxmove:
-        print 'Not enough open. Have',locmaxmove,'need', fromline
+        if showDeets:
+            print 'Not enough open. Have',locmaxmove,'need', fromline
         return -1
     return fromline
     return 0
@@ -199,10 +227,6 @@ def doable (r1, r2):
 def shiftcards(r1, r2, amt):
     elements[r2].extend(elements[r1][-amt:])
     del elements[r1][-amt:]
-
-spares = [0, 0, 0, 0]
-found = [0, 0, 0, 0]
-
 
 elements = []
 
@@ -216,15 +240,23 @@ elements.append([])
 elements.append([])
 elements.append([])
 
-
+initSide()
 initCards()
 printCards()
+
+backup = [row[:] for row in elements]
 
 name = ""
 
 while win == 0:
     checkFound()
     name = raw_input("Move:")
+    if name == "-":
+        elements = [row[:] for row in backup]
+        initSide()
+        printCards()
+        checkFound()
+        continue
     if name == "?":
         print 'Maximum card length moves: ', maxmove()
         continue
@@ -283,7 +315,7 @@ while win == 0:
         if len(elements[t1]) == 0:
             print 'Nothing to move from.'
             continue
-        tempdoab = doable(t1,t2)
+        tempdoab = doable(t1,t2,1)
         if tempdoab == -1:
             print 'Not enough space.'
             continue
