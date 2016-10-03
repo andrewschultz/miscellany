@@ -70,6 +70,7 @@ def checkFound():
             if spares[y] > 0:
                 if (spares[y]-1) % 13 == found[(spares[y]-1)/13]:
                     sparesuit = (spares[y]-1)/13
+                    print 'position', y, 'suit' ,suits[(spares[y]-1)/13], 'card' ,tocard(spares[y])
                     if found[(sparesuit+3)%4] < found[sparesuit] - 1:
                         break
                     if found[(sparesuit+1)%4] < found[sparesuit] - 1:
@@ -129,7 +130,11 @@ def printVertical():
         oneMoreTry = 0;
         for y in range (1,9):
             if len(elements[y]) > count:
-                thisline += (' ' + str(tocard(elements[y][count])))
+                thisline += str(tocard(elements[y][count]))
+                if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)/13]:
+                    thisline += '*'
+                else:
+                    thisline += ' '
                 oneMoreTry = 1
             else:
                 thisline += '    '
@@ -244,9 +249,9 @@ while win == 0:
         elif name[0].isdigit():
             temprow = int(name[0])
         elif (ord(name[0]) > 96) and (ord(name[0]) < 101):
-            tempspare = ord(name[0]) - 96
+            tempspare = ord(name[0]) - 97
         elif (ord(name[1]) > 96) and (ord(name[1]) < 101):
-            tempspare = ord(name[1]) - 96
+            tempspare = ord(name[1]) - 97
         if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print 'Not a valid row.'
@@ -268,7 +273,7 @@ while win == 0:
                 spares[tempspare] = 0;
                 print 'Moving from spares.'
             else:
-                print 'Can\'t move from spares.'
+                print 'Can\'t move from spares.' #/? 3s onto 2s with nothing else, all filled
             continue
         print 'Must move 1-8 or a-d.'
         continue
