@@ -23,6 +23,11 @@ def initSide():
     global found
     found = [0, 0, 0, 0]
 
+def plur(a):
+    if a is 1:
+        return ''
+    return 's'
+
 def maxmove():
     base = 1
     myexp = 1
@@ -75,23 +80,22 @@ def checkFound():
                     if len(elements[y]) == 0:
                         break
         for y in range (0,4):
+            #print 'checking ',y,tocard(spares[y])
             if spares[y] > 0:
                 if (spares[y]-1) % 13 == found[(spares[y]-1)/13]:
                     sparesuit = (spares[y]-1)/13
                     if debug:
                         print 'position', y, 'suit' ,suits[(spares[y]-1)/13], 'card' ,tocard(spares[y])
                     if found[(sparesuit+3)%4] < found[sparesuit] - 1:
-                        break
+                        continue
                     if found[(sparesuit+1)%4] < found[sparesuit] - 1:
-                        break
+                        continue
                     cardlist = cardlist + tocardX(spares[y])
                     found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
                     spares[y] = 0
                     needToCheck = 1
-    if totalFoundThisTime == 1:
-        print totalFoundThisTime, 'card safely to foundation:',cardlist
-    elif totalFoundThisTime > 0:
-        print totalFoundThisTime, 'cards safely to foundation:',cardlist
+    if totalFoundThisTime > 0:
+        sys.stdout.write(str(totalFoundThisTime) + 'card' + plur(totalFoundThisTime) + ' safely to foundation: ' + cardlist + '\n')
 
 def checkWin():
     for y in range (0,4):
@@ -433,4 +437,4 @@ while win == 0:
     usage()
 endwhile
 
-#?? possible moves show restricted, put in new line
+#?? possible moves show restricted, put in new line 
