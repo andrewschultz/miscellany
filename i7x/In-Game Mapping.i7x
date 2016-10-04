@@ -27,7 +27,7 @@ to print-current-map:
 		say "Nothing to map.";
 		continue the action;
 	if number of mappable rooms is 1:
-		say "This is the only room to map.";
+		say "This is the only room to map. Once you explore another, this command will be more interesting and informative.";
 		continue the action;
 	say "[fixed letter spacing]";
 	let xmi be xmin;
@@ -45,7 +45,7 @@ to print-current-map:
 						say "[l1 entry]";
 					else:
 						say "     ";
-					unless room east of rm entry is nowhere:
+					unless room east of rm entry is nowhere or rm entry is unvisited:
 						say "=";
 					else:
 						say " ";
@@ -67,11 +67,16 @@ to print-current-map:
 		say "[line break]";
 		repeat with r running from xmi to xma: [vertical right here]
 			repeat through table of map coordinates:
-				if r is x entry and q is y entry and room south of rm entry is not nowhere:
-					say "  |  ";
-				else if r is x entry and q + 1 is y entry and room north of rm entry is not nowhere:	
-					say "     ";
-			say " "; [reserved for diagonal later]
+				let drawVert be false;
+				if r is x entry and q is y entry:
+					if room south of rm entry is not nowhere:
+						if rm entry is visited or room south of rm entry is visited:
+							now drawVert is true;
+					if drawVert is true:
+						say "  |  ";
+					else:
+						say "     ";
+			say " [no line break]"; [reserved for diagonal later]
 		say "[line break]";
 	say "[variable letter spacing]";
 	

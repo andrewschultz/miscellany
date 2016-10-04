@@ -96,6 +96,7 @@ v=1
 out=slicker-city.zip
 >>invis.pl sc
 F=c:\games\inform\slicker-city.inform\Source\story.ni
+F=c:\games\inform\slicker-city.inform\Source\index.html
 F=c:\games\inform\slicker-city Materials\Release\Slicker City.zblorb
 F=c:\games\inform\slicker-city Materials\Release\slicker-city-invisiclues.htm
 F=c:\games\inform\triz\mine\slicker-city.pdf
