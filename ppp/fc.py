@@ -13,15 +13,20 @@ suits = ['C', 'd', 'S', 'h']
 
 cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
 
+moveList = []
+
 win = 0
 
 vertical = 0
+
+inUndo = 0
 
 def initSide():
     global spares
     spares = [0, 0, 0, 0]
     global found
     found = [0, 0, 0, 0]
+    moveList = []
 
 def plur(a):
     if a is 1:
@@ -302,22 +307,28 @@ backup = [row[:] for row in elements]
 
 name = ""
 
-while win == 0:
-    checkFound()
+def readCmd():
+    global vertical
+    global elements
+    global force
     force = 0
+    checkFound()
     name = raw_input("Move:")
+    if name == "ua":
+        print moveList
+        return
     if len(name) == 1 and name.isdigit():
         name = name + 'e'
     if len(name) == 0:
         printCards()
-        continue
+        return
     if name[0] == '/':
         debug = 1 - debug
         print 'debug', onoff[debug]
-        continue
+        return
     if name[0] == 'u':
         usage()
-        continue
+        return
     if name[0] == 'f':
         name = name.replace("f", "")
         force = 1
@@ -326,23 +337,23 @@ while win == 0:
         initSide()
         printCards()
         checkFound()
-        continue
+        return
     if name == "?":
         print 'Maximum card length moves: ', maxmove()
-        continue
+        return
     if name == "":
         printCards()
-        continue
+        return
     if name == 'v':
         vertical = 1 - vertical
         printCards()
-        continue
+        return
     if len(name) > 2:
         print 'Only 2 chars per command.'
-        continue
+        return
     if len(name) < 2:
         print 'Must have 2 chars per command.'
-        continue
+        return
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
         temprow = -1
@@ -353,88 +364,97 @@ while win == 0:
         if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print 'Not a valid row.'
-                continue
+                return
             if len(elements[temprow]) == 0:
                 print 'Empty row.'
-                continue
+                return
             if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
                 found[(elements[temprow][len(elements[temprow])-1]-1)/13]+= 1
                 elements[temprow].pop()
+                moveList.append(name)
                 checkFound()
                 printCards()
-                continue
+                return
             print 'Sorry, found nothing.'
-            continue
+            return
         if tempspare > -1:
             if foundable(spares[tempspare]):
                 found[(spares[tempspare]-1)/13]+= 1
                 spares[tempspare] = 0;
                 print 'Moving from spares.'
+                moveList.append(move)
                 checkFound()
                 printCards()
             else:
                 print 'Can\'t move from spares.' #/? 3s onto 2s with nothing else, all filled
-            continue
+            return
         print 'Must move 1-8 or a-d.'
-        continue
+        return
     if name[0].isdigit() and name[1].isdigit():
         t1 = int(name[0])
         t2 = int(name[1])
         if len(elements[t1]) == 0:
             print 'Nothing to move from.'
-            continue
+            return
         tempdoab = doable(t1,t2,1)
         if tempdoab == -1:
             #print 'Not enough space.'
-            continue
+            return
         if tempdoab == 0:
             print 'Those cards don\'t match up.'
-            continue
+            return
         shiftcards(t1, t2, tempdoab)
+        moveList.append(name)
         checkFound()
         printCards()
-        continue
+        return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
             print 'Nothing in slot' , name[0]
-            continue
+            return
         myRow = int(name[1])
         if myRow < 1 or myRow > 8:
             print 'To row must be between 1 and 8.'
-            continue
+            return
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
             spares[mySpare] = 0
+            moveList.append(name)
             checkFound()
             printCards()
-            continue
+            return
         print 'Can\'t put ', spares[mySpare], 'on', elements[myRow][len(elements[myRow])-1]
-        continue;
+        return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if name[1] == 'e':
             myToSpare = firstEmpty()
             if myToSpare == -1:
                 print 'Nothing empty to move to. To which to move.'
-                continue
+                return
         else:
             myToSpare = ord(name[1]) - 97
         myRow = int(name[0])
         if spares[myToSpare] > 0:
             print 'Spare', myToSpare, 'already filled.'
-            continue
+            return
         if myRow < 1 or myRow > 8:
             print 'From row must be between 1 and 8.'
-            continue
+            return
         if (len(elements[myRow]) == 0):
             print 'Empty from-row.'
-            continue
+            return
         spares[myToSpare] = elements[myRow].pop()
+        moveList.append(name)
         checkFound()
         printCards()
-        continue
+        return
     print name,'not recognized, displaying usage.'
     usage()
+
+while win == 0:
+    readCmd()
 endwhile
+
 
 #?? possible moves show restricted, put in new line 
