@@ -28,6 +28,13 @@ def firstEmptyRow():
             return i
     return 0
 
+def firstMatchableRow(cardval):
+    for i in range (1,9):
+        if len(elements[i]) > 0:
+            if canPut(cardval, elements[i][len(elements[i])-1]):
+                return i;
+    return 0
+
 def readOpts():
     global vertical
     infile = "fcopt.txt";
@@ -208,6 +215,7 @@ def printHorizontal():
 def printOthers():
     checkWin()
     canmove = ''
+    wackmove = ''
     for z1 in range (1,9):
         if len(elements[z1]) == 0:
             canmove = canmove + ' E' + str(z1)
@@ -217,7 +225,9 @@ def printOthers():
                 continue
             if len(elements[z2]) == 0:
                 continue
-            if doable(z1,z2,0):
+            if doable(z1,z2,0) == -1:
+                wackmove = wackmove + ' ' + str(z1)+str(z2)
+            elif doable(z1,z2,0):
                 canmove = canmove + ' ' + str(z1)+str(z2)
     for z1 in range (1,9):
         if len(elements[z1]):
@@ -227,6 +237,8 @@ def printOthers():
     for z1 in range (0,4):
         if spares[z1] == 0:
             canmove = canmove + ' r' + chr(z1+97)
+    if wackmove:
+        print 'Not enough room:', str(wackmove)
     if canmove:
         sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ')\n')
     else:
@@ -362,7 +374,7 @@ def readCmd():
     global force
     force = 0
     checkFound()
-    name = raw_input("Move:")
+    name = raw_input("Move:").strip()
     if len(name) == 0:
         printCards()
         return
@@ -395,9 +407,26 @@ def readCmd():
     #### mostly meta commands above here. Keep them there.
     if len(name) == 1:
         if name.isdigit():
-            name = name + 'e'
+            i = int(name)
+            if i > 8 or i < 1:
+                print 'Need 1-8.'
+                return
+            if len(elements[i]) is 0:
+                print 'Acting on an empty row.'
+                return
+            if chains(i) > 1:
+                if firstMatchableRow(elements[i][len(elements[i])-1]):
+                    name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
+                else:
+                    print 'Can\'t find anywhere to dump the chain.'
+                    return
+            else:
+                name = name + 'e'
+            print 'New implied command', name
         elif ord(name[0]) < 101 and ord(name[0]) > 96:
-            if firstEmptyRow() > 0:
+            if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
+                name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
+            elif firstEmptyRow() > 0:
                 name = name + str(firstEmptyRow())
             else:
                 print 'No empty row/column to drop from spares.'
@@ -450,7 +479,7 @@ def readCmd():
                 found[(spares[tempspare]-1)/13]+= 1
                 spares[tempspare] = 0;
                 print 'Moving from spares.'
-                moveList.append(move)
+                moveList.append(name)
                 checkFound()
                 printCards()
             else:
