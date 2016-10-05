@@ -22,6 +22,12 @@ inUndo = 0
 #options to define. How to do better?
 vertical = 0
 
+def firstEmptyRow():
+    for i in range(1,9):
+        if len(elements[i]) == 0:
+            return i
+    return 0
+
 def readOpts():
     global vertical
     infile = "fcopt.txt";
@@ -291,7 +297,7 @@ def usage():
     print '(1-8a-d) (1-8a-d) move to spares and back'
     print 'u = usage (this)'
 
-def firstEmpty():
+def firstEmptySpare():
     for i in range(0,4):
         if spares[i] == 0:
             return i
@@ -320,6 +326,36 @@ backup = [row[:] for row in elements]
 
 name = ""
 
+def loadGame(gameName):
+    print 'looking for', gameName
+    original = open("fcsav.txt", "r")
+    while True:
+        line=original.readline()
+        if gameName == line.strip():
+            for y in range (1,9):
+                line=original.readline().strip()
+                print line
+                elements[y] = [int(i) for i in line.split()]
+                backup[y] = [int(i) for i in line.split()]
+                print elements[y]
+            line=original.readline().strip()
+            moveList = [int(i) for i in line]
+            print moveList
+            print "Got it!"
+            return 1
+        if not line:
+            return 0
+    return 0
+
+def saveGame(gameName):
+    with open("fcsav.txt", "a") as myfile:
+        myfile.write(gameName + "\n")
+        for y in range (1,9):
+            myfile.write(join(' ', backup[y]) + "\n")
+        myfile.write(join(' ', moveList) + "\n")
+        myfile.write("###end of " + gameName + "\n")
+    return 0
+
 def readCmd():
     global vertical
     global elements
@@ -327,11 +363,6 @@ def readCmd():
     force = 0
     checkFound()
     name = raw_input("Move:")
-    if name == "ua":
-        print moveList
-        return
-    if len(name) == 1 and name.isdigit():
-        name = name + 'e'
     if len(name) == 0:
         printCards()
         return
@@ -360,6 +391,30 @@ def readCmd():
     if name == 'v':
         vertical = 1 - vertical
         printCards()
+        return
+    #### mostly meta commands above here. Keep them there.
+    if len(name) == 1:
+        if name.isdigit():
+            name = name + 'e'
+        elif ord(name[0]) < 101 and ord(name[0]) > 96:
+            if firstEmptyRow() > 0:
+                name = name + str(firstEmptyRow())
+            else:
+                print 'No empty row/column to drop from spares.'
+                return
+        else:
+            print "Unknown 1-letter command."
+            return
+    #### two letter commands below here.
+    if name[0] == 'l' and name[1] == '=':
+        loadGame(re.sub(r'^l=', 's=', name))
+        return
+    if name[0] == 's' and name[1] == '=':
+        saveGame(name.strip())
+        return
+    #### saving comes first.
+    if name == "ua":
+        print moveList
         return
     if len(name) > 2:
         print 'Only 2 chars per command.'
@@ -441,7 +496,7 @@ def readCmd():
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if name[1] == 'e':
-            myToSpare = firstEmpty()
+            myToSpare = firstEmptySpare()
             if myToSpare == -1:
                 print 'Nothing empty to move to. To which to move.'
                 return
