@@ -4,6 +4,7 @@
 #no frills Python Freecell game
 #
 
+import re
 import sys
 from random import shuffle
 
@@ -16,10 +17,21 @@ cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q',
 moveList = []
 
 win = 0
+inUndo = 0
 
+#options to define. How to do better?
 vertical = 0
 
-inUndo = 0
+def readOpts():
+    global vertical
+    infile = "fcopt.txt";
+    with open(infile) as f:
+        for line in f:
+            q=re.sub(r'.*=', '', line.rstrip())
+            if "vertical" in line:
+                vertical = int(q)
+                return
+    exit()
 
 def initSide():
     global spares
@@ -100,7 +112,7 @@ def checkFound():
                     spares[y] = 0
                     needToCheck = 1
     if totalFoundThisTime > 0:
-        sys.stdout.write(str(totalFoundThisTime) + 'card' + plur(totalFoundThisTime) + ' safely to foundation: ' + cardlist + '\n')
+        sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation: ' + cardlist + '\n')
 
 def checkWin():
     for y in range (0,4):
@@ -297,6 +309,7 @@ elements.append([])
 elements.append([])
 elements.append([])
 
+readOpts()
 initSide()
 initCards()
 printCards()
