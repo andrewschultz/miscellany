@@ -22,6 +22,8 @@ inUndo = 0
 #options to define. How to do better?
 vertical = 0
 
+highlight = 0
+
 def firstEmptyRow():
     for i in range(1,9):
         if len(elements[i]) == 0:
@@ -51,6 +53,8 @@ def initSide():
     spares = [0, 0, 0, 0]
     global found
     found = [0, 0, 0, 0]
+    global highlight
+    highlight = 0
     moveList = []
 
 def plur(a):
@@ -124,7 +128,7 @@ def checkFound():
                     found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
                     spares[y] = 0
                     needToCheck = 1
-    if totalFoundThisTime > 0:
+    if totalFoundThisTime > 0 and inUndo == 0:
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation: ' + cardlist + '\n')
 
 def checkWin():
@@ -157,6 +161,8 @@ def tocardX (cnum):
     return tocard(cnum)
 
 def printCards():
+    if inUndo == 1:
+        return
     if vertical == 1:
         printVertical()
     else:
@@ -194,6 +200,8 @@ def printVertical():
                 thisline += str(tocard(elements[y][count]))
                 if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)/13]:
                     thisline += '*'
+                elif highlight and (((elements[y][count]-1) % 13) == highlight - 1):
+                    thisline += '+'
                 else:
                     thisline += ' '
                 oneMoreTry = 1
@@ -299,7 +307,6 @@ def doable (r1, r2, showDeets):
     return 0
 
 def shiftcards(r1, r2, amt):
-    print r1,r2,amt
     elements[r2].extend(elements[r1][-amt:])
     del elements[r1][-amt:]
 
@@ -339,23 +346,26 @@ backup = [row[:] for row in elements]
 name = ""
 
 def loadGame(gameName):
-    print 'looking for', gameName
+    #print 'looking for', gameName
     original = open("fcsav.txt", "r")
     while True:
         line=original.readline()
         if gameName == line.strip():
             for y in range (1,9):
                 line=original.readline().strip()
-                print line
                 elements[y] = [int(i) for i in line.split()]
                 backup[y] = [int(i) for i in line.split()]
-                print elements[y]
             line=original.readline().strip()
-            moveList = [int(i) for i in line]
-            print moveList
-            print "Got it!"
+            moveList = line.split()
+            global inUndo
+            inUndo = 1
+            for myCmd in moveList:
+                readCmd(str(myCmd))
+            inUndo = 0
+            printCards()
             return 1
         if not line:
+            print re.sub(r'^.=', '', gameName) , 'save game not found.'
             return 0
     return 0
 
@@ -363,24 +373,52 @@ def saveGame(gameName):
     with open("fcsav.txt", "a") as myfile:
         myfile.write(gameName + "\n")
         for y in range (1,9):
-            myfile.write(join(' ', backup[y]) + "\n")
-        myfile.write(join(' ', moveList) + "\n")
+            myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
+        myfile.write(' '.join(moveList) + "\n")
         myfile.write("###end of " + gameName + "\n")
     return 0
 
-def readCmd():
+def readCmd(thisCmd):
     global vertical
     global elements
     global force
     force = 0
     checkFound()
-    name = raw_input("Move:").strip()
+    if thisCmd == '':
+        name = raw_input("Move:").strip()
+    else:
+        name = thisCmd
     if len(name) == 0:
         printCards()
         return
     if name[0] == '/':
         debug = 1 - debug
         print 'debug', onoff[debug]
+        return
+    if name[0] == 'h':
+        name = re.sub(r'^h', '', name)
+        if name.isdigit() == 0:
+            if name == 'q':
+                name = 12
+            elif name == 'j':
+                name = 11
+            elif name == 'k':
+                name = 13
+            elif name == 'a':
+                name = 1
+            else:
+                print 'Need a number, or AJQK.'
+                return
+        if int(name) < 1 or int(name) > 13:
+            print 'Need 1-13.'
+            return
+        global highlight
+        highlight = int(name)
+        if highlight == 0:
+            print 'Highlighting off.'
+        else:
+            print 'Now highlighting', cards[highlight-1]
+        printCards()
         return
     if name[0] == 'u':
         usage()
@@ -414,12 +452,8 @@ def readCmd():
             if len(elements[i]) is 0:
                 print 'Acting on an empty row.'
                 return
-            if chains(i) > 1:
-                if firstMatchableRow(elements[i][len(elements[i])-1]):
-                    name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
-                else:
-                    print 'Can\'t find anywhere to dump the chain.'
-                    return
+            if chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
+                name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             else:
                 name = name + 'e'
             print 'New implied command', name
@@ -510,6 +544,9 @@ def readCmd():
         if spares[mySpare] == 0:
             print 'Nothing in slot' , name[0]
             return
+        if not name[1].isdigit():
+            print 'Second letter not recognized.'
+            return
         myRow = int(name[1])
         if myRow < 1 or myRow > 8:
             print 'To row must be between 1 and 8.'
@@ -531,6 +568,9 @@ def readCmd():
                 return
         else:
             myToSpare = ord(name[1]) - 97
+        if not name[0].isdigit():
+            print 'First letter not recognized.'
+            return
         myRow = int(name[0])
         if spares[myToSpare] > 0:
             print 'Spare', myToSpare, 'already filled.'
@@ -550,7 +590,7 @@ def readCmd():
     usage()
 
 while win == 0:
-    readCmd()
+    readCmd('')
 endwhile
 
 
