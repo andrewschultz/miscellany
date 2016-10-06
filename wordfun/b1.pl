@@ -133,5 +133,5 @@ sub checkForRepeats
   my @a2a = uniq(@a2);
   for (@a2a) { if ($_) { $f2{$_}++; } }
 
-  if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line\n"; } else { $count++; print "$count $line\n"; }
+  if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
 }

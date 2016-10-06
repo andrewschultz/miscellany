@@ -22,6 +22,7 @@ inUndo = 0
 #options to define. How to do better?
 vertical = 0
 
+lastscore = 0
 highlight = 0
 
 def spareUsed():
@@ -273,7 +274,13 @@ def printOthers():
             sys.stdout.write(' ---');
         else:
             sys.stdout.write(' ' + tocard(found[y] + y * 13))
-    print ' (' + str(foundscore) + ' points)'
+    sys.stdout.write(' (' + str(foundscore) + ' point' + plur(foundscore))
+    if (lastscore < foundscore):
+        sys.stdout.write(', up ' + str(foundscore - lastscore))
+    sys.stdout.write(')\n')
+    global lastscore
+    lastscore = foundscore
+
 
 def doable (r1, r2, showDeets):
     cardsToMove = 0

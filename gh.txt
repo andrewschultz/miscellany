@@ -388,5 +388,8 @@ rmt=editor\skeep2.map,editor\samples
 rmt=c:\writing\scripts\cg.bat,stubs
 rmt=c:\writing\scripts\mc.bat,stubs
 rmt=stubs\ReadMe.txt,stubs
+rmt=2400\2400.ahs,samples\2400
+rmt=2400\2400.nmr,samples\2400
+rmt=2400\2400.txt,samples\2400
 
 ;
