@@ -24,6 +24,13 @@ vertical = 0
 
 highlight = 0
 
+def spareUsed():
+    retval = 0
+    for i in range (0,4):
+        if spares[i]:
+            retval += 1
+    return retval
+        
 def firstEmptyRow():
     for i in range(1,9):
         if len(elements[i]) == 0:
@@ -454,6 +461,11 @@ def readCmd(thisCmd):
                 return
             if chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
+            elif firstEmptyRow() and spareUsed() == 4:
+                if doable(i, firstEmptyRow(), 0) == len(elements[i])
+                    print "That's just useless shuffling."
+                    return
+                name = name + str(firstEmptyRow())
             else:
                 name = name + 'e'
             print 'New implied command', name
