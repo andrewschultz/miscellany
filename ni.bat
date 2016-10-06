@@ -5,29 +5,14 @@ set EXT=.inform
 set PROJ=slicker-city
 set SOREL=source
 
-if "%1" EQU "?" (
-:usage
-echo r = roiling
-echo sa = shuffling
-echo ni r nu = roiling nudges
-echo ni sa ra = shuffling random
-echo pr sr rr = problems, shuffling or roiling releases
-echo e1 1-5 = ectoComp n/ni = nightly
-echo m as 1st argument = materials
-echo tr = trizbort
-echo gr = grubbyville, ua = ugly oafs
-echo current project = SC, pc/t2 = problems compound
-echo btp/bp/17 = Buck the Past
-echo rt = daily stuff, an = anagram list
-echo b = build
-goto end
-)
-
-if "%1" EQU "h" (
+if "%1" == "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
 goto end
 )
 
+if "%1" == "?" (
+goto usage
+)
 
 if "%1" EQU "e11" (
 set PROJ=dash
@@ -98,6 +83,11 @@ goto story
 
 if "%1" EQU "t2" (
 set PROJ=Compound
+goto story
+)
+
+if "%1" EQU "tb" (
+set PROJ=buck-the-past
 goto story
 )
 
@@ -391,6 +381,17 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" \games\inform\%PROJ%%E
 	)
 
 echo Did not find %PROJ% in tries, tmbg or the default.
-goto usage
+
+:usage
+echo Global tweaks: nu = nudges, ra = random <= for Stale Tales Slate
+echo m as 1st argument = materials, b = build
+echo ========================
+echo r = roiling, sa = shuffling
+echo Releases have R at end. pr scr sr rr = problems, slicker, shuffling or roiling releases
+echo e1 [1235] = ectoComp n/ni = nightly
+echo gr = grubbyville, ua = ugly oafs
+echo current project = sc, pc/t2 = problems compound, btp/bp/17/t3 = Buck the Past
+echo ========================
+echo Non-Inform source: tr = trizbort rt = daily stuff, an = anagram list
 
 :end

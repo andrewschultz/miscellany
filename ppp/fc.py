@@ -462,7 +462,7 @@ def readCmd(thisCmd):
             if chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             elif firstEmptyRow() and spareUsed() == 4:
-                if doable(i, firstEmptyRow(), 0) == len(elements[i])
+                if doable(i, firstEmptyRow(), 0) == len(elements[i]):
                     print "That's just useless shuffling."
                     return
                 name = name + str(firstEmptyRow())
