@@ -258,9 +258,13 @@ def printOthers():
         sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ')\n')
     else:
         print 'Uh oh. You\'re probably lost.'
-    sys.stdout.write('Empty slots:')
+    sys.stdout.write('Empty slots: ')
     for y in range (0,4):
-        sys.stdout.write(' ' + tocard(spares[y]))
+        sys.stdout.write(tocard(spares[y]))
+        if spares[y] > 0 and (spares[y] - 1) % 13 == found[(spares[y] - 1) / 13]:
+            sys.stdout.write('*')
+        else:
+            sys.stdout.write(' ')
     sys.stdout.write('\nFoundation: ')
     foundscore = 0
     for y in [0, 2, 1, 3]:

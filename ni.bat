@@ -383,8 +383,8 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" \games\inform\%PROJ%%E
 echo Did not find %PROJ% in tries, tmbg or the default.
 
 :usage
-echo Global tweaks: nu = nudges, ra = random <= for Stale Tales Slate
-echo m as 1st argument = materials, b = build
+echo Global tweaks: nu = nudges, ra = random (for Stale Tales Slate)
+echo m as 1st argument = materials, b as 1st argument = build
 echo ========================
 echo r = roiling, sa = shuffling
 echo Releases have R at end. pr scr sr rr = problems, slicker, shuffling or roiling releases
