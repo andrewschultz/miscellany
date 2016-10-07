@@ -25,6 +25,14 @@ vertical = 0
 lastscore = 0
 highlight = 0
 
+def chainTotal():
+    retval = 0
+    for i in range (0,9):
+        for v in range (1,len(elements[i])):
+            if canPut(elements[i][v], elements[i][v-1]):
+                retval += 1
+    return retval
+
 def spareUsed():
     retval = 0
     for i in range (0,4):
@@ -271,7 +279,7 @@ def printOthers():
     if wackmove:
         print 'Not enough room:', str(wackmove)
     if canmove:
-        sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ')\n')
+        sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ', ' + str(chainTotal()) + ' in order)\n')
     if not canfwdmove:
         print 'Uh oh. You\'re probably lost.'
     sys.stdout.write('Empty slots: ')
