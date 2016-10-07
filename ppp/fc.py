@@ -27,6 +27,12 @@ highlight = 0
 
 onlymove = 0
 
+def inOrder(rowNum):
+    for i in range(1,len(elements[rowNum])):
+        if not canPut(elements[rowNum][i], elements[rowNum][i-1]):
+            return 0
+    return 1
+
 def chainTotal():
     retval = 0
     for i in range (0,9):
@@ -287,6 +293,10 @@ def printOthers():
     sys.stdout.write('Empty slots: ')
     for y in range (0,4):
         sys.stdout.write(tocard(spares[y]))
+        for z in range(1,9):
+            if len(elements[z]) and canPut(spares[y], elements[z][len(elements[z])-1]):
+                sys.stdout.write('<')
+                break
         if spares[y] > 0 and (spares[y] - 1) % 13 == found[(spares[y] - 1) / 13]:
             sys.stdout.write('*')
         else:
@@ -306,12 +316,15 @@ def printOthers():
     sys.stdout.write(')\n')
     lastscore = foundscore
 
-
 def doable (r1, r2, showDeets):
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
+    global onlymove
     if len(elements[r2]) == 0:
+        if inOrder(r1) and onlymove > 0:
+            print 'OK, moved the already-sorted row, though this doesn\'t really change the game state.'
+            return len(elements[r1])
         locmaxmove /= 2
         if showDeets:
             print 'Only half moves here down to', locmaxmove
@@ -334,7 +347,6 @@ def doable (r1, r2, showDeets):
                 return 0
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
-    global onlymove
     if onlymove >= locmaxmove:
         print 'WARNING,' , onlymove, 'is not less than the maximum of', locmaxmove
         onlymove = 0
