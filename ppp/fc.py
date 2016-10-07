@@ -133,11 +133,12 @@ def checkFound():
                     if found[(sparesuit+1)%4] < found[sparesuit] - 1:
                         continue
                     cardlist = cardlist + tocardX(spares[y])
+                    totalFoundThisTime += 1
                     found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
                     spares[y] = 0
                     needToCheck = 1
     if totalFoundThisTime > 0 and inUndo == 0:
-        sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation: ' + cardlist + '\n')
+        sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
 
 def checkWin():
     for y in range (0,4):
@@ -171,6 +172,9 @@ def tocardX (cnum):
 def printCards():
     if inUndo == 1:
         return
+    if sum(found) == 52:
+        print "You win!"
+        exit()
     if vertical == 1:
         printVertical()
     else:
@@ -232,32 +236,43 @@ def printOthers():
     checkWin()
     canmove = ''
     wackmove = ''
+    canfwdmove = 0
     for z1 in range (1,9):
         if len(elements[z1]) == 0:
             canmove = canmove + ' E' + str(z1)
+            canfwdmove = 1
             continue
         for z2 in range (1,9):
             if z2 == z1:
                 continue
             if len(elements[z2]) == 0:
                 continue
-            if doable(z1,z2,0) == -1:
+            thisdo  = doable(z1,z2,0)
+            if thisdo == -1:
                 wackmove = wackmove + ' ' + str(z1)+str(z2)
-            elif doable(z1,z2,0):
+            elif thisdo:
                 canmove = canmove + ' ' + str(z1)+str(z2)
+                if thisdo >= len(elements[z1]):
+                    canfwdmove = 1
+                elif not canPut(elements[z1][len(elements[z1])-thisdo], elements[z1][len(elements[z1])-thisdo-1]):
+                    canfwdmove = 1
+                else:
+                    canmove = canmove + '-'
     for z1 in range (1,9):
         if len(elements[z1]):
             for z2 in range (0,4):
                 if canPut(spares[z2], elements[z1][len(elements[z1])-1]):
                     canmove = canmove + ' ' + chr(z2+97) + str(z1)
+                    canfwdmove = 1
     for z1 in range (0,4):
         if spares[z1] == 0:
-            canmove = canmove + ' r' + chr(z1+97)
+            canmove = canmove + ' >' + chr(z1+97)
+            canfwdmove = 1
     if wackmove:
         print 'Not enough room:', str(wackmove)
     if canmove:
         sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ')\n')
-    else:
+    if not canfwdmove:
         print 'Uh oh. You\'re probably lost.'
     sys.stdout.write('Empty slots: ')
     for y in range (0,4):
@@ -275,10 +290,10 @@ def printOthers():
         else:
             sys.stdout.write(' ' + tocard(found[y] + y * 13))
     sys.stdout.write(' (' + str(foundscore) + ' point' + plur(foundscore))
+    global lastscore
     if (lastscore < foundscore):
         sys.stdout.write(', up ' + str(foundscore - lastscore))
     sys.stdout.write(')\n')
-    global lastscore
     lastscore = foundscore
 
 
