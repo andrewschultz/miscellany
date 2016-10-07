@@ -98,7 +98,7 @@ def maxmove():
     return base * myexp
 
 def foundable(thiscard):
-    whichsuit = (thiscard - 1) / 13
+    whichsuit = (thiscard - 1) // 13
     whichface = ((thiscard  - 1) % 13) + 1    
     if found[whichsuit] == whichface - 1:
         return 1
@@ -111,7 +111,7 @@ def canPut(lower, higher):
         return 0;
     if temp2 % 13 - temp1 % 13 != 1:
         return 0;
-    if ((temp2 / 13) + (temp1 / 13)) % 2 == 1:
+    if ((temp2 // 13) + (temp1 // 13)) % 2 == 1:
         return 1;
     return 0;
 
@@ -124,15 +124,15 @@ def checkFound():
         needToCheck = 0
         for y in range (1,9):
             if len(elements[y]) > 0:
-                while elements[y][len(elements[y])-1] % 13 == (1 + found[(elements[y][len(elements[y])-1]-1)/13]) % 13:
-                    basesuit = (elements[y][len(elements[y])-1]-1)/13
+                while elements[y][len(elements[y])-1] % 13 == (1 + found[(elements[y][len(elements[y])-1]-1)//13]) % 13:
+                    basesuit = (elements[y][len(elements[y])-1]-1)//13
                     if found[(basesuit+1) % 4] < found[basesuit] - 1:
                         break
                     if found[(basesuit+3) % 4] < found[basesuit] - 1:
                         break
                     needToCheck = 1;
                     totalFoundThisTime += 1
-                    found[(elements[y][len(elements[y])-1]-1)/13] = found[(elements[y][len(elements[y])-1]-1)/13] + 1
+                    found[(elements[y][len(elements[y])-1]-1)//13] = found[(elements[y][len(elements[y])-1]-1)//13] + 1
                     cardlist = cardlist + tocardX(elements[y][len(elements[y])-1])
                     elements[y].pop();
                     if len(elements[y]) == 0:
@@ -140,17 +140,17 @@ def checkFound():
         for y in range (0,4):
             #print 'checking ',y,tocard(spares[y])
             if spares[y] > 0:
-                if (spares[y]-1) % 13 == found[(spares[y]-1)/13]:
-                    sparesuit = (spares[y]-1)/13
+                if (spares[y]-1) % 13 == found[(spares[y]-1)//13]:
+                    sparesuit = (spares[y]-1)//13
                     if debug:
-                        print 'position', y, 'suit' ,suits[(spares[y]-1)/13], 'card' ,tocard(spares[y])
+                        print ('position', y, 'suit' ,suits[(spares[y]-1)/13], 'card' ,tocard(spares[y]))
                     if found[(sparesuit+3)%4] < found[sparesuit] - 1:
                         continue
                     if found[(sparesuit+1)%4] < found[sparesuit] - 1:
                         continue
                     cardlist = cardlist + tocardX(spares[y])
                     totalFoundThisTime += 1
-                    found[(spares[y]-1)/13] = found[(spares[y]-1)/13] + 1
+                    found[(spares[y]-1)//13] += 1
                     spares[y] = 0
                     needToCheck = 1
     if totalFoundThisTime > 0 and inUndo == 0:
@@ -161,11 +161,11 @@ def checkWin():
         #print y,found[y]
         if found[y] != 13:
             return 0;
-    print 'You win!'
+    print ('You win!')
     exit()
     
 def initCards():
-    x = range(1,53)
+    x = list(range(1,53))
     shuffle(x)
     for y in range(0,7):
         for z in range(1,9):
@@ -177,7 +177,7 @@ def tocard( cardnum ):
     if cardnum == 0:
         return '---'
     temp = cardnum - 1
-    retval = '' + cards[temp % 13] + suits[temp / 13]
+    retval = '' + cards[temp % 13] + suits[temp // 13]
     return retval;
 
 def tocardX (cnum):
@@ -189,7 +189,7 @@ def printCards():
     if inUndo == 1:
         return
     if sum(found) == 52:
-        print "You win!"
+        print ("You win!")
         exit()
     if vertical == 1:
         printVertical()
@@ -215,10 +215,10 @@ def printVertical():
     count = 0
     for y in range (1,9):
         sys.stdout.write('(' + str(chains(y)) + ') ')
-    print
+    print ()
     for y in range (1,9):
         sys.stdout.write(' ' + str(y) + ': ')
-    print
+    print ()
     oneMoreTry = 1
     while oneMoreTry:
         thisline = ''
@@ -226,7 +226,7 @@ def printVertical():
         for y in range (1,9):
             if len(elements[y]) > count:
                 thisline += str(tocard(elements[y][count]))
-                if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)/13]:
+                if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)//13]:
                     thisline += '*'
                 elif highlight and (((elements[y][count]-1) % 13) == highlight - 1):
                     thisline += '+'
@@ -236,7 +236,7 @@ def printVertical():
             else:
                 thisline += '    '
         if oneMoreTry:
-            print thisline
+            print (thisline)
         count+=1
     printOthers()
 
@@ -285,11 +285,11 @@ def printOthers():
             canmove = canmove + ' >' + chr(z1+97)
             canfwdmove = 1
     if wackmove:
-        print 'Not enough room:', str(wackmove)
+        print ('Not enough room:', str(wackmove))
     if canmove:
         sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ', ' + str(chainTotal()) + ' in order)\n')
     if not canfwdmove:
-        print 'Uh oh. You\'re probably lost.'
+        print ('Uh oh. You\'re probably lost.')
     sys.stdout.write('Empty slots: ')
     for y in range (0,4):
         sys.stdout.write(tocard(spares[y]))
@@ -297,7 +297,7 @@ def printOthers():
             if len(elements[z]) and canPut(spares[y], elements[z][len(elements[z])-1]):
                 sys.stdout.write('<')
                 break
-        if spares[y] > 0 and (spares[y] - 1) % 13 == found[(spares[y] - 1) / 13]:
+        if spares[y] > 0 and (spares[y] - 1) % 13 == found[(spares[y] - 1) // 13]:
             sys.stdout.write('*')
         else:
             sys.stdout.write(' ')
@@ -323,11 +323,11 @@ def doable (r1, r2, showDeets):
     global onlymove
     if len(elements[r2]) == 0:
         if inOrder(r1) and onlymove > 0:
-            print 'OK, moved the already-sorted row, though this doesn\'t really change the game state.'
+            print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
         locmaxmove /= 2
         if showDeets:
-            print 'Only half moves here down to', locmaxmove
+            print ('Only half moves here down to', locmaxmove)
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
             #print '1 debug stuff:',tocard(elements[r1][n]),n,fromline
@@ -348,23 +348,23 @@ def doable (r1, r2, showDeets):
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
     if onlymove >= locmaxmove:
-        print 'WARNING,' , onlymove, 'is not less than the maximum of', locmaxmove
+        print ('WARNING,' , onlymove, 'is not less than the maximum of', locmaxmove)
         onlymove = 0
     if len(elements[r1]) == 0:
         if showDeets:
-            print 'Tried to move from empty.'
+            print ('Tried to move from empty.')
         return 0
     if onlymove > 0 and onlymove < locmaxmove:
         if showDeets:
-            print 'Cutting down to', onlymove
+            print ('Cutting down to', onlymove)
             return onlymove
     if fromline > locmaxmove:
         if force == 1:
             if showDeets:
-                print 'Cutting down to ', locmaxmove
+                print ('Cutting down to ', locmaxmove)
             return locmaxmove
         if showDeets:
-            print 'Not enough open. Have',locmaxmove,'need', fromline
+            print ('Not enough open. Have',locmaxmove,'need', fromline)
         return -1
     return fromline
     return 0
@@ -374,10 +374,10 @@ def shiftcards(r1, r2, amt):
     del elements[r1][-amt:]
 
 def usage():
-    print 'r (1-8a-d) sends that card to the foundation'
-    print '1-8 1-8 = move a row, standard move'
-    print '(1-8a-d) (1-8a-d) move to spares and back'
-    print 'u = usage (this)'
+    print ('r (1-8a-d) sends that card to the foundation')
+    print ('1-8 1-8 = move a row, standard move')
+    print ('(1-8a-d) (1-8a-d) move to spares and back')
+    print ('u = usage (this)')
 
 def firstEmptySpare():
     for i in range(0,4):
@@ -409,7 +409,6 @@ backup = [row[:] for row in elements]
 name = ""
 
 def loadGame(gameName):
-    #print 'looking for', gameName
     original = open("fcsav.txt", "r")
     while True:
         line=original.readline()
@@ -428,7 +427,7 @@ def loadGame(gameName):
             printCards()
             return 1
         if not line:
-            print re.sub(r'^.=', '', gameName) , 'save game not found.'
+            print (re.sub(r'^.=', '', gameName) , 'save game not found.')
             return 0
     return 0
 
@@ -448,7 +447,10 @@ def readCmd(thisCmd):
     force = 0
     checkFound()
     if thisCmd == '':
-        name = raw_input("Move:").strip()
+        global input
+        try: input = raw_input
+        except NameError: pass
+        name = input("Move:").strip()
     else:
         name = thisCmd
     if len(name) == 0:
@@ -460,13 +462,13 @@ def readCmd(thisCmd):
         if name[2] == '-':
             onlymove = re.sub(r'.*-', '', name)
             if not onlymove.isdigit:
-                print 'Format is ##-#.'
+                print ('Format is ##-#.')
                 return
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
     if name[0] == '/':
         debug = 1 - debug
-        print 'debug', onoff[debug]
+        print ('debug', onoff[debug])
         return
     if name[0] == 'h':
         name = re.sub(r'^h', '', name)
@@ -480,17 +482,17 @@ def readCmd(thisCmd):
             elif name == 'a':
                 name = 1
             else:
-                print 'Need a number, or AJQK.'
+                print ('Need a number, or AJQK.')
                 return
         if int(name) < 1 or int(name) > 13:
-            print 'Need 1-13.'
+            print ('Need 1-13.')
             return
         global highlight
         highlight = int(name)
         if highlight == 0:
-            print 'Highlighting off.'
+            print ('Highlighting off.')
         else:
-            print 'Now highlighting', cards[highlight-1]
+            print ('Now highlighting', cards[highlight-1])
         printCards()
         return
     if name[0] == 'u':
@@ -506,7 +508,7 @@ def readCmd(thisCmd):
         checkFound()
         return
     if name == "?":
-        print 'Maximum card length moves: ', maxmove()
+        print ('Maximum card length moves: ', maxmove())
         return
     if name == "":
         printCards()
@@ -520,31 +522,31 @@ def readCmd(thisCmd):
         if name.isdigit():
             i = int(name)
             if i > 8 or i < 1:
-                print 'Need 1-8.'
+                print ('Need 1-8.')
                 return
             if len(elements[i]) is 0:
-                print 'Acting on an empty row.'
+                print ('Acting on an empty row.')
                 return
             if chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
-                    print "That's just useless shuffling."
+                    print ("That's just useless shuffling.")
                     return
                 name = name + str(firstEmptyRow())
             else:
                 name = name + 'e'
-            print 'New implied command', name
+            print ('New implied command', name)
         elif ord(name[0]) < 101 and ord(name[0]) > 96:
             if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
                 name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
             elif firstEmptyRow() > 0:
                 name = name + str(firstEmptyRow())
             else:
-                print 'No empty row/column to drop from spares.'
+                print ('No empty row/column to drop from spares.')
                 return
         else:
-            print "Unknown 1-letter command."
+            print ("Unknown 1-letter command.")
             return
     #### two letter commands below here.
     if name[0] == 'l' and name[1] == '=':
@@ -555,13 +557,13 @@ def readCmd(thisCmd):
         return
     #### saving comes first.
     if name == "ua":
-        print moveList
+        print (moveList)
         return
     if len(name) > 2:
-        print 'Only 2 chars per command.'
+        print ('Only 2 chars per command.')
         return
     if len(name) < 2:
-        print 'Must have 2 chars per command.'
+        print ('Must have 2 chars per command.')
         return
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
@@ -572,45 +574,48 @@ def readCmd(thisCmd):
             tempspare = ord(tofound) - 97
         if temprow > -1:
             if temprow > 8 or temprow < 1:
-                print 'Not a valid row.'
+                print ('Not a valid row.')
                 return
             if len(elements[temprow]) == 0:
-                print 'Empty row.'
+                print ('Empty row.')
                 return
             if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
-                found[(elements[temprow][len(elements[temprow])-1]-1)/13]+= 1
+                found[(elements[temprow][len(elements[temprow])-1]-1)//13]+= 1
                 elements[temprow].pop()
                 moveList.append(name)
                 checkFound()
                 printCards()
                 return
-            print 'Sorry, found nothing.'
+            print ('Sorry, found nothing.')
             return
         if tempspare > -1:
             if foundable(spares[tempspare]):
-                found[(spares[tempspare]-1)/13]+= 1
+                found[(spares[tempspare]-1)//13]+= 1
                 spares[tempspare] = 0;
-                print 'Moving from spares.'
+                print ('Moving from spares.')
                 moveList.append(name)
                 checkFound()
                 printCards()
             else:
-                print 'Can\'t move from spares.' #/? 3s onto 2s with nothing else, all filled
+                print ('Can\'t move from spares.') #/? 3s onto 2s with nothing else, all filled
             return
-        print 'Must move 1-8 or a-d.'
+        print ('Must move 1-8 or a-d.')
         return
     if name[0].isdigit() and name[1].isdigit():
         t1 = int(name[0])
         t2 = int(name[1])
+        if t1 == t2:
+            print ('Moving a row to itself does nothing.')
+            return
         if len(elements[t1]) == 0:
-            print 'Nothing to move from.'
+            print ('Nothing to move from.')
             return
         tempdoab = doable(t1,t2,1)
         if tempdoab == -1:
             #print 'Not enough space.'
             return
         if tempdoab == 0:
-            print 'Those cards don\'t match up.'
+            print ('Those cards don\'t match up.')
             return
         shiftcards(t1, t2, tempdoab)
         moveList.append(name)
@@ -620,14 +625,14 @@ def readCmd(thisCmd):
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
-            print 'Nothing in slot' , name[0]
+            print ('Nothing in slot' , name[0])
             return
         if not name[1].isdigit():
-            print 'Second letter not recognized.'
+            print ('Second letter not recognized.')
             return
         myRow = int(name[1])
         if myRow < 1 or myRow > 8:
-            print 'To row must be between 1 and 8.'
+            print ('To row must be between 1 and 8.')
             return
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
@@ -636,35 +641,35 @@ def readCmd(thisCmd):
             checkFound()
             printCards()
             return
-        print 'Can\'t put ', spares[mySpare], 'on', elements[myRow][len(elements[myRow])-1]
+        print ('Can\'t put ', spares[mySpare], 'on', elements[myRow][len(elements[myRow])-1])
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if name[1] == 'e':
             myToSpare = firstEmptySpare()
             if myToSpare == -1:
-                print 'Nothing empty to move to. To which to move.'
+                print ('Nothing empty to move to. To which to move.')
                 return
         else:
             myToSpare = ord(name[1]) - 97
         if not name[0].isdigit():
-            print 'First letter not recognized.'
+            print ('First letter not recognized.')
             return
         myRow = int(name[0])
         if spares[myToSpare] > 0:
-            print 'Spare', myToSpare, 'already filled.'
+            print ('Spare', myToSpare, 'already filled.')
             return
         if myRow < 1 or myRow > 8:
-            print 'From row must be between 1 and 8.'
+            print ('From row must be between 1 and 8.')
             return
         if (len(elements[myRow]) == 0):
-            print 'Empty from-row.'
+            print ('Empty from-row.')
             return
         spares[myToSpare] = elements[myRow].pop()
         moveList.append(name)
         checkFound()
         printCards()
         return
-    print name,'not recognized, displaying usage.'
+    print (name,'not recognized, displaying usage.')
     usage()
 
 while win == 0:
