@@ -25,6 +25,8 @@ vertical = 0
 lastscore = 0
 highlight = 0
 
+onlymove = 0
+
 def chainTotal():
     retval = 0
     for i in range (0,9):
@@ -309,10 +311,6 @@ def doable (r1, r2, showDeets):
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
-    if len(elements[r1]) == 0:
-        if showDeets:
-            print 'Tried to move from empty.'
-        return 0
     if len(elements[r2]) == 0:
         locmaxmove /= 2
         if showDeets:
@@ -336,6 +334,18 @@ def doable (r1, r2, showDeets):
                 return 0
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
+    global onlymove
+    if onlymove >= locmaxmove:
+        print 'WARNING,' , onlymove, 'is not less than the maximum of', locmaxmove
+        onlymove = 0
+    if len(elements[r1]) == 0:
+        if showDeets:
+            print 'Tried to move from empty.'
+        return 0
+    if onlymove > 0 and onlymove < locmaxmove:
+        if showDeets:
+            print 'Cutting down to', onlymove
+            return onlymove
     if fromline > locmaxmove:
         if force == 1:
             if showDeets:
@@ -432,6 +442,16 @@ def readCmd(thisCmd):
     if len(name) == 0:
         printCards()
         return
+    global onlymove
+    onlymove = 0
+    if len(name) > 3:
+        if name[2] == '-':
+            onlymove = re.sub(r'.*-', '', name)
+            if not onlymove.isdigit:
+                print 'Format is ##-#.'
+                return
+            onlymove = int(onlymove)
+            name = re.sub(r'-.*', '', name)
     if name[0] == '/':
         debug = 1 - debug
         print 'debug', onoff[debug]
