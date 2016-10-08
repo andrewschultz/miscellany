@@ -214,8 +214,6 @@ def checkWinning():
                 initSide()
                 global backup
                 backup = [row[:] for row in elements]
-                print backup[1]
-                print elements[1]
                 return
         print ("Y or N. Case insensitive, cuz I'm a sensitive guy.")
         
@@ -238,10 +236,10 @@ def printVertical():
     count = 0
     for y in range (1,9):
         sys.stdout.write('(' + str(chains(y)) + ') ')
-    print ()
+    print ("")
     for y in range (1,9):
         sys.stdout.write(' ' + str(y) + ': ')
-    print ()
+    print ("")
     oneMoreTry = 1
     while oneMoreTry:
         thisline = ''
@@ -343,6 +341,10 @@ def doable (r1, r2, showDeets):
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
+    if r1 < 1 or r2 < 1 or r1 > 8 or r2 > 8:
+        print ("This shouldn't have happened, but one of the rows is invalid.")
+        trackback.print_tb()
+        return
     global onlymove
     if len(elements[r2]) == 0:
         if inOrder(r1) and onlymove > 0:
@@ -370,8 +372,8 @@ def doable (r1, r2, showDeets):
                 return 0
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
-    if onlymove >= locmaxmove:
-        print ("WARNING, %d is not less than the maximum of %d." % (onlymove, locmaxmove))
+    if onlymove > locmaxmove:
+        print ("WARNING, %d is greater than the maximum of %d." % (onlymove, locmaxmove))
         onlymove = 0
     if len(elements[r1]) == 0:
         if showDeets:
@@ -558,7 +560,7 @@ def readCmd(thisCmd):
             if len(elements[i]) is 0:
                 print ('Acting on an empty row.')
                 return
-            if (len(elements[i] == 0 or chains(i) > 1) and firstMatchableRow(elements[i][len(elements[i])-1]):
+            if (len(elements[i]) == 0 or chains(i) > 1) and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
@@ -640,6 +642,9 @@ def readCmd(thisCmd):
             return
         if len(elements[t1]) == 0:
             print ('Nothing to move from.')
+            return
+        if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
+            print ("Need digits from 1-8.")
             return
         tempdoab = doable(t1,t2,1)
         if tempdoab == -1:
