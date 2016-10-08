@@ -79,10 +79,12 @@ def initSide():
     found = [0, 0, 0, 0]
     global highlight
     highlight = 0
+    print (str(inUndo))
     if inUndo == 0:
         global win
         win = 0
-    moveList = []
+        global moveList
+        moveList = []
 
 def plur(a):
     if a is 1:
@@ -433,6 +435,27 @@ backup = [row[:] for row in elements]
 
 name = ""
 
+def undoMoves(toUndo):
+    global moveList
+    if len(moveList) == 0:
+        print "Nothing to undo."
+        return 0
+    global elements
+    elements = [row[:] for row in backup]
+    global found
+    found = [0, 0, 0, 0]
+    global spares
+    spares = [0, 0, 0, 0]
+    for i in range (0,toUndo):
+        moveList.pop()
+    inUndo = 1
+    for myCmd in moveList:
+        readCmd(str(myCmd))
+    inUndo = 0
+    printCards()
+    return 1
+   
+
 def loadGame(gameName):
     original = open("fcsav.txt", "r")
     while True:
@@ -445,13 +468,13 @@ def loadGame(gameName):
             line=original.readline().strip()
             original.close()
             global moveList
+            global inUndo
+            inUndo = 1
+            initSide()
             if len(line) > 0 and line[0] != '#':
                 moveList = line.split()
             else:
                 moveList = []
-            global inUndo
-            inUndo = 1
-            initSide()
             for myCmd in moveList:
                 readCmd(str(myCmd))
             inUndo = 0
@@ -459,7 +482,7 @@ def loadGame(gameName):
             printCards()
             return 1
         if not line:
-            print (re.sub(r'^.=', '', gameName) , 'save game not found.')
+            print (re.sub(r'^.=', '', gameName) + 'save game not found.')
             original.close()
             return 0
     return 0
@@ -499,6 +522,22 @@ def readCmd(thisCmd):
                 return
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
+    if name[0] == 'u':
+        if len(name) == 1:
+            undoMoves(1)
+            return
+        if name[1] == 'a':
+            print (moveList)
+            return
+        temp = re.sub(r'^u', '', name)
+        if not temp.isdigit:
+            print "Need to undo a number, or nothing."
+            return
+        if int(temp) > len(moveList):
+            print ("Tried to do %d undos, can only undo %d." % temp, len(moveList))
+            return
+        undoMoves(int(temp))
+        return
     if name[0] == '/':
         debug = 1 - debug
         print ('debug', onoff[debug])
@@ -528,7 +567,7 @@ def readCmd(thisCmd):
             print ('Now highlighting', cards[highlight-1])
         printCards()
         return
-    if name[0] == 'u':
+    if name[0] == '?':
         usage()
         return
     if name[0] == 'f':
@@ -589,9 +628,6 @@ def readCmd(thisCmd):
         saveGame(name.strip())
         return
     #### saving comes first.
-    if name == "ua":
-        print (moveList)
-        return
     if len(name) > 2:
         print ('Only 2 chars per command.')
         return
