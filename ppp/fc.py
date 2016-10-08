@@ -285,11 +285,11 @@ def printOthers():
             canmove = canmove + ' >' + chr(z1+97)
             canfwdmove = 1
     if wackmove:
-        print ('Not enough room:', str(wackmove))
+        print ("Not enough room: " + str(wackmove))
     if canmove:
-        sys.stdout.write('Possible moves: ' + str(canmove) + ' (' + str(maxmove()) + ', ' + str(chainTotal()) + ' in order)\n')
+        print ("Possible moves:" + canmove + " (%d longest, %d in order)" % (maxmove(), chainTotal()))
     if not canfwdmove:
-        print ('Uh oh. You\'re probably lost.')
+        print ("Uh oh. You\'re probably lost.")
     sys.stdout.write('Empty slots: ')
     for y in range (0,4):
         sys.stdout.write(tocard(spares[y]))
@@ -327,7 +327,7 @@ def doable (r1, r2, showDeets):
             return len(elements[r1])
         locmaxmove /= 2
         if showDeets:
-            print ('Only half moves here down to', locmaxmove)
+            print ("Only half moves here down to %d" % (locmaxmove))
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
             #print '1 debug stuff:',tocard(elements[r1][n]),n,fromline
@@ -348,7 +348,7 @@ def doable (r1, r2, showDeets):
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
                 return 0
     if onlymove >= locmaxmove:
-        print ('WARNING,' , onlymove, 'is not less than the maximum of', locmaxmove)
+        print ("WARNING, %d is not less than the maximum of %d." % (onlymove, locmaxmove))
         onlymove = 0
     if len(elements[r1]) == 0:
         if showDeets:
@@ -361,10 +361,10 @@ def doable (r1, r2, showDeets):
     if fromline > locmaxmove:
         if force == 1:
             if showDeets:
-                print ('Cutting down to ', locmaxmove)
+                print ("Cutting down to " + str(locmaxmove))
             return locmaxmove
         if showDeets:
-            print ('Not enough open. Have',locmaxmove,'need', fromline)
+            print ("Not enough open. Have %d, need %d" % (locmaxmove, fromline))
         return -1
     return fromline
     return 0
@@ -536,7 +536,7 @@ def readCmd(thisCmd):
                 name = name + str(firstEmptyRow())
             else:
                 name = name + 'e'
-            print ('New implied command', name)
+            print ("New implied command %d." % (name))
         elif ord(name[0]) < 101 and ord(name[0]) > 96:
             if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
                 name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
