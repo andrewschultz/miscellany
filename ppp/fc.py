@@ -79,6 +79,9 @@ def initSide():
     found = [0, 0, 0, 0]
     global highlight
     highlight = 0
+    if inUndo == 0:
+        global win
+        win = 0
     moveList = []
 
 def plur(a):
@@ -160,13 +163,13 @@ def checkWin():
     for y in range (0,4):
         #print y,found[y]
         if found[y] != 13:
-            return 0;
-    print ('You win!')
-    exit()
+            return 0
+    checkWinning()
     
 def initCards():
     x = list(range(1,53))
     shuffle(x)
+    global elements
     for y in range(0,7):
         for z in range(1,9):
             if len(x) == 0:
@@ -189,13 +192,33 @@ def printCards():
     if inUndo == 1:
         return
     if sum(found) == 52:
-        print ("You win!")
-        exit()
+        checkWinning()
     if vertical == 1:
         printVertical()
     else:
         printHorizontal()
- 
+
+def checkWinning():
+    global input
+    try: input = raw_input
+    except NameError: pass
+    finish = ""
+    while True:
+        finish = input("You win! Play again?")
+        if len(finish) > 0:
+            if finish[0] == 'n' or finish[0] == 'N':
+                print("Bye!")
+                exit()
+            if finish[0] == 'y' or finish[0] == 'Y':
+                initCards()
+                initSide()
+                global backup
+                backup = [row[:] for row in elements]
+                print backup[1]
+                print elements[1]
+                return
+        print ("Y or N. Case insensitive, cuz I'm a sensitive guy.")
+        
 def chains(myrow):
     if len(elements[myrow]) == 0:
         return 0;
@@ -418,16 +441,24 @@ def loadGame(gameName):
                 elements[y] = [int(i) for i in line.split()]
                 backup[y] = [int(i) for i in line.split()]
             line=original.readline().strip()
-            moveList = line.split()
+            original.close()
+            global moveList
+            if len(line) > 0 and line[0] != '#':
+                moveList = line.split()
+            else:
+                moveList = []
             global inUndo
             inUndo = 1
+            initSide()
             for myCmd in moveList:
                 readCmd(str(myCmd))
             inUndo = 0
+            checkFound()
             printCards()
             return 1
         if not line:
             print (re.sub(r'^.=', '', gameName) , 'save game not found.')
+            original.close()
             return 0
     return 0
 
@@ -527,7 +558,7 @@ def readCmd(thisCmd):
             if len(elements[i]) is 0:
                 print ('Acting on an empty row.')
                 return
-            if chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
+            if (len(elements[i] == 0 or chains(i) > 1) and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
@@ -536,7 +567,7 @@ def readCmd(thisCmd):
                 name = name + str(firstEmptyRow())
             else:
                 name = name + 'e'
-            print ("New implied command %d." % (name))
+            print ("New implied command %s." % (name))
         elif ord(name[0]) < 101 and ord(name[0]) > 96:
             if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
                 name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
@@ -656,7 +687,7 @@ def readCmd(thisCmd):
             return
         myRow = int(name[0])
         if spares[myToSpare] > 0:
-            print ('Spare', myToSpare, 'already filled.')
+            print ("Spare %d already filled" % (myToSpare))
             return
         if myRow < 1 or myRow > 8:
             print ('From row must be between 1 and 8.')
