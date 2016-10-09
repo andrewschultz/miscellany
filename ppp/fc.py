@@ -353,7 +353,7 @@ def doable (r1, r2, showDeets):
             print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
         locmaxmove /= 2
-        if showDeets:
+        if showDeets and not inUndo:
             print ("Only half moves here down to %d" % (locmaxmove))
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
@@ -448,6 +448,8 @@ def undoMoves(toUndo):
     spares = [0, 0, 0, 0]
     for i in range (0,toUndo):
         moveList.pop()
+    print (moveList)
+    global inUndo
     inUndo = 1
     for myCmd in moveList:
         readCmd(str(myCmd))
@@ -651,7 +653,8 @@ def readCmd(thisCmd):
             if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
                 found[(elements[temprow][len(elements[temprow])-1]-1)//13]+= 1
                 elements[temprow].pop()
-                moveList.append(name)
+                if inUndo == 0:
+                    moveList.append(name)
                 checkFound()
                 printCards()
                 return
@@ -662,7 +665,8 @@ def readCmd(thisCmd):
                 found[(spares[tempspare]-1)//13]+= 1
                 spares[tempspare] = 0;
                 print ('Moving from spares.')
-                moveList.append(name)
+                if inUndo == 0:
+                    moveList.append(name)
                 checkFound()
                 printCards()
             else:
@@ -690,14 +694,15 @@ def readCmd(thisCmd):
             print ('Those cards don\'t match up.')
             return
         shiftcards(t1, t2, tempdoab)
-        moveList.append(name)
+        if inUndo == 0:
+            moveList.append(name)
         checkFound()
         printCards()
         return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
-            print ('Nothing in slot' , name[0])
+            print ('Nothing in slot %d' % name[0])
             return
         if not name[1].isdigit():
             print ('Second letter not recognized.')
@@ -709,11 +714,12 @@ def readCmd(thisCmd):
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
             spares[mySpare] = 0
-            moveList.append(name)
+            if inUndo == 0:
+                moveList.append(name)
             checkFound()
             printCards()
             return
-        print ('Can\'t put ', spares[mySpare], 'on', elements[myRow][len(elements[myRow])-1])
+        print ("Can't put %s on %d." % (tocard(spares[mySpare]), elements[myRow][len(elements[myRow])-1]))
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if name[1] == 'e':
@@ -737,7 +743,8 @@ def readCmd(thisCmd):
             print ('Empty from-row.')
             return
         spares[myToSpare] = elements[myRow].pop()
-        moveList.append(name)
+        if inUndo == 0:
+            moveList.append(name)
         checkFound()
         printCards()
         return
@@ -750,3 +757,5 @@ endwhile
 
 
 #?? possible moves show restricted, put in new line 
+
+#implied command, check if it is useful (?)
