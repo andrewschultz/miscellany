@@ -79,7 +79,6 @@ def initSide():
     found = [0, 0, 0, 0]
     global highlight
     highlight = 0
-    print (str(inUndo))
     if inUndo == 0:
         global win
         win = 0
@@ -572,9 +571,40 @@ def readCmd(thisCmd):
     if name[0] == '?':
         usage()
         return
+    if name == "r":
+        print "Sending all to foundation."
+        checkAgain = 1
+        forceStr = ""
+        while checkAgain:
+            checkAgain = 0
+            for row in range (1,9):
+                if len(elements[row]) > 0:
+                    if foundable(elements[row][len(elements[row])-1]) == 1:
+                        found[(elements[row][len(elements[row])-1]-1)//13]+= 1
+                        forceStr = forceStr + tocardX(elements[row][len(elements[row])-1])
+                        elements[row].pop()
+                        checkAgain = 1
+            for xx in range (0,4):
+                if spares[xx]:
+                    #print ("Checking" + tocardX(spares[xx]))
+                    if foundable(spares[xx]):
+                        forceStr = forceStr + tocardX(spares[xx])
+                        found[(spares[xx]-1)//13] += 1
+                        spares[xx] = 0
+                        checkAgain = 1
+        if forceStr:
+            print ("Forced" + forceStr)
+            checkFound()
+            printCards()
+        else:
+            print ("Nothing to force to foundation.")
+        return
     if name[0] == 'f':
         name = name.replace("f", "")
         force = 1
+        if len(name) == 0:
+            print ("You need a from/to, or at the very least, a from.")
+            return
     if name == "-":
         elements = [row[:] for row in backup]
         initSide()
