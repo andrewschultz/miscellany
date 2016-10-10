@@ -77,6 +77,7 @@ roi=c:\games\inform\triz\mine\voltmaze.trizbort,roiling
 roi=c:\games\inform\triz\mine\voltmaze.pdf,roiling
 roi=c:\games\inform\roiling.inform\uuid.txt,roiling
 roi=c:\games\inform\roiling.inform\source\roomlist.txt,roiling
+roi=c:\games\inform\roiling.inform\source\sso.pl,roiling
 roi=c:\games\inform\roiling.inform\source\reg-roi-*,\roiling\testing
 -b:roi=c:\games\inform\Roiling Materials\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling

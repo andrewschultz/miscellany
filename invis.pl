@@ -22,6 +22,7 @@ my $launchAfter = 1;
 my $launchRaw = 1;
 my $count = 0;
 my $forceRunThrough = 0;
+my $debug = 0;
 
 ###trickier variables
 my $cmd = "";
@@ -40,6 +41,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
   /-a/ && do { printAllFiles(); exit; };
+  /-d/ && do { $debug = 1; $count++; next; };
   /-f/ && do { $forceRunThrough = 1; $count++; next; };
   /-u/ && do { $updateOnly = 1; $count++; next; };
   /-l/ && do { $launchAfter = 1; $count++; next; };
@@ -64,10 +66,10 @@ $a = <A>;
 
 if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:\\writing\\scripts\\invis\\$a"; $a = <A>; }
 
-if ($updateOnly)
+if ($updateOnly && defined(-M $outname))
 {
   #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
-  print "" . ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n";
+  if ($debug) { print "" . ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n"; }
   if ((-M $filename > -M $outname) && (!$forceRunThrough)) { print "$outname is already up to date. Run with -f to force things.\n"; exit; }
   else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
 }
