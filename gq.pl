@@ -194,29 +194,6 @@ sub processOneFile
   if (!$foundOne) { push (@blanks, $modFile); }
 }
 
-sub processNotes
-{
-  open(A, "c:/writing/$_[0]") || open(A, "c:/writing/dict/$_[0]") || open(A, "c:/games/inform/roiling.inform/source/$_[0]") || die ("Can't open $_[0] file.");
-  print "In notes file $_[0]:\n"; $foundSomething = 0;
-  $section = "";
-  $lines = 0;
-  while ($a = <A>)
-  { # all headers for ARO?
-    if ($readStuff) {
-	  $lines++;
-	}
-    if ($a =~ /^\\ana/i) { $readStuff = 1; $header = $a; $header =~ s/.*=//g; chomp($header); $foundSomething = 0; }
-    if ($a =~ /^\\ifupdate/i) { $readStuff = 1; $header = $a; $header =~ s/.*=//g; chomp($header); }
-	if ($a !~ /[a-z\"]/i) { if ($readStuff && !$foundSomething) { print "NOTHING in $lines lines of $header.\n"; } $readStuff = 0; $lines=0; }
-	if ($a =~ /^\\/) { $section = $a; chomp ($section); $section =~ s/.*=//g; }
-    if ($a =~ /^#/) { next; }
-    if ($readStuff)
-    {
-      if (cromu($a)) { print "In $section: $a"; $foundSomething = 1; }
-    }
-  }
-}
-
 sub cromu
 {
   if ($firstStart)

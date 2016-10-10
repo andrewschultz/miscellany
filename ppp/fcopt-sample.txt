@@ -1,0 +1,7 @@
+###############################
+#This is a list of current options
+#currently only vertical/horizontal
+#or doubles (2x2 text)/CDHS
+#
+vertical=1
+doubles=0

@@ -25,6 +25,7 @@ c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Roiling Nudges
 c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Roiling Random Text.i7x
 c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Shuffling Nudges.i7x
 c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Shuffling Random Text.i7x
+c:\games\inform\roiling.inform\Source\tosort.txt
 c:\writing\games.otl	sa,ifbrave,if-manor,if-towers,if-troves,if-oyster,if-routes,if-presto,if-otters,roi
 c:\writing\dict\sts.txt
 c:\games\inform\triz\mine\shuffling-around.trizbort

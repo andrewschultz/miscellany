@@ -21,6 +21,7 @@ inUndo = 0
 
 #options to define. How to do better?
 vertical = 0
+doubles = 0
 
 lastscore = 0
 highlight = 0
@@ -63,12 +64,18 @@ def firstMatchableRow(cardval):
 
 def readOpts():
     global vertical
+    global doubles
     infile = "fcopt.txt";
     with open(infile) as f:
         for line in f:
+            if line[0] == '#': #ignore comments
+                continue
             q=re.sub(r'.*=', '', line.rstrip())
             if "vertical" in line:
                 vertical = int(q)
+                return
+            if "doubles" in line:
+                doubles = int(q)
                 return
     exit()
 
