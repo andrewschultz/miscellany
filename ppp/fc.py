@@ -14,6 +14,9 @@ suits = ['C', 'd', 'S', 'h']
 
 cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
 
+top = ['CL', 'di', 'SP', 'he']
+btm = ['UB', 'am', 'AD', 'ar']
+
 moveList = []
 
 win = 0
@@ -73,11 +76,9 @@ def readOpts():
             q=re.sub(r'.*=', '', line.rstrip())
             if "vertical" in line:
                 vertical = int(q)
-                return
             if "doubles" in line:
                 doubles = int(q)
-                return
-    exit()
+    return
 
 def initSide():
     global spares
@@ -244,28 +245,52 @@ def printVertical():
     count = 0
     for y in range (1,9):
         sys.stdout.write('(' + str(chains(y)) + ') ')
+        if doubles:
+            sys.stdout.write(' ')
     print ("")
     for y in range (1,9):
         sys.stdout.write(' ' + str(y) + ': ')
+        if doubles:
+            sys.stdout.write(' ')
     print ("")
     oneMoreTry = 1
     while oneMoreTry:
         thisline = ''
+        secondLine = ''
         oneMoreTry = 0;
         for y in range (1,9):
             if len(elements[y]) > count:
-                thisline += str(tocard(elements[y][count]))
+                oneMoreTry = 1
+                if doubles:
+                    temp = str(tocard(elements[y][count]))
+                    if tocard(elements[y][count])[0] == ' ':
+                        thisline += temp[1]
+                        secondLine += temp[0]
+                    else:
+                        thisline += temp[0]
+                        secondLine += temp[1]
+                    thisline += top[(elements[y][count]-1)//13]
+                    secondLine += btm[(elements[y][count]-1)//13] + ' '
+                else:
+                    thisline += str(tocard(elements[y][count]))
                 if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)//13]:
                     thisline += '*'
                 elif highlight and (((elements[y][count]-1) % 13) == highlight - 1):
                     thisline += '+'
                 else:
                     thisline += ' '
-                oneMoreTry = 1
+                if doubles:
+                    thisline += ' '
+                    secondLine += ' '
             else:
                 thisline += '    '
+                if doubles:
+                    thisline += ' '
+                    secondLine += '     '
         if oneMoreTry:
             print (thisline)
+            if secondLine:
+                print (secondLine)
         count+=1
     printOthers()
 
@@ -506,6 +531,7 @@ def saveGame(gameName):
 
 def readCmd(thisCmd):
     global vertical
+    global doubles
     global elements
     global force
     force = 0
@@ -622,6 +648,10 @@ def readCmd(thisCmd):
         print ('Maximum card length moves: ', maxmove())
         return
     if name == "":
+        printCards()
+        return
+    if name == '+':
+        doubles = 1 - doubles
         printCards()
         return
     if name == 'v':
