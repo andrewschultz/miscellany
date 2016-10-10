@@ -343,7 +343,17 @@ def printOthers():
     if canmove:
         print ("Possible moves:" + canmove + " (%d longest, %d in order)" % (maxmove(), chainTotal()))
     if not canfwdmove:
-        print ("Uh oh. You\'re probably lost.")
+        reallylost = 1
+        for z in range (1,9):
+            if len(element[z]) > 0 and foundable(element[z][len(element[z])-1]):
+                reallylost = 0
+        for z in range (0,4):
+            if foundable(spares[z]):
+                reallylost = 0
+        if reallylost == 1:
+            print ("Uh oh. You\'re probably lost.")
+        else:
+            print ("You may have to dump stuff in the foundation.")
     sys.stdout.write('Empty slots: ')
     for y in range (0,4):
         sys.stdout.write(tocard(spares[y]))
@@ -710,6 +720,9 @@ def readCmd(thisCmd):
             temprow = int(tofound)
         elif (ord(tofound) > 96) and (ord(tofound) < 101):
             tempspare = ord(tofound) - 97
+        else:
+            print "1-8 a-d are needed with R, or (nothing) tries to force everything."
+            return
         if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print ('Not a valid row.')
