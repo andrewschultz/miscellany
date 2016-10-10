@@ -71,6 +71,7 @@ def readOpts():
     infile = "fcopt.txt";
     with open(infile) as f:
         for line in f:
+            gotOne = 1
             if line[0] == '#': #ignore comments
                 continue
             q=re.sub(r'.*=', '', line.rstrip())
@@ -78,6 +79,36 @@ def readOpts():
                 vertical = int(q)
             if "doubles" in line:
                 doubles = int(q)
+    if gotOne:
+        print "Options file read."
+        f.close()
+    else:
+        print "Failed to read options file."
+    return
+
+def sendOpts():
+    q = re.compile(r'^vertical=')
+    r = re.compile(r'^doubles=')
+    infile = "fcopt.txt"
+    fileString = ""
+    gotOne = 0
+    with open(infile) as f:
+        for line in f:
+            gotOne = 1
+            if (q.match(line)):
+                fileString += "doubles=" + str(doubles) + "\n"
+            elif (r.match(line)):
+                fileString += "vertical=" + str(vertical) + "\n"
+            else:
+                fileString += line
+    if gotOne:
+        f.close()
+        f2 = open(infile, 'w')
+        f2.write(fileString)
+        print "Got options file, rewrote it."
+        f2.close()
+    else:
+        print "Failed to get options file."
     return
 
 def initSide():
@@ -442,10 +473,12 @@ def shiftcards(r1, r2, amt):
     del elements[r1][-amt:]
 
 def usage():
-    print ('r (1-8a-d) sends that card to the foundation')
-    print ('1-8 1-8 = move a row, standard move')
-    print ('(1-8a-d) (1-8a-d) move to spares and back')
-    print ('u = usage (this)')
+    print ('r (1-8a-d) sends that card to the foundation. r alone forces everything it can.')
+    print ('lo/so loads/saves options.')
+    print ('1-8 1-8 = move a row, standard move.')
+    print ('(1-8a-d) (1-8a-d) move to spares and back.')
+    print ('v toggles vertical, + toggles card size (only vertical right now).')
+    print ('u = usage (this).')
 
 def firstEmptySpare():
     for i in range(0,4):
@@ -566,6 +599,12 @@ def readCmd(thisCmd):
                 return
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
+    if name == "lo":
+        readOpts()
+        return
+    if name == "so":
+        sendOpts()
+        return
     if name[0] == 'u':
         if len(name) == 1:
             undoMoves(1)
