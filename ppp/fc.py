@@ -45,6 +45,14 @@ def chainTotal():
                 retval += 1
     return retval
 
+def chainNope():
+    retval = 0
+    for i in range (0,9):
+        for v in range (1,len(elements[i])):
+            if not canPut(elements[i][v], elements[i][v-1]):
+                retval += 1
+    return retval
+
 def spareUsed():
     retval = 0
     for i in range (0,4):
@@ -305,7 +313,11 @@ def printVertical():
                 else:
                     thisline += str(tocard(elements[y][count]))
                 if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)//13]:
-                    thisline += '*'
+                    odds = (elements[y][count]-1)//13
+                    if (elements[y][count]-1) % 13 < found[(odds+1)%4]+2 and (elements[y][count]-1) % 13 < found[(odds+3)%4]+2:
+                        thisline += '!'
+                    else:
+                        thisline += '*'
                 elif highlight and (((elements[y][count]-1) % 13) == highlight - 1):
                     thisline += '+'
                 else:
@@ -372,11 +384,11 @@ def printOthers():
     if wackmove:
         print ("Not enough room: " + str(wackmove))
     if canmove:
-        print ("Possible moves:" + canmove + " (%d longest, %d in order)" % (maxmove(), chainTotal()))
+        print ("Possible moves:" + canmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNope()))
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
-            if len(element[z]) > 0 and foundable(element[z][len(element[z])-1]):
+            if len(elements[z]) > 0 and foundable(elements[z][len(elements[z])-1]):
                 reallylost = 0
         for z in range (0,4):
             if foundable(spares[z]):
@@ -678,6 +690,7 @@ def readCmd(thisCmd):
             print ("Forced" + forceStr)
             checkFound()
             printCards()
+            moveList.append("r")
         else:
             print ("Nothing to force to foundation.")
         return
