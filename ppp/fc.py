@@ -240,7 +240,8 @@ def printCards():
     if inUndo == 1:
         return
     if sum(found) == 52:
-        checkWinning()
+        if not checkWinning():
+            return
     if vertical == 1:
         printVertical()
     else:
@@ -252,7 +253,7 @@ def checkWinning():
     except NameError: pass
     finish = ""
     while True:
-        finish = input("You win! Play again?")
+        finish = input("You win! Play again (Y/N, U to undo)?")
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'N':
                 print("Bye!")
@@ -262,8 +263,14 @@ def checkWinning():
                 initSide()
                 global backup
                 backup = [row[:] for row in elements]
-                return
-        print ("Y or N. Case insensitive, cuz I'm a sensitive guy.")
+                return 1
+            if finish[0] == 'u' or finish[0] == 'U':
+                global inUndo
+                inUndo = 1
+                undoMoves(1)
+                inUndo = 0
+                return 0
+        print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
         
 def chains(myrow):
     if len(elements[myrow]) == 0:
@@ -534,12 +541,12 @@ def undoMoves(toUndo):
     spares = [0, 0, 0, 0]
     for i in range (0,toUndo):
         moveList.pop()
-    print (moveList)
     global inUndo
     inUndo = 1
     for myCmd in moveList:
         readCmd(str(myCmd))
     inUndo = 0
+    checkFound()
     printCards()
     return 1
    
@@ -851,7 +858,7 @@ def readCmd(thisCmd):
             checkFound()
             printCards()
             return
-        print ("Can't put %s on %d." % (tocard(spares[mySpare]), elements[myRow][len(elements[myRow])-1]))
+        print ("Can't put%s on%s." % (tocardX(spares[mySpare]), tocardX(elements[myRow][len(elements[myRow])-1])))
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if name[1] == 'e':
