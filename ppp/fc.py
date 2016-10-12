@@ -8,6 +8,8 @@ import re
 import sys
 from random import shuffle
 
+savefile = "fcsav.txt"
+
 onoff = ['off', 'on']
 
 suits = ['C', 'd', 'S', 'h']
@@ -560,7 +562,7 @@ def undoMoves(toUndo):
    
 
 def loadGame(gameName):
-    original = open("fcsav.txt", "r")
+    original = open(savefile, "r")
     while True:
         line=original.readline()
         if gameName == line.strip():
@@ -585,18 +587,30 @@ def loadGame(gameName):
             printCards()
             return 1
         if not line:
-            print (re.sub(r'^.=', '', gameName) + 'save game not found.')
+            print (re.sub(r'^.=', '', gameName) + ' save game not found.')
             original.close()
             return 0
+    gn2 = gameName.replace(r'^.=', '')
+    print ("Successfully loaded " + gn2)
     return 0
 
 def saveGame(gameName):
-    with open("fcsav.txt", "a") as myfile:
+    savfi = open(savefile, "r")
+    linecount = 0
+    for line in savfi:
+        linecount += 1
+        if line.strip() == gameName:
+            print ("Duplicate save game name found at line %d." % linecount)
+            return
+    savfi.close()
+    with open(savefile, "a") as myfile:
         myfile.write(gameName + "\n")
         for y in range (1,9):
             myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
         myfile.write(' '.join(moveList) + "\n")
         myfile.write("###end of " + gameName + "\n")
+    gn2 = gameName.replace(r'^.=', '')
+    print ("Successfully saved game as " + gn2)
     return 0
 
 def readCmd(thisCmd):
