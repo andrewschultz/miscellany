@@ -430,7 +430,7 @@ def printOthers():
     sys.stdout.write(')\n')
     lastscore = foundscore
 
-def doable (r1, r2, showDeets):
+def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no match, -1 = asking too much
     cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
@@ -474,18 +474,23 @@ def doable (r1, r2, showDeets):
         return 0
     if onlymove > 0 and onlymove < locmaxmove:
         if showDeets:
+            if len(elements[r2]) > 0:
+                print ('Can\'t move to that non-empty, even with force.')
+                return -1
             print ('Cutting down to', onlymove)
             return onlymove
     if fromline > locmaxmove:
         if force == 1:
             if showDeets:
+                if len(elements[r2]) > 0:
+                    print ('Can\'t move to that non-empty, even with force.')
+                    return -1
                 print ("Cutting down to " + str(locmaxmove))
             return locmaxmove
         if showDeets:
             print ("Not enough open. Have %d, need %d" % (locmaxmove, fromline))
         return -1
     return fromline
-    return 0
 
 def shiftcards(r1, r2, amt):
     elements[r2].extend(elements[r1][-amt:])
@@ -496,6 +501,9 @@ def usage():
     print ('lo/so loads/saves options.')
     print ('1-8 1-8 = move a row, standard move.')
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
+    print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
+    print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
+    print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
     print ('u = usage (this).')
 
@@ -672,7 +680,7 @@ def readCmd(thisCmd):
     if name[0] == '?':
         usage()
         return
-    if name == "r":
+    if name == "r" or name == "rr":
         print "Sending all to foundation."
         checkAgain = 1
         forceStr = ""
@@ -697,7 +705,8 @@ def readCmd(thisCmd):
             print ("Forced" + forceStr)
             checkFound()
             printCards()
-            moveList.append("r")
+            if not inUndo:
+                moveList.append("r")
         else:
             print ("Nothing to force to foundation.")
         return

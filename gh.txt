@@ -214,11 +214,10 @@ prob=c:\games\inform\triz\mine\compound-walkthrough.pdf,
 prob=c:\games\inform\triz\mine\compound-directors-cut.trizbort,
 prob=c:\games\inform\triz\mine\compound-directors-cut.pdf,
 prob=c:\games\inform\triz\mine\compound-ordering.trizbort,
-prob=c:\writing\scripts\pc.txt,
+prob=c:\writing\scripts\invis\pc.txt,
 prob=c:\games\inform\Compound Materials\Release\problems-compound-invisiclues.htm,
 -b:prob=c:\games\inform\Compound Materials\Release\The Problems Compound.gblorb,
 -b:prob=c:\games\inform\beta Materials\Release\beta-The Problems Compound.gblorb,
-prob=c:\writing\scripts\pc.txt,
 prob=c:\games\inform\Compound Materials\Cover.png,
 prob=c:\games\inform\Compound Materials\Small Cover.png,
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conversation Modified.i7x,
@@ -271,6 +270,7 @@ past=c:\games\inform\triz\mine\buck-the-past.trizbort,
 past=c:\games\inform\triz\mine\buck-the-past.pdf,
 past=c:\games\inform\buck-the-past Materials\Release\buck-the-past-invisiclues.htm,
 past=c:\writing\scripts\invis\btp.txt,
+past=c:\games\inform\buck-the-past.inform\Source\excl.pl
 
 #Grubbyville files
 TOBASE=grubbyville
@@ -279,7 +279,7 @@ gru=c:\games\inform\grubbyville.inform\source\walkthru.txt,
 gru=c:\games\inform\grubbyville.inform\source\story.ni,
 gru=c:\games\inform\grubbyville Materials\Cover.png,
 gru=c:\games\inform\grubbyville Materials\Release\grubbyville-invisiclues.htm,
-gru=c:\writing\scripts\gru.txt
+gru=c:\writing\scripts\invis\gru.txt
 
 #misc stuff
 FROMBASE=c:\writing\scripts
