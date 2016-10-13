@@ -695,7 +695,6 @@ def readCmd(thisCmd):
         usage()
         return
     if name == "r" or name == "rr":
-        print "Sending all to foundation."
         checkAgain = 1
         forceStr = ""
         while checkAgain:
@@ -716,11 +715,12 @@ def readCmd(thisCmd):
                         spares[xx] = 0
                         checkAgain = 1
         if forceStr:
-            print ("Forced" + forceStr)
-            checkFound()
-            printCards()
             if not inUndo:
                 moveList.append("r")
+                print "Sending all to foundation."
+                print ("Forced" + forceStr)
+            checkFound()
+            printCards()
         else:
             print ("Nothing to force to foundation.")
         return

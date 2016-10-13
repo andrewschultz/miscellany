@@ -14,6 +14,7 @@ default=sc
 u,uo,14=uglyoafs
 15,p,pc,tpc=compound
 16,sc=slicker-city
+17,btp=buck-the-past
 d=dirk
 r,ro,roi=roiling
 
@@ -26,6 +27,7 @@ allproj=s,r,u,p,d,15,16
 z:dirk
 z:threediopolis
 z:slicker-city
+z:buck-the-past
 
 #######################
 #using 6l is below here
