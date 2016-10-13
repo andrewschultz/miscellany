@@ -27,11 +27,40 @@ inUndo = 0
 #options to define. How to do better?
 vertical = 0
 doubles = 0
+autoReshuf = 0
 
 lastscore = 0
 highlight = 0
 
 onlymove = 0
+
+def canDump(mycol):
+    if chains(mycol) > maxmove()/2:
+        return 0
+    for tocol in range (1,9):
+        if len(elements[tocol]) == 0:
+            return tocol
+    return 0
+
+
+def reshuf():
+    if autoReshuf == 0:
+        return
+    tryAgain = 1
+    while tryAgain:
+        tryAgain = 0
+        for i in range(0,4):
+            if spares[i]:
+                for j in range(1,9):
+                    if len(elements[j]):
+                        if canPut(spares[i], elements[j][len(elements[j])-1]): #doesn't matter if there are 2. We can always switch
+                            elements[j].append(spares[i])
+                            spares[i] = 0
+                            tryAgain = 0;
+                            #stupid bug here with if we change autoReshuf in the middle of the game
+                            #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
+    return
+            
 
 def inOrder(rowNum):
     for i in range(1,len(elements[rowNum])):
@@ -77,6 +106,7 @@ def firstMatchableRow(cardval):
 
 def readOpts():
     global vertical
+    global autoReshuf
     global doubles
     infile = "fcopt.txt";
     with open(infile) as f:
@@ -85,9 +115,11 @@ def readOpts():
             if line[0] == '#': #ignore comments
                 continue
             q=re.sub(r'.*=', '', line.rstrip())
-            if "vertical" in line:
+            if "autoReshuf".lower() in line.lower():
+                autoReshuf = int(q)
+            if "vertical".lower() in line.lower():
                 vertical = int(q)
-            if "doubles" in line:
+            if "doubles".lower() in line.lower():
                 doubles = int(q)
     if gotOne:
         print "Options file read."
@@ -616,6 +648,7 @@ def saveGame(gameName):
 def readCmd(thisCmd):
     global vertical
     global doubles
+    global autoReshuf
     global elements
     global force
     force = 0
@@ -719,6 +752,7 @@ def readCmd(thisCmd):
                 moveList.append("r")
                 print "Sending all to foundation."
                 print ("Forced" + forceStr)
+            reshuf()
             checkFound()
             printCards()
         else:
@@ -744,13 +778,22 @@ def readCmd(thisCmd):
         return
     if name == '+':
         doubles = 1 - doubles
+        print ("Toggled doubles to %s." % (onoff[doubles]))
+        printCards()
+        return
+    if name == 'e':
+        autoReshuf = 1 - autoReshuf
+        print ("Toggled reshuffling to %s." % (onoff[autoReshuf]))
+        reshuf()
         printCards()
         return
     if name == 'v':
         vertical = 1 - vertical
+        print ("Toggled vertical view to %s." % (onoff[vertical]))
         printCards()
         return
     #### mostly meta commands above here. Keep them there.
+    preverified = 0
     if len(name) == 1:
         if name.isdigit():
             i = int(name)
@@ -760,7 +803,10 @@ def readCmd(thisCmd):
             if len(elements[i]) is 0:
                 print ('Acting on an empty row.')
                 return
-            if (len(elements[i]) == 0 or chains(i) > 1) and firstMatchableRow(elements[i][len(elements[i])-1]):
+            if chains(i) > 1 and canDump(i):
+                name = name + str(canDump(i))
+                preverified = 1
+            elif chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
                 name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
@@ -848,7 +894,7 @@ def readCmd(thisCmd):
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
             print ("Need digits from 1-8.")
             return
-        tempdoab = doable(t1,t2,1)
+        tempdoab = doable(t1,t2,1 - preverified)
         if tempdoab == -1:
             #print 'Not enough space.'
             return
@@ -858,13 +904,14 @@ def readCmd(thisCmd):
         shiftcards(t1, t2, tempdoab)
         if inUndo == 0:
             moveList.append(name)
+        reshuf()
         checkFound()
         printCards()
         return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
-            print ('Nothing in slot %d' % name[0])
+            print ('Nothing in slot %d.' % (mySpare + 1))
             return
         if not name[1].isdigit():
             print ('Second letter not recognized.')
@@ -878,6 +925,7 @@ def readCmd(thisCmd):
             spares[mySpare] = 0
             if inUndo == 0:
                 moveList.append(name)
+            reshuf()
             checkFound()
             printCards()
             return
@@ -896,7 +944,7 @@ def readCmd(thisCmd):
             return
         myRow = int(name[0])
         if spares[myToSpare] > 0:
-            print ("Spare %d already filled" % (myToSpare))
+            print ("Spare %d already filled" % (myToSpare + 1))
             return
         if myRow < 1 or myRow > 8:
             print ('From row must be between 1 and 8.')
@@ -916,8 +964,3 @@ def readCmd(thisCmd):
 while win == 0:
     readCmd('')
 endwhile
-
-
-#?? possible moves show restricted, put in new line 
-
-#implied command, check if it is useful (?)

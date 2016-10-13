@@ -5,3 +5,4 @@
 #
 vertical=1
 doubles=0
+autoReshuf=1
