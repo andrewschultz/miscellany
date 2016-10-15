@@ -45,7 +45,8 @@ def canDump(mycol):
 
 def reshuf():
     if autoReshuf == 0:
-        return
+        return 0
+    retval = 0
     tryAgain = 1
     while tryAgain:
         tryAgain = 0
@@ -56,10 +57,11 @@ def reshuf():
                         if canPut(spares[i], elements[j][len(elements[j])-1]): #doesn't matter if there are 2. We can always switch
                             elements[j].append(spares[i])
                             spares[i] = 0
-                            tryAgain = 0;
+                            tryAgain = 1
+                            retval = 1
                             #stupid bug here with if we change autoReshuf in the middle of the game
                             #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
-    return
+    return retval
             
 
 def inOrder(rowNum):
@@ -216,6 +218,7 @@ def checkFound():
                     if found[(basesuit+3) % 4] < found[basesuit] - 1:
                         break
                     needToCheck = 1;
+                    retval = 1
                     totalFoundThisTime += 1
                     found[(elements[y][len(elements[y])-1]-1)//13] = found[(elements[y][len(elements[y])-1]-1)//13] + 1
                     cardlist = cardlist + tocardX(elements[y][len(elements[y])-1])
@@ -238,8 +241,10 @@ def checkFound():
                     found[(spares[y]-1)//13] += 1
                     spares[y] = 0
                     needToCheck = 1
+                    retval = 1
     if totalFoundThisTime > 0 and inUndo == 0:
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
+    return retval
 
 def checkWin():
     for y in range (0,4):
@@ -464,6 +469,13 @@ def printOthers():
     sys.stdout.write(')\n')
     lastscore = foundscore
 
+def anyDoable (ii, emptyOK):
+    for y in range (1,9):
+        if doable(ii, y, 0):
+            if emptyOK or len(elements[y]) > 0:
+                return y
+    return 0
+
 def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no match, -1 = asking too much
     cardsToMove = 0
     fromline = 0
@@ -475,7 +487,8 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
     global onlymove
     if len(elements[r2]) == 0:
         if inOrder(r1) and onlymove > 0:
-            print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
+            if showDeets:
+                print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
         locmaxmove /= 2
         if showDeets and not inUndo:
@@ -803,16 +816,20 @@ def readCmd(thisCmd):
             if len(elements[i]) is 0:
                 print ('Acting on an empty row.')
                 return
-            if chains(i) > 1 and canDump(i):
+            if anyDoable(i,0):
+                name = name + str(anyDoable(i,0))
+            elif chains(i) > 1 and canDump(i):
                 name = name + str(canDump(i))
                 preverified = 1
-            elif chains(i) > 1 and firstMatchableRow(elements[i][len(elements[i])-1]):
-                name = name + str(firstMatchableRow(elements[i][len(elements[i])-1]))
+            elif chains(i) == 1 and spareUsed() < 4:
+                name = name + "e"
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
                     print ("That's just useless shuffling.")
                     return
                 name = name + str(firstEmptyRow())
+            elif anyDoable(i,1) and chains(i) < len(elements[i]):
+                name = name + str(anyDoable(i,1))
             else:
                 name = name + 'e'
             print ("New implied command %s." % (name))
@@ -904,8 +921,8 @@ def readCmd(thisCmd):
         shiftcards(t1, t2, tempdoab)
         if inUndo == 0:
             moveList.append(name)
-        reshuf()
-        checkFound()
+        while reshuf() or checkFound():
+            pass
         printCards()
         return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
