@@ -30,11 +30,11 @@ if ($ARGV[0] =~ /^\+/)
   open(B, ">>$misses"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit;
 }
 
-my @right = split(//, $ARGV[0]);
+my @right = split(//, lc($ARGV[0]));
 if (!defined($ARGV[1])) { $wrongString = ""; }
 else
 {
-  $wrongString = $ARGV[1];
+  $wrongString = lc($ARGV[1]);
   if ($ARGV[0] =~ /[$wrongString]/) { die "Oops, found and wrong overlap.\n"; }
 }
 
@@ -64,7 +64,7 @@ my $canAlphabetize = 0;
 #if ($r =~ /$ARGV[1]/i) { die; }
 #else { die ("$r !~ $ARGV[1]"); }
 
-if ($ARGV[0] =~ /^[a-z]/i) { $canAlphabetize = 1; $lastOne = $ARGV[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr($ARGV[0], 0, 1)); }
+if ($ARGV[0] =~ /^[a-z]/i) { $canAlphabetize = 1; $lastOne = $ARGV[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($ARGV[0]), 0, 1)); }
 
 while ($line = <A>)
 {
@@ -95,6 +95,7 @@ if ($endString) { print "MISSED BEFORE:\n$endString"; }
 if ($count + $missFound > 1)
 {
 print "FREQUENCIES:";
+#for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
 foreach my $val ( sort { $freq{$b} <=> $freq{$a}  or $f2{$b} <=> $f2{$a} } keys %freq)
 {
   if ($f2{$val} == ($count + $missFound)) { print " **$val**"; next; }
@@ -105,10 +106,10 @@ print "\n";
 
 sub checkForRepeats
 {
-  my @a1 = split(//, $ARGV[0]);
+  my @a1 = split(//, lc($ARGV[0]));
   my @a2 = split(//, $_[0]);
  
-  my $a3 = $ARGV[0]; $a3 =~ s/\.//g;
+  my $a3 = lc($ARGV[0]); $a3 =~ s/\.//g;
   
   for (0..$#a2)
   {

@@ -395,5 +395,20 @@ rmt=stubs\ReadMe.txt,stubs
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
 rmt=2400\2400.txt,samples\2400
+rmt=u4map\ReadMe.txt,u4map
+rmt=u4map\level.bmp,u4map
+rmt=u4map\room.bmp,u4map
+rmt=u4map\testcase.htm,u4map
+rmt=u4map\u4d.bmp,u4map
+rmt=u4map\u4d.nmr,u4map
+rmt=u4map\u4d.pix,u4map
+rmt=u4map\u4d.txt,u4map
+rmt=u4map\u4map.cpp,u4map
+rmt=u4map\u4map.dsp,u4map
+rmt=u4map\u4map.dsw,u4map
+rmt=u4map\u4map.exe,u4map
+rmt=u4map\u4map.h,u4map
+rmt=u4map\u4map.rc,u4map
+rmt=u4map\u4shapes.c,u4map
 
 ;
