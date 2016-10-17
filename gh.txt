@@ -374,13 +374,13 @@ FROMBASE=c:\coding\games
 TOBASE=rpg-mapping-tools
 rmt=mapconv\mapconv.c,mapconv
 rmt=mapconv\mapconv.exe,mapconv
-rmt=mapconv\readme.txt,mapconv
+rmt=mapconv\README.md,mapconv
 rmt=mapcpy\mapcpy.c,mapcpy
 rmt=mapcpy\mapcpy.exe,mapcpy
-rmt=mapcpy\readme.txt,mapcpy
+rmt=mapcpy\README.md,mapcpy
 rmt=editor\icons.bmp,editor
 rmt=editor\walls.bmp,editor
-rmt=editor\readme.txt,editor
+rmt=editor\README.md,editor
 rmt=editor\editor.cpp,editor
 rmt=editor\editor.dsp,editor
 rmt=editor\editor.dsw,editor
@@ -391,11 +391,14 @@ rmt=editor\skeep1.map,editor\samples
 rmt=editor\skeep2.map,editor\samples
 rmt=c:\writing\scripts\cg.bat,stubs
 rmt=c:\writing\scripts\mc.bat,stubs
-rmt=stubs\ReadMe.txt,stubs
+rmt=stubs\README.md,stubs
+########################specific games below here
+#2400 AD
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
 rmt=2400\2400.txt,samples\2400
-rmt=u4map\ReadMe.txt,u4map
+#Ultima IV
+rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map
 rmt=u4map\room.bmp,u4map
 rmt=u4map\testcase.htm,u4map
@@ -410,5 +413,19 @@ rmt=u4map\u4map.exe,u4map
 rmt=u4map\u4map.h,u4map
 rmt=u4map\u4map.rc,u4map
 rmt=u4map\u4shapes.c,u4map
-
+#Ultima V
+rmt=u5map\level.bmp,u5map
+rmt=u5map\README.md,u5map
+rmt=u5map\room.bmp,u5map
+rmt=u5map\u5map.cpp,u5map
+rmt=u5map\u5map.dsp,u5map
+rmt=u5map\u5map.dsw,u5map
+rmt=u5map\u5map.exe,u5map
+rmt=u5map\u5map.h,u5map
+rmt=u5map\u5map.rc,u5map
+rmt=u5map\u5d.bmp,u5map
+rmt=u5map\u5d.nmr,u5map
+rmt=u5map\u5d.pix,u5map
+rmt=u5map\u5d.txt,u5map
+rmt=u5map\testcase.htm,u5map
 ;
