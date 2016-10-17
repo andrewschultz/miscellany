@@ -117,6 +117,7 @@ sub processTerms
   my $uncopiedList = "";
   my $dirName = "";
   my $fromBase="", my $toBase="";
+  my $maxSize = 0;
   for my $thisFile (@_)
   {
   open(A, $thisFile) || die ("No $thisFile");
@@ -124,8 +125,10 @@ sub processTerms
   {
     chomp($a);
     my $b = $a;
-	
+	$maxSize = 0;
+
     if ($a =~ /^#/) { next; }
+	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
 	if ($a =~ /^>/)
 	{
 	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
@@ -157,18 +160,20 @@ sub processTerms
       my $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
 	  my $toFile = $d[1];
-	  
+
 	  if ($fromFile !~ /:/) { $fromFile = "$fromBase\\$fromFile"; }
 	  if ($toBase) { $toFile = "$toBase\\$d[1]"; }
-	  
+
 
 	  if ((! -f $fromFile)  && ($fromFile !~ /\*/)) { print "Oops $fromFile can't be found.\n"; $badFileList .= "$fromFile\n"; $badFileCount++; next; }
-	  
+
+
 	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
 
 	  if (-d "$gh\\$toFile") { my $short = $fromFile; $short =~ s/.*[\\\/]//g; $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
 	  if (compare($fromFile, "$outName"))
 	  {
+	  if (($maxSize) && (-s $fromFile > $maxSize)) { print "Oops $fromFile size is above $maxSize.\n"; $badFileCount++; next; }
 	  my $thisWild = 0;
       my $cmd = "copy \"$fromFile\" $gh\\$toFile";
 	  if ($fromFile =~ /\*/) { $wildcards++; $thisWild = 1; }
