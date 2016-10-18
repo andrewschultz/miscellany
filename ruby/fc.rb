@@ -32,7 +32,7 @@ def foundable(mycard)
 	end
 	themod = mycard.to_i % 13
 	thesuit = mycard.to_i / 13
-	if themod <= $found[(thesuit+3)%4] + 2 and themod <= $found[(thesuit+1)%4] + 2
+	if themod <= $found[(thesuit+3)%4] + 1 and themod <= $found[(thesuit+1)%4] + 1 and themod == $found[thesuit]
 		return 1
 	end
 	return 0
@@ -41,7 +41,6 @@ end
 def updateFound()
 	searchForFound = 1
 	while searchForFound == 1
-		puts searchForFound
 		searchForFound = 0
 		for z in 1..8
 			if $y[z].length > 0
@@ -61,7 +60,7 @@ def updateFound()
 		end
 	end
 	for z in 0..3
-		if $empty[z] != 13
+		if $found[z] != 13
 			return 0
 		end
 	end
@@ -98,6 +97,16 @@ def printcards()
 			print " " + tocard($found[z] + z * 13 - 1)
 		end
 	end
+	puts
+	print "Empty spaces: "
+	for z in 0..3
+		if $empty[z] == -1
+			print " ---"
+		else
+			print " " + tocard($empty[z])
+		end
+	end
+	puts
 end
 
 def printcardsH()
@@ -158,26 +167,47 @@ def canPut(lower, higher)
 	return 0
 end
 
+def thischain(from)
+	retval = 1
+	fromIdx = $y[from].length - 1	
+	while fromIdx > 0
+		if canPut($y[from][fromIdx], $y[from][fromIdx - 1]) == 1
+			fromIdx -= 1
+			retval += 1
+		else
+			return retval
+		end
+	end
+	return retval
+end
+
 def possShift(from, to)
 	if $y[from].length == 0
 		return 0
 	end
+	if $y[to].length == 0
+		return thischain(from)
+	end
 	fromIdx = $y[from].length - 1
 	toval = $y[to][$y[to].length-1]
-	chainLength = 0
+	chainLength = 1
 	stillProc = 1
 	while stillProc
 		stillProc = 0
-		if canPut($y[from][fromIdx], toval) == 0
+		if canPut($y[from][fromIdx], toval) == 1
 			return chainLength
 		end
-		chainLength += 1
-		stillProc = 1
-		fromIdx = fromIdx - 1
 		if fromIdx == 0
 			return 0
+		elsif canPut($y[from][fromIdx], $y[from][fromIdx - 1]) == 1
+			stillProc = 1
+		else
+			return 0
 		end
+		fromIdx = fromIdx - 1
+		chainLength += 1
 	end
+	return 0
 end
 
 def moverows(from, to)
@@ -192,13 +222,17 @@ def moverows(from, to)
 		puts "Cards don't match."
 		return 0
 	end
-	if (temp <= maxShift() and $y[to].length > 0) or (temp <= maxShift() / 2)
+	theShift = maxShift()
+	if $y[to].length == 0
+		theShift /= 2
+	end
+	if temp <= theShift
 		$y[to].push(*$y[from].last(temp))
 		$y[from].pop(temp)
 		printcards()
 		return 0
 	end
-	puts "Can't currently move from " + from.to_s + " to " + to.to_s + ". Not enough rows."
+	puts "Can't currently move from " + from.to_s + " to " + to.to_s + ". Not enough rowspace. Want " + temp.to_s + " have " + theShift.to_s
 	return 0
 end
 
@@ -212,29 +246,94 @@ end
 printcards()
 
 ARGF.each_line do |e|
-  if e.chomp == ""
+  e = e.chomp
+  if e == ""
     printcards()
 	next
   end
-  if e.chomp == "v"
+  if e == "v"
     $vertical = 1 - $vertical
 	puts "Vertical print is " + $onoff[$vertical]
 	printcards()
     next
   end
-  if e.chomp == "?"
+  if e == "?"
     usage()
     next
   end
-  if e.chomp == "q"
+  if e == "q"
     exit
   end
   if e[0].digit? and e[1].digit?
 	moverows(e[0].to_i, e[1].to_i)
-  elsif e[0].digit? and e[1] < "e" and e[1] >= "a"
-	puts "Trying to move to spare."
+  elsif e[0].digit? and e[1] <= "d" and e[1] >= "a"
+	myc = e[0].to_i
+	if myc < 1 or myc > 8
+		puts "Between 1 and 8."
+		next
+	end
+	if $y[myc].length == 0
+		puts "Empty column."
+		next
+	end
+	temp = e[1].ord - 97
+	if $empty[temp] != -1
+		puts "That's full."
+		next
+	end
+	$empty[temp] = $y[myc][$y[myc].length-1]
+	$y[myc].pop()
+	printcards()
+	next
+  elsif e[1].digit? and e[0] <= "d" and e[0] >= "a"
+	myc = e[1].to_i
+	mye = e[0].ord - 97
+	if myc < 1 or myc > 8
+		puts "Between 1 and 8."
+		next
+	end
+	if $empty[mye] == -1
+		print "Nothing there"
+		next
+	end
+	if $y[myc].length == 0 or canPut($empty[mye], $y[myc][$y[myc].length-1]) == 1
+		$y[myc].push($empty[mye])
+		$empty[mye] = -1
+		printcards()
+		next
+	end
+	print "Couldn't place that."
+	next
   elsif e[0] == "r" or e[1] == "r"
-	puts "Trying to move to spare."
+	if e.length > 2
+		puts "Length is " + e.length.to_s
+		puts "!" + e[2] + "!"
+		print "r needs only 1 other letter, 1-8 a-d."
+		next
+	end
+	puts "Trying to move to foundation."
+	e = e.sub! 'r', ''
+	if e[0].digit?
+		myc = e[0].to_i
+		if $y[myc].length > 0 and foundable($y[myc][$y[myc].length-1]) > 0
+			found[$y[myc]/13] += 1
+			$y[myc].pop()
+			printcards()
+		end
+	elsif e[0] <= 'd' and e[0] >= 'a'
+		temp = e[0].ord - 97
+		if $empty[temp] == -1
+			puts "That's empty."
+			next
+		end
+		if foundable($empty[temp]) > 0
+			found[$empty[temp]/13] += 1
+			$empty[temp] = -1
+			printcards()
+		end
+	end
+	puts "wrong text for r."
+	next
   end
 end
 
