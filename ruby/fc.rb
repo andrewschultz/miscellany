@@ -10,6 +10,21 @@ class String
   end
 end
 
+def maxShift()
+	base = 1
+	for z in 0..3
+		if $empty[z].to_i == -1
+			base = base + 1
+		end
+	end
+	for z in 1..8
+		if $y[z].length == 0
+			base = base * 2
+		end
+	end
+	return base
+end
+
 def canPut(lower, higher)
 	l1 = lower / 13
 	l2 = higher / 13
@@ -22,15 +37,47 @@ def canPut(lower, higher)
 	return 0
 end
 
+def possShift(from, to)
+	if $y[from].length == 0
+		return 0
+	fromIdx = $y[from].length - 1
+	toval = $y[to][$y[to].length-1]
+	chainLength = 2
+	stillProc = 1
+	while stillProc
+		stillProc = 0
+		if canPut($y[from][fromIdx], toval)
+			return chainLength
+		end
+		if fromIdx == 0
+			return 0
+		end
+		if canPut($y[from][fromIdx], toval)
+			stillProc = 1
+		end
+		fromIdx = fromIdx - 1
+	end
+end
+
 def moverows(from, to)
+	return
+	if from == to
+		return 0
+	end
 	if $y[from].length == 0
 		return 0
 	end
-	if canPut($y[from][$y[from].length-1], $y[to][$y[to].length-1]) == 1
-		$y[to].push($y[from].pop())
+	temp = possShift(from, to)
+	if temp == 0
+		puts "Cards don't match."
+		return
+	end
+	if (temp <= maxShift() and $y[to].len > 0) or (temp <= maxShift() / 2)
+		$y[to].push(*$y[from].last(temp))
 		printcards()
-	else
-		puts "Can't move from " + from.to_s + " to " + to.to_s
+		return
+	end
+	puts "Can't currently move from " + from.to_s + " to " + to.to_s + ". Not enough rows."
 	end
 end
 
@@ -129,7 +176,12 @@ ARGF.each_line do |e|
     exit
   end
   if e[0].digit? and e[1].digit?
-	moverows(e[0].to_i, e[1].to_i)
+	#moverows(1,1)
+	#moverows(e[0].to_i, e[1].to_i)
+  elsif e[0].digit? and e[1] < "e" and e[1] >= "a"
+	puts "Trying to move to spare."
+  elsif e[0] == "r" or e[1] == "r"
+	puts "Trying to move to spare."
   end
 end
 
