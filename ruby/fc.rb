@@ -4,97 +4,69 @@
 #a script for playing FreeCell in ruby
 #
 
-class String
-  def digit?
-    !!match(/^[[:digit:]]+$/)
-  end
-end
-
-def maxShift()
-	base = 1
-	for z in 0..3
-		if $empty[z].to_i == -1
-			base = base + 1
-		end
-	end
-	for z in 1..8
-		if $y[z].length == 0
-			base = base * 2
-		end
-	end
-	return base
-end
-
-def canPut(lower, higher)
-	l1 = lower / 13
-	l2 = higher / 13
-	if (l1 + l2) & 1 == 0
-		return 0
-	end
-	if (higher % 13) - (lower % 13) == 1
-		return 1
-	end
-	return 0
-end
-
-def possShift(from, to)
-	if $y[from].length == 0
-		return 0
-	fromIdx = $y[from].length - 1
-	toval = $y[to][$y[to].length-1]
-	chainLength = 2
-	stillProc = 1
-	while stillProc
-		stillProc = 0
-		if canPut($y[from][fromIdx], toval)
-			return chainLength
-		end
-		if fromIdx == 0
-			return 0
-		end
-		if canPut($y[from][fromIdx], toval)
-			stillProc = 1
-		end
-		fromIdx = fromIdx - 1
-	end
-end
-
-def moverows(from, to)
-	return
-	if from == to
-		return 0
-	end
-	if $y[from].length == 0
-		return 0
-	end
-	temp = possShift(from, to)
-	if temp == 0
-		puts "Cards don't match."
-		return
-	end
-	if (temp <= maxShift() and $y[to].len > 0) or (temp <= maxShift() / 2)
-		$y[to].push(*$y[from].last(temp))
-		printcards()
-		return
-	end
-	puts "Can't currently move from " + from.to_s + " to " + to.to_s + ". Not enough rows."
-	end
-end
-
-def usage()
-  puts "q = quit"
-  puts "(1-8a-d)(1-8a-d) = move"
-  puts "r = force foundation"
-  puts "? = this"
-end
-
-onoff=Array['on', 'off']
+$onoff=Array['on', 'off']
 $face=Array['A','2','3','4','5','6','7','8','9','10','J','Q','K']
 $suit=Array['C','d','S','h']
 $empty=Array[-1,-1,-1,-1]
 $found=Array[0,0,0,0]
 
 $vertical = 1
+
+x=Array(0..51).shuffle
+
+$y=Array[[],[],[],[],[],[],[],[],[]]
+
+for z in 0..51
+	$y[z%8+1][z/8] = x[z]
+end
+
+class String
+  def digit?
+    !!match(/^[[:digit:]]+$/)
+  end
+end
+
+def foundable(mycard)
+	if mycard == -1
+		return 0
+	end
+	themod = mycard.to_i % 13
+	thesuit = mycard.to_i / 13
+	if themod <= $found[(thesuit+3)%4] + 2 and themod <= $found[(thesuit+1)%4] + 2
+		return 1
+	end
+	return 0
+end
+
+def updateFound()
+	searchForFound = 1
+	while searchForFound == 1
+		puts searchForFound
+		searchForFound = 0
+		for z in 1..8
+			if $y[z].length > 0
+				if foundable($y[z][$y[z].length-1]) != 0
+					$found[$y[z][$y[z].length-1]/13] += 1
+					$y[z].pop()
+					searchForFound = 1
+				end
+			end
+		end
+		for z in 0..3
+			if foundable($empty[z]) != 0
+				$found[$empty[z]/13] += 1
+				$empty[z] = -1
+				searchForFound = 1
+			end
+		end
+	end
+	for z in 0..3
+		if $empty[z] != 13
+			return 0
+		end
+	end
+	return 1
+end
 
 def tocard(raw)
 	if raw == -1
@@ -109,10 +81,22 @@ def tocard(raw)
 end
 
 def printcards()
+	if updateFound() == 1
+		print "Won game."
+		exit()
+	end
 	if $vertical == 1
 		printcardsV()
 	else
 		printcardsH()
+	end
+	print "Foundation:"
+	for z in [0, 2, 1, 3]
+		if $found[z] == 0
+			print " ---"
+		else
+			print " " + tocard($found[z] + z * 13 - 1)
+		end
 	end
 end
 
@@ -147,12 +131,82 @@ def printcardsV()
 	end
 end
 
-x=Array(0..51).shuffle
+def maxShift()
+	base = 1
+	for z in 0..3
+		if $empty[z].to_i == -1
+			base = base + 1
+		end
+	end
+	for z in 1..8
+		if $y[z].length == 0
+			base = base * 2
+		end
+	end
+	return base
+end
 
-$y=Array[[],[],[],[],[],[],[],[],[]]
+def canPut(lower, higher)
+	l1 = lower / 13
+	l2 = higher / 13
+	if (l1 + l2) & 1 == 0
+		return 0
+	end
+	if (higher % 13) - (lower % 13) == 1
+		return 1
+	end
+	return 0
+end
 
-for z in 0..51
-	$y[z%8+1][z/8] = x[z]
+def possShift(from, to)
+	if $y[from].length == 0
+		return 0
+	end
+	fromIdx = $y[from].length - 1
+	toval = $y[to][$y[to].length-1]
+	chainLength = 0
+	stillProc = 1
+	while stillProc
+		stillProc = 0
+		if canPut($y[from][fromIdx], toval) == 0
+			return chainLength
+		end
+		chainLength += 1
+		stillProc = 1
+		fromIdx = fromIdx - 1
+		if fromIdx == 0
+			return 0
+		end
+	end
+end
+
+def moverows(from, to)
+	if from == to
+		return 0
+	end
+	if $y[from].length == 0
+		return 0
+	end
+	temp = possShift(from, to)
+	if temp == 0
+		puts "Cards don't match."
+		return 0
+	end
+	if (temp <= maxShift() and $y[to].length > 0) or (temp <= maxShift() / 2)
+		$y[to].push(*$y[from].last(temp))
+		$y[from].pop(temp)
+		printcards()
+		return 0
+	end
+	puts "Can't currently move from " + from.to_s + " to " + to.to_s + ". Not enough rows."
+	return 0
+end
+
+def usage()
+  puts "q = quit"
+  puts "(1-8a-d)(1-8a-d) = move"
+  puts "r = force foundation"
+  puts "? = this"
 end
 
 printcards()
@@ -164,7 +218,7 @@ ARGF.each_line do |e|
   end
   if e.chomp == "v"
     $vertical = 1 - $vertical
-	puts "Vertical print is " + onoff[$vertical]
+	puts "Vertical print is " + $onoff[$vertical]
 	printcards()
     next
   end
@@ -176,8 +230,7 @@ ARGF.each_line do |e|
     exit
   end
   if e[0].digit? and e[1].digit?
-	#moverows(1,1)
-	#moverows(e[0].to_i, e[1].to_i)
+	moverows(e[0].to_i, e[1].to_i)
   elsif e[0].digit? and e[1] < "e" and e[1] >= "a"
 	puts "Trying to move to spare."
   elsif e[0] == "r" or e[1] == "r"
