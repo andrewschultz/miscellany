@@ -242,7 +242,7 @@ https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 TOBASE=slicker-city
 city=c:\games\inform\slicker-city.inform\source\story.ni,
 city=c:\games\inform\slicker-city Materials\Release\slicker-city-invisiclues.htm,
--b:city=c:\games\inform\slicker-city Materials\Release\release-Slicker City.gblorb,
+-b:city=c:\games\inform\slicker-city Materials\Release\release-Slicker City.zblorb,
 city=c:\games\inform\triz\mine\slicker-city.trizbort,
 city=c:\games\inform\triz\mine\slicker-city.pdf,
 city=c:\games\inform\slicker-city.inform\uuid.txt,
