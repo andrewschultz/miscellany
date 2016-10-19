@@ -1,6 +1,6 @@
 Version 1/151212 of In-Game Mapping by Andrew Schultz begins here.
 
-"Writes a  text map of a game"
+"Writes a text map of a game"
 
 Volume the main map thing
 
