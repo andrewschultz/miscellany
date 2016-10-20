@@ -42,6 +42,8 @@ c:\writing\games.otl	3d,4d
 run=as
 c:\games\inform\compound.inform\source\story.ni
 c:\games\inform\slicker-city.inform\source\story.ni
+c:\games\inform\buck-the-past.inform\source\story.ni
+c:\games\inform\buck-the-past.inform\source\from-sc.ni
 c:\writing\games.otl	pc,sc,sce,scd,scc,scb,sca,sc-book,sc-farm
 c:\games\inform\triz\mine\compound-directors-cut.trizbort
 c:\games\inform\triz\mine\compound-walkthrough.trizbort

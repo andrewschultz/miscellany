@@ -127,7 +127,12 @@ CHECK
 >icl.pl -jr $$
 >icl.pl -jb $$
 >icl.pl -jd $$
->$d/scbk.pl -t
+>$d/grate.pl
+
+btp=buck-the-past
+>icl.pl -jr $$
+>icl.pl -jb $$
+>icl.pl -jd $$
 
 pc=compound
 >gh.pl -t $$
