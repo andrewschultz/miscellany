@@ -519,12 +519,15 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
         if showDeets:
             print ('Tried to move from empty.')
         return 0
-    if onlymove > 0 and onlymove < locmaxmove:
-        if showDeets:
-            if len(elements[r2]) > 0:
-                print ('Can\'t move to that non-empty, even with force.')
-                return -1
-            print ('Cutting down to', onlymove)
+    if onlymove > 0:
+        if onlymove < locmaxmove:
+            if showDeets:
+                if len(elements[r2]) > 0:
+                    print ('Can\'t move to that non-empty, even with force.')
+                    return -1
+                print ('Cutting down to', onlymove)
+                return onlymove
+        if onlymove < fromline:
             return onlymove
     if fromline > locmaxmove:
         if force == 1:
@@ -666,6 +669,7 @@ def readCmd(thisCmd):
     global force
     force = 0
     checkFound()
+    thisCmd = thisCmd.lower()
     if thisCmd == '':
         global input
         try: input = raw_input
@@ -819,6 +823,9 @@ def readCmd(thisCmd):
             if anyDoable(i,0):
                 name = name + str(anyDoable(i,0))
             elif chains(i) > 1 and canDump(i):
+                if chains(i) == len(elements[i]):
+                    print ("That's just useless shuffling.")
+                    return
                 name = name + str(canDump(i))
                 preverified = 1
             elif chains(i) == 1 and spareUsed() < 4:
@@ -918,9 +925,13 @@ def readCmd(thisCmd):
         if tempdoab == 0:
             print ('Those cards don\'t match up.')
             return
+        oldchain = chains(t1)
         shiftcards(t1, t2, tempdoab)
         if inUndo == 0:
-            moveList.append(name)
+            if tempdoab < oldchain:
+                moveList.append(str(name) + "-" + str(tempdoab))
+            else:
+                moveList.append(name)
         while reshuf() or checkFound():
             pass
         printCards()
