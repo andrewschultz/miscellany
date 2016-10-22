@@ -258,7 +258,6 @@ city=c:\games\inform\slicker-city.inform\source\reg-sc-*,\testing
 city=c:\games\inform\slicker-city.inform\source\scdir.pl,\testing
 city=c:\games\inform\slicker-city.inform\source\regsc.bat,\testing
 city=c:\games\inform\slicker-city.inform\source\roomlist.txt,\testing
-city=c:\games\inform\slicker-city.inform\source\reg-sc-*.txt,\testing
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
@@ -272,7 +271,10 @@ past=c:\games\inform\triz\mine\buck-the-past.trizbort,
 past=c:\games\inform\triz\mine\buck-the-past.pdf,
 past=c:\games\inform\buck-the-past Materials\Release\buck-the-past-invisiclues.htm,
 past=c:\writing\scripts\invis\btp.txt,
+city=c:\games\inform\buck-the-past.inform\source\reg-btp-*,\testing
+#############utilities
 past=c:\games\inform\buck-the-past.inform\Source\excl.pl
+past=c:\games\inform\buck-the-past.inform\Source\badj.pl
 
 #Grubbyville files
 TOBASE=grubbyville

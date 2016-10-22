@@ -928,8 +928,8 @@ def readCmd(thisCmd):
         oldchain = chains(t1)
         shiftcards(t1, t2, tempdoab)
         if inUndo == 0:
-            if tempdoab < oldchain:
-                moveList.append(str(name) + "-" + str(tempdoab))
+            if tempdoab < oldchain and len(elements[t2]) == 0:
+                moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
             else:
                 moveList.append(name)
         while reshuf() or checkFound():
