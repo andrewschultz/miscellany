@@ -708,7 +708,7 @@ def readCmd(thisCmd):
             print "Need to undo a number, or nothing."
             return
         if int(temp) > len(moveList):
-            print ("Tried to do %d undos, can only undo %d." % temp, len(moveList))
+            print ("Tried to do %d undos, can only undo %d." % (int(temp), len(moveList)))
             return
         undoMoves(int(temp))
         return

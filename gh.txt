@@ -271,7 +271,7 @@ past=c:\games\inform\triz\mine\buck-the-past.trizbort,
 past=c:\games\inform\triz\mine\buck-the-past.pdf,
 past=c:\games\inform\buck-the-past Materials\Release\buck-the-past-invisiclues.htm,
 past=c:\writing\scripts\invis\btp.txt,
-city=c:\games\inform\buck-the-past.inform\source\reg-btp-*,\testing
+past=c:\games\inform\buck-the-past.inform\source\reg-btp-*,\testing
 #############utilities
 past=c:\games\inform\buck-the-past.inform\Source\excl.pl
 past=c:\games\inform\buck-the-past.inform\Source\badj.pl
