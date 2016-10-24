@@ -15,7 +15,7 @@
 #
 opo~3d,4d
 sts~ana,sa,roi
-as~pc,sc
+as~pc,sc,btp
 ec~e11,e13,e14,e15
 
 e11=dash
@@ -108,6 +108,11 @@ roi=roiling
 >icl.pl -jb $$
 >icl.pl -jd $$
 
+btp=buck-the-past
+>icl.pl -jr $$
+>icl.pl -jb $$
+>icl.pl -jd $$
+
 sc=slicker-city
 >gq.pl $$ -x search.string
 >gh.pl -t $$
@@ -128,11 +133,6 @@ CHECK
 >icl.pl -jb $$
 >icl.pl -jd $$
 >$d/grate.pl
-
-btp=buck-the-past
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
 
 pc=compound
 >gh.pl -t $$

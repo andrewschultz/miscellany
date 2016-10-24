@@ -16,7 +16,7 @@ while ($count <= $#ARGV)
 	/^-?\?$/ && do { usage(); exit; };
 	/^-f\?$/ && do { $inFile = @ARGV[$count+1]; $count += 2; next; };
 	/^-/ && do { print "Bad flag.\n\n"; usage(); exit; };
-	/[a-z]/ && do { @starts = split(/,/, $a); $count++; next; };
+	/[a-z]/ && do { @starts = split(/,/, $a); for (@starts) { $gotYet{$_} = 0; } $count++; next; };
 	die; #should never happen but yeah
   }
 }
@@ -41,13 +41,14 @@ while ($a = <A>)
   {
     for $st (@starts)
 	{
-	  if ($a =~ /^\\$st[=\|]/) { print "Start with $a"; $sec = $a; chomp($sec); $sec =~ s/[\|=].*//g; $sec =~ s/^\\//g; $everFound = 1; $counting = 1; next OUTER; }
+	  if ($a =~ /^\\$st[=\|]/) { $gotYet{$st}++; print "Start with $a"; $sec = $a; chomp($sec); $sec =~ s/[\|=].*//g; $sec =~ s/^\\//g; $everFound = 1; $counting = 1; next OUTER; }
 	}
   }
   if (($counting) && ($a !~ /^#/)) { $totalLines++; }
 }
 
 if (!$everFound) { die "Oops! Never tripped anything in @starts.\n"; }
+else { for (@starts) { if ($gotYet{$_} == 0) { print "Didn't find $_.\n"; } } }
 
 close(A);
 
