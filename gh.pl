@@ -19,6 +19,8 @@ my $defaultString;
 my $testResults = 0;
 my $runTrivialTests = 0;
 
+my $reverse = 0;
+
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
@@ -55,6 +57,7 @@ while ($count <= $#ARGV)
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
   /^-d$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
+  /^-?reverse$/ && do { $reverse = 1; $count++; next; };
   /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do
   {
@@ -160,6 +163,7 @@ sub processTerms
       my $c = $a; $c =~ s/.*=//g; @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
 	  my $toFile = $d[1];
+	  my $short = $fromFile; $short =~ s/.*[\\\/]//g;
 
 	  if ($fromFile !~ /:/) { $fromFile = "$fromBase\\$fromFile"; }
 	  if ($toBase) { $toFile = "$toBase\\$d[1]"; }
@@ -170,12 +174,13 @@ sub processTerms
 
 	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
 
-	  if (-d "$gh\\$toFile") { my $short = $fromFile; $short =~ s/.*[\\\/]//g; $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
+	  if (-d "$gh\\$toFile") { $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
 	  if (compare($fromFile, "$outName"))
 	  {
 	  if (($maxSize) && (-s $fromFile > $maxSize)) { print "Oops $fromFile size is above $maxSize.\n"; $badFileCount++; next; }
 	  my $thisWild = 0;
-      my $cmd = "copy \"$fromFile\" $gh\\$toFile";
+      my $cmd = "copy \"$fromFile\" \"$gh\\$toFile\"";
+	  if ($reverse) { if ($short =~ /\*/) { next; } $cmd = "copy \"$gh\\$toFile\\$short\" \"$fromFile\""; }
 	  if ($fromFile =~ /\*/) { $wildcards++; $thisWild = 1; }
 	  if ($justPrint) { print "$cmd\n"; $fileList .= "$fromFile\n"; }
 	  else

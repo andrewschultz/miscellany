@@ -27,7 +27,6 @@ allproj=s,r,u,p,d,15,16
 z:dirk
 z:threediopolis
 z:slicker-city
-z:buck-the-past
 
 #######################
 #using 6l is below here
