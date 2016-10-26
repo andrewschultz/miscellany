@@ -678,6 +678,8 @@ def readCmd(thisCmd):
     else:
         name = thisCmd
     if len(name) == 0:
+        while reshuf():
+            next
         printCards()
         return
     global onlymove
