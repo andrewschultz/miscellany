@@ -161,8 +161,13 @@ sub processTerms
     {
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g;
+	  # I could probably do the below a little more programatically but for right now this gets rid of a lot of the repetitive stuff that clogs the text files
+	  $c =~ s/\$ws/c:\\writing\\scripts/g;
+	  $c =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
+	  $c =~ s/\$wd/c:\\writing\\dict/g;
 	  $c =~ s/\$im/c:\\games\\inform\\$toBase materials/g;
 	  $c =~ s/\$is/c:\\games\\inform\\$toBase.inform\\source/g;
+	  $c =~ s/\$id/c:\\games\\inform\\$toBase.inform\\uuid.txt/g;
 
 	  @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
