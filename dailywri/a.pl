@@ -8,6 +8,7 @@ my $lastDay = 0;
 
 my $clip = Win32::Clipboard::new();
 
+my $openOnWarn = 0;
 my $warns = 0;
 my $bigErrs = 0;
 my $numDailyFiles = 0;
@@ -74,6 +75,7 @@ while ($ARGV[$count])
 	/^-nw$/ && do { $showWarn = 0; $count++; next; };
 	/^-q$/ && do { $showOK = $showWarn = 0; $count++; next; };
 	/^-o$/ && do { $openFile = 1; $count++; next; };
+	/^-ow$/ && do { $openFile = 1; $openOnWarn = 1; $count++; next; };
 	/^-t$/ && do { $testing = 1; $count++; next; };
 	/^-u$/ && do { $allBack = 1; $count++; if ($howFar == $defFar) { $howFar = 90; } next; };
 	/^-sp$/ && do { $showProc = 1; $count++; next; };
@@ -194,7 +196,7 @@ my $hasSomething = 0;
   if ($line =~ /\\nam/) { $gotNames = 1; }
   if (($curIdx > 0) && (!defined($myAry[$curIdx])) && ($line !~ /\\/))
   {
-    if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; next; } #this is to make sure that double carriage returns don't bomb out;
+    if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $lines; } next; } #this is to make sure that double carriage returns don't bomb out;
     printErrExt("You don't have a header in $shortName: $line");
     if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
 	$betterDie++;
@@ -205,7 +207,7 @@ my $hasSomething = 0;
     if ($myAry[$curIdx]) { printErrExt("Header needs spacing: $line"); $betterDie++;   $fileToOpen = $_[0]; }
 	else { if ($startLine{$b}) { printErrExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $lines; }
       if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
-	} else { $startLine{$b} = $lines; } $myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; } }
+	} else { $startLine{$b} = $lines; } $myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $lines; } } }
   }
   $myAry[$curIdx] .= $line;
   if ($line !~ /[a-z=]/i) { $curIdx++; next; }
@@ -247,7 +249,7 @@ if ($limericks)
 
 
 if (($myAry[0] !~ /[a-z]/) && ($showWarn))
-{ $warns++; $warning .= "  WARNING: No main ideas in $_[0].\n"; }
+{ $warns++; $warning .= "  WARNING: No main ideas in $_[0].\n"; $betterDie = 1; }
 
 for (1..$#myAry)
 {
@@ -306,6 +308,7 @@ my @q = sort {
 
 if ($betterDie)
 {
+  if ($warning) { print $warning; }
   print ("Fix stuff in $_[0] before sorting.\n");
   if ($openFile)
   {

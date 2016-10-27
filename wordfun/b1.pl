@@ -96,7 +96,7 @@ if ($count + $missFound > 1)
 {
 print "FREQUENCIES:";
 #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
-foreach my $val ( sort { $freq{$b} <=> $freq{$a}  or $f2{$b} <=> $f2{$a} } keys %freq)
+foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} } keys %freq)
 {
   if ($f2{$val} == ($count + $missFound)) { print " **$val**"; next; }
   print " $val:$f2{$val}/$freq{$val}";
