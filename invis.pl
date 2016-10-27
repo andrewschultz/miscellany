@@ -18,8 +18,8 @@ my %exp;
 
 ###flags and such
 my $updateOnly = 1;
-my $launchAfter = 1;
-my $launchRaw = 1;
+my $launchAfter = 0;
+my $launchRaw = 0;
 my $count = 0;
 my $forceRunThrough = 0;
 my $debug = 0;
@@ -30,7 +30,8 @@ my $invDir = "c:\\writing\\scripts\\invis";
 my $filename = "";
 
 #$exp{"pc"} = "compound";
-my $default = "pc";
+my $default = "btp";
+$exp{"0"} = "sc";
 $exp{"1"} = "sa";
 $exp{"2"} = "roi";
 $exp{"3"} = "3d";
@@ -40,7 +41,7 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
-  /-a/ && do { printAllFiles(); exit; };
+  /-a/ && do { printAllFiles(0); exit; };
   /-d/ && do { $debug = 1; $count++; next; };
   /-f/ && do { $forceRunThrough = 1; $count++; next; };
   /-u/ && do { $updateOnly = 1; $count++; next; };
@@ -135,7 +136,7 @@ while ($a = <A>)
     print B "<h$ll>$a</h$ll>\n<div>\n";
     next;
   }
-  print "Outlining $a.\n";
+  if ($debug) { print "Outlining $a.\n"; }
   $temp = $a;
   my $times = $temp =~ tr/>//;
   $temp =~ s/>//g;
@@ -143,16 +144,16 @@ while ($a = <A>)
   $levels[$times]++;
   for ($times+1 .. 9) { @levels[$_] = 0; }
   $otl = currentOutline(@levels);
-  print "$otl!!\n";
+  if ($debug) { print "Element number $otl!!\n"; }
   my $t2 = $lastLev - $times;
 
-  print "Current level $times Last level $lastLev\n";
+  if ($debug) { print "Current level $times Last level $lastLev\n"; }
 
   if ($t2 >= 0)
   {
   for (0..$t2)
   {
-  if ($_ > 0) { print "Playing catchup on $otl.\n"; }
+  if (($_ > 0) && ($debug)) { print "Playing catchup on $otl.\n"; }
   print B "</div>\n";
   }
   }
@@ -229,13 +230,30 @@ sub cbr
 sub printAllFiles
 {
   opendir(DIR, "c:\\writing\\scripts\\invis");
-  my @dfi = readdir DIR;
-  for my $fi (@dfi) { if ($fi =~ /\.txt/) { print "$fi\n"; } }
+  my @dfi = sort(readdir DIR);
+  for my $fi (@dfi)
+  {
+    if ($fi =~ /\.txt/)
+	{
+	  if ($_[0]) { $fi =~ s/\.txt//g; print " $fi"; }
+	  else
+	  { print "$fi\n"; }
+	}
+  }
 }
 
 sub usage
 {
 print<<EOT;
+===========================USAGE
+-a = show all files
+-d = debug
+-f = force a redo if HTM file's mod date >= the generating file
+-l = launch HTM invisiclues after
+-r = launch raw (e.g. spoiler file showing everything, launched after -l)
+-u = update only (opposite of -f, currently the default)
 EOT
+
+print "Current files in directory:"; printAllFiles(1); print "\n";
 exit;
 }
