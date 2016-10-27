@@ -109,23 +109,24 @@ roi=roiling
 >icl.pl -jd $$
 
 btp=buck-the-past
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>gh.pl -t $$
+#>icl.pl -jr $$
+#>icl.pl -jb $$
+#>icl.pl -jd $$
+>lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
 
 sc=slicker-city
 >gq.pl $$ -x search.string
 >gh.pl -t $$
 >conc.pl -t -o -$$
 >conc.pl $$
->lnct.pl 10 $$,sc1,sc2,sc3,sc4,scfarm,sca,scb,scc,scd,sce,sc-dis
 >invis.pl -u $$
 >wfl.pl -t
 >i7t.pl $d -t xadd -p $$
-c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city-redacted.trizbort
-\tech\trizbort\redact.pl -sc
-c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city.pdf
-CHECK
+#c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city-redacted.trizbort
+#\tech\trizbort\redact.pl -sc
+#c:/games/inform/triz/mine/slicker-city.trizbort>c:/games/inform/triz/mine/slicker-city.pdf
+#CHECK
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
