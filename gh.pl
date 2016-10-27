@@ -120,6 +120,7 @@ sub processTerms
   my $uncopiedList = "";
   my $dirName = "";
   my $fromBase="", my $toBase="";
+  my $fromShort="";
   my $maxSize = 0;
   for my $thisFile (@_)
   {
@@ -152,7 +153,8 @@ sub processTerms
 	my $prefix = "";
 	my $c = $a; if ($c =~ /^-.:/) { $c =~ s/(^..).*/$1/g; $prefix = $c; $b =~ s/^-.://g; }
 	 if ($a =~ /FROMBASE=/) { $fromBase = $a; $fromBase =~ s/^FROMBASE=//g; }
-	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; }
+	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; $fromShort = $toBase; }
+	 if ($a =~ /FROMSHORT=/) { $fromShort = $a; $fromShort =~ s/^FROMSHORT=//g; }
 	 if ($a =~ /POSTPROC=/i) { $a =~ s/^POSTPROC=//g; my @as = split(/,/, $a); for (@as) { $postproc{$_} = 1; } }
 
     $b =~ s/=.*//g;
@@ -165,9 +167,9 @@ sub processTerms
 	  $c =~ s/\$ws/c:\\writing\\scripts/g;
 	  $c =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
 	  $c =~ s/\$wd/c:\\writing\\dict/g;
-	  $c =~ s/\$im/c:\\games\\inform\\$toBase materials/g;
-	  $c =~ s/\$is/c:\\games\\inform\\$toBase.inform\\source/g;
-	  $c =~ s/\$id/c:\\games\\inform\\$toBase.inform\\uuid.txt/g;
+	  $c =~ s/\$im/c:\\games\\inform\\$fromShort materials/g;
+	  $c =~ s/\$is/c:\\games\\inform\\$fromShort.inform\\source/g;
+	  $c =~ s/\$id/c:\\games\\inform\\$fromShort.inform\\uuid.txt/g;
 
 	  @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];

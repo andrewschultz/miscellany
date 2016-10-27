@@ -32,6 +32,7 @@ while ($count <= $#ARGV)
   if ($count < $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
   for ($a)
   {
+  $anythingRead = 1;
   /^-g$/ && do { @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
   /^-d$/ && do { $debug = 1; $count++; next; };
   /^-c$/ && do { $runC = 1; $count++; next; };
@@ -39,7 +40,10 @@ while ($count <= $#ARGV)
   /^-q$/ && do { $myReadFile = $defRead; $runC = 1; @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
   /^-pd$/ && do { $myReadFile = $defRead; $count++; next; };
   /^-fs$/ && do { showParameterFileSyntax(); };
-  readArray($ARGV + $count);
+  if ($count < $#ARGV)
+  {
+  readArray(@ARGV[$count..$#ARGV]);
+  }
   last OUTER;
   }
 }
@@ -87,7 +91,8 @@ sub readArray
   while ($count <= $#_)
   {
     my $a = $_[$count];
-	my $b = $_[$count+1]; if ($b =~ /^\"/) { $b =~ s/\"//g; }
+	my $b = "";
+	if (defined $_[$count+1]) { $b = $_[$count+1]; if ($b =~ /^\"/) { $b =~ s/\"//g; } }
 	MYFOR:
     for ($a)
 	{
@@ -103,7 +108,7 @@ sub readArray
 	/^-o$/ && do { $outFile = $b; $count += 2; next; };
 	/^-d$/ && do { $debug = 1; $count++; next; };
 	/^-nd$/ && do { $debug = 0; $count++; next; };
-	print "$a ($count) unknown.\n";
+	print "Argument $count ($a) unknown.\n";
 	usage();
 	}
   }

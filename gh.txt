@@ -202,6 +202,7 @@ ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
 
 #Problems files to GitHub
 TOBASE=the-problems-compound
+FROMSHORT=compound
 prob=$is\story.ni,
 prob=$is\item-ordering.htm,
 prob=$is\termpuz.pl,
@@ -223,14 +224,14 @@ prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Quip-Based Conve
 prob=c:\Users\Andrew\Documents\Inform\Extensions\Michael Martin\Reactable Quips Modified.i7x,
 prob=$id,
 prob=c:\users\andrew\dropbox\notes\prob*.txt,
-prob=$wd\wfl.pl,\utils
-prob=$is\regpc.bat,\testing
-prob=$is\roomlist.txt,\testing
--a:prob=$is\flip.txt,\utils
--a:prob=$is\fliptrack.txt,\utils
+prob=$wd\wfl.pl,utils
+prob=$is\regpc.bat,testing
+prob=$is\roomlist.txt,testing
+-a:prob=$is\flip.txt,utils
+-a:prob=$is\fliptrack.txt,utils
 #concept tracker
-prob=$wd\conc.pl,\utils
-prob=$is\reg-pc-*,\testing
+prob=$wd\conc.pl,utils
+prob=$is\reg-pc-*,testing
 >prob=conc.pl -o -pc
 >prob=conc.pl -pc
 >prob=i7t.pl -q -s pc | grep -iE "failed|likely|run this"
