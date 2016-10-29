@@ -34,6 +34,8 @@ highlight = 0
 
 onlymove = 0
 
+trackUndo = 0
+
 def canDump(mycol):
     if chains(mycol) > maxmove()/2:
         return 0
@@ -603,6 +605,10 @@ def undoMoves(toUndo):
     inUndo = 1
     for myCmd in moveList:
         readCmd(str(myCmd))
+        if trackUndo == 1:
+            inUndo = 0
+            printCards()
+            inUndo = 1
     inUndo = 0
     checkFound()
     printCards()
@@ -630,6 +636,10 @@ def loadGame(gameName):
                 moveList = []
             for myCmd in moveList:
                 readCmd(str(myCmd))
+                if trackUndo == 1:
+                    inUndo = 0
+                    printCards()
+                    inUndo = 1
             inUndo = 0
             checkFound()
             printCards()
@@ -667,6 +677,7 @@ def readCmd(thisCmd):
     global autoReshuf
     global elements
     global force
+    global trackUndo
     force = 0
     checkFound()
     thisCmd = thisCmd.lower()
@@ -677,6 +688,10 @@ def readCmd(thisCmd):
         name = input("Move:").strip()
     else:
         name = thisCmd
+    if name == 'tu':
+        trackUndo = 1 - trackUndo
+        print ("trackUndo now " + onoff[trackUndo])
+        return
     if len(name) == 0:
         while reshuf():
             next
@@ -938,6 +953,10 @@ def readCmd(thisCmd):
             pass
         printCards()
         return
+    if (ord(name[0]) > 96) and (ord(name[0]) < 101):
+        if (ord(name[1]) > 96) and (ord(name[1]) < 101):
+            print ('Shuffling between empty squares does nothing, whether or not that move is legal.')
+            return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
@@ -988,7 +1007,7 @@ def readCmd(thisCmd):
         checkFound()
         printCards()
         return
-    print (name,'not recognized, displaying usage.')
+    print (name + ' not recognized, displaying usage.')
     usage()
 
 while win == 0:
