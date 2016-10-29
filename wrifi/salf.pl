@@ -11,7 +11,12 @@
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq);
 
+use strict;
+use warnings;
+
 my $dupBytes = 0;
+my %got = ();
+my $noGlobals = 0;
 
 if (!@ARGV[0]) { print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit; }
 
@@ -19,7 +24,7 @@ if (!@ARGV[0]) { print ("Need alphabetical to sort, or -btp for all of BTP. PC a
 
 if (@ARGV[0] eq "-pc")
 {
-  @sects=split(/,/, "pc"
+  @sects=split(/,/, "pc");
 }
 elsif (@ARGV[0] eq "sc-rej")
 {
@@ -55,13 +60,16 @@ close(B);
 
 if (!$didSomething) { print "Didn't sort anything!\n"; exit; }
 
-if ((-s $infile) != ((-s $outfile) + $dupBytes))
+my $outDup = (-s $outfile) + $dupBytes;
+
+if ((-s $infile) != $outDup)
 {
   print "Uh oh, $infile and $outfile(+$dupBytes) didn't match sizes. Bailing.\n";
-  print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile.\n";
+  print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile, total $outDup.\n";
   exit;
 }
 
+die($dupes);
 $cmd = "copy $outfile $infile";
 print "$cmd\n";
 `$cmd`;
@@ -71,14 +79,15 @@ sub alfThis
   $didSomething = 1;
   my @lines = ();
   my @uniq_no_case = ();
-  %got = ();
+  if ($noGlobals) { %got = (); }
+
   
   while ($a = <A>)
   {
     chomp($a);
     if ($a !~ /[a-z0-9]/i)
     {
-      print "Last line $lines[-1]\n";
+      #print "Last line $lines[-1]\n";
       last;
     }
     push(@lines, $a);
@@ -88,8 +97,15 @@ sub alfThis
 
   for $y (@x)
   {
-    #if ($got{lc($y)} == 1) { print "Duplicate $y\n"; $dupBytes += length(lc($y))+1; $dupes++; print "$dupBytes/$dupes total.\n"; next; }
-	$got{lc($y)} = 1;
+    if ($got{simp($y)} == 1)
+	{
+	  print "Duplicate $y\n";
+	  $dupBytes += length(lc($y))+2;
+	  $dupes++;
+	  #print "$dupBytes/$dupes total.\n";
+	  next;
+    }
+	$got{simp($y)} = 1;
 	push(@uniq_no_case, $y);
   }
 
@@ -97,6 +113,14 @@ sub alfThis
   print B join("\n", @uniq_no_case);
   if ($#uniq_no_case > -1) { print B "\n"; }
   print B "$a\n";
-  print "$#lines ($#uniq_no_case unique) shuffled\n";
+  #print "$#lines ($#uniq_no_case unique) shuffled\n";
   return;
+}
+
+sub simp
+{
+  my $temp = $_[0];
+  $temp = lc($_[0]);
+  $temp =~ s/[\.!\/\?]//g;
+  return $temp;
 }

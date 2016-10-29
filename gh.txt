@@ -152,21 +152,21 @@ TOBASE=threediopolis
 
 #Fourdiopolis files to BitBucket
 TOBASE=fourdiopolis
-4d=$isstory.ni,
-4d=$isfourdiopolis-logic.txt,
-4d=$isfourdiopolis-walkthrough.txt,
+4d=$is\story.ni,
+4d=$is\fourdiopolis-logic.txt,
+4d=$is\fourdiopolis-walkthrough.txt,
 4d=$id,
-4d=$isincomp-updates.txt,
-4d=$islocs.pl,
+4d=$is\incomp-updates.txt,
+4d=$is\locs.pl,
 #the logcheck.pl are now merged and equivalent
-4d=$istalf.pl,
-4d=$ispos.pl,
+4d=$is\talf.pl,
+4d=$is\pos.pl,
 4d=$ws\opotst.pl,testing
-4d=$isrtest4.txt,testing
-4d=$isrtest4s.txt,testing
-4d=$isreg-4d-ends-unit.txt,testing
-4d=$isreg-4d-misc-unit.txt,testing
-4d=$isreg-4d-scens-unit.txt,testing
+4d=$is\rtest4.txt,testing
+4d=$is\rtest4s.txt,testing
+4d=$is\reg-4d-ends-unit.txt,testing
+4d=$is\reg-4d-misc-unit.txt,testing
+4d=$is\reg-4d-scens-unit.txt,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
 4d=c:\users\andrew\dropbox\notes\fourd*.txt,
 >4d=i7t.pl -q -s 4d | grep -iE "failed|likely|run this"

@@ -113,7 +113,7 @@ btp=buck-the-past
 #>icl.pl -jr $$
 #>icl.pl -jb $$
 #>icl.pl -jd $$
->lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
+>lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-auth,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
 
 sc=slicker-city
 >gq.pl $$ -x search.string

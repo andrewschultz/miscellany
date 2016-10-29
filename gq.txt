@@ -44,7 +44,7 @@ c:\games\inform\compound.inform\source\story.ni
 c:\games\inform\slicker-city.inform\source\story.ni
 c:\games\inform\buck-the-past.inform\source\story.ni
 c:\games\inform\buck-the-past.inform\source\from-sc.ni
-c:\writing\games.otl	pc,sc,sce,scd,scc,scb,sca,sc-book,sc-farm
+c:\writing\games.otl	pc,sc,btp-e,btp-d,btp-c,btp-b,btp-a,btp-book,btp-farm,btp-auth,btp-rej,btp-dis
 c:\games\inform\triz\mine\compound-directors-cut.trizbort
 c:\games\inform\triz\mine\compound-walkthrough.trizbort
 c:\games\inform\triz\mine\compound.trizbort
