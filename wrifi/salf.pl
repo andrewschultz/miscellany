@@ -6,20 +6,28 @@
 #
 # usage salf.pl 
 #
-# recommended: salf.pl pc, salf.pl sc
+# recommended: salf.pl pc, salf.pl sc, salf.pl btp
 
 use Data::Dumper qw(Dumper);
 use List::MoreUtils qw(uniq);
 
 my $dupBytes = 0;
 
-if (!@ARGV[0]) { print ("Need alphabetical to sort, or -pc for all of PC"); exit; }
+if (!@ARGV[0]) { print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit; }
 
 @sects = split(/,/, @ARGV[0]);
 
 if (@ARGV[0] eq "-pc")
 {
-  @sects=split(/,/, "pc,sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca");
+  @sects=split(/,/, "pc"
+}
+elsif (@ARGV[0] eq "sc-rej")
+{
+  @sects=split(/,/, "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca");
+}
+elsif (@ARGV[0] eq "btp")
+{
+  @sects=split(/,/, "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a");
 }
 
 if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp.\n"; exit; }
