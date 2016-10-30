@@ -678,6 +678,7 @@ def readCmd(thisCmd):
     global elements
     global force
     global trackUndo
+    prefix = ''
     force = 0
     checkFound()
     thisCmd = thisCmd.lower()
@@ -799,6 +800,7 @@ def readCmd(thisCmd):
     if name[0] == 'f':
         name = name.replace("f", "")
         force = 1
+        prefix = prefix + 'f'
         if len(name) == 0:
             print ("You need a from/to, or at the very least, a from.")
             return
@@ -969,7 +971,7 @@ def readCmd(thisCmd):
             if tempdoab < oldchain and len(elements[t2]) == 0:
                 moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
             else:
-                moveList.append(name)
+                moveList.append(prefix + name)
         while reshuf() or checkFound():
             pass
         printCards()
