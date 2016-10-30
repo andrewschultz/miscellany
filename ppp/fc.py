@@ -688,6 +688,10 @@ def readCmd(thisCmd):
         name = input("Move:").strip()
     else:
         name = thisCmd
+    if len(name) == 2:
+        if name[0] == name[1]:
+            name = name[0]
+            print ("Eliminating duplicate letter.")
     if name == 'tu':
         trackUndo = 1 - trackUndo
         print ("trackUndo now " + onoff[trackUndo])
@@ -828,6 +832,23 @@ def readCmd(thisCmd):
         return
     #### mostly meta commands above here. Keep them there.
     preverified = 0
+    if len(name) == 2:
+        n1 = ord(name[0])
+        n2 = ord(name[1])
+        if (n1 > 96) and (n1 < 101):
+            if (n2 > 96) and (n2 < 101):
+                if n1 == n2:
+                    print ("Assuming you meant to do something with " + name[0] + ".")
+                    name = name[0]
+                elif spares[n1-97] > 0 and spares[n2-97] > 0:
+                    print ("Neither cell is empty, though shuffling does nothing.")
+                    return
+                elif spares[n1-97] == 0 and spares[n2-97] == 0:
+                    print ("Both cells are empty, so this does nothing.")
+                    return
+                else:
+                    print ('Shuffling between empty squares does nothing, so I\'ll just pass here.')
+                    return
     if len(name) == 1:
         if name.isdigit():
             i = int(name)
@@ -953,10 +974,6 @@ def readCmd(thisCmd):
             pass
         printCards()
         return
-    if (ord(name[0]) > 96) and (ord(name[0]) < 101):
-        if (ord(name[1]) > 96) and (ord(name[1]) < 101):
-            print ('Shuffling between empty squares does nothing, whether or not that move is legal.')
-            return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101): #a1 moves
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
