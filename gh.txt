@@ -345,6 +345,7 @@ misc=dfi.pl,
 misc=noway.py,python
 misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
+misc=unco.pl,
 #################3 files for copying regr suite over
 misc=proj.txt,
 misc=i7proj.pm,
