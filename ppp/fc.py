@@ -471,6 +471,12 @@ def printOthers():
     sys.stdout.write(')\n')
     lastscore = foundscore
 
+def anyDoableLimit (ii):
+    for y in range (1,9):
+        if len(elements[y]) > 0 and doable(ii, y, 0) > 0 and doable(ii, y, 0) < maxmove:
+            return y
+    return 0
+
 def anyDoable (ii, emptyOK):
     for y in range (1,9):
         if doable(ii, y, 0):
@@ -860,7 +866,9 @@ def readCmd(thisCmd):
             if len(elements[i]) is 0:
                 print ('Acting on an empty row.')
                 return
-            if anyDoable(i,0):
+            if anyDoableLimit(i):
+                name = name + str(anyDoableLimit(i))
+            elif anyDoable(i,0):
                 name = name + str(anyDoable(i,0))
             elif chains(i) > 1 and canDump(i):
                 if chains(i) == len(elements[i]):
