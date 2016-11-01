@@ -14,6 +14,19 @@ if "%1" == "?" (
 goto usage
 )
 
+if "%2" EQU "m" (
+set EXT= Materials
+set SOREL=release
+)
+
+if "%1" EQU "m" (
+set EXT= Materials
+set SOREL=release
+shift /1
+)
+
+::only add projects below
+
 if "%1" EQU "e11" (
 set PROJ=dash
 goto nodef
@@ -34,6 +47,11 @@ set PROJ=heezy-park
 goto nodef
 )
 
+if "%1" EQU "e16" (
+set PROJ=ectocomp16
+goto nodef
+)
+
 if "%1" EQU "ni" (
 cd \writing\dict\nightly
 goto end
@@ -42,12 +60,6 @@ goto end
 if "%1" EQU "n" (
 cd \writing\dict\nightly
 goto end
-)
-
-if "%1" EQU "m" (
-set EXT= Materials
-set SOREL=release
-shift /1
 )
 
 if "%1" EQU "b" (

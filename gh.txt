@@ -27,6 +27,8 @@ rpg~rpg-mapping-tools
 ###ecto
 ec~ecto
 ect~ecto
+###misc
+mis~misc
 ###writing
 wri~writing
 
@@ -194,15 +196,24 @@ TOBASE=ectocomp
 ecto=c:\games\inform\dash.inform\source\story.ni,2011
 ecto=c:\games\inform\dash.inform\source\walkthrough.txt,2011
 ecto=c:\games\inform\dash.inform\uuid.txt,2011
+ecto=c:\games\inform\dash.inform\source\README.md,2011
 ecto=c:\games\inform\ghost.inform\source\story.ni,2013
 ecto=c:\games\inform\ghost.inform\source\walkthrough.txt,2013
 ecto=c:\games\inform\ghost.inform\uuid.txt,2013
+ecto=c:\games\inform\ghost.inform\source\README.md,2013
 ecto=c:\games\inform\Candy Rush Saga.inform\source\story.ni,2014
 ecto=c:\games\inform\Candy Rush Saga.inform\source\walkthrough.txt,2014
 ecto=c:\games\inform\Candy Rush Saga.inform\uuid.txt,2014
+ecto=c:\games\inform\Candy Rush Saga.inform\source\README.md,2014
 ecto=c:\games\inform\heezy-park.inform\source\story.ni,2015
 ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
 ecto=c:\games\inform\heezy-park.inform\uuid.txt,2015
+ecto=c:\games\inform\heezy-park.inform\source\README.md,2015
+ecto=c:\games\inform\ectocomp16.inform\source\story.ni,2016
+ecto=c:\games\inform\ectocomp16.inform\source\walkthrough.txt,2016
+ecto=c:\games\inform\ectocomp16.inform\uuid.txt,2016
+ecto=c:\games\inform\ectocomp16.inform\source\ach-postmortem.txt,2016
+ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
 
 #Problems files to GitHub
 TOBASE=the-problems-compound
