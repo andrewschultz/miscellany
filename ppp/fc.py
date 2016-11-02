@@ -12,10 +12,12 @@
 #??force to foundation on P?
 #??time before/after
 #> and < to bookend macro-type undoables. Skip if in Undo
+#track total undos
 
 import re
 import sys
 from random import shuffle
+import time
 
 savefile = "fcsav.txt"
 
@@ -32,6 +34,8 @@ moveList = []
 
 win = 0
 inUndo = 0
+
+startTime = 0
 
 #options to define. How to do better?
 vertical = 0
@@ -186,8 +190,10 @@ def initSide():
     global found
     found = [0, 0, 0, 0]
     global highlight
+    global startTime
     highlight = 0
     if inUndo == 0:
+        startTime = time.time()
         global win
         win = 0
         global moveList
@@ -324,6 +330,10 @@ def checkWinning():
     try: input = raw_input
     except NameError: pass
     finish = ""
+    global startTime
+    if startTime != -1:
+        timeTaken = time.time() - startTime
+        print (str(timeTaken) + ' seconds taken.')
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?")
         if len(finish) > 0:
@@ -654,6 +664,8 @@ def undoMoves(toUndo):
 
 def loadGame(gameName):
     original = open(savefile, "r")
+    global time
+    startTime = -1
     while True:
         line=original.readline()
         if gameName == line.strip():
