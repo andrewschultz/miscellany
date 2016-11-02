@@ -7,8 +7,6 @@
 #?? org possible moves with best ones first
 #?? show # of weird
 #?? bug if we run a p then try to undo must do one at a time, so we can p* or p...need to tack that on somehow
-#?? move in/out of order to by foundation, track increases there
-#??8a if filled kick to next
 #P (all)
 #??time before/after
 #> and < to bookend macro-type undoables. Skip if in Undo
@@ -368,18 +366,18 @@ def checkWinning():
         timeTaken = time.time() - startTime
         print (str(timeTaken) + ' seconds taken.')
     while True:
-        finish = input("You win! Play again (Y/N, U to undo)?")
+        finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
-            if finish[0] == 'n' or finish[0] == 'N':
+            if finish[0] == 'n':
                 print("Bye!")
                 exit()
-            if finish[0] == 'y' or finish[0] == 'Y':
+            if finish[0] == 'y':
                 initCards()
                 initSide()
                 global backup
                 backup = [row[:] for row in elements]
                 return 1
-            if finish[0] == 'u' or finish[0] == 'U':
+            if finish[0] == 'u':
                 global inUndo
                 inUndo = 1
                 undoMoves(1)
@@ -405,7 +403,10 @@ def chains(myrow):
 def printVertical():
     count = 0
     for y in range (1,9):
-        sys.stdout.write(' ' + str(chains(y)) + '/' + str(chainNope(y)))
+        if chainNope(y) == 0:
+            sys.stdout.write(' *' + str(chains(y)) + '*')
+        else:
+            sys.stdout.write(' ' + str(chains(y)) + '/' + str(chainNope(y)))
         if doubles:
             sys.stdout.write(' ')
     print ("")
