@@ -4,12 +4,9 @@
 #no frills Python Freecell game
 #
 
-#?? org possible moves with best ones first
-#?? show # of weird
-#?? bug if we run a p then try to undo must do one at a time, so we can p* or p...need to tack that on somehow
+#?? track the scoring e.g. how much since the las
 #P (all)
 #> and < to bookend macro-type undoables. Skip if in Undo
-#??track total undos
 
 import re
 import sys
@@ -31,6 +28,7 @@ moveList = []
 
 win = 0
 inUndo = 0
+totalUndo = 0
 
 startTime = 0
 
@@ -363,7 +361,10 @@ def checkWinning():
     global startTime
     if startTime != -1:
         timeTaken = time.time() - startTime
-        print (str(timeTaken) + ' seconds taken.')
+        print ("%.2f seconds taken." % (timeTaken))
+    global totalUndo
+    if totalUndo > 0:
+        print ("%d undo used." % (totalUndo))
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
@@ -517,7 +518,7 @@ def printOthers():
         emmove = ' |' + emmove
     elif not coolmove and not latmove:
         coolmove = '(nothing)'
-    print ("Possible moves:" + coolmove + latmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNopeBig()))
+    print ("Possible moves:" + coolmove + latmove + " (%d longest)" % (maxmove()))
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
@@ -553,6 +554,7 @@ def printOthers():
     global lastscore
     if (lastscore < foundscore):
         sys.stdout.write(', up ' + str(foundscore - lastscore))
+    sys.stdout.write(', ' + str(chainTotal()) + ' in order, ' + str(chainNopeBig()) + ' out of order')
     sys.stdout.write(')\n')
     lastscore = foundscore
 
@@ -681,6 +683,7 @@ name = ""
 
 def undoMoves(toUndo):
     global moveList
+    global totalUndo
     if len(moveList) == 0:
         print "Nothing to undo."
         return 0
@@ -692,6 +695,8 @@ def undoMoves(toUndo):
     spares = [0, 0, 0, 0]
     for i in range (0,toUndo):
         moveList.pop()
+        if totalUndo > -1:
+            totalUndo += 1
     global inUndo
     inUndo = 1
     for myCmd in moveList:
@@ -707,8 +712,9 @@ def undoMoves(toUndo):
    
 
 def loadGame(gameName):
-    original = open(savefile, "r")
     global time
+    global totalUndo
+    original = open(savefile, "r")
     startTime = -1
     while True:
         line=original.readline()
@@ -743,6 +749,7 @@ def loadGame(gameName):
             return 0
     gn2 = gameName.replace(r'^.=', '')
     print ("Successfully loaded " + gn2)
+    totalUndo = -1
     return 0
 
 def saveGame(gameName):
