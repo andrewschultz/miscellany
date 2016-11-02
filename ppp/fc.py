@@ -9,10 +9,10 @@
 #?? bug if we run a p then try to undo must do one at a time, so we can p* or p...need to tack that on somehow
 #?? move in/out of order to by foundation, track increases there
 #??8a if filled kick to next
-#??force to foundation on P?
+#P (all)
 #??time before/after
 #> and < to bookend macro-type undoables. Skip if in Undo
-#track total undos
+#??track total undos
 
 import re
 import sys
@@ -282,6 +282,39 @@ def checkFound():
     if totalFoundThisTime > 0 and shouldPrint() == 1:
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
     return retval
+
+def forceFoundation():
+    global inUndo
+    checkAgain = 1
+    forceStr = ""
+    while checkAgain:
+        checkAgain = 0
+        for row in range (1,9):
+            if len(elements[row]) > 0:
+                if foundable(elements[row][len(elements[row])-1]) == 1:
+                    found[(elements[row][len(elements[row])-1]-1)//13]+= 1
+                    forceStr = forceStr + tocardX(elements[row][len(elements[row])-1])
+                    elements[row].pop()
+                    checkAgain = 1
+        for xx in range (0,4):
+            if spares[xx]:
+                #print ("Checking" + tocardX(spares[xx]))
+                if foundable(spares[xx]):
+                    forceStr = forceStr + tocardX(spares[xx])
+                    found[(spares[xx]-1)//13] += 1
+                    spares[xx] = 0
+                    checkAgain = 1
+    if forceStr:
+        if not inUndo:
+            moveList.append("r")
+            print "Sending all to foundation."
+            print ("Forced" + forceStr)
+        reshuf()
+        checkFound()
+        printCards()
+    else:
+        print ("Nothing to force to foundation.")
+    return
 
 def checkWin():
     for y in range (0,4):
@@ -818,35 +851,7 @@ def readCmd(thisCmd):
         usage()
         return
     if name == "r" or name == "rr":
-        checkAgain = 1
-        forceStr = ""
-        while checkAgain:
-            checkAgain = 0
-            for row in range (1,9):
-                if len(elements[row]) > 0:
-                    if foundable(elements[row][len(elements[row])-1]) == 1:
-                        found[(elements[row][len(elements[row])-1]-1)//13]+= 1
-                        forceStr = forceStr + tocardX(elements[row][len(elements[row])-1])
-                        elements[row].pop()
-                        checkAgain = 1
-            for xx in range (0,4):
-                if spares[xx]:
-                    #print ("Checking" + tocardX(spares[xx]))
-                    if foundable(spares[xx]):
-                        forceStr = forceStr + tocardX(spares[xx])
-                        found[(spares[xx]-1)//13] += 1
-                        spares[xx] = 0
-                        checkAgain = 1
-        if forceStr:
-            if not inUndo:
-                moveList.append("r")
-                print "Sending all to foundation."
-                print ("Forced" + forceStr)
-            reshuf()
-            checkFound()
-            printCards()
-        else:
-            print ("Nothing to force to foundation.")
+        forceFoundation()
         return
     if name[0] == 'f' or (len(name) > 2 and name[2] == 'f'):
         name = name.replace("f", "")
@@ -1079,27 +1084,32 @@ def readCmd(thisCmd):
         print ("Can't put%s on%s." % (tocardX(spares[mySpare]), tocardX(elements[myRow][len(elements[myRow])-1])))
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
-        if name[1] == 'e':
-            myToSpare = firstEmptySpare()
-            if myToSpare == -1:
-                if cmdChurn == 0:
-                    print ('Nothing empty to move to. To which to move.')
-                return
-        else:
-            myToSpare = ord(name[1]) - 97
         if not name[0].isdigit():
-            print ('First letter not recognized.')
+            print ('First letter not recognized as a digit.')
             return
+        myToSpare = firstEmptySpare()
+        if myToSpare == -1:
+            if cmdChurn == 0:
+                print ('Nothing empty to move to. To which to move.')
+            return
+        if name[1] != 'e':
+            myToSpare = ord(name[1]) - 97
         myRow = int(name[0])
-        if spares[myToSpare] > 0:
-            print ("Spare %d already filled" % (myToSpare + 1))
-            return
         if myRow < 1 or myRow > 8:
             print ('From row must be between 1 and 8.')
             return
         if (len(elements[myRow]) == 0):
             print ('Empty from-row.')
             return
+        if spares[myToSpare] > 0:
+            for temp in range (0,4):
+                if spares[(myToSpare + temp) % 4] <= 0:
+                    print ("Spare %d already filled, picking %d instead" % (myToSpare + 1, (myToSpare + temp) % 4 + 1))
+                    myToSpare += temp
+                    break
+            if spares[myToSpare] > 0:
+                print ("Oops, I somehow see all-full and not all full at the same time.")
+                return
         spares[myToSpare] = elements[myRow].pop()
         if inUndo == 0:
             moveList.append(name)
