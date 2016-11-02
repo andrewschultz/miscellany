@@ -8,7 +8,6 @@
 #?? show # of weird
 #?? bug if we run a p then try to undo must do one at a time, so we can p* or p...need to tack that on somehow
 #P (all)
-#??time before/after
 #> and < to bookend macro-type undoables. Skip if in Undo
 #??track total undos
 
@@ -470,12 +469,15 @@ def printHorizontal():
     
 def printOthers():
     checkWin()
+    coolmove = ''
     canmove = ''
     wackmove = ''
+    emmove = ''
+    latmove = ''
     canfwdmove = 0
     for z1 in range (1,9):
         if len(elements[z1]) == 0:
-            canmove = canmove + ' E' + str(z1)
+            emmove = emmove + ' E' + str(z1)
             canfwdmove = 1
             continue
         for z2 in range (1,9):
@@ -487,27 +489,35 @@ def printOthers():
             if thisdo == -1:
                 wackmove = wackmove + ' ' + str(z1)+str(z2)
             elif thisdo:
-                canmove = canmove + ' ' + str(z1)+str(z2)
+                tempmove = ' ' + str(z1)+str(z2)
                 if thisdo >= len(elements[z1]):
                     canfwdmove = 1
+                    coolmove = coolmove + tempmove
                 elif not canPut(elements[z1][len(elements[z1])-thisdo], elements[z1][len(elements[z1])-thisdo-1]):
                     canfwdmove = 1
+                    coolmove = coolmove + tempmove
                 else:
-                    canmove = canmove + '-'
+                    tempmove = tempmove + '-'
+                    latmove = latmove + tempmove
     for z1 in range (1,9):
         if len(elements[z1]):
             for z2 in range (0,4):
                 if canPut(spares[z2], elements[z1][len(elements[z1])-1]):
-                    canmove = canmove + ' ' + chr(z2+97) + str(z1)
+                    coolmove = coolmove + ' ' + chr(z2+97) + str(z1)
                     canfwdmove = 1
     for z1 in range (0,4):
         if spares[z1] == 0:
-            canmove = canmove + ' >' + chr(z1+97)
+            coolmove = coolmove + ' >' + chr(z1+97)
             canfwdmove = 1
     if wackmove:
         print ("Not enough room: " + str(wackmove))
-    if canmove:
-        print ("Possible moves:" + canmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNopeBig()))
+    if coolmove and latmove:
+        coolmove = coolmove + ' |'
+    if (coolmove or latmove) and emmove:
+        emmove = ' |' + emmove
+    elif not coolmove and not latmove:
+        coolmove = '(nothing)'
+    print ("Possible moves:" + coolmove + latmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNopeBig()))
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
