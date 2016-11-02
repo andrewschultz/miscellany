@@ -820,9 +820,20 @@ def readCmd(thisCmd):
         if name[1] == 'a':
             print (moveList)
             return
+        if name[1] == 's':
+            if len(moveList) == 0:
+                print ("You've made no moves yet.")
+                return
+            d1 = moveList[len(moveList)-1][0]
+            temp = 0
+            while (temp < len(moveList) - 1) and (d1 == moveList[len(moveList)-temp-1][0]):
+                temp += 1
+            undoMoves(temp)
+            print ("Last " + str(temp) + " moves started with " + d1)
+            return
         temp = re.sub(r'^u', '', name)
         if not temp.isdigit:
-            print "Need to undo a number, or nothing."
+            print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing."
             return
         if int(temp) > len(moveList):
             print ("Tried to do %d undos, can only undo %d." % (int(temp), len(moveList)))
