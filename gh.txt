@@ -25,8 +25,7 @@ g,gr~gru
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
 ###ecto
-ec~ecto
-ect~ecto
+ec,ect~ecto
 ###misc
 mis~misc
 ###writing

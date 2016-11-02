@@ -4,6 +4,15 @@
 #no frills Python Freecell game
 #
 
+#?? org possible moves with best ones first
+#?? show # of weird
+#?? bug if we run a p then try to undo must do one at a time, so we can p* or p...need to tack that on somehow
+#?? move in/out of order to by foundation, track increases there
+#??8a if filled kick to next
+#??force to foundation on P?
+#??time before/after
+#> and < to bookend macro-type undoables. Skip if in Undo
+
 import re
 import sys
 from random import shuffle
@@ -32,9 +41,18 @@ autoReshuf = 0
 lastscore = 0
 highlight = 0
 
+cmdChurn = 0
+
 onlymove = 0
 
 trackUndo = 0
+
+def shouldPrint():
+    global inUndo
+    global cmdChurn
+    if inUndo == 1 or cmdChurn == 1:
+        return 0
+    return 1
 
 def canDump(mycol):
     if chains(mycol) > maxmove()/2:
@@ -80,12 +98,17 @@ def chainTotal():
                 retval += 1
     return retval
 
-def chainNope():
+def chainNopeBig():
     retval = 0
     for i in range (0,9):
-        for v in range (1,len(elements[i])):
-            if not canPut(elements[i][v], elements[i][v-1]):
-                retval += 1
+        retval += chainNope(i)
+    return retval
+    
+def chainNope(rowcand):
+    retval = 0
+    for v in range (1,len(elements[rowcand])):
+        if not canPut(elements[rowcand][v], elements[rowcand][v-1]):
+            retval += 1
     return retval
 
 def spareUsed():
@@ -204,11 +227,17 @@ def canPut(lower, higher):
         return 1;
     return 0;
 
+totalFoundThisTime = 0
+cardlist = ''
+
 def checkFound():
     retval = 0
     needToCheck = 1
-    totalFoundThisTime = 0
-    cardlist = '';
+    global totalFoundThisTime
+    global cardlist
+    if cmdChurn == 0:
+        totalFoundThisTime = 0
+        cardlist = '';
     while needToCheck:
         needToCheck = 0
         for y in range (1,9):
@@ -244,7 +273,7 @@ def checkFound():
                     spares[y] = 0
                     needToCheck = 1
                     retval = 1
-    if totalFoundThisTime > 0 and inUndo == 0:
+    if totalFoundThisTime > 0 and shouldPrint() == 1:
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
     return retval
 
@@ -278,6 +307,8 @@ def tocardX (cnum):
     return tocard(cnum)
 
 def printCards():
+    if cmdChurn == 1:
+        return
     if inUndo == 1:
         return
     if sum(found) == 52:
@@ -331,7 +362,7 @@ def chains(myrow):
 def printVertical():
     count = 0
     for y in range (1,9):
-        sys.stdout.write('(' + str(chains(y)) + ') ')
+        sys.stdout.write(' ' + str(chains(y)) + '/' + str(chainNope(y)))
         if doubles:
             sys.stdout.write(' ')
     print ("")
@@ -432,7 +463,7 @@ def printOthers():
     if wackmove:
         print ("Not enough room: " + str(wackmove))
     if canmove:
-        print ("Possible moves:" + canmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNope()))
+        print ("Possible moves:" + canmove + " (%d longest, %d in order, %d out of order)" % (maxmove(), chainTotal(), chainNopeBig()))
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
@@ -499,7 +530,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
         locmaxmove /= 2
-        if showDeets and not inUndo:
+        if showDeets and shouldPrint():
             print ("Only half moves here down to %d" % (locmaxmove))
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
@@ -678,6 +709,7 @@ def saveGame(gameName):
     return 0
 
 def readCmd(thisCmd):
+    global cmdChurn
     global vertical
     global doubles
     global autoReshuf
@@ -693,6 +725,7 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        name = name.replace(' ', '')
     else:
         name = thisCmd
     if len(name) == 2:
@@ -803,7 +836,7 @@ def readCmd(thisCmd):
         else:
             print ("Nothing to force to foundation.")
         return
-    if name[0] == 'f':
+    if name[0] == 'f' or (len(name) > 2 and name[2] == 'f'):
         name = name.replace("f", "")
         force = 1
         prefix = prefix + 'f'
@@ -871,7 +904,7 @@ def readCmd(thisCmd):
             elif anyDoable(i,0):
                 name = name + str(anyDoable(i,0))
             elif chains(i) > 1 and canDump(i):
-                if chains(i) == len(elements[i]):
+                if chains(i) == len(elements[i]) and cmdChurn == 0:
                     print ("That's just useless shuffling.")
                     return
                 name = name + str(canDump(i))
@@ -887,7 +920,8 @@ def readCmd(thisCmd):
                 name = name + str(anyDoable(i,1))
             else:
                 name = name + 'e'
-            print ("New implied command %s." % (name))
+            if shouldPrint():
+                print ("New implied command %s." % (name))
         elif ord(name[0]) < 101 and ord(name[0]) > 96:
             if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
                 name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
@@ -954,6 +988,31 @@ def readCmd(thisCmd):
             return
         print ('Must move 1-8 or a-d.')
         return
+    if name[0] == 'p' or name[1] == 'p':
+        q2 = (name.replace("p", ""))
+        if not q2.isdigit():
+            print ("p command requires a digit.")
+            return
+        q = int(q2)
+        if q < 1 or q > 8:
+            print ("Column/row needs to be 1-8.")
+            return
+        if len(elements[q]) == 0:
+            print ("Already no elements.")
+            return
+        goAgain = 1
+        cmdChurn = 1
+        while goAgain == 1 and len(elements[q]) > 0:
+            goAgain = 0
+            tempArySize = len(moveList)
+            readCmd(q2)
+            if len(moveList) > tempArySize:
+                goAgain = 1
+        cmdChurn = -1
+        checkFound()
+        cmdChurn = 0
+        printCards()
+        return
     if name[0].isdigit() and name[1].isdigit():
         t1 = int(name[0])
         t2 = int(name[1])
@@ -1011,7 +1070,8 @@ def readCmd(thisCmd):
         if name[1] == 'e':
             myToSpare = firstEmptySpare()
             if myToSpare == -1:
-                print ('Nothing empty to move to. To which to move.')
+                if cmdChurn == 0:
+                    print ('Nothing empty to move to. To which to move.')
                 return
         else:
             myToSpare = ord(name[1]) - 97
