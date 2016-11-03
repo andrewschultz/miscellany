@@ -29,6 +29,7 @@ moveList = []
 win = 0
 inUndo = 0
 totalUndo = 0
+totalReset = 0
 
 startTime = 0
 
@@ -362,9 +363,14 @@ def checkWinning():
     if startTime != -1:
         timeTaken = time.time() - startTime
         print ("%.2f seconds taken." % (timeTaken))
+    global totalReset
     global totalUndo
+    if totalReset > 0:
+        print ("%d reset used." % (totalReset))
     if totalUndo > 0:
         print ("%d undo used." % (totalUndo))
+    if totalUndo == 1:
+        print ("No undo data from loaded game.")
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
@@ -374,6 +380,8 @@ def checkWinning():
             if finish[0] == 'y':
                 initCards()
                 initSide()
+                totalUndo = 0
+                totalReset = 0
                 global backup
                 backup = [row[:] for row in elements]
                 return 1
@@ -714,6 +722,7 @@ def undoMoves(toUndo):
 def loadGame(gameName):
     global time
     global totalUndo
+    global totalReset
     original = open(savefile, "r")
     startTime = -1
     while True:
@@ -750,6 +759,7 @@ def loadGame(gameName):
     gn2 = gameName.replace(r'^.=', '')
     print ("Successfully loaded " + gn2)
     totalUndo = -1
+    totalReset = -1
     return 0
 
 def saveGame(gameName):
@@ -779,10 +789,10 @@ def readCmd(thisCmd):
     global elements
     global force
     global trackUndo
+    global totalReset
     prefix = ''
     force = 0
     checkFound()
-    thisCmd = thisCmd.lower()
     if thisCmd == '':
         global input
         try: input = raw_input
@@ -791,10 +801,12 @@ def readCmd(thisCmd):
         name = name.replace(' ', '')
     else:
         name = thisCmd
-    if len(name) == 2:
-        if name[0] == name[1]:
-            name = name[0]
-            print ("Eliminating duplicate letter.")
+    name = name.lower()
+    if len(name) % 2 == 0 and len(name) >= 2:
+        temp = len(name) / 2
+        if name[:temp] == name[temp:]:
+            print ("Looks like a duplicate command, so I'm cutting it in half.")
+            name = name[temp:]
     if name == 'tu':
         trackUndo = 1 - trackUndo
         print ("trackUndo now " + onoff[trackUndo])
@@ -820,6 +832,12 @@ def readCmd(thisCmd):
     if name == "so":
         sendOpts()
         return
+    if name == 'q':
+        print ("QU needed to quit.")
+        return
+    if name == 'qu':
+        print ("Bye!")
+        exit()
     if name[0] == 'u':
         if len(name) == 1:
             undoMoves(1)
@@ -890,10 +908,14 @@ def readCmd(thisCmd):
             print ("You need a from/to, or at the very least, a from.")
             return
     if name == "-":
+        if len(moveList) == 0:
+            print ("Nothing to undo.")
+            return
         elements = [row[:] for row in backup]
         initSide()
         printCards()
         checkFound()
+        totalReset += 1
         return
     if name == "?":
         print ('Maximum card length moves: ', maxmove())
