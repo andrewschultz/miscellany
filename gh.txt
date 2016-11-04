@@ -92,8 +92,6 @@ stsu=$wd\weed.pl,
 stsu=$ws\gq.bat,
 stsu=$wd\anan.pl,
 stsu=$wd\hv.pl,
-stsu=$wd\punc.pl,
-stsu=$wd\punc.txt,
 stsu=$wd\lov.pl,
 stsu=$wd\lov.txt,
 stsu=$wd\reds.pl,
@@ -310,11 +308,16 @@ misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial N
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Object-Based Hinting.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Line Topical Hints.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Game Mapping.i7x,i7x
+##############formerly STS
+misc=$wd\punc.pl,
+misc=$wd\punc.txt,
+#Card game
 misc=c:\coding\perl\proj\al.pl,autumn-leaves
 -a:misc=c:\coding\perl\proj\altime.txt,autumn-leaves
 misc=c:\coding\perl\proj\al.txt,autumn-leaves
 misc=c:\coding\perl\proj\alt.txt,autumn-leaves
 misc=c:\coding\perl\proj\pts.pl,autumn-leaves
+#Trizbort changer
 misc=c:\tech\trizbort\redact.pl,trizbort
 misc=c:\tech\trizbort\redact.txt,trizbort
 misc=gh.pl,
