@@ -1,0 +1,121 @@
+####need start capital? punctuation (1\0\-1) quotes 1\0\-1
+# 1 means we need it, -1 means we need NOT to have it, 0 OK either way
+# -- means that, although the table has a "blurb" entry, it is not part of the random list of text we wish to print out.
+# in this case, magnifs is what Ed Yerg tells you once he's friendly, sexdif is the table of differences based on your gender, and
+# townarr gives additional information about the Curst Palace once you visit certain rooms.
+# the [p] after in the source code means to pass on the possible errors.
+####PROB COMP
+VALUE=compound
+####Not necessary but put there for posterity
+FILES=c:\games\inform\compound.inform\source\story.ni
+hs - horrendous songs	0,1,-1,-1	1,1,-1,-1
+hb - horrendous books	0,1,-1,-1	1,1,-1,-1
+####ROIL
+VALUE=roiling
+FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Roiling Random Text.i7x
+########general
+cussing rejects	0,1,1,-1
+death messages	0,1,1,-1
+empty command rejects	0,1,1,0
+help companies	0,1,1,-1
+noage	0,1,1,-1
+nonviolence messages	0,1,1,-1
+singing rejects	0,1,1,0
+sleep rejects	0,1,1,0
+undo allows	0,1,1,0
+undo rejects	0,1,1,0
+wait responses	0,1,1,0
+yessage	0,1,1,-1
+########intro
+ad slogans	0,2,0,-1
+bad rappers	0,2,-1,-1
+biopics	0,2,-1,-1
+comedians	0,2,-1,-1
+elmo emo	0,0,-1,-1
+lame computer games	0,2,-1,-1
+lame movies	0,2,-1,-1
+lame talk shows	0,2,-1,-1
+lame tv shows	0,2,-1,-1
+laughhouses	0,2,-1,-1
+lousy hit songs	0,2,-1,-1
+oldies singers	0,2,-1,-1
+mob chants	0,1,1,0
+random books	0,2,-1,-1
+sports chatter	0,1,1,0
+########stores
+idiotic lecture points	0,-1,1,0
+overdone movies	0,0,1,-1
+sicko movies	0,2,1,-1
+store c ads	0,1,1,0
+store c competitors	0,2,0,-1
+tokers nonsense	0,1,1,0
+########store u
+mantle laments	0,3,-1,-1
+missing deli foods	0,1,-1,-1
+moralizers	0,2,-1,-1
+horbert farewells	0,1,1,1
+horbert musings	0,0,1,0
+########store v
+sked items	0,1,1,0
+divorces articles	0,1,1,-1
+iffy advice	0,1,1,0
+gritty dialogue	0,1,1,1
+non-skeds	0,2,-1,-1
+posh dialogue	0,1,1,1
+posse bosses	0,2,-1,-1
+prestigious bums	0,2,-1,-1
+real estate ads	0,2,-1,-1
+self-help bestsellers	0,2,-1,-1
+songs you could write	0,2,-1,-1
+########store p
+bedding brands	0,2,-1,-1
+catechism pages	0,1,1,0
+leo-rand chitchat	0,1,1,0
+leo-rand idols	0,2,-1,-1
+research topics	0,0,-1,-1
+smartypants	0,2,-1,-1
+########store y
+aunt tuna chatter	0,-1,1,0
+bar dialogue	0,1,1,0
+competing bars	0,2,-1,-1
+casper mumbles	0,1,1,-1
+fish fries	0,1,1,0
+theses	0,1,1,-1
+tuna gossip	0,0,1,0
+unpopular girls	0,2,-1,-1
+########store w
+gizmo parts	0,0,-1,-1
+rodney bluster	0,-1,-1,-1
+########store t
+animal friends	0,0,-1,-1
+elmer and merle squabbles	0,1,1,0
+elvira battle cries	0,1,0,0
+elvira machines	0,-1,-1,-1
+elvira taunts	0,1,1,1
+########store h
+selly yells	0,1,1,1
+political slogans	0,1,1,1
+####need start capital? punctuation (1\0\-1) quotes 1\0\-1
+#magnifs	--
+#sexdif	--
+#townarr	--
+
+####SA
+# this list is shorter, consisting of Pat's codas, the deadbeat camp, condo chatter, PSAs, nerd chat, Red Bull Burdell's taunts, the riot chants and the names on the graffiti in the strip.
+VALUE=shuffling
+FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Shuffling Random Text.i7x
+######intro
+job searcher names	1	-1	-1
+######f
+evil locations	0	-1	-1
+######i
+poem codas	1	1	-1
+######m
+camp chants	1	1	1
+condo dialogue	1	1	0
+psas	3	-1	-1
+nerd natter	1	1	0
+######r
+riot slogans	1	1	0
+red bull taunts	1	1	0
+;
