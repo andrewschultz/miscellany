@@ -167,6 +167,7 @@ sub processTerms
 	  $c =~ s/\$ws/c:\\writing\\scripts/g;
 	  $c =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
 	  $c =~ s/\$wd/c:\\writing\\dict/g;
+	  $c =~ s/\$if/$fromBase/g;
 	  $c =~ s/\$im/c:\\games\\inform\\$fromShort materials/g;
 	  $c =~ s/\$is/c:\\games\\inform\\$fromShort.inform\\source/g;
 	  $c =~ s/\$id/c:\\games\\inform\\$fromShort.inform\\uuid.txt/g;

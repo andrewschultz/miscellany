@@ -33,6 +33,7 @@ wri~writing
 
 #Shuffling files
 TOBASE=stale-tales-slate
+FROMSHORT=shuffling
 shu=$is\story.ni,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling random text.i7x,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling nudges.i7x,shuffling
@@ -54,6 +55,7 @@ shu=$is\reg-sa-*,\shuffling\testing
 
 #Roiling files
 TOBASE=stale-tales-slate
+FROMSHORT=roiling
 roi=$is\story.ni,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling random text.i7x,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling nudges.i7x,roiling
