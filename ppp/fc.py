@@ -31,6 +31,7 @@ inUndo = 0
 totalUndo = 0
 totalReset = 0
 
+lastReset = 0
 startTime = 0
 
 #options to define. How to do better?
@@ -180,16 +181,19 @@ def sendOpts():
         print "Failed to get options file."
     return
 
-def initSide():
+def initSide(inGameReset):
     global spares
     spares = [0, 0, 0, 0]
     global found
     found = [0, 0, 0, 0]
     global highlight
     global startTime
+    global lastReset
     highlight = 0
     if inUndo == 0:
-        startTime = time.time()
+        lastReset = time.time()
+        if inGameReset != 1:
+            startTime = lastReset
         global win
         win = 0
         global moveList
@@ -360,16 +364,20 @@ def checkWinning():
     except NameError: pass
     finish = ""
     global startTime
+    global lastReset
     if startTime != -1:
-        timeTaken = time.time() - startTime
+        curTime = time.time()
+        timeTaken = curTime - startTime
         print ("%.2f seconds taken." % (timeTaken))
+        if lastReset > startTime:
+            print ("%.2f seconds taken since last reset." % (curTime - lastReset))
     global totalReset
     global totalUndo
     if totalReset > 0:
         print ("%d reset used." % (totalReset))
     if totalUndo > 0:
         print ("%d undo used." % (totalUndo))
-    if totalUndo == 1:
+    if totalUndo == -1:
         print ("No undo data from loaded game.")
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
@@ -379,7 +387,7 @@ def checkWinning():
                 exit()
             if finish[0] == 'y':
                 initCards()
-                initSide()
+                initSide(0)
                 totalUndo = 0
                 totalReset = 0
                 global backup
@@ -679,7 +687,7 @@ elements.append([])
 elements.append([])
 
 readOpts()
-initSide()
+initSide(0)
 initCards()
 printCards()
 
@@ -737,7 +745,7 @@ def loadGame(gameName):
             global moveList
             global inUndo
             inUndo = 1
-            initSide()
+            initSide(0)
             if len(line) > 0 and line[0] != '#':
                 moveList = line.split()
             else:
@@ -838,14 +846,16 @@ def readCmd(thisCmd):
     if name == 'qu':
         print ("Bye!")
         exit()
-    if name[0] == 'u':
+    if name == 'u':
         if len(name) == 1:
             undoMoves(1)
             return
-        if name[1] == 'a':
+    if "u" in name:
+        name = name.replace("u", "")
+        if name == 'a':
             print (moveList)
             return
-        if name[1] == 's':
+        if name == 's':
             if len(moveList) == 0:
                 print ("You've made no moves yet.")
                 return
@@ -856,14 +866,13 @@ def readCmd(thisCmd):
             undoMoves(temp)
             print ("Last " + str(temp) + " moves started with " + d1)
             return
-        temp = re.sub(r'^u', '', name)
-        if not temp.isdigit:
+        if not name.isdigit:
             print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing."
             return
-        if int(temp) > len(moveList):
+        if int(name) > len(moveList):
             print ("Tried to do %d undos, can only undo %d." % (int(temp), len(moveList)))
             return
-        undoMoves(int(temp))
+        undoMoves(int(name))
         return
     if name[0] == '/':
         debug = 1 - debug
@@ -912,7 +921,7 @@ def readCmd(thisCmd):
             print ("Nothing to undo.")
             return
         elements = [row[:] for row in backup]
-        initSide()
+        initSide(1)
         printCards()
         checkFound()
         totalReset += 1
