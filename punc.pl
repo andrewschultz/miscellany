@@ -30,6 +30,7 @@ use strict;
 
 ######################options
 my $showOK = 0;
+my $printWarnings = 0;
 
 ######################counters
 my $errsYet = 0;
@@ -40,6 +41,7 @@ my $totalSuccesses = 0;
 my $head = "";
 my $noerr;
 my $anyerr;
+my $default;
 
 my @lineList = ();
 
@@ -85,6 +87,8 @@ my $c = "";
 my $tempLine;
 my $myLine;
 
+my $count;
+
 while ($myLine = <A>)
 {
   $lineNum++;
@@ -92,14 +96,23 @@ while ($myLine = <A>)
   if ($myLine =~ /;/) { last; }
   chomp($myLine);
   if (length($myLine) == 0) { next; }
-  if ($myLine =~ /^VALUE=/) { $myLine =~ s/VALUE=//g; $gameVal = $myLine; $myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source"; next; }
+  if ($myLine =~ /^DEFAULT=/) { $default = $myLine; $default =~ s/DEFAULT=//g; $gameVal = $myLine; next; }
+  if ($myLine =~ /^VALUE=/) { $myLine =~ s/VALUE=//g; $gameVal = $myLine; $myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source\\story.ni"; next; }
   if ($myLine =~ /^FILES=/) { $myLine =~ s/FILES=//g; $myFile{$gameVal} = $myLine; print "$gameVal -> $myLine\n"; next; }
+  $myLine = lc($myLine);
+  if ($myLine =~ /^table of /) { print "Don't need (table of) at line $lineNum, $myLine\n"; $myLine =~ s/^table of //g; }
   $tempLine = $myLine;
   $tempLine =~ s/^[^\t]*\t//;
   $c = $myLine; $c =~ s/\t.*//;
+  my @grp = split(/\t/, $tempLine);
+  for my $g (@grp)
+  {
+    $count = ($g =~ tr/,//);
+	if ($count != 3) { print "$lineNum: $g wrong # of commas: $count\n"; }
+  }
   $searches{$c} = $tempLine;
   if (!$tempLine) { print "Warning: No data for TABLE OF $c.\n"; }
-}
+}die;
 
 close(A);
 
@@ -115,7 +128,18 @@ $map{"b"} = "shuffling,roiling";
 $map{"pc"} = "compound";
 $map{"sc"} = "slicker-city";
 $map{"btp"} = "buck-the-past";
-$map{"btp"} = "compound,slicker-city,buck-the-past";
+$map{"as"} = "compound,slicker-city,buck-the-past";
+
+if ($#ARGV == -1)
+{
+  if ($default)
+  {
+    print "Going with default, $default.\n";
+    storyTables($default);
+  }
+  else { print "No default. Define with DEFAULT=\n"; }
+  exit();
+}
 
 for my $argnum (0..$#ARGV)
 {
@@ -150,14 +174,13 @@ my $inTable = 0;
 while ($a = <A>)
 {
   $allLines++;
-  if ($a =~ /^table of /)
+  if (($a =~ /^table of /) && ($inTable == 0))
   {
-    if (($a =~ /\t/) || ($a =~ /megachatter/)) { next; }
     chomp($a);
+	$a =~ s/ \(continued\)//;
     $head = lc($a); $head =~ s/^table of //g; $head =~ s/[ \t]*\[.*//g;
-	<A>;
+	<A>; $allLines++;
     $errsYet = 0; $errs = 0;
-	#print "$head: $searches{$head}\n";
     if (!$searches{$head})
 	{
 	  if (!defined($warning{$_[0]}) || (defined($ignore{$head}) && $ignore{$head}))
@@ -174,7 +197,7 @@ while ($a = <A>)
 	  my $currentParsing = $searches{$head};
 	  @parseAry = split(/\t/, $currentParsing);
 	  #if ($#parseAry < 3) { die("Bad # of arguments ($#parseAry) in cluster $currentParsing, line $allLines."); }
-	  #print "Changing to @parseAry\n";
+	  #print "Changing $head to @parseAry\n";
 	  #print "Starting $head.\n";
 	  }
 	  next;
@@ -182,7 +205,7 @@ while ($a = <A>)
   }
 	if ($inTable == 1)
 	{
-	  if ($a !~ /^\"/i)
+	  if (	($a !~ /\t\"/) && ($a !~ /^\"/))
 	  {
 	    if ($errs)
 		{ print "===============Finished $head. $errs errors.\n"; $totalErrors += $errs; }
@@ -195,7 +218,8 @@ while ($a = <A>)
 	{
 	  $lineNum++;
 	  chomp($a);
-	  #print "Trying @parseAry\n";
+	  #print "Trying $a/@parseAry\n";
+	  if ($a =~ /\[p\]/) { $totalSuccesses++; next; }
 	  for my $thisParse (@parseAry)
 	  {
 	    my @tempParse = split(/,/, $thisParse);
@@ -203,8 +227,15 @@ while ($a = <A>)
         $capCheck = $tempParse[1];
         $puncCheck = $tempParse[2];
         $quoCheck = $tempParse[3];
+		my @entryArray = split(/\t/, $a);
+		if ($myIndex > $#entryArray) { if ($printWarnings) { print "No element $myIndex at line $lineNum of $head, $#entryArray\n"; } next; }
+        if ($entryArray[$myIndex] eq "\"\"" || $entryArray[$myIndex] eq "--")
+        {
+          if ($printWarnings) { print "Empty entry $myIndex empty.\n"; }
+		  next;
+        }
 		#print "Looking up $a\n";
-		lookUp($a);
+		lookUp($entryArray[$myIndex]);
 	  }
 	}
 }
@@ -222,7 +253,7 @@ else
 {
 if ($showOK) { print "OK tables:$noerr.\n"; }
 }
-my $listOut = join(" / ", @lineList);
+my $listOut = join(" / ", @lineList); if ($listOut) { $listOut = "Lines: $listOut"; }
 
 print "TEST RESULTS:$_[0] punctuation,0,$totalErrors,$totalSuccesses,$listOut\n";
 
@@ -234,9 +265,9 @@ sub lookUp
 {
       my $adNotTitle = 0;
       my $temp = $_[0];
+	  my $temp2;
 	  my $count;
 	  
-	  if ($temp =~ /\[p\]/i) { $totalSuccesses++; return; }
 	  if ($temp =~ /\ttrue/) { $adNotTitle = 1; }
       $temp =~ s/^\"//gi;
       $temp =~ s/\".*//g;
@@ -265,11 +296,17 @@ sub lookUp
 	  if ($quoCheck == -1) { if (($temp =~ /'$/) && ($temp =~ /^'/)) { err(); print "$allLines($lineNum): $temp too quotey.\n"; return; } }
       my $gotit = ($temp =~ /[\.\!\"\?]['\)]?$/);
       if ($gotit && ($puncCheck == -1)) { err(); print "$allLines($lineNum): $temp unnecc punctuation.\n"; }
-      if (!$gotit && ($puncCheck==1)) { err(); print "$allLines($lineNum): $temp missing punctuation.\n"; }
+      if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; }
       if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; }
       if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; }
-	  my $temp2 = $temp; $temp2 =~ s/[a-z]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return; }
-      if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/)) { if ($temp !~ /'[a-z]+'/i) { err(); print "$allLines($lineNum): $temp possible unbracketed apostrophe.\n"; } }
+	  $temp2 = $temp; $temp2 =~ s/[a-z\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return; }
+      if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
+	  { # ?? shuffle to probably-ok in the future
+	    $temp2 = $temp;
+		$temp2 =~ s/'[a-zA-Z].*'[ \"]//gi;
+	    if ($temp2 =~ /( '|' )/i)
+		{ err(); print "$allLines($lineNum):\n$temp\n$temp2\npossible unbracketed apostrophe.\n"; return; }
+      }
       if (($temp =~ /^'/) ^ ($temp =~ /'$/)) { $count = ($temp =~ tr/'//); if ($count == 1) { err(); print ("$allLines($lineNum): $temp unmatched quotes.\n"); return; } }
       if (($temp =~ /^'/) && ($temp =~ /'$/)) { $temp =~ s/'//g; }
       if ($temp =~ /^ /) { err(); print "$allLines($lineNum): $temp leading space.\n"; }

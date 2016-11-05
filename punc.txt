@@ -1,3 +1,4 @@
+DEFAULT=compound
 ####need start capital? punctuation (1\0\-1) quotes 1\0\-1
 # 1 means we need it, -1 means we need NOT to have it, 0 OK either way
 # -- means that, although the table has a "blurb" entry, it is not part of the random list of text we wish to print out.
@@ -10,10 +11,27 @@ VALUE=compound
 FILES=c:\games\inform\compound.inform\source\story.ni
 hs - horrendous songs	0,1,-1,-1	1,1,-1,-1
 hb - horrendous books	0,1,-1,-1	1,1,-1,-1
+b1 - brother big talk	0,1,1,-1
+bad guy worries	0,1,1,0
+room explanations	1,1,1,-1
+explanations	1,1,1,-1
+##################need to fix this because of "continue" clause
+##################e.g. xx... works too
+xxadd	1,1,1,-1
+alfbyroom	1,1,1,-1
+####SLICKER CITY
+VALUE=slicker-city
+explanations	1,1,1,-1
+####BUCK THE PAST
+VALUE=buck-the-past
+explanations	1,1,1,-1
+up inn adjectives	0,1,-1,-1
+down inn adjectives	0,1,-1,-1
 ####ROIL
 VALUE=roiling
 FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Roiling Random Text.i7x
 ########general
+megachatter	6,1,-1,0	9,1,1,0
 cussing rejects	0,1,1,-1
 death messages	0,1,1,-1
 empty command rejects	0,1,1,0
@@ -105,17 +123,17 @@ political slogans	0,1,1,1
 VALUE=shuffling
 FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Shuffling Random Text.i7x
 ######intro
-job searcher names	1	-1	-1
+job searcher names	0,1,-1,-1
 ######f
-evil locations	0	-1	-1
+evil locations	0,0,-1,-1
 ######i
-poem codas	1	1	-1
+poem codas	0,1,1,-1
 ######m
-camp chants	1	1	1
-condo dialogue	1	1	0
-psas	3	-1	-1
-nerd natter	1	1	0
+camp chants	0,1,1,1
+condo dialogue	0,1,1,0
+psas	0,3,-1,-1
+nerd natter	0,1,1,0
 ######r
-riot slogans	1	1	0
-red bull taunts	1	1	0
+riot slogans	0,1,1,0
+red bull taunts	0,1,1,0
 ;
