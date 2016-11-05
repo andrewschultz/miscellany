@@ -12,6 +12,7 @@ Compound	xxbgw	"	$$ random important administrative and philosophical matters
 Compound	table of jerk-girl-talk	"	jerks now have $$ "romantic"
 Compound	table of sleep stories	"	$$ sleep stories
 Compound	table of incisive sid viewpoints	"	To be precise, $+
+Compound	table of Bible references	"	there are now $$ Basher Bible references
 #command to run if things are wrong
 Compound	ni pr
 ######################################

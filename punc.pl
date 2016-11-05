@@ -62,7 +62,9 @@ my %ignore;
 my %got;
 my %entry;
 
-if (defined($ARGV[0]) && ($ARGV[0] eq "e")) { `c:\\writing\\dict\\punc.txt`; exit; }
+my $rf = "c:\\writing\\dict\\punc.txt";
+
+if (defined($ARGV[0]) && ($ARGV[0] eq "e")) { `$rf`; exit; }
 
 # -cl used to be "fix checklist" where I tacked on periods
 # now it can just be done with s/([^\.])\"/\.\"/
@@ -71,13 +73,13 @@ if (defined($ARGV[0]) && ($ARGV[0] eq "e")) { `c:\\writing\\dict\\punc.txt`; exi
 my @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from");
 addTitles();
 
-if (-f "punc.txt") 
+if (-f $rf) 
 {
-open(A, "punc.txt") || die ("Can't open punc.txt.");
+open(A, "$rf") || die ("Can't open $rf.");
 }
 else
 {
-open(A, "c:/writing/dict/punc.txt") || do { print ("Can't open c:/writing/dict/punc.txt."); usage(); }
+die ("No $rf. Need to specify another in the file.");
 }
 
 my $lineNum = 0;
@@ -89,30 +91,18 @@ my $myLine;
 
 my $count;
 
+###############################
+#first find the default project
+
 while ($myLine = <A>)
 {
-  $lineNum++;
-  if ($myLine =~ /#/) { next; }
-  if ($myLine =~ /;/) { last; }
-  chomp($myLine);
-  if (length($myLine) == 0) { next; }
-  if ($myLine =~ /^DEFAULT=/) { $default = $myLine; $default =~ s/DEFAULT=//g; $gameVal = $myLine; next; }
-  if ($myLine =~ /^VALUE=/) { $myLine =~ s/VALUE=//g; $gameVal = $myLine; $myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source\\story.ni"; next; }
-  if ($myLine =~ /^FILES=/) { $myLine =~ s/FILES=//g; $myFile{$gameVal} = $myLine; print "$gameVal -> $myLine\n"; next; }
-  $myLine = lc($myLine);
-  if ($myLine =~ /^table of /) { print "Don't need (table of) at line $lineNum, $myLine\n"; $myLine =~ s/^table of //g; }
-  $tempLine = $myLine;
-  $tempLine =~ s/^[^\t]*\t//;
-  $c = $myLine; $c =~ s/\t.*//;
-  my @grp = split(/\t/, $tempLine);
-  for my $g (@grp)
-  {
-    $count = ($g =~ tr/,//);
-	if ($count != 3) { print "$lineNum: $g wrong # of commas: $count\n"; }
-  }
-  $searches{$c} = $tempLine;
-  if (!$tempLine) { print "Warning: No data for TABLE OF $c.\n"; }
-}die;
+  if ($myLine =~ /^DEFAULT=/) { $default = $myLine; $default =~ s/DEFAULT=//g; next; }
+}
+close(A);
+
+
+=pod
+=cut
 
 close(A);
 
@@ -151,8 +141,66 @@ for my $argnum (0..$#ARGV)
   else
   { $proj = $ARGV[$argnum]; }
   my @projs = split(/,/, $proj);
-  for my $myproj(@projs) { storyTables($myproj); }
+  for my $myProj(@projs) { getTableList($myProj); storyTables($myProj); }
 }
+
+#################################
+#this reads in what to do with the various tables from punc.txt, for whatever story.ni file
+#
+
+sub getTableList
+{
+
+%ignore = ();
+%searches = ();
+
+my $inCurrent = 0;
+my $gotAny = 0;
+
+open(A, "$rf") || die ("Can't open $rf");
+
+while ($myLine = <A>)
+{
+  $lineNum++;
+  if ($myLine =~ /#/) { next; }
+  if ($myLine =~ /;/) { last; }
+  if ($myLine =~ /^DEFAULT=/) { next; }
+  chomp($myLine);
+  if (length($myLine) == 0) { next; }
+  if (($inCurrent) && ($myLine =~ /^====/)) { last; }
+  if ($myLine =~ /^-/) { $myLine =~ s/^-//g; $ignore{$myLine} = 1; next; }
+  if ($myLine eq "VALUE=$_[0]")
+  {
+    $inCurrent = 1;
+	$gotAny = 1;
+	$myLine =~ s/VALUE=//g;
+	$gameVal = $myLine;
+	$myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source\\story.ni";
+	next;
+  }
+  if ($myLine =~ /^FILES=/) { $myLine =~ s/FILES=//g; $myFile{$gameVal} = $myLine; print "$gameVal -> $myLine\n"; next; }
+  $myLine = lc($myLine);
+  if ($myLine =~ /^table of /) { print "Don't need (table of) at line $lineNum, $myLine\n"; $myLine =~ s/^table of //g; }
+  $tempLine = $myLine;
+  $tempLine =~ s/^[^\t]*\t//;
+  $c = $myLine; $c =~ s/\t.*//;
+  my @grp = split(/\t/, $tempLine);
+  for my $g (@grp)
+  {
+    $count = ($g =~ tr/,//);
+	if ($count != 3) { print "$lineNum: $g wrong # of commas: $count\n"; }
+  }
+  $searches{$c} = $tempLine;
+  if (!$tempLine) { print "Warning: No data for TABLE OF $c.\n"; }
+}
+
+close(A);
+if (!$gotAny) { die("Found nothing for $_[0], exiting."); }
+}
+
+################################
+#this processes the story tables
+#
 
 sub storyTables
 {
@@ -171,6 +219,10 @@ print "Table parsing for $fileToRead:\n";
 
 my $inTable = 0;
 
+my $tableWarnings = 0;
+
+my %alreadyWarn;
+
 while ($a = <A>)
 {
   $allLines++;
@@ -183,10 +235,8 @@ while ($a = <A>)
     $errsYet = 0; $errs = 0;
     if (!$searches{$head})
 	{
-	  if (!defined($warning{$_[0]}) || (defined($ignore{$head}) && $ignore{$head}))
-	  { }
-	  else
-	  { print "Warning, no entry in punc.txt for $head.\n"; }
+	  if (!$ignore{$head} && !$alreadyWarn{$head})
+	  { print "Warning, no entry in punc.txt for $head at line $..\n"; $tableWarnings++; $alreadyWarn{$head} = $.; }
 	}
 	else
 	{
@@ -241,10 +291,10 @@ while ($a = <A>)
 }
 
 #now check to make sure everything in punc.txt is used
-for my $key (sort keys %entry)
+for my $key (sort keys %searches)
 {
   #print "$key/$entry{$key} vs $_[1]/$ignore{$key}/$got{$key}\n";
-  if ((!$ignore{$key}) && (!$got{$key}) && ($entry{$key} eq $_[0]))
+  if ((!$ignore{$key}) && (!$got{$key}))
   { print "WARNING punc.txt pointed to table $key but story.ni did not.\n"; }
 }
 
@@ -256,6 +306,8 @@ if ($showOK) { print "OK tables:$noerr.\n"; }
 my $listOut = join(" / ", @lineList); if ($listOut) { $listOut = "Lines: $listOut"; }
 
 print "TEST RESULTS:$_[0] punctuation,0,$totalErrors,$totalSuccesses,$listOut\n";
+
+if ($tableWarnings) { print ("We need to flag $tableWarnings tables.\n"); }
 
 close(A);
 
@@ -288,8 +340,8 @@ sub lookUp
 	  if ($temp =~ /\[\]/) { err(); print "$allLines($lineNum): $temp brackets with nothing in them.\n"; }
 	  if (($temp =~ /[a-zA-Z][\.!\?] +[a-z]/) && ($temp !~ /[!\?] by/)) { if ($temp !~ /(i\.e|e\.g)\./i) { err(); print "$allLines($lineNum): $temp starts sentence with lower-case.\n"; }}
 	  if ($temp =~ /â€œ/) { err(); print "$allLines($lineNum): $temp has smart quotes, which you may not want\n"; }
-	  if (($capCheck == 3) && ($temp =~ /[a-z]/)) { err(); print "$allLines($lineNum): $temp needs to be ALL CAPS.\n"; }
-	  if (($capCheck == 2) && ($adNotTitle == 0) && (!titleCase($temp))) { err(); print "$allLines($lineNum): $temp needs to be Title Case, change $wrongString.\n"; }
+	  if (($capCheck == 3) && ($temp =~ /[a-z]/)) { err(); print "$allLines($lineNum): $temp needs to be ALL CAPS.\n"; return; }
+	  if (($capCheck == 2) && ($adNotTitle == 0) && (!titleCase($temp))) { err(); print "$allLines($lineNum): $temp needs to be Title Case, change $wrongString.\n"; return; }
 	  if (($capCheck == 1) && ($temp =~ /^[a-z]/)) { err(); print "$allLines($lineNum): $temp need caps.\n"; return; }
 	  if (($capCheck == -1) && ($temp =~ /^[A-Z]/)) { err(); print "$allLines($lineNum): $temp wrong caps.\n"; return; }
 	  if ($quoCheck == 1) { $count = ($temp =~ tr/'//); if (($count < 2) || (($temp !~ /^'/) && ($temp !~ /'$/))) { err(); print "$allLines($lineNum): $temp not enough quotes.\n"; return; } }
