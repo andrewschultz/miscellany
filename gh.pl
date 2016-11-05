@@ -122,6 +122,8 @@ sub processTerms
   my $fromBase="", my $toBase="";
   my $fromShort="";
   my $maxSize = 0;
+  my $wildSwipes = 0;
+
   for my $thisFile (@_)
   {
   open(A, $thisFile) || die ("No $thisFile");
@@ -193,7 +195,34 @@ sub processTerms
 	  my $thisWild = 0;
       my $cmd = "copy \"$fromFile\" \"$gh\\$toFile\"";
 	  if ($reverse) { if ($short =~ /\*/) { next; } $cmd = "copy \"$gh\\$toFile\\$short\" \"$fromFile\""; }
-	  if ($fromFile =~ /\*/) { $wildcards++; $thisWild = 1; }
+	  if ($fromFile =~ /\*/)
+	  {
+		my $wildYet = 0;
+		my $wildFrom = $c; $wildFrom =~ s/,.*//g; $wildFrom =~ s/\\[^\\]+$//;
+		my $wildCheck = $c; $wildCheck =~ s/,.*//g; $wildCheck =~ s/.*\\//; $wildCheck =~ s/\*/\.\*/g;
+		opendir(DIR, "$wildFrom") || do { print "$wildFrom dir doesn't exist.\n"; next; };
+		my @x = readdir(DIR);
+		my @y = ();
+		for (@x)
+		{
+		  if ($_ =~ /$wildCheck/) { push (@y, $_); }
+		}
+		if ($#y == -1) { print "No matches for $wildFrom/$wildCheck.\n"; next; }
+		for (@y)
+		{
+		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
+		  {
+		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
+		  `$cmd`;
+		  $fileList .= "$wildFrom\\$_\n";
+		  #print "$cmd\n$toBase\n$toFile\n";
+		  $wildcards++;
+		  $copies++;
+		  if (!$wildYet) { $wildYet++; $wildSwipes++; }
+		  }
+		}
+		next;
+	  }
 	  if ($justPrint) { print "$cmd\n"; $fileList .= "$fromFile\n"; }
 	  else
 	  {
@@ -211,7 +240,7 @@ sub processTerms
   if (!$didOne) { print "Didn't find anything for $procString."; }
   else
   {
-    print "Copied $copies file(s), $wildcards wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
+    print "Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
 	my $cbf = $copies+$badFileCount;
 	my $proc2 = join("/", split(/,/, $procString));
 	if ($testResults && $cbf)
