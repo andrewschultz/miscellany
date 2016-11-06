@@ -4,8 +4,7 @@
 #no frills Python Freecell game
 #
 
-#?? track the scoring e.g. how much since the las
-#P (all)
+#?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
 
 import re
@@ -47,6 +46,11 @@ cmdChurn = 0
 onlymove = 0
 
 trackUndo = 0
+
+def printCond(myString):
+    if inUndo == 0 and cmdChurn == 0:
+        print(myString)
+    return
 
 def shufwarn():
     if cmdChurn == 0:
@@ -95,17 +99,22 @@ def ripUp(q):
     goAgain = 1
     global cmdChurn
     cmdChurn = 1
+    movesize = len(moveList)
     while goAgain == 1 and len(elements[q]) > 0:
         goAgain = 0
         tempArySize = len(moveList)
         readCmd(str(q))
         if len(moveList) > tempArySize:
             goAgain = 1
+        checkFound()
+        reshuf()
+        forceFoundation()
     cmdChurn = -1
-    checkFound()
-    reshuf()
     cmdChurn = 0
+    checkFound() # bug where not everything is printed
     printCards()
+    if (len(moveList) == movesize):
+        print ("Nothing moved.")
 
 def shouldPrint():
     global inUndo
@@ -197,9 +206,14 @@ def chainNopeEach():
     
 def chainNope(rowcand):
     retval = 0
+    thelast = 0
     for v in range (1,len(elements[rowcand])):
-        if not canPut(elements[rowcand][v], elements[rowcand][v-1]):
+        mye = elements[rowcand][thelast]
+        if nexties(elements[rowcand][v]) and foundable(elements[rowcand][v]):
+            continue
+        if not canPut(elements[rowcand][v], mye): # make sure it is not a (!)
             retval += 1
+        thelast = v
     return retval
 
 def spareUsed():
@@ -397,13 +411,13 @@ def forceFoundation():
     if forceStr:
         if not inUndo:
             moveList.append("r")
-            print "Sending all to foundation."
-            print ("Forced" + forceStr)
+            printCond("Sending all to foundation.")
+            printCond("Forced" + forceStr)
         reshuf()
         checkFound()
         printCards()
     else:
-        print ("Nothing to force to foundation.")
+        printCond("Nothing to force to foundation.")
     return
 
 def checkWin():
@@ -472,6 +486,9 @@ def checkWinning():
     if totalUndo == -1:
         print ("No undo data from loaded game.")
     while True:
+        global cmdChurn
+        cmdChurn = 0
+        checkFound()
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
             if finish[0] == 'n':
@@ -490,7 +507,7 @@ def checkWinning():
                 inUndo = 1
                 undoMoves(1)
                 inUndo = 0
-                return 0
+                continue
         print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
         
 def chains(myrow):
