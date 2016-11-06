@@ -48,6 +48,65 @@ onlymove = 0
 
 trackUndo = 0
 
+def shufwarn():
+    if cmdChurn == 0:
+        print ("That's just useless shuffling.")
+
+def dumpTotal(q):
+    retval = 0
+    for z in range(0,len(elements[q])):
+        if foundable(z):
+            retval += 1
+        if nexties(z):
+            retval += 1
+    return retval
+
+def bestDumpRow():
+    bestScore = -1
+    bestRow = 0
+    bestChains = 10
+    for y in range (1,9):
+        if chainNope(y) == 0:
+            continue
+        if canDump(y):
+            if dumpTotal(y) > bestScore or (dumpTotal(y) == bestScore and chainTotal(y) < bestChains):
+                bestRow = y
+                bestChains = chainNope(y)
+    return bestRow
+
+def foundable(myc):
+    if (myc-1) % 13 == found[(myc-1)//13]:
+        return True
+    return False
+
+def nexties(myc):
+    odds = (myc-1)//13
+    if (myc-1) % 13 < found[(odds+1)%4]+2 and (myc-1) % 13 < found[(odds+3)%4]+2:
+        return True
+    return False
+
+def ripUp(q):
+    if q < 1 or q > 8:
+        print ("Column/row needs to be 1-8.")
+        return
+    if len(elements[q]) == 0:
+        print ("Already no elements.")
+        return
+    goAgain = 1
+    global cmdChurn
+    cmdChurn = 1
+    while goAgain == 1 and len(elements[q]) > 0:
+        goAgain = 0
+        tempArySize = len(moveList)
+        readCmd(str(q))
+        if len(moveList) > tempArySize:
+            goAgain = 1
+    cmdChurn = -1
+    checkFound()
+    reshuf()
+    cmdChurn = 0
+    printCards()
+
 def shouldPrint():
     global inUndo
     global cmdChurn
@@ -56,6 +115,17 @@ def shouldPrint():
     return 1
 
 def canDump(mycol):
+    dumpSpace = 0
+    for thiscol in range (1,9):
+        if len(elements[thiscol]) == 0:
+            dumpSpace = dumpSpace + 1
+    if dumpSpace == 0:
+        return 0
+    dumpSpace *= 2
+    dumpSpace -= 1
+    for x in range (0,4):
+        if found[x] == 0:
+            dumpSpace = dumpSpace + 1
     if chains(mycol) > maxmove()/2:
         return 0
     for tocol in range (1,9):
@@ -82,7 +152,20 @@ def reshuf():
                             retval = 1
                             #stupid bug here with if we change autoReshuf in the middle of the game
                             #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
-    return retval
+    while autoShift():
+        pass
+
+def autoShift():
+    for i in range (1,9): # this is to check for in-order columns that can be restacked
+        if len(elements[i]) == 0 or chainNope(i) > 0:
+            continue
+        for j in range (1,9):
+            if len(elements[j]) > 1 and len(elements[j]) <= maxmove():
+                if canPut(elements[i][0],
+                  elements[j][len(elements[j])-1]):
+                    shiftcards(i, j, len(elements[i]))
+                    return True
+    return False
             
 
 def inOrder(rowNum):
@@ -103,6 +186,13 @@ def chainNopeBig():
     retval = 0
     for i in range (0,9):
         retval += chainNope(i)
+    return retval
+
+def chainNopeEach():
+    retval = 0;
+    for i in range (0,9):
+        if chainNope(i) > 0:
+            retval += 1
     return retval
     
 def chainNope(rowcand):
@@ -371,6 +461,8 @@ def checkWinning():
         print ("%.2f seconds taken." % (timeTaken))
         if lastReset > startTime:
             print ("%.2f seconds taken since last reset." % (curTime - lastReset))
+    else:
+        print ("No time data kept for loaded game.")
     global totalReset
     global totalUndo
     if totalReset > 0:
@@ -451,9 +543,8 @@ def printVertical():
                     secondLine += btm[(elements[y][count]-1)//13] + ' '
                 else:
                     thisline += str(tocard(elements[y][count]))
-                if ((elements[y][count]-1) % 13) == found[(elements[y][count]-1)//13]:
-                    odds = (elements[y][count]-1)//13
-                    if (elements[y][count]-1) % 13 < found[(odds+1)%4]+2 and (elements[y][count]-1) % 13 < found[(odds+3)%4]+2:
+                if foundable(elements[y][count]):
+                    if nexties(elements[y][count]):
                         thisline += '!'
                     else:
                         thisline += '*'
@@ -570,7 +661,7 @@ def printOthers():
     global lastscore
     if (lastscore < foundscore):
         sys.stdout.write(', up ' + str(foundscore - lastscore))
-    sys.stdout.write(', ' + str(chainTotal()) + ' in order, ' + str(chainNopeBig()) + ' out of order')
+    sys.stdout.write(', ' + str(chainTotal()) + ' pairs in order, ' + str(chainNopeBig()) + ' out of order, ' + str(chainNopeEach()) + ' cols unordered')
     sys.stdout.write(')\n')
     lastscore = foundscore
 
@@ -731,6 +822,7 @@ def loadGame(gameName):
     global time
     global totalUndo
     global totalReset
+    global startTime
     original = open(savefile, "r")
     startTime = -1
     while True:
@@ -806,7 +898,8 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
-        name = name.replace(' ', '')
+        if name[:2] != 'l=' and name[:2] != 's=':
+            name = name.replace(' ', '')
     else:
         name = thisCmd
     name = name.lower()
@@ -834,6 +927,13 @@ def readCmd(thisCmd):
                 return
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
+    #### saving/loading comes first.
+    if name[0] == 'l' and name[1] == '=':
+        loadGame(re.sub(r'^l=', 's=', name))
+        return
+    if name[0] == 's' and name[1] == '=':
+        saveGame(name.strip())
+        return
     if name == "lo":
         readOpts()
         return
@@ -850,6 +950,19 @@ def readCmd(thisCmd):
         if len(name) == 1:
             undoMoves(1)
             return
+    if name == 'p':
+        oldMoves = len(moveList)
+        anyDump = 0
+        while bestDumpRow() > 0:
+            anyDump = 1
+            print ("Dumping row " + str(bestDumpRow()))
+            ripUp(bestDumpRow())
+            checkFound()
+        if anyDump == 0:
+            print ("No rows found to dump.")
+        else:
+            print (str(len(moveList)-oldMoves) + " moves total.")
+        return
     if "u" in name:
         name = name.replace("u", "")
         if name == 'a':
@@ -982,7 +1095,7 @@ def readCmd(thisCmd):
                 name = name + str(anyDoable(i,0))
             elif chains(i) > 1 and canDump(i):
                 if chains(i) == len(elements[i]) and cmdChurn == 0:
-                    print ("That's just useless shuffling.")
+                    shufwarn()
                     return
                 name = name + str(canDump(i))
                 preverified = 1
@@ -990,7 +1103,7 @@ def readCmd(thisCmd):
                 name = name + "e"
             elif firstEmptyRow() and spareUsed() == 4:
                 if doable(i, firstEmptyRow(), 0) == len(elements[i]):
-                    print ("That's just useless shuffling.")
+                    shufwarn()
                     return
                 name = name + str(firstEmptyRow())
             elif anyDoable(i,1) and chains(i) < len(elements[i]):
@@ -1011,13 +1124,6 @@ def readCmd(thisCmd):
             print ("Unknown 1-letter command.")
             return
     #### two letter commands below here.
-    if name[0] == 'l' and name[1] == '=':
-        loadGame(re.sub(r'^l=', 's=', name))
-        return
-    if name[0] == 's' and name[1] == '=':
-        saveGame(name.strip())
-        return
-    #### saving comes first.
     if len(name) > 2:
         print ('Only 2 chars per command.')
         return
@@ -1070,25 +1176,7 @@ def readCmd(thisCmd):
         if not q2.isdigit():
             print ("p command requires a digit.")
             return
-        q = int(q2)
-        if q < 1 or q > 8:
-            print ("Column/row needs to be 1-8.")
-            return
-        if len(elements[q]) == 0:
-            print ("Already no elements.")
-            return
-        goAgain = 1
-        cmdChurn = 1
-        while goAgain == 1 and len(elements[q]) > 0:
-            goAgain = 0
-            tempArySize = len(moveList)
-            readCmd(q2)
-            if len(moveList) > tempArySize:
-                goAgain = 1
-        cmdChurn = -1
-        checkFound()
-        cmdChurn = 0
-        printCards()
+        ripUp(int(q2))
         return
     if name[0].isdigit() and name[1].isdigit():
         t1 = int(name[0])
