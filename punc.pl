@@ -7,6 +7,7 @@
 # originally just for Stale Tales Slate random entries but now expanded to other projects
 #
 # punc.txt has more annotations on what things mean
+# punc-priv.txt is for private projects I don't want to show the source for yet
 #
 #example
 #hs - horrendous songs	0,1,-1,-1	1,1,-1,-1
@@ -63,6 +64,7 @@ my %got;
 my %entry;
 
 my $rf = "c:\\writing\\dict\\punc.txt";
+my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
 
 if (defined($ARGV[0]) && ($ARGV[0] eq "e")) { `$rf`; exit; }
 
@@ -96,11 +98,12 @@ my $count;
 
 while ($myLine = <A>)
 {
-  if ($myLine =~ /^DEFAULT=/) { $default = $myLine; $default =~ s/DEFAULT=//g; next; }
+  if ($myLine =~ /^DEFAULT=/) { $default = $myLine; $default =~ s/DEFAULT=//g; chomp($default); last; }
 }
+if (!$default) { print "WARNING no default set.\n"; }
 close(A);
 
-
+#################code kept so we can see mass-commenting later
 =pod
 =cut
 
@@ -125,6 +128,7 @@ if ($#ARGV == -1)
   if ($default)
   {
     print "Going with default, $default.\n";
+	getTableList($default);
     storyTables($default);
   }
   else { print "No default. Define with DEFAULT=\n"; }
@@ -136,7 +140,7 @@ for my $argnum (0..$#ARGV)
   my $proj;
   if ($ARGV[$argnum] eq "-h") { usage(); }
   if ($ARGV[$argnum] eq "-i") { $matchQuotes = 0; }
-  if ($map{$ARGV[0]})
+  if ($map{$ARGV[$argnum]})
   { $proj = $map{$ARGV[$argnum]}; }
   else
   { $proj = $ARGV[$argnum]; }
@@ -156,6 +160,7 @@ sub getTableList
 
 my $inCurrent = 0;
 my $gotAny = 0;
+my $readPrivYet = 0;
 
 open(A, "$rf") || die ("Can't open $rf");
 
@@ -163,7 +168,13 @@ while ($myLine = <A>)
 {
   $lineNum++;
   if ($myLine =~ /#/) { next; }
-  if ($myLine =~ /;/) { last; }
+  if ($myLine =~ /;/)
+  {
+    if ($readPrivYet) { last; }
+	$readPrivYet++;
+	open(A, "$rf2") || die ("Couldn't open $rf2 after $rf.");
+	next;
+  }
   if ($myLine =~ /^DEFAULT=/) { next; }
   chomp($myLine);
   if (length($myLine) == 0) { next; }

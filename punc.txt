@@ -79,16 +79,6 @@ map coordinates	3,3,-1,-1	4,3,-1,-1
 monties	0,-1,-1,-1	2,3,-1,-1	5,-1,-1,-1
 tj-moves	0,1,-1,-1
 ========================================
-####SLICKER CITY
-VALUE=slicker-city
-explanations	1,1,1,-1
-========================================
-####BUCK THE PAST
-VALUE=buck-the-past
-explanations	1,1,1,-1
-up inn adjectives	0,1,-1,-1
-down inn adjectives	0,1,-1,-1
-========================================
 ####ROIL
 VALUE=roiling
 FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Roiling Random Text.i7x
