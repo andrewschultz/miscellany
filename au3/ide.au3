@@ -42,6 +42,16 @@ if $CmdLine[0] > 0 Then
     call("openIDE", "buck-the-past");
   ElseIf $CmdLine[1] == "in" Then
     call("openIDE", "grubbyville");
+  ElseIf $CmdLine[1] == "e16" Then
+    call("openIDE", "ectocomp16");
+  ElseIf $CmdLine[1] == "e15" Then
+    call("openIDE", "heezy-park");
+  ElseIf $CmdLine[1] == "e14" Then
+    call("openIDE", "Candy Rush Saga");
+  ElseIf $CmdLine[1] == "e13" Then
+    call("openIDE", "ghost");
+  ElseIf $CmdLine[1] == "e11" Then
+    call("openIDE", "dash");
   Else
     call("openIDE", $CmdLine[1]);
   Endif
