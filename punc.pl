@@ -302,6 +302,17 @@ while ($a = <A>)
 		  next;
         }
 		#print "Looking up $a\n";
+		if ($head =~ /ad slogans/)
+	    {
+	      if ($a =~ /!\"/)
+		  {
+		    if ((!defined($entryArray[1])) ||
+			  ($entryArray[1] !~ /true/))
+			{ err(); print "$allLines($lineNum): $a needs TRUE after tab.\n"; }
+		    $capCheck = 1;
+			lookUp($entryArray[$myIndex]); next;
+		  }
+	    }
 		lookUp($entryArray[$myIndex]);
 	  }
 	}
@@ -340,18 +351,16 @@ sub lookUp
 	  if ($temp =~ /\ttrue/) { $adNotTitle = 1; }
       $temp =~ s/^\"//gi;
       $temp =~ s/\".*//g;
+	  $temp =~ s/[:,]//g;
 	  $temp =~ s/' \/ '/ /g;
-	  $temp =~ s/\[[^\]]\]//g;
 	  $temp =~ s/\[a-word-u\]/Ass/g;
 	  $temp =~ s/\[d-word-u\]/Damn/g;
 	  $temp =~ s/\[n-t\]/Nate/g;
+	  $temp =~ s/\[['rbi]\]//g;
+	  $temp =~ s/\[[^\]]\]/X/g;
 	  #bracket out comments
-	  $temp =~ s/^\[[^\]]+\]//;
+	  $temp =~ s/^\[[^\]]+\]/X/;
 	  $temp =~ s/\[[^\]]+\]$//g;
-	  if ($head =~ /ad slogans/)
-	  {
-	    if ($_[0] =~ /!\"$/) { err(); print "$allLines($lineNum): $_[0] needs TRUE after tab.\n"; return; }
-	  }
 	  if ($head =~ /(random books|biopics)/)
 	  {
 	    if ($_[0] !~ /\[r\]/) { err(); print "$allLines($lineNum): $_[0] needs [r].\n"; return; }
@@ -401,7 +410,7 @@ sub addTitles
 
 sub titleCase
 {
-  my $temp = $_[0]; $temp =~ s/\[.*?\]//g; $temp =~ s/'[a-z]+//g;
+  my $temp = $_[0]; $temp =~ s/\[.*?\]//g; $temp =~ s/'[a-z]+//g; $temp =~ s/[\?!\.]//g;
   my @q = split(/[ -]/, $temp);
   my @wrongs = ();
   for my $word (@q)

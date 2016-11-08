@@ -175,6 +175,8 @@ political slogans	0,1,1,1
 # this list is shorter, consisting of Pat's codas, the deadbeat camp, condo chatter, PSAs, nerd chat, Red Bull Burdell's taunts, the riot chants and the names on the graffiti in the strip.
 VALUE=shuffling
 FILES=c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Shuffling Random Text.i7x
+######big top meta
+megachatter	6,1,-1,0	9,1,1,0
 ######intro
 job searcher names	0,1,-1,-1
 ######f
