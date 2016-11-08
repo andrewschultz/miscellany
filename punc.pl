@@ -66,7 +66,11 @@ my %entry;
 my $rf = "c:\\writing\\dict\\punc.txt";
 my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
 
-if (defined($ARGV[0]) && ($ARGV[0] eq "e")) { `$rf`; exit; }
+if (defined($ARGV[0]))
+{
+  if ($ARGV[0] eq "e") { `$rf`; exit; }
+  if ($ARGV[0] eq "ep") { `$rf2`; exit; }
+}
 
 # -cl used to be "fix checklist" where I tacked on periods
 # now it can just be done with s/([^\.])\"/\.\"/
@@ -189,6 +193,8 @@ while ($myLine = <A>)
 	$myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source\\story.ni";
 	next;
   }
+  elsif ($myLine =~ /^VALUE=/i) { $inCurrent = 0; }
+  if (!$inCurrent) { next; }
   if ($myLine =~ /^FILES=/) { $myLine =~ s/FILES=//g; $myFile{$gameVal} = $myLine; print "$gameVal -> $myLine\n"; next; }
   $myLine = lc($myLine);
   if ($myLine =~ /^table of /) { print "Don't need (table of) at line $lineNum, $myLine\n"; $myLine =~ s/^table of //g; }
@@ -339,6 +345,9 @@ sub lookUp
 	  $temp =~ s/\[a-word-u\]/Ass/g;
 	  $temp =~ s/\[d-word-u\]/Damn/g;
 	  $temp =~ s/\[n-t\]/Nate/g;
+	  #bracket out comments
+	  $temp =~ s/^\[[^\]]+\]//;
+	  $temp =~ s/\[[^\]]+\]$//g;
 	  if ($head =~ /ad slogans/)
 	  {
 	    if ($_[0] =~ /!\"$/) { err(); print "$allLines($lineNum): $_[0] needs TRUE after tab.\n"; return; }
@@ -366,7 +375,7 @@ sub lookUp
       if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
 	  { # ?? shuffle to probably-ok in the future
 	    $temp2 = $temp;
-		$temp2 =~ s/'[a-zA-Z].*'[ \"]//gi;
+		$temp2 =~ s/'.+?(\.|\?|!)?'( |$)//gi;
 	    if ($temp2 =~ /( '|' )/i)
 		{ err(); print "$allLines($lineNum):\n$temp\n$temp2\npossible unbracketed apostrophe.\n"; return; }
       }
@@ -393,11 +402,11 @@ sub addTitles
 sub titleCase
 {
   my $temp = $_[0]; $temp =~ s/\[.*?\]//g; $temp =~ s/'[a-z]+//g;
-  my @q = split(/\b/, $temp);
+  my @q = split(/[ -]/, $temp);
   my @wrongs = ();
   for my $word (@q)
   {
-    if (($word =~ /^[a-z]/) && ($titleLC{$word} == 0)) { push(@wrongs, $word); }
+    if (($word =~ /^[a-z]/) && !defined($titleLC{$word})) { push(@wrongs, $word); }
   }
   if ($#wrongs == -1) { return 1; }
   $wrongString = join("/", @wrongs);

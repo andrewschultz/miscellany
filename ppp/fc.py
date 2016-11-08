@@ -180,7 +180,7 @@ def autoShift():
             if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
                 if canPut(elements[i][0],
                   elements[j][len(elements[j])-1]):
-                    print ("Autoshifted " + str(i) + " to " + str(j) + ", " + str(maxmove()))
+                    print ("Autoshifted " + str(i) + " to " + str(j) + ".")
                     shiftcards(i, j, len(elements[i]))
                     return True
     return False
