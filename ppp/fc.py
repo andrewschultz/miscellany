@@ -100,15 +100,19 @@ def ripUp(q):
     global cmdChurn
     cmdChurn = 1
     movesize = len(moveList)
-    while goAgain == 1 and len(elements[q]) > 0:
+    maxRun = 0
+    while goAgain == 1 and len(elements[q]) > 0 and maxRun < 25:
+        maxRun += 1
         goAgain = 0
         tempArySize = len(moveList)
         readCmd(str(q))
         if len(moveList) > tempArySize:
             goAgain = 1
         checkFound()
-        reshuf()
+        reshuf() # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
         forceFoundation()
+    if maxRun == 25:
+        print ("Oops potential hang at " + str(q))
     cmdChurn = -1
     cmdChurn = 0
     checkFound() # bug where not everything is printed
@@ -161,17 +165,22 @@ def reshuf():
                             retval = 1
                             #stupid bug here with if we change autoReshuf in the middle of the game
                             #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
+    shifties = 0
     while autoShift():
-        pass
+        shifties += 1
+        if shifties == 12:
+            print ('Oops, broke an infinite loop.')
+            return
 
 def autoShift():
     for i in range (1,9): # this is to check for in-order columns that can be restacked
         if len(elements[i]) == 0 or chainNope(i) > 0:
             continue
         for j in range (1,9):
-            if len(elements[j]) > 1 and len(elements[j]) <= maxmove():
+            if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
                 if canPut(elements[i][0],
                   elements[j][len(elements[j])-1]):
+                    print ("Autoshifted " + str(i) + " to " + str(j) + ", " + str(maxmove()))
                     shiftcards(i, j, len(elements[i]))
                     return True
     return False
@@ -358,7 +367,7 @@ def checkFound():
                         break
                     if found[(basesuit+3) % 4] < found[basesuit] - 1:
                         break
-                    needToCheck = 1;
+                    needToCheck = 1
                     retval = 1
                     totalFoundThisTime += 1
                     found[(elements[y][len(elements[y])-1]-1)//13] = found[(elements[y][len(elements[y])-1]-1)//13] + 1
@@ -641,7 +650,7 @@ def printOthers():
     if (coolmove or latmove) and emmove:
         emmove = ' |' + emmove
     elif not coolmove and not latmove:
-        coolmove = '(nothing)'
+        coolmove = '(no row switches)'
     print ("Possible moves:" + coolmove + latmove + " (%d longest)" % (maxmove()))
     if not canfwdmove:
         reallylost = 1
@@ -767,14 +776,20 @@ def shiftcards(r1, r2, amt):
 
 def usage():
     print ('r (1-8a-d) sends that card to the foundation. r alone forces everything it can.')
+    print ('p (1-8) moves a row as much as you can.')
+    print ('p on its own tries to force everything if you\'re near a win.')
     print ('lo/so loads/saves options.')
-    print ('1-8 1-8 = move a row, standard move.')
+    print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
+    print ('(1-8)(1-8) = move a row, standard move.')
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
     print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
-    print ('u = usage (this).')
+    print ('u = undo, u1-u9 undoes that many moves.')
+    print ('ua = shows current move/undo array.')
+    print ('? = usage (this).')
+    print ('empty command tries basic reshuffling and prints out the cards again.')
 
 def firstEmptySpare():
     for i in range(0,4):
@@ -806,10 +821,13 @@ backup = [row[:] for row in elements]
 name = ""
 
 def undoMoves(toUndo):
+    if toUndo == 0:
+        print('No moves undone.')
+        return 0
     global moveList
     global totalUndo
     if len(moveList) == 0:
-        print "Nothing to undo."
+        print ('Nothing to undo.')
         return 0
     global elements
     elements = [row[:] for row in backup]
@@ -898,6 +916,29 @@ def saveGame(gameName):
     print ("Successfully saved game as " + gn2)
     return 0
 
+def reverseCard(myCard):
+    retVal = 0
+    for i in range(0,5):
+        if i == 4:
+            return -2
+        if re.search(suits[i].lower(), myCard):
+            retVal = 13 * i
+            break
+    for i in range (0,13):
+        if re.search(cards[i].lower(), ' ' + myCard):
+            retVal += (i + 1)
+            return retVal
+    return -1
+
+def cardEval(myCmd):
+    ary = re.split(' |,', myCmd)
+    for word in ary:
+        if word == 'e':
+            continue
+        sys.stdout.write(' ' + str(reverseCard(word)))
+    print ("")
+    return
+
 def readCmd(thisCmd):
     global cmdChurn
     global vertical
@@ -915,6 +956,9 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        if name[:2] == 'e ':
+            cardEval(name)
+            return
         if name[:2] != 'l=' and name[:2] != 's=':
             name = name.replace(' ', '')
     else:
@@ -964,9 +1008,8 @@ def readCmd(thisCmd):
         print ("Bye!")
         exit()
     if name == 'u':
-        if len(name) == 1:
-            undoMoves(1)
-            return
+        undoMoves(1)
+        return
     if name == 'p':
         oldMoves = len(moveList)
         anyDump = 0
