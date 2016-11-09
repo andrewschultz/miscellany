@@ -262,16 +262,21 @@ city=$tr\slicker-city.trizbort,
 city=$tr\slicker-city.pdf,
 city=$id,
 city=$ws\invis\sc.txt,
-city=$is\excl.pl,
-city=$wd\talf.pl,
-city=$is\grate.pl,
 city=$is\walkthru.txt,
-city=c:\users\andrew\dropbox\notes\slicker_city*,
+city=c:\users\andrew\dropbox\notes\slicker_city_release_1_notes.txt
 city=$is\technotes.txt,
 city=$is\reg-sc-*,testing
 city=$is\scdir.pl,testing
 city=$is\regsc.bat,testing
 city=$is\roomlist.txt,testing
+##############################
+#perl scripts
+city=$is\excl.pl,
+city=$wd\talf.pl,
+city=$is\grate.pl,
+city=$is\sctt.pl,
+#################################
+#commands to run
 >city=talf.pl
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
@@ -287,6 +292,7 @@ past=$tr\buck-the-past.pdf,
 past=$im\Release\buck-the-past-invisiclues.htm,
 past=$ws\invis\btp.txt,
 past=$is\reg-btp-*,testing
+past=$is\tra.pl,
 #############utilities
 past=$is\excl.pl
 past=$is\badj.pl
