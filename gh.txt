@@ -208,7 +208,7 @@ ecto=c:\games\inform\heezy-park.inform\source\story.ni,2015
 ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
 ecto=c:\games\inform\heezy-park.inform\uuid.txt,2015
 ecto=c:\games\inform\heezy-park.inform\source\README.md,2015
--b:ecto=c:\games\inform\heezy-park Materials\release\Heezy Park.zblorb,2015 sz=316000
+-b:ecto=c:\games\inform\heezy-park Materials\release\Heezy Park.zblorb,2015 sz:316000
 ecto=c:\games\inform\ectocomp16.inform\source\story.ni,2016
 ecto=c:\games\inform\ectocomp16.inform\source\walkthrough.txt,2016
 ecto=c:\games\inform\ectocomp16.inform\uuid.txt,2016
@@ -253,6 +253,18 @@ prob=$is\reg-pc-*,testing
 
 https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
+TOBASE=slicker-city
+scb
+city=$is\story.ni,
+city=$im\Release\slicker-city-invisiclues.htm,
+-b:city=$im\Release\release-Slicker City.zblorb,
+city=$tr\slicker-city.trizbort,
+city=$tr\slicker-city.pdf,
+city=$id,
+city=$ws\invis\sc.txt,
+city=$is\walkthru.txt,
+city=c:\users\andrew\dropbox\notes\slicker_city_release_2_notes.txt
+
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
 city=$is\story.ni,
@@ -265,10 +277,11 @@ city=$ws\invis\sc.txt,
 city=$is\walkthru.txt,
 city=c:\users\andrew\dropbox\notes\slicker_city_release_1_notes.txt
 city=$is\technotes.txt,
-city=$is\reg-sc-*,testing
+#city=$is\reg-sc-*,testing
 city=$is\scdir.pl,testing
 city=$is\regsc.bat,testing
 city=$is\roomlist.txt,testing
+city=$is\postmortem_release_1.txt,testing
 ##############################
 #perl scripts
 city=$is\excl.pl,
@@ -372,6 +385,7 @@ misc=noway.py,python
 misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
 misc=unco.pl,
+misc=$wd\fl.pl,
 #################3 files for copying regr suite over
 misc=proj.txt,
 misc=i7proj.pm,
@@ -400,6 +414,7 @@ writing=cheatsheet.txt,
 writing=limericks.otl,
 writing=limwork.txt,
 writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
+writing=scripts\cov.pl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games
