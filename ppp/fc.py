@@ -53,7 +53,7 @@ def printCond(myString):
     return
 
 def shufwarn():
-    if cmdChurn == 0:
+    if cmdChurn == 0 and inUndo == 0:
         print ("That's just useless shuffling.")
 
 def dumpTotal(q):
@@ -175,7 +175,6 @@ def reshuf():
         shifties += 1
         if shifties == 12:
             print ('Oops, broke an infinite loop.')
-            return
 
 def autoShift():
     for i in range (1,9): # this is to check for in-order columns that can be restacked
@@ -183,9 +182,8 @@ def autoShift():
             continue
         for j in range (1,9):
             if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
-                if canPut(elements[i][0],
-                  elements[j][len(elements[j])-1]):
-                    if cmdChurn == 0:
+                if canPut(elements[i][0], elements[j][len(elements[j])-1]):
+                    if cmdChurn == 0 and inUndo == 0:
                         print ("Autoshifted " + str(i) + " to " + str(j) + ".")
                     shiftcards(i, j, len(elements[i]))
                     return True
@@ -522,7 +520,7 @@ def checkWinning():
                 inUndo = 1
                 undoMoves(1)
                 inUndo = 0
-                continue
+                return 0
         print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
         
 def chains(myrow):
@@ -1021,8 +1019,12 @@ def readCmd(thisCmd):
         anyDump = 0
         while bestDumpRow() > 0:
             anyDump = 1
-            print ("Dumping row " + str(bestDumpRow()))
-            ripUp(bestDumpRow())
+            newDump = bestDumpRow()
+            print ("Dumping row " + str(newDump))
+            if chains(newDump) == len(elements[newDump]) and cmdChurn == 0:
+                shufwarn()
+                return
+            ripUp(newDump)
             checkFound()
         if anyDump == 0:
             print ("No rows found to dump.")
@@ -1250,7 +1252,7 @@ def readCmd(thisCmd):
         if t1 == t2:
             print ('Moving a row to itself does nothing.')
             return
-        if len(elements[t1]) == 0:
+        if len(elements[t1]) == 0 and inUndo == 0:
             print ('Nothing to move from.')
             return
         if len(elements[t2]) == 0:
@@ -1265,7 +1267,10 @@ def readCmd(thisCmd):
             #print 'Not enough space.'
             return
         if tempdoab == 0:
-            print ('Those cards don\'t match up.')
+            if inUndo == 1:
+                print ("Move " + str(len(moveList)) + " seems to have gone wrong. Use ua.")
+            else:
+                print ('Those cards don\'t match up.')
             return
         oldchain = chains(t1)
         shiftcards(t1, t2, tempdoab)
@@ -1274,7 +1279,9 @@ def readCmd(thisCmd):
                 moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
             else:
                 moveList.append(prefix + name)
-        while reshuf() or checkFound():
+        while checkFound():
+            if force == 1:
+                reshuf()
             pass
         printCards()
         return
