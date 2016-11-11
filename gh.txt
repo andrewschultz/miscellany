@@ -254,16 +254,15 @@ prob=$is\reg-pc-*,testing
 https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
 TOBASE=slicker-city
-scb
-city=$is\story.ni,
-city=$im\Release\slicker-city-invisiclues.htm,
--b:city=$im\Release\release-Slicker City.zblorb,
-city=$tr\slicker-city.trizbort,
-city=$tr\slicker-city.pdf,
-city=$id,
-city=$ws\invis\sc.txt,
-city=$is\walkthru.txt,
-city=c:\users\andrew\dropbox\notes\slicker_city_release_2_notes.txt
+scb=$is\story.ni,
+scb=$im\Release\slicker-city-invisiclues.htm,
+-b:scb=$im\Release\release-Slicker City.zblorb,
+scb=$tr\slicker-city.trizbort,
+scb=$tr\slicker-city.pdf,
+scb=$id,
+scb=$ws\invis\sc.txt,
+scb=$is\walkthru.txt,
+scb=c:\users\andrew\dropbox\notes\slicker_city_release_2_notes.txt
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
@@ -281,7 +280,7 @@ city=$is\technotes.txt,
 city=$is\scdir.pl,testing
 city=$is\regsc.bat,testing
 city=$is\roomlist.txt,testing
-city=$is\postmortem_release_1.txt,testing
+city=$is\postmortem_ifcomp.txt,
 ##############################
 #perl scripts
 city=$is\excl.pl,

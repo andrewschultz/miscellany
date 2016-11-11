@@ -102,6 +102,10 @@ def ripUp(q):
     movesize = len(moveList)
     maxRun = 0
     while goAgain == 1 and len(elements[q]) > 0 and maxRun < 25:
+        shouldReshuf = True
+        if len(elements[q]) > 1:
+            if canPut(elements[q][len(elements[q])-1], elements[q][len(elements[q])-2]):
+                shouldReshuf = False
         maxRun += 1
         goAgain = 0
         tempArySize = len(moveList)
@@ -109,7 +113,8 @@ def ripUp(q):
         if len(moveList) > tempArySize:
             goAgain = 1
         checkFound()
-        reshuf() # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
+        if shouldReshuf:
+            reshuf() # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
         forceFoundation()
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
@@ -180,7 +185,8 @@ def autoShift():
             if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
                 if canPut(elements[i][0],
                   elements[j][len(elements[j])-1]):
-                    print ("Autoshifted " + str(i) + " to " + str(j) + ".")
+                    if cmdChurn == 0:
+                        print ("Autoshifted " + str(i) + " to " + str(j) + ".")
                     shiftcards(i, j, len(elements[i]))
                     return True
     return False
@@ -1247,6 +1253,10 @@ def readCmd(thisCmd):
         if len(elements[t1]) == 0:
             print ('Nothing to move from.')
             return
+        if len(elements[t2]) == 0:
+            if chains(t1) == len(elements[t1]) and cmdChurn == 0:
+                shufwarn()
+                return
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
             print ("Need digits from 1-8.")
             return
