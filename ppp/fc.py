@@ -13,6 +13,7 @@ from random import shuffle
 import time
 
 savefile = "fcsav.txt"
+winFile = "fcwins.txt"
 
 onoff = ['off', 'on']
 
@@ -37,6 +38,8 @@ startTime = 0
 vertical = 0
 doubles = 0
 autoReshuf = 0
+savePosition = False
+saveOnWin = False
 
 lastscore = 0
 highlight = 0
@@ -274,18 +277,24 @@ def readOpts():
     return
 
 def sendOpts():
-    q = re.compile(r'^vertical=')
-    r = re.compile(r'^doubles=')
+    o1 = re.compile(r'^vertical=')
+    o2 = re.compile(r'^doubles=')
+    o3 = re.compile(r'^autoReshuf=')
+    o4 = re.compile(r'^saveOnWin=')
     infile = "fcopt.txt"
     fileString = ""
     gotOne = 0
     with open(infile) as f:
         for line in f:
             gotOne = 1
-            if (q.match(line)):
-                fileString += "doubles=" + str(doubles) + "\n"
-            elif (r.match(line)):
+            if (o1.match(line)):
                 fileString += "vertical=" + str(vertical) + "\n"
+            elif (o2.match(line)):
+                fileString += "doubles=" + str(doubles) + "\n"
+            elif (o3.match(line)):
+                fileString += "autoReshuf=" + str(autoReshuf) + "\n"
+            elif (o4.match(line)):
+                fileString += "saveOnWin=" + str(saveOnWin) + "\n"
             else:
                 fileString += line
     if gotOne:
@@ -498,6 +507,14 @@ def checkWinning():
         print ("%d undo used." % (totalUndo))
     if totalUndo == -1:
         print ("No undo data from loaded game.")
+    if saveOnWin:
+        with open(winFile, "a") as myfile:
+            winstring = time.strftime("sw=%Y-%m-%d-%H-%M-%S", time.localtime())
+            myfile.write(winstring)
+            myfile.write("\n#START NEW SAVED POSITION\n")
+            for i in range (1,9):
+                myfile.write(' '.join(str(x) for x in backup[i]) + "\n")
+        print ("Saved " + winstring)
     while True:
         global cmdChurn
         cmdChurn = 0
@@ -952,6 +969,7 @@ def readCmd(thisCmd):
     global force
     global trackUndo
     global totalReset
+    global saveOnWin
     prefix = ''
     force = 0
     checkFound()
@@ -1011,6 +1029,10 @@ def readCmd(thisCmd):
     if name == 'qu':
         print ("Bye!")
         exit()
+    if name == 'ws':
+        saveOnWin = not saveOnWin
+        print ("Save on win is now %s." %("on" if saveOnWin else "off"))
+        return
     if name == 'u':
         undoMoves(1)
         return
@@ -1280,7 +1302,7 @@ def readCmd(thisCmd):
             else:
                 moveList.append(prefix + name)
         while checkFound():
-            if force == 1:
+            if force == 0:
                 reshuf()
             pass
         printCards()
