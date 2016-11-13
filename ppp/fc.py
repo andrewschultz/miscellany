@@ -136,7 +136,7 @@ def ripUp(q):
             goAgain = 1
         checkFound()
         if shouldReshuf:
-            reshuf() # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
+            reshuf(-1) # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
         forceFoundation()
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
@@ -174,7 +174,7 @@ def canDump(mycol):
     return 0
 
 
-def reshuf():
+def reshuf(xyz):
     if autoReshuf == 0:
         return False
     retval = False
@@ -182,6 +182,8 @@ def reshuf():
     while tryAgain:
         tryAgain = 0
         for i in range(0,4):
+            if i == xyz:
+                continue
             if spares[i]:
                 for j in range(1,9):
                     if len(elements[j]):
@@ -463,7 +465,7 @@ def forceFoundation():
             moveList.append("r")
             printCond("Sending all to foundation.")
             printCond("Forced" + forceStr)
-        reshuf()
+        reshuf(-1)
         checkFound()
         printCards()
     else:
@@ -1010,7 +1012,7 @@ def readCmd(thisCmd):
         print ("trackUndo now " + onoff[trackUndo])
         return
     if len(name) == 0:
-        while reshuf():
+        while reshuf(-1):
             next
         printCards()
         return
@@ -1161,7 +1163,7 @@ def readCmd(thisCmd):
     if name == 'e':
         autoReshuf = 1 - autoReshuf
         print ("Toggled reshuffling to %s." % (onoff[autoReshuf]))
-        reshuf()
+        reshuf(-1)
         printCards()
         return
     if name == 'v':
@@ -1324,7 +1326,7 @@ def readCmd(thisCmd):
             checkAgain = False
             checkAgain |= checkFound()
             if force == 0:
-                checkAgain |= reshuf()
+                checkAgain |= reshuf(-1)
             pass
         printCards()
         return
@@ -1345,7 +1347,7 @@ def readCmd(thisCmd):
             spares[mySpare] = 0
             if inUndo == 0:
                 moveList.append(name)
-            reshuf()
+            reshuf(-1)
             checkFound()
             printCards()
             return
@@ -1381,7 +1383,11 @@ def readCmd(thisCmd):
         spares[myToSpare] = elements[myRow].pop()
         if inUndo == 0:
             moveList.append(name)
-        checkFound()
+        tempMoveSize = -1
+        while tempMoveSize < len(moveList):
+            tempMoveSize = len(moveList)
+            checkFound()
+            reshuf(myToSpare)
         printCards()
         return
     print (name + ' not recognized, displaying usage.')
