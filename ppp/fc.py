@@ -29,24 +29,25 @@ btm = ['UB', 'am', 'AD', 'ar']
 moveList = []
 
 win = 0
-inUndo = 0
+
 totalUndo = 0
 totalReset = 0
+
+cmdChurn = False
+inUndo = False
 
 lastReset = 0
 startTime = 0
 
 #options to define. How to do better?
-vertical = 0
-doubles = 0
-autoReshuf = 0
+vertical = False
+doubles = False
+autoReshuf = False
 savePosition = False
 saveOnWin = False
 
 lastscore = 0
 highlight = 0
-
-cmdChurn = 0
 
 onlymove = 0
 
@@ -70,12 +71,12 @@ elements.append([])
 name = ""
 
 def printCond(myString):
-    if inUndo == 0 and cmdChurn == 0:
+    if not inUndo and not cmdChurn:
         print(myString)
     return
 
 def shufwarn():
-    if cmdChurn == 0 and inUndo == 0:
+    if not cmdChurn and not inUndo:
         print ("That's just useless shuffling.")
 
 def dumpTotal(q):
@@ -150,7 +151,7 @@ def ripUp(q):
 def shouldPrint():
     global inUndo
     global cmdChurn
-    if inUndo == 1 or cmdChurn == 1:
+    if inUndo or cmdChurn:
         return 0
     return 1
 
@@ -209,7 +210,7 @@ def autoShift():
         for j in range (1,9):
             if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
                 if canPut(elements[i][0], elements[j][len(elements[j])-1]):
-                    if cmdChurn == 0 and inUndo == 0:
+                    if not cmdChurn and not inUndo:
                         print ("Autoshifted " + str(i) + " to " + str(j) + ".")
                     shiftcards(i, j, len(elements[i]))
                     return True
@@ -287,15 +288,15 @@ def readOpts():
                 continue
             q=re.sub(r'.*=', '', line.rstrip())
             if "autoReshuf".lower() in line.lower():
-                autoReshuf = int(q)
+                autoReshuf = bool(q)
             if "savePosition".lower() in line.lower():
                 savePosition = bool(q)
             if "saveOnWin".lower() in line.lower():
                 saveOnWin = bool(q)
             if "vertical".lower() in line.lower():
-                vertical = int(q)
+                vertical = bool(q)
             if "doubles".lower() in line.lower():
-                doubles = int(q)
+                doubles = bool(q)
     if gotOne:
         print "Options file read."
         f.close()
@@ -346,7 +347,7 @@ def initSide(inGameReset):
     global startTime
     global lastReset
     highlight = 0
-    if inUndo == 0:
+    if not inUndo:
         lastReset = time.time()
         if inGameReset != 1:
             startTime = lastReset
@@ -397,7 +398,7 @@ def checkFound():
     needToCheck = 1
     global totalFoundThisTime
     global cardlist
-    if cmdChurn == 0:
+    if not cmdChurn:
         totalFoundThisTime = 0
         cardlist = '';
     while needToCheck:
@@ -504,9 +505,9 @@ def tocardX (cnum):
     return tocard(cnum)
 
 def printCards():
-    if cmdChurn == 1:
+    if cmdChurn:
         return
-    if inUndo == 1:
+    if inUndo:
         return
     if sum(found) == 52:
         if not checkWinning():
@@ -1063,7 +1064,7 @@ def readCmd(thisCmd):
             anyDump = 1
             newDump = bestDumpRow()
             print ("Dumping row " + str(newDump))
-            if chains(newDump) == len(elements[newDump]) and cmdChurn == 0:
+            if chains(newDump) == len(elements[newDump]) and not cmdChurn:
                 shufwarn()
                 return
             ripUp(newDump)
@@ -1204,7 +1205,7 @@ def readCmd(thisCmd):
             elif anyDoable(i,0):
                 name = name + str(anyDoable(i,0))
             elif chains(i) > 1 and canDump(i):
-                if chains(i) == len(elements[i]) and cmdChurn == 0:
+                if chains(i) == len(elements[i]) and not cmdChurn:
                     shufwarn()
                     return
                 name = name + str(canDump(i))
@@ -1260,7 +1261,7 @@ def readCmd(thisCmd):
             if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
                 found[(elements[temprow][len(elements[temprow])-1]-1)//13]+= 1
                 elements[temprow].pop()
-                if inUndo == 0:
+                if not inUndo:
                     moveList.append(name)
                 checkFound()
                 printCards()
@@ -1272,7 +1273,7 @@ def readCmd(thisCmd):
                 found[(spares[tempspare]-1)//13]+= 1
                 spares[tempspare] = 0;
                 print ('Moving from spares.')
-                if inUndo == 0:
+                if not inUndo:
                     moveList.append(name)
                 checkFound()
                 printCards()
@@ -1294,11 +1295,11 @@ def readCmd(thisCmd):
         if t1 == t2:
             print ('Moving a row to itself does nothing.')
             return
-        if len(elements[t1]) == 0 and inUndo == 0:
+        if len(elements[t1]) == 0 and not inUndo:
             print ('Nothing to move from.')
             return
         if len(elements[t2]) == 0:
-            if chains(t1) == len(elements[t1]) and cmdChurn == 0:
+            if chains(t1) == len(elements[t1]) and not cmdChurn:
                 shufwarn()
                 return
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
@@ -1309,14 +1310,14 @@ def readCmd(thisCmd):
             #print 'Not enough space.'
             return
         if tempdoab == 0:
-            if inUndo == 1:
+            if inUndo:
                 print ("Move " + str(len(moveList)) + " seems to have gone wrong. Use ua.")
             else:
                 print ('Those cards don\'t match up.')
             return
         oldchain = chains(t1)
         shiftcards(t1, t2, tempdoab)
-        if inUndo == 0:
+        if not inUndo:
             if tempdoab < oldchain and len(elements[t2]) == 0:
                 moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
             else:
@@ -1345,7 +1346,7 @@ def readCmd(thisCmd):
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
             spares[mySpare] = 0
-            if inUndo == 0:
+            if not inUndo:
                 moveList.append(name)
             reshuf(-1)
             checkFound()
@@ -1359,7 +1360,7 @@ def readCmd(thisCmd):
             return
         myToSpare = firstEmptySpare()
         if myToSpare == -1:
-            if cmdChurn == 0:
+            if not cmdChurn:
                 print ('Nothing empty to move to. To which to move.')
             return
         if name[1] != 'e':
@@ -1381,7 +1382,7 @@ def readCmd(thisCmd):
                 print ("Oops, I somehow see all-full and not all full at the same time.")
                 return
         spares[myToSpare] = elements[myRow].pop()
-        if inUndo == 0:
+        if not inUndo:
             moveList.append(name)
         tempMoveSize = -1
         while tempMoveSize < len(moveList):
