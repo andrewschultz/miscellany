@@ -7,6 +7,8 @@
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
 
+# reshuf can have a digit for what better not be reshuffled e.g. if 2c, reshuf(2)
+
 import re
 import sys
 from random import shuffle
@@ -49,6 +51,23 @@ cmdChurn = 0
 onlymove = 0
 
 trackUndo = 0
+
+debug = 0
+
+backup = []
+elements = []
+
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+elements.append([])
+
+name = ""
 
 def printCond(myString):
     if inUndo == 0 and cmdChurn == 0:
@@ -157,8 +176,8 @@ def canDump(mycol):
 
 def reshuf():
     if autoReshuf == 0:
-        return 0
-    retval = 0
+        return False
+    retval = False
     tryAgain = 1
     while tryAgain:
         tryAgain = 0
@@ -170,7 +189,7 @@ def reshuf():
                             elements[j].append(spares[i])
                             spares[i] = 0
                             tryAgain = 1
-                            retval = 1
+                            retval = True
                             #stupid bug here with if we change autoReshuf in the middle of the game
                             #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
     shifties = 0
@@ -178,6 +197,8 @@ def reshuf():
         shifties += 1
         if shifties == 12:
             print ('Oops, broke an infinite loop.')
+            return False
+    return retval
 
 def autoShift():
     for i in range (1,9): # this is to check for in-order columns that can be restacked
@@ -265,6 +286,10 @@ def readOpts():
             q=re.sub(r'.*=', '', line.rstrip())
             if "autoReshuf".lower() in line.lower():
                 autoReshuf = int(q)
+            if "savePosition".lower() in line.lower():
+                savePosition = bool(q)
+            if "saveOnWin".lower() in line.lower():
+                saveOnWin = bool(q)
             if "vertical".lower() in line.lower():
                 vertical = int(q)
             if "doubles".lower() in line.lower():
@@ -281,6 +306,7 @@ def sendOpts():
     o2 = re.compile(r'^doubles=')
     o3 = re.compile(r'^autoReshuf=')
     o4 = re.compile(r'^saveOnWin=')
+    o5 = re.compile(r'^savePosition=')
     infile = "fcopt.txt"
     fileString = ""
     gotOne = 0
@@ -295,6 +321,8 @@ def sendOpts():
                 fileString += "autoReshuf=" + str(autoReshuf) + "\n"
             elif (o4.match(line)):
                 fileString += "saveOnWin=" + str(saveOnWin) + "\n"
+            elif (o5.match(line)):
+                fileString += "savePosition=" + str(savePosition) + "\n"
             else:
                 fileString += line
     if gotOne:
@@ -363,7 +391,7 @@ totalFoundThisTime = 0
 cardlist = ''
 
 def checkFound():
-    retval = 0
+    retval = False
     needToCheck = 1
     global totalFoundThisTime
     global cardlist
@@ -381,7 +409,7 @@ def checkFound():
                     if found[(basesuit+3) % 4] < found[basesuit] - 1:
                         break
                     needToCheck = 1
-                    retval = 1
+                    retval = True
                     totalFoundThisTime += 1
                     found[(elements[y][len(elements[y])-1]-1)//13] = found[(elements[y][len(elements[y])-1]-1)//13] + 1
                     cardlist = cardlist + tocardX(elements[y][len(elements[y])-1])
@@ -404,7 +432,7 @@ def checkFound():
                     found[(spares[y]-1)//13] += 1
                     spares[y] = 0
                     needToCheck = 1
-                    retval = 1
+                    retval = True
     if totalFoundThisTime > 0 and shouldPrint() == 1:
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
     return retval
@@ -458,6 +486,8 @@ def initCards():
             if len(x) == 0:
                 break
             elements[z].append(x.pop())
+    global backup
+    backup = [row[:] for row in elements]
 
 def tocard( cardnum ):
     if cardnum == 0:
@@ -512,6 +542,7 @@ def checkWinning():
             winstring = time.strftime("sw=%Y-%m-%d-%H-%M-%S", time.localtime())
             myfile.write(winstring)
             myfile.write("\n#START NEW SAVED POSITION\n")
+            global backup
             for i in range (1,9):
                 myfile.write(' '.join(str(x) for x in backup[i]) + "\n")
         print ("Saved " + winstring)
@@ -529,8 +560,6 @@ def checkWinning():
                 initSide(0)
                 totalUndo = 0
                 totalReset = 0
-                global backup
-                backup = [row[:] for row in elements]
                 return 1
             if finish[0] == 'u':
                 global inUndo
@@ -818,28 +847,10 @@ def firstEmptySpare():
             return i
     return -1
 
-elements = []
-
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-
 readOpts()
 initSide(0)
 initCards()
 printCards()
-
-debug = 0
-
-backup = [row[:] for row in elements]
-
-name = ""
 
 def undoMoves(toUndo):
     if toUndo == 0:
@@ -932,6 +943,9 @@ def saveGame(gameName):
         for y in range (1,9):
             myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
         myfile.write(' '.join(moveList) + "\n")
+        if savePosition:
+            for y in range (1,9):
+                myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + gameName + "\n")
     gn2 = gameName.replace(r'^.=', '')
     print ("Successfully saved game as " + gn2)
@@ -1029,9 +1043,13 @@ def readCmd(thisCmd):
     if name == 'qu':
         print ("Bye!")
         exit()
-    if name == 'ws':
+    if name == 'ws' or name == 'sw':
         saveOnWin = not saveOnWin
         print ("Save on win is now %s." %("on" if saveOnWin else "off"))
+        return
+    if name == 'ps' or name == 'sp':
+        savePosition = not savePosition
+        print ("Save position with moves/start is now %s." %("on" if savePosition else "off"))
         return
     if name == 'u':
         undoMoves(1)
@@ -1301,9 +1319,12 @@ def readCmd(thisCmd):
                 moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
             else:
                 moveList.append(prefix + name)
-        while checkFound():
+        checkAgain = True
+        while checkAgain:
+            checkAgain = False
+            checkAgain |= checkFound()
             if force == 0:
-                reshuf()
+                checkAgain |= reshuf()
             pass
         printCards()
         return
