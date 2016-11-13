@@ -284,14 +284,15 @@ city=$is\postmortem_ifcomp.txt,
 ##############################
 #perl scripts
 city=$is\excl.pl,
-city=$wd\talf.pl -sc,
+city=$wd\talf.pl,
 city=$is\grate.pl,
 city=$is\sctt.pl,
 #################################
 #commands to run
->city=talf.pl
+>city=talf.pl -sc
 >city=conc.pl -o -sc
 >city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
+>city=$is\grate.pl
 
 TOBASE=buck-the-past
 past=$is\btpbk.pl,

@@ -70,7 +70,12 @@ elements.append([])
 
 name = ""
 
-def printCond(myString):
+def tobool(x):
+    if x == "False":
+        return False
+    return True
+
+def printCond(myString, z):
     if not inUndo and not cmdChurn:
         print(myString)
     return
@@ -175,8 +180,8 @@ def canDump(mycol):
     return 0
 
 
-def reshuf(xyz):
-    if autoReshuf == 0:
+def reshuf(xyz): # this reshuffles the empty cards
+    if not autoReshuf:
         return False
     retval = False
     tryAgain = 1
@@ -203,12 +208,12 @@ def reshuf(xyz):
             return False
     return retval
 
-def autoShift():
+def autoShift(): # this shifts rows
     for i in range (1,9): # this is to check for in-order columns that can be restacked
         if len(elements[i]) == 0 or chainNope(i) > 0:
             continue
         for j in range (1,9):
-            if len(elements[j]) > 1 and len(elements[i]) <= maxmove():
+            if len(elements[j]) > 0 and len(elements[i]) <= maxmove():
                 if canPut(elements[i][0], elements[j][len(elements[j])-1]):
                     if not cmdChurn and not inUndo:
                         print ("Autoshifted " + str(i) + " to " + str(j) + ".")
@@ -288,15 +293,15 @@ def readOpts():
                 continue
             q=re.sub(r'.*=', '', line.rstrip())
             if "autoReshuf".lower() in line.lower():
-                autoReshuf = bool(q)
+                autoReshuf = tobool(q)
             if "savePosition".lower() in line.lower():
-                savePosition = bool(q)
+                savePosition = tobool(q)
             if "saveOnWin".lower() in line.lower():
-                saveOnWin = bool(q)
+                saveOnWin = tobool(q)
             if "vertical".lower() in line.lower():
-                vertical = bool(q)
+                vertical = tobool(q)
             if "doubles".lower() in line.lower():
-                doubles = bool(q)
+                doubles = tobool(q)
     if gotOne:
         print "Options file read."
         f.close()
@@ -317,15 +322,15 @@ def sendOpts():
         for line in f:
             gotOne = 1
             if (o1.match(line)):
-                fileString += "vertical=" + str(vertical) + "\n"
+                fileString += "vertical=" + str(int(vertical)) + "\n"
             elif (o2.match(line)):
-                fileString += "doubles=" + str(doubles) + "\n"
+                fileString += "doubles=" + str(int(doubles)) + "\n"
             elif (o3.match(line)):
-                fileString += "autoReshuf=" + str(autoReshuf) + "\n"
+                fileString += "autoReshuf=" + str(int(autoReshuf)) + "\n"
             elif (o4.match(line)):
-                fileString += "saveOnWin=" + str(saveOnWin) + "\n"
+                fileString += "saveOnWin=" + str(int(saveOnWin)) + "\n"
             elif (o5.match(line)):
-                fileString += "savePosition=" + str(savePosition) + "\n"
+                fileString += "savePosition=" + str(int(savePosition)) + "\n"
             else:
                 fileString += line
     if gotOne:
@@ -464,13 +469,13 @@ def forceFoundation():
     if forceStr:
         if not inUndo:
             moveList.append("r")
-            printCond("Sending all to foundation.")
-            printCond("Forced" + forceStr)
+            printCond("Sending all to foundation.", False)
+            printCond("Forced" + forceStr, False)
         reshuf(-1)
         checkFound()
         printCards()
     else:
-        printCond("Nothing to force to foundation.")
+        printCond("Nothing to force to foundation.", False)
     return
 
 def checkWin():
@@ -1157,12 +1162,12 @@ def readCmd(thisCmd):
         printCards()
         return
     if name == '+':
-        doubles = 1 - doubles
+        doubles = not doubles
         print ("Toggled doubles to %s." % (onoff[doubles]))
         printCards()
         return
     if name == 'e':
-        autoReshuf = 1 - autoReshuf
+        autoReshuf = not autoReshuf
         print ("Toggled reshuffling to %s." % (onoff[autoReshuf]))
         reshuf(-1)
         printCards()
