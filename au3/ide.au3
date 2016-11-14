@@ -1,6 +1,6 @@
 #include <MsgBoxConstants.au3>
 
-Local $project = "Compound";
+Local $project = "buck-the-past";
 
 if $CmdLine[0] > 0 Then
   $project = $CmdLine[1];
@@ -78,6 +78,8 @@ Func OpenIDE($project)
   Send("{F5}");
 
   $x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+  Beep (600, 200)
+
 EndFunc
 
 ; MsgBox(4096, '', @AutoItVersion) ; 4096 = $MB_SYSTEMMODAL
