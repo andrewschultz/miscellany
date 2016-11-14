@@ -95,6 +95,7 @@ while ($a = <A>)
 {
   if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
+    my $aorig = $a;
     @tableCount = ();
     if ($a =~ /^\[/) { $a =~ s/[\[\]]//g;
 	#commented out for a non-table in BTP
@@ -105,6 +106,7 @@ while ($a = <A>)
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
 	$curTable =~ s/ *\[.*//g; $tableRow = -3;
+	if ($aorig =~ /^\[table/) { $tableRow++; }
 	$curTable =~ s/ - .*//g;
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
 	if ($tableShort =~ / \[/) { $tableShort =~ s/ \[.*//g; }
@@ -117,7 +119,7 @@ while ($a = <A>)
   if ($table)
   {
     print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
-	if ($a =~ /[a-z]/i)
+	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
 	  if ($#tempAry > $#tableCount) { $maxString = $a; }
