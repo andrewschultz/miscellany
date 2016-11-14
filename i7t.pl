@@ -10,8 +10,14 @@ use POSIX;
 
 my $newDir = ".";
 my $project = "Project";
-$tables = 0;
-$count = 0;
+
+my $tables = 0;
+my $count = 0;
+
+my $printSuccesses = 0;
+my $quietTables = 1;
+
+my %exp;
 
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
@@ -34,7 +40,9 @@ while ($count <= $#ARGV)
     /^-t$/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { print "Opening source. -f opens the data file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?f$/ && do { print "Opening data file. -e opens the source.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
+	/^-tl$/ && do { $quietTables = 0; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
 	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x"; $count++; next; };
@@ -60,7 +68,10 @@ while ($a = <A>)
   if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
     @tableCount = ();
-    if ($a =~ /^\[/) { $a =~ s/[\[\]]//g; print "--$a"; }
+    if ($a =~ /^\[/) { $a =~ s/[\[\]]//g;
+	#commented out for a non-table in BTP
+	#print "--$a";
+	}
 	$a =~ s/ \(continued\)//g;
     $a =~ s/^\[//g;
     $table = 1; $tables++; $curTable = $a; chomp($curTable); $tableShort = $curTable;
@@ -153,7 +164,7 @@ while ($a = <A>)
 
   @b[3] =~ s/\$\$/$size/g;
   @b[3] =~ s/\$\+/$sizeX/g;
-  print "Trying @b[3]\n";
+  print "Looking for this text: @b[3]\n";
   my $success = 0;
   my $nearSuccess = "";
   while ($f = <F>)
@@ -165,7 +176,7 @@ while ($a = <A>)
   close(F);
   if ($success)
   {
-    print "$thisFile search for @b[3] PASSED:\n  $f\n";
+    if ($printSuccesses) { print "$thisFile search for @b[3] PASSED:\n  $f\n"; }
   }
   else
   {
@@ -222,6 +233,9 @@ csv = tables to highlight
 -f opens the i7t.txt file
 -o opens the offending file post-test
 -ot opens the table file
+-q quiets out the printing of tables
+-tl lists them (currently the default)
+-ps prints out successes as well
 -p specifies the project
 -s specifies the project in shorthand
 (directory) looks for story.ni in a different directory
