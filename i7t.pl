@@ -1,14 +1,15 @@
 #############################################
 #i7t.pl
 #reads in i7 source and sees all the tables
-#and potentially matches them up with a log file
+#and potentially matches them up with release notes
+#determined by a log file i7t.txt
 #i7t.pl -s pc
 #or run it in a directory with story.ni
 #
 
 use POSIX;
 
-#use strict;
+use strict;
 use warnings;
 
 my $newDir = ".";
@@ -17,14 +18,24 @@ my $project = "Project";
 my $sum = "";
 my $tables = 0;
 my $count = 0;
+my $fileToOpen = "";
+my $curTable = "";
+my @important = ();
+my $majorTable = 0;
+my $tableList = "";
 
 ################################
 # options
-my $tableTabs = 0; # this lists how many tables have how many tabs
+my $tableTab = 0; # this lists how many tables have how many tabs
 my $printSuccesses = 0;
 my $quietTables = 1;
+my $openTableFile = 0;
+my $openPost = 0;
+my $maxString = 0;
 
+my %rows;
 my %exp;
+my %failCmd;
 
 my @tableCount = ();
 
@@ -39,6 +50,8 @@ my $writeDir = "c:\\writing\\dict";
 
 if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; }
 
+my $fileName;
+
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
@@ -46,9 +59,10 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
-    /^-t$/ && do { $b = $ARGV[$count+1]; $important = split(/,/, $b); $count+= 2; next; };
+    /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { print "Opening source. -f opens the data file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?f$/ && do { print "Opening data file. -e opens the source.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-tl$/ && do { $quietTables = 0; $count++; next; };
@@ -69,12 +83,16 @@ while ($count <= $#ARGV)
 if (!$fileName) { $fileName = "$newDir/story.ni"; }
 
 open(A, "$fileName") || die ("$fileName doesn't exist.");
-$tableFile = "$writeDir\\tables-$project.i7";
+my $tableFile = "$writeDir\\tables-$project.i7";
 open(B, ">$tableFile");
+
+my $tableShort;
+my $table = 0;
+my $majorList = "";
+my $tableRow = 0;
 
 while ($a = <A>)
 {
-  $aorig = $a;
   if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
     @tableCount = ();
@@ -84,20 +102,21 @@ while ($a = <A>)
 	}
 	$a =~ s/ \(continued\)//g;
     $a =~ s/^\[//g;
-    $table = 1; $tables++; $curTable = $a; chomp($curTable); $tableShort = $curTable;
-	$curTable =~ s/ *\[.*//g; $tableCount = -3;
+    $table = 1; $tables++; $curTable = $a; chomp($curTable);
+	$tableShort = $curTable;
+	$curTable =~ s/ *\[.*//g; $tableRow = -3;
 	$curTable =~ s/ - .*//g;
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
 	if ($tableShort =~ / \[/) { $tableShort =~ s/ \[.*//g; }
 	$tableShort =~ s/ - .*//g;
-	for $x (@important)
+	for my $x (@important)
 	{
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
 	}
   }
   if ($table)
   {
-    print B $a; $count++; $tableCount++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
+    print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
 	if ($a =~ /[a-z]/i)
 	{
 	  my @tempAry = split(/\t/, $a);
@@ -124,11 +143,11 @@ while ($a = <A>)
 	{
 	  $tableList .= "$curTable";
 	  if ($curTable ne $tableShort) { $tableList .= "($tableShort)"; }
-	  $tableList .= ": $tableCount rows\n";
+	  $tableList .= ": $tableRow rows\n";
 	}
-	if ($rows{$tableShort}) { print "Tacking on $tableCount to $tableShort, up from $rows{$tableShort}.\n"; }
-	$rows{$tableShort} += $tableCount;
-	if ($majorTable) { $majorList .= "$curTable: $tableCount rows<br />"; } $majorTable = 0;
+	if ($rows{$tableShort}) { print "Tacking on $tableRow to $tableShort, up from $rows{$tableShort}.\n"; }
+	$rows{$tableShort} += $tableRow;
+	if ($majorTable) { $majorList .= "$curTable: $tableRow rows<br />"; } $majorTable = 0;
   }
 }
 
@@ -145,6 +164,11 @@ close(B);
 open(A, "c:/writing/scripts/i7t.txt");
 
 my @b;
+my $ranOneTest = 0;
+my $printFail = 0;
+my $errLog = "";
+my $thisFile = "";
+my $lastOpen = "";
 
 while ($a = <A>)
 {
@@ -173,7 +197,7 @@ while ($a = <A>)
   
   if ($rows{$b[1]}) { $size = $rows{$b[1]}; } else { print "$b[1] has nothing.\n"; }
   
-  $sizeX = $size+1;
+  my $sizeX = $size+1;
   
   my $almost = $b[3]; $almost =~ s/\$[\+\$]//g;
 
@@ -182,6 +206,8 @@ while ($a = <A>)
   print "Looking for this text: $b[3]\n";
   my $success = 0;
   my $nearSuccess = "";
+  my $f;
+
   while ($f = <F>)
   {
     #print "$b[3] =~? $f";
@@ -246,6 +272,7 @@ csv = tables to highlight
 -c specifies the writedir for tables.i7 as the current directory (default is writing\\dict)
 -e opens the i7t.pl file
 -f opens the i7t.txt file
+-i lists important arrays
 -o opens the offending file post-test
 -ot opens the table file
 -q quiets out the printing of tables
