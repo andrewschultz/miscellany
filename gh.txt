@@ -287,14 +287,15 @@ city=$is\excl.pl,
 city=$wd\talf.pl,
 city=$is\grate.pl,
 city=$is\sctt.pl,
-city=$is\olap.pl,
+city=$wd\olap.pl,
+city=$wd\olap.txt,
 #################################
 #commands to run
 >city=talf.pl -sc
 >city=conc.pl -o -sc
 >city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
 >city=$is\grate.pl
->city=$is\olap.pl
+>city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
 past=$is\btpbk.pl,
