@@ -313,7 +313,7 @@ set PROJ=%1
 )
 
 if "%1" EQU "cr" (
-%NOTES%\slicker_city_release_1_notes.txt
+%NOTES%\buck_the_past_release_1_notes.txt
 goto end
 )
 
@@ -334,13 +334,18 @@ if "%1" EQU "scr" (
 goto end
 )
 
+if "%1" EQU "br" (
+%NOTES%\buck_the_past_release_1_notes.txt
+goto end
+)
+
 if "%1" EQU "rr" (
 %NOTES%\roiling_release_4_notes.txt
 goto end
 )
 
 if "%1" EQU "sr" (
-%NOTES%\shuffling_release_5_notes.txt
+%NOTES%\shuffling_around_release_5_notes.txt
 goto end
 )
 

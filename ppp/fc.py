@@ -53,6 +53,8 @@ onlymove = 0
 
 trackUndo = 0
 
+breakMacro = 0
+
 debug = 0
 
 backup = []
@@ -554,6 +556,8 @@ def checkWinning():
             for i in range (1,9):
                 myfile.write(' '.join(str(x) for x in backup[i]) + "\n")
         print ("Saved " + winstring)
+    global breakMacro
+    breakMacro = 1
     while True:
         global cmdChurn
         cmdChurn = 0
@@ -1065,6 +1069,7 @@ def readCmd(thisCmd):
     if name == 'p':
         oldMoves = len(moveList)
         anyDump = 0
+        global breakMacro
         while bestDumpRow() > 0:
             anyDump = 1
             newDump = bestDumpRow()
@@ -1073,6 +1078,9 @@ def readCmd(thisCmd):
                 shufwarn()
                 return
             ripUp(newDump)
+            if breakMacro == 1:
+                breakMacro = 0
+                break
             checkFound()
         if anyDump == 0:
             print ("No rows found to dump.")
