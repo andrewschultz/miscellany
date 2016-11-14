@@ -7,12 +7,11 @@
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
 
-# reshuf can have a digit for what better not be reshuffled e.g. if 2c, reshuf(2)
-
 import re
 import sys
 from random import shuffle
 import time
+import traceback
 
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
@@ -128,7 +127,7 @@ def ripUp(q):
         return
     goAgain = 1
     global cmdChurn
-    cmdChurn = 1
+    cmdChurn = True
     movesize = len(moveList)
     maxRun = 0
     while goAgain == 1 and len(elements[q]) > 0 and maxRun < 25:
@@ -144,14 +143,14 @@ def ripUp(q):
             goAgain = 1
         checkFound()
         if shouldReshuf:
-            reshuf(-1) # this causes a hang with ad-8s-7h in row 6 and p6 and no empty rows.
+            reshuf(-1)
         forceFoundation()
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
-    cmdChurn = -1
-    cmdChurn = 0
-    checkFound() # bug where not everything is printed
+    checkFound()
+    cmdChurn = False
     printCards()
+    printFound()
     if (len(moveList) == movesize):
         print ("Nothing moved.")
 
@@ -159,8 +158,8 @@ def shouldPrint():
     global inUndo
     global cmdChurn
     if inUndo or cmdChurn:
-        return 0
-    return 1
+        return False
+    return True
 
 def canDump(mycol):
     dumpSpace = 0
@@ -180,7 +179,6 @@ def canDump(mycol):
         if len(elements[tocol]) == 0:
             return tocol
     return 0
-
 
 def reshuf(xyz): # this reshuffles the empty cards
     if not autoReshuf:
@@ -443,9 +441,14 @@ def checkFound():
                     spares[y] = 0
                     needToCheck = 1
                     retval = True
-    if totalFoundThisTime > 0 and shouldPrint() == 1:
-        sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
+    #print (str(totalFoundThisTime) + " undo " + str(inUndo) + " churn " + str(cmdChurn) + " " + str(shouldPrint()))
+    #traceback.print_stack()
+    printFound()
     return retval
+
+def printFound():
+    if totalFoundThisTime > 0 and shouldPrint():
+        sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
 
 def forceFoundation():
     global inUndo
@@ -529,6 +532,9 @@ def checkWinning():
     try: input = raw_input
     except NameError: pass
     finish = ""
+    global cmdChurn
+    cmdChurn = False
+    printFound()
     global startTime
     global lastReset
     if startTime != -1:
@@ -559,9 +565,6 @@ def checkWinning():
     global breakMacro
     breakMacro = 1
     while True:
-        global cmdChurn
-        cmdChurn = 0
-        checkFound()
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
             if finish[0] == 'n':
@@ -575,9 +578,9 @@ def checkWinning():
                 return 1
             if finish[0] == 'u':
                 global inUndo
-                inUndo = 1
+                inUndo = True
                 undoMoves(1)
-                inUndo = 0
+                inUndo = False
                 return 0
         print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
         
@@ -884,14 +887,14 @@ def undoMoves(toUndo):
         if totalUndo > -1:
             totalUndo += 1
     global inUndo
-    inUndo = 1
+    inUndo = True
     for myCmd in moveList:
         readCmd(str(myCmd))
         if trackUndo == 1:
-            inUndo = 0
+            inUndo = False
             printCards()
-            inUndo = 1
-    inUndo = 0
+            inUndo = True
+    inUndo = False
     checkFound()
     printCards()
     return 1
@@ -915,7 +918,7 @@ def loadGame(gameName):
             original.close()
             global moveList
             global inUndo
-            inUndo = 1
+            inUndo = True
             initSide(0)
             if len(line) > 0 and line[0] != '#':
                 moveList = line.split()
@@ -924,10 +927,10 @@ def loadGame(gameName):
             for myCmd in moveList:
                 readCmd(str(myCmd))
                 if trackUndo == 1:
-                    inUndo = 0
+                    inUndo = False
                     printCards()
-                    inUndo = 1
-            inUndo = 0
+                    inUndo = True
+            inUndo = False
             checkFound()
             printCards()
             return 1

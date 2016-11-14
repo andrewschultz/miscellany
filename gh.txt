@@ -248,8 +248,8 @@ prob=$is\roomlist.txt,testing
 prob=$wd\conc.pl,utils
 prob=$is\reg-pc-*,testing
 >prob=conc.pl -o -pc
->prob=conc.pl -pc
->prob=i7t.pl -q -s pc | grep -iE "failed|likely|run this"
+>prob=talf.pl -pc
+>prob=i7t.pl -o -q -s pc | grep -iE "failed|likely|run this"
 
 https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
@@ -292,7 +292,7 @@ city=$is\olap.pl,
 #commands to run
 >city=talf.pl -sc
 >city=conc.pl -o -sc
->city=i7t.pl -q -s sc | grep -iE "failed|likely|run this"
+>city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
 >city=$is\grate.pl
 >city=$is\olap.pl
 
@@ -312,6 +312,9 @@ past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
 #############utilities
 past=$is\excl.pl
 past=$is\badj.pl
+>past=talf.pl -btp
+>past=conc.pl -o -btp
+>past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
 
 #Grubbyville files
 TOBASE=grubbyville
