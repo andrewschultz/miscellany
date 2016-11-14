@@ -28,11 +28,14 @@ Slicker-City	xxtgtn	"	$$ cluing tries
 #table of life shelf books
 Buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
 #table of book jungle books
-Buck-the-past	xxjb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ second-rate self-help books
+Buck-the-past	xxjb	"	$+ second-rate self-help books
 #authors for the books
-Buck-the-past	table of insightful authors	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ insightful authors
+Buck-the-past	table of insightful authors	"	$+ insightful authors
 #ideas not in game proper
-Buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
+Buck-the-past	xxadd	"	$$ off-the-wall
+Buck-the-past	xxui	"	$$ friendly inns
+Buck-the-past	xxdi	"	$$ unfriendly inns
+Buck-the-past	xxfarm	"	$$ farm animal antics
 Buck-the-past	ni cr / ni scr
 ######################################
 #fourdiopolis searching

@@ -172,10 +172,21 @@ while ($a = <A>)
     $countMismatch++;
 	print "$thisFile search for @b[3] FAILED\n";
 	if (!$fileToOpen) { $fileToOpen = $thisFile; }
-	if ($nearSuccess) { print "Likely suspect(s): $nearSuccess"; }
-	print "TEST RESULTS:(notes) $project-@b[3],0,1,0,Look <a href=\"file:///$thisFile\">here</a>\n";
+	$errLog .= "@b[3] needs to be in<br />\n";
+	if ($nearSuccess)
+	{
+	  my $add = "Likely suspect(s): $nearSuccess";
+	  print $add;
+	  chomp($add);
+	  $errLog .= "$add<br />\n";
+    }
 	$printFail = 1;
   }
+}
+
+if ($printFail)
+{
+  print "TEST RESULTS:(notes) $project-tables,0,1,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog";
 }
 
 if ($majorList)
