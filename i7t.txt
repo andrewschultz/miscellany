@@ -16,7 +16,13 @@ Compound	table of Bible references	"	there are now $$ Basher Bible references
 #command to run if things are wrong
 Compound	ni pr
 ######################################
-#slicker city searching
+#Slicker City searching
+#
+#############
+Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ winning tries
+Slicker-City	xxtgtn	"	$$ cluing tries
+######################################
+#Buck the Past searching
 #
 #############
 #table of life shelf books

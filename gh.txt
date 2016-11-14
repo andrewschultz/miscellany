@@ -306,6 +306,7 @@ past=$im\Release\buck-the-past-invisiclues.htm,
 past=$ws\invis\btp.txt,
 past=$is\reg-btp-*,testing
 past=$is\tra.pl,
+past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
 #############utilities
 past=$is\excl.pl
 past=$is\badj.pl

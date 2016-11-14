@@ -17,6 +17,7 @@ $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
 $exp{"pc"} = "Compound";
 $exp{"sc"} = "Slicker-City";
+$exp{"btp"} = "buck-the-past";
 
 my $countMismatch = 0;
 my $writeDir = "c:\\writing\\dict";
@@ -31,8 +32,8 @@ while ($count <= $#ARGV)
   {
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-t$/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
-    /^-?e$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
-    /^-?f$/ && do { `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?e$/ && do { print "Opening source. -f opens the data file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
+    /^-?f$/ && do { print "Opening data file. -e opens the source.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
@@ -41,7 +42,7 @@ while ($count <= $#ARGV)
 	/^nur$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Nudges.i7x"; $count++; next; };
 	/^nus$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x"; $count++; next; };
 	/^-c$/ && do { $writeDir = "."; $count++; next; };
-    /-p/ && do { $b = @ARGV[$count+1]; $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
+    /-p/ && do { $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; print "Note -p forces you to write out the project, so -s may be more appropriate.\n"; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
 	usage();
@@ -134,7 +135,7 @@ while ($a = <A>)
 
   if (@b[2] ne "\"")
   {
-  open(F, @b[2]) || die ("Can't find @b[2].");
+  open(F, @b[2]) || die ("Can't find release notes file @b[2].");
   $thisFile = $lastOpen = @b[2];
   }
   else
