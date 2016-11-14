@@ -8,16 +8,25 @@
 
 use POSIX;
 
+#use strict;
+use warnings;
+
 my $newDir = ".";
 my $project = "Project";
 
+my $sum = "";
 my $tables = 0;
 my $count = 0;
 
+################################
+# options
+my $tableTabs = 0; # this lists how many tables have how many tabs
 my $printSuccesses = 0;
 my $quietTables = 1;
 
 my %exp;
+
+my @tableCount = ();
 
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
@@ -32,12 +41,12 @@ if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; 
 
 while ($count <= $#ARGV)
 {
-  $a = @ARGV[$count];
-  $b = @ARGV[$count+1];
+  $a = $ARGV[$count];
+  $b = $ARGV[$count+1];
   for ($a)
   {
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
-    /^-t$/ && do { $b = @ARGV[$count+1]; @important = split(/,/, $b); $count+= 2; next; };
+    /^-t$/ && do { $b = $ARGV[$count+1]; $important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { print "Opening source. -f opens the data file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?f$/ && do { print "Opening data file. -e opens the source.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
@@ -65,6 +74,7 @@ open(B, ">$tableFile");
 
 while ($a = <A>)
 {
+  $aorig = $a;
   if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
   {
     @tableCount = ();
@@ -93,7 +103,7 @@ while ($a = <A>)
 	  my @tempAry = split(/\t/, $a);
 	  if ($#tempAry > $#tableCount) { $maxString = $a; }
 	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
-	  @tableCount[$#tempAry]++;
+	  $tableCount[$#tempAry]++;
 	}
   }
   if ($a !~ /[a-z]/)
@@ -103,9 +113,12 @@ while ($a = <A>)
     if ($tableTab)
 	{
 	  print "$tableShort: ";
-	  for (0..$#tableCount) { if (@tableCount[$_]) { print "$_ tabs: @tableCount[$_] "; } }
+	  for (0..$#tableCount) { if ($tableCount[$_]) { print "$_ tabs: $tableCount[$_] "; } }
 	  print "\n";
-	  if (($maxString) && (@tableCount[$#tableCount] < @tableCount[$#tableCount - 1])) { print "Max string: $maxString"; }
+	  if (($maxString) && ($#tableCount >= 1) && defined($tableCount[$#tableCount - 1]) && ($tableCount[$#tableCount] < $tableCount[$#tableCount - 1]))
+	  {
+	    print "Max string: $maxString";
+	  }
 	}
     if (!$quietTables)
 	{
@@ -131,6 +144,8 @@ close(B);
 
 open(A, "c:/writing/scripts/i7t.txt");
 
+my @b;
+
 while ($a = <A>)
 {
   if ($a =~ /^#/) { next; }
@@ -138,16 +153,16 @@ while ($a = <A>)
   chomp($a);
   @b = split(/\t/, $a);
   
-  if (lc(@b[0]) ne lc($project)) { next; }
+  if (lc($b[0]) ne lc($project)) { next; }
   
-  if ($#b == 1) { $failCmd{$project} = @b[1]; next; }
+  if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
 
   $ranOneTest = 1;
 
-  if (@b[2] ne "\"")
+  if ($b[2] ne "\"")
   {
-  open(F, @b[2]) || die ("Can't find release notes file @b[2].");
-  $thisFile = $lastOpen = @b[2];
+  open(F, $b[2]) || die ("Can't find release notes file $b[2].");
+  $thisFile = $lastOpen = $b[2];
   }
   else
   {
@@ -156,34 +171,34 @@ while ($a = <A>)
   
   my $size = 0;
   
-  if ($rows{@b[1]}) { $size = $rows{@b[1]}; } else { print "@b[1] has nothing.\n"; }
+  if ($rows{$b[1]}) { $size = $rows{$b[1]}; } else { print "$b[1] has nothing.\n"; }
   
   $sizeX = $size+1;
   
-  my $almost = @b[3]; $almost =~ s/\$[\+\$]//g;
+  my $almost = $b[3]; $almost =~ s/\$[\+\$]//g;
 
-  @b[3] =~ s/\$\$/$size/g;
-  @b[3] =~ s/\$\+/$sizeX/g;
-  print "Looking for this text: @b[3]\n";
+  $b[3] =~ s/\$\$/$size/g;
+  $b[3] =~ s/\$\+/$sizeX/g;
+  print "Looking for this text: $b[3]\n";
   my $success = 0;
   my $nearSuccess = "";
   while ($f = <F>)
   {
-    #print "@b[3] =~? $f";
-    if ($f =~ /\b@b[3]/) { $success = 1; last; }
+    #print "$b[3] =~? $f";
+    if ($f =~ /\b$b[3]/) { $success = 1; last; }
 	if ($f =~ /$almost/) { $nearSuccess .= $f; }
   }
   close(F);
   if ($success)
   {
-    if ($printSuccesses) { print "$thisFile search for @b[3] PASSED:\n  $f\n"; }
+    if ($printSuccesses) { print "$thisFile search for $b[3] PASSED:\n  $f\n"; }
   }
   else
   {
     $countMismatch++;
-	print "$thisFile search for @b[3] FAILED\n";
+	print "$thisFile search for $b[3] FAILED\n";
 	if (!$fileToOpen) { $fileToOpen = $thisFile; }
-	$errLog .= "@b[3] needs to be in<br />\n";
+	$errLog .= "$b[3] needs to be in<br />\n";
 	if ($nearSuccess)
 	{
 	  my $add = "Likely suspect(s): $nearSuccess";
@@ -228,7 +243,7 @@ print<<EOT;
 directory
 csv = tables to highlight
 -t specifies a CSV of important tables to track
--c specifies the writedir for tables.i7 as the current directory (default is writing\dict)
+-c specifies the writedir for tables.i7 as the current directory (default is writing\\dict)
 -e opens the i7t.pl file
 -f opens the i7t.txt file
 -o opens the offending file post-test
