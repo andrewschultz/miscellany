@@ -201,6 +201,8 @@ def reshuf(xyz): # this reshuffles the empty cards
                             #stupid bug here with if we change autoReshuf in the middle of the game
                             #solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
     shifties = 0
+    if force == 1 or onlymove > 0:
+        return retval
     while autoShift():
         shifties += 1
         if shifties == 12:
@@ -778,7 +780,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
         return
     global onlymove
     if len(elements[r2]) == 0:
-        if inOrder(r1) and onlymove > 0:
+        if inOrder(r1) and onlymove == len(elements[r1]):
             if showDeets:
                 print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
@@ -1318,7 +1320,7 @@ def readCmd(thisCmd):
             print ('Nothing to move from.')
             return
         if len(elements[t2]) == 0:
-            if chains(t1) == len(elements[t1]) and not cmdChurn:
+            if chains(t1) == len(elements[t1]) and not cmdChurn and force == 0 and onlymove == 0:
                 shufwarn()
                 return
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
