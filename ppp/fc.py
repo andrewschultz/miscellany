@@ -250,15 +250,10 @@ def chainNopeEach():
     return retval
     
 def chainNope(rowcand):
-    retval = 0
-    thelast = 0
+    retval = 0 #note this doesn't consider if we have, say, 7C-Ah-6D
     for v in range (1,len(elements[rowcand])):
-        mye = elements[rowcand][thelast]
-        if nexties(elements[rowcand][v]) and foundable(elements[rowcand][v]):
-            continue
-        if not canPut(elements[rowcand][v], mye): # make sure it is not a (!)
+        if canPut(elements[rowcand][v], elements[rowcand][v-1]) == 0: # make sure it is not a (!)
             retval += 1
-        thelast = v
     return retval
 
 def spareUsed():
