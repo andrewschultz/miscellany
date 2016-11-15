@@ -447,8 +447,12 @@ def checkFound():
     return retval
 
 def printFound():
+    global totalFoundThisTime
+    global cardlist
     if totalFoundThisTime > 0 and shouldPrint():
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
+        totalFoundThisTime = 0;
+        cardlist = '';
 
 def forceFoundation():
     global inUndo
@@ -933,6 +937,10 @@ def loadGame(gameName):
             inUndo = False
             checkFound()
             printCards()
+            global totalFoundThisTime
+            global cardlist
+            totalFoundThisTime = 0;
+            cardlist = '';
             return 1
         if not line:
             print (re.sub(r'^.=', '', gameName) + ' save game not found.')
