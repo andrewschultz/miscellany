@@ -395,7 +395,7 @@ misc=unco.pl,
 misc=$wd\fl.pl,
 #################daily tasks
 misc=$ws\hrcheck.pl,
-misc=$ws\hrcheck.txt,
+#misc=$ws\hrcheck.txt,
 #################3 files for copying regr suite over
 misc=proj.txt,
 misc=i7proj.pm,

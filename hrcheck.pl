@@ -4,21 +4,57 @@
 #scheduling stuff, and stuff
 #hrcheck.txt edited for what, when
 #
+#example of one line:
+#
+#11|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://www.thefreedictionary.com"
+#
+
+use strict;
+use warnings;
 
 my $check = "c:\\writing\\scripts\\hrcheck.txt";
+my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
-($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time);
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time);
 
-if ($ARGV[0] eq "e") { `$check`; exit; }
+if (defined($ARGV[0]))
+{
+if ($ARGV[0] eq "e")
+{
+  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check";
+  `$cmd`;
+  exit;
+}
+
+if ($ARGV[0] eq "c")
+{
+  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code";
+  `$cmd`;
+  exit;
+}
+usage();
+}
 
 open(A, "$check") || die ("No $check");
-while ($a = <A>)
+
+my $line;
+
+while ($line = <A>)
 {
-  chomp($a);
-  @b = split(/\|/, $a);
-  $time = @b[0];
-  print @b[0];
-  if ($time == $hour) { print "Running @b[1]\n"; `@b[1]`; }
+  chomp($line);
+  if ($line =~ /^#/) { next; }
+  my @b = split(/\|/, $line);
+  my $time = $b[0];
+  if ($time == $hour) { print "Running $b[1]\n"; `$b[1]`; }
 }
 
 close(A);
+
+sub usage
+{
+print<<EOT;
+e = check stuff to check
+c = check code
+EOT
+exit;
+}

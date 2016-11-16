@@ -2,9 +2,9 @@
 #sov.txt
 #hash for what to do when
 10|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://stackoverflow.com/users/6395052/aschultz"
+10|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://chess.stackexchange.com/users/11202/aschultz"
 11|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://www.thefreedictionary.com"
-12|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://chess.stackexchange.com/users/11202/aschultz"
-13|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://www.gamefaqs.com/boards"
-14|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://bitbucket.org/andrewschultz/buck-the-past"
-15|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://bitbucket.org/andrewschultz/slicker-city"
-16|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://github.com/andrewschultz"
+11|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://www.gamefaqs.com/boards"
+13|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://bitbucket.org/andrewschultz/buck-the-past"
+13|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://bitbucket.org/andrewschultz/slicker-city"
+15|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "https://github.com/andrewschultz"
