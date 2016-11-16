@@ -251,7 +251,7 @@ prob=$is\reg-pc-*,testing
 >prob=talf.pl -pc
 >prob=i7t.pl -o -q -s pc | grep -iE "failed|likely|run this"
 
-https://github.com/andrewschultz/the-problems-compound/tree/master/testing
+#https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
 TOBASE=slicker-city
 scb=$is\story.ni,
@@ -393,6 +393,9 @@ misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
 misc=unco.pl,
 misc=$wd\fl.pl,
+#################daily tasks
+misc=$ws\hrcheck.pl,
+misc=$ws\hrcheck.txt,
 #################3 files for copying regr suite over
 misc=proj.txt,
 misc=i7proj.pm,
