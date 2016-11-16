@@ -7,6 +7,7 @@
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
 
+# reshuf after, say, 5r (?)
 import re
 import sys
 from random import shuffle
@@ -83,7 +84,7 @@ def printCond(myString, z):
 
 def shufwarn():
     if not cmdChurn and not inUndo:
-        print ("That's just useless shuffling.")
+        print ("That won't make progress. F(##) or ##-# let you move part of an in-order stack over.")
 
 def dumpTotal(q):
     retval = 0
@@ -190,6 +191,8 @@ def reshuf(xyz): # this reshuffles the empty cards
         for i in range(0,4):
             if i == xyz:
                 continue
+            if xyz > -1 and spares[i] and abs(spares[i] - spares[xyz]) == 26:
+                continue #this is a very special case for if we put 3C to spares and 3S is there
             if spares[i]:
                 for j in range(1,9):
                     if len(elements[j]):
@@ -1296,6 +1299,13 @@ def readCmd(thisCmd):
                 print ('Moving from spares.')
                 if not inUndo:
                     moveList.append(name)
+                checkAgain = True
+                while checkAgain:
+                    checkAgain = False
+                    checkAgain |= checkFound()
+                    if force == 0:
+                        checkAgain |= reshuf(-1)
+                    pass
                 checkFound()
                 printCards()
             else:
