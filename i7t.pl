@@ -60,8 +60,15 @@ while ($count <= $#ARGV)
   {
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
-    /^-?e$/ && do { print "Opening source. -f opens the data file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
-    /^-?f$/ && do { print "Opening data file. -e opens the source.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?e$/ && do { print "Opening source. -f opens the data file, -ef both.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
+    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+	/^-?(ef|fe)$/ && do
+    {
+      print "Opening data and source.\n";
+      `c:\\writing\\scripts\\i7t.txt`;
+      `c:\\writing\\scripts\\i7t.pl`;
+      next;
+    };
 	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
@@ -274,6 +281,7 @@ csv = tables to highlight
 -c specifies the writedir for tables.i7 as the current directory (default is writing\\dict)
 -e opens the i7t.pl file
 -f opens the i7t.txt file
+-ef/fe opens both
 -i lists important arrays
 -o opens the offending file post-test
 -ot opens the table file

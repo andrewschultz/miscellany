@@ -19,12 +19,17 @@ Compound	ni pr
 #Slicker City searching
 #
 #############
-Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_1_notes.txt	$$ winning tries
+Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
 Slicker-City	xxtgtn	"	$$ cluing tries
 Slicker-City	xxenos	"	$$ guys named Enos
 Slicker-City	xxles	"	$$ guys named Les
 Slicker-City	xxlee	"	$$ guys named Lee
 Slicker-City	xxcom	"	$$ companies
+Slicker-City	xxadd	"	$$ total concepts
+Slicker-City	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
+Slicker-City	xxtgtn	"	and 61 cluing verbs
+Slicker-City	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, 26.
+Slicker-City	xxtgtn	"	And there are $$ good guesses.
 ######################################
 #Buck the Past searching
 #
