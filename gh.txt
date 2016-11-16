@@ -1,3 +1,5 @@
+# gh.pl c opens code, e opens gh.txt, p opens private file
+
 ######################default
 d:sc
 
@@ -27,7 +29,8 @@ rpg~rpg-mapping-tools
 ###ecto
 ec,ect~ecto
 ###misc
-mis~misc
+#################typo protection
+isc,mis~misc
 ###writing
 wri~writing
 

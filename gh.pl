@@ -46,9 +46,16 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
-  /^(-p|p)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghp"); $count++; exit; };
-  /^(-e|e)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); $count++; exit; };
-  /^(-c|c)$/ && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); $count++; exit; };
+  /^(-p|p)$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghp"); exit; };
+  /^(-e|e)$/ && do { print "Opening external file, -c opens code, -p opens private file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); exit; };
+  /^(-c|c)$/ && do { print "Opening code, -e opens external .txt file, -p opens private file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); exit; };
+  /^-?(ec|ce)$/ && do
+  {
+    print "Opening code/external.\n";
+	system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs");
+	system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght");
+	exit;
+  };
   /-j/ && do { $justPrint = 1; $count++; next; };
   /-v/ && do { $justPrint = 1; $count++; next; };
   /^-rt$/ && do { $runTrivialTests = 1; $count++; next; };
@@ -56,9 +63,8 @@ while ($count <= $#ARGV)
   /^-t$/ && do { $testResults = 1; $count++; next; };
   /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
   /^-b$/ && do { $copyBinary = 1; $count++; next; };
-  /^-d$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
+  /^-(d|ab|ba)$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
   /^-?reverse$/ && do { $reverse = 1; $count++; next; };
-  /^-(ab|ba)$/ && do { $copyBinary = $copyAuxiliary = 1; $count++; next; };
   /^[a-z34]/ && do
   {
     if ($a =~ /-$/) { $a =~ s/-$//g; if ($altHash{$a}) { $postproc{$altHash{$a}} = 0; } else { $postproc{$a} = 0; } } # sc- means you do run trivials
@@ -326,12 +332,14 @@ sub usage
 print<<EOT;
 ========USAGE
 -e edits gh.txt
+-c edits gh.pl
+-p edits private file
 -v = verbose output
 -j = just print commands instead of executing
 -? = this
 -a = copy auxiliary files
 -b = copy binary files
--c = -a + -b
+-d = -a + -b (eg both)
 EOT
 exit;
 }
