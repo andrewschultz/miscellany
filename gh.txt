@@ -372,6 +372,7 @@ misc=c:\coding\python\ho.py,python
 misc=a.pl,dailywri
 misc=dsort.pl,dailywri
 misc=ni.bat,
+misc=c:\scripts\np.bat,
 misc=crv.pl,
 misc=i7t.pl,
 misc=i7t.txt,

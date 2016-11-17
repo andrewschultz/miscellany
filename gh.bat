@@ -92,5 +92,3 @@ echo c/e/p = GH.PL code and external list and private files
 echo tr = trizbort
 
 :end
-
-echo 1
