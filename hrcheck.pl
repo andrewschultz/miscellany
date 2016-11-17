@@ -1,5 +1,5 @@
 ############################################
-#hrcheck.pl
+#hrcheck.pl (formerly sov.pl for stack overflow stuff)
 #
 #scheduling stuff, and stuff
 #hrcheck.txt edited for what, when
@@ -45,6 +45,10 @@ while ($line = <A>)
   if ($line =~ /^#/) { next; }
   my @b = split(/\|/, $line);
   my $time = $b[0];
+  #print "$b[1]\n"; exit;
+  $b[1] =~ s/FFX/start "" "C:\\Program Files (x86)\\Mozilla Firefox\\firefox"/;
+  $b[1] =~ s/OPE/start "" "C:\\Program Files (x86)\\Opera\\launcher.exe"/;
+  $b[1] =~ s/CHR/start "" "C:\\Users\\Andrew\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe"/;
   if ($time == $hour) { print "Running $b[1]\n"; `$b[1]`; }
 }
 
@@ -55,6 +59,7 @@ sub usage
 print<<EOT;
 e = check stuff to check
 c = check code
+? (or anything else) = usage
 EOT
 exit;
 }
