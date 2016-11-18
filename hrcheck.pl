@@ -6,8 +6,10 @@
 #
 #example of one line:
 #
-#11|start "" "C:\Program Files (x86)\Mozilla Firefox\firefox" "http://www.thefreedictionary.com"
+#11|FFX "http://www.thefreedictionary.com"
 #
+#Weekly thing
+#5|8|FFX "http://btpowerhouse.com"
 
 use strict;
 use warnings;
@@ -43,13 +45,22 @@ while ($line = <A>)
 {
   chomp($line);
   if ($line =~ /^#/) { next; }
+  my $cmdCount = 0;
+  my $day = -1;
   my @b = split(/\|/, $line);
-  my $time = $b[0];
+  if ($#b == 2)
+  {
+    $day = $b[0];
+	if (($day >= 0) && ($day != $dayOfWeek)) { next; }
+    $cmdCount++;
+  }
+  my $time = $b[$cmdCount];
+  $cmdCount++;
   #print "$b[1]\n"; exit;
-  $b[1] =~ s/FFX/start "" "C:\\Program Files (x86)\\Mozilla Firefox\\firefox"/;
-  $b[1] =~ s/OPE/start "" "C:\\Program Files (x86)\\Opera\\launcher.exe"/;
-  $b[1] =~ s/CHR/start "" "C:\\Users\\Andrew\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe"/;
-  if ($time == $hour) { print "Running $b[1]\n"; `$b[1]`; }
+  $b[$cmdCount] =~ s/FFX/start "" "C:\\Program Files (x86)\\Mozilla Firefox\\firefox"/;
+  $b[$cmdCount] =~ s/OPE/start "" "C:\\Program Files (x86)\\Opera\\launcher.exe"/;
+  $b[$cmdCount] =~ s/CHR/start "" "C:\\Users\\Andrew\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe"/;
+  if ($time == $hour) { print "Running $b[$cmdCount]\n"; `$b[$cmdCount]`; }
 }
 
 close(A);

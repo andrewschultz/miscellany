@@ -1103,7 +1103,7 @@ def readCmd(thisCmd):
             print ("No rows found to dump.")
         elif not wonThisCmd:
             print (str(len(moveList)-oldMoves) + " moves total.")
-        dumpWon = false
+        dumpWon = False
         return
     if "u" in name:
         name = name.replace("u", "")
