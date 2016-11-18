@@ -36,6 +36,8 @@ totalReset = 0
 cmdChurn = False
 inUndo = False
 
+wonThisCmd = False
+
 lastReset = 0
 startTime = 0
 
@@ -568,6 +570,8 @@ def checkWinning():
         print ("Saved " + winstring)
     global breakMacro
     breakMacro = 1
+    global wonThisCmd
+    wonThisCmd = True
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
@@ -1093,10 +1097,13 @@ def readCmd(thisCmd):
                 breakMacro = 0
                 break
             checkFound()
+        global wonThisCmd
+        wonThisCmd = 0
         if anyDump == 0:
             print ("No rows found to dump.")
-        else:
+        elif not wonThisCmd:
             print (str(len(moveList)-oldMoves) + " moves total.")
+        dumpWon = false
         return
     if "u" in name:
         name = name.replace("u", "")
@@ -1326,6 +1333,9 @@ def readCmd(thisCmd):
         if t1 == t2:
             print ('Moving a row to itself does nothing.')
             return
+        if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
+            print ("Need digits from 1-8.")
+            return ##### don't put anything above this
         if len(elements[t1]) == 0 and not inUndo:
             print ('Nothing to move from.')
             return
@@ -1333,9 +1343,6 @@ def readCmd(thisCmd):
             if chains(t1) == len(elements[t1]) and not cmdChurn and force == 0 and onlymove == 0:
                 shufwarn()
                 return
-        if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
-            print ("Need digits from 1-8.")
-            return
         tempdoab = doable(t1,t2,1 - preverified)
         if tempdoab == -1:
             #print 'Not enough space.'
