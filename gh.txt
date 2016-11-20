@@ -412,6 +412,8 @@ misc=c:\coding\perl\proj\fc.py,ppp
 misc=c:\coding\perl\proj\fcopt-sample.txt,ppp
 misc=c:\coding\perl\proj\fcsav-sample.txt,ppp
 misc=c:\coding\perl\proj\fc.rb,ruby
+misc=$ws\comout.pl
+misc=$ws\comout.txt
 
 #PlotEx
 FROMBASE=c:\games\inform
