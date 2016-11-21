@@ -41,6 +41,8 @@ open(A, "$check") || die ("No $check");
 
 my $line;
 
+my $halfHour;
+
 while ($line = <A>)
 {
   chomp($line);
@@ -55,12 +57,18 @@ while ($line = <A>)
     $cmdCount++;
   }
   my $time = $b[$cmdCount];
+  $halfHour = $time =~ tr/h/h/;
+  if ($time =~ /h/) { $time =~ s/h//; }
   $cmdCount++;
   #print "$b[1]\n"; exit;
   $b[$cmdCount] =~ s/FFX/start "" "C:\\Program Files (x86)\\Mozilla Firefox\\firefox"/;
   $b[$cmdCount] =~ s/OPE/start "" "C:\\Program Files (x86)\\Opera\\launcher.exe"/;
   $b[$cmdCount] =~ s/CHR/start "" "C:\\Users\\Andrew\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe"/;
-  if ($time == $hour) { print "Running $b[$cmdCount]\n"; `$b[$cmdCount]`; }
+  if ($time == $hour)
+  {
+    if ($halfHour xor ($minute < 30))
+	{ print "Running $b[$cmdCount]\n"; print `$b[$cmdCount]`; }
+  }
 }
 
 close(A);
