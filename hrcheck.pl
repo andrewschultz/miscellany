@@ -60,6 +60,10 @@ while ($line = <A>)
   $halfHour = $time =~ tr/h/h/;
   if ($time =~ /h/) { $time =~ s/h//; }
   $cmdCount++;
+  if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
+  {
+    if (-s "$b[$cmdCount]" == 0) { print "Skipping empty file $b[$cmdCount].\n"; next; }
+  }
   #print "$b[1]\n"; exit;
   $b[$cmdCount] =~ s/FFX/start "" "C:\\Program Files (x86)\\Mozilla Firefox\\firefox"/;
   $b[$cmdCount] =~ s/OPE/start "" "C:\\Program Files (x86)\\Opera\\launcher.exe"/;
