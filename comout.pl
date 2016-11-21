@@ -14,6 +14,7 @@ my %proj;
 my $afterComp;
 
 ############################variables
+my $cmd;
 my $need = 4;
 my $myproj = "slicker-city";
 my $project;
@@ -28,11 +29,13 @@ open(A, "$comcfg") || die ("No such file $comcfg.");
 my $count = 0;
 while ($count <= $#ARGV)
 {
-  for ($ARGV[$count])
+  my $arg = $ARGV[$count];
+  for ($arg)
   {
+  /^-?n?[0-9]+/ && do { $need = $arg; $need =~ s/^-?n?//g; $count++; next; };
   /^-?[ef]$/i && do { `$comcfg`; exit(); };
   /^-?[a]$/i && do { $afterComp = 1; $count++; print "Opening WinDiff after...\n"; next; };
-  /^-?[c]$/i && do { my $cmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $comsou"; `$cmd`; exit(); };
+  /^-?[c]$/i && do { $cmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $comsou"; `$cmd`; exit(); };
   $myproj = $ARGV[$count];
   last;
   }
@@ -57,7 +60,7 @@ if (not defined $proj{$myproj}) { die ("No project $myproj.\n"); }
 my $line;
 my $match;
 
-my $stor = "c:/games/inform/$project.inform/source/story";
+my $stor = "c:\\games\\inform\\$project.inform\\source\\story";
 my $inTable = 0;
 
 close(A);
@@ -67,9 +70,11 @@ open(B, ">$stor.22");
 
 my $temp;
 
+if ($need)
+{
 while ($line = <A>)
 {
-  if (($inTable == 1) && ($line !~ /[a-z]/i)) { print B "\]$line"; $inTable = 0; }
+  if (($inTable == 1) && ($line !~ /[a-z]/i)) { print B "\]$line"; $inTable = 0; next; }
   print B $line;
   for $match (@projs)
   {
@@ -86,5 +91,22 @@ while ($line = <A>)
   }
   }
 }
+}
+else
+{
+while ($line = <A>)
+{
+  if (($inTable == 1) && ($line !~ /[a-z]/)) { print B "\n"; $inTable = 0; next; }
+  if (($inTable == 1) && ($line =~ /^\[/)) { $line =~ s/^\[//; }
+  if ($line =~ /^\[?table of /) { $inTable = 1; }
+  print B $line;
+  next;
+}
+}
+
+$cmd = "copy /Y $stor.22 $stor.ni";
+print "$cmd\n";
+my $q = `$cmd`;
+print $q;
 
 if ($afterComp) { `wm $stor.ni $stor.22`; exit(); }
