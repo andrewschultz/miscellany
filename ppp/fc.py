@@ -108,6 +108,15 @@ def bestDumpRow():
             if dumpTotal(y) > bestScore or (dumpTotal(y) == bestScore and chainTotal(y) < bestChains):
                 bestRow = y
                 bestChains = chainNope(y)
+    if bestRow > 0:
+        return bestRow
+    maxShifts = 10;
+    for y in range (1,9):
+        if chainNope(y) == 0:
+            continue
+        if chainNope(y) < maxShifts:
+            maxShifts = chainNope(y)
+            bestRow = y
     return bestRow
 
 def foundable(myc):
