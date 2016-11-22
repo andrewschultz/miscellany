@@ -154,7 +154,7 @@ while ($a = <A>)
 	  if ($curTable ne $tableShort) { $tableList .= "($tableShort)"; }
 	  $tableList .= ": $tableRow rows\n";
 	}
-	if ($rows{$tableShort}) { print "Tacking on $tableRow to $tableShort, up from $rows{$tableShort}.\n"; }
+	#if ($rows{$tableShort}) { print "Tacking on $tableRow to $tableShort, up from $rows{$tableShort}.\n"; }
 	$rows{$tableShort} += $tableRow;
 	if ($majorTable) { $majorList .= "$curTable: $tableRow rows<br />"; } $majorTable = 0;
   }
@@ -178,6 +178,8 @@ my $printFail = 0;
 my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
+
+my $openLine = 0;
 
 while ($a = <A>)
 {
@@ -208,11 +210,11 @@ while ($a = <A>)
   
   my $sizeX = $size+1;
   
-  my $almost = $b[3]; $almost =~ s/\$[\+\$]//g;
+  my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
 
   $b[3] =~ s/\$\$/$size/g;
   $b[3] =~ s/\$\+/$sizeX/g;
-  print "Looking for this text: $b[3]\n";
+  #print "Looking for this text: $b[3]\n";
   my $success = 0;
   my $nearSuccess = "";
   my $f;
@@ -221,7 +223,7 @@ while ($a = <A>)
   {
     #print "$b[3] =~? $f";
     if ($f =~ /\b$b[3]/) { $success = 1; last; }
-	if ($f =~ /$almost/) { $nearSuccess .= $f; }
+	if ($f =~ /$almost/) { $nearSuccess .= $f; if ($openLine == 0) { $openLine = $.; } }
   }
   close(F);
   if ($success)
@@ -264,13 +266,19 @@ if ($openPost)
 {
   if ($fileToOpen)
   {
-    print "Opening $fileToOpen\n";
-    `$fileToOpen`;
+    print "Opening $fileToOpen, line $openLine\n";
+	my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $fileToOpen";
+	if ($openLine) { $openCmd .= " -n$openLine"; }
+    `$openCmd`;
   }
   else { print "No error files to open!\n"; }
 }
 
-if ($openTableFile) { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile"); }
+if ($openTableFile)
+{
+  my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile";
+  `$openCmd`;
+}
 
 sub usage
 {
