@@ -115,8 +115,10 @@ def bestDumpRow():
         if chainNope(y) == 0:
             continue
         if chainNope(y) < maxShifts:
-            maxShifts = chainNope(y)
-            bestRow = y
+            for z in range (1,9):
+                if doable(y, z, 0) > 0:
+                    maxShifts = chainNope(y)
+                    bestRow = y
     return bestRow
 
 def foundable(myc):
@@ -371,6 +373,8 @@ def initSide(inGameReset):
         win = 0
         global moveList
         moveList = []
+    global breakMacro
+    breakMacro = 0
 
 def plur(a):
     if a is 1:
@@ -704,7 +708,7 @@ def printOthers():
             thisdo  = doable(z1,z2,0)
             if thisdo == -1:
                 wackmove = wackmove + ' ' + str(z1)+str(z2)
-            elif thisdo:
+            elif thisdo > 0:
                 tempmove = ' ' + str(z1)+str(z2)
                 if thisdo >= len(elements[z1]):
                     canfwdmove = 1
@@ -1102,17 +1106,18 @@ def readCmd(thisCmd):
                 shufwarn()
                 return
             ripUp(newDump)
+            if len(elements[newDump]) > 0:
+                break
             if breakMacro == 1:
                 breakMacro = 0
                 break
             checkFound()
         global wonThisCmd
-        wonThisCmd = 0
         if anyDump == 0:
             print ("No rows found to dump.")
         elif not wonThisCmd:
             print (str(len(moveList)-oldMoves) + " moves total.")
-        dumpWon = False
+        wonThisCmd = False
         return
     if "u" in name:
         name = name.replace("u", "")
