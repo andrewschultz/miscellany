@@ -256,17 +256,6 @@ prob=$is\reg-pc-*,testing
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
-TOBASE=slicker-city
-scb=$is\story.ni,
-scb=$im\Release\slicker-city-invisiclues.htm,
--b:scb=$im\Release\release-Slicker City.zblorb,
-scb=$tr\slicker-city.trizbort,
-scb=$tr\slicker-city.pdf,
-scb=$id,
-scb=$ws\invis\sc.txt,
-scb=$is\walkthru.txt,
-scb=c:\users\andrew\dropbox\notes\slicker_city_release_2_notes.txt
-
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
 city=$is\story.ni,
@@ -277,7 +266,7 @@ city=$tr\slicker-city.pdf,
 city=$id,
 city=$ws\invis\sc.txt,
 city=$is\walkthru.txt,
-city=c:\users\andrew\dropbox\notes\slicker_city_release_1_notes.txt
+city=c:\users\andrew\dropbox\notes\slicker_city_release_2_notes.txt
 city=$is\technotes.txt,
 #city=$is\reg-sc-*,testing
 city=$is\scdir.pl,testing
@@ -294,11 +283,11 @@ city=$wd\olap.pl,
 city=$wd\olap.txt,
 #################################
 #commands to run
->city=talf.pl -sc
->city=conc.pl -o -sc
->city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
+#>city=talf.pl -sc
+#>city=conc.pl -o -sc
+#>city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
 >city=$is\grate.pl
->city=$wd\olap.pl -sc
+#>city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
 past=$is\btpbk.pl,

@@ -38,8 +38,6 @@ my @projs = ();
 my $proj;
 my $errFile = "c:/writing/dict/nightly/errs.htm";
 
-print "NOTE: To run from the command line, schtasks /Run /TN \"Nightly Build\"\n";
-
 projMap();
 getArgs();
 
@@ -87,7 +85,15 @@ sub projMap
 	  next;
 	}
 	if ($a =~ /^D:/i) { $a =~ s/^d://gi; if (-M $a < 1.01) { $a = <A>; $cmd{$curProj} .= "$a"; } next; }
-	if ($a =~ /^x/i) { while ($a =~ /[a-z]/i) { $a = <A>; print "Skipping $a"; } next; }
+	if ($a =~ /^x/i)
+	{
+	  while ($a =~ /[a-z]/i)
+	  {
+	    $a = <A>;
+		#print "Skipping $a";
+      }
+      next;
+	}
 	if ($a =~ /^>/)
 	{
 	  $a =~ s/^>//g;

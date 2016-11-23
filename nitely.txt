@@ -110,9 +110,9 @@ roi=roiling
 
 btp=buck-the-past
 >gh.pl -t $$
-#>icl.pl -jr $$
-#>icl.pl -jb $$
-#>icl.pl -jd $$
+>icl.pl -jr $$
+>icl.pl -jb $$
+>icl.pl -jd $$
 >lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-auth,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
 
 sc=slicker-city
@@ -160,5 +160,5 @@ uo=uglyoafs
 wri=writing
 >dfi.pl
 >limcheck.pl
->a.pl -a -t
+>a.pl -eo
 ;

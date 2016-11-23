@@ -5,6 +5,7 @@
 #
 #commands: gh.pl sts (stale tales slate) or gh.pl e (edit the list file)
 #
+# gh.pl c opens code, e opens gh.txt, p opens private file
 
 use strict;
 use warnings;
@@ -149,6 +150,15 @@ sub processTerms
 	  if (($runTrivialTests == 1) || ($postproc{$b}))
 	  {
 	  $b = $a; $b =~ s/.*=//g;
+	  #below is duplicate code but it'll do for now
+	  $b =~ s/\$ws/c:\\writing\\scripts/g;
+	  $b =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
+	  $b =~ s/\$wd/c:\\writing\\dict/g;
+	  $b =~ s/\$if/$fromBase/g;
+	  $b =~ s/\$im/c:\\games\\inform\\$fromShort materials/g;
+	  $b =~ s/\$is/c:\\games\\inform\\$fromShort.inform\\source/g;
+	  $b =~ s/\$id/c:\\games\\inform\\$fromShort.inform\\uuid.txt/g;
+	  #above is duplicate code but it'll do for now
 	  $quickCheck .= `$b`;
 	  }
 	  else { $warnCanRun = 1; next; }
