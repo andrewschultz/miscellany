@@ -16,6 +16,7 @@ use warnings;
 use POSIX;
 
 my $check = "c:\\writing\\scripts\\hrcheck.txt";
+my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
 my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time);
@@ -46,13 +47,18 @@ if ($ARGV[0] eq "c")
 usage();
 }
 
-open(A, "$check") || die ("No $check");
+my $defaultBrowser = "";
+
+hrcheck($check);
+hrcheck($check2);
+
+sub hrcheck
+{
+open(A, "$_[0]") || die ("No $_[0]");
 
 my $line;
 
 my @qhr = (0, 0, 0, 0);
-
-my $defaultBrowser = "";
 
 while ($line = <A>)
 {
@@ -116,6 +122,7 @@ while ($line = <A>)
 }
 
 close(A);
+}
 
 sub usage
 {
