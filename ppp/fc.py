@@ -199,6 +199,7 @@ def reshuf(xyz): # this reshuffles the empty cards
         return False
     retval = False
     tryAgain = 1
+    movesBefore = len(moveList)
     while tryAgain:
         tryAgain = 0
         for i in range(0,4):
@@ -1059,7 +1060,7 @@ def readCmd(thisCmd):
     if len(name) > 3:
         if name[2] == '-':
             onlymove = re.sub(r'.*-', '', name)
-            if not onlymove.isdigit:
+            if not onlymove.isdigit():
                 print ('Format is ##-#.')
                 return
             onlymove = int(onlymove)
@@ -1135,7 +1136,7 @@ def readCmd(thisCmd):
             undoMoves(temp)
             print ("Last " + str(temp) + " moves started with " + d1)
             return
-        if not name.isdigit:
+        if not name.isdigit():
             print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing."
             return
         if int(name) > len(moveList):
@@ -1440,7 +1441,8 @@ def readCmd(thisCmd):
         while tempMoveSize < len(moveList):
             tempMoveSize = len(moveList)
             checkFound()
-            reshuf(myToSpare)
+            if reshuf(myToSpare):
+                reshuf(-1)
         printCards()
         return
     print (name + ' not recognized, displaying usage.')
