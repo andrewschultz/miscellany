@@ -23,6 +23,7 @@ $long{"15"} = "compound";
 $long{"pc"} = "compound";
 $long{"4d"} = "fourdiopolis";
 $long{"sc"} = "slicker-city";
+$long{"btp"} = "buck-the-past";
 
 #1st argument can be either one of the abbrevs above or something longer
 if (@ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/@ARGV[0].inform/source"); tryDir("c:/games/inform/$long{@ARGV[0]}.inform/source"); }
@@ -83,11 +84,15 @@ while ($a = <A>)
       {
       if (!$foundComments)
 	  {
+	  if ($. - $lastHead > 2)
+	  {
 	  checkForComments();
+	  }
       $newHeader = $a;
 	  }
       }
       $foundComments = 0;
+	  $lastHead = $.;
 	if ($a =~ /not for release/) { print "********$a should not be NFR with a really good reason.\n"; }
 	$newHeader = $a;
     $lastChap = $lines;
@@ -116,7 +121,7 @@ if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
 
 if ($#commentNeed == -1) { $linesToFix = "No lines"; } else { $linesToFix = join(" / ", @commentNeed); }
 
-print "TEST RESULTS:$shortDir Code Comments,1,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
+print "TEST RESULTS:$shortDir Code Comments with crv.pl,1,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
 if (!$needComment) { print "Yay! Success!\n"; }
 
 if ($betaBomb) { print "COMMENT BETA TESTING OUT BEFORE RELEASE\n" x 5; }
