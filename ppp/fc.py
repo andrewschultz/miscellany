@@ -873,7 +873,7 @@ def usage():
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
-    print ('u = undo, u1-u9 undoes that many moves.')
+    print ('u = undo, u1-u10 undoes that many moves, undo does 11+.')
     print ('ua = shows current move/undo array.')
     print ('? = usage (this).')
     print ('empty command tries basic reshuffling and prints out the cards again.')
@@ -1120,8 +1120,13 @@ def readCmd(thisCmd):
             print (str(len(moveList)-oldMoves) + " moves total.")
         wonThisCmd = False
         return
-    if "u" in name:
-        name = name.replace("u", "")
+    if name[:1] == 'u':
+        bigUndo = False
+        if name[:4] == 'undo':
+            bigUndo = True
+            name = name[4:]
+        else:
+            name = name[1:]
         if name == 'a':
             print (moveList)
             return
@@ -1140,8 +1145,13 @@ def readCmd(thisCmd):
             print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing."
             return
         if int(name) > len(moveList):
-            print ("Tried to do %d undos, can only undo %d." % (int(temp), len(moveList)))
+            print ("Tried to do %d undo%s, can only undo %d." % (int(name), plur(int(name)), len(moveList)))
             return
+        if int(name) > 10:
+            if bigUndo:
+                print ("This game doesn't allow undoing more than 10 at a time except with UND, because u78 would be kind of bogus if you changed your mind from undoing to moving.")
+                return
+            print ("UNDOing more than 10 moves.")
         undoMoves(int(name))
         return
     if name[0] == '/':

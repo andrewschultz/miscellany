@@ -30,8 +30,9 @@ for (@reserved) { $ignore{$_} = 1; }
 
 for my $x (@dfi)
 {
+  if (! -f "$daily\\$x") { next; }
   if (-d "$daily\\$x") { next; }
-  if (-s "$daily\\$x" == 0) { $zb++; push(@zerob, $x); next; }
+  if (-s "$daily\\$x" == 0) { print "0: $daily\\$x\n"; $zb++; push(@zerob, $x); next; }
   if ($x =~ /^2016[0-9]{4}\.txt$/i) { $unconv++; push (@days, $x); next; }
   if ($x =~ /^2016/) { $notallnum++; push (@notall, $x); next; }
   if ($x =~ /^200/) { $veryold++; push (@olds, $x); next; }
@@ -39,7 +40,7 @@ for my $x (@dfi)
   $misc++; push (@odd, $x);
 }
 
-print "TEST RESULTS: unconverted,$unconv,3,0,@days\n";
-print "TEST RESULTS: notallnum,$notallnum,3,0,@notall\n";
-print "TEST RESULTS: misc,$misc,3,0,@odd\n";
-print "TEST RESULTS: zero-byte,$zb,3,0,@zerob\n";
+print "TEST RESULTS: unconverted,3,$unconv,0,@days\n";
+print "TEST RESULTS: notallnum,3,$notallnum,0,@notall\n";
+print "TEST RESULTS: misc,3,$misc,0,@odd\n";
+print "TEST RESULTS: zero-byte,3,$zb,0,@zerob\n";
