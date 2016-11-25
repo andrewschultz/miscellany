@@ -862,8 +862,8 @@ def shiftcards(r1, r2, amt):
     del elements[r1][-amt:]
 
 def usage():
-    print ('r (1-8a-d) sends that card to the foundation. r alone forces everything it can.')
-    print ('p (1-8) moves a row as much as you can.')
+    print ('r(1-8a-d) sends that card to the foundation. r alone forces everything it can.')
+    print ('p(1-8) moves a row as much as you can.')
     print ('p on its own tries to force everything if you\'re near a win.')
     print ('lo/so loads/saves options.')
     print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
@@ -873,8 +873,12 @@ def usage():
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
-    print ('u = undo, u1-u10 undoes that many moves, undo does 11+.')
+    print ('sw/ws saves on win, sp/ps saves position.')
+    print ('+ = toggles double size, e = toggle autoshuffle.')
+    print ('========meta========')
+    print ('u = undo, u1-u10 undoes that many moves, undo does 11+, tu tracks undo.')
     print ('ua = shows current move/undo array.')
+    print ('qu quits (q could be typed by accident).')
     print ('? = usage (this).')
     print ('empty command tries basic reshuffling and prints out the cards again.')
 
@@ -1079,7 +1083,7 @@ def readCmd(thisCmd):
         sendOpts()
         return
     if name == 'q':
-        print ("QU needed to quit.")
+        print ("QU needed to quit, so you don't type Q accidentally.")
         return
     if name == 'qu':
         print ("Bye!")
@@ -1450,8 +1454,9 @@ def readCmd(thisCmd):
         tempMoveSize = -1
         while tempMoveSize < len(moveList):
             tempMoveSize = len(moveList)
+            tempRowSize = len(elements[myRow])
             checkFound()
-            if reshuf(myToSpare):
+            if reshuf(myToSpare) or len(elements[myRow]) < tempRowSize:
                 reshuf(-1)
         printCards()
         return
