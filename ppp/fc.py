@@ -110,7 +110,7 @@ def bestDumpRow():
                 bestChains = chainNope(y)
     if bestRow > 0:
         return bestRow
-    maxShifts = 10;
+    maxShifts = 10
     for y in range (1,9):
         if chainNope(y) == 0:
             continue
@@ -159,6 +159,7 @@ def ripUp(q):
         if shouldReshuf:
             reshuf(-1)
         forceFoundation()
+        slipUnder()
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
     checkFound()
@@ -239,9 +240,10 @@ def autoShift(): # this shifts rows
                     shiftcards(i, j, len(elements[i]))
                     return True
     return False
-            
 
 def inOrder(rowNum):
+    if len(elements[rowNum]) == 0:
+        return 0
     for i in range(1,len(elements[rowNum])):
         if not canPut(elements[rowNum][i], elements[rowNum][i-1]):
             return 0
@@ -262,7 +264,7 @@ def chainNopeBig():
     return retval
 
 def chainNopeEach():
-    retval = 0;
+    retval = 0
     for i in range (0,9):
         if chainNope(i) > 0:
             retval += 1
@@ -292,14 +294,14 @@ def firstMatchableRow(cardval):
     for i in range (1,9):
         if len(elements[i]) > 0:
             if canPut(cardval, elements[i][len(elements[i])-1]):
-                return i;
+                return i
     return 0
 
 def readOpts():
     global vertical
     global autoReshuf
     global doubles
-    infile = "fcopt.txt";
+    infile = "fcopt.txt"
     with open(infile) as f:
         for line in f:
             gotOne = 1
@@ -404,12 +406,12 @@ def canPut(lower, higher):
     temp1 = lower - 1
     temp2 = higher - 1
     if temp1 % 13 == 0:
-        return 0;
+        return 0
     if temp2 % 13 - temp1 % 13 != 1:
-        return 0;
+        return 0
     if ((temp2 // 13) + (temp1 // 13)) % 2 == 1:
-        return 1;
-    return 0;
+        return 1
+    return 0
 
 totalFoundThisTime = 0
 cardlist = ''
@@ -421,7 +423,7 @@ def checkFound():
     global cardlist
     if not cmdChurn:
         totalFoundThisTime = 0
-        cardlist = '';
+        cardlist = ''
     while needToCheck:
         needToCheck = 0
         for y in range (1,9):
@@ -437,7 +439,7 @@ def checkFound():
                     totalFoundThisTime += 1
                     found[(elements[y][len(elements[y])-1]-1)//13] = found[(elements[y][len(elements[y])-1]-1)//13] + 1
                     cardlist = cardlist + tocardX(elements[y][len(elements[y])-1])
-                    elements[y].pop();
+                    elements[y].pop()
                     if len(elements[y]) == 0:
                         break
         for y in range (0,4):
@@ -467,8 +469,8 @@ def printFound():
     global cardlist
     if totalFoundThisTime > 0 and shouldPrint():
         sys.stdout.write(str(totalFoundThisTime) + ' card' + plur(totalFoundThisTime) + ' safely to foundation:' + cardlist + '\n')
-        totalFoundThisTime = 0;
-        cardlist = '';
+        totalFoundThisTime = 0
+        cardlist = ''
 
 def forceFoundation():
     global inUndo
@@ -527,7 +529,7 @@ def tocard( cardnum ):
         return '---'
     temp = cardnum - 1
     retval = '' + cards[temp % 13] + suits[temp // 13]
-    return retval;
+    return retval
 
 def tocardX (cnum):
     if (cnum % 13 == 10):
@@ -608,7 +610,7 @@ def checkWinning():
         
 def chains(myrow):
     if len(elements[myrow]) == 0:
-        return 0;
+        return 0
     retval = 1
     mytemp = len(elements[myrow]) - 1
     while mytemp > 0:
@@ -640,7 +642,7 @@ def printVertical():
     while oneMoreTry:
         thisline = ''
         secondLine = ''
-        oneMoreTry = 0;
+        oneMoreTry = 0
         for y in range (1,9):
             if len(elements[y]) > count:
                 oneMoreTry = 1
@@ -767,7 +769,7 @@ def printOthers():
     for y in [0, 2, 1, 3]:
         foundscore += found[y]
         if found[y] == 0:
-            sys.stdout.write(' ---');
+            sys.stdout.write(' ---')
         else:
             sys.stdout.write(' ' + tocard(found[y] + y * 13))
     sys.stdout.write(' (' + str(foundscore) + ' point' + plur(foundscore))
@@ -780,7 +782,7 @@ def printOthers():
 
 def anyDoableLimit (ii):
     for y in range (1,9):
-        if len(elements[y]) > 0 and doable(ii, y, 0) > 0 and doable(ii, y, 0) < maxmove:
+        if len(elements[y]) > 0 and doable(ii, y, 0) > 0 and doable(ii, y, 0) < maxmove():
             return y
     return 0
 
@@ -798,9 +800,13 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
     if r1 < 1 or r2 < 1 or r1 > 8 or r2 > 8:
         print ("This shouldn't have happened, but one of the rows is invalid.")
         trackback.print_tb()
-        return
+        return 0
     global onlymove
     if len(elements[r2]) == 0:
+        if len(elements[r1]) == 0:
+            if showDeets:
+                print ("Empty-empty move.")
+            return 0
         if inOrder(r1) and onlymove == len(elements[r1]):
             if showDeets:
                 print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
@@ -857,6 +863,39 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
         return -1
     return fromline
 
+def maxMoveMod():
+    base = 2
+    myexp = .5
+    for y in range (0,4):
+        if (spares[y] == 0):
+            base += 1
+    for y in range (1,9):
+        if (len(elements[y]) == 0):
+            myexp *= 2
+    return base * myexp
+
+def slipUnder():
+    fi = firstEmptyRow()
+    if fi == 0:
+        return
+    slipProcess = True
+    everSlip = False
+    while slipProcess:
+        slipProcess = False
+        for i in range(1,9):
+            if len(elements[i]) > 0 and inOrder(i):
+                for j in range (0,4):
+                    if canPut(elements[i][0], spares[j]):
+                        if len(elements[i]) < maxMoveMod():
+                            tst = chr(97+j) + str(fi)
+                            readCmd(tst)
+                            shiftcards(i, fi, len(elements[i]))
+                            slipProcess = True
+                            everSlip = True
+                            break
+    return everSlip
+
+        
 def shiftcards(r1, r2, amt):
     elements[r2].extend(elements[r1][-amt:])
     del elements[r1][-amt:]
@@ -871,6 +910,7 @@ def usage():
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
     print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
+    print ('h slips a card under eg KH in spares would go under an ordered QC-JD.')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
     print ('sw/ws saves on win, sp/ps saves position.')
@@ -961,8 +1001,8 @@ def loadGame(gameName):
             printCards()
             global totalFoundThisTime
             global cardlist
-            totalFoundThisTime = 0;
-            cardlist = '';
+            totalFoundThisTime = 0
+            cardlist = ''
             return 1
         if not line:
             print (re.sub(r'^.=', '', gameName) + ' save game not found.')
@@ -1098,6 +1138,10 @@ def readCmd(thisCmd):
         return
     if name == 'u':
         undoMoves(1)
+        return
+    if name == 'h':
+        if not slipUnder():
+            print ("No slip-unders found.")
         return
     if name == 'p':
         oldMoves = len(moveList)
@@ -1331,7 +1375,7 @@ def readCmd(thisCmd):
         if tempspare > -1:
             if foundable(spares[tempspare]):
                 found[(spares[tempspare]-1)//13]+= 1
-                spares[tempspare] = 0;
+                spares[tempspare] = 0
                 print ('Moving from spares.')
                 if not inUndo:
                     moveList.append(name)
