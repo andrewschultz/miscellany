@@ -31,14 +31,21 @@ my @quarters  = ("t", "p", "h", "b");
 
 if (defined($ARGV[0]))
 {
-if ($ARGV[0] eq "e")
+if ($ARGV[0] eq "e" || $ARGV[0] eq "-e")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check";
   `$cmd`;
   exit;
 }
 
-if ($ARGV[0] eq "c")
+if ($ARGV[0] eq "p" || $ARGV[0] eq "-p")
+{
+  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2";
+  `$cmd`;
+  exit;
+}
+
+if ($ARGV[0] eq "c" || $ARGV[0] eq "-c")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code";
   `$cmd`;
@@ -129,6 +136,7 @@ sub usage
 print<<EOT;
 e = check stuff to check
 c = check code
+p = check private file
 ? (or anything else) = usage
 EOT
 exit;
