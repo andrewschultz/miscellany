@@ -135,10 +135,10 @@ def nexties(myc):
 def ripUp(q):
     if q < 1 or q > 8:
         print ("Column/row needs to be 1-8.")
-        return
+        return False
     if len(elements[q]) == 0:
         print ("Already no elements.")
-        return
+        return True
     goAgain = 1
     global cmdChurn
     cmdChurn = True
@@ -155,6 +155,7 @@ def ripUp(q):
         readCmd(str(q))
         if len(moveList) > tempArySize:
             goAgain = 1
+            madeOne = True
         checkFound()
         if shouldReshuf:
             reshuf(-1)
@@ -163,11 +164,9 @@ def ripUp(q):
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
     checkFound()
-    cmdChurn = False
-    printCards()
-    printFound()
     if (len(moveList) == movesize):
         print ("Nothing moved.")
+    return madeOne
 
 def shouldPrint():
     global inUndo
@@ -476,6 +475,8 @@ def forceFoundation():
     global inUndo
     checkAgain = 1
     forceStr = ""
+    global cardlist
+    global totalFoundThisTime
     while checkAgain:
         checkAgain = 0
         for row in range (1,9):
@@ -483,6 +484,9 @@ def forceFoundation():
                 if foundable(elements[row][len(elements[row])-1]) == 1:
                     found[(elements[row][len(elements[row])-1]-1)//13]+= 1
                     forceStr = forceStr + tocardX(elements[row][len(elements[row])-1])
+                    if not inUndo:
+                        cardlist = cardlist + tocardX(elements[row][len(elements[row])-1])
+                        totalFoundThisTime += 1
                     elements[row].pop()
                     checkAgain = 1
         for xx in range (0,4):
@@ -490,6 +494,9 @@ def forceFoundation():
                 #print ("Checking" + tocardX(spares[xx]))
                 if foundable(spares[xx]):
                     forceStr = forceStr + tocardX(spares[xx])
+                    if not inUndo:
+                        cardlist = cardlist + tocardX(spares[xx])
+                        totalFoundThisTime += 1
                     found[(spares[xx]-1)//13] += 1
                     spares[xx] = 0
                     checkAgain = 1
@@ -555,6 +562,7 @@ def checkWinning():
     except NameError: pass
     finish = ""
     global cmdChurn
+    #print ("Churn now false (checkWinning).")
     cmdChurn = False
     printFound()
     global startTime
@@ -681,6 +689,7 @@ def printVertical():
                 print (secondLine)
         count+=1
     printOthers()
+    #traceback.print_stack()
 
 def printHorizontal():
     for y in range (1,9):
@@ -877,21 +886,34 @@ def maxMoveMod():
 def slipUnder():
     fi = firstEmptyRow()
     if fi == 0:
-        return
+        return False
     slipProcess = True
     everSlip = False
+    global cmdChurn
     while slipProcess:
         slipProcess = False
+        curMove = len(moveList)
         for i in range(1,9):
             if len(elements[i]) > 0 and inOrder(i):
                 for j in range (0,4):
-                    if canPut(elements[i][0], spares[j]):
+                    if spares[j] > 0 and canPut(elements[i][0], spares[j]):
+                        #print ("OK, giving a look %d %d" % (len(elements[i]), maxMoveMod()))
                         if len(elements[i]) < maxMoveMod():
                             tst = chr(97+j) + str(fi)
+                            resetChurn = not cmdChurn
+                            cmdChurn = True
                             readCmd(tst)
                             shiftcards(i, fi, len(elements[i]))
+                            if resetChurn:
+                                cmdChurn = False
                             slipProcess = True
                             everSlip = True
+                            if curMove == len(moveList):
+                                print ("Uh oh, infinite loop avoided")
+                                print elements
+                                cmdChurn = False
+                                #printVertical()
+                                exit()
                             break
     return everSlip
 
@@ -911,6 +933,7 @@ def usage():
     print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('h slips a card under eg KH in spares would go under an ordered QC-JD.')
+    print ('- or = = a full boad reset.')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
     print ('sw/ws saves on win, sp/ps saves position.')
@@ -1069,6 +1092,7 @@ def readCmd(thisCmd):
     global trackUndo
     global totalReset
     global saveOnWin
+    global savePosition
     prefix = ''
     force = 0
     checkFound()
@@ -1161,11 +1185,13 @@ def readCmd(thisCmd):
                 breakMacro = 0
                 break
             checkFound()
+        cmdChurn = False
         global wonThisCmd
         if anyDump == 0:
             print ("No rows found to dump.")
         elif not wonThisCmd:
             print (str(len(moveList)-oldMoves) + " moves total.")
+            printCards()
         wonThisCmd = False
         return
     if name[:1] == 'u':
@@ -1244,7 +1270,7 @@ def readCmd(thisCmd):
         if len(name) == 0:
             print ("You need a from/to, or at the very least, a from.")
             return
-    if name == "-":
+    if name == '-' or name == '=':
         if len(moveList) == 0:
             print ("Nothing to undo.")
             return
@@ -1393,12 +1419,17 @@ def readCmd(thisCmd):
             return
         print ('Must move 1-8 or a-d.')
         return
-    if name[0] == 'p' or name[1] == 'p':
+    if len(name) == 2 and (name[0] == 'p' or name[1] == 'p'):
         q2 = (name.replace("p", ""))
         if not q2.isdigit():
             print ("p command requires a digit.")
             return
-        ripUp(int(q2))
+        if ripUp(int(q2)):
+            cmdChurn = False
+            printCards()
+            printFound()
+        else:
+            cmdChurn = False
         return
     if name[0].isdigit() and name[1].isdigit():
         t1 = int(name[0])
@@ -1439,6 +1470,7 @@ def readCmd(thisCmd):
             checkAgain |= checkFound()
             if force == 0:
                 checkAgain |= reshuf(-1)
+            checkAgain |= slipUnder()
             pass
         printCards()
         return
