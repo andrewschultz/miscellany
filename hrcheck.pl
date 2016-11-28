@@ -19,7 +19,7 @@ my $check = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
-my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time);
+my $adjust = 0;
 
 my %browsMap;
 
@@ -31,28 +31,32 @@ my @quarters  = ("t", "p", "h", "b");
 
 if (defined($ARGV[0]))
 {
-if ($ARGV[0] eq "e" || $ARGV[0] eq "-e")
+if ($ARGV[0] =~ /^(-|\+)?[0-9]+$/) { $adjust += $ARGV[0]; }
+elsif ($ARGV[0] eq "e" || $ARGV[0] eq "-e")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check";
   `$cmd`;
   exit;
 }
-
-if ($ARGV[0] eq "p" || $ARGV[0] eq "-p")
+elsif ($ARGV[0] eq "p" || $ARGV[0] eq "-p")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2";
   `$cmd`;
   exit;
 }
-
-if ($ARGV[0] eq "c" || $ARGV[0] eq "-c")
+elsif ($ARGV[0] eq "c" || $ARGV[0] eq "-c")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code";
   `$cmd`;
   exit;
 }
+else
+{
 usage();
 }
+}
+
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time + $adjust * 60);
 
 my $defaultBrowser = "";
 
@@ -69,6 +73,9 @@ my @qhr = (0, 0, 0, 0);
 
 while ($line = <A>)
 {
+  if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
+  if ($line =~ /^#/) { next; }
+  if ($line =~ /^;/) { last; }
   chomp($line);
   @qhr = (1, 0, 0, 0);
   if ($line =~ /^DEF=/)
@@ -77,7 +84,6 @@ while ($line = <A>)
 	$defaultBrowser =~ s/^DEF=//;
 	next;
   }
-  if ($line =~ /^#/) { next; }
   my $cmdCount = 0;
   my $day = -1;
   my @b = split(/\|/, $line);
