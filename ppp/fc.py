@@ -892,6 +892,9 @@ def slipUnder():
     everSlip = False
     global cmdChurn
     while slipProcess:
+        fi = firstEmptyRow()
+        if (fi == 0):
+            break
         slipProcess = False
         curMove = len(moveList)
         for i in range(1,9):
@@ -921,6 +924,8 @@ def dumpInfo(x):
     print elements
     print backup
     print moveList
+    print ("Spares: "% (spares));
+    print ("Found: "% (found));
     if abs(x) == 2:
         printVertical()
     if x < 0:
@@ -1131,6 +1136,9 @@ def readCmd(thisCmd):
         while reshuf(-1):
             next
         printCards()
+        return
+    if name[0] == '>' and name[1:].isdigit:
+        print (name[1:], "becomes", tocard(int(name[1:])))
         return
     global onlymove
     onlymove = 0
