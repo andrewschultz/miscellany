@@ -133,6 +133,7 @@ def nexties(myc):
     return False
 
 def ripUp(q):
+    madeOne = False
     if q < 1 or q > 8:
         print ("Column/row needs to be 1-8.")
         return False
@@ -909,15 +910,23 @@ def slipUnder():
                             slipProcess = True
                             everSlip = True
                             if curMove == len(moveList):
-                                print ("Uh oh, infinite loop avoided")
-                                print elements
                                 cmdChurn = False
+                                dumpInfo(-1)
                                 #printVertical()
-                                exit()
                             break
     return everSlip
 
-        
+def dumpInfo(x):
+    print ("Uh oh, big error avoided")
+    print elements
+    print backup
+    print moveList
+    if abs(x) == 2:
+        printVertical()
+    if x < 0:
+        exit()
+    return
+
 def shiftcards(r1, r2, amt):
     elements[r2].extend(elements[r1][-amt:])
     del elements[r1][-amt:]
