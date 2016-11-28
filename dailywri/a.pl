@@ -11,7 +11,7 @@ my $clip = Win32::Clipboard::new();
 my $openOnWarn = 0;
 my $warns = 0;
 my $bigErrs = 0;
-my $numDailyFiles = 0;
+my @allDailyFiles = ();
 my $justCheck;
 my $clipboard;
 my $debug;
@@ -103,11 +103,13 @@ if ($verifyHeadings)
   for $thisDay (0..$howFar)
   {
     $thisFile = daysAgo($thisDay);
-	if (-f $thisFile) { $numDailyFiles++; $lastDay = $thisDay+1; processDaily($thisFile); if (!$allBack) { exit; } }
+	if (-f $thisFile) { my $thatFile = $thisFile; $thatFile =~ s/.*[\\\/]//g; push(@allDailyFiles, $thatFile); $lastDay = $thisDay+1; processDaily($thisFile); if (!$allBack) { exit; } }
   }
 
+@allDailyFiles = sort(@allDailyFiles);
+
 if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
-else { print "$numDailyFiles daily files in $lastDay days.\n"; }
+else { print "" . ($#allDailyFiles + 1) . " daily files in $lastDay days: @allDailyFiles.\n"; }
 
 if ($testing)
 {
