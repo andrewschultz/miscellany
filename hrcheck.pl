@@ -89,8 +89,10 @@ while ($line = <A>)
   my @b = split(/\|/, $line);
   if ($#b == 2)
   {
-    $day = $b[0];
-	if (($day >= 0) && ($day != $dayOfWeek)) { next; }
+    my @q = split(/,/, $b[0]);
+	my $gotOne = 0;
+	for (@q) { if ($day == $_) { $gotOne = 1; }
+	if (!$gotOne) { next; }
     $cmdCount++;
   }
   my $time = $b[$cmdCount];

@@ -183,6 +183,11 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\dict\sts.t
 goto end
 )
 
+if "%1" EQU "st" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\dict\sts.txt"
+goto end
+)
+
 if "%1" EQU "ro" (
 set PROJ=roiling
 goto nodef
@@ -409,6 +414,6 @@ echo e1 [1235] = ectoComp n/ni = nightly
 echo gr = grubbyville, ua = ugly oafs
 echo current project = sc, pc/t2 = problems compound, btp/bp/17/t3 = Buck the Past
 echo ========================
-echo Non-Inform source: tr = trizbort rt = daily stuff, an = anagram list
+echo Non-Inform source: tr = trizbort, rt/st = anagram sorter, an = anagram list
 
 :end
