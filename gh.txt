@@ -302,6 +302,7 @@ past=$ws\invis\btp.txt,
 past=$is\reg-btp-*,testing
 past=$is\tra.pl,
 past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
+past=$is\gotl.pl
 #############utilities
 past=$is\excl.pl
 past=$is\badj.pl

@@ -41,12 +41,13 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
-  /-a/ && do { printAllFiles(0); exit; };
-  /-d/ && do { $debug = 1; $count++; next; };
-  /-f/ && do { $forceRunThrough = 1; $count++; next; };
-  /-u/ && do { $updateOnly = 1; $count++; next; };
-  /-l/ && do { $launchAfter = 1; $count++; next; };
-  /-r/ && do { $launchRaw = 1; $count++; next; };
+  /^-?a$/ && do { printAllFiles(0); exit; };
+  /^-?d$/ && do { $debug = 1; $count++; next; };
+  /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
+  /^-?u$/ && do { $updateOnly = 1; $count++; next; };
+  /^-?l$/ && do { $launchAfter = 1; $count++; next; };
+  /^-?r$/ && do { $launchRaw = 1; $count++; next; };
+  /-?(lr|rl)$/ && do { $launchRaw = 1; $launchAfter = 1; $count++; next; };
   /^-?e$/ && do { `$invDir\\$ARGV[$count+1].txt`; exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
@@ -248,6 +249,7 @@ print<<EOT;
 ===========================USAGE
 -a = show all files
 -d = debug
+-e = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
 -f = force a redo if HTM file's mod date >= the generating file
 -l = launch HTM invisiclues after
 -r = launch raw (e.g. spoiler file showing everything, launched after -l)

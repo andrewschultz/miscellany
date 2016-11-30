@@ -12,6 +12,11 @@ if "%1" EQU "t" (
 goto end
 )
 
+if "%1" EQU "h" (
+%TEMPDIR%\git-tips.txt
+goto end
+)
+
 if "%1" EQU "pc" (
 cd  %TEMPDIR%\the-problems-compound
 goto end
@@ -87,7 +92,7 @@ echo
 :usage
 echo USAGE
 echo ===========================
-echo t = git-tips.txt
+echo h or t = git-tips.txt
 echo c/e/p = GH.PL code and external list and private files
 echo tr = trizbort
 
