@@ -906,15 +906,17 @@ def slipUnder():
                             tst = chr(97+j) + str(fi)
                             resetChurn = not cmdChurn
                             cmdChurn = True
-                            readCmd(tst)
+                            elements[fi].append(spares[j])
+                            spares[j] = 0
                             shiftcards(i, fi, len(elements[i]))
                             if resetChurn:
                                 cmdChurn = False
                             slipProcess = True
-                            everSlip = True
-                            if curMove == len(moveList):
-                                cmdChurn = False
-                                dumpInfo(-1)
+                            everSlip = True #note the below is tricky because we sort of record the move and sort of don't. The best way to do this is to have, say "slip-" + tst as the move and it's only activated if slip (not an option right now) is turned off. Similarly for other options. But that's a lot of work.
+                            #if curMove == len(moveList):
+                                #cmdChurn = False
+                                #print ("Tried move" + tst + ", failed.")
+                                #dumpInfo(-1)
                                 #printVertical()
                             break
     return everSlip
@@ -1202,6 +1204,9 @@ def readCmd(thisCmd):
                 breakMacro = 0
                 break
             checkFound()
+            if breakMacro == 1:
+                breakMacro = 0
+                break
         cmdChurn = False
         global wonThisCmd
         if anyDump == 0:
