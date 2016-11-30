@@ -10,6 +10,9 @@
 #
 #Weekly thing
 #5|8|FFX "http://btpowerhouse.com"
+#
+#tphb = quarter hours
+#:(0-5) = 0 past, 10 past, etc.
 
 use strict;
 use warnings;
@@ -27,7 +30,10 @@ $browsMap{"FFX"} = "\"C:\\Program Files (x86)\\Mozilla Firefox\\firefox\"";
 $browsMap{"OPE"} = "\"C:\\Program Files (x86)\\Opera\\launcher.exe\"";
 $browsMap{"CHR"} = "\"C:\\Users\\Andrew\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe\"";
 
+my $min;
+
 my @quarters  = ("t", "p", "h", "b");
+my @tens = (0, 0, 0, 0, 0, 0);
 
 if (defined($ARGV[0]))
 {
@@ -86,24 +92,36 @@ while ($line = <A>)
   }
   my $cmdCount = 0;
   my $day = -1;
+  my $min = 0;
   my @b = split(/\|/, $line);
   if ($#b == 2)
   {
     my @q = split(/,/, $b[0]);
 	my $gotOne = 0;
-	for (@q) { if ($day == $_) { $gotOne = 1; }
+	for (@q) { if ($day == $_) { $gotOne = 1; } }
 	if (!$gotOne) { next; }
     $cmdCount++;
   }
   my $time = $b[$cmdCount];
 
   ######################quarter hours
-  if ($time =~ /[tphb]$/) { @qhr[0] = 0; }
+  if ($time =~ /[tphb]$/) { @qhr[0] = 0;
   while ($time =~ /[tphb]$/)
   {
     for (0..3) { if ($time =~ /$quarters[$_]$/) { $qhr[$_] = 1; $time =~ s/.$//; } }
   }
-  my $min = floor($minute/15);
+  }
+  #this needs to be outside the loop so it registers
+  $min = floor($minute/15);
+ 
+  if ($time =~ /:/)
+  {
+    @tens = (0, 0, 0, 0, 0, 0);
+	my @totens = split(/:/, $time);
+	$time =~ s/:.*//;
+	for (1..$#totens) { $tens[$totens[$_]] = 1; }
+	$min = floor($minute/10);
+  }
   $cmdCount++;
 
   #print "$b[1]\n"; exit;
@@ -124,7 +142,7 @@ while ($line = <A>)
   }
   if ($time == $hour)
   {
-    if ($qhr[$min])
+    if ($qhr[$min] || $tens[$min])
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
