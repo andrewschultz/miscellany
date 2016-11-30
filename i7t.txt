@@ -27,8 +27,8 @@ Slicker-City	xxlee	"	$$ guys named Lee
 Slicker-City	xxcom	"	$$ companies
 Slicker-City	xxadd	"	$$ total concepts
 Slicker-City	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
-Slicker-City	xxtgtn	"	and 61 cluing verbs
-Slicker-City	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, 26.
+Slicker-City	xxtgtn	"	and $$ cluing verbs
+Slicker-City	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
 Slicker-City	xxtgtn	"	And there are $$ good guesses.
 ######################################
 #Buck the Past searching

@@ -243,13 +243,13 @@ while ($a = <A>)
 	  chomp($add);
 	  $errLog .= "$add<br />\n";
     }
-	$printFail = 1;
+	$printFail++;
   }
 }
 
 if ($printFail)
 {
-  print "TEST RESULTS:(notes) $project-tables,0,1,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog";
+  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog";
 }
 
 if ($majorList)
