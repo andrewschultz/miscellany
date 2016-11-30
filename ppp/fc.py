@@ -177,6 +177,9 @@ def shouldPrint():
     return True
 
 def canDump(mycol):
+    for thatcol in range (1,9):
+        if doable(mycol, thatcol, 0):
+            return thatcol;
     dumpSpace = 0
     for thiscol in range (1,9):
         if len(elements[thiscol]) == 0:
@@ -1099,6 +1102,7 @@ def cardEval(myCmd):
     return
 
 def readCmd(thisCmd):
+    global wonThisCmd
     global cmdChurn
     global vertical
     global doubles
@@ -1109,6 +1113,7 @@ def readCmd(thisCmd):
     global totalReset
     global saveOnWin
     global savePosition
+    wonThisCmd = False
     prefix = ''
     force = 0
     checkFound()
@@ -1198,7 +1203,8 @@ def readCmd(thisCmd):
                 shufwarn()
                 return
             ripUp(newDump)
-            if len(elements[newDump]) > 0:
+            if inOrder(newDump) == 1:
+                print ("Row %d didn't unfold all the way." % (newDump))
                 break
             if breakMacro == 1:
                 breakMacro = 0
@@ -1207,13 +1213,17 @@ def readCmd(thisCmd):
             if breakMacro == 1:
                 breakMacro = 0
                 break
+            print("6 " + " ".join(str(x) for x in found) + " <sp found> " + " ".join(str(x) for x in spares))
         cmdChurn = False
-        global wonThisCmd
+        print ("Won this cmd: " + str(wonThisCmd))
         if anyDump == 0:
             print ("No rows found to dump.")
         elif not wonThisCmd:
             print (str(len(moveList)-oldMoves) + " moves total.")
             printCards()
+        elif spares.sum == 52:
+            print ("Not sure why but I need to check for a win here.")
+            checkWin()
         wonThisCmd = False
         return
     if name[:1] == 'u':
@@ -1471,7 +1481,7 @@ def readCmd(thisCmd):
                 return
         tempdoab = doable(t1,t2,1 - preverified)
         if tempdoab == -1:
-            #print 'Not enough space.'
+            print 'Not enough space.'
             return
         if tempdoab == 0:
             if inUndo:
