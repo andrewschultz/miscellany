@@ -178,8 +178,8 @@ def shouldPrint():
 
 def canDump(mycol):
     for thatcol in range (1,9):
-        if doable(mycol, thatcol, 0):
-            return thatcol;
+        if doable(mycol, thatcol, 0) > 0:
+            return thatcol
     dumpSpace = 0
     for thiscol in range (1,9):
         if len(elements[thiscol]) == 0:
