@@ -83,7 +83,6 @@ roi=$tr\voltmaze.trizbort,roiling
 roi=$tr\voltmaze.pdf,roiling
 roi=$id,roiling
 roi=$is\roomlist.txt,roiling
-roi=$is\sso.pl,roiling
 roi=$is\reg-roi-*,\roiling\testing
 -b:roi=$im\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
@@ -114,6 +113,7 @@ stsu=$wd\ac.pl,
 stsu=$wd\nud.pl,
 stsu=$wd\anin.pl,
 stsu=c:\games\inform\shuffling.inform\source\nucut.pl,testing
+stsu=$is\sso.pl,
 
 #Stale Tales Slate data/utility files to GitHub
 TOBASE=stale-tales-slate

@@ -48,7 +48,10 @@ while ($count <= $#ARGV)
   /^-?l$/ && do { $launchAfter = 1; $count++; next; };
   /^-?r$/ && do { $launchRaw = 1; $count++; next; };
   /-?(lr|rl)$/ && do { $launchRaw = 1; $launchAfter = 1; $count++; next; };
-  /^-?e$/ && do { `$invDir\\$ARGV[$count+1].txt`; exit; };
+  /^-?e$/ && do {
+  if (!defined($ARGV[$count+1])) { `$invDir\\$default.txt`; }
+  else { `$invDir\\$ARGV[$count+1].txt`; }
+  exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }
