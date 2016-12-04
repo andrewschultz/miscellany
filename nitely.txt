@@ -76,6 +76,7 @@ x
 >ac.pl -t
 #how many anagrams to look through?
 >myan.pl -t
+>sso.pl dns
 
 sa=shuffling
 >lnct.pl $$

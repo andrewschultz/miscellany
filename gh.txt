@@ -113,7 +113,7 @@ stsu=$wd\ac.pl,
 stsu=$wd\nud.pl,
 stsu=$wd\anin.pl,
 stsu=c:\games\inform\shuffling.inform\source\nucut.pl,testing
-stsu=$is\sso.pl,
+stsu=$wd\sso.pl,
 
 #Stale Tales Slate data/utility files to GitHub
 TOBASE=stale-tales-slate
