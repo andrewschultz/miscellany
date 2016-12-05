@@ -1,5 +1,5 @@
 ######################################
-#problems compound searching
+#Problems Compound searching
 #
 #############
 #the first one is xxadd since there are several Table of Explanations
@@ -30,6 +30,7 @@ Slicker-City	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	Ther
 Slicker-City	xxtgtn	"	and $$ cluing verbs
 Slicker-City	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
 Slicker-City	xxtgtn	"	And there are $$ good guesses.
+Slicker-City	ni scr
 ######################################
 #Buck the Past searching
 #
@@ -45,7 +46,7 @@ Buck-the-past	xxadd	"	$$ off-the-wall
 Buck-the-past	xxui	"	$$ friendly inns
 Buck-the-past	xxdi	"	$$ unfriendly inns
 Buck-the-past	xxfarm	"	$$ farm animal antics
-Buck-the-past	ni cr / ni scr
+Buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #fourdiopolis searching
 #
