@@ -35,6 +35,7 @@ while ($count <= $#ARGV)
   for (0..$#j)
   {
     $q = ($_+1) % ($#j+1);
+	if ($q == $j[$_]) { die("$q mapped to itself."); }
     if ($matchups{$j[$_]}) { die("$j[$_] is mapped twice, bailing.\n"); }
     $matchups{$j[$_]} = $j[$q];
     #print "$j[$_] -> $j[$q], from $_ to $q.\n";
@@ -47,7 +48,9 @@ while ($count <= $#ARGV)
   }
 }
 
-if ($order) { orderTriz(); exit(); }
+if ($order) { orderTriz(); }
+
+if (keys %matchups == 0) { print "No matchups found to flip.\n"; exit; }
 
 my $outFile = $file; $outFile =~ s/\./id\./g;
 
@@ -122,6 +125,50 @@ sub diagnose
 
 sub orderTriz
 {
+  my $outFile = $file; $outFile =~ s/\./id\./g;
+  my $toFile = 1;
+  my @ids;
+  my $curStr = "";
+  open(A, "$trdr\\$file");
+  open(B, ">$trdr\\$outFile");
+  while ($line = <A>)
+  {
+    if ($toFile)
+	{
+	  print B $line;
+      if ($line =~ /<map>/) { $toFile = 0; }
+	  next;
+	}
+    if ($line =~ /<\/map>/)
+	{
+	  $toFile = 1;
+	  print B join("\n", sort { idnum($a) <=> idnum($b) } @ids);
+	  print "" . ($#ids+1) . " total.\n";
+	  print B "\n$line";
+	  next;
+    }
+	if ($line =~ /<(room|line).*\/>/)
+    {
+      print "Self closing tag: $line";
+	  chomp($line);
+	  push (@ids, $line);
+	  next;
+	}
+	if ($line =~ /<\/(room|line)>/) { chomp($line); }
+	$curStr .= $line;
+	if ($line =~ /<\/(room|line)>/) { push(@ids, $curStr); $curStr = ""; }
+  }
+  close(A);
+  close(B);
+  `copy /Y $trdr\\$outFile $trdr\\$file`;
+}
+
+sub idnum
+{
+  my $id = $_[0];
+  $id =~ s/.*id=\"//g;
+  $id =~ s/\".*//g;
+  return $id;
 }
 
 sub usage
