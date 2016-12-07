@@ -1,30 +1,57 @@
 #################################
 #
-# trsw = trizbort switch
+# trsw.pl = trizbort switch
 #
 
-if ($#ARGV < 0) { die ("Need CSVs of ids to flip."); }
+if ($#ARGV < 0) { die ("Need (at the very least) CSVs of ids to flip."); }
 
 my $copyBack = 0;
 
 my $count = 0;
 my %matchups;
 my %long;
+my $line;
 
-$long{"btp"} = "buck-the-past";
-$long{"sc"} = "slicker-city";
-$long{"pc"} = "compound-directors-cut";
+my $mapfile = __FILE__;
+$mapfile =~ s/pl$/txt/;
+
+my $trdr = ".";
+my $file = "";
+
+open(A, $mapfile) || die ("Can't open $mapfile.");
+while ($line = <A>)
+{
+  if ($line =~ /^#/)
+  {
+    next;
+  }
+  chomp($line);
+  if ($line =~ /=/)
+  {
+    my @eq = split(/=/, $line);
+	$long{$eq[0]} = $eq[1];
+  }
+  if ($line =~ /^DEFAULT:/)
+  {
+    $file = $line; $file =~ s/^DEFAULT://;
+  }
+  if ($line =~ /^MAPDIR:/)
+  {
+    $trdr = $line; $trdr =~ s/^MAPDIR://;
+  }
+}
+close(A);
+
+if (!$file) { print "Warning, no default file in $mapfile.\n"; }
 
 my $trdr = "c:\\games\\inform\\triz\\mine";
-
-my $file = "buck-the-past.trizbort";
 
 while ($count <= $#ARGV)
 {
   $a1 = $ARGV[$count];
   for ($a1)
   {
-  /^-?d$/ && do { diagnose(); exit(); };
+  /^-?d$/ && do { $diagnose = 1; $count++; next; };
   /^-?ca?$/ && do { $copyBack = 1; if ($a1 =~ /a/) { $diagAfter = 1; } $count++; next; };
   /^-?n$/ && do { $copyBack = 0; $count++; next; };
   /^-?o$/ && do { $order = 1; $count++; next; };
@@ -35,7 +62,7 @@ while ($count <= $#ARGV)
   for (0..$#j)
   {
     $q = ($_+1) % ($#j+1);
-	if ($q == $j[$_]) { die("$q mapped to itself."); }
+	if (($_ > 1) && ($q == $j[$_]-1)) { die("$q mapped to itself."); }
     if ($matchups{$j[$_]}) { die("$j[$_] is mapped twice, bailing.\n"); }
     $matchups{$j[$_]} = $j[$q];
     #print "$j[$_] -> $j[$q], from $_ to $q.\n";
@@ -47,6 +74,10 @@ while ($count <= $#ARGV)
   usage();
   }
 }
+
+if (!$file) { die ("Without a default file to read, you need to specify one on the command line."); }
+
+if ($diagnose) { diagnose(); exit(); }
 
 if ($order) { orderTriz(); }
 
