@@ -91,14 +91,20 @@ while ($line = <A>)
 	next;
   }
   my $cmdCount = 0;
-  my $day = -1;
   my $min = 0;
   my @b = split(/\|/, $line);
   if ($#b == 2)
   {
     my @q = split(/,/, $b[0]);
 	my $gotOne = 0;
-	for (@q) { if ($day == $_) { $gotOne = 1; } }
+	for (@q)
+	{
+	  if ($dayOfWeek == $_)
+	  {
+	    #print "$line: today\n";
+		$gotOne = 1;
+      }
+    }
 	if (!$gotOne) { next; }
     $cmdCount++;
   }
@@ -108,7 +114,14 @@ while ($line = <A>)
   if ($time =~ /[tphb]$/) { @qhr[0] = 0;
   while ($time =~ /[tphb]$/)
   {
-    for (0..3) { if ($time =~ /$quarters[$_]$/) { $qhr[$_] = 1; $time =~ s/.$//; } }
+    for (0..3)
+	{
+	  if ($time =~ /$quarters[$_]$/)
+	  {
+	    $qhr[$_] = 1;
+		$time =~ s/.$//;
+      }
+    }
   }
   }
   #this needs to be outside the loop so it registers
