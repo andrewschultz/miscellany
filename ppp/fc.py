@@ -57,22 +57,28 @@ trackUndo = 0
 
 breakMacro = 0
 
-debug = 0
+debug = False
 
 backup = []
-elements = []
-
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
-elements.append([])
+elements = [ [], [], [], [], [], [], [], [], [] ]
 
 name = ""
+
+def cmdUsage():
+    print ("Usage=======================")
+    print ("Right now only -d for debug.")
+    exit()
+
+if len(sys.argv) > 0:
+    count = 0
+    while count < len(sys.argv) - 1:
+        if sys.argv[count] == 'd' or sys.argv[count] == '-d':
+            debug = True
+            count = count + 1
+            next
+        print ("Invalid flag " + sys.argv[count])
+        print ("")
+        cmdUsage()
 
 def tobool(x):
     if x == "False":
@@ -1213,9 +1219,11 @@ def readCmd(thisCmd):
             if breakMacro == 1:
                 breakMacro = 0
                 break
-            print("6 " + " ".join(str(x) for x in found) + " <sp found> " + " ".join(str(x) for x in spares))
+            if debug:
+                print("Check: " + " ".join(str(x) for x in found) + " <sp found> " + " ".join(str(x) for x in spares))
         cmdChurn = False
-        print ("Won this cmd: " + str(wonThisCmd))
+        if debug:
+            print ("Won this cmd: " + str(wonThisCmd))
         if anyDump == 0:
             print ("No rows found to dump.")
         elif not wonThisCmd:
