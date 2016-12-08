@@ -44,8 +44,6 @@ close(A);
 
 if (!$file) { print "Warning, no default file in $mapfile.\n"; }
 
-my $trdr = "c:\\games\\inform\\triz\\mine";
-
 while ($count <= $#ARGV)
 {
   $a1 = $ARGV[$count];
@@ -56,7 +54,8 @@ while ($count <= $#ARGV)
   /^-?n$/ && do { $copyBack = 0; $count++; next; };
   /^-?o$/ && do { $order = 1; $count++; next; };
   /^-?da$/ && do { $diagAfter = 1; $count++; next; };
-  if ($long{$a1}) { $file = $long{$a1} . ".trizbort"; $count++; next; }
+  if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $count++; next; }
+  if (-f "$a1.trizbort") { $file = "$a1.trizbort"; $count++; next; }
   /^[0-9,]+$/ && do {
   @j = split(/,/, $a1);
   for (0..$#j)
@@ -78,6 +77,8 @@ while ($count <= $#ARGV)
 if (!$file) { die ("Without a default file to read, you need to specify one on the command line."); }
 
 if ($diagnose) { diagnose(); exit(); }
+
+checkIDBounds();
 
 if ($order) { orderTriz(); }
 
@@ -180,7 +181,7 @@ sub orderTriz
     }
 	if ($line =~ /<(room|line).*\/>/)
     {
-      print "Self closing tag: $line";
+      #print "Self closing tag: $line";
 	  chomp($line);
 	  push (@ids, $line);
 	  next;
@@ -200,6 +201,26 @@ sub idnum
   $id =~ s/.*id=\"//g;
   $id =~ s/\".*//g;
   return $id;
+}
+
+sub checkIDBounds
+{
+  open(A, "$trdr\\$file");
+  while ($line = <A>)
+  {
+    if ($line =~ /id=\"/)
+	{
+	   @x = split(/\"/, $line);
+	   $y = $x[1];
+	   if ($y > $max) { $max = $y; }
+	}
+  }
+  close(A);
+  for $j (sort keys %matchups)
+  {
+    if ($j > $max) { die ("$j is more than the maximum ID, $max."); }
+  }
+  close(A);
 }
 
 sub usage
