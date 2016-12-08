@@ -47,6 +47,7 @@ doubles = False
 autoReshuf = False
 savePosition = False
 saveOnWin = False
+annoyingNudge = False
 
 lastscore = 0
 highlight = 0
@@ -68,17 +69,6 @@ def cmdUsage():
     print ("Usage=======================")
     print ("Right now only -d for debug.")
     exit()
-
-if len(sys.argv) > 0:
-    count = 0
-    while count < len(sys.argv) - 1:
-        if sys.argv[count] == 'd' or sys.argv[count] == '-d':
-            debug = True
-            count = count + 1
-            next
-        print ("Invalid flag " + sys.argv[count])
-        print ("")
-        cmdUsage()
 
 def tobool(x):
     if x == "False":
@@ -310,6 +300,9 @@ def readOpts():
     global vertical
     global autoReshuf
     global doubles
+    global saveOnWin
+    global savePosition
+    global annoyingNudge
     infile = "fcopt.txt"
     with open(infile) as f:
         for line in f:
@@ -327,6 +320,16 @@ def readOpts():
                 vertical = tobool(q)
             if "doubles".lower() in line.lower():
                 doubles = tobool(q)
+            if "annoyingNudge".lower() in line.lower() and tobool(q) is True and debug is False:
+                try: input = raw_input
+                except NameError: pass
+                pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
+                if pwd != "I am wasting time":
+                    if pwd.lower() == "i am wasting time":
+                        print ("Remember to put it in sentence case!" + pwd)
+                        exit()
+                    print ("Type I am wasting time, or you can't play.")
+                    exit()
     if gotOne:
         print "Options file read."
         f.close()
@@ -976,11 +979,6 @@ def firstEmptySpare():
             return i
     return -1
 
-readOpts()
-initSide(0)
-initCards()
-printCards()
-
 def undoMoves(toUndo):
     if toUndo == 0:
         print('No moves undone.')
@@ -1578,6 +1576,22 @@ def readCmd(thisCmd):
         return
     print (name + ' not recognized, displaying usage.')
     usage()
+
+if len(sys.argv) > 0:
+    count = 0
+    while count < len(sys.argv) - 1:
+        if sys.argv[count] == 'd' or sys.argv[count] == '-d':
+            debug = True
+            count = count + 1
+            next
+        print ("Invalid flag " + sys.argv[count])
+        print ("")
+        cmdUsage()
+
+readOpts()
+initSide(0)
+initCards()
+printCards()
 
 while win == 0:
     readCmd('')
