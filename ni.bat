@@ -114,8 +114,13 @@ goto story
 )
 
 if "%1" EQU "g" (
-set PROJ=grubbyville
-goto nodef
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\games.otl
+goto end
+)
+
+if "%1" EQU "l" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\limericks.otl
+goto end
 )
 
 if "%1" EQU "gr" (

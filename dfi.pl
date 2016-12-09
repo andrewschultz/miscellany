@@ -41,8 +41,8 @@ for my $x (@dfi)
   $misc++; push (@odd, $x);
 }
 
-print "TEST RESULTS: unconverted dfi.pl,3,$unconv,0,@days\n";
-print "TEST RESULTS: notallnum dfi.pl,3,$notallnum,0,@notall\n";
-print "TEST RESULTS: very old dfi.pl,3,$veryold,0,@voldies\n";
-print "TEST RESULTS: misc dfi.pl,3,$misc,0,@odd\n";
-print "TEST RESULTS: zero-byte dfi.pl,3,$zb,0,@zerob\n";
+print "TEST RESULTS: unconverted <b>DFI.PL</b>,3,$unconv,0,@days\n";
+print "TEST RESULTS: notallnum <b>DFI.PL</b>,3,$notallnum,0,@notall\n";
+print "TEST RESULTS: very old <b>DFI.PL/COV.PL</b>,3,$veryold,0,@voldies\n";
+print "TEST RESULTS: misc <b>DFI.PL</b>,3,$misc,0,@odd\n";
+print "TEST RESULTS: zero-byte <b>DFI.PL</b>,3,$zb,0,@zerob\n";

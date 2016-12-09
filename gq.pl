@@ -26,6 +26,7 @@ if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
 elsif ($pwd =~ /Compound/i) { @runs = ("as"); }
 elsif ($pwd =~ /slicker/i) { @runs = ("as"); }
+elsif ($pwd =~ /(buck|past)/i) { @runs = ("as"); }
 
 while ($count <= $#ARGV)
 {

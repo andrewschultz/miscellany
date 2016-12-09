@@ -301,11 +301,16 @@ past=$im\Release\buck-the-past-invisiclues.htm,
 past=$ws\invis\btp.txt,
 past=$is\reg-btp-*,testing
 past=$is\tra.pl,
+past=$is\tra.txt,
 past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
 past=$is\gotl.pl
 #############utilities
 past=$is\excl.pl
 past=$is\badj.pl
+past=$is\plot.txt
+past=$is\graf.pl
+past=$is\graf.txt
+
 >past=talf.pl -btp
 >past=conc.pl -o -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
