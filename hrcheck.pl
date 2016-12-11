@@ -77,11 +77,16 @@ my $line;
 
 my @qhr = (0, 0, 0, 0);
 
+my $ignore = 0;
+
 while ($line = <A>)
 {
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
+  if ($line =~ /^--/) { $ignore = 1; next; }
+  if ($line =~ /^\+\+/) { $ignore = 0; next; }
   if ($line =~ /^#/) { next; }
   if ($line =~ /^;/) { last; }
+  if ($ignore) { next; }
   chomp($line);
   @qhr = (1, 0, 0, 0);
   if ($line =~ /^DEF=/)

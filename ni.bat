@@ -258,6 +258,11 @@ set PROJ=buck-the-past
 goto nodef
 )
 
+if "%1" EQU "bt" (
+set PROJ=buck-the-past
+goto nodef
+)
+
 if "%1" EQU "i" (
 set PROJ=invis
 goto nodef
