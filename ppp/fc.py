@@ -70,8 +70,10 @@ def cmdUsage():
     print ("Right now only -d for debug.")
     exit()
 
-def tobool(x):
+def TOrF(x):
     if x == "False":
+        return False
+    if x == "0":
         return False
     return True
 
@@ -311,16 +313,16 @@ def readOpts():
                 continue
             q=re.sub(r'.*=', '', line.rstrip())
             if "autoReshuf".lower() in line.lower():
-                autoReshuf = tobool(q)
+                autoReshuf = TOrF(q)
             if "savePosition".lower() in line.lower():
-                savePosition = tobool(q)
+                savePosition = TOrF(q)
             if "saveOnWin".lower() in line.lower():
-                saveOnWin = tobool(q)
+                saveOnWin = TOrF(q)
             if "vertical".lower() in line.lower():
-                vertical = tobool(q)
+                vertical = TOrF(q)
             if "doubles".lower() in line.lower():
-                doubles = tobool(q)
-            if "annoyingNudge".lower() in line.lower() and tobool(q) is True and debug is False:
+                doubles = TOrF(q)
+            if "annoyingNudge".lower() in line.lower() and TOrF(q) is True and debug is False:
                 try: input = raw_input
                 except NameError: pass
                 pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
@@ -612,7 +614,7 @@ def checkWinning():
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
         if len(finish) > 0:
-            if finish[0] == 'n':
+            if finish[0] == 'n' or finish[0] == 'q':
                 print("Bye!")
                 exit()
             if finish[0] == 'y':
@@ -1106,6 +1108,7 @@ def cardEval(myCmd):
     return
 
 def readCmd(thisCmd):
+    global debug
     global wonThisCmd
     global cmdChurn
     global vertical
