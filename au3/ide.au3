@@ -1,59 +1,65 @@
 #include <MsgBoxConstants.au3>
 
 Local $project = "buck-the-past";
+Local $stuff = 1;
+Local $build = 1;
 
 if $CmdLine[0] > 0 Then
-  $project = $CmdLine[1];
-  if $CmdLine[1] == "b" Then
+  if $CmdLine[$stuff] == "nb" Then
+    $build = 0;
+	$stuff = $stuff + 1;
+  Endif
+  $project = $CmdLine[$stuff];
+  if $CmdLine[$stuff] == "b" Then
     call("openIDE", "basic");
-  ElseIf $CmdLine[1] == "d" Then
+  ElseIf $CmdLine[$stuff] == "d" Then
     call("openIDE", "dirk");
-  ElseIf $CmdLine[1] == "s" Then
+  ElseIf $CmdLine[$stuff] == "s" Then
     call("openIDE", "shuffling");
-  ElseIf $CmdLine[1] == "sa" Then
+  ElseIf $CmdLine[$stuff] == "sa" Then
     call("openIDE", "shuffling");
-  ElseIf $CmdLine[1] == "r" Then
+  ElseIf $CmdLine[$stuff] == "r" Then
     call("openIDE", "roiling");
-  ElseIf $CmdLine[1] == "ro" Then
+  ElseIf $CmdLine[$stuff] == "ro" Then
     call("openIDE", "roiling");
-  ElseIf $CmdLine[1] == "roi" Then
+  ElseIf $CmdLine[$stuff] == "roi" Then
     call("openIDE", "roiling");
-  ElseIf $CmdLine[1] == "pc" Then
+  ElseIf $CmdLine[$stuff] == "pc" Then
     call("openIDE", "Compound");
-  ElseIf $CmdLine[1] == "sc" Then
+  ElseIf $CmdLine[$stuff] == "sc" Then
     call("openIDE", "slicker-city");
-  ElseIf $CmdLine[1] == "3d" Then
+  ElseIf $CmdLine[$stuff] == "3d" Then
     call("openIDE", "threediopolis");
-  ElseIf $CmdLine[1] == "4d" Then
+  ElseIf $CmdLine[$stuff] == "4d" Then
     call("openIDE", "fourdiopolis");
-  ElseIf $CmdLine[1] == "as" Then
+  ElseIf $CmdLine[$stuff] == "as" Then
     call("openIDE", "Compound");
 	call("openIDE", "slicker-city");
 	call("openIDE", "buck-the-past");
-  ElseIf $CmdLine[1] == "opo" Then
+  ElseIf $CmdLine[$stuff] == "opo" Then
     call("openIDE", "threediopolis");
 	call("openIDE", "fourdiopolis");
-  ElseIf $CmdLine[1] == "sts" Then
+  ElseIf $CmdLine[$stuff] == "sts" Then
     call("openIDE", "roiling");
 	call("openIDE", "sa");
-  ElseIf $CmdLine[1] == "" Then
+  ElseIf $CmdLine[$stuff] == "" Then
     call("openIDE", "slicker-city");
-  ElseIf $CmdLine[1] == "btp" Then
+  ElseIf $CmdLine[$stuff] == "btp" Then
     call("openIDE", "buck-the-past");
-  ElseIf $CmdLine[1] == "in" Then
+  ElseIf $CmdLine[$stuff] == "in" Then
     call("openIDE", "grubbyville");
-  ElseIf $CmdLine[1] == "e16" Then
+  ElseIf $CmdLine[$stuff] == "e16" Then
     call("openIDE", "ectocomp16");
-  ElseIf $CmdLine[1] == "e15" Then
+  ElseIf $CmdLine[$stuff] == "e15" Then
     call("openIDE", "heezy-park");
-  ElseIf $CmdLine[1] == "e14" Then
+  ElseIf $CmdLine[$stuff] == "e14" Then
     call("openIDE", "Candy Rush Saga");
-  ElseIf $CmdLine[1] == "e13" Then
+  ElseIf $CmdLine[$stuff] == "e13" Then
     call("openIDE", "ghost");
-  ElseIf $CmdLine[1] == "e11" Then
+  ElseIf $CmdLine[$stuff] == "e11" Then
     call("openIDE", "dash");
   Else
-    call("openIDE", $CmdLine[1]);
+    call("openIDE", $CmdLine[$stuff]);
   Endif
 Else
   call("openIDE", $project);
@@ -72,12 +78,12 @@ Func OpenIDE($project)
 
   Send("c:\games\inform\" & $project & ".inform!O");
 
-  sleep(1);
-  WinWaitActive($project & ".inform");
-
-  Send("{F5}");
-
-  $x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+  if $build == 1 Then
+    sleep(1);
+    WinWaitActive($project & ".inform");
+    Send("{F5}");
+    $x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+  Endif
   Beep (600, 200)
 
 EndFunc
