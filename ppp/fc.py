@@ -764,7 +764,7 @@ def printOthers():
         emmove = ' |' + emmove
     elif not coolmove and not latmove:
         coolmove = '(no row switches)'
-    print ("Possible moves:" + coolmove + latmove + " (%d longest)" % (maxmove()))
+    print ("Possible moves:" + coolmove + latmove + " (%d max shift" % (maxmove()) + (", recdumprow=" + str(bestDumpRow()) if bestDumpRow() > 0 else "") + ")" )
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
