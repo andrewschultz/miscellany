@@ -158,9 +158,9 @@ while ($line = <A>)
   $browsMap{$q} );
   }
   }
-  if ($time == $hour)
+  if (($time == $hour) || ($time == -1))
   {
-    if ($qhr[$min] || $tens[$min])
+    if ($qhr[$min] || $tens[$min] || ($time == -1))
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
