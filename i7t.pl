@@ -18,7 +18,6 @@ my $project = "Project";
 my $sum = "";
 my $tables = 0;
 my $count = 0;
-my $fileToOpen = "";
 my $curTable = "";
 my @important = ();
 my $majorTable = 0;
@@ -36,6 +35,9 @@ my $maxString = 0;
 my %rows;
 my %exp;
 my %failCmd;
+
+my %filesToOpen;
+my %doubleErr;
 
 my @tableCount = ();
 
@@ -179,8 +181,6 @@ my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
 
-my $openLine = 0;
-
 while ($a = <A>)
 {
   if ($a =~ /^#/) { next; }
@@ -223,7 +223,7 @@ while ($a = <A>)
   {
     #print "$b[3] =~? $f";
     if ($f =~ /\b$b[3]/) { $success = 1; last; }
-	if ($f =~ /$almost/) { $nearSuccess .= $f; if ($openLine == 0) { $openLine = $.; } }
+	if ($f =~ /$almost/) { if ($filesToOpen{$lastOpen}) { $doubleErr{$lastOpen}++; } else { $filesToOpen{$lastOpen} = $.; } }
   }
   close(F);
   if ($success)
@@ -234,7 +234,7 @@ while ($a = <A>)
   {
     $countMismatch++;
 	print "$thisFile search for $b[3] FAILED\n";
-	if (!$fileToOpen) { $fileToOpen = $thisFile; }
+	if (!$filesToOpen{$thisFile}) { $filesToOpen{$thisFile} = $.; }
 	$errLog .= "$b[3] needs to be in<br />\n";
 	if ($nearSuccess)
 	{
@@ -264,14 +264,24 @@ if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
 
 if ($openPost)
 {
-  if ($fileToOpen)
+  my $myfi;
+  for $myfi (sort keys %filesToOpen)
   {
-    print "Opening $fileToOpen, line $openLine\n";
-	my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $fileToOpen";
-	if ($openLine) { $openCmd .= " -n$openLine"; }
+    print "Opening $myfi, line $filesToOpen{$myfi}\n";
+	my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $myfi";
+	if ($filesToOpen{$myfi}) { $openCmd .= " -n$filesToOpen{$myfi}"; }
     `$openCmd`;
   }
-  else { print "No error files to open!\n"; }
+  if (!scalar keys %filesToOpen) { print "No error files to open!\n"; }
+  if (scalar keys %doubleErr)
+  {
+    print "Files with >1 error:\n";
+	for $myfi (sort { $doubleErr{$a} <=> $doubleErr{$b} } keys %doubleErr )
+	{
+	  $doubleErr{$myfi}++;
+	  print "$myfi: $doubleErr{$myfi} total focus-able errors.\n";
+	}
+  }
 }
 
 if ($openTableFile)
