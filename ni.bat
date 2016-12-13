@@ -345,7 +345,7 @@ goto end
 )
 
 if "%1" EQU "scr" (
-%NOTES%\slicker_city_release_1_notes.txt
+%NOTES%\slicker_city_release_2_notes.txt
 goto end
 )
 

@@ -71,9 +71,7 @@ def cmdUsage():
     exit()
 
 def TOrF(x):
-    if x == "False":
-        return False
-    if x == "0":
+    if x == "False" or x == "0":
         return False
     return True
 
@@ -323,15 +321,7 @@ def readOpts():
             if "doubles".lower() in line.lower():
                 doubles = TOrF(q)
             if "annoyingNudge".lower() in line.lower() and TOrF(q) is True and debug is False:
-                try: input = raw_input
-                except NameError: pass
-                pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
-                if pwd != "I am wasting time":
-                    if pwd.lower() == "i am wasting time":
-                        print ("Remember to put it in sentence case!" + pwd)
-                        exit()
-                    print ("Type I am wasting time, or you can't play.")
-                    exit()
+                annoyingNudge = TOrF(q)
     if gotOne:
         print "Options file read."
         f.close()
@@ -1592,6 +1582,18 @@ if len(sys.argv) > 0:
         cmdUsage()
 
 readOpts()
+
+if annoyingNudge:
+    try: input = raw_input
+    except NameError: pass
+    pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
+    if pwd != "I am wasting time":
+        if pwd.lower() == "i am wasting time":
+            print ("Remember to put it in sentence case!" + pwd)
+            exit()
+        print ("Type I am wasting time, or you can't play.")
+        exit()
+
 initSide(0)
 initCards()
 printCards()
