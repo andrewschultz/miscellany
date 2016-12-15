@@ -24,6 +24,7 @@ my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
 my $adjust = 0;
 my $cmdCount = 0;
+my $mod = 0;
 
 my @times;
 
@@ -94,7 +95,7 @@ while ($line = <A>)
   if ($ignore) { next; }
   chomp($line);
   @qhr = (1, 0, 0, 0);
-  $modNum = 0;
+  $mod = 0;
   if ($line =~ /^DEF=/)
   {
     $defaultBrowser = $line;
@@ -186,11 +187,15 @@ close(A);
 sub validHour
 {
   my $t = $times[$#times];
-  if ($t == $hour) { return 1; }
+  my @ha = split(/,/, $hour);
+  for my $h (@ha)
+  {
+  if ($t == $h) { return 1; }
   if ($t < 0)
   {
     my $mult = - $t;
-	if ($hour * 2 % $mult == 0) { return 1; }
+	if ($h * 2 % $mult == $mod) { return 1; }
+  }
   }
   return 0;
 }
