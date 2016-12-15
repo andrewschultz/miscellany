@@ -23,6 +23,9 @@ my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
 my $adjust = 0;
+my $cmdCount = 0;
+
+my @times;
 
 my %browsMap;
 
@@ -79,6 +82,8 @@ my @qhr = (0, 0, 0, 0);
 
 my $ignore = 0;
 
+my @b;
+
 while ($line = <A>)
 {
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
@@ -89,15 +94,16 @@ while ($line = <A>)
   if ($ignore) { next; }
   chomp($line);
   @qhr = (1, 0, 0, 0);
+  $modNum = 0;
   if ($line =~ /^DEF=/)
   {
     $defaultBrowser = $line;
 	$defaultBrowser =~ s/^DEF=//;
 	next;
   }
-  my $cmdCount = 0;
+  $cmdCount = 0;
   my $min = 0;
-  my @b = split(/\|/, $line);
+  @b = split(/\|/, $line);
   if ($#b == 2)
   {
     my @q = split(/,/, $b[0]);
@@ -113,18 +119,20 @@ while ($line = <A>)
 	if (!$gotOne) { next; }
     $cmdCount++;
   }
-  my $time = $b[$cmdCount];
+  @times = split(/,/, $b[$cmdCount]);
 
+  if ($times[$#times] =~ /[m]$/) { $mod = $times[$#times]; $mod =~ s/.*m//g; }
+  
   ######################quarter hours
-  if ($time =~ /[tphb]$/) { @qhr[0] = 0;
-  while ($time =~ /[tphb]$/)
+  if ($times[$#times] =~ /[tphb]$/) { @qhr[0] = 0;
+  while ($times[$#times] =~ /[tphb]$/)
   {
     for (0..3)
 	{
-	  if ($time =~ /$quarters[$_]$/)
+	  if ($times[$#times] =~ /$quarters[$_]$/)
 	  {
 	    $qhr[$_] = 1;
-		$time =~ s/.$//;
+		$times[$#times] =~ s/.$//;
       }
     }
   }
@@ -132,11 +140,11 @@ while ($line = <A>)
   #this needs to be outside the loop so it registers
   $min = floor($minute/15);
  
-  if ($time =~ /:/)
+  if ($times[$#times] =~ /:/)
   {
     @tens = (0, 0, 0, 0, 0, 0);
-	my @totens = split(/:/, $time);
-	$time =~ s/:.*//;
+	my @totens = split(/:/, $times[$#times]);
+	$times[$#times] =~ s/:.*//;
 	for (1..$#totens) { $tens[$totens[$_]] = 1; }
 	$min = floor($minute/10);
   }
@@ -158,9 +166,9 @@ while ($line = <A>)
   $browsMap{$q} );
   }
   }
-  if (($time == $hour) || ($time == -1))
+  if (validHour())
   {
-    if ($qhr[$min] || $tens[$min] || ($time == -1))
+    if ($qhr[$min] || $tens[$min])
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
@@ -173,6 +181,18 @@ while ($line = <A>)
 }
 
 close(A);
+}
+
+sub validHour
+{
+  my $t = $times[$#times];
+  if ($t == $hour) { return 1; }
+  if ($t < 0)
+  {
+    my $mult = - $t;
+	if ($hour * 2 % $mult == 0) { return 1; }
+  }
+  return 0;
 }
 
 sub usage
