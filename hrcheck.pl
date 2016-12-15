@@ -169,7 +169,8 @@ while ($line = <A>)
   }
   if (validHour())
   {
-    if ($qhr[$min] || $tens[$min])
+    #print "$hour, $times[$#times] good so far ($min): @qhr, @tens.\n";
+    if ($qhr[$min] || $tens[$min] || ($times[$#times] < 0))
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
@@ -194,7 +195,7 @@ sub validHour
   if ($t < 0)
   {
     my $mult = - $t;
-	if ($h * 2 % $mult == $mod) { return 1; }
+	if (($h * 2 + floor($minute/30)) % $mult == $mod) { return 1; }
   }
   }
   return 0;

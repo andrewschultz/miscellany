@@ -872,7 +872,8 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                     return -1
                 print ("Cutting down to " + str(locmaxmove))
             return locmaxmove
-        if showDeets:
+        global cmdChurn
+        if showDeets and not cmdChurn:
             print ("Not enough open. Have %d, need %d" % (locmaxmove, fromline))
         return -1
     return fromline
@@ -1200,9 +1201,10 @@ def readCmd(thisCmd):
                 shufwarn()
                 return
             ripUp(newDump)
-            if inOrder(newDump) == 1:
-                print ("Row %d didn't unfold all the way." % (newDump))
-                break
+            if len(elements[newDump]) > 0:
+                if inOrder(newDump) != 1 or elements[newDump][0] % 13 != 0:
+                    print ("Row %d didn't unfold all the way." % (newDump))
+                    break
             if breakMacro == 1:
                 breakMacro = 0
                 break
@@ -1480,7 +1482,8 @@ def readCmd(thisCmd):
                 return
         tempdoab = doable(t1,t2,1 - preverified)
         if tempdoab == -1:
-            print 'Not enough space.'
+            if not cmdChurn:
+                print 'Not enough space.'
             return
         if tempdoab == 0:
             if inUndo:
