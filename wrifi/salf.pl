@@ -14,34 +14,40 @@ use List::MoreUtils qw(uniq);
 use strict;
 use warnings;
 
+my $didSomething = 0;
 my $dupBytes = 0;
 my %got = ();
 my $noGlobals = 0;
+my $dupes;
 
-if (!@ARGV[0]) { print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit; }
+if (!defined($ARGV[0])) { print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit; }
 
-@sects = split(/,/, @ARGV[0]);
+my @sects = split(/,/, $ARGV[0]);
 
-if (@ARGV[0] eq "-pc")
+if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/^-//; }
+
+if ($ARGV[0] eq "pc")
 {
   @sects=split(/,/, "pc");
 }
-elsif (@ARGV[0] eq "sc-rej")
+elsif ($ARGV[0] eq "sc")
 {
   @sects=split(/,/, "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca");
 }
-elsif (@ARGV[0] eq "btp")
+elsif ($ARGV[0] eq "btp")
 {
   @sects=split(/,/, "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a");
 }
 
 if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp.\n"; exit; }
 
-$infile = "c:\\writing\\games.otl";
-$outfile = "c:\\writing\\temp\\games.otl";
+my $infile = "c:\\writing\\games.otl";
+my $outfile = "c:\\writing\\temp\\games.otl";
 
 open(A, "$infile");
 open(B, ">$outfile");
+
+my $mysect;
 
 while ($a = <A>)
 {
@@ -69,8 +75,8 @@ if ((-s $infile) != $outDup)
   exit;
 }
 
-die($dupes);
-$cmd = "copy $outfile $infile";
+#die("$dupes duplicates $dupBytes bytes duplicated.");
+my $cmd = "copy $outfile $infile";
 print "$cmd\n";
 `$cmd`;
 
@@ -92,12 +98,12 @@ sub alfThis
     }
     push(@lines, $a);
   }
-  @x = sort { "\L$a" cmp "\L$b" } @lines;
+  my @x = sort { comm($a) <=> comm($b) || "\L$a" cmp "\L$b" } @lines;
   #@x = @lines;
 
-  for $y (@x)
+  for my $y (@x)
   {
-    if ($got{simp($y)} == 1)
+    if (defined($got{simp($y)}) && ($got{simp($y)} == 1))
 	{
 	  print "Duplicate $y\n";
 	  $dupBytes += length(lc($y))+2;
@@ -123,4 +129,10 @@ sub simp
   $temp = lc($_[0]);
   $temp =~ s/[\.!\/\?]//g;
   return $temp;
+}
+
+sub comm
+{
+  if ($_[0] =~ /^#/) { return 1; }
+  return 0;
 }
