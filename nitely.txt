@@ -136,6 +136,7 @@ sc=slicker-city
 >icl.pl -jb $$
 >icl.pl -jd $$
 >$d/grate.pl
+>$d/sctt.pl
 
 pc=compound
 >gh.pl -t $$
