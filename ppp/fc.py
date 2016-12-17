@@ -141,7 +141,7 @@ def ripUp(q):
     cmdChurn = True
     movesize = len(moveList)
     maxRun = 0
-    while goAgain == 1 and len(elements[q]) > 0 and maxRun < 25:
+    while goAgain == 1 and len(elements[q]) > 0 and maxRun < 25 and not inOrder(q):
         shouldReshuf = True
         if len(elements[q]) > 1:
             if canPut(elements[q][len(elements[q])-1], elements[q][len(elements[q])-2]):
@@ -903,10 +903,10 @@ def slipUnder():
         slipProcess = False
         curMove = len(moveList)
         for i in range(1,9):
-            if len(elements[i]) > 0 and inOrder(i):
+            if len(elements[i]) > 0 and inOrder(i) and slipProcess == False:
                 for j in range (0,4):
                     if spares[j] > 0 and canPut(elements[i][0], spares[j]):
-                        #print ("OK, giving a look %d %d" % (len(elements[i]), maxMoveMod()))
+                        #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
                         if len(elements[i]) < maxMoveMod():
                             tst = chr(97+j) + str(fi)
                             resetChurn = not cmdChurn

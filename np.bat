@@ -63,6 +63,10 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1.otl"
 goto end
 )
 
+if "%1" EQU "g" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
+)
+
 if EXIST "c:\writing\%1.otl" (
 echo Found OTL file.
 
