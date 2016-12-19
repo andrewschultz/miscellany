@@ -25,11 +25,30 @@ if ($ARGV[0] eq "e") { `$misses`; exit(); }
 
 if ($ARGV[0] =~ /^\+/)
 {
+  my %val;
+  my @this;
   my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g;
+  if (!$toAdd) { print ("Added nothing."); die; }
   open(A, "$misses");
-  while (my $line = <A>) { chomp($line); if ($line eq $toAdd) { print "Already there.\n"; exit; } }
+  while (my $line = <A>)
+  {
+    chomp($line);
+	if ($line =~ /:/) { @this = split(/:/, $line); $val{$this[0]} = $this[1]; $line = $this[0]; }
+	else { $val{$line} = 1; }
+	if ($toAdd eq $line)
+	{
+	  if (defined($val{$line}))
+	  {
+	    print "$line already in, adding weight.\n";
+      }
+	  $val{$toAdd}++;
+    }
+  }
   close(A);
-  open(B, ">>$misses"); print B "$toAdd\n"; close(B); print "Added $toAdd.\n"; exit;
+  open(B, ">$misses");
+  for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
+  close(B);
+  print "Added $toAdd.\n"; exit;
 }
 
 my @right = split(//, lc($ARGV[0]));
@@ -56,7 +75,7 @@ my $readFile = "c:/writing/dict/words-$whichf.txt";
 my $line;
  
 open(A, "$misses") || die ("No misses file.");
-while ($line = <A>) { chomp($line); if (defined($miss{lc($line)})) { print "$line duplicated.\n"; } $miss{lc($line)} = 1; }
+while ($line = <A>) { chomp($line); my @q = split(/:/, $line); if (defined($miss{lc($q[0])})) { print "$q[0] duplicated.\n"; } $miss{lc($q[0])} = $q[1]; }
 close(A);
 
 open(A, "$readFile") || die ("No $readFile");
@@ -136,5 +155,5 @@ sub checkForRepeats
   my @a2a = uniq(@a2);
   for (@a2a) { if ($_) { $f2{$_}++; } }
 
-  if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
+  if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line ($miss{$line})\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
 }
