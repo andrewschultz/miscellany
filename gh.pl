@@ -19,6 +19,7 @@ my $procString;
 my $defaultString;
 my $testResults = 0;
 my $runTrivialTests = 0;
+my $byFile = 0;
 
 my $reverse = 0;
 
@@ -57,14 +58,15 @@ while ($count <= $#ARGV)
 	system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght");
 	exit;
   };
-  /-j/ && do { $justPrint = 1; $count++; next; };
-  /-v/ && do { $justPrint = 1; $count++; next; };
+  /^-?j$/ && do { $justPrint = 1; $count++; next; };
+  /^-?f/ && do { $byFile = 1; $count++; next; };
+  /^-?v$/ && do { $verbose = 1; $count++; next; };
   /^-rt$/ && do { $runTrivialTests = 1; $count++; next; };
   /^-nrt$/ && do { $runTrivialTests = -1; $count++; next; };
-  /^-t$/ && do { $testResults = 1; $count++; next; };
-  /^-a$/ && do { $copyAuxiliary = 1; $count++; next; };
-  /^-b$/ && do { $copyBinary = 1; $count++; next; };
-  /^-(d|ab|ba)$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
+  /^-?t$/ && do { $testResults = 1; $count++; next; };
+  /^-?a$/ && do { $copyAuxiliary = 1; $count++; next; };
+  /^-?b$/ && do { $copyBinary = 1; $count++; next; };
+  /^-?(d|ab|ba)$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
   /^-?reverse$/ && do { $reverse = 1; $count++; next; };
   /^[a-z34]/ && do
   {
@@ -95,23 +97,22 @@ findTerms($ghp);
 
 my @procAry = split(/,/, $procString);
 
-for (@procAry)
-{
-  if ($_ eq "-a")
-  { $alph = 1; next; }
-  if ($altHash{$_}) { $do{$altHash{$_}} = 1; print "$_ => $altHash{$_}\n"; }
-  else
-  {
-  $do{$_} = 1;
-  }
-}
+fillProc();
 
 if ($verbose)
 {
 for my $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
 }
 
-processTerms($ght, $ghp);
+if (!processTerms($ght, $ghp))
+{
+  if ($byFile && ($#procAry > -1))
+  {
+  fillProc();
+  processTerms($ght, $ghp);
+  }
+}
+
 
 ##########################################
 #the main function
@@ -176,9 +177,9 @@ sub processTerms
 	 if ($a =~ /POSTPROC=/i) { $a =~ s/^POSTPROC=//g; my @as = split(/,/, $a); for (@as) { $postproc{$_} = 1; } }
 
     $b =~ s/=.*//g;
-
     if (hasHash($b))
     {
+
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g;
 	  # I could probably do the below a little more programatically but for right now this gets rid of a lot of the repetitive stuff that clogs the text files
@@ -252,8 +253,12 @@ sub processTerms
 #      `$cmd`;
     }
   }
+  close(A);
   }
-  if (!$didOne) { print "Didn't find anything for $procString."; }
+  if (!$didOne)
+  {
+    @procAry = checkForFile($ght, $ghp);
+  }
   else
   {
     print "Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
@@ -270,6 +275,7 @@ sub processTerms
   }
   if ($quickCheck) { print "\n========quick verifications\n$quickCheck"; }
   if ($warnCanRun) { print "\nYou could have run code checking by tacking on an =."; }
+  return $didOne;
 }
 
 ##########################
@@ -335,6 +341,45 @@ sub hasHash
   if ($do{$_[0]}) { return 1; }
   if (($altHash{$_[0]}) && ($do{$altHash{$_[0]}})) { return 1; }
   return 0;
+}
+
+sub checkForFile
+{
+  my $line;
+  my @mb;
+  my @mb2;
+  my $curProj = "";
+  my $last = "";
+  for my $thisfi(@_)
+  {
+  open(A, "$thisfi");
+  while ($line = <A>)
+  {
+    if ($line =~ /\b$procString\b/) { chomp($line); push (@mb, $line); $last = $line; $curProj = $last; $curProj =~ s/=.*//; if ($curProj ne $last) { push(@mb2, $curProj); } $last = $curProj; }
+  }
+  close(A);
+  }
+  if (($byFile == 1) && ($#mb >= 0))
+  {
+    return @mb2;
+	exit();
+  }
+  if ($#mb >= 0) { print "No project found, but there are close matches you may be able to run with -f:\n" . join("\n", @mb) . "\n"; exit(); }
+  return ();
+}
+
+sub fillProc
+{
+for (@procAry)
+{
+  if ($_ eq "-a")
+  { $alph = 1; next; }
+  if ($altHash{$_}) { $do{$altHash{$_}} = 1; print "$_ => $altHash{$_}\n"; }
+  else
+  {
+  $do{$_} = 1;
+  }
+}
 }
 
 sub usage
