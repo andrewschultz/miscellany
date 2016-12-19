@@ -8,8 +8,9 @@
 #
 # recommended: salf.pl pc, salf.pl sc, salf.pl btp
 
-use Data::Dumper qw(Dumper);
-use List::MoreUtils qw(uniq);
+#use Data::Dumper qw(Dumper);
+#use List::MoreUtils qw(uniq);
+use POSIX;
 
 use strict;
 use warnings;
@@ -20,26 +21,43 @@ my %got = ();
 my $noGlobals = 0;
 my $dupes;
 
-if (!defined($ARGV[0])) { print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit; }
+my @sects = ();
+my $toSplit = "";
 
-my @sects = split(/,/, $ARGV[0]);
+my $myd = getcwd();
 
-if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/^-//; }
+my %list;
+$list{"pc"} = "pc";
+$list{"sc"} = "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca";
+$list{"btp"} = "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
 
-if ($ARGV[0] eq "pc")
+if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc"}; }
+if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; }
+if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; }
+
+if (!defined($ARGV[0]))
 {
-  @sects=split(/,/, "pc");
+  if (!$toSplit)
+  {
+  print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit;
+  }
 }
-elsif ($ARGV[0] eq "sc")
+else
 {
-  @sects=split(/,/, "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca");
-}
-elsif ($ARGV[0] eq "btp")
-{
-  @sects=split(/,/, "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a");
+  if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/^-//; }
+  if (defined($list{$ARGV[0]}))
+  {
+    $toSplit = $list{$ARGV[0]};
+  }
+  else
+  {
+    $toSplit = $ARGV[0];
+  }
 }
 
-if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp.\n"; exit; }
+if (!$toSplit == -1) { print "Need a CSV of sections, or use -pc for ProbComp, -sc or BTP.\n"; exit; }
+
+@sects = split(/,/, $toSplit);
 
 my $infile = "c:\\writing\\games.otl";
 my $outfile = "c:\\writing\\temp\\games.otl";
