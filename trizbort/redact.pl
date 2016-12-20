@@ -33,13 +33,14 @@ while ($count <= $#ARGV)
   for ($a)
   {
   $anythingRead = 1;
-  /^-g$/ && do { @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
-  /^-d$/ && do { $debug = 1; $count++; next; };
-  /^-c$/ && do { $runC = 1; $count++; next; };
-  /^-p$/ && do { $myReadFile = $b; $count+= 2; next; };
-  /^-q$/ && do { $myReadFile = $defRead; $runC = 1; @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
-  /^-pd$/ && do { $myReadFile = $defRead; $count++; next; };
-  /^-fs$/ && do { showParameterFileSyntax(); };
+  /^-?g$/ && do { @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
+  /^-?d$/ && do { $debug = 1; $count++; next; };
+  /^-?c$/ && do { $runC = 1; $count++; next; };
+  /^-?p$/ && do { $myReadFile = $b; $count+= 2; next; };
+  /^-?q$/ && do { $myReadFile = $defRead; $runC = 1; @temp = split(/,/, $b); for (@temp) { $runThisGroup{$_} = 1; } $count += 2; next; };
+  /^-?pd$/ && do { $myReadFile = $defRead; $count++; next; };
+  /^-?fs$/ && do { showParameterFileSyntax(); };
+  /^-?\?$/ && do { usage(); };
   if ($count < $#ARGV)
   {
   readArray(@ARGV[$count..$#ARGV]);
