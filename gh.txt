@@ -384,7 +384,9 @@ misc=c:\scripts\unch.pl,
 misc=salf.pl,wrifi
 misc=noter.pl,wrifi
 misc=$wd\aadd.pl,
+#######################autoIt, with batch file that runs through args 1 at a time
 misc=ide.au3,au3
+misc=id.bat,au3
 misc=pch.pl,
 misc=pch.txt,
 misc=naz.pl,

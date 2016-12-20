@@ -257,7 +257,9 @@ sub processTerms
   }
   if (!$didOne)
   {
+    my $q = join("/", @procAry);
     @procAry = checkForFile($ght, $ghp);
+    if ($#procAry == -1) { print "Nothing found for $q.\n"; exit(); }
   }
   else
   {
