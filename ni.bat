@@ -14,6 +14,15 @@ if "%1" == "?" (
 goto usage
 )
 
+if "%1" EQU "b" (
+set SOREL=build
+shift /1
+)
+
+if "%2" EQU "b" (
+set SOREL=build
+)
+
 if "%2" EQU "m" (
 set EXT= Materials
 set SOREL=release

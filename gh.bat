@@ -22,6 +22,16 @@ cd  %TEMPDIR%\the-problems-compound
 goto end
 )
 
+if "%1" EQU "sc" (
+cd  %TEMPDIR%\slicker-city
+goto end
+)
+
+if "%1" EQU "btp" (
+cd  %TEMPDIR%\buck-the-past
+goto end
+)
+
 if "%1" EQU "4" (
 cd  %TEMPDIR%\fourdiopolis
 goto end
@@ -49,6 +59,31 @@ goto end
 
 if "%1" EQU "gr" (
 cd  %TEMPDIR%\grubbyville
+goto end
+)
+
+if "%1" EQU "e11" (
+cd  %TEMPDIR%\ectocomp\2011
+goto end
+)
+
+if "%1" EQU "e13" (
+cd  %TEMPDIR%\ectocomp\2013
+goto end
+)
+
+if "%1" EQU "e14" (
+cd  %TEMPDIR%\ectocomp\2014
+goto end
+)
+
+if "%1" EQU "e15" (
+cd  %TEMPDIR%\ectocomp\2015
+goto end
+)
+
+if "%1" EQU "e16" (
+cd  %TEMPDIR%\ectocomp\2016
 goto end
 )
 
