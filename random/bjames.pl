@@ -19,8 +19,8 @@ while ($count <= $#ARGV)
   {
     /^-?r/ && do { $temp = $a; $temp =~ s/^-?r//; listReverse($temp); exit(); };
     /-/ && do { my @score = split(/-/, $a); $dif = $score[0] - $score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
-	/^[0-9]+$/ && do { $dif = $a; $count++; next; };
-    /:/ && do { my @time = split(/:/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
+	/^[0-9]+$/ && do { if ($a > 30) { $secs = $a; } else { $dif = $a; } $count++; next; };
+    /[:,\.]/ && do { my @time = split(/[:,\.]/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
     /[ny]/i && do { $haveBall = ($a =~ /y/i); $count++; next; };
     /b/i && do { $boths = 1; $count++; next; };
     usage();

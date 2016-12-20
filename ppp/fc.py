@@ -241,7 +241,7 @@ def autoShift(): # this shifts rows
     return False
 
 def inOrder(rowNum):
-    if len(elements[rowNum]) == 0:
+    if len(elements[rowNum]) < 2:
         return 0
     for i in range(1,len(elements[rowNum])):
         if not canPut(elements[rowNum][i], elements[rowNum][i-1]):
@@ -1202,7 +1202,7 @@ def readCmd(thisCmd):
                 return
             ripUp(newDump)
             if len(elements[newDump]) > 0:
-                if inOrder(newDump) != 1 or elements[newDump][0] % 13 != 0:
+                if inOrder(newDump) != 1: #or elements[newDump][0] % 13 != 0
                     print ("Row %d didn't unfold all the way." % (newDump))
                     break
             if breakMacro == 1:

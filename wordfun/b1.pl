@@ -21,12 +21,15 @@ my %f2;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
 
+if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
+
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
 
 if ($ARGV[0] =~ /^\+/)
 {
   my %val;
   my @this;
+  my $gotIt = 0;
   my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g;
   if (!$toAdd) { print ("Added nothing."); die; }
   open(A, "$misses");
@@ -39,16 +42,18 @@ if ($ARGV[0] =~ /^\+/)
 	{
 	  if (defined($val{$line}))
 	  {
-	    print "$line already in, adding weight.\n";
+        $val{$toAdd}++;
+	    print "$line already in. Its weight is now $val{$line}.\n";
+		$gotIt = 1;
       }
-	  $val{$toAdd}++;
     }
   }
   close(A);
+  if (!$gotIt) { print "Added $toAdd.\n"; $val{$toAdd}++; }
   open(B, ">$misses");
   for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
   close(B);
-  print "Added $toAdd.\n"; exit;
+  exit;
 }
 
 my @right = split(//, lc($ARGV[0]));
