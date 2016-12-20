@@ -67,6 +67,10 @@ if "%1" EQU "g" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
 )
 
+if "%1" EQU "sr" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\Standard Rules.i7x"
+)
+
 if EXIST "c:\writing\%1.otl" (
 echo Found OTL file.
 
