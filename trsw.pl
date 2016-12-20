@@ -11,9 +11,12 @@ my $count = 0;
 my %matchups;
 my %long;
 my $line;
+my $upperLimit = 99999;
 
 my $mapfile = __FILE__;
 $mapfile =~ s/pl$/txt/;
+
+my $triz = "c:\\games\\inform\\triz\\mine";
 
 my $trdr = ".";
 my $file = "";
@@ -30,6 +33,7 @@ while ($line = <A>)
   {
     my @eq = split(/=/, $line);
 	$long{$eq[0]} = $eq[1];
+	$long{"-$eq[0]"} = $eq[1];
   }
   if ($line =~ /^DEFAULT:/)
   {
@@ -54,9 +58,33 @@ while ($count <= $#ARGV)
   /^-?n$/ && do { $copyBack = 0; $count++; next; };
   /^-?o$/ && do { $order = 1; $count++; next; };
   /^-?da$/ && do { $diagAfter = 1; $count++; next; };
+  /^-?ul$/ && do { $upperLimit = $ARGV[$count+1]; $count+= 2; next; };
   if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $count++; next; }
   if (-f "$a1.trizbort") { $file = "$a1.trizbort"; $count++; next; }
-  /^[0-9,]+$/ && do {
+  if (-f "$triz\\$a1.trizbort") { die(); $file = "$triz\\$a1.trizbort"; $count++; next; }
+  /^[0-9,\\\/]+$/ && do {
+  if ($a1 =~ /\//)
+  {
+    @j = split(/\//, $a1);
+	for (@j[0]..@j[1]-1)
+	{
+	  $matchups{$_} = $_+1;
+	}
+	$matchups{@j[1]} = @j[0];
+	$count++;
+	next;
+  }
+  if ($a1 =~ /\\/)
+  {
+    @j = split(/\\/, $a1);
+	for (@j[0]+1..@j[1])
+	{
+	  $matchups{$_} = $_-1;
+	}
+	$matchups{@j[0]} = @j[1];
+	$count++;
+	next;
+  }
   @j = split(/,/, $a1);
   for (0..$#j)
   {
@@ -82,7 +110,9 @@ checkIDBounds();
 
 if ($order) { orderTriz(); }
 
-if (keys %matchups == 0) { print "No matchups found to flip.\n"; exit; }
+if (scalar keys %matchups == 0) { print "No matchups found to flip.\n"; exit; }
+
+#for $y (sort keys %matchups) { print "$y - $matchups{$y}\n"; }
 
 my $outFile = $file; $outFile =~ s/\./id\./g;
 
@@ -145,11 +175,19 @@ sub diagnose
   }
   @printy = sort {$a <=> $b} (@printy);
   $lastID = 0;
+  my $curCount = 0;
   for (@printy)
   {
     $thisID = $_; $thisID =~s/ .*//g;
+	if ($thisID > $upperLimit)
+	{
+	  print "Printout truncated at $_ / $thisID > $upperLimit, $curCount.\n";
+	  splice(@printy,$curCount);
+	  last;
+    }
 	if ($thisID - $lastID != 1) { $_ =~ s/ ->/ \* ->/; }
 	$lastID = $thisID;
+	$curCount++;
   }
   print join("\n", sort {$a <=> $b} (@printy)) . "\n";
   print "Lines: " . join(", ", sort {$a <=> $b} (@mylines));
