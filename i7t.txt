@@ -37,10 +37,8 @@ Slicker-City	ni scr
 #############
 #table of life shelf books
 Buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
-#table of book jungle books
-Buck-the-past	xxjb	"	$+ second-rate self-help books
 #authors for the books
-Buck-the-past	table of insightful authors	"	$+ insightful authors
+Buck-the-past	xxtia	"	$+ insightful authors
 #ideas not in game proper
 Buck-the-past	xxadd	"	$$ off-the-wall
 Buck-the-past	xxui	"	$$ friendly inns
