@@ -59,7 +59,7 @@ while ($count <= $#ARGV)
 	exit;
   };
   /^-?j$/ && do { $justPrint = 1; $count++; next; };
-  /^-?f/ && do { $byFile = 1; $count++; next; };
+  /^-?f$/ && do { $byFile = 1; $count++; next; };
   /^-?v$/ && do { $verbose = 1; $count++; next; };
   /^-rt$/ && do { $runTrivialTests = 1; $count++; next; };
   /^-nrt$/ && do { $runTrivialTests = -1; $count++; next; };

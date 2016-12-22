@@ -1156,12 +1156,16 @@ def readCmd(thisCmd):
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
     #### saving/loading comes first.
-    if name[0] == 'l' and name[1] == '=':
-        loadGame(re.sub(r'^l=', 's=', name))
+    if name == 'l' or name == 's' or name == 'l=' or name == 's=':
+        print ("load/save needs = and then a name.")
         return
-    if name[0] == 's' and name[1] == '=':
-        saveGame(name.strip())
-        return
+    if len(name) > 1:
+        if name[0] == 'l' and name[1] == '=':
+            loadGame(re.sub(r'^l=', 's=', name))
+            return
+        if name[0] == 's' and name[1] == '=':
+            saveGame(name.strip())
+            return
     if name == "lo":
         readOpts()
         return
