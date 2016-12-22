@@ -12,6 +12,7 @@ my %matchups;
 my %long;
 my $line;
 my $upperLimit = 99999;
+my $region = "";
 
 my $mapfile = __FILE__;
 $mapfile =~ s/pl$/txt/;
@@ -57,6 +58,7 @@ while ($count <= $#ARGV)
   /^-?ca?$/ && do { $copyBack = 1; if ($a1 =~ /a/) { $diagAfter = 1; } $count++; next; };
   /^-?n$/ && do { $copyBack = 0; $count++; next; };
   /^-?o$/ && do { $order = 1; $count++; next; };
+  /^-?r$/ && do { $region = $ARGV[$count+1]; $count += 2; next; };
   /^-?da$/ && do { $diagAfter = 1; $count++; next; };
   /^-?ul$/ && do { $upperLimit = $ARGV[$count+1]; $count+= 2; next; };
   if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $count++; next; }
@@ -164,7 +166,10 @@ sub diagnose
   if ($line =~ /room id=\"/)
   {
     @q = split(/\"/, $line);
+	if ((!$region) || ($q[15] =~ /$region/i))
+	{
 	push(@printy, "@q[1] -> @q[3] (@q[15])");
+	}
 	$lastID = @q[1];
   }
   if ($line =~ /line id=\"/)
@@ -266,7 +271,14 @@ sub usage
 print<<EOT;
 -c = copy
 -d = diagnose (show all rooms)
+-da = diagnose after copying
+-n = don't copy back
+-o = order
+-r = specify region
+-ul = upper limit for IDs to display
+-? = this
 btp pc sc = projects
+1,4,7 cycles 1 to 4 to 7, 1/4=1,2,3,4, 1\4=4,3,2,1
 EOT
 exit()
 }
