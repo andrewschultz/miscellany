@@ -54,16 +54,18 @@ while ($count <= $#ARGV)
   $a1 = $ARGV[$count];
   for ($a1)
   {
+  /^-?x$/ && do { $count = 9999; next; };
   /^-?d$/ && do { $diagnose = 1; $count++; next; };
   /^-?ca?$/ && do { $copyBack = 1; if ($a1 =~ /a/) { $diagAfter = 1; } $count++; next; };
   /^-?n$/ && do { $copyBack = 0; $count++; next; };
   /^-?o$/ && do { $order = 1; $count++; next; };
   /^-?r$/ && do { $region = $ARGV[$count+1]; $count += 2; next; };
   /^-?da$/ && do { $diagAfter = 1; $count++; next; };
+  /^-?l$/ && do { $launch = 1; $count++; next; };
   /^-?ul$/ && do { $upperLimit = $ARGV[$count+1]; $count+= 2; next; };
-  if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $count++; next; }
-  if (-f "$a1.trizbort") { $file = "$a1.trizbort"; $count++; next; }
-  if (-f "$triz\\$a1.trizbort") { die(); $file = "$triz\\$a1.trizbort"; $count++; next; }
+  if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $gotLong = 1; $count++; next; }
+  if (-f "$a1.trizbort") { $gotLong = 0; $file = "$a1.trizbort"; $count++; next; }
+  if (-f "$triz\\$a1.trizbort") { die(); $gotLong = 0; $file = "$triz\\$a1.trizbort"; $count++; next; }
   /^[0-9,\\\/]+$/ && do {
   if ($a1 =~ /\//)
   {
@@ -117,6 +119,9 @@ if (scalar keys %matchups == 0) { print "No matchups found to flip.\n"; exit; }
 #for $y (sort keys %matchups) { print "$y - $matchups{$y}\n"; }
 
 my $outFile = $file; $outFile =~ s/\./id\./g;
+
+if (($gotLong) && (! -f "$trdr\\$file")) { die ("Oops, no file $trdr\\$file, check trsw.pl."); }
+if ((!$gotLong) && (! -f "$trdr\\$file")) { die ("Oops, no file $trdr\\$file, check command line."); }
 
 open(A, "$trdr\\$file");
 open(B, ">$trdr\\$outFile");
@@ -276,9 +281,11 @@ print<<EOT;
 -o = order
 -r = specify region
 -ul = upper limit for IDs to display
+-l = launch after
 -? = this
-btp pc sc = projects
-1,4,7 cycles 1 to 4 to 7, 1/4=1,2,3,4, 1\4=4,3,2,1
+-x breaks arg reading loop, useful for if you typed in a lot before and don't want to delete
+btp pc sc ss = projects
+1,4,7 cycles 1 to 4 to 7, 1/4=1,2,3,4, 1\\4=4,3,2,1
 EOT
 exit()
 }
