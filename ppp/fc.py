@@ -962,6 +962,7 @@ def usage():
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('h slips a card under eg KH in spares would go under an ordered QC-JD.')
     print ('- or = = a full boad reset.')
+    print ('l=loads a game, s=saves, lp=load previous/latest saved')
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
     print ('sw/ws saves on win, sp/ps saves position.')
@@ -1163,6 +1164,18 @@ def readCmd(thisCmd):
             onlymove = int(onlymove)
             name = re.sub(r'-.*', '', name)
     #### saving/loading comes first.
+    if name == 'lp':
+        original = open(savefile, "r")
+        o1 = re.compile(r'^s=')
+        while True:
+            line=original.readline()
+            if o1.match(line):
+                newSave = line
+            if not line:
+                break
+        name = newSave.strip()
+        name = "l" + name[1:]
+        print ("Loading " + name[2:])
     if name == 'l' or name == 's' or name == 'l=' or name == 's=':
         print ("load/save needs = and then a name.")
         return
