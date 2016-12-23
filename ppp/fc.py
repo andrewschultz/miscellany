@@ -240,6 +240,11 @@ def autoShift(): # this shifts rows
                     return True
     return False
 
+def inOrder2(rowNum):
+    if len(elements[rowNum]) < 2:
+        return 0
+    return inOrder(rowNum)
+
 def inOrder(rowNum):
     if len(elements[rowNum]) < 2:
         return 0
@@ -903,8 +908,10 @@ def slipUnder():
         slipProcess = False
         curMove = len(moveList)
         for i in range(1,9):
-            if len(elements[i]) > 0 and inOrder(i) and slipProcess == False:
+            if slipProcess == False and ((len(elements[i]) > 0 and inOrder(i)) or (len(elements[i]) == 1)):
+                #print ("%d %d %d %d" % (i, len(elements[i]), inOrder(i), slipProcess))
                 for j in range (0,4):
+                    #print ("%d %d %d %d" % (i, j, spares[j], canPut(elements[i][0], spares[j])))
                     if spares[j] > 0 and canPut(elements[i][0], spares[j]):
                         #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
                         if len(elements[i]) < maxMoveMod():
@@ -1530,6 +1537,7 @@ def readCmd(thisCmd):
             if not inUndo:
                 moveList.append(name)
             reshuf(-1)
+            slipUnder()
             checkFound()
             printCards()
             return
@@ -1570,6 +1578,7 @@ def readCmd(thisCmd):
             tempMoveSize = len(moveList)
             tempRowSize = len(elements[myRow])
             checkFound()
+            slipUnder()
             if reshuf(myToSpare) or len(elements[myRow]) < tempRowSize:
                 reshuf(-1)
         printCards()
