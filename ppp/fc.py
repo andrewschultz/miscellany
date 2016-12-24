@@ -865,7 +865,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 if len(elements[r2]) > 0:
                     print ('Can\'t move to that non-empty, even with force.')
                     return -1
-                print ('Cutting down to', onlymove)
+                printCond ('Cutting down to ' + onlymove, False)
                 return onlymove
         if onlymove < fromline:
             return onlymove
@@ -875,7 +875,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 if len(elements[r2]) > 0:
                     print ('Can\'t move to that non-empty, even with force.')
                     return -1
-                print ("Cutting down to " + str(locmaxmove))
+                printCond ("Cutting down to " + str(locmaxmove), False)
             return locmaxmove
         global cmdChurn
         if showDeets and not cmdChurn:
@@ -914,7 +914,7 @@ def slipUnder():
                     #print ("%d %d %d %d" % (i, j, spares[j], canPut(elements[i][0], spares[j])))
                     if spares[j] > 0 and canPut(elements[i][0], spares[j]):
                         #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
-                        if len(elements[i]) < maxMoveMod():
+                        if len(elements[i]) <= maxMoveMod():
                             tst = chr(97+j) + str(fi)
                             resetChurn = not cmdChurn
                             cmdChurn = True
@@ -1450,6 +1450,7 @@ def readCmd(thisCmd):
                 elements[temprow].pop()
                 if not inUndo:
                     moveList.append(name)
+                slipUnder()
                 checkFound()
                 printCards()
                 return
