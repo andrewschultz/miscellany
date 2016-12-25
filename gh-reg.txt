@@ -1,0 +1,8 @@
+ws	c:\writing\scripts
+wd	c:\writing\dict
+tr	c:\games\inform\triz\mine
+if	$fromBase
+is	c:\games\inform\$fromShort.inform\source
+im	c:\games\inform\$fromShort materials
+id	c:\games\inform\$fromShort.inform\uuid.txt
+;

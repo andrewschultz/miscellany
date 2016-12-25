@@ -251,8 +251,8 @@ prob=$is\roomlist.txt,testing
 #concept tracker
 prob=$wd\conc.pl,utils
 prob=$is\reg-pc-*,testing
->prob=conc.pl -o -pc
->prob=talf.pl -pc
+>prob=conc.pl -c -ro -pc
+>prob=$wd\talf.pl -pc
 >prob=i7t.pl -o -q -s pc | grep -iE "failed|likely|run this"
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
@@ -264,6 +264,8 @@ city=$im\Release\slicker-city-invisiclues.htm,
 -b:city=$im\Release\release-Slicker City.zblorb,
 city=$tr\slicker-city.trizbort,
 city=$tr\slicker-city.pdf,
+city=$tr\slicker-city-walkthrough.trizbort,
+city=$tr\slicker-city-walkthrough.pdf,
 city=$id,
 city=$ws\invis\sc.txt,
 city=$is\walkthru.txt,
@@ -284,8 +286,8 @@ city=$wd\olap.pl,
 city=$wd\olap.txt,
 #################################
 #commands to run
->city=talf.pl -sc
->city=conc.pl -o -sc
+>city=$wd\talf.pl -sc
+>city=conc.pl -c -ro -sc
 >city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
 >city=$is\grate.pl
 >city=$wd\olap.pl -sc
@@ -312,8 +314,8 @@ past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
 
->past=talf.pl -btp
->past=conc.pl -o -btp
+>past=$wd\talf.pl -btp
+>past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
 
 #Grubbyville files
@@ -347,6 +349,7 @@ misc=c:\tech\trizbort\redact.pl,trizbort
 misc=c:\tech\trizbort\redact.txt,trizbort
 misc=gh.pl,
 misc=gh.txt,
+misc=gh-reg.txt,
 misc=tli.pl,
 misc=sec.pl,
 misc=typo.pl,

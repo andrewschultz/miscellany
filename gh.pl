@@ -14,6 +14,8 @@ use File::Compare;
 
 my $warnCanRun = 0;
 
+my %repls;
+
 my $alph = 1;
 my $procString;
 my $defaultString;
@@ -104,6 +106,8 @@ if ($verbose)
 for my $k (sort keys %poss) { if ($k =~ /,/) { print "$k is a valid key and maps to multiple others.\n"; } else { print "$k is a valid key.\n"; } }
 }
 
+readReplace();
+
 if (!processTerms($ght, $ghp))
 {
   if ($byFile && ($#procAry > -1))
@@ -182,14 +186,15 @@ sub processTerms
 
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g;
-	  # I could probably do the below a little more programatically but for right now this gets rid of a lot of the repetitive stuff that clogs the text files
-	  $c =~ s/\$ws/c:\\writing\\scripts/g;
-	  $c =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
-	  $c =~ s/\$wd/c:\\writing\\dict/g;
-	  $c =~ s/\$if/$fromBase/g;
-	  $c =~ s/\$im/c:\\games\\inform\\$fromShort materials/g;
-	  $c =~ s/\$is/c:\\games\\inform\\$fromShort.inform\\source/g;
-	  $c =~ s/\$id/c:\\games\\inform\\$fromShort.inform\\uuid.txt/g;
+	  #print "Before $c\n";
+	  for my $repl (sort keys %repls)
+	  {
+	    $c =~ s/\$$repl/$repls{$repl}/g;
+      }
+	  #still would like to tighten this up a bit somehow so it's not hard coded
+	  $c =~ s/\$fromBase/$fromBase/g;
+	  $c =~ s/\$fromShort/$fromShort/g;
+	  #print "After $c\n";
 
 	  @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
@@ -301,6 +306,20 @@ while ($a = <A>)
 }
 
 close(A);
+}
+
+sub readReplace
+{
+  my $line;
+  open(A, "c:\\writing\\scripts\\gh-reg.txt") || die();
+  while ($line = <A>)
+  {
+    if ($line =~ /^;/) { last; }
+    chomp($line);
+	my @lines = split(/\t/, $line);
+	$repls{$lines[0]} = $lines[1];
+  }
+  close(A);
 }
 
 ###############################
