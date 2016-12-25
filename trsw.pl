@@ -66,26 +66,36 @@ while ($count <= $#ARGV)
   if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $gotLong = 1; $count++; next; }
   if (-f "$a1.trizbort") { $gotLong = 0; $file = "$a1.trizbort"; $count++; next; }
   if (-f "$triz\\$a1.trizbort") { die(); $gotLong = 0; $file = "$triz\\$a1.trizbort"; $count++; next; }
-  /^[0-9,\\\/]+$/ && do {
+  /^[0-9,\\\/:]+$/ && do {
   if ($a1 =~ /\//)
   {
+    my $incr = 1;
+    if ($a1 =~ /:/) { $b = $a1; $b =~ s/.*://; $incr = $b; if ($incr < 0) { die ("Increment must be positive. Switch / and \\ to change."); } $a1 =~ s/:.*//; }
     @j = split(/\//, $a1);
-	for (@j[0]..@j[1]-1)
+	for ($j[0]..$j[1])
 	{
-	  $matchups{$_} = $_+1;
+	  $matchups{$_} = $_+$incr;
+	  if ($matchups{$_} > $j[1])
+	  {
+	    $matchups{$_} += ($j[0] - $j[1] - 1);
+      }
 	}
-	$matchups{@j[1]} = @j[0];
 	$count++;
 	next;
   }
   if ($a1 =~ /\\/)
   {
+    my $incr = 1;
+    if ($a1 =~ /:/) { $b = $a1; $b =~ s/.*://; $incr = $b; if ($incr < 0) { die ("Increment must be positive. Switch / and \\ to change."); } $a1 =~ s/:.*//; }
     @j = split(/\\/, $a1);
-	for (@j[0]+1..@j[1])
+	for ($j[0]..$j[1])
 	{
-	  $matchups{$_} = $_-1;
+	  $matchups{$_} = $_-$incr;
+	  if ($matchups{$_} < $j[0])
+	  {
+	    $matchups{$_} += ($j[1] - $j[0] + 1);
+      }
 	}
-	$matchups{@j[0]} = @j[1];
 	$count++;
 	next;
   }
@@ -108,7 +118,7 @@ while ($count <= $#ARGV)
 
 if (!$file) { die ("Without a default file to read, you need to specify one on the command line."); }
 
-if ($diagnose) { diagnose(); exit(); }
+if ($diagnose) { diagnose(); }
 
 checkIDBounds();
 
@@ -126,11 +136,14 @@ if ((!$gotLong) && (! -f "$trdr\\$file")) { die ("Oops, no file $trdr\\$file, ch
 open(A, "$trdr\\$file");
 open(B, ">$trdr\\$outFile");
 
-while ($a = <A>)
+my $line2;
+
+while ($line = <A>)
 {
   $thisLine = 0;
-  $a =~ s/id=\"([0-9]+)\"/newNum($1)/ge;
-  print B $a;
+  $line2 = $line;
+  $line2 =~ s/id=\"([0-9]+)\"/newNum($1)/ge;
+  print B $line2;
   $lineDif += $thisLine;
 }
 
@@ -143,12 +156,20 @@ if ($copyBack)
 {
 print "Copying back $file.\n";
 `copy /Y $trdr\\$outFile $trdr\\$file`;
+`erase $trdr\\$outFile`;
+
 if ($diagAfter) { diagnose(); exit(); }
 } else
 {
   print "-c to copy back $file.\n";
   `wm $trdr\\$outFile $trdr\\$file`;
 }
+
+####################################################################
+#
+# subroutines below here
+#
+####################################################################
 
 sub newNum
 {
@@ -200,7 +221,7 @@ sub diagnose
 	$curCount++;
   }
   print join("\n", sort {$a <=> $b} (@printy)) . "\n";
-  print "Lines: " . join(", ", sort {$a <=> $b} (@mylines));
+  print "Lines: " . join(", ", sort {$a <=> $b} (@mylines)) . "\n";
 }
 
 sub orderTriz
