@@ -194,7 +194,7 @@ sub diagnose
     @q = split(/\"/, $line);
 	if ((!$region) || ($q[15] =~ /$region/i))
 	{
-	push(@printy, "@q[1] -> @q[3] (@q[15])");
+	$printy{$q[1]} = "$q[3] ($q[15])";
 	}
 	$lastID = @q[1];
   }
@@ -204,23 +204,22 @@ sub diagnose
 	push(@mylines, @q[1]);
   }
   }
-  @printy = sort {$a <=> $b} (@printy);
   $lastID = 0;
   my $curCount = 0;
-  for (@printy)
+  for (sort keys %printy)
   {
     $thisID = $_; $thisID =~s/ .*//g;
 	if ($thisID > $upperLimit)
 	{
 	  print "Printout truncated at $_ / $thisID > $upperLimit, $curCount.\n";
-	  splice(@printy,$curCount);
+	  for $j (sort keys %printy) { if ($j > $upperLimit) { delete($printy{$j}); } }
 	  last;
     }
 	if ($thisID - $lastID != 1) { $_ =~ s/ ->/ \* ->/; }
 	$lastID = $thisID;
 	$curCount++;
   }
-  print join("\n", sort {$a <=> $b} (@printy)) . "\n";
+  print join("\n", map { sprintf("%3d: $printy{$_}", $_) } sort keys %printy) . "\n";
   print "Lines: " . join(", ", sort {$a <=> $b} (@mylines)) . "\n";
 }
 
