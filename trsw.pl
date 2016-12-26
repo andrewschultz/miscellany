@@ -2,11 +2,26 @@
 #
 # trsw.pl = trizbort switch
 #
+# sample usages
+#       trsw.pl d ss
+#       trsw.pl ca sc 2,3
+
+use warnings;
+use strict;
 
 if ($#ARGV < 0) { die ("Need (at the very least) CSVs of ids to flip."); }
 
+######################options
+my $diagnose = 0;
 my $copyBack = 0;
+my $diagAfter = 0;
+my $order = 0;
+my $launch = 0;
+my $gotLong = 0;
 
+####################variables
+my $lineDif = 0;
+my $idDif = 0;
 my $count = 0;
 my %matchups;
 my %long;
@@ -51,9 +66,11 @@ if (!$file) { print "Warning, no default file in $mapfile.\n"; }
 
 while ($count <= $#ARGV)
 {
-  $a1 = $ARGV[$count];
+  my $a1 = $ARGV[$count];
+  my @j;
   for ($a1)
   {
+  /^-?\?$/ && do { usage(); };
   /^-?x$/ && do { $count = 9999; next; };
   /^-?d$/ && do { $diagnose = 1; $count++; next; };
   /^-?ca?$/ && do { $copyBack = 1; if ($a1 =~ /a/) { $diagAfter = 1; } $count++; next; };
@@ -102,7 +119,7 @@ while ($count <= $#ARGV)
   @j = split(/,/, $a1);
   for (0..$#j)
   {
-    $q = ($_+1) % ($#j+1);
+    my $q = ($_+1) % ($#j+1);
 	if (($_ > 1) && ($q == $j[$_]-1)) { die("$q mapped to itself."); }
     if ($matchups{$j[$_]}) { die("$j[$_] is mapped twice, bailing.\n"); }
     $matchups{$j[$_]} = $j[$q];
@@ -137,6 +154,7 @@ open(A, "$trdr\\$file");
 open(B, ">$trdr\\$outFile");
 
 my $line2;
+my $thisLine;
 
 while ($line = <A>)
 {
@@ -150,7 +168,10 @@ while ($line = <A>)
 close(A);
 close(B);
 
-#print "$lineDif different lines, $idDif total changes.\n";
+if (($lineDif) || ($idDif))
+{
+  print "$lineDif different lines, $idDif total changes.\n";
+}
 
 if ($copyBack)
 {
@@ -184,24 +205,27 @@ sub newNum
 
 sub diagnose
 {
+  my %printy;
   my $thisID;
   my $lastID;
+  my @mylines;
+
   open(A, "$trdr\\$file");
   while ($line=<A>)
   {
   if ($line =~ /room id=\"/)
   {
-    @q = split(/\"/, $line);
+    my @q = split(/\"/, $line);
 	if ((!$region) || ($q[15] =~ /$region/i))
 	{
 	$printy{$q[1]} = "$q[3] ($q[15])";
 	}
-	$lastID = @q[1];
+	$lastID = $q[1];
   }
   if ($line =~ /line id=\"/)
   {
-    @q = split(/\"/, $line);
-	push(@mylines, @q[1]);
+    my @q = split(/\"/, $line);
+	push(@mylines, $q[1]);
   }
   }
   $lastID = 0;
@@ -212,7 +236,7 @@ sub diagnose
 	if ($thisID > $upperLimit)
 	{
 	  print "Printout truncated at $_ / $thisID > $upperLimit, $curCount.\n";
-	  for $j (sort keys %printy) { if ($j > $upperLimit) { delete($printy{$j}); } }
+	  for my $j (sort keys %printy) { if ($j > $upperLimit) { delete($printy{$j}); } }
 	  last;
     }
 	if ($thisID - $lastID != 1) { $_ =~ s/ ->/ \* ->/; }
@@ -273,18 +297,19 @@ sub idnum
 
 sub checkIDBounds
 {
+  my $max = 0;
   open(A, "$trdr\\$file");
   while ($line = <A>)
   {
     if ($line =~ /id=\"/)
 	{
-	   @x = split(/\"/, $line);
-	   $y = $x[1];
+	   my @x = split(/\"/, $line);
+	   my $y = $x[1];
 	   if ($y > $max) { $max = $y; }
 	}
   }
   close(A);
-  for $j (sort keys %matchups)
+  for my $j (sort keys %matchups)
   {
     if ($j > $max) { die ("$j is more than the maximum ID, $max."); }
   }
