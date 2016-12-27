@@ -7,7 +7,7 @@
 #
 # gh.pl c opens code, e opens gh.txt, p opens private file
 
-use strict;
+#use strict;
 use warnings;
 
 use File::Compare;
@@ -144,6 +144,8 @@ sub processTerms
     chomp($a);
     my $b = $a;
 	$maxSize = 0;
+	
+	if ($a !~ /[a-z]/) { $dirName = ""; }
 
     if ($a =~ /^#/) { next; }
 	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
@@ -152,18 +154,10 @@ sub processTerms
 	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
 	  $b =~ s/^>//g; $b =~ s/=.*//g;
 	  if (!hasHash($b)) { next; }
-	  if (($runTrivialTests == 1) || ($postproc{$b}))
+	  if (($runTrivialTests == 1) || ($postproc{$b})) # this is about running commands. Now the loop below should hit the FROMBASE= etc first
 	  {
 	  $b = $a; $b =~ s/.*=//g;
-	  #below is duplicate code but it'll do for now
-	  $b =~ s/\$ws/c:\\writing\\scripts/g;
-	  $b =~ s/\$tr/c:\\games\\inform\\triz\\mine/g;
-	  $b =~ s/\$wd/c:\\writing\\dict/g;
-	  $b =~ s/\$if/$fromBase/g;
-	  $b =~ s/\$im/c:\\games\\inform\\$fromShort materials/g;
-	  $b =~ s/\$is/c:\\games\\inform\\$fromShort.inform\\source/g;
-	  $b =~ s/\$id/c:\\games\\inform\\$fromShort.inform\\uuid.txt/g;
-	  #above is duplicate code but it'll do for now
+	  $b = rehash($b);
 	  $quickCheck .= `$b`;
 	  }
 	  else { $warnCanRun = 1; next; }
@@ -175,9 +169,9 @@ sub processTerms
 	#-b:
 	my $prefix = "";
 	my $c = $a; if ($c =~ /^-.:/) { $c =~ s/(^..).*/$1/g; $prefix = $c; $b =~ s/^-.://g; }
-	 if ($a =~ /FROMBASE=/) { $fromBase = $a; $fromBase =~ s/^FROMBASE=//g; }
-	 if ($a =~ /TOBASE=/) { $toBase = $a; $toBase =~ s/^TOBASE=//g; $fromShort = $toBase; }
-	 if ($a =~ /FROMSHORT=/) { $fromShort = $a; $fromShort =~ s/^FROMSHORT=//g; }
+	 if ($a =~ /FROMBASE=/) { $temp = $a; $temp =~ s/^FROMBASE=//g; $repl2{"fromBase"} = $temp; }
+	 if ($a =~ /TOBASE=/) { $temp = $a; $temp =~ s/^TOBASE=//g; $repl2{"fromShort"} = $repl2{"toBase"} = $temp; }
+	 if ($a =~ /FROMSHORT=/) { $temp = $a; $temp =~ s/^FROMSHORT=//g; $repl2{"fromShort"} = $temp; }
 	 if ($a =~ /POSTPROC=/i) { $a =~ s/^POSTPROC=//g; my @as = split(/,/, $a); for (@as) { $postproc{$_} = 1; } }
 
     $b =~ s/=.*//g;
@@ -186,14 +180,9 @@ sub processTerms
 
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g;
-	  #print "Before $c\n";
-	  for my $repl (sort keys %repls)
-	  {
-	    $c =~ s/\$$repl/$repls{$repl}/g;
-      }
-	  #still would like to tighten this up a bit somehow so it's not hard coded
-	  $c =~ s/\$fromBase/$fromBase/g;
-	  $c =~ s/\$fromShort/$fromShort/g;
+
+	  #print "Before $c\n";	  
+	  $c = rehash($c);
 	  #print "After $c\n";
 
 	  @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
@@ -201,8 +190,8 @@ sub processTerms
 	  my $toFile = $d[1];
 	  my $short = $fromFile; $short =~ s/.*[\\\/]//g;
 
-	  if ($fromFile !~ /:/) { $fromFile = "$fromBase\\$fromFile"; }
-	  if ($toBase) { $toFile = "$toBase\\$d[1]"; }
+	  if ($fromFile !~ /:/) { $fromFile = "$repl2{fromBase}\\$fromFile"; }
+	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}\\$d[1]"; }
 
 
 	  if ((! -f $fromFile)  && ($fromFile !~ /\*/)) { print "Oops $fromFile can't be found.\n"; $badFileList .= "$fromFile\n"; $badFileCount++; next; }
@@ -235,7 +224,8 @@ sub processTerms
 		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
 		  {
 		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
-		  `$cmd`;
+		  print "$cmd\n";
+		  #`$cmd`;
 		  $fileList .= "$wildFrom\\$_\n";
 		  #print "$cmd\n$toBase\n$toFile\n";
 		  $wildcards++;
@@ -401,6 +391,26 @@ for (@procAry)
   $do{$_} = 1;
   }
 }
+}
+
+sub rehash
+{
+  my $temp = $_[0];
+  for my $repl (sort keys %repls)
+  {
+  #print "$repl $repls{$repl}\n";
+  $temp =~ s/\$$repl/$repls{$repl}/g;
+  }
+  for my $repl (sort keys %repl2)
+  {
+  #print "$repl $repl2{$repl}\n";
+  $temp =~ s/\$$repl/$repl2{$repl}/g;
+  }
+  if ($temp =~ /$$/)
+  {
+    print "WARNING $_[0] -> $temp still has $$ in it.\n";
+  }
+  return $temp;
 }
 
 sub usage
