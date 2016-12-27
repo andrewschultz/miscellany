@@ -25,32 +25,37 @@ if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"
 
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
 if ($ARGV[0] eq "s") { showMisses(); exit(); }
+if ($ARGV[0] eq "?") { usage(); exit(); }
 
-if ($ARGV[0] =~ /^\+/)
+if ($ARGV[0] =~ /^[=\+]/)
 {
   my %val;
   my @this;
+  my $addit = 0;
+  
+  if ($ARGV[0] =~ /^\+/) { $addit = 1; }
   my $gotIt = 0;
-  my $toAdd = lc($ARGV[0]); $toAdd =~ s/^\+//g;
+  my $toAdd = lc($ARGV[0]); $toAdd =~ s/^[=\+]//g;
   if (!$toAdd) { print ("Added nothing."); die; }
+  if ($toAdd =~ /[^a-z]/i) { die ("Bad characters in what to add."); }
   open(A, "$misses");
   while (my $line = <A>)
   {
     chomp($line);
 	if ($line =~ /:/) { @this = split(/:/, $line); $val{$this[0]} = $this[1]; $line = $this[0]; }
-	else { $val{$line} = 1; }
+	else { $val{$line} = 1; } # eg if a line is not word:#, make it word:1
 	if ($toAdd eq $line)
 	{
 	  if (defined($val{$line}))
 	  {
-        $val{$toAdd}++;
+        $val{$toAdd}+= $addit;
 	    print "$line already in. Its weight is now $val{$line}.\n";
 		$gotIt = 1;
       }
     }
   }
   close(A);
-  if (!$gotIt) { print "Added $toAdd.\n"; $val{$toAdd}++; }
+  if (!$gotIt) { print "Added $toAdd with value $addit.\n"; $val{$toAdd}+= $addit; }
   open(B, ">$misses");
   for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
   close(B);
@@ -164,6 +169,11 @@ sub checkForRepeats
   if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line ($miss{$line})\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
 }
 
+#########################################################
+#
+# subdirs
+#
+
 sub showMisses
 {
   my %amt;
@@ -179,4 +189,15 @@ sub showMisses
   {
     print "$am misses: $amt{$am}\n";
   }
+}
+
+sub usage
+{
+print<<EOT;
+=(word) adds it without admitting wrong
++(word) adds word or increases its wrong count
+e = run misses file
+s = show misses
+? = this usage
+EOT
 }

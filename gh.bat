@@ -62,6 +62,16 @@ cd  %TEMPDIR%\grubbyville
 goto end
 )
 
+if "%1" EQU "pe" (
+cd  %TEMPDIR%\perlmaven
+goto end
+)
+
+if "%1" EQU "perl" (
+cd  %TEMPDIR%\perlmaven
+goto end
+)
+
 if "%1" EQU "e11" (
 cd  %TEMPDIR%\ectocomp\2011
 goto end
