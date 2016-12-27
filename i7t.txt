@@ -9,7 +9,7 @@ Compound	xxdb	"	$$ bits of wisdom, up from 8
 Compound	xxhs	"	$$, up from 13
 Compound	xxhb	"	$$. up from 38
 Compound	xxbgw	"	$$ random important administrative and philosophical matters
-Compound	xxjgt	"	jerks/groaners now have $$ "romantic"
+Compound	xxjgt	"	jerks/groaners now have $$ "grown-up"
 Compound	xxss	"	$$ sleep stories
 Compound	xxisv	"	To be precise, $+
 Compound	xxbr	"	there are now $$ Basher Bible references
@@ -44,6 +44,8 @@ Buck-the-past	xxadd	"	$$ off-the-wall
 Buck-the-past	xxui	"	$$ friendly inns
 Buck-the-past	xxdi	"	$$ unfriendly inns
 Buck-the-past	xxfarm	"	$$ farm animal antics
+Buck-the-past	xxkmc	"	$$ Hit King chats
+Buck-the-past	xxps	"	$+ Sharing Prophet babbles
 Buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #fourdiopolis searching
