@@ -4,15 +4,15 @@
 #############
 #the first one is xxadd since there are several Table of Explanations
 Compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
-Compound	table of dutch-blab	"	$$ bits of wisdom, up from 8
+Compound	xxdb	"	$$ bits of wisdom, up from 8
 #horrible books and horrible songs
-Compound	table of hs	"	$$, up from 13
+Compound	xxhs	"	$$, up from 13
 Compound	xxhb	"	$$. up from 38
 Compound	xxbgw	"	$$ random important administrative and philosophical matters
-Compound	table of jerk-girl-talk	"	jerks/groaners now have $$ "romantic"
-Compound	table of sleep stories	"	$$ sleep stories
-Compound	table of incisive sid viewpoints	"	To be precise, $+
-Compound	table of Bible references	"	there are now $$ Basher Bible references
+Compound	xxjgt	"	jerks/groaners now have $$ "romantic"
+Compound	xxss	"	$$ sleep stories
+Compound	xxisv	"	To be precise, $+
+Compound	xxbr	"	there are now $$ Basher Bible references
 #command to run if things are wrong
 Compound	ni pr
 ######################################

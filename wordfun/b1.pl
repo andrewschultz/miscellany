@@ -24,6 +24,7 @@ if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. U
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
+if ($ARGV[0] eq "s") { showMisses(); exit(); }
 
 if ($ARGV[0] =~ /^\+/)
 {
@@ -161,4 +162,21 @@ sub checkForRepeats
   for (@a2a) { if ($_) { $f2{$_}++; } }
 
   if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line ($miss{$line})\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
+}
+
+sub showMisses
+{
+  my %amt;
+  open(A, "$misses");
+  while ($a = <A>)
+  {
+    chomp($a);
+	$a =~ s/.*://g;
+	$amt{$a}++;
+  }
+  
+  for my $am (sort keys %amt)
+  {
+    print "$am misses: $amt{$am}\n";
+  }
 }

@@ -2,7 +2,7 @@
 
 set NOTES=c:\users\andrew\dropbox\notes
 set EXT=.inform
-set PROJ=slicker-city
+set PROJ=buck-the-past
 set SOREL=source
 
 if "%1" == "h" (
@@ -103,6 +103,11 @@ goto story
 )
 
 if "%1" EQU "t2" (
+set PROJ=slicker-city
+goto story
+)
+
+if "%1" EQU "tp" (
 set PROJ=Compound
 goto story
 )
@@ -264,6 +269,11 @@ goto nodef
 
 if "%1" EQU "btp" (
 set PROJ=buck-the-past
+goto nodef
+)
+
+if "%1" EQU "ss" (
+set PROJ=seeker-status
 goto nodef
 )
 
