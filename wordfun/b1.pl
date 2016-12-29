@@ -67,7 +67,13 @@ if (!defined($ARGV[1])) { $wrongString = ""; }
 else
 {
   $wrongString = lc($ARGV[1]);
-  if ($ARGV[0] =~ /[$wrongString]/) { die "Oops, found and wrong overlap.\n"; }
+  if (lc($ARGV[0]) =~ /[$wrongString]/) { die "Oops, found string and wrong string overlap.\n"; }
+  my @dup = sort(split(//, $wrongString));
+  my $lastDup = "";
+  for (0..$#dup-1)
+  {
+    if (($dup[$_] eq $dup[$_+1]) && ($dup[$_] ne $lastDup)) { print "$dup[$_] is duplicated in guessed-string.\n"; $lastDup = $dup[$_]; }
+  }
 }
 
 my @wrong = split(//, $wrongString);
@@ -128,7 +134,7 @@ if ($count + $missFound > 1)
 {
 print "FREQUENCIES:";
 #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
-foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} } keys %freq)
+foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} or $a cmp $b} keys %freq)
 {
   if ($f2{$val} == ($count + $missFound)) { print " **$val**"; next; }
   print " $val:$f2{$val}/$freq{$val}";
