@@ -412,6 +412,8 @@ def foundable(thiscard):
     return 0
 
 def canPut(lower, higher):
+    if lower == 0 or higher == 0:
+        return 0
     temp1 = lower - 1
     temp2 = higher - 1
     if temp1 % 13 == 0:
@@ -895,42 +897,48 @@ def maxMoveMod():
     return base * myexp
 
 def slipUnder():
-    fi = firstEmptyRow()
-    if fi == 0:
-        return False
     slipProcess = True
     everSlip = False
     global cmdChurn
     while slipProcess:
         fi = firstEmptyRow()
-        if (fi == 0):
-            break
         slipProcess = False
         curMove = len(moveList)
-        for i in range(1,9):
-            if slipProcess == False and ((len(elements[i]) > 0 and inOrder(i)) or (len(elements[i]) == 1)):
-                #print ("%d %d %d %d" % (i, len(elements[i]), inOrder(i), slipProcess))
+        if (fi == 0):
+            for i in range (1,9):
                 for j in range (0,4):
-                    #print ("%d %d %d %d" % (i, j, spares[j], canPut(elements[i][0], spares[j])))
-                    if spares[j] > 0 and canPut(elements[i][0], spares[j]):
-                        #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
-                        if len(elements[i]) <= maxMoveMod():
-                            tst = chr(97+j) + str(fi)
-                            resetChurn = not cmdChurn
-                            cmdChurn = True
-                            elements[fi].append(spares[j])
+                    if slipProcess == False and (inOrder(i) or (len(elements[i]) == 1)) and canPut(elements[i][0], spares[j]):
+                        print ("Oof slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
+                        if len(elements[i]) + spareUsed() <= 4:
+                            temp = 0
+                            elements[i].insert(0, spares[j])
                             spares[j] = 0
-                            shiftcards(i, fi, len(elements[i]))
-                            if resetChurn:
-                                cmdChurn = False
                             slipProcess = True
-                            everSlip = True #note the below is tricky because we sort of record the move and sort of don't. The best way to do this is to have, say "slip-" + tst as the move and it's only activated if slip (not an option right now) is turned off. Similarly for other options. But that's a lot of work.
-                            #if curMove == len(moveList):
-                                #cmdChurn = False
-                                #print ("Tried move" + tst + ", failed.")
-                                #dumpInfo(-1)
-                                #printVertical()
-                            break
+        else:
+            for i in range(1,9):
+                if slipProcess == False and ((len(elements[i]) > 0 and inOrder(i)) or (len(elements[i]) == 1)):
+                    #print ("%d %d %d %d" % (i, len(elements[i]), inOrder(i), slipProcess))
+                    for j in range (0,4):
+                        #print ("%d %d %d %d" % (i, j, spares[j], canPut(elements[i][0], spares[j])))
+                        if spares[j] > 0 and canPut(elements[i][0], spares[j]):
+                            #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
+                            if len(elements[i]) <= maxMoveMod():
+                                tst = chr(97+j) + str(fi)
+                                resetChurn = not cmdChurn
+                                cmdChurn = True
+                                elements[fi].append(spares[j])
+                                spares[j] = 0
+                                shiftcards(i, fi, len(elements[i]))
+                                if resetChurn:
+                                    cmdChurn = False
+                                slipProcess = True
+                                everSlip = True #note the below is tricky because we sort of record the move and sort of don't. The best way to do this is to have, say "slip-" + tst as the move and it's only activated if slip (not an option right now) is turned off. Similarly for other options. But that's a lot of work.
+                                #if curMove == len(moveList):
+                                    #cmdChurn = False
+                                    #print ("Tried move" + tst + ", failed.")
+                                    #dumpInfo(-1)
+                                    #printVertical()
+                                break
     return everSlip
 
 def dumpInfo(x):
