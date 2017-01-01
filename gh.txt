@@ -313,10 +313,12 @@ past=$is\badj.pl
 past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
+past=$is\pun.pl
 
 >past=$wd\talf.pl -btp
 >past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
+>past=$is\pun.pl grep -iE ",[0-9]"
 
 #Grubbyville files
 TOBASE=grubbyville
@@ -417,6 +419,8 @@ misc=c:\coding\perl\proj\fc.rb,ruby
 misc=$ws\comout.pl,
 misc=$ws\comout.txt,
 misc=$ws\trsw.pl,
+misc=$ws\gt.pl
+misc=$ws\gt.bat
 
 #PlotEx
 FROMBASE=c:\games\inform
