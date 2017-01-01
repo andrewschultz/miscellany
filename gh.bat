@@ -63,12 +63,17 @@ goto end
 )
 
 if "%1" EQU "pe" (
-cd  %TEMPDIR%\perlmaven
+cd  %TEMPDIR%\perlmaven\sites\en\pages
+goto end
+)
+
+if "%1" EQU "pm" (
+cd  %TEMPDIR%\perlmaven\sites\en\pages
 goto end
 )
 
 if "%1" EQU "perl" (
-cd  %TEMPDIR%\perlmaven
+cd  %TEMPDIR%\perlmaven\sites\en\pages
 goto end
 )
 

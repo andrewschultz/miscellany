@@ -1516,11 +1516,6 @@ def readCmd(thisCmd):
             print ('Nothing to move from.')
             return
         if len(elements[t2]) == 0:
-            print chains(t1)
-            print len(elements[t1])
-            print cmdChurn
-            print force
-            print onlymove
             if chains(t1) == len(elements[t1]) and not cmdChurn and force == 0 and onlymove == 0:
                 shufwarn()
                 return
@@ -1636,9 +1631,9 @@ if annoyingNudge:
     try: input = raw_input
     except NameError: pass
     pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
-    if pwd != "I am wasting time":
+    if pwd != "I aM wAsTiNg TiMe":
         if pwd.lower() == "i am wasting time":
-            print ("Remember to put it in sentence case!")
+            print ("Remember to put it in alternate caps case! I did this on purpose, to make it that much harder.")
             exit()
         print ("Type I am wasting time, or you can't play.")
         exit()
