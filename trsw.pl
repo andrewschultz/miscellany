@@ -18,6 +18,7 @@ my $diagAfter = 0;
 my $order = 0;
 my $launch = 0;
 my $gotLong = 0;
+my $showLines = 0;
 
 ####################variables
 my $last = 0;
@@ -80,6 +81,7 @@ while ($count <= $#ARGV)
   /^-?o$/ && do { $order = 1; $count++; next; };
   /^-?r$/ && do { $region = $ARGV[$count+1]; $count += 2; next; };
   /^-?da$/ && do { $diagAfter = 1; $count++; next; };
+  /^-?sl$/ && do { $showLines = 1; $count++; next; };
   /^-?l$/ && do { $launch = 1; $count++; next; };
   /^-?ul$/ && do { $upperLimit = $ARGV[$count+1]; $count+= 2; next; };
   if ($long{$a1}) { $file = "$long{$a1}.trizbort"; $gotLong = 1; $count++; next; }
@@ -249,7 +251,15 @@ sub diagnose
   {
     sprintf("%3d: $printy{$_}%s", $_, isasc($_));
   } sort {$a <=> $b } keys %printy) . "\n";
-  print "Lines: " . join(", ", sort {$a <=> $b} (@mylines)) . "\n";
+  @mylines = sort {$a <=> $b} (@mylines);
+  if ($showLines)
+  {
+  print "Lines: " . join(", ", @mylines) . "\n";
+  }
+  else
+  {
+  print "Lines min=$mylines[0], max=$mylines[$#mylines]\n";
+  }
   if ($#bump > -1)
   {
     print "Bump ups: " . join(", ", sort {$a <=> $b} (@bump)) . "\n";
@@ -347,6 +357,7 @@ print<<EOT;
 -r = specify region
 -ul = upper limit for IDs to display
 -l = launch after
+-sl = show all lines, not just max
 -? = this
 -x breaks arg reading loop, useful for if you typed in a lot before and don't want to delete
 btp pc sc ss = projects
