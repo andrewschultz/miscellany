@@ -636,20 +636,23 @@ def chains(myrow):
     while mytemp > 0:
         if canPut(elements[myrow][mytemp], elements[myrow][mytemp-1]):
             retval += 1
-            if retval == 10:
-                return "+"
             mytemp = mytemp - 1
         else:
             return retval
     return retval
 
+def onedig(y):
+    if y < 10:
+        return str(y)
+    return "+"
+
 def printVertical():
     count = 0
     for y in range (1,9):
         if chainNope(y) == 0:
-            sys.stdout.write(' *' + str(chains(y)) + '*')
+            sys.stdout.write(' *' + onedig(chains(y)) + '*')
         else:
-            sys.stdout.write(' ' + str(chains(y)) + '/' + str(chainNope(y)))
+            sys.stdout.write(' ' + onedig(chains(y)) + '/' + str(chainNope(y)))
         if doubles:
             sys.stdout.write(' ')
     print ("")
@@ -808,11 +811,14 @@ def anyDoableLimit (ii):
     return 0
 
 def anyDoable (ii, emptyOK):
+    tempret = 0
     for y in range (1,9):
-        if doable(ii, y, 0):
-            if emptyOK or len(elements[y]) > 0:
+        tempval = doable(ii, y, 0);
+        if emptyOK or len(elements[y]) > 0:
+            if tempval > 0:
                 return y
-    return 0
+            tempret = y
+    return tempret
 
 def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no match, -1 = asking too much
     cardsToMove = 0
@@ -908,7 +914,7 @@ def slipUnder():
             for i in range (1,9):
                 for j in range (0,4):
                     if slipProcess == False and (inOrder(i) or (len(elements[i]) == 1)) and canPut(elements[i][0], spares[j]):
-                        print ("Oof slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
+                        #print ("Checking slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
                         if len(elements[i]) + spareUsed() <= 4:
                             temp = 0
                             elements[i].insert(0, spares[j])
@@ -1510,6 +1516,11 @@ def readCmd(thisCmd):
             print ('Nothing to move from.')
             return
         if len(elements[t2]) == 0:
+            print chains(t1)
+            print len(elements[t1])
+            print cmdChurn
+            print force
+            print onlymove
             if chains(t1) == len(elements[t1]) and not cmdChurn and force == 0 and onlymove == 0:
                 shufwarn()
                 return
@@ -1627,7 +1638,7 @@ if annoyingNudge:
     pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
     if pwd != "I am wasting time":
         if pwd.lower() == "i am wasting time":
-            print ("Remember to put it in sentence case!" + pwd)
+            print ("Remember to put it in sentence case!")
             exit()
         print ("Type I am wasting time, or you can't play.")
         exit()
