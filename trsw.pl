@@ -20,6 +20,7 @@ my $launch = 0;
 my $gotLong = 0;
 
 ####################variables
+my $last = 0;
 my $lineDif = 0;
 my $idDif = 0;
 my $count = 0;
@@ -28,6 +29,7 @@ my %long;
 my $line;
 my $upperLimit = 99999;
 my $region = "";
+my @bump;
 
 my $mapfile = __FILE__;
 $mapfile =~ s/pl$/txt/;
@@ -243,8 +245,24 @@ sub diagnose
 	$lastID = $thisID;
 	$curCount++;
   }
-  print join("\n", map { sprintf("%3d: $printy{$_}", $_) } sort keys %printy) . "\n";
+  print join("\n", map
+  {
+    sprintf("%3d: $printy{$_}%s", $_, isasc($_));
+  } sort {$a <=> $b } keys %printy) . "\n";
   print "Lines: " . join(", ", sort {$a <=> $b} (@mylines)) . "\n";
+  if ($#bump > -1)
+  {
+    print "Bump ups: " . join(", ", sort {$a <=> $b} (@bump)) . "\n";
+  }
+}
+
+sub isasc
+{
+  my $l2 = $last;
+  $last = $_[0];
+  if ($_[0] - $l2 == 1) { return ""; }
+  push (@bump, $_[0]);
+  return " ********************";
 }
 
 sub orderTriz
@@ -298,6 +316,7 @@ sub idnum
 sub checkIDBounds
 {
   my $max = 0;
+  my $die = 0;
   open(A, "$trdr\\$file");
   while ($line = <A>)
   {
@@ -311,8 +330,9 @@ sub checkIDBounds
   close(A);
   for my $j (sort keys %matchups)
   {
-    if ($j > $max) { die ("$j is more than the maximum ID, $max."); }
+    if ($j > $max) { print ("$j is more than the maximum ID, $max."); $die = 1; }
   }
+  if ($die) { $die; }
   close(A);
 }
 
