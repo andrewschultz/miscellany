@@ -817,6 +817,7 @@ def anyDoable (ii, emptyOK):
         if emptyOK or len(elements[y]) > 0:
             if tempval > 0:
                 return y
+        if len(elements[y]) > 0 and tempval > 0:
             tempret = y
     return tempret
 
@@ -1631,6 +1632,7 @@ if annoyingNudge:
     try: input = raw_input
     except NameError: pass
     pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
+    #if pwd != "i am wasting time":
     if pwd != "I aM wAsTiNg TiMe":
         if pwd.lower() == "i am wasting time":
             print ("Remember to put it in alternate caps case! I did this on purpose, to make it that much harder.")
