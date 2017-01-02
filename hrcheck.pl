@@ -28,6 +28,7 @@ my $cmdCount = 0;
 my $mod = 0;
 
 my @times;
+my $thistime;
 
 my %browsMap;
 
@@ -123,35 +124,41 @@ while ($line = <A>)
     $cmdCount++;
   }
   @times = split(/,/, $b[$cmdCount]);
+  
+  $cmdCount++;
+  
+  for $thistime (@times)
+  {
 
-  if ($times[$#times] =~ /[m]$/) { $mod = $times[$#times]; $mod =~ s/.*m//g; }
+  if ($thistime =~ /[m]$/) { $mod = $thistime; $mod =~ s/.*m//g; }
   
   ######################quarter hours
-  if ($times[$#times] =~ /[tphb]$/) { @qhr[0] = 0;
-  while ($times[$#times] =~ /[tphb]$/)
+  if ($thistime =~ /[tphb]$/)
   {
-    for (0..3)
-	{
-	  if ($times[$#times] =~ /$quarters[$_]$/)
-	  {
-	    $qhr[$_] = 1;
-		$times[$#times] =~ s/.$//;
+    @qhr[0] = 0;
+    while ($thistime =~ /[tphb]$/)
+    {
+      for (0..3)
+ 	  {
+	    if ($thistime =~ /$quarters[$_]$/)
+	    {
+	      $qhr[$_] = 1;
+		  $thistime =~ s/.$//;
+        }
       }
     }
-  }
   }
   #this needs to be outside the loop so it registers
   $min = floor($minute/15);
  
-  if ($times[$#times] =~ /:/)
+  if ($thistime =~ /:/)
   {
     @tens = (0, 0, 0, 0, 0, 0);
-	my @totens = split(/:/, $times[$#times]);
-	$times[$#times] =~ s/:.*//;
+	my @totens = split(/:/, $thistime);
+	$thistime =~ s/:.*//;
 	for (1..$#totens) { $tens[$totens[$_]] = 1; }
 	$min = floor($minute/10);
   }
-  $cmdCount++;
 
   #print "$b[1]\n"; exit;
   if ($defaultBrowser)
@@ -169,10 +176,10 @@ while ($line = <A>)
   $browsMap{$q} );
   }
   }
-  if (($b[0] eq "*") || validHour())
+  if (validHour($thistime))
   {
     #print "$hour, $times[$#times] good so far ($min): @qhr, @tens.\n";
-    if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($times[$#times] < 0)))
+    if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($thistime < 0)))
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
@@ -183,6 +190,8 @@ while ($line = <A>)
 	  print `$b[$cmdCount]`;
 	}
   }
+  }
+
   if ($lastTime ne '"')
   {
     $lastTime = $b[0];
@@ -194,14 +203,14 @@ close(A);
 
 sub validHour
 {
-  my $t = $times[$#times];
+  if ($_[0] eq "*") { return 1; }
   my @ha = split(/,/, $hour);
   for my $h (@ha)
   {
-  if ($t == $h) { return 1; }
-  if ($t < 0)
+  if ($_[0] == $h) { return 1; }
+  if ($_[0] < 0)
   {
-    my $mult = - $t;
+    my $mult = - $_[0];
 	if (($h * 2 + floor($minute/30)) % $mult == $mod) { return 1; }
   }
   }
