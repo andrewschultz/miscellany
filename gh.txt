@@ -1,7 +1,7 @@
 # gh.pl c opens code, e opens gh.txt, p opens private file
 
 ######################default
-d:sc
+d:btp
 
 #POSTPROC=prob,city
 

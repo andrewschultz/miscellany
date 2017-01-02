@@ -18,11 +18,13 @@ my $endString = "";
 my $missFound = 0;
 my %freq;
 my %f2;
+my $stdin = 0;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
 
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
+if ($ARGV[0] eq "i") { $stdin = 1; }
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
 if ($ARGV[0] eq "s") { showMisses(); exit(); }
 if ($ARGV[0] eq "?") { usage(); exit(); }
@@ -62,23 +64,6 @@ if ($ARGV[0] =~ /^[=\+]/)
   exit;
 }
 
-my @right = split(//, lc($ARGV[0]));
-if (!defined($ARGV[1])) { $wrongString = ""; }
-else
-{
-  $wrongString = lc($ARGV[1]);
-  if (lc($ARGV[0]) =~ /[$wrongString]/) { die "Oops, found string and wrong string overlap.\n"; }
-  my @dup = sort(split(//, $wrongString));
-  my $lastDup = "";
-  for (0..$#dup-1)
-  {
-    if (($dup[$_] eq $dup[$_+1]) && ($dup[$_] ne $lastDup)) { print "$dup[$_] is duplicated in guessed-string.\n"; $lastDup = $dup[$_]; }
-  }
-}
-
-my @wrong = split(//, $wrongString);
-my @toGuess;
-
 my $count = 0;
 
 my $lastOne = "";
@@ -87,25 +72,61 @@ my $whichf = length ($ARGV[0]);
 
 my $wordBad = 0;
 
-my $readFile = "c:/writing/dict/words-$whichf.txt";
-
 my $line;
  
 open(A, "$misses") || die ("No misses file.");
 while ($line = <A>) { chomp($line); my @q = split(/:/, $line); if (defined($miss{lc($q[0])})) { print "$q[0] duplicated.\n"; } $miss{lc($q[0])} = $q[1]; }
 close(A);
 
-open(A, "$readFile") || die ("No $readFile");
-
 my $canAlphabetize = 0;
 
 #if ($r =~ /$ARGV[1]/i) { die; }
 #else { die ("$r !~ $ARGV[1]"); }
 
-if ($ARGV[0] =~ /^[a-z]/i) { $canAlphabetize = 1; $lastOne = $ARGV[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($ARGV[0]), 0, 1)); }
-
-while ($line = <A>)
+if (!$stdin) { oneHangman($ARGV[0], $ARGV[1]); }
+else
 {
+  my $temp;
+  while ($temp = <STDIN>)
+  {
+    chomp($temp);
+    if (($temp eq "q") || ($temp eq "")) { last; }
+	my @tohang = split(/ /, $temp);
+	if ($#tohang == 0) { push(@tohang, ""); }
+	if ($#tohang > 1) { print "Need 2 args."; next; }
+	oneHangman($tohang[0], $tohang[1]);
+  }
+}
+
+sub oneHangman
+{
+
+#this is a step to save time. If we know the first letter, we don't look through the file and compare it, because anything with the 25 other letters to start it is wrong.
+
+  my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
+  open(A, "$readFile") || die ("No $readFile");
+
+  if ($ARGV[0] =~ /^[a-z]/i)
+  { $canAlphabetize = 1; $lastOne = $ARGV[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($ARGV[0]), 0, 1)); }
+
+  my $wrongString = lc($_[1]);
+
+  if ($wrongString && (lc($_[0]) =~ /[$wrongString]/)) { print "Oops, found string and wrong string overlap.\n"; return; }
+
+  my @dup = sort(split(//, $wrongString));
+  my $lastDup = "";
+
+  for (0..$#dup-1)
+  {
+    if (($dup[$_] eq $dup[$_+1]) && ($dup[$_] ne $lastDup)) { print "$dup[$_] is duplicated in guessed-string.\n"; $lastDup = $dup[$_]; }
+  }
+
+  my @right = split(//, lc($_[0]));
+  my @wrong = split(//, $wrongString);
+  my @toGuess;
+
+  while ($line = <A>)
+  {
   chomp($line);
   #if (length($line) != length($ARGV[0])) { next; }
   if ($canAlphabetize)
@@ -118,15 +139,12 @@ while ($line = <A>)
   $wordBad = 0;
   for (0..$#toGuess)
   {
-    if (($toGuess[$_] eq $right[$_])) { }
+    if (($toGuess[$_] eq $right[$_])) { next; }
     elsif  ($right[$_] ne ".") { $wordBad = 1; last; }
-    if ($right[$_] eq ".")
-    {
-      for my $x (0..$#wrong) { if ($line =~ $wrong[$x]) { $wordBad = 1; last; } }
-    }
+    for my $x (0..$#wrong) { if ($line =~ $wrong[$x]) { $wordBad = 1; last; } }
   }
-  if (!$wordBad) { checkForRepeats($line); }
-}
+  if (!$wordBad) { checkForRepeats($_[0], $line); }
+  }
 
 if ($endString) { print "MISSED BEFORE:\n$endString"; }
 
@@ -142,13 +160,16 @@ foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} or $a cm
 print "\n";
 } elsif ($count + $missFound == 0) { print "Uh oh no matches.\n"; } else { print "Only one match found.\n"; }
 
+close(A);
+}
+
 sub checkForRepeats
 {
-  my @a1 = split(//, lc($ARGV[0]));
-  my @a2 = split(//, $_[0]);
+  my @a1 = split(//, lc($_[0]));
+  my @a2 = split(//, lc($_[1]));
  
-  my $a3 = lc($ARGV[0]); $a3 =~ s/\.//g;
-  
+  my $a3 = lc($_[0]); $a3 =~ s/\.//g;
+
   for (0..$#a2)
   {
     if ($a1[$_] ne ".") { $a2[$_] = ""; }
