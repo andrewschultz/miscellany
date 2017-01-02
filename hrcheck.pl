@@ -22,6 +22,7 @@ my $check = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
+my $lastTime = "";
 my $adjust = 0;
 my $cmdCount = 0;
 my $mod = 0;
@@ -105,6 +106,7 @@ while ($line = <A>)
   $cmdCount = 0;
   my $min = 0;
   @b = split(/\|/, $line);
+  if ($b[0] eq '"') { $b[0] = $lastTime; $b[0] =~ s/\|.*//; }
   if ($#b == 2)
   {
     my @q = split(/,/, $b[0]);
@@ -179,6 +181,10 @@ while ($line = <A>)
 	  print "Running $b[$cmdCount]\n";
 	  print `$b[$cmdCount]`;
 	}
+  }
+  if ($lastTime ne '"')
+  {
+    $lastTime = $b[0];
   }
 }
 
