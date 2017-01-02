@@ -169,15 +169,16 @@ while ($line = <A>)
   $browsMap{$q} );
   }
   }
-  if (validHour())
+  if (($b[0] eq "*") || validHour())
   {
     #print "$hour, $times[$#times] good so far ($min): @qhr, @tens.\n";
-    if ($qhr[$min] || $tens[$min] || ($times[$#times] < 0))
+    if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($times[$#times] < 0)))
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
         if (-s "$b[$cmdCount]" == 0) { print "Skipping empty file $b[$cmdCount].\n"; next; }
       }
+	  if ($b[0] eq "*") { print "WILD CARD: "; }
 	  print "Running $b[$cmdCount]\n";
 	  print `$b[$cmdCount]`;
 	}
