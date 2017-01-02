@@ -191,11 +191,13 @@ sub processTerms
 	  my $short = $fromFile; $short =~ s/.*[\\\/]//g;
 
 	  if ($fromFile !~ /:/) { $fromFile = "$repl2{fromBase}\\$fromFile"; }
-	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}\\$d[1]"; }
+	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}"; if (defined($d[1])) { $toFile .= "\\$d[1]"; } }
 
-
-	  if ((! -f $fromFile)  && ($fromFile !~ /\*/)) { print "Oops $fromFile can't be found.\n"; $badFileList .= "$fromFile\n"; $badFileCount++; next; }
-
+	  if ((! -f $fromFile) && ($fromFile !~ /\*/))
+	  {
+	    print "Oops $fromFile can't be found.\n";
+		$badFileList .= "$fromFile\n"; $badFileCount++; next;
+      }
 
 	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
 
@@ -224,8 +226,8 @@ sub processTerms
 		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
 		  {
 		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
-		  print "$cmd\n";
-		  #`$cmd`;
+		  #print "WILDCARD COPY: $cmd\n";
+		  `$cmd`;
 		  $fileList .= "$wildFrom\\$_\n";
 		  #print "$cmd\n$toBase\n$toFile\n";
 		  $wildcards++;
