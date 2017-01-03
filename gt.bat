@@ -5,6 +5,6 @@ if "%1" EQU "" (
   goto end
 )
 
-gt.pl %1
+gt.pl %1 %2
 
 :end
