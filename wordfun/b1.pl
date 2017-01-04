@@ -20,7 +20,7 @@ my %freq;
 my %f2;
 my $stdin = 0;
 
-if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses.\n"); }
+if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"); }
 
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
@@ -71,6 +71,9 @@ my $firstOne = "";
 my $whichf = length ($ARGV[0]);
 
 my $wordBad = 0;
+my $wrongs = "";
+
+if (defined($ARGV[1])) { $wrongs = $ARGV[1]; }
 
 my $line;
  
@@ -83,7 +86,7 @@ my $canAlphabetize = 0;
 #if ($r =~ /$ARGV[1]/i) { die; }
 #else { die ("$r !~ $ARGV[1]"); }
 
-if (!$stdin) { oneHangman($ARGV[0], $ARGV[1]); }
+if (!$stdin) { oneHangman($ARGV[0], $wrongs); }
 else
 {
   my $temp;
@@ -103,11 +106,20 @@ sub oneHangman
 
 #this is a step to save time. If we know the first letter, we don't look through the file and compare it, because anything with the 25 other letters to start it is wrong.
 
-  my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
-  open(A, "$readFile") || die ("No $readFile");
+  $count = 0;
+  my %val;
+  %f2 = ();
+  %freq = ();
+  
+    my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
+    print "Trying $readFile.\n";
+    open(A, "$readFile") || die ("No $readFile");
+  my $canAlphabetize = 0;
+  my $lastOne;
+  my $firstOne;
 
-  if ($ARGV[0] =~ /^[a-z]/i)
-  { $canAlphabetize = 1; $lastOne = $ARGV[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($ARGV[0]), 0, 1)); }
+  if ($_[0] =~ /^[a-z]/i)
+  { $canAlphabetize = 1; $lastOne = $_[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($_[0]), 0, 1)); }
 
   my $wrongString = lc($_[1]);
 
@@ -128,7 +140,7 @@ sub oneHangman
   while ($line = <A>)
   {
   chomp($line);
-  #if (length($line) != length($ARGV[0])) { next; }
+  #if (length($line) != length($_[0])) { next; }
   if ($canAlphabetize)
   {
     if ($line le $firstOne) { next; }
@@ -185,7 +197,7 @@ sub checkForRepeats
   {
     if ($a4 =~ /$j/)
     {
-      #print "$_[0] contains extra guessed letters from $ARGV[0] namely $j.\n";
+      #print "$_[0] contains extra guessed letters from $_[0] namely $j.\n";
       return;
     }
   }
@@ -226,5 +238,6 @@ print<<EOT;
 e = run misses file
 s = show misses
 ? = this usage
+i = use stdin
 EOT
 }
