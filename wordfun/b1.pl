@@ -31,37 +31,8 @@ if ($ARGV[0] eq "?") { usage(); exit(); }
 
 if ($ARGV[0] =~ /^[=\+]/)
 {
-  my %val;
-  my @this;
-  my $addit = 0;
-  
-  if ($ARGV[0] =~ /^\+/) { $addit = 1; }
-  my $gotIt = 0;
-  my $toAdd = lc($ARGV[0]); $toAdd =~ s/^[=\+]//g;
-  if (!$toAdd) { print ("Added nothing."); die; }
-  if ($toAdd =~ /[^a-z]/i) { die ("Bad characters in what to add."); }
-  open(A, "$misses");
-  while (my $line = <A>)
-  {
-    chomp($line);
-	if ($line =~ /:/) { @this = split(/:/, $line); $val{$this[0]} = $this[1]; $line = $this[0]; }
-	else { $val{$line} = 1; } # eg if a line is not word:#, make it word:1
-	if ($toAdd eq $line)
-	{
-	  if (defined($val{$line}))
-	  {
-        $val{$toAdd}+= $addit;
-	    print "$line already in. Its weight is now $val{$line}.\n";
-		$gotIt = 1;
-      }
-    }
-  }
-  close(A);
-  if (!$gotIt) { print "Added $toAdd with value $addit.\n"; $val{$toAdd}+= $addit; }
-  open(B, ">$misses");
-  for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
-  close(B);
-  exit;
+  addToErrs($ARGV[0]);
+  exit();
 }
 
 my $count = 0;
@@ -93,6 +64,7 @@ else
   while ($temp = <STDIN>)
   {
     chomp($temp);
+	if ($temp =~ /^[=\+]/) { addToErrs($temp); next; }
     if (($temp eq "q") || ($temp eq "")) { last; }
 	my @tohang = split(/ /, $temp);
 	if ($#tohang == 0) { push(@tohang, ""); }
@@ -100,6 +72,12 @@ else
 	oneHangman($tohang[0], $tohang[1]);
   }
 }
+
+###########################################
+#
+# subroutines
+#
+#
 
 sub oneHangman
 {
@@ -210,8 +188,40 @@ sub checkForRepeats
 
 #########################################################
 #
-# subdirs
+# subroutines
 #
+
+sub addToErrs
+{
+  my %val;
+  my $addit = 0;
+  if ($_[0] =~ /^\+/) { $addit = 1; }
+  my $gotIt = 0;
+  my $toAdd = lc($_[0]); $toAdd =~ s/^[=\+]//g;
+  if (!$toAdd) { print ("Added nothing."); die; }
+  if ($toAdd =~ /[^a-z]/i) { die ("Bad characters in what to add."); }
+  open(A, "$misses");
+  while (my $line = <A>)
+  {
+    chomp($line);
+	if ($line =~ /:/) { my @this = split(/:/, $line); $val{$this[0]} = $this[1]; $line = $this[0]; }
+	else { $val{$line} = 1; } # eg if a line is not word:#, make it word:1
+	if ($toAdd eq $line)
+	{
+	  if (defined($val{$line}))
+	  {
+        $val{$toAdd}+= $addit;
+	    print "$line already in. Its weight is now $val{$line}.\n";
+		$gotIt = 1;
+      }
+    }
+  }
+  close(A);
+  if (!$gotIt) { print "Added $toAdd with value $addit.\n"; $val{$toAdd}+= $addit; }
+  open(B, ">$misses");
+  for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
+  close(B);
+}
 
 sub showMisses
 {
