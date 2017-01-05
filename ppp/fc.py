@@ -805,10 +805,14 @@ def printOthers():
     lastscore = foundscore
 
 def anyDoableLimit (ii):
+    tempval = 0
     for y in range (1,9):
-        if len(elements[y]) > 0 and doable(ii, y, 0) > 0 and doable(ii, y, 0) < maxmove():
-            return y
-    return 0
+        temp2 = doable(ii, y, 0)
+        if len(elements[y]) > 0 and temp2 > 0 and temp2 < maxmove():
+            if chains(ii) == temp2:
+                return y
+            tempval = y
+    return tempval
 
 def anyDoable (ii, emptyOK):
     tempret = 0
@@ -1595,6 +1599,7 @@ def readCmd(thisCmd):
                 if spares[(myToSpare + temp) % 4] <= 0:
                     print ("Spare %d already filled, picking %d instead" % (myToSpare + 1, (myToSpare + temp) % 4 + 1))
                     myToSpare += temp
+                    myToSpare %= 4
                     break
             if spares[myToSpare] > 0:
                 print ("Oops, I somehow see all-full and not all full at the same time.")
