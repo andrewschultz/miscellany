@@ -43,12 +43,14 @@ my $copyBinary = 0;
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
 my $a;
+my $a2;
 my %altHash, my %do, my %poss, my %postproc;
 
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
-  for ($a)
+  $a2 = lc($a);
+  for ($a2)
   {
   /^(-p|p)$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghp"); exit; };
   /^(-e|e)$/ && do { print "Opening external file, -c opens code, -p opens private file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); exit; };
@@ -60,34 +62,34 @@ while ($count <= $#ARGV)
 	system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght");
 	exit;
   };
-  /^-?j$/ && do { $justPrint = 1; $count++; next; };
-  /^-?f$/ && do { $byFile = 1; $count++; next; };
-  /^-?v$/ && do { $verbose = 1; $count++; next; };
-  /^-rt$/ && do { $runTrivialTests = 1; $count++; next; };
-  /^-nrt$/ && do { $runTrivialTests = -1; $count++; next; };
-  /^-?t$/ && do { $testResults = 1; $count++; next; };
-  /^-?a$/ && do { $copyAuxiliary = 1; $count++; next; };
-  /^-?b$/ && do { $copyBinary = 1; $count++; next; };
-  /^-?(d|ab|ba)$/ && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
-  /^-?reverse$/ && do { $reverse = 1; $count++; next; };
-  /^[a-z34]/ && do
+  /^-?j$/i && do { $justPrint = 1; $count++; next; };
+  /^-?f$/i && do { $byFile = 1; $count++; next; };
+  /^-?v$/i && do { $verbose = 1; $count++; next; };
+  /^-rt$/i && do { $runTrivialTests = 1; $count++; next; };
+  /^-nrt$/i && do { $runTrivialTests = -1; $count++; next; };
+  /^-?t$/i && do { $testResults = 1; $count++; next; };
+  /^-?a$/i && do { $copyAuxiliary = 1; $count++; next; };
+  /^-?b$/i && do { $copyBinary = 1; $count++; next; };
+  /^-?(d|ab|ba)$/i && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
+  /^-?reverse$/i && do { $reverse = 1; $count++; next; };
+  /^[a-z34]/i && do
   {
-    if ($a =~ /-$/) { $a =~ s/-$//g; if ($altHash{$a}) { $postproc{$altHash{$a}} = 0; } else { $postproc{$a} = 0; } } # sc- means you do run trivials
-    if ($a =~ /=$/) { $a =~ s/=$//g; if ($altHash{$a}) { $postproc{$altHash{$a}} = 1; } else { $postproc{$a} = 1; } } # sc= means you do run trivials
-    if ($altHash{$a})
+    if ($a2 =~ /-$/) { $a2 =~ s/-$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 0; } else { $postproc{$a2} = 0; } } # sc- means you do run trivials
+    if ($a2 =~ /=$/) { $a2 =~ s/=$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 1; } else { $postproc{$a2} = 1; } } # sc= means you do run trivials
+    if ($altHash{$a2})
 	{
-	  print "$a => $altHash{$a}\n";
-	  $procString = $altHash{$a};
+	  print "$a2 => $altHash{$a2}\n";
+	  $procString = $altHash{$a2};
 	}
 	else
 	{
-	  $procString = $a;
+	  $procString = $a2;
 	}
 	$count++;
 	next;
   };
   /^-\?/ && do { usage(); };
-  print "$a not recognized.\n";
+  print "$a2 not recognized.\n";
   usage();
   }
 }
