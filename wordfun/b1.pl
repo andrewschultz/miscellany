@@ -186,11 +186,6 @@ sub checkForRepeats
   if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line ($miss{$line})\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
 }
 
-#########################################################
-#
-# subroutines
-#
-
 sub addToErrs
 {
   my %val;
