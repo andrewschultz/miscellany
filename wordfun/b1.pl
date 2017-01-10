@@ -7,6 +7,8 @@
 #then prints out results, with the most likely letters left
 #
 
+# bug can't add word that isn't in the dictionary in first place (omeprazole)
+
 use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
@@ -22,6 +24,13 @@ my $stdin = 0;
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"); }
 
+if ((lc($ARGV[0]) eq "-f") || (lc($ARGV[0]) eq "f"))
+{
+  if (!defined($ARGV[1])) { die ("Need a word to force into the list."); }
+  addToDict($ARGV[1], 1);
+  exit();
+}
+
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
 if ($ARGV[0] eq "i") { $stdin = 1; }
@@ -31,6 +40,8 @@ if ($ARGV[0] eq "?") { usage(); exit(); }
 
 if ($ARGV[0] =~ /^[=\+]/)
 {
+  my $toAdd = $ARGV[0]; $toAdd =~ s/^.//;
+  addToDict($toAdd, 0);
   addToErrs($ARGV[0]);
   exit();
 }
@@ -212,7 +223,7 @@ sub addToErrs
     }
   }
   close(A);
-  if (!$gotIt) { print "Added $toAdd with value $addit.\n"; $val{$toAdd}+= $addit; }
+  if (!$gotIt) { print "Added $toAdd to misses file with value $addit.\n"; $val{$toAdd}+= $addit; }
   open(B, ">$misses");
   for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
   close(B);
@@ -233,6 +244,44 @@ sub showMisses
   {
     print "$am misses: $amt{$am}\n";
   }
+}
+
+sub addToDict
+{
+  my $l = length($_[0]);
+  my $uc = uc($_[0]);
+  my $lc = lc($_[0]);
+  my $wordfile = "c:\\writing\\dict\\words-$l.txt";
+  my $wordTo = "c:\\writing\\dict\\words-new-hangman.txt";
+  my $insertedYet = 0;
+  open(A, $wordfile);
+  open(B, ">$wordTo");
+  while ($a = <A>)
+  {
+    if ((!$insertedYet) && ($lc lt lc($a)))
+	{
+	  print B "$uc\n";
+	  $insertedYet = 1;
+	}
+    print B $a;
+    chomp($a);
+	if (lc($a) eq lc($_[0]))
+	{
+	  if ($_[1] == 1)
+	  {
+	  print "$_[0] already in $wordfile.";
+	  }
+	  close(A);
+	  close(B);
+	  `erase $wordTo`;
+	  return;
+	}
+  }
+  if (!$insertedYet) { print B "$uc\n"; }
+  close(A);
+  close(B);
+  print "Added $_[0] to $wordfile.\n";
+  `copy $wordTo $wordfile`;
 }
 
 sub usage
