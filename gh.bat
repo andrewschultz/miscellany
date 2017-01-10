@@ -17,6 +17,11 @@ if "%1" EQU "h" (
 goto end
 )
 
+if "%1" EQU "rpg" (
+cd  %TEMPDIR%\rpg-mapping-tools
+goto end
+)
+
 if "%1" EQU "pc" (
 cd  %TEMPDIR%\the-problems-compound
 goto end

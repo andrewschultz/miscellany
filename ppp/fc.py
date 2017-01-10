@@ -610,6 +610,7 @@ def checkWinning():
     wonThisCmd = True
     while True:
         finish = input("You win! Play again (Y/N, U to undo)?").lower()
+        finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
                 print("Bye!")
