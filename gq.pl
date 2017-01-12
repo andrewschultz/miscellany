@@ -59,7 +59,7 @@ elsif ($pwd =~ /(buck|past)/i) { @runs = ("as"); }
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
-  
+
   for ($a)
   {
   /^0$/ && do { processNameConditionals(); exit; };
@@ -110,14 +110,59 @@ else
   }
 }
 
+for (@runs)
+{
+  addSaveFile(join(" ", @thisAry), $_);
+}
+
+#################################################subroutines
+
+sub addSaveFile
+{
+  my $saveFile = "c:\\writing\\scripts\\gq-$_[1].txt";
+  my @saveData;
+  my %saveHash;
+  my $q = $_[0]; $q =~ s/ //g;
+  push(@saveData, $q);
+  $saveHash{$q} = 1;
+
+  open(A, $saveFile) || warn ("No save file $saveFile.");
+  while ($a = <A>)
+  {
+    chomp($a);
+	if ($a =~ / /)
+	{
+	  my @words = split(/ /, lc($a));
+	  if ($saveHash{"$words[1]$words[0]"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[0]$words[1]"}) { print "$a already in save list.\n"; next; }
+	}
+	else
+	{
+	  if ($saveHash{lc($a)}) { print "$a already in save list.\n"; next; }
+	}
+	$a =~ s/ //g;
+	$saveHash{$a} = 1;
+	if ($#saveData == 29) { last; }
+	push(@saveData, $a);
+  }
+  close(A);
+  open(A, ">$saveFile");
+  for (@saveData)
+  {
+    print A "$_\n";
+  }
+  close(A);
+  print "Wrote to $saveFile.\n";
+}
+
 sub processListFile
 {
   my $line;
   my $defaultString;
   my $currentLedger;
-  
+
   open(A, $gqfile) || die ("Can't find $gqfile.");
-  
+
   while ($line = <A>)
   {
     if ($line =~ /^#/) { next; }
@@ -146,7 +191,7 @@ sub processListFile
 	{
 	$cmds{$currentLedger} .= $line;
 	}
-	
+
   }
   close(A);
   if ($#runs == -1)
@@ -162,7 +207,7 @@ sub processListFile
 sub processFiles
 {
   my @x = split(/\n/, $cmds{$_[0]});
-  
+
   foreach my $cmd (@x)
   {
 	my @fileAndMarkers = split(/\t/, $cmd);
@@ -240,10 +285,10 @@ sub cromu
   {
     if (($_[0] !~ /^\"$thisAry[0]/i) && ($_[0] !~ /'$thisAry[0]'/i)){ return 0; }
   }
-  
+
     $a =~ s/\[one of\]/\[\]/g;
     $a =~ s/\[end if\]/\[\]/g;
-  
+
   if ($_[0] =~ /^(test|volume|chapter|book|part|section)/) { return 0; }
   #lumped together
   if ($#thisAry)
@@ -260,7 +305,7 @@ sub cromu
   if ($_[0] =~ /\b$thisAry[0]s\b/i) { return 2; }
   if ($_[0] =~ /\b$thisAry[0]\b/i) { return 1; }
   }
-  
+
   #words apart
   for my $tomatch (@thisAry)
   {
@@ -273,7 +318,7 @@ sub processStory
 {
   my $fileName;
   my $tabrow;
-  
+
   if ($_[0] =~ /trizbort/i)
   {
     $fileName = $_[0];
