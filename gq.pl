@@ -13,14 +13,42 @@
 
 use POSIX;
 
+use strict;
+use warnings;
+
+################constants
 my $gqfile = "c:/writing/scripts/gq.txt";
 
-$count = 0;
+#################vars
+my @availRuns = ();
+my @thisAry = ();
+my $pwd = getcwd();
+my @runs = ();
+my $count = 0;
+my %map;
+my %cmds;
+my @blanks;
+my @errStuff;
+my $blurby = "";
+my $myHeader = "";
+my $foundSomething = 0;
+my $thisTable = "";
+my $shortName = "";
+my $totalFind = 0;
+my $lastHeader = "";
 
-$printTabbed = 1;
-$printUntabbed = 1;
-
-$pwd = getcwd();
+#################options
+my $printTabbed = 1;
+my $printUntabbed = 1;
+my $onlyTables = 0;
+my $onlyRand = 0;
+my $firstStart = 0;
+my $runAll = 0;
+my $showRules = 0;
+my $showHeaders = 0;
+my $headersToo = 0;
+my $dontWant = 0;
+my $maxFind = 0;
 
 if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
@@ -30,13 +58,13 @@ elsif ($pwd =~ /(buck|past)/i) { @runs = ("as"); }
 
 while ($count <= $#ARGV)
 {
-  $a = @ARGV[$count];
+  $a = $ARGV[$count];
   
   for ($a)
   {
   /^0$/ && do { processNameConditionals(); exit; };
   /^-?e$/ && do { `$gqfile`; exit; };
-  /^\// && do { @thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
+  /^\// && do { $thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
   /^-o$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
@@ -49,9 +77,9 @@ while ($count <= $#ARGV)
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
   /^-x/ && do { $dontWant = 1; $count++; next; };
-  /^-nd$/ && do { newDefault(@ARGV[$count+1]); $count++; next; };
+  /^-nd$/ && do { newDefault($ARGV[$count+1]); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
-  /^-m$/ && do { $maxFind = @thisAry[1]; @thisAry = @thisAry[2..$#thisAry]; $count+= 2; next; };
+  /^-m$/ && do { $maxFind = $thisAry[1]; @thisAry = $thisAry[2..$#thisAry]; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
@@ -61,9 +89,11 @@ while ($count <= $#ARGV)
   }
 
 }
-if (!@thisAry[0]) { die ("Need a process-able word for an argument."); }
+if (!$thisAry[0]) { die ("Need a process-able word for an argument."); }
 
 processListFile();
+
+my $myrun;
 
 if ($runAll)
 {
@@ -82,34 +112,39 @@ else
 
 sub processListFile
 {
+  my $line;
+  my $defaultString;
+  my $currentLedger;
+  
   open(A, $gqfile) || die ("Can't find $gqfile.");
-  while ($a = <A>)
+  
+  while ($line = <A>)
   {
-    if ($a =~ /^#/) { next; }
-    if ($a =~ /^;/) { last; }
-	if ($a =~ /^MAP=/)
+    if ($line =~ /^#/) { next; }
+    if ($line =~ /^;/) { last; }
+	if ($line =~ /^MAP=/)
 	{
-	  chomp($a); $a =~ s/^MAP=//;
-	  @b = split(/:/, $a);
-	  @c = split(/,/, @b);
-	  for (@c) { $map{$_} = @b[1]; }
+	  chomp($line); $line =~ s/^MAP=//;
+	  my @b = split(/:/, $line);
+	  my @c = split(/,/, @b);
+	  for (@c) { $map{$_} = $b[1]; }
 	}
-	if ($a =~ /^DEFAULT=/)
+	if ($line =~ /^DEFAULT=/)
 	{
-	  $defaultString = $a; chomp($defaultString); $defaultString =~ s/DEFAULT=//;
+	  $defaultString = $line; chomp($defaultString); $defaultString =~ s/DEFAULT=//;
 	}
-    if ($a =~ /^run=/)
+    if ($line =~ /^run=/)
 	{
-      chomp($a);
-	  $a =~ s/.*=//g;
-	  $currentLedger = $a;
-	  push(@availRuns, $a);
+      chomp($line);
+	  $line =~ s/.*=//g;
+	  $currentLedger = $line;
+	  push(@availRuns, $line);
 	  next;
 	}
-	if ($a !~ /[a-z]/i) { $currentLedger = ""; next; }
+	if ($line !~ /[a-z]/i) { $currentLedger = ""; next; }
 	if ($currentLedger)
 	{
-	$cmds{$currentLedger} .= $a;
+	$cmds{$currentLedger} .= $line;
 	}
 	
   }
@@ -126,14 +161,15 @@ sub processListFile
 
 sub processFiles
 {
-  @x = split(/\n/, $cmds{$_[0]});
-  foreach $cmd (@x)
+  my @x = split(/\n/, $cmds{$_[0]});
+  
+  foreach my $cmd (@x)
   {
-	@fileAndMarkers = split(/\t/, $cmd);
+	my @fileAndMarkers = split(/\t/, $cmd);
 	processOneFile(@fileAndMarkers);
   }
   if ($#blanks > -1) { print "EMPTY FILES: " . join(", ", @blanks) . "\n"; }
-  if (@errStuff[0]) { print "TEST RESULTS: $_[0],0," . $#errStuff+1 . ",0," . join("<br />", @errStuff) . "\n"; }
+  if ($errStuff[0]) { print "TEST RESULTS: $_[0],0," . $#errStuff+1 . ",0," . join("<br />", @errStuff) . "\n"; }
 }
 
 sub processOneFile
@@ -145,6 +181,9 @@ sub processOneFile
   my $currentTable = "";
   my $foundOne = 0;
   my $latestRule;
+  my $thisImportant = 0;
+  my $idx;
+  my @importants;
 
   if ($_[1])
   {
@@ -199,7 +238,7 @@ sub cromu
 {
   if ($firstStart)
   {
-    if (($_[0] !~ /^\"@thisAry[0]/i) && ($_[0] !~ /'@thisAry[0]'/i)){ return 0; }
+    if (($_[0] !~ /^\"$thisAry[0]/i) && ($_[0] !~ /'$thisAry[0]'/i)){ return 0; }
   }
   
     $a =~ s/\[one of\]/\[\]/g;
@@ -209,21 +248,21 @@ sub cromu
   #lumped together
   if ($#thisAry)
   {
-  if ($_[0] =~ /\b@thisAry[0]@thisAry[1]\b/i) { return 1; }
-  if ($_[0] =~ /\b@thisAry[1]@thisAry[0]\b/i) { return 1; }
-  if ($_[0] =~ /\b@thisAry[0]@thisAry[1]s\b/i) { return 2; }
-  if ($_[0] =~ /\b@thisAry[1]@thisAry[0]s\b/i) { return 2; }
-  if (($_[0] =~ /\b@thisAry[0]\b/i) && ($_[0] =~ /\b@thisAry[1]s\b/i)) { return 2; }
-  if (($_[0] =~ /\b@thisAry[0]s\b/i) && ($_[0] =~ /\b@thisAry[1](s)?\b/i)) { return 2; }
+  if ($_[0] =~ /\b$thisAry[0]$thisAry[1]\b/i) { return 1; }
+  if ($_[0] =~ /\b$thisAry[1]$thisAry[0]\b/i) { return 1; }
+  if ($_[0] =~ /\b$thisAry[0]$thisAry[1]s\b/i) { return 2; }
+  if ($_[0] =~ /\b$thisAry[1]$thisAry[0]s\b/i) { return 2; }
+  if (($_[0] =~ /\b$thisAry[0]\b/i) && ($_[0] =~ /\b$thisAry[1]s\b/i)) { return 2; }
+  if (($_[0] =~ /\b$thisAry[0]s\b/i) && ($_[0] =~ /\b$thisAry[1](s)?\b/i)) { return 2; }
   }
   elsif ($#thisAry == 0)
   {
-  if ($_[0] =~ /\b@thisAry[0]s\b/i) { return 2; }
-  if ($_[0] =~ /\b@thisAry[0]\b/i) { return 1; }
+  if ($_[0] =~ /\b$thisAry[0]s\b/i) { return 2; }
+  if ($_[0] =~ /\b$thisAry[0]\b/i) { return 1; }
   }
   
   #words apart
-  for $tomatch (@thisAry)
+  for my $tomatch (@thisAry)
   {
     if ($_[0] !~ /\b$tomatch\b/i) { if (($headersToo) && ($myHeader =~ /\b$tomatch\b/i)) { next; } return 0; }
   }
@@ -232,6 +271,9 @@ sub cromu
 
 sub processStory
 {
+  my $fileName;
+  my $tabrow;
+  
   if ($_[0] =~ /trizbort/i)
   {
     $fileName = $_[0];
@@ -249,7 +291,8 @@ sub processStory
     chomp($a);
 	if (($a =~ /^[a-z].*: *$/i) || ($a =~ /^table/)) { $myHeader = $a;  $tabrow = 0; $blurby = 0;}
 	if ($a =~ /^blurb/) { $blurby = 1; }
-    $count++; $tabrow++;
+    $count++;
+	$tabrow++;
     if ($a =~ /`/) { print "WARNING: Line $count has back-quote!\n$a"; }
 	if ($a =~ /^table of /i) { $a =~ s/ *\[[^\]]*\].*//g; $thisTable = "($a) "; } elsif ($a !~ /[a-z]/i) { $thisTable = ""; }
 	my $tmp = cromu($a);
@@ -269,7 +312,7 @@ sub processStory
 		print "$shortName L$count ";
 		$totalFind++;
 		  if ($thisTable)
-		  { $tr2 = $tabrow - 2; print "/$tr2"; }
+		  { my $tr2 = $tabrow - 2; print "/$tr2"; }
 		  if ($showHeaders) { print ": $a\n"; }
 		  else
 		  {
@@ -306,12 +349,12 @@ sub tabCheck
 
 sub processList
 {
-  $listName = $a; $listName =~ s/.is a list of.*//gi;
-  $yep = 0;
+  my $listName = $a; $listName =~ s/.is a list of.*//gi;
+  my $yep = 0;
   if ($a =~ /\{/)
   {
     $a =~ s/^[^\"]*.//g; $a =~ s/\" *\}.*//g;
-    @b = split(/\", \"/, $a);
+    my @b = split(/\", \"/, $a);
     for (@b)
     {
 	  my $temp = cromu($_);
@@ -321,11 +364,12 @@ sub processList
     return;
   }
   print "$a\n";
-  if (!$yep) { print "$shortName had @ARGV[0]/@ARGV[1] but not in same entry.\n"; }
+  if (!$yep) { print "$shortName had $ARGV[0]/$ARGV[1] but not in same entry.\n"; }
 }
 
 sub newDefault
 {
+my @array;
 open(A, "$gqfile");
 my $newDefLine = "DEFAULT=$_[1]";
 while ($a = <A>)
@@ -349,27 +393,32 @@ sub processNameConditionals
 {
 open(A, "C:/games/inform/roiling.inform/Source/story.ni") || die ("Can't open Roiling source.");
 
-while ($a = <A>)
+my $line;
+my $l2;
+my $l3;
+my $processTo;
+
+while ($line = <A>)
 {
-  if ($a =~ /section gender specific stubs/) { print "List of gender-says:\n"; $processTo = 1; next; }
+  if ($line =~ /section gender specific stubs/) { print "List of gender-says:\n"; $processTo = 1; next; }
   if ($processTo)
   {
-    if ($a =~ /^section/) { last; }
-	if ($a =~ /^to /)
+    if ($line =~ /^section/) { last; }
+	if ($line =~ /^to /)
 	{
-	  $b = $a; chomp($b); $b =~ s/to say //g; $b =~ s/:.*//g;
-	  $c = <A>;
-	  if ($c =~ /\[one of\]/)
+	  $l2 = $line; chomp($l2); $l2 =~ s/to say //g; $l2 =~ s/:.*//g;
+	  $l3 = <A>;
+	  if ($l3 =~ /\[one of\]/)
 	  {
-	    $c =~ s/.*one of\]//g;
-		$c =~ s/\[in random.*//g;
-		$c =~ s/\[or\]/\//g;
+	    $l3 =~ s/.*one of\]//g;
+		$l3 =~ s/\[in random.*//g;
+		$l3 =~ s/\[or\]/\//g;
 	  }
 	  else
 	  {
-	    $c =~ s/\[end if.*//g; $c =~ s/.*if [^\]]*\]//g; $c =~ s/\[else\]/\//g;
+	    $l3 =~ s/\[end if.*//g; $l3 =~ s/.*if [^\]]*\]//g; $l3 =~ s/\[else\]/\//g;
 	  }
-	  print "$b = $c";
+	  print "$l2 = $l3";
 	}
   }
 
