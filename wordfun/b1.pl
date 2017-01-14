@@ -100,15 +100,17 @@ sub oneHangman
   %f2 = ();
   %freq = ();
   
-    my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
-    print "Trying $readFile.\n";
-    open(A, "$readFile") || die ("No $readFile");
+  my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
+  #print "Trying $readFile.\n";
+  open(A, "$readFile") || die ("No $readFile");
   my $canAlphabetize = 0;
   my $lastOne;
   my $firstOne;
+  
+  if ($_[0] =~ /[^a-z.,]/i) { print "Bad characters in $_[0].\n"; return; }
 
   if ($_[0] =~ /^[a-z]/i)
-  { $canAlphabetize = 1; $lastOne = $_[0]; $lastOne =~ s/\..*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($_[0]), 0, 1)); }
+  { $canAlphabetize = 1; $lastOne = lc($_[0]); $lastOne =~ s/[.,].*//g; $lastOne .= "zzz"; $firstOne = uc(substr(lc($_[0]), 0, 1)); }
 
   my $wrongString = lc($_[1]);
 
@@ -141,7 +143,7 @@ sub oneHangman
   for (0..$#toGuess)
   {
     if (($toGuess[$_] eq $right[$_])) { next; }
-    elsif  ($right[$_] ne ".") { $wordBad = 1; last; }
+    elsif (($right[$_] ne ".") && ($right[$_] ne ",")) { $wordBad = 1; last; }
     for my $x (0..$#wrong) { if ($line =~ $wrong[$x]) { $wordBad = 1; last; } }
   }
   if (!$wordBad) { checkForRepeats($_[0], $line); }
@@ -173,7 +175,7 @@ sub checkForRepeats
 
   for (0..$#a2)
   {
-    if ($a1[$_] ne ".") { $a2[$_] = ""; }
+    if (($a1[$_] ne ".") && ($a1[$_] ne ",")) { $a2[$_] = ""; }
   }
   
   my $a4 = join("", @a2);
