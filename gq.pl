@@ -16,6 +16,8 @@ use POSIX;
 use strict;
 use warnings;
 
+use Win32::Clipboard;
+
 ################constants
 my $gqfile = "c:/writing/scripts/gq.txt";
 
@@ -49,6 +51,7 @@ my $showHeaders = 0;
 my $headersToo = 0;
 my $dontWant = 0;
 my $maxFind = 0;
+my $getClipboard = 0;
 
 if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
@@ -70,10 +73,11 @@ while ($count <= $#ARGV)
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
   /^-?n$/ && do { @runs = ("names"); $count++; next; }; # names
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
-  /^-?(c|as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
+  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
   /^-?(r|roi|s|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
   /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
+  /^-c$/ && do { $getClipboard = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
   /^-x/ && do { $dontWant = 1; $count++; next; };
@@ -89,17 +93,37 @@ while ($count <= $#ARGV)
   }
 
 }
-if (!$thisAry[0]) { die ("Need a process-able word for an argument."); }
+
+if ((!$thisAry[0]) && (!$getClipboard)) { die ("Need a process-able word for an argument."); }
 
 processListFile();
 
 my $myrun;
+
+if ($getClipboard)
+{
+  my $clip = Win32::Clipboard::new;
+  my $cliptxt = $clip->Get();
+  my @sets = split(/[\n\r]+/, $cliptxt);
+  for my $clipLine(@sets) { @thisAry = split(/ /, $clipLine); print "Proc'ing $clipLine from clipboard.\n"; tryOneSet(); }
+}
+else
+{
+  tryOneSet();
+}
+
+sub tryOneSet
+{
 
 if ($runAll)
 {
   foreach $myrun (@availRuns)
   {
     processFiles($myrun);
+  }
+  for (@availRuns)
+  {
+    addSaveFile(join(" ", @thisAry), $_);
   }
 }
 else
@@ -108,11 +132,12 @@ else
   {
     processFiles($myrun);
   }
+  for (@runs)
+  {
+    addSaveFile(join(" ", @thisAry), $_);
+  }
 }
 
-for (@runs)
-{
-  addSaveFile(join(" ", @thisAry), $_);
 }
 
 #################################################subroutines
