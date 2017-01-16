@@ -5,6 +5,17 @@ echo Need an argument
 goto end
 )
 
+if "%1" equ "-f" (
+goto f
+)
+
+if "%1" equ "f" (
+echo creating empty file/appending nothing to existing, ignore error.
+"abc" >> "%2"
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%2"
+goto end
+)
+
 if "%1" equ "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
 )
@@ -139,5 +150,6 @@ goto end
 echo No %1, %1.pl, %1.bat or %1.txt.
 echo h opens starter home page
 echo -b goes to backup directory
+echo -f/f forces you to create file
 
 :end

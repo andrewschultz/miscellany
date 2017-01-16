@@ -87,6 +87,8 @@ my $ignore = 0;
 
 my @b;
 
+my $months = 0;
+
 while ($line = <A>)
 {
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
@@ -96,6 +98,9 @@ while ($line = <A>)
   if ($line =~ /^;/) { last; }
   if ($ignore) { next; }
   chomp($line);
+  $months = ($line =~ /^m/i);
+  $line =~ s/^m//i;
+
   @qhr = (1, 0, 0, 0);
   $mod = 0;
   if ($line =~ /^DEF=/)
@@ -114,9 +119,12 @@ while ($line = <A>)
 	my $gotOne = 0;
 	for (@q)
 	{
-	  if ($dayOfWeek == $_)
+	  if (($dayOfWeek == $_) && ($months == 0))
 	  {
-	    #print "$line: today\n";
+		$gotOne = 1;
+      }
+	  if (($dayOfMonth == $_) && ($months == 1))
+	  {
 		$gotOne = 1;
       }
     }
