@@ -121,20 +121,12 @@ if ($runAll)
   {
     processFiles($myrun);
   }
-  for (@availRuns)
-  {
-    addSaveFile(join(" ", @thisAry), $_);
-  }
 }
 else
 {
   foreach $myrun (@runs)
   {
     processFiles($myrun);
-  }
-  for (@runs)
-  {
-    addSaveFile(join(" ", @thisAry), $_);
   }
 }
 
@@ -148,7 +140,7 @@ sub addSaveFile
   my @saveData;
   my %saveHash;
   my $q = $_[0]; $q =~ s/ //g;
-  push(@saveData, $q);
+  push(@saveData, $_[0]);
   $saveHash{$q} = 1;
 
   open(A, $saveFile) || warn ("No save file $saveFile.");
@@ -167,7 +159,7 @@ sub addSaveFile
 	}
 	$a =~ s/ //g;
 	$saveHash{$a} = 1;
-	if ($#saveData == 29) { last; }
+	if ($#saveData == 99) { last; }
 	push(@saveData, $a);
   }
   close(A);
@@ -240,6 +232,7 @@ sub processFiles
   }
   if ($#blanks > -1) { print "EMPTY FILES: " . join(", ", @blanks) . "\n"; }
   if ($errStuff[0]) { print "TEST RESULTS: $_[0],0," . $#errStuff+1 . ",0," . join("<br />", @errStuff) . "\n"; }
+  addSaveFile(join(" ", @thisAry), $_[0]);
 }
 
 sub processOneFile
