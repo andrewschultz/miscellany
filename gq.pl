@@ -100,6 +100,11 @@ processListFile();
 
 my $myrun;
 
+if ($runAll)
+{
+  @runs = @availRuns;
+}
+
 if ($getClipboard)
 {
   my $clip = Win32::Clipboard::new;
@@ -112,27 +117,17 @@ else
   tryOneSet();
 }
 
+#################################################subroutines
+
 sub tryOneSet
 {
 
-if ($runAll)
+foreach $myrun (@runs)
 {
-  foreach $myrun (@availRuns)
-  {
-    processFiles($myrun);
-  }
-}
-else
-{
-  foreach $myrun (@runs)
-  {
-    processFiles($myrun);
-  }
+  processFiles($myrun);
 }
 
 }
-
-#################################################subroutines
 
 sub addSaveFile
 {

@@ -58,6 +58,8 @@ if $CmdLine[0] > 0 Then
     call("openIDE", "ghost");
   ElseIf $CmdLine[$stuff] == "e11" Then
     call("openIDE", "dash");
+  ElseIf $CmdLine[$stuff] == "ss" Then
+    call("openIDE", "seeker-status");
   Else
     call("openIDE", $CmdLine[$stuff]);
   Endif

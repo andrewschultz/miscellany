@@ -11,6 +11,7 @@ DEFAULT=as
 MAP:3,4,3d,4d=opo
 MAP:ro,roi,sa=sts
 MAP:pc,sc=as
+MAP:ect=ecto
 
 #names
 run=names
@@ -56,5 +57,14 @@ run=oafs
 c:\games\inform\uglyoafs.inform\source\story.ni
 c:\writing\games.otl	uo
 c:\games\inform\triz\mine\ugly-oafs.trizbort
+
+#ectocomp
+run=ecto
+c:\games\inform\ghost.inform\Source
+c:\games\inform\dash.inform\Source
+c:\games\inform\Candy Rush Saga.inform\Source
+c:\games\inform\ghost.inform\Source
+c:\games\inform\heezy-park.inform\Source
+c:\games\inform\ectocomp16.inform\Source
 
 ;
