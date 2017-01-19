@@ -443,6 +443,7 @@ writing=scripts\cov.pl,
 #rpg mapping tools
 FROMBASE=c:\coding\games
 TOBASE=rpg-mapping-tools
+rmt=README.md,
 rmt=mapconv\mapconv.c,mapconv
 -b:rmt=mapconv\mapconv.exe,mapconv sz:70000
 rmt=mapconv\README.md,mapconv

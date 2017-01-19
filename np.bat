@@ -137,6 +137,12 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1
 goto end
 )
 
+if EXIST "c:\scripts\%1.pl" (
+echo file is in scripts
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1.pl
+goto end
+)
+
 if EXIST "c:\writing\scripts\%1.txt" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\scripts\%1.txt
 goto end
