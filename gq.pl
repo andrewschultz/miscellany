@@ -19,7 +19,9 @@ use warnings;
 use Win32::Clipboard;
 
 ################constants
-my $gqfile = "c:/writing/scripts/gq.txt";
+my $gqfile = __FILE__;
+$gqfile =~ s/pl$/txt/i;
+my $gqdir  = $gqfile; $gqdir =~ s/\\[^\\]+$//g;
 
 #################vars
 my @availRuns = ();
@@ -62,6 +64,11 @@ elsif ($pwd =~ /(buck|past)/i) { @runs = ("as"); }
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
+  $b = "";
+  if (defined($ARGV[$count+1]))
+  {
+  $b = $ARGV[$count+1];
+  }
 
   for ($a)
   {
@@ -77,6 +84,8 @@ while ($count <= $#ARGV)
   /^-?(r|roi|s|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
   /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
+  /^-?ha$/ && do { processListFile(); openHistory(@availRuns); exit(); };
+  /^-?hi$/ && do { openHistory(split(/,/, $b)); exit(); };
   /^-c$/ && do { $getClipboard = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
@@ -483,6 +492,20 @@ while ($line = <A>)
 }
 close(A);
 
+}
+
+sub openHistory
+{
+  if ($#_ == -1) { die ("Need an argument.\n"); }
+  for (@_)
+  {
+    my $thisfile = "$gqdir\\gq-$_.txt";
+    if (-f "$thisfile")
+	{
+      `$thisfile`;
+	}
+	else { print "Oops no file $thisfile\n"; }
+  }
 }
 
 sub usage
