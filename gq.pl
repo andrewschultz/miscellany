@@ -40,6 +40,7 @@ my $thisTable = "";
 my $shortName = "";
 my $totalFind = 0;
 my $lastHeader = "";
+my $othersToo = 0;
 
 #################options
 my $printTabbed = 1;
@@ -76,17 +77,18 @@ while ($count <= $#ARGV)
   /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { $thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
-  /^-o$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
+  /^-?(o|oa)$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
   /^-?n$/ && do { @runs = ("names"); $count++; next; }; # names
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
-  /^-?(as|sc|pc)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
+  /^-?(as|sc|pc|ss)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
   /^-?(r|roi|s|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
   /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
   /^-h$/ && do { $showHeaders = 1; $count++; next; };
   /^-?ha$/ && do { processListFile(); openHistory(@availRuns); exit(); };
   /^-?hi$/ && do { openHistory(split(/,/, $b)); exit(); };
-  /^-c$/ && do { $getClipboard = 1; $count++; next; };
+  /^-c$/ && do { $getClipboard = 1; $othersToo = 1; $count++; print "WARNING: using clipboard invalidates command line text. Use -x for deluxe anagramming.\n"; next; };
+  /^-x$/ && do { $othersToo = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
   /^-x/ && do { $dontWant = 1; $count++; next; };
@@ -119,7 +121,13 @@ if ($getClipboard)
   my $clip = Win32::Clipboard::new;
   my $cliptxt = $clip->Get();
   my @sets = split(/[\n\r]+/, $cliptxt);
-  for my $clipLine(@sets) { @thisAry = split(/ /, $clipLine); print "Proc'ing $clipLine from clipboard.\n"; tryOneSet(); }
+  for my $clipLine(@sets)
+  {
+    @thisAry = split(/ /, $clipLine);
+	if ($#thisAry > 1) { print "Warning: $clipLine has too many spaces.\n"; next; }
+	print "Proc'ing $clipLine from clipboard.\n";
+	tryOneSet();
+  }
 }
 else
 {
@@ -134,6 +142,15 @@ sub tryOneSet
 foreach $myrun (@runs)
 {
   processFiles($myrun);
+  if ($othersToo)
+  {
+    if ( !grep( /^sts$/, @runs) ) { next; }
+    my $thisclump = join("", @thisAry);
+	#print "anan.pl $thisclump=\n";
+	#print "myan.pl $thisclump=\n";
+	print `anan.pl $thisclump=`;
+	print `myan.pl $thisclump=`;
+  }
 }
 
 }
@@ -144,6 +161,7 @@ sub addSaveFile
   my @saveData;
   my %saveHash;
   my $q = $_[0]; $q =~ s/ //g;
+  my $dontrewrite = 0;
   push(@saveData, $_[0]);
   $saveHash{$q} = 1;
 
@@ -162,11 +180,13 @@ sub addSaveFile
 	  if ($saveHash{lc($a)}) { print "$a already in save list.\n"; next; }
 	}
 	$a =~ s/ //g;
+	if ($a eq $q) { $dontrewrite = 1; }
 	$saveHash{$a} = 1;
 	if ($#saveData == 99) { last; }
 	push(@saveData, $a);
   }
   close(A);
+  if ($dontrewrite) { return; }
   open(A, ">$saveFile");
   for (@saveData)
   {
@@ -517,6 +537,9 @@ print<<EOT;
 -nt = print tabbed
 -ft = print untabbed
 -t = only in tables
+-x = others too
+-c = clipboard
+as, opo, sts are the main ones.
 EOT
 exit;
 }
