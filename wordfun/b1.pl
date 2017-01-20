@@ -14,6 +14,7 @@ use warnings;
 use List::MoreUtils qw(uniq);
 
 my $misses = "c:\\writing\\dict\\b1.txt";
+my @prevMiss = ();
 my %miss;
 my $wrongString;
 my $endString = "";
@@ -93,9 +94,10 @@ else
 sub oneHangman
 {
 
-#this is a step to save time. If we know the first letter, we don't look through the file and compare it, because anything with the 25 other letters to start it is wrong.
-
+  @prevMiss = ();
   $count = 0;
+
+  #this is a step to save time. If we know the first letter, we don't look through the file and compare it, because anything with the 25 other letters to start it is wrong.
   my %val;
   %f2 = ();
   %freq = ();
@@ -148,8 +150,16 @@ sub oneHangman
   }
   if (!$wordBad) { checkForRepeats($_[0], $line); }
   }
-
-if ($endString) { print "MISSED BEFORE:\n$endString"; }
+if ($#prevMiss > -1)
+{
+  print "MISSED BEFORE:\n";
+  for (@prevMiss)
+  {
+    $count++;
+	$missFound++;
+	print "**** $count ($missFound) $_\n";
+  }
+}
 
 if ($count + $missFound > 1)
 {
@@ -196,7 +206,12 @@ sub checkForRepeats
   my @a2a = uniq(@a2);
   for (@a2a) { if ($_) { $f2{$_}++; } }
 
-  if ($miss{$line}) { $missFound++; $endString .= "****** $missFound $line ($miss{$line})\n"; } else { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
+  if ($miss{$line})
+  {
+    push (@prevMiss, $line);
+  }
+  else
+  { $count++; if ($count < 1000) { print "$count $line\n"; } elsif ($count == 1000) { print "1000+.\n"; } }
 }
 
 sub addToErrs
