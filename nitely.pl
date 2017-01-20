@@ -34,11 +34,15 @@ my %cmd;
 my %subs;
 my $before;
 
+my $nmain = "c:/writing/dict/nitely.txt";
+my $npriv = "c:/writing/dict/nitely-pr.txt";
+
 my @projs = ();
 my $proj;
 my $errFile = "c:/writing/dict/nightly/errs.htm";
 
-projMap();
+projMap($nmain);
+projMap($npriv);
 getArgs();
 
 chdir("c:/writing/dict/nightly");
@@ -64,7 +68,7 @@ sub projMap
   my $longStr = "";
   my $curLong = "";
   my $curProj = "";
-  open(A, "c:/writing/dict/nitely.txt");
+  open(A, "$_[0]") || die ("No $_[0]");
 
   while ($a = <A>)
   {
@@ -257,7 +261,8 @@ sub getArgs
 	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
 	  /^-b$/ && do { $build = 1; $count++; next; };
 	  /^-d$/ && do { $debug = 1; $count++; next; };
-	  /^-?e$/ && do { `c:/writing/dict/nitely.txt`; exit; };
+	  /^-?e$/ && do { `$nmain`; exit; };
+	  /^-?p$/ && do { `$npriv`; exit; };
 	  /^-f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
 	  /^-jr$/ && do { $justRelease = -1; $count++; next; };
@@ -294,6 +299,7 @@ sub usage
 print <<EOT;
 -d = debug
 -e = edit the nightly test text file
+-p = edit the private nightly test file
 -f = force a nightly check even if there haven't been any daily changes
 -h = open HTML file
 -b = force a build (individual projects turn it off and on: on for Alec, off for Stale Tales Slate, off for opolis)
