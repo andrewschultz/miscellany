@@ -1,8 +1,22 @@
-use POSIX;
+######################################
+#
+#crv.pl
+#formerly "check release version"
+#
+#now a way to do basic code checks so we aren't missing anything obvious
+#
 
-my $needComment = 0;
+#use strict;
+#use warnings;
 
+use POSIX qw (getcwd);
+
+##################options
 my $testStubs = 1;
+
+##################variables
+my $needComment = 0;
+my $fillIn = 0;
 
 print "Starting code testing.\n";
 
@@ -24,6 +38,7 @@ $long{"pc"} = "compound";
 $long{"4d"} = "fourdiopolis";
 $long{"sc"} = "slicker-city";
 $long{"btp"} = "buck-the-past";
+$long{"ss"} = "seeker-status";
 
 #1st argument can be either one of the abbrevs above or something longer
 if (@ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/@ARGV[0].inform/source"); tryDir("c:/games/inform/$long{@ARGV[0]}.inform/source"); }
@@ -37,7 +52,13 @@ $shortDir =~ s/\.inform.*//gi; $shortDir =~ s/.*[\/\\]//g; $shortDir = lc($short
 while ($a = <A>)
 {
   chomp($a);
-  $lines++;
+  
+  if ($a =~ /\[fill-in-here\]/)
+  {
+    push (@fillLines, $.);
+	$fillIn++;
+	next;
+  }
 
   if ($a =~ /^volume/i)
   {
@@ -95,7 +116,7 @@ while ($a = <A>)
 	  $lastHead = $.;
 	if ($a =~ /not for release/) { print "********$a should not be NFR with a really good reason.\n"; }
 	$newHeader = $a;
-    $lastChap = $lines;
+    $lastChap = $.;
     }
 	#print "$a----\n";
     if ($a =~ /^\[ *\*/)
@@ -121,6 +142,7 @@ if ($foundBeta && $foundTest) { print "Have both beta and regular tests.\n"; }
 
 if ($#commentNeed == -1) { $linesToFix = "No lines"; } else { $linesToFix = join(" / ", @commentNeed); }
 
+print "TEST RESULTS:$shortDir Fill-In-Here,0,$fillIn," . join("/", @fillLines) . "\n";
 print "TEST RESULTS:$shortDir Code Comments with crv.pl,1,$needComment," . ($testSuccess + $needComment) . ",$linesToFix\n";
 if (!$needComment) { print "Yay! Success!\n"; }
 
