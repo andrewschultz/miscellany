@@ -628,7 +628,9 @@ def checkWinning():
                 inUndo = False
                 return 0
         print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
-        
+
+# this detects how long a chain is, e.g. how many in a row
+#10d-9s-8d-7s is 4 not 3
 def chains(myrow):
     if len(elements[myrow]) == 0:
         return 0
@@ -809,7 +811,7 @@ def anyDoableLimit (ii):
     tempval = 0
     for y in range (1,9):
         temp2 = doable(ii, y, 0)
-        if len(elements[y]) > 0 and temp2 > 0 and temp2 < maxmove():
+        if len(elements[y]) > 0 and temp2 > 0 and temp2 <= maxmove():
             if chains(ii) == temp2:
                 return y
             tempval = y
@@ -1622,13 +1624,13 @@ def readCmd(thisCmd):
     usage()
 
 if len(sys.argv) > 0:
-    count = 0
-    while count < len(sys.argv) - 1:
+    count = 1;
+    while count < len(sys.argv):
         if sys.argv[count] == 'd' or sys.argv[count] == '-d':
             debug = True
             count = count + 1
-            next
-        print ("Invalid flag " + sys.argv[count])
+            continue
+        print ("Invalid flag " + sys.argv[count] + " position " + str(count))
         print ("")
         cmdUsage()
 
