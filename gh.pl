@@ -28,6 +28,7 @@ my $reverse = 0;
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
+my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
 
 preProcessHashes($ght);
 preProcessHashes($ghp);
@@ -305,7 +306,7 @@ close(A);
 sub readReplace
 {
   my $line;
-  open(A, "c:\\writing\\scripts\\gh-reg.txt") || die();
+  open(A, $ghreg) || die("Can't open regular expression replacement file.");
   while ($line = <A>)
   {
     if ($line =~ /^;/) { last; }

@@ -15,6 +15,7 @@ u,uo,14=uglyoafs
 15,p,pc,tpc=compound
 16,sc=slicker-city
 17,btp=buck-the-past
+ss=seeker-status
 d=dirk
 r,ro,roi=roiling
 
