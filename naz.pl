@@ -8,10 +8,18 @@
 
 #die(strt(" lose memory, maybe lose some of the ways I bullshitted myself when I was younger to\n"));
 
-$in = "c:/writing/notes9.otl";
-$tin = "c:/writing/temp/notes9.otl";
-$out = "c:/writing/notes-a-z.otl";
-$tout = "c:/writing/temp/notes-a-z.otl";
+use warnings;
+use strict;
+
+##################variables
+my %nums;
+my $inMain = 0;
+my $dumpNext = 0;
+
+my $in = "c:/writing/notes9.otl";
+my $tin = "c:/writing/temp/notes9.otl";
+my $out = "c:/writing/notes-a-z.otl";
+my $tout = "c:/writing/temp/notes-a-z.otl";
 
 open(A, "$in") || die ("Big oops no $in");
 open(B, "$out") || die ("Big oops no $out");
@@ -93,12 +101,12 @@ prsz($out);
 prsz($tin);
 prsz($tout);
 
-$inBytes = (-s $in) + (-s $out);
-$outBytes = (-s $tin) + (-s $tout);
+my $inBytes = (-s $in) + (-s $out);
+my $outBytes = (-s $tin) + (-s $tout);
 
 printf("%d + %d = %d\n%d + %d = %d\n", -s $in, -s $out, $inBytes, -s $tin, -s $tout, $outBytes);
 
-for $x (sort keys %nums)
+for my $x (sort keys %nums)
 {
   print "Didn't delete hash key $x\n$nums{$x}.\n";
 }
