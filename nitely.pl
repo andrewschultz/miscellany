@@ -34,18 +34,19 @@ my %cmd;
 my %subs;
 my $before;
 
-my $nmain = "c:/writing/dict/nitely.txt";
-my $npriv = "c:/writing/dict/nitely-pr.txt";
+my $nmain = "c:/writing/scripts/nitely.txt";
+my $npriv = "c:/writing/scripts/nitely-pr.txt";
 
 my @projs = ();
 my $proj;
-my $errFile = "c:/writing/dict/nightly/errs.htm";
+my $nitedir = "c:/nightly";
+my $errFile = "$nitedir/errs.htm";
 
 projMap($nmain);
 projMap($npriv);
 getArgs();
 
-chdir("c:/writing/dict/nightly");
+chdir("$nitedir");
 
 open(C, ">$errFile");
 print C "<html><title>Total errors</title><body><center><font size=+4>TOTAL ERRORS</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
@@ -163,8 +164,8 @@ sub blockBuild # may be expanded to blockActivity
 
 sub procIt
 {
-  my $x = "c:/writing/dict/nightly/$_[0].htm";
-  my $y = "c:/writing/dict/nightly/$_[0].txt";
+  my $x = "$nitedir/$_[0].htm";
+  my $y = "$nitedir/$_[0].txt";
   open(B, ">$y"); print B $_[1]; close(B);
   my @c;
   my $thisfail = 0;
@@ -215,8 +216,8 @@ sub procIt
 sub opoNightly
 {
 my $q;
-my $outfile = "c:/writing/dict/nightly/opolis-latest.txt";
-my $datefile = strftime "c:/writing/dict/nightly/opolis-errs-%m-%d-%Y.txt", localtime;
+my $outfile = "$nitedir/opolis-latest.txt";
+my $datefile = strftime "$nitedir/opolis-errs-%m-%d-%Y.txt", localtime;
 
 my $threed = "c:/games/inform/threediopolis.inform/source/story.ni";
 my $fourd = "c:/games/inform/fourdiopolis.inform/source/story.ni";
@@ -264,7 +265,7 @@ sub getArgs
 	  /^-?e$/ && do { `$nmain`; exit; };
 	  /^-?p$/ && do { `$npriv`; exit; };
 	  /^-f$/ && do { $force = 1; $count++; next; };
-	  /^-?h$/ && do { `c:/writing/dict/nightly/errs.htm`; exit; };
+	  /^-?h$/ && do { `$nitedir/errs.htm`; exit; };
 	  /^-jr$/ && do { $justRelease = -1; $count++; next; };
 	  /^-n(b?)$/ && do { $build = -1; $count++; next; };
 	  /^-w$/ && do { $quiet = 1; $count++; next; };

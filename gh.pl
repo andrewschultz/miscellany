@@ -7,7 +7,7 @@
 #
 # gh.pl c opens code, e opens gh.txt, p opens private file
 
-#use strict;
+use strict;
 use warnings;
 
 use File::Compare;
@@ -15,6 +15,7 @@ use File::Compare;
 my $warnCanRun = 0;
 
 my %repls;
+my %repl2;
 
 my $alph = 1;
 my $procString;
@@ -37,6 +38,9 @@ preProcessHashes($ghp);
 my $justPrint = 0;
 my $verbose = 0;
 my $myBase = "";
+
+my $globalWarnings = 0;
+my $globalStrict = 0;
 
 my $copyAuxiliary = 0;
 my $copyBinary = 0;
@@ -66,8 +70,16 @@ while ($count <= $#ARGV)
   /^-?j$/i && do { $justPrint = 1; $count++; next; };
   /^-?f$/i && do { $byFile = 1; $count++; next; };
   /^-?v$/i && do { $verbose = 1; $count++; next; };
-  /^-rt$/i && do { $runTrivialTests = 1; $count++; next; };
-  /^-nrt$/i && do { $runTrivialTests = -1; $count++; next; };
+  /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
+  /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
+  /^-?sw/i && do
+  {
+    readReplace();
+	strictWarn($ght);
+	strictWarn($ghp);
+	print "Total warnings needed $globalWarnings total strict needed $globalStrict\n";
+	exit();
+  };
   /^-?t$/i && do { $testResults = 1; $count++; next; };
   /^-?a$/i && do { $copyAuxiliary = 1; $count++; next; };
   /^-?b$/i && do { $copyBinary = 1; $count++; next; };
@@ -138,6 +150,7 @@ sub processTerms
   my $fromShort="";
   my $maxSize = 0;
   my $wildSwipes = 0;
+  my $temp;
 
   for my $thisFile (@_)
   {
@@ -147,7 +160,7 @@ sub processTerms
     chomp($a);
     my $b = $a;
 	$maxSize = 0;
-	
+
 	if ($a !~ /[a-z]/) { $dirName = ""; }
 
     if ($a =~ /^#/) { next; }
@@ -184,7 +197,7 @@ sub processTerms
 	  $didOne = 1; my $wc = "";
       my $c = $a; $c =~ s/.*=//g;
 
-	  #print "Before $c\n";	  
+	  #print "Before $c\n";
 	  $c = rehash($c);
 	  #print "After $c\n";
 
@@ -398,6 +411,55 @@ for (@procAry)
 }
 }
 
+sub strictWarn
+{
+  my $temp;
+  open(A, "$_[0]") || die;
+  my $line;
+  while ($line = <A>)
+  {
+    chomp($line);
+	 if ($line =~ /FROMBASE=/) { $temp = $line; $temp =~ s/^FROMBASE=//g; $repl2{"fromBase"} = $temp; next; }
+	 if ($line =~ /TOBASE=/) { $temp = $line; $temp =~ s/^TOBASE=//g; $repl2{"fromShort"} = $repl2{"toBase"} = $temp; next; }
+	 if ($line =~ /FROMSHORT=/) { $temp = $line; $temp =~ s/^FROMSHORT=//g; $repl2{"fromShort"} = $temp; next; }
+	 if ($line !~ /=/) { next; }
+	 if ($line =~ /^[>#]/) { next; }
+	 $line =~ s/.*=//;
+	 $line =~ s/,.*//;
+	 $line = rehash($line);
+	 if ($line !~ /^c:/)
+	 {
+	   $line = $repl2{"fromBase"} . "\\$line";
+	   #print "$line\n";
+     }
+	 if ($line =~ /\.pl$/) { checkWarnings($line); }
+  }
+  close(A);
+}
+
+sub checkWarnings
+{
+  my $gotWarnings = 0;
+  my $gotStrict = 0;
+
+  my $line2;
+
+  #print "$_[0]\n";
+  open(B,   $_[0]) || do { print "No $_[0], returning.\n"; return; };
+
+  while ($line2 = <B>)
+  {
+    chomp($line2);
+    if ($line2 eq "use warnings;") { $gotWarnings++; }
+    if ($line2 eq "use strict;") { $gotStrict++; }
+  }
+  close(B);
+
+  if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0]\n"; $globalStrict++; }
+  if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
+  if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
+}
+
 sub rehash
 {
   my $temp = $_[0];
@@ -431,6 +493,7 @@ print<<EOT;
 -a = copy auxiliary files
 -b = copy binary files
 -d = -a + -b (eg both)
+-sw = search for need strict/warnings
 EOT
 exit;
 }
