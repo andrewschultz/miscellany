@@ -151,6 +151,7 @@ sub processTerms
   my $maxSize = 0;
   my $wildSwipes = 0;
   my $temp;
+  my %copto;
 
   for my $thisFile (@_)
   {
@@ -223,6 +224,11 @@ sub processTerms
 	  if (($maxSize) && (-s $fromFile > $maxSize)) { print "Oops $fromFile size is above $maxSize.\n"; $badFileCount++; next; }
 	  my $thisWild = 0;
       my $cmd = "copy \"$fromFile\" \"$gh\\$toFile\"";
+	  if (($copto{$toFile}) && (! -d "$gh\\$toFile"))
+	  {
+	    print "Warning! Copying two different files to the same location $gh\\$toFile (next is $fromFile). Check gh*.txt or create a directory.\n";
+	  }
+	  $copto{$toFile}++;
 	  if ($reverse) { if ($short =~ /\*/) { next; } $cmd = "copy \"$gh\\$toFile\\$short\" \"$fromFile\""; }
 	  if ($fromFile =~ /\*/)
 	  {
