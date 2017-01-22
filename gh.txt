@@ -474,6 +474,13 @@ rmt=txt2bmp\txt2bmp.c,txt2bmp
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
 rmt=2400\2400.txt,samples\2400
+rmt=2400\readme.MD,samples\2400
+#Ancient Legends
+rmt=ancient-legends\al.ahs,samples\ancient-legends
+rmt=ancient-legends\al.nmr,samples\ancient-legends
+rmt=ancient-legends\al.xtr,samples\ancient-legends
+rmt=ancient-legends\al.bmp,samples\ancient-legends
+rmt=ancient-legends\readme.MD,samples\ancient-legends
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map
