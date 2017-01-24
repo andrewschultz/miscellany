@@ -1,28 +1,57 @@
-##############################
-#fl.pl = last-or-first 
+##############################################
+# lf.pl
+# last-or-first
 #
-#this looks through my files of first or last names and prints out what's there
 
-if (!$ARGV[0]) { die ("Need a string to search. It can be a regex."); }
+use strict;
+use warnings;
 
-##############################
-#DOS is crusty about using ^'s
-##############################
-$search = $ARGV[0]; if ($search =~ /^!/) { $search =~ s/!/\^/; }
+my $count;
 
-goThru("c:\\writing\\dict\\firsts.txt", $search);
-goThru("c:\\writing\\dict\\lasts.txt", $search);
+my $first = 1;
+my $last = 1;
 
-sub goThru
+my @searchies;
+
+while ($count <= $#ARGV)
 {
-my $anyYet = 0;
-
-open(A, "$_[0]") || die ("Can't open $_[0]");
-
-while ($a = <A>)
-{
-  if ($a =~ /$_[1]/i) { if (!$anyYet) { print "$_[0]:\n"; $anyYet = 1; } print "$a"; }
+  my $arg = $ARGV[$count];
+  for ($arg)
+  {
+  /^-b$/ && do { $first = 1; $last = 1; $count++; next; };
+  /^-f$/ && do { $first = 1; $last = 0; $count++; next; };
+  /^-l$/ && do { $first = 0; $last = 1; $count++; next; };
+  push(@searchies, $arg); $count++;
+  }
 }
 
-if (!$anyYet) { print "Nothing in $_[0].\n"; }
+if ($#ARGV == -1) { print ("Using default @searchies[0].\n"); @searchies = ("jim"); }
+
+my $endStr = "";
+my @endAry;
+
+for (@searchies)
+{
+  @endAry = ();
+  if ($first) { namelook("c:/writing/dict/firsts.txt", "first", "f", $_); }
+  if ($last) { namelook("c:/writing/dict/lasts.txt", "last", "l", $_); }
+  $endStr = join(",", sort(@endAry));
+  if ($endStr) { print "Best matches:$endStr\n"; }
+}
+
+sub namelook
+{
+  my $p = "($_[2])";
+  my $mainStr = "";
+  my @mainAry = ();
+
+  open(A, "$_[0]") || die ("No $_[0]");
+  while ($a = <A>)
+  {
+    if (($a =~ /^$_[3]/i) || ($a =~ /$_[3]$/i)) { chomp($a); push(@endAry, "$a$p"); next;}
+    if (($a =~ /$_[3]/i) && ($a !~ /[0-9]/)) { chomp($a); push(@mainAry, "$a$p"); }
+  }
+  $mainStr = join(",", sort(@mainAry));
+  if ($mainStr) { print "Anywhere for $_[1]:$mainStr\n"; }
+  close(A);
 }
