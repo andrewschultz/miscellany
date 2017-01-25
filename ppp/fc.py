@@ -716,10 +716,33 @@ def printHorizontal():
              sys.stdout.write(' ' + tocard(z))
         print
     printOthers()
-    
+
+def orgit(myList = []):
+    globbed = 1
+    while globbed:
+        globbed = 0
+        for x1 in range (0,len(myList)):
+            for x2 in range (0,len(myList)):
+                if globbed == 0:
+                    if myList[x1][0] == myList[x2][-1]:
+                        print myList
+                        globbed = 1
+                        temp = myList[x2] + myList[x1][1:]
+                        print "Deleting " + myList[x1] + " and " + myList[x2] + " to gain " + temp
+                        del myList[x2]
+                        if x1 > x2:
+                            del myList[x1-1]
+                        else:
+                            del myList[x1]
+                        myList.insert(0, temp)
+                        print myList
+    return  ' '.join(myList)
+
 def printOthers():
     checkWin()
+    coolmoves = []
     coolmove = ''
+    foundmove = ''
     canmove = ''
     wackmove = ''
     emmove = ''
@@ -739,13 +762,13 @@ def printOthers():
             if thisdo == -1:
                 wackmove = wackmove + ' ' + str(z1)+str(z2)
             elif thisdo > 0:
-                tempmove = ' ' + str(z1)+str(z2)
+                tempmove = str(z1)+str(z2)
                 if thisdo >= len(elements[z1]):
                     canfwdmove = 1
-                    coolmove = coolmove + tempmove
+                    coolmoves.append(tempmove)
                 elif not canPut(elements[z1][len(elements[z1])-thisdo], elements[z1][len(elements[z1])-thisdo-1]):
                     canfwdmove = 1
-                    coolmove = coolmove + tempmove
+                    coolmoves.append(tempmove)
                 else:
                     tempmove = tempmove + '-'
                     latmove = latmove + tempmove
@@ -753,11 +776,11 @@ def printOthers():
         if len(elements[z1]):
             for z2 in range (0,4):
                 if canPut(spares[z2], elements[z1][len(elements[z1])-1]):
-                    coolmove = coolmove + ' ' + chr(z2+97) + str(z1)
+                    foundmove = foundmove + ' ' + chr(z2+97) + str(z1)
                     canfwdmove = 1
     for z1 in range (0,4):
         if spares[z1] == 0:
-            coolmove = coolmove + ' >' + chr(z1+97)
+            foundmove = ' >' + chr(z1+97) + ' ' + foundmove
             canfwdmove = 1
     if wackmove:
         print ("Not enough room: " + str(wackmove))
@@ -767,7 +790,7 @@ def printOthers():
         emmove = ' |' + emmove
     elif not coolmove and not latmove:
         coolmove = '(no row switches)'
-    print ("Possible moves:" + coolmove + latmove + " (%d max shift" % (maxmove()) + (", recdumprow=" + str(bestDumpRow()) if bestDumpRow() > 0 else "") + ")" )
+    print ("Possible moves:" + orgit(coolmoves) + foundmove + latmove + " (%d max shift" % (maxmove()) + (", recdumprow=" + str(bestDumpRow()) if bestDumpRow() > 0 else "") + ")" )
     if not canfwdmove:
         reallylost = 1
         for z in range (1,9):
