@@ -16,6 +16,7 @@ import traceback
 
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
+timefile = "fctime.txt"
 
 onoff = ['off', 'on']
 
@@ -613,8 +614,7 @@ def checkWinning():
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
-                print("Bye!")
-                exit()
+                goBye()
             if finish[0] == 'y':
                 initCards()
                 initSide(0)
@@ -749,6 +749,8 @@ def printOthers():
         if len(elements[z1]) == 0:
             emmove = emmove + ' E' + str(z1)
             canfwdmove = 1
+            continue
+        if inOrder(z1) and elements[z1][0] % 13 == 0:
             continue
         for z2 in range (1,9):
             if z2 == z1:
@@ -1148,6 +1150,14 @@ def cardEval(myCmd):
     print ("")
     return
 
+def goBye():
+    print ("Bye!")
+    f = open('fctime.txt', 'w')
+    f.seek(0)
+    f.write(str(round(time.time())))
+    f.close()
+    exit()
+
 def readCmd(thisCmd):
     global debug
     global wonThisCmd
@@ -1238,8 +1248,7 @@ def readCmd(thisCmd):
         print ("QU needed to quit, so you don't type Q accidentally.")
         return
     if name == 'qu':
-        print ("Bye!")
-        exit()
+        goBye()
     if name == 'ws' or name == 'sw':
         saveOnWin = not saveOnWin
         print ("Save on win is now %s." %("on" if saveOnWin else "off"))
@@ -1648,6 +1657,8 @@ def readCmd(thisCmd):
     print (name + ' not recognized, displaying usage.')
     usage()
 
+###################################start main program
+
 if len(sys.argv) > 0:
     count = 1;
     while count < len(sys.argv):
@@ -1658,6 +1669,17 @@ if len(sys.argv) > 0:
         print ("Invalid flag " + sys.argv[count] + " position " + str(count))
         print ("")
         cmdUsage()
+
+timeMatters = 1
+delay = 43200
+if timeMatters:
+    with open(timefile) as f:
+        for line in f:
+            lastTime = int(line)
+    curTime = int(time.time())
+    if curTime - lastTime < delay:
+        print "Only " + str(curTime-lastTime) + " of " + str(delay) + " seconds since last time waster."
+        exit()
 
 readOpts()
 
