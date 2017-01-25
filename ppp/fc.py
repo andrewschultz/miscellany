@@ -725,18 +725,15 @@ def orgit(myList = []):
             for x2 in range (0,len(myList)):
                 if globbed == 0:
                     if myList[x1][0] == myList[x2][-1]:
-                        print myList
                         globbed = 1
                         temp = myList[x2] + myList[x1][1:]
-                        print "Deleting " + myList[x1] + " and " + myList[x2] + " to gain " + temp
                         del myList[x2]
                         if x1 > x2:
                             del myList[x1-1]
                         else:
                             del myList[x1]
                         myList.insert(0, temp)
-                        print myList
-    return  ' '.join(myList)
+    return  ' ' + ' '.join(myList)
 
 def printOthers():
     checkWin()
@@ -770,7 +767,7 @@ def printOthers():
                     canfwdmove = 1
                     coolmoves.append(tempmove)
                 else:
-                    tempmove = tempmove + '-'
+                    tempmove = ' ' + tempmove + '-'
                     latmove = latmove + tempmove
     for z1 in range (1,9):
         if len(elements[z1]):
@@ -780,7 +777,7 @@ def printOthers():
                     canfwdmove = 1
     for z1 in range (0,4):
         if spares[z1] == 0:
-            foundmove = ' >' + chr(z1+97) + ' ' + foundmove
+            foundmove = ' >' + chr(z1+97) + foundmove
             canfwdmove = 1
     if wackmove:
         print ("Not enough room: " + str(wackmove))
@@ -1468,6 +1465,11 @@ def readCmd(thisCmd):
             return
     #### two letter commands below here.
     if len(name) > 2:
+        if name.isdigit:
+            for jj in reversed(range(0,len(name)-1)):
+                temp = name[jj] + name[len(name)-1]
+                print "Moving " + temp
+                readCmd(name[jj] + name[len(name)-1])
         print ('Only 2 chars per command.')
         return
     if len(name) < 2:
