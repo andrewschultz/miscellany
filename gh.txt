@@ -309,7 +309,6 @@ past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
 past=$is\gotl.pl
 #############utilities
 past=$is\excl.pl
-past=$is\badj.pl
 past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
@@ -332,12 +331,19 @@ gru=$ws\invis\gru.txt
 #misc stuff
 FROMBASE=c:\writing\scripts
 TOBASE=misc
+#the main stuff
+misc=gh.pl,
+misc=gh.txt,
+misc=gh-reg.txt,
+#warnings/strict summary
+misc=warsum.pl,
+#inform extensions (misc)
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Full Monty Testing.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial Niceties.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Object-Based Hinting.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Line Topical Hints.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Game Mapping.i7x,i7x
-##############formerly STS
+##############formerly STS but  can be used on any inform files
 misc=$wd\punc.pl,
 misc=$wd\punc.txt,
 #Card game
@@ -349,9 +355,6 @@ misc=c:\coding\perl\proj\pts.pl,autumn-leaves
 #Trizbort changer
 misc=c:\tech\trizbort\redact.pl,trizbort
 misc=c:\tech\trizbort\redact.txt,trizbort
-misc=gh.pl,
-misc=gh.txt,
-misc=gh-reg.txt,
 misc=tli.pl,
 misc=sec.pl,
 misc=typo.pl,
@@ -445,7 +448,7 @@ FROMBASE=c:\coding\games
 TOBASE=rpg-mapping-tools
 rmt=README.md,
 rmt=mapconv\mapconv.c,mapconv
--b:rmt=mapconv\mapconv.exe,mapconv sz:70000
+-b:rmt=mapconv\mapconv.exe,mapconv sz:90000
 rmt=mapconv\README.md,mapconv
 rmt=mapcpy\mapcpy.c,mapcpy
 rmt=mapconv\test.ahs,mapconv\testing
@@ -481,6 +484,8 @@ rmt=ancient-legends\al.nmr,samples\ancient-legends
 rmt=ancient-legends\al.xtr,samples\ancient-legends
 rmt=ancient-legends\al.bmp,samples\ancient-legends
 rmt=ancient-legends\readme.MD,samples\ancient-legends
+rmt=ancient-legends\x2b.pl,samples\ancient-legends
+rmt=ancient-legends\alx2b.txt,samples\ancient-legends
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map

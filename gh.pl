@@ -72,7 +72,7 @@ while ($count <= $#ARGV)
   /^-?v$/i && do { $verbose = 1; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
-  /^-?sw/i && do
+  /^-?(sw|ws)/i && do
   {
     readReplace();
 	strictWarn($ght);
@@ -87,7 +87,7 @@ while ($count <= $#ARGV)
   /^-?reverse$/i && do { $reverse = 1; $count++; next; };
   /^[a-z34]/i && do
   {
-    if ($a2 =~ /-$/) { $a2 =~ s/-$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 0; } else { $postproc{$a2} = 0; } } # sc- means you do run trivials
+    if ($a2 =~ /-$/) { $a2 =~ s/-$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 0; } else { $postproc{$a2} = 0; } } # sc- means you don't run trivials
     if ($a2 =~ /=$/) { $a2 =~ s/=$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 1; } else { $postproc{$a2} = 1; } } # sc= means you do run trivials
     if ($altHash{$a2})
 	{
@@ -494,12 +494,14 @@ print<<EOT;
 -c edits gh.pl
 -p edits private file
 -v = verbose output
+-rt/-nrt = flag running trivial tests
 -j = just print commands instead of executing
+-t = print various test results
+-a = copy auxiliary files, -d = copy binary files, -d/ab/ba = -a + -b (eg both)
+-f doesn't look for a whole project but rather for a specific file, then runs that project
+-sw/ws = search for need strict/warnings
+Putting = after a command runs tests
 -? = this
--a = copy auxiliary files
--b = copy binary files
--d = -a + -b (eg both)
--sw = search for need strict/warnings
 EOT
 exit;
 }
