@@ -25,6 +25,7 @@ my %count;
 my %low;
 my %high;
 my %lastsub;
+my %scalars;
 
 my $c;
 
@@ -58,6 +59,12 @@ for $thisline (@warnlines)
   $b = $thisline;
   $b =~ s/.* line //;
   $c = $b; $c =~ s/\.//;
+  if ($thisline =~ /^scalar value/i)
+  {
+    $thisline =~ s/^scalar value //i;
+	$thisline =~ s/\[.*//;
+	$scalars{$thisline}++;
+  }
   if ($thisline !~ /^Global symbol/i) { next; }
   $thisline =~ s/^Global symbol \"//; $thisline =~ s/\".*//;
   if (!$low{$thisline}) { $low{$thisline} = $c; $high{$thisline} = $c; }
@@ -76,6 +83,11 @@ for my $key (sort keys %low)
   if (cursub($low{$key}) ne cursub($high{$key})) { printf (" Separate functions: %s vs %s.", cursub($low{$key}), cursub($high{$key})); }
   else { printf(" Completely contained in %s.", cursub($low{$key})); }
   print "\n";
+}
+
+for my $key (sort keys %scalars)
+{
+  print "$key has $scalars{$key} warnings thrown: @ to \$.\n";
 }
 
 #####################################
