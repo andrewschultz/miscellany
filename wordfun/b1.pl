@@ -23,6 +23,11 @@ my %freq;
 my %f2;
 my $stdin = 0;
 
+my $del = -1;
+
+for (0..$#ARGV) { if ($ARGV[$_] =~ /b1\.pl/) { $del = $_; } }
+if ($del > -1) { print "Oops, it looks like you forgot to delete the command above.\n"; @ARGV=@ARGV[$del+1..$#ARGV]; sleep(1); }
+
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"); }
 
 if ((lc($ARGV[0]) eq "-f") || (lc($ARGV[0]) eq "f"))
