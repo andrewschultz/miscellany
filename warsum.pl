@@ -20,6 +20,7 @@
 
 use warnings;
 use strict;
+use File::Which qw (which where);
 
 my %count;
 my %low;
@@ -32,8 +33,15 @@ my $c;
 my $fileToSearch = "";
 
 if (!defined($ARGV[0])) { usage(); }
-if (-f $ARGV[0]) { $fileToSearch = $ARGV[0]; }
-if (! $fileToSearch) { die "No file $ARGV[0]. I could look for it in my path, but I'm too lazy."; }
+
+if ($ENV{"PATHEXT"} !~ /\.pl;/) { $ENV{"PATHEXT"} = ".pl;" . $ENV{"PATHEXT"}; }
+my @bins = where($ARGV[0]);
+
+if ($#bins == -1) { die "No file $ARGV[0]."; } else { print "Reading $bins[0].\n"; }
+
+if ($#bins > 0) { print "(Note there's >1: @bins)\n"; }
+
+$fileToSearch = $bins[0];
 
 open(A, "$fileToSearch");
 
@@ -87,8 +95,10 @@ for my $key (sort keys %low)
 
 for my $key (sort keys %scalars)
 {
-  print "$key has $scalars{$key} warnings thrown: @ to \$.\n";
+  print "$key has warnings thrown: $scalars{$key}. ";
 }
+
+print "" . (scalar keys %low) . " total keys read.\n";
 
 #####################################
 
