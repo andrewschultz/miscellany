@@ -8,16 +8,22 @@
 #also checks for if you have a missing quote
 #
 
+use strict;
+use warnings;
+
+my $apo;
+my $count = 0;
+
 open(A, "story.ni") || die ("Need to run from a directory with a story.ni.");
 open(B, ">stotext.txt");
 open(C, ">apost.txt");
 
 #define defaults here
-$ignorebracket = 1;
-$openAfter = 1;
-$bracketText = "/";
+my $ignorebracket = 1;
+my $openAfter = 1;
+my $bracketText = "/";
 
-@ignores = ("bad-guy", "i", "r");
+my @ignores = ("bad-guy", "i", "r");
 
 while ($count < $#ARGV)
 {
@@ -36,6 +42,9 @@ while ($count < $#ARGV)
   }
   $count++;
 }
+
+my @app;
+my $x;
 
 while ($a = <A>)
 {
