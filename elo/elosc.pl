@@ -23,6 +23,12 @@ my $defaultRating = 2000;
 
 my @teams = ("Purdue", "Rutgers", "Maryland", "Minnesota", "Indiana", "Michigan State", "Ohio State", "Illinois", "Northwestern", "Michigan", "Iowa", "Penn State", "Wisconsin", "Nebraska");
 
+my %nickname;
+$nickname{"Michigan State"} = "MSU";
+$nickname{"Michigan"} = "UM";
+$nickname{"Penn State"} = "PSU";
+$nickname{"Wisconsin"} = "UW";
+
 for (@teams) { $rating{$_} = $defaultRating; }
 
 while ($count <= $#ARGV)
@@ -110,16 +116,26 @@ for (@sorted) {
   printf "%2s %10s $rating{$_} $draftOrder{$_}\n", $tempCount, $_;
   }
 
+  print "<table><tr><td>";
+  
+  for $t1 (sort keys %rating)
+  {
+    print "<td>";
+	print ifshort($t1);
+  }
  for $t1 (sort keys %rating)
   {
-    print "$t1 win pct:";
+    print "<tr><td>";
+	print ifshort($t1);
     for $t2 (sort keys %rating)
 	{
+	  print "<td>";
 	  if ($t1 eq $t2) { next; }
-	  printf(" $t2 %.2f", winPct($t1, $t2));
+	  printf("%.2f", winPct($t1, $t2));
 	}
 	print "\n";
   }
+  print "</table>";
 
 ##########################subroutines
 
@@ -135,9 +151,20 @@ sub printDbug
   print $_[0];
 }
 
+sub ifshort
+{
+  if (defined($nickname{$_[0]}))
+  {
+    return $nickname{$_[0]};
+  }
+  return $_[0];
+}
+
+
 sub usage
 {
 print<<EOT;
+No cmd line arguments yet
 EOT
 exit;
 }
