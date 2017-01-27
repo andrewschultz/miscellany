@@ -363,7 +363,6 @@ misc=zup.pl,
 misc=wpb.pl,
 misc=rwi.pl,
 misc=invis.pl,
-misc=$wd\hc.pl,wordfun
 misc=$wd\alfit.pl,wordfun
 misc=icl.pl,
 misc=icl.txt,

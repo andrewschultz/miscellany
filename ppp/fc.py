@@ -1675,7 +1675,7 @@ delay = 43200
 if timeMatters:
     with open(timefile) as f:
         for line in f:
-            lastTime = int(line)
+            lastTime = int(float(line))
     curTime = int(time.time())
     if curTime - lastTime < delay:
         print "Only " + str(curTime-lastTime) + " of " + str(delay) + " seconds since last time waster."

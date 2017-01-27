@@ -1,3 +1,9 @@
+##############################
+#
+# alfit.pl
+# alphabetizes first and last names
+#
+
 use strict;
 use warnings;
 
