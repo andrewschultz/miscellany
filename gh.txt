@@ -106,7 +106,6 @@ stsu=$wd\rg.txt,shuffling
 stsu=$wd\wmet.pl,
 stsu=$wd\wmet.txt,
 stsu=$wd\metrics.htm,
-stsu=$wd\badcap.pl,
 stsu=$wd\alfy.pl,
 stsu=c:\games\inform\roiling.inform\source\rcl.pl,
 stsu=$wd\ac.pl,

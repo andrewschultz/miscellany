@@ -31,6 +31,8 @@ my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
 my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
 
+my %gws;
+
 preProcessHashes($ght);
 preProcessHashes($ghp);
 
@@ -72,12 +74,19 @@ while ($count <= $#ARGV)
   /^-?v$/i && do { $verbose = 1; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
-  /^-?(sw|ws)/i && do
+  /^-?(sw|ws)(t)?/i && do
   {
     readReplace();
 	strictWarn($ght);
 	strictWarn($ghp);
+	if ($a =~ /t/)
+	{
+	printf("TEST RESULTS: strict-warn,%d,0,gh.pl -sw(t),%s\n", (scalar keys %gws), join("<br />", %gws));
+	}
+	else
+	{
 	print "Total warnings needed $globalWarnings total strict needed $globalStrict\n";
+	}
 	exit();
   };
   /^-?t$/i && do { $testResults = 1; $count++; next; };
@@ -464,6 +473,7 @@ sub checkWarnings
   if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0]\n"; $globalStrict++; }
   if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
   if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
+  if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
 }
 
 sub rehash
