@@ -91,7 +91,7 @@ while ($count <= $#ARGV)
   /^-x$/ && do { $othersToo = 1; $count++; next; };
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
-  /^-x/ && do { $dontWant = 1; $count++; next; };
+  /^-w/ && do { $dontWant = 1; $count++; next; };
   /^-nd$/ && do { newDefault($ARGV[$count+1]); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-m$/ && do { $maxFind = $thisAry[1]; @thisAry = $thisAry[2..$#thisAry]; $count+= 2; next; };
@@ -532,14 +532,23 @@ sub usage
 {
 print<<EOT;
 0 = process Roiling name conditionals
+-e = open manifest file of which group checks what
 -h = show headers
+-ha = history of all, -hi = specific history
 -p = headers too
+-n = look through names
 -nt = print tabbed
+-nd = change default if we don't specify -opo etc
 -ft = print untabbed
--t = only in tables
--x = others too
--c = clipboard
-as, opo, sts are the main ones.
+-t = only in tables tb=only random 1=1st start
+-x = run others too e.g. anan and myan
+-w = push line numbers to err files
+-c = clipboard (invalidates comand line)
+-m = maximum to find
+-hi = open history of specified groups, -ha = open history of all
+-sr = show rules, if text shows up in a rule
+/3d = only look in tables of 3d (for instance{)
+as, opo, sts are the main ones. -a runs all. You can split with 3d,sa if you want.
 EOT
 exit;
 }
