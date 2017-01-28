@@ -1,0 +1,14 @@
+Illinois,UI
+Indiana,iu
+Iowa,OMHR
+Maryland,MD
+Michigan,UM
+Michigan State,MSU
+Minnesota,MN
+Nebraska,NEB
+Northwestern,NW
+Ohio State,O$U
+Penn State,PSU
+Purdue,PUR
+Rutgers,RUT
+Wisconsin,WIS

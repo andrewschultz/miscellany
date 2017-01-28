@@ -399,7 +399,8 @@ misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
 misc=unco.pl,
 misc=$wd\fl.pl,
-misc=c:\writing\elosc.pl,elo
+misc=c:\coding\proj\elo\elosc.pl,elo
+misc=c:\coding\proj\elo\elonick.txt,elo
 #######################autoIt, with batch file that runs through args 1 at a time
 misc=ide.au3,au3
 misc=id.bat,au3
@@ -476,6 +477,7 @@ rmt=txt2bmp\txt2bmp.c,txt2bmp
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
 rmt=2400\2400.txt,samples\2400
+rmt=2400\2400u.txt,samples\2400
 rmt=2400\readme.MD,samples\2400
 #Ancient Legends
 rmt=ancient-legends\al.ahs,samples\ancient-legends
@@ -485,6 +487,10 @@ rmt=ancient-legends\al.bmp,samples\ancient-legends
 rmt=ancient-legends\readme.MD,samples\ancient-legends
 rmt=ancient-legends\x2b.pl,samples\ancient-legends
 rmt=ancient-legends\alx2b.txt,samples\ancient-legends
+rmt=ancient-legends\ancient-legends-castles.png,samples\ancient-legends
+rmt=ancient-legends\ancient-legends-dungeons.png,samples\ancient-legends
+rmt=ancient-legends\ancient-legends-merkania.png,samples\ancient-legends
+rmt=ancient-legends\ancient-legends-towns.png,samples\ancient-legends
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map
