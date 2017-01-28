@@ -27,25 +27,10 @@ my @allGames = ();
 my @q;
 
 #this could be put in a text file, but for now, it's not. Teams/Nicknames could be a hash.
-my @teams = ("Illinois", "Indiana", "Iowa", "Maryland", "Michigan", "Michigan State", "Minnesota", "Nebraska", "Northwestern", "Ohio State", "Penn State", "Purdue", "Rutgers", "Wisconsin");
-
+my @teams;
 my %nickname;
-$nickname{"Indiana"} = "iu";
-$nickname{"Illinois"} = "UI";
-$nickname{"Iowa"} = "OMHR";
-$nickname{"Maryland"} = "MD";
-$nickname{"Michigan"} = "UM";
-$nickname{"Michigan State"} = "MSU";
-$nickname{"Minnesota"} = "MN";
-$nickname{"Nebraska"} = "NEB";
-$nickname{"Northwestern"} = "NW";
-$nickname{"Ohio State"} = "O\$U";
-$nickname{"Penn State"} = "PSU";
-$nickname{"Purdue"} = "PUR";
-$nickname{"Rutgers"} = "RUT";
-$nickname{"Wisconsin"} = "UW";
-
-for (@teams) { $rating{$_} = $defaultRating; }
+my $nickfile = "elonick.txt";
+my $gamefile = "elosc.txt";
 
 while ($count <= $#ARGV)
 {
@@ -61,30 +46,9 @@ while ($count <= $#ARGV)
     usage();
   }
 }
-open(A, "elosc.txt");
 
-while ($a = <A>)
-{
-  chomp($a);
-  if ($a =~ /#/)
-  {
-    next;
-  }
-  if ($a =~ /;/) { last; }
-  $a =~ s/.*201[67][ \t]*//;
-  $a =~ s/^[ \t]*//;
-  $a =~ s/\t.*//;
-  $a =~ s/ *\(OT\)//;
-  $a =~ s/ *[0-9]+, */,/;
-  $a =~ s/ *[0-9]+ *$//;
-  @q = split(/,/, $a);
-  if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
-  {
-    push(@allGames, $a);
-  }
-}
-
-close(A);
+readTeamNicknames();
+readTeamGames();
 
 for ($count = 1; $count <= $iterations; $count++)
 {
@@ -101,7 +65,7 @@ foreach $x (sort keys %rating)
  my $rank = 0;
 
  print "<table>\n";
-foreach $x (sort {$rating{$a} <=> $rating{$b}} keys %rating)
+foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
 {
   $rank++;
   print "<tr><td>$rank<td>$x<td>$rating{$x}\n";
@@ -110,7 +74,7 @@ print "</table>";
 
 # now to print the table of probabilities
 print "<table><tr><td>";
-  
+
 my $t1;
 my $t2;
 my $mult;
@@ -212,6 +176,54 @@ sub ifshort
   return $_[0];
 }
 
+################reads game scores and converts them to (Winner, Loser)
+sub readTeamGames
+{
+open(A, $gamefile) || die ("No team game file");
+
+while ($a = <A>)
+{
+  chomp($a);
+  if ($a =~ /#/)
+  {
+    next;
+  }
+  if ($a =~ /;/) { last; }
+  $a =~ s/.*201[67][ \t]*//;
+  $a =~ s/^[ \t]*//;
+  $a =~ s/\t.*//;
+  $a =~ s/ *\(OT\)//;
+  $a =~ s/ *[0-9]+, */,/;
+  $a =~ s/ *[0-9]+ *$//;
+  @q = split(/,/, $a);
+  if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
+  {
+    push(@allGames, $a);
+  }
+}
+close(A);
+}
+
+###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow
+# e.g. names like "Northwestern" make a column really wide
+sub readTeamNicknames
+{
+open(A, "elonick.txt") || die ("Can't open elonick.txt");
+my @b;
+while ($a = <A>)
+{
+  if ($a =~ /^;/)
+  { last; }
+  chomp($a);
+  @b = split(/,/, $a);
+  push(@teams, $b[0]);
+  if ($#b > 0) { $nickname{$b[0]} = $b[1]; }
+}
+@teams = sort(@teams);
+for (@teams) { $rating{$_} = $defaultRating; }
+
+}
+
 sub usage
 {
 print<<EOT;
@@ -223,5 +235,5 @@ EOT
 exit;
 }
 
-# future options: 1 table or no 2 show debug every X turns
+# future options: 1 table or no 3 say we're complete if total or max delt < a certain number, print # of iterations
 # also, create a hash of win numbers for each side, as well as their schedule. @allGames contains nonconference games at the moment.
