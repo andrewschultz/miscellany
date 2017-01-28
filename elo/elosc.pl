@@ -20,13 +20,15 @@ my $iterations = 2000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
 my $debugEveryX = 0;
+my $maxTotalShift = 0;
+my $maxSingleShift = 0;
 
 #variables
+my $closeEnough = 0;
 my $count = 0;
 my @allGames = ();
 my @q;
 
-#this could be put in a text file, but for now, it's not. Teams/Nicknames could be a hash.
 my @teams;
 my %nickname;
 my $nickfile = "elonick.txt";
@@ -41,6 +43,8 @@ while ($count <= $#ARGV)
     /^-?d$/ && do { $dBug=1; $count++; next; };
     /^-?de$/ && do { $debugEveryX = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
+	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
+	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
 	/^-?n(i)?$/ && do { $nickfile = $b; $count += 2; next; };
     /^-?p$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
@@ -52,9 +56,14 @@ while ($count <= $#ARGV)
 readTeamNicknames();
 readTeamGames();
 
-for ($count = 1; $count <= $iterations; $count++)
+for ($count = 1; $count <= $iterations && !$closeEnough; $count++)
 {
 eloIterate();
+}
+
+if ($closeEnough)
+{
+  print "Needed $count of $iterations iterations.\n";
 }
 
 my $x;
@@ -132,16 +141,21 @@ my $maxDelt = 0;
 my $curDelt = 0;
 foreach $x (keys %rating)
 {
-  if ($dBug)
+  if ($dBug || $maxTotalShift || $maxSingleShift)
   {
   $curDelt = abs($rating{$x} - $tempRating{$x});
   if ($curDelt > $maxDelt) { $maxDelt = $curDelt; }
   $totalDelt += $curDelt;
-  print("$totalDelt total rating shift for run $count.\n");
-  print("$maxDelt maximum rating shift for run $count.\n");
   }
   $rating{$x} = $tempRating{$x};
 }
+if ($dBug)
+{
+  print("$totalDelt total rating shift for run $count.\n");
+  print("$maxDelt maximum rating shift for run $count.\n");
+}
+if ($totalDelt < $maxTotalShift) { $closeEnough = 1; }
+if ($maxDelt < $maxSingleShift) { $closeEnough = 1; }
 
 if (($debugEveryX) && ($count  % $debugEveryX == 0))
 {
@@ -232,6 +246,8 @@ print<<EOT;
 -d is debug rating
 -de means send debug information every X iterations
 -i changes number of iterations
+-m is the minimum total rating shift to try another iteration
+-m1 is the minimum maximum rating shift by any one team to try another iteration
 -ni changes the nickname file
 -p changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
@@ -240,5 +256,5 @@ EOT
 exit;
 }
 
-# future options: 1 table or no 3 say we're complete if total or max delt < a certain number, print # of iterations
+# future options: 1 table or no
 # also, create a hash of win numbers for each side, as well as their schedule. @allGames contains nonconference games at the moment.
