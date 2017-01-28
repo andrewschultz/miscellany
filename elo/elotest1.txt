@@ -1,0 +1,26 @@
+####################this tests what happens if 1 team won all their games and 2 lost all theirs
+Purdue,Illinois
+Purdue,Indiana
+Purdue,Iowa
+Purdue,Maryland
+Purdue,Michigan
+Purdue,Michigan State
+Purdue,Minnesota
+Purdue,Nebraska
+Purdue,Northwestern
+Purdue,Ohio State
+Purdue,Penn State
+Purdue,Rutgers
+Purdue,Wisconsin
+Illinois,Indiana
+Iowa,Indiana
+Maryland,Indiana
+Michigan,Indiana
+Michigan State,Indiana
+Minnesota,Indiana
+Nebraska,Indiana
+Northwestern,Indiana
+Ohio State,Indiana
+Penn State,Indiana
+Purdue,Indiana
+Wisconsin,Indiana

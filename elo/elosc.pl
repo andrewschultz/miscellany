@@ -14,6 +14,7 @@ use warnings;
 my %rating;
 my %tempRating;
 
+my %schedule;
 my %wins;
 my %losses;
 
@@ -31,7 +32,6 @@ my $fudgefactor = 0.1;
 my $x;
 my $closeEnough = 0;
 my $count = 0;
-my @allGames = ();
 my @q;
 
 my @teams;
@@ -92,25 +92,20 @@ sub eloIterate
 {
   my $x;
   my @b;
-  my $expPoints;
   my $expWins;
-foreach $x (keys %rating) { $tempRating{$x} = $rating{$x}; }
-
-for (@allGames)
+  my $mult;
+foreach $x (keys %rating)
 {
-  @b = split(/[,]/, $_);
-  #printf("$b[0] %d vs $b[1] %d\n", $rating{$b[0]}, $rating{$b[1]});
-  # this shouldn't be necessary but I want it in to do basic error checking
-  unless (defined($rating{$b[0]}) && defined($rating{$b[1]})) { print "$_ is an irrelevant matchup\n"; next; }
-  if (!$rating{$b[0]}) { $rating{$b[0]} = $tempRating{$b[0]} = $defaultRating; printDbug("resetting $b[0]\n"); }
-  if (!$rating{$b[1]}) { $rating{$b[1]} = $tempRating{$b[1]} = $defaultRating; printDbug("resetting $b[1]\n"); }
-  $mult = ($rating{$b[1]} - $rating{$b[0]})/400;
-  $expWins = 1/(1+10**($mult));
-  #printDbug("Expected wins for $b[0] vs $b[1] rating $rating{$b[0]} rating $rating{$b[1]} = $expWins\n");
-  $expPoints = $pointsPerWin*(1 - $expWins * 1);
-  #printDbug("$b[0] gains $expPoints\n$b[1] loses $expPoints\n");
-  $tempRating{$b[0]} += $expPoints;
-  $tempRating{$b[1]} -= $expPoints;
+  $expWins = 0;
+  $tempRating{$x} = $rating{$x};
+  @b = split(/,/, $schedule{$x});
+  for (@b)
+  {
+  $mult = ($rating{$_} - $rating{$x})/400;
+  $expWins += 1/(1+10**($mult));
+  }
+  #printf("$x changes by %.2f.\n", ($wins{$x} - $expWins) * $pointsPerWin);
+  $tempRating{$x} += ($wins{$x} - $expWins) * $pointsPerWin;
 }
 
 my $totalDelt = 0;
@@ -200,11 +195,13 @@ while ($a = <A>)
 	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
 	  next;
     }
-    push(@allGames, $a);
+	$schedule{$q[0]} .= ",$q[1]";
+	$schedule{$q[1]} .= ",$q[0]";
 	$wins{$q[0]}++;
 	$losses{$q[1]}++;
   }
 }
+for (keys %schedule) { $schedule{$_} =~ s/^,//; }
 close(A);
 my $team;
 my $adj = 0;
@@ -229,7 +226,7 @@ for $team (@teams)
   if ($wins{$team} == 0)
   {
     if ($dBug) { print "$team has no wins.\n"; }
-	$allwin++; $losses{$team} = $fudgefactor; $wins{$team}  -= $fudgefactor;
+	$allwin++; $losses{$team} -= $fudgefactor; $wins{$team}  = $fudgefactor;
   }
   elsif ($losses{$team} == 0)
   {
