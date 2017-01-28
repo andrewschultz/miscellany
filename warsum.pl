@@ -28,13 +28,18 @@ my %high;
 my %lastsub;
 my %scalars;
 
+my %descr;
+$descr{"\$"} = "STRING VARIABLES";
+$descr{"\@"} = "ARRAYS";
+$descr{"\%"} = "HASHES";
+
 my $c;
 
 my $fileToSearch = "";
 
 if (!defined($ARGV[0])) { usage(); }
 
-if ($ENV{"PATHEXT"} !~ /\.pl;/) { $ENV{"PATHEXT"} = ".pl;" . $ENV{"PATHEXT"}; }
+if ($ENV{"PATHEXT"} !~ /\.pl;/i) { $ENV{"PATHEXT"} = ".PL;" . $ENV{"PATHEXT"}; }
 my @bins = where($ARGV[0]);
 
 if ($#bins == -1) { die "No file $ARGV[0]."; } else { print "Reading $bins[0].\n"; }
@@ -45,12 +50,12 @@ $fileToSearch = $bins[0];
 
 open(A, "$fileToSearch");
 
-$lastsub{"main"} = 0;
+$lastsub{"MAIN"} = 0;
 
 my $line;
 while ($line = <A>)
 {
-  if ($line =~ /^sub/) { $line =~ s/^sub //; chomp($line); $lastsub{$line} = $.; }
+  if ($line =~ /^sub/) { $line =~ s/^sub //; $line =~ s/ +#.*//; chomp($line); $lastsub{$line} = $.; }
 }
 close(A);
 
@@ -75,7 +80,11 @@ for $thisline (@warnlines)
   }
   if ($thisline !~ /^Global symbol/i) { next; }
   $thisline =~ s/^Global symbol \"//; $thisline =~ s/\".*//;
-  if (!$low{$thisline}) { $low{$thisline} = $c; $high{$thisline} = $c; }
+  if (!$low{$thisline})
+  {
+    $low{$thisline} = $c;
+	$high{$thisline} = $c;
+  }
   else
   {
     if ($c < $low{$thisline}) { $low{$thisline} = $c; }
@@ -85,8 +94,11 @@ for $thisline (@warnlines)
   #print "$thisline\n";
 }
 
+my $firstkey = "";
 for my $key (sort keys %low)
 {
+  my $key1 = substr($key,0,1);
+  if ($key1 ne $firstkey) { print "=" x 40 . $descr{$key1} . "\n"; $firstkey = $key1; }
   print "$key covers $low{$key} to $high{$key}, $count{$key} incidences.";
   if (cursub($low{$key}) ne cursub($high{$key})) { printf (" Separate functions: %s vs %s.", cursub($low{$key}), cursub($high{$key})); }
   else { printf(" Completely contained in %s.", cursub($low{$key})); }
