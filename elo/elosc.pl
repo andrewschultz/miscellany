@@ -28,6 +28,7 @@ my $maxSingleShift = 0;
 my $fudgefactor = 0.1;
 
 #variables
+my $x;
 my $closeEnough = 0;
 my $count = 0;
 my @allGames = ();
@@ -66,7 +67,15 @@ while ($count <= $#ARGV)
 
 readTeamNicknames();
 readTeamGames();
+doIterations();
+stabilizeRatings();
+printOutRatings();
 
+##########################################################################subroutines
+
+#####################################simply executes eloIterate until all iterations are either through or small enough not to worry
+sub doIterations
+{
 for ($count = 1; $count <= $iterations && !$closeEnough; $count++)
 {
 eloIterate();
@@ -76,53 +85,10 @@ if ($closeEnough)
 {
   print "Needed $count of $iterations iterations.\n";
 }
-
-my $x;
-
-foreach $x (sort keys %rating)
-  {
-    $rating{$x} = int($rating{$x} + .5);
-  }
-
- my $rank = 0;
-
- print "<table>\n";
-foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
-{
-  $rank++;
-  print "<tr><td>$rank<td>$x<td>$rating{$x}\n";
 }
-print "</table>";
 
-# now to print the table of probabilities
-print "<table><tr><td>";
-
-my $t1;
-my $t2;
-my $mult;
-
-for $t1 (sort keys %rating)
-  {
-    print "<td>";
-	print ifshort($t1);
-  }
- for $t1 (sort keys %rating)
-  {
-    print "<tr><td>";
-	print ifshort($t1);
-    for $t2 (sort keys %rating)
-	{
-	  print "<td>";
-	  if ($t1 eq $t2) { next; }
-	  printf("%.2f", winPct($t1, $t2));
-	}
-	print "\n";
-  }
-  print "</table>";
-
-##########################subroutines
-
-sub eloIterate # this takes the ELO rating and
+# this takes the ELO rating for each team, replays all the games, and tracks all ratings changes
+sub eloIterate
 {
   my $x;
   my @b;
@@ -300,6 +266,73 @@ for (@teams) { $rating{$_} = $defaultRating; $wins{$_} = 0; $losses{$_} = 0; }
 
 }
 
+#########################this stabilizes any significant rounding errors while we are approximating ELO ratings. Everyone gets a +/- til the average is the default rating again.
+sub stabilizeRatings
+{
+my $totalRating;
+
+foreach $x (sort keys %rating)
+{
+  $totalRating += $rating{$x};
+}
+my $endFudge = $defaultRating - $totalRating / (scalar keys %rating);
+if ($endFudge < .01) { print "No significant rounding errors\n"; return; }
+printf("Adjusting all ratings by %.4f.\n", $endFudge);
+
+foreach $x (sort keys %rating)
+{
+  $rating{$x} +=  $endFudge;
+}
+
+}
+
+#######################here we print out all the ratings
+sub printOutRatings
+{
+foreach $x (sort keys %rating)
+{
+  $rating{$x} = int($rating{$x} + .5);
+}
+
+ my $rank = 0;
+
+ print "<table>\n";
+foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
+{
+  $rank++;
+  print "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}\n";
+}
+print "</table>\n";
+
+# now to print the table of probabilities
+print "<table><tr><td>";
+
+my $t1;
+my $t2;
+my $mult;
+
+for $t1 (sort keys %rating)
+  {
+    print "<td>";
+	print ifshort($t1);
+  }
+print "\n";
+for $t1 (sort keys %rating)
+  {
+    print "<tr><td>";
+	print ifshort($t1);
+    for $t2 (sort keys %rating)
+	{
+	  print "<td>";
+	  if ($t1 eq $t2) { next; }
+	  printf("%.2f", winPct($t1, $t2));
+	}
+	print "\n";
+  }
+  print "</table>";
+}
+
+##################################standard usage file
 sub usage
 {
 print<<EOT;
