@@ -33,6 +33,7 @@ my $x;
 my $closeEnough = 0;
 my $count = 0;
 my @q;
+my @allGames;
 my $addString;
 my $flipString;
 my $undoString;
@@ -50,7 +51,7 @@ while ($count <= $#ARGV)
   {
     /^-?d$/ && do { $dBug=1; $count++; next; };
     /^-?de$/ && do { $debugEveryX = $b; $count += 2; next; };
-    /^-?f$/ && do
+    /^-?ff$/ && do
 	{
 	  $fudgefactor = $b;
 	  if (($fudgefactor > .5) || ($fudgefactor < 0)) { die "Fudgefactor must be between 0 and .5.\n"; }
@@ -188,6 +189,7 @@ while ($a = <A>)
 }
 
 readUserAlterations();
+processInitSchedule();
 
 for (keys %schedule) { $schedule{$_} =~ s/^,//; }
 close(A);
@@ -231,6 +233,20 @@ for my $t (@teams) { print "$t: $wins{$t}-$losses{$t}\n"; }
 }
 }
 
+sub processInitSchedule
+{
+  my @q;
+  my $myGame;
+  for $myGame (@allGames)
+  {
+  @q = split(/,/, $myGame);
+  $schedule{$q[0]} .= ",$q[1]";
+  $schedule{$q[1]} .= ",$q[0]";
+  $wins{$q[0]}++;
+  $losses{$q[1]}++;
+  }
+}
+
 ############################adds a game to the schedule.
 sub addToSched
 {
@@ -251,10 +267,7 @@ sub addToSched
 	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
 	  next;
     }
-	$schedule{$q[0]} .= ",$q[1]";
-	$schedule{$q[1]} .= ",$q[0]";
-	$wins{$q[0]}++;
-	$losses{$q[1]}++;
+	push(@allGames, $_[0]);
   }
 }
 
@@ -289,16 +302,33 @@ my $thisGame;
   }
   if ($flipString)
   {
-    @gameMod = ();
+    @gameMod = split(/\//, $flipString);
 	for $thisGame (@gameMod)
 	{
+	  for (0..$#allGames)
+	  {
+	    if (lc($thisGame) eq lc($allGames[$_]))
+		{
+          my $thatGameR = $allGames[$_];
+          $thatGameR =~ s/(.*),(.*)/$2,$1/;
+		  splice(@allGames, $_, 1);
+		  push(@allGames, $thatGameR);
+		}
+	  }
 	}
   }
   if ($undoString)
   {
-    @gameMod = ();
+    @gameMod = split(/\//, $undoString);
 	for $thisGame (@gameMod)
 	{
+	  for (0..$#allGames)
+	  {
+	    if (lc($thisGame) eq lc($allGames[$_]))
+		{
+		  splice(@allGames, $_, 1);
+		}
+	  }
 	}
   }
 
@@ -374,9 +404,12 @@ for $t1 (sort keys %rating)
 sub usage
 {
 print<<EOT;
+-a adds games
+-f flips a game's result (winner first, changed to loser)
+-u undoes a game (deletes it)
 -d is debug rating
 -de means send debug information every X iterations
--f sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
+-ff sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
 -i changes number of iterations
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
