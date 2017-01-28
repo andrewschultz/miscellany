@@ -38,11 +38,13 @@ while ($count <= $#ARGV)
   $b = $ARGV[$count+1];
   for ($a)
   {
-    /-r/ && do { $defaultRating = $b; $count += 2; next; };
-    /-de/ && do { $debugEveryX = $b; $count += 2; next; };
-    /-d/ && do { $dBug=1; $count++; next; };
-    /-i/ && do { $iterations = $b; $count += 2; next; };
-    /-p/ && do { $pointsPerWin = $b; $count += 2; next; };
+    /^-?d$/ && do { $dBug=1; $count++; next; };
+    /^-?de$/ && do { $debugEveryX = $b; $count += 2; next; };
+    /^-?i$/ && do { $iterations = $b; $count += 2; next; };
+	/^-?n(i)?$/ && do { $nickfile = $b; $count += 2; next; };
+    /^-?p$/ && do { $pointsPerWin = $b; $count += 2; next; };
+    /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
+    /^-?(re|g)$/ && do { $gamefile = $b; $count += 2; next; };
     usage();
   }
 }
@@ -227,10 +229,13 @@ for (@teams) { $rating{$_} = $defaultRating; }
 sub usage
 {
 print<<EOT;
--r changes the default rating, which is usually 2000 (expert)
 -d is debug rating
+-de means send debug information every X iterations
 -i changes number of iterations
+-ni changes the nickname file
 -p changes the points per win
+-r changes the default rating, which is usually 2000 (expert)
+-re/-g is the game result file
 EOT
 exit;
 }
