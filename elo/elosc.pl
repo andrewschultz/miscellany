@@ -14,6 +14,9 @@ use warnings;
 my %rating;
 my %tempRating;
 
+my %wins;
+my %losses;
+
 #defaults, can be tweaked with options
 my $dBug = 0;
 my $iterations = 2000;
@@ -22,6 +25,7 @@ my $defaultRating = 2000;
 my $debugEveryX = 0;
 my $maxTotalShift = 0;
 my $maxSingleShift = 0;
+my $fudgefactor = 0.1;
 
 #variables
 my $closeEnough = 0;
@@ -42,11 +46,18 @@ while ($count <= $#ARGV)
   {
     /^-?d$/ && do { $dBug=1; $count++; next; };
     /^-?de$/ && do { $debugEveryX = $b; $count += 2; next; };
+    /^-?f$/ && do
+	{
+	  $fudgefactor = $b;
+	  if (($fudgefactor > .5) || ($fudgefactor < 0)) { die "Fudgefactor must be between 0 and .5.\n"; }
+	  $count += 2;
+	  next;
+    };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
 	/^-?n(i)?$/ && do { $nickfile = $b; $count += 2; next; };
-    /^-?p$/ && do { $pointsPerWin = $b; $count += 2; next; };
+    /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
     /^-?(re|g)$/ && do { $gamefile = $b; $count += 2; next; };
     usage();
@@ -205,19 +216,68 @@ while ($a = <A>)
     next;
   }
   if ($a =~ /;/) { last; }
+  if ($a =~ /^#/) { next; }
+  if ($a =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
+  {
   $a =~ s/.*201[67][ \t]*//;
   $a =~ s/^[ \t]*//;
   $a =~ s/\t.*//;
   $a =~ s/ *\(OT\)//;
   $a =~ s/ *[0-9]+, */,/;
   $a =~ s/ *[0-9]+ *$//;
+  }
   @q = split(/,/, $a);
   if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
   {
+    if ($q[0] eq $q[1])
+	{
+	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
+	  next;
+    }
     push(@allGames, $a);
+	$wins{$q[0]}++;
+	$losses{$q[1]}++;
   }
 }
 close(A);
+my $team;
+my $adj = 0;
+my $allwin = 0;
+my $allloss = 0;
+for $team (@teams)
+{
+  if ($wins{$team} + $losses{$team} == 0) { die ("$team has not played any games. Bailing.\n"); }
+  if ($losses{$team} == 0) { $allloss++; }
+  if ($wins{$team} == 0) { $allwin++; }
+}
+
+if (scalar @teams - $allwin - $allloss == 0) { die ("No teams with a win and a loss. Bailing.\n"); }
+
+#check for the most likely case when we have played a few rounds, where everyone has won and lost, no adjustments necessary
+if ($allwin + $allloss == 0) { return; }
+
+if ($allwin == $allloss) { return; }
+my $delta = ($allwin - $allloss) * $fudgefactor * ($allwin + $allloss) / (@teams - $allwin - $allloss);
+for $team (@teams)
+{
+  if ($wins{$team} == 0)
+  {
+    if ($dBug) { print "$team has no wins.\n"; }
+	$allwin++; $losses{$team} = $fudgefactor; $wins{$team}  -= $fudgefactor;
+  }
+  elsif ($losses{$team} == 0)
+  {
+    if ($dBug) { print "$team has no losses.\n"; }
+	$allloss++; $wins{$team} -= $fudgefactor; $losses{$team}  = $fudgefactor;
+  }
+  else { $wins{$team} -= $delta; $losses{$team} += $delta; }
+}
+
+if ($dBug)
+{
+print "Fudge factor = $fudgefactor, delta = $delta\n";
+for my $t (@teams) { print "$t: $wins{$t}-$losses{$t}\n"; }
+}
 }
 
 ###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow
@@ -236,7 +296,7 @@ while ($a = <A>)
   if ($#b > 0) { $nickname{$b[0]} = $b[1]; }
 }
 @teams = sort(@teams);
-for (@teams) { $rating{$_} = $defaultRating; }
+for (@teams) { $rating{$_} = $defaultRating; $wins{$_} = 0; $losses{$_} = 0; }
 
 }
 
@@ -245,16 +305,19 @@ sub usage
 print<<EOT;
 -d is debug rating
 -de means send debug information every X iterations
+-f sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
 -i changes number of iterations
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
 -ni changes the nickname file
--p changes the points per win
+-p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
 -re/-g is the game result file
 EOT
 exit;
 }
 
-# future options: 1 table or no
+# future options:
+# * table or no
+# * check what total ratings sum to and bring everything back to the original average
 # also, create a hash of win numbers for each side, as well as their schedule. @allGames contains nonconference games at the moment.
