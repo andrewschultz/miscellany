@@ -33,6 +33,9 @@ my $x;
 my $closeEnough = 0;
 my $count = 0;
 my @q;
+my $addString;
+my $flipString;
+my $undoString;
 
 my @teams;
 my %nickname;
@@ -54,6 +57,9 @@ while ($count <= $#ARGV)
 	  $count += 2;
 	  next;
     };
+	/^-?a$/ && do { $addString = $b; $count += 2; next; };
+	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
+	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
@@ -178,29 +184,11 @@ while ($a = <A>)
   }
   if ($a =~ /;/) { last; }
   if ($a =~ /^#/) { next; }
-  if ($a =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
-  {
-  $a =~ s/.*201[67][ \t]*//;
-  $a =~ s/^[ \t]*//;
-  $a =~ s/\t.*//;
-  $a =~ s/ *\(OT\)//;
-  $a =~ s/ *[0-9]+, */,/;
-  $a =~ s/ *[0-9]+ *$//;
-  }
-  @q = split(/,/, $a);
-  if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
-  {
-    if ($q[0] eq $q[1])
-	{
-	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
-	  next;
-    }
-	$schedule{$q[0]} .= ",$q[1]";
-	$schedule{$q[1]} .= ",$q[0]";
-	$wins{$q[0]}++;
-	$losses{$q[1]}++;
-  }
+  addToSched($a);
 }
+
+readUserAlterations();
+
 for (keys %schedule) { $schedule{$_} =~ s/^,//; }
 close(A);
 my $team;
@@ -243,6 +231,33 @@ for my $t (@teams) { print "$t: $wins{$t}-$losses{$t}\n"; }
 }
 }
 
+############################adds a game to the schedule.
+sub addToSched
+{
+  if ($_[0] =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
+  {
+  $_[0] =~ s/.*201[67][ \t]*//;
+  $_[0] =~ s/^[ \t]*//;
+  $_[0] =~ s/\t.*//;
+  $_[0] =~ s/ *\(OT\)//;
+  $_[0] =~ s/ *[0-9]+, */,/;
+  $_[0] =~ s/ *[0-9]+ *$//;
+  }
+ my @q = split(/,/, $_[0]);
+  if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
+  {
+    if ($q[0] eq $q[1])
+	{
+	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
+	  next;
+    }
+	$schedule{$q[0]} .= ",$q[1]";
+	$schedule{$q[1]} .= ",$q[0]";
+	$wins{$q[0]}++;
+	$losses{$q[1]}++;
+  }
+}
+
 ###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow
 # e.g. names like "Northwestern" make a column really wide
 sub readTeamNicknames
@@ -260,6 +275,32 @@ while ($a = <A>)
 }
 @teams = sort(@teams);
 for (@teams) { $rating{$_} = $defaultRating; $wins{$_} = 0; $losses{$_} = 0; }
+
+}
+
+sub readUserAlterations
+{
+my @gameMod = ();
+my $thisGame;
+  if ($addString)
+  {
+    @gameMod = split(/\//, $addString);
+	for $thisGame (@gameMod) { addToSched($thisGame); }
+  }
+  if ($flipString)
+  {
+    @gameMod = ();
+	for $thisGame (@gameMod)
+	{
+	}
+  }
+  if ($undoString)
+  {
+    @gameMod = ();
+	for $thisGame (@gameMod)
+	{
+	}
+  }
 
 }
 
@@ -293,7 +334,7 @@ foreach $x (sort keys %rating)
 
  my $rank = 0;
 
- print "<table>\n";
+ print "<table border=1>\n";
 foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
 {
   $rank++;
@@ -302,7 +343,7 @@ foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
 print "</table>\n";
 
 # now to print the table of probabilities
-print "<table><tr><td>";
+print "<table border=1><tr><td>";
 
 my $t1;
 my $t2;
