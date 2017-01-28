@@ -19,10 +19,12 @@ my $dBug = 0;
 my $iterations = 2000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
+my $debugEveryX = 0;
 
 #variables
 my $count = 0;
 my @allGames = ();
+my @q;
 
 #this could be put in a text file, but for now, it's not. Teams/Nicknames could be a hash.
 my @teams = ("Illinois", "Indiana", "Iowa", "Maryland", "Michigan", "Michigan State", "Minnesota", "Nebraska", "Northwestern", "Ohio State", "Penn State", "Purdue", "Rutgers", "Wisconsin");
@@ -52,6 +54,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /-r/ && do { $defaultRating = $b; $count += 2; next; };
+    /-de/ && do { $debugEveryX = $b; $count += 2; next; };
     /-d/ && do { $dBug=1; $count++; next; };
     /-i/ && do { $iterations = $b; $count += 2; next; };
     /-p/ && do { $pointsPerWin = $b; $count += 2; next; };
@@ -74,12 +77,15 @@ while ($a = <A>)
   $a =~ s/ *\(OT\)//;
   $a =~ s/ *[0-9]+, */,/;
   $a =~ s/ *[0-9]+ *$//;
-  push(@allGames, $a);
+  @q = split(/,/, $a);
+  if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
+  {
+    push(@allGames, $a);
+  }
 }
 
 close(A);
 
-my $count;
 for ($count = 1; $count <= $iterations; $count++)
 {
 eloIterate();
@@ -142,7 +148,8 @@ for (@allGames)
 {
   @b = split(/[,]/, $_);
   #printf("$b[0] %d vs $b[1] %d\n", $rating{$b[0]}, $rating{$b[1]});
-  unless (defined($rating{$b[0]}) && defined($rating{$b[1]})) { next; }
+  # this shouldn't be necessary but I want it in to do basic error checking
+  unless (defined($rating{$b[0]}) && defined($rating{$b[1]})) { print "$_ is an irrelevant matchup\n"; next; }
   if (!$rating{$b[0]}) { $rating{$b[0]} = $tempRating{$b[0]} = $defaultRating; printDbug("resetting $b[0]\n"); }
   if (!$rating{$b[1]}) { $rating{$b[1]} = $tempRating{$b[1]} = $defaultRating; printDbug("resetting $b[1]\n"); }
   $mult = ($rating{$b[1]} - $rating{$b[0]})/400;
@@ -155,14 +162,29 @@ for (@allGames)
 }
 
 my $totalDelt = 0;
-foreach $x (keys %rating) { $totalDelt += abs($rating{$x} - $tempRating{$x}); $rating{$x} = $tempRating{$x}; }
-printDbug("$totalDelt total rating shift for run $count.\n");
+my $maxDelt = 0;
+my $curDelt = 0;
+foreach $x (keys %rating)
+{
+  if ($dBug)
+  {
+  $curDelt = abs($rating{$x} - $tempRating{$x});
+  if ($curDelt > $maxDelt) { $maxDelt = $curDelt; }
+  $totalDelt += $curDelt;
+  print("$totalDelt total rating shift for run $count.\n");
+  print("$maxDelt maximum rating shift for run $count.\n");
+  }
+  $rating{$x} = $tempRating{$x};
+}
 
-#foreach $x (sort keys %rating)
-#  {
-#    printDbug("$x $rating{$x}\n");
-#  }
-#printDbug("==============================\n");
+if (($debugEveryX) && ($count  % $debugEveryX == 0))
+{
+  print("Results after $count ==============================\n");
+  foreach $x (sort { $rating{$b} <=> $rating{$a} } keys %rating)
+  {
+    printf("$x %.2f\n", $rating{$x});
+  }
+}
 
 }
 
