@@ -21,12 +21,22 @@ my $iterations = 2000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
 
-my @teams = ("Purdue", "Rutgers", "Maryland", "Minnesota", "Indiana", "Michigan State", "Ohio State", "Illinois", "Northwestern", "Michigan", "Iowa", "Penn State", "Wisconsin", "Nebraska");
+my @teams = ("Illinois", "Indiana", "Iowa", "Maryland", "Michigan", "Michigan State", "Minnesota", "Nebraska", "Northwestern", "Ohio State", "Penn State", "Purdue", "Rutgers", "Wisconsin");
 
 my %nickname;
-$nickname{"Michigan State"} = "MSU";
+$nickname{"Indiana"} = "iu";
+$nickname{"Illinois"} = "UI";
+$nickname{"Iowa"} = "OMHR";
+$nickname{"Maryland"} = "MD";
 $nickname{"Michigan"} = "UM";
+$nickname{"Michigan State"} = "MSU";
+$nickname{"Minnesota"} = "MN";
+$nickname{"Nebraska"} = "NEB";
+$nickname{"Northwestern"} = "NW";
+$nickname{"Ohio State"} = "O\$U";
 $nickname{"Penn State"} = "PSU";
+$nickname{"Purdue"} = "PUR";
+$nickname{"Rutgers"} = "RUT";
 $nickname{"Wisconsin"} = "UW";
 
 for (@teams) { $rating{$_} = $defaultRating; }
@@ -65,39 +75,11 @@ while ($a = <A>)
 
 close(A);
 
-for ($i = 0; $i < $iterations; $i++)
+my $count;
+for ($count = 1; $count <= $iterations; $count++)
 {
-
-foreach $x (keys %rating) { $tempRating{$x} = $rating{$x}; }
-
-for (@allGames)
-{
-  @b = split(/[,]/, $_);
-  #printf("@b[0] %d vs @b[1] %d\n", $rating{$b[0]}, $rating{$b[1]});
-  unless (defined($rating{@b[0]}) && defined($rating{@b[1]})) { next; }
-  if (!$rating{@b[0]}) { $rating{@b[0]} = $tempRating{@b[0]} = $defaultRating; printDbug("resetting @b[0]\n"); }
-  if (!$rating{@b[1]}) { $rating{@b[1]} = $tempRating{@b[1]} = $defaultRating; printDbug("resetting @b[1]\n"); }
-  $mult = ($rating{@b[1]} - $rating{@b[0]})/400;
-  $expWins = 1/(1+10**($mult));
-  printDbug("Expected wins for @b[0] vs @b[1] rating $rating{@b[0]} rating $rating{@b[1]} = $expWins\n");
-  $expPoints = $pointsPerWin*(1 - $expWins * 1);
-  printDbug("@b[0] gains $expPoints\n@b[1] loses $expPoints\n");
-  $tempRating{@b[0]} += $expPoints;
-  $tempRating{@b[1]} -= $expPoints;
+eloIterate();
 }
-
-foreach $x (keys %rating) { $rating{$x} = $tempRating{$x}; }
-
-foreach $x (sort keys %rating)
-  {
-    printDbug("$x $rating{$x}\n");
-  }
-
-printDbug("==============================\n");
-
-}
-
-print "Done!\n";
 
 foreach $x (sort keys %rating)
   {
@@ -139,6 +121,38 @@ for (@sorted) {
 
 ##########################subroutines
 
+sub eloIterate # this takes the ELO rating and
+{
+foreach $x (keys %rating) { $tempRating{$x} = $rating{$x}; }
+
+for (@allGames)
+{
+  @b = split(/[,]/, $_);
+  #printf("@b[0] %d vs @b[1] %d\n", $rating{$b[0]}, $rating{$b[1]});
+  unless (defined($rating{@b[0]}) && defined($rating{@b[1]})) { next; }
+  if (!$rating{@b[0]}) { $rating{@b[0]} = $tempRating{@b[0]} = $defaultRating; printDbug("resetting @b[0]\n"); }
+  if (!$rating{@b[1]}) { $rating{@b[1]} = $tempRating{@b[1]} = $defaultRating; printDbug("resetting @b[1]\n"); }
+  $mult = ($rating{@b[1]} - $rating{@b[0]})/400;
+  $expWins = 1/(1+10**($mult));
+  #printDbug("Expected wins for @b[0] vs @b[1] rating $rating{@b[0]} rating $rating{@b[1]} = $expWins\n");
+  $expPoints = $pointsPerWin*(1 - $expWins * 1);
+  #printDbug("@b[0] gains $expPoints\n@b[1] loses $expPoints\n");
+  $tempRating{@b[0]} += $expPoints;
+  $tempRating{@b[1]} -= $expPoints;
+}
+
+my $totalDelt = 0;
+foreach $x (keys %rating) { $totalDelt += abs($rating{$x} - $tempRating{$x}); $rating{$x} = $tempRating{$x}; }
+printDbug("$totalDelt total rating shift for run $count.\n");
+
+#foreach $x (sort keys %rating)
+#  {
+#    printDbug("$x $rating{$x}\n");
+#  }
+#printDbug("==============================\n");
+
+}
+
 sub winPct
 {
   my $exp = ($rating{$_[1]} - $rating{$_[0]}) / 400;
@@ -164,7 +178,10 @@ sub ifshort
 sub usage
 {
 print<<EOT;
-No cmd line arguments yet
+-r changes the default rating, which is usually 2000 (expert)
+-d is debug rating
+-i changes number of iterations
+-p changes the points per win
 EOT
 exit;
 }
