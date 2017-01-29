@@ -29,6 +29,7 @@ my $maxTotalShift = 0;
 my $maxSingleShift = 0;
 my $fudgefactor = 0.1;
 my $home = 70;
+my $suppressWarnings = 0;
 
 #variables
 my $x;
@@ -42,6 +43,7 @@ my $undoString;
 
 my @teams;
 my %nickname;
+my %revnick;
 my $nickfile = "elonick.txt";
 my $gamefile = "elosc.txt";
 
@@ -70,6 +72,7 @@ while ($count <= $#ARGV)
 	/^-?n(i)?$/ && do { $nickfile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
+	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
     /^-?(re|g)$/ && do { $gamefile = $b; $count += 2; next; };
     usage();
   }
@@ -113,8 +116,7 @@ foreach $x (keys %rating)
   @c = split(/,/, $homeAway{$x});
   for (0..$#b)
   {
-  print "$x, $_, $c[$_], $home: " . ($rating{$b[$_]} + ($c[$_] * $home));
-  print "\n";
+  #print "$x, $_, $c[$_], $home: " . ($rating{$b[$_]} + ($c[$_] * $home)) . "\n";
   $mult = ($rating{$b[$_]} + ($c[$_] * $home) - $rating{$x})/400;
   $expWins += 1/(1+10**($mult));
   }
@@ -276,6 +278,8 @@ sub addToSched
   my @q = split(/,/, $line);
   if ($q[0] =~ /^@/) { $q[2] = 1; $q[0] =~ s/^@//; }
   if ($q[1] =~ /^@/) { $q[2] = -1; $q[1] =~ s/^@//; }
+  $q[0] = teamMod($q[0]);
+  $q[1] = teamMod($q[1]);
   if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
   {
     if ($q[0] eq $q[1])
@@ -288,12 +292,26 @@ sub addToSched
   }
 }
 
+##################this allows us to use shorthand
+sub teamMod
+{
+  my $team;
+  if ($rating{$_[0]}) { return $_[0]; }
+  if ($revnick{lc($_[0])}) { return $revnick{lc($_[0])}; }
+  for $team (keys %rating)
+  {
+    if (lc($team) eq lc($_[0])) { return $team; }
+  }
+  if (!$suppressWarnings) { print "WARNING $_[0] could not be modded into a team" . ($. ? " at line $." : "" ) . ".\n"; }
+}
+
 ###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow
 # e.g. names like "Northwestern" make a column really wide
 sub readTeamNicknames
 {
 open(A,  $nickfile) || die ("Can't open $nickfile");
 my @b;
+my $temp;
 while ($a = <A>)
 {
   if ($a =~ /^;/)
@@ -301,7 +319,16 @@ while ($a = <A>)
   chomp($a);
   @b = split(/,/, $a);
   push(@teams, $b[0]);
-  if ($#b > 0) { $nickname{$b[0]} = $b[1]; }
+  if ($#b > 0)
+  {
+    $nickname{$b[0]} = $b[1];
+	for (1..$#b)
+	{
+	  $temp = lc($b[$_]);
+	  if ($revnick{$temp}) { die ("$temp was mapped to $revnick{$temp} but $nickfile tries to redefine it as $b[0]."); }
+	  $revnick{lc($b[$_])} = $b[0];
+    }
+  }
 }
 @teams = sort(@teams);
 for (@teams) { $rating{$_} = $defaultRating; $wins{$_} = 0; $losses{$_} = 0; }
@@ -442,6 +469,7 @@ print<<EOT;
 -p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
 -re/-g is the game result file
+-s suppresses warnings
 EOT
 exit;
 }
