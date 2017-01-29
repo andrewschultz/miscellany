@@ -32,6 +32,7 @@ my $ghs = "c:\\writing\\scripts\\gh.pl";
 my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
 
 my %gws;
+my %gwt;
 
 preProcessHashes($ght);
 preProcessHashes($ghp);
@@ -41,6 +42,7 @@ my $justPrint = 0;
 my $verbose = 0;
 my $myBase = "";
 
+my $globalTS = 0;
 my $globalWarnings = 0;
 my $globalStrict = 0;
 
@@ -82,10 +84,11 @@ while ($count <= $#ARGV)
 	if ($a =~ /t/)
 	{
 	printf("TEST RESULTS: strict-warn,%d,0,gh.pl -sw(t),%s\n", (scalar keys %gws), join("<br />", %gws));
+	printf("TEST RESULTS: trailing-space,%d,0,gh.pl -sw(t),%s\n", (scalar keys %gwt), join("<br />", %gwt));
 	}
 	else
 	{
-	print "Total warnings needed $globalWarnings total strict needed $globalStrict\n";
+	print "Total warnings needed $globalWarnings total strict needed $globalStrict total excess tab files $globalTS\n";
 	}
 	exit();
   };
@@ -456,6 +459,7 @@ sub checkWarnings
 {
   my $gotWarnings = 0;
   my $gotStrict = 0;
+  my $trailingSpace = 0;
 
   my $line2;
 
@@ -465,15 +469,18 @@ sub checkWarnings
   while ($line2 = <B>)
   {
     chomp($line2);
+	if ($line2 =~ /[\t ]+$/) { $trailingSpace++; }
     if ($line2 eq "use warnings;") { $gotWarnings++; }
     if ($line2 eq "use strict;") { $gotStrict++; }
   }
   close(B);
 
+  if ($trailingSpace > 0) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
   if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0]\n"; $globalStrict++; }
   if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
   if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
   if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
+  if ($trailingSpace) { $gwt{$_[0]} = 1; }
 }
 
 sub rehash
