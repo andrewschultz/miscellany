@@ -17,9 +17,10 @@ my %tempRating;
 my %schedule;
 my %wins;
 my %losses;
+my %homeAway;
 
 #defaults, can be tweaked with options
-my $dBug = 0;
+my $debug = 0;
 my $iterations = 2000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
@@ -27,6 +28,7 @@ my $debugEveryX = 0;
 my $maxTotalShift = 0;
 my $maxSingleShift = 0;
 my $fudgefactor = 0.1;
+my $home = 70;
 
 #variables
 my $x;
@@ -49,7 +51,7 @@ while ($count <= $#ARGV)
   $b = $ARGV[$count+1];
   for ($a)
   {
-    /^-?d$/ && do { $dBug=1; $count++; next; };
+    /^-?d$/ && do { $debug=1; $count++; next; };
     /^-?de$/ && do { $debugEveryX = $b; $count += 2; next; };
     /^-?ff$/ && do
 	{
@@ -61,6 +63,7 @@ while ($count <= $#ARGV)
 	/^-?a$/ && do { $addString = $b; $count += 2; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
+	/^-?h$/ && do { $home  = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
@@ -83,7 +86,7 @@ printOutRatings();
 #####################################simply executes eloIterate until all iterations are either through or small enough not to worry
 sub doIterations
 {
-for ($count = 1; $count <= $iterations && !$closeEnough; $count++)
+for ($count = 0; $count < $iterations && !$closeEnough; $count++)
 {
 eloIterate();
 }
@@ -99,6 +102,7 @@ sub eloIterate
 {
   my $x;
   my @b;
+  my @c;
   my $expWins;
   my $mult;
 foreach $x (keys %rating)
@@ -106,9 +110,12 @@ foreach $x (keys %rating)
   $expWins = 0;
   $tempRating{$x} = $rating{$x};
   @b = split(/,/, $schedule{$x});
-  for (@b)
+  @c = split(/,/, $homeAway{$x});
+  for (0..$#b)
   {
-  $mult = ($rating{$_} - $rating{$x})/400;
+  print "$x, $_, $c[$_], $home: " . ($rating{$b[$_]} + ($c[$_] * $home));
+  print "\n";
+  $mult = ($rating{$b[$_]} + ($c[$_] * $home) - $rating{$x})/400;
   $expWins += 1/(1+10**($mult));
   }
   #printf("$x changes by %.2f.\n", ($wins{$x} - $expWins) * $pointsPerWin);
@@ -120,7 +127,7 @@ my $maxDelt = 0;
 my $curDelt = 0;
 foreach $x (keys %rating)
 {
-  if ($dBug || $maxTotalShift || $maxSingleShift)
+  if ($debug || $maxTotalShift || $maxSingleShift)
   {
   $curDelt = abs($rating{$x} - $tempRating{$x});
   if ($curDelt > $maxDelt) { $maxDelt = $curDelt; }
@@ -128,7 +135,7 @@ foreach $x (keys %rating)
   }
   $rating{$x} = $tempRating{$x};
 }
-if ($dBug)
+if ($debug)
 {
   print("$totalDelt total rating shift for run $count.\n");
   print("$maxDelt maximum rating shift for run $count.\n");
@@ -155,9 +162,9 @@ sub winPct
 }
 
 ##################if debug flag is on, print what's there. Otherwise, do nothing.
-sub printDbug
+sub printdebug
 {
-  if (!$dBug) { return; }
+  if (!$debug) { return; }
   print $_[0];
 }
 
@@ -192,6 +199,9 @@ readUserAlterations();
 processInitSchedule();
 
 for (keys %schedule) { $schedule{$_} =~ s/^,//; }
+for (keys %homeAway) { $homeAway{$_} =~ s/^,//; }
+#for (keys %homeAway) { print "$_: $homeAway{$_}\n"; } die;
+
 close(A);
 my $team;
 my $adj = 0;
@@ -215,18 +225,18 @@ for $team (@teams)
 {
   if ($wins{$team} == 0)
   {
-    if ($dBug) { print "$team has no wins.\n"; }
+    if ($debug) { print "$team has no wins.\n"; }
 	$allwin++; $losses{$team} -= $fudgefactor; $wins{$team}  = $fudgefactor;
   }
   elsif ($losses{$team} == 0)
   {
-    if ($dBug) { print "$team has no losses.\n"; }
+    if ($debug) { print "$team has no losses.\n"; }
 	$allloss++; $wins{$team} -= $fudgefactor; $losses{$team}  = $fudgefactor;
   }
   else { $wins{$team} -= $delta; $losses{$team} += $delta; }
 }
 
-if ($dBug)
+if ($debug)
 {
 print "Fudge factor = $fudgefactor, delta = $delta\n";
 for my $t (@teams) { print "$t: $wins{$t}-$losses{$t}\n"; }
@@ -240,6 +250,8 @@ sub processInitSchedule
   for $myGame (@allGames)
   {
   @q = split(/,/, $myGame);
+  $homeAway{$q[0]} .= "," . $q[2];
+  $homeAway{$q[1]} .= "," . (0 - $q[2]);
   $schedule{$q[0]} .= ",$q[1]";
   $schedule{$q[1]} .= ",$q[0]";
   $wins{$q[0]}++;
@@ -250,16 +262,20 @@ sub processInitSchedule
 ############################adds a game to the schedule.
 sub addToSched
 {
-  if ($_[0] =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
+  my $line = $_[0];
+  if ($line =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
   {
-  $_[0] =~ s/.*201[67][ \t]*//;
-  $_[0] =~ s/^[ \t]*//;
-  $_[0] =~ s/\t.*//;
-  $_[0] =~ s/ *\(OT\)//;
-  $_[0] =~ s/ *[0-9]+, */,/;
-  $_[0] =~ s/ *[0-9]+ *$//;
+  $line =~ s/.*201[67][ \t]*//;
+  $line =~ s/^[ \t]*//;
+  $line =~ s/\t.*//;
+  $line =~ s/ *\(OT\)//;
+  $line =~ s/ *[0-9]+, */,/;
+  $line =~ s/ *[0-9]+ *$//;
   }
- my @q = split(/,/, $_[0]);
+  if ($line =~ /^-/) { $line =~ s/^-(.*),(.*)/$2,$1/; } # - at start means reverse
+  my @q = split(/,/, $line);
+  if ($q[0] =~ /^@/) { $q[2] = 1; $q[0] =~ s/^@//; }
+  if ($q[1] =~ /^@/) { $q[2] = -1; $q[1] =~ s/^@//; }
   if (defined($rating{$q[0]}) && defined($rating{$q[1]}))
   {
     if ($q[0] eq $q[1])
@@ -267,7 +283,8 @@ sub addToSched
 	  print("$q[0] playing themselves at line $. ignored. A team can only figuratively beat itself.\n");
 	  next;
     }
-	push(@allGames, $_[0]);
+	if (!defined($q[2])) { push(@q, 0); }
+	push(@allGames, join(",", @q));
   }
 }
 
@@ -275,7 +292,7 @@ sub addToSched
 # e.g. names like "Northwestern" make a column really wide
 sub readTeamNicknames
 {
-open(A, "elonick.txt") || die ("Can't open elonick.txt");
+open(A,  $nickfile) || die ("Can't open $nickfile");
 my @b;
 while ($a = <A>)
 {
@@ -295,6 +312,8 @@ sub readUserAlterations
 {
 my @gameMod = ();
 my $thisGame;
+my $gotOne;
+
   if ($addString)
   {
     @gameMod = split(/\//, $addString);
@@ -305,6 +324,7 @@ my $thisGame;
     @gameMod = split(/\//, $flipString);
 	for $thisGame (@gameMod)
 	{
+     $gotOne = 0;
 	  for (0..$#allGames)
 	  {
 	    if (lc($thisGame) eq lc($allGames[$_]))
@@ -313,8 +333,10 @@ my $thisGame;
           $thatGameR =~ s/(.*),(.*)/$2,$1/;
 		  splice(@allGames, $_, 1);
 		  push(@allGames, $thatGameR);
+		  $gotOne = 1;
 		}
 	  }
+      if (!$gotOne) { print "$thisGame didn't happen so it can't be flipped.\n";}
 	}
   }
   if ($undoString)
@@ -322,13 +344,16 @@ my $thisGame;
     @gameMod = split(/\//, $undoString);
 	for $thisGame (@gameMod)
 	{
+      $gotOne = 0;
 	  for (0..$#allGames)
 	  {
 	    if (lc($thisGame) eq lc($allGames[$_]))
 		{
+		  $gotOne = 1;
 		  splice(@allGames, $_, 1);
 		}
 	  }
+      if (!$gotOne) { print "$thisGame didn't happen so it can't be flipped.\n";}
 	}
   }
 
