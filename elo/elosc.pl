@@ -267,18 +267,58 @@ sub processInitSchedule
 ############################adds a game to the schedule.
 sub addToSched
 {
+  my $scoreYet;
+  my $locationYet;
+  my $score;
+  my $tabentry;
+  my $thisLoc;
+  my $homeTeam = "";
+
   my $line = $_[0];
-  if ($line =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER"
+  if ($line =~ /\t/) # the big ten website has tables, which cut-paste to tabs. Otherwise, we can make files with "WINNER, LOSER" and @ where need be
   {
-  $line =~ s/.*201[67][ \t]*//;
-  $line =~ s/^[ \t]*//;
-  $line =~ s/\t.*//;
-  $line =~ s/ *\(OT\)//;
-  $line =~ s/ *[0-9]+, */,/;
-  $line =~ s/ *[0-9]+ *$//;
+  $line =~ s/ *$//;
+  $homeTeam = "";
+  my @lineSplit = split(/ *\t */, $line);
+  for $tabentry (@lineSplit)
+  {
+    if ($tabentry =~ /20[0-9][0-9]/) { next; } # this is a date
+	if ($tabentry !~ /[a-z]/i) { next; } # blank cell, skip it
+    if ($tabentry !~ /[0-9]/) # might be game location
+	{
+	  for my $loc (keys %locs)
+	  {
+	    if ($locs{$loc} eq $tabentry)
+		{
+		  $homeTeam = $loc;
+		  last;
+		}
+	  }
+	  $thisLoc = $tabentry;
+	  next;
+	}
+	if ($tabentry =~ /[0-9],/)
+	{
+	  $score = $tabentry;
+	  $score =~ s/ *\([0-9]* *OT\) *//;
+	  $score =~ s/ *[0-9]+//g;
+	  $score =~ s/, */,/g;
+	}
   }
-  if ($line =~ /^-/) { $line =~ s/^-(.*),(.*)/$2,$1/; } # - at start means reverse
-  my @q = split(/,/, $line);
+  if ($homeTeam)
+  {
+    if ($score =~ /^$homeTeam/) { $score = "$score,1"; }
+	elsif ($score =~ /,$homeTeam/) { $score = "$score,-1"; }
+	else { $score = "$score,0"; }
+  } else { $score = "$score,0"; }
+  #print "$score,$homeTeam!!\n";
+  }
+  else
+  {
+    $score = $line;
+  }
+  if ($score =~ /^-/) { $score =~ s/^-(.*),(.*)/$2,$1/; } # - at start means reverse
+  my @q = split(/,/, $score);
   if ($q[0] =~ /^@/) { $q[2] = 1; $q[0] =~ s/^@//; }
   if ($q[1] =~ /^@/) { $q[2] = -1; $q[1] =~ s/^@//; }
   $q[0] = teamMod($q[0]);
@@ -320,9 +360,10 @@ sub readTeamLocs
   { last; }
   chomp($a);
   @l = split (/\t/, $a);
-  if ($#l != -1) { print "WARNING bad line $.: $a\n"; }
+  if ($#l != 1) { print "WARNING bad line $.: $a\n"; }
   else { $locs{$l[0]} = $l[1]; }
   }
+  #for my $loc(sort keys %locs) { print "$loc, $locs{$loc}\n"; }
 }
 
 ###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow

@@ -1,14 +1,14 @@
-Illinois,UI
-Indiana,iu
+Illinois,UI,ill
+Indiana,iu,loosiers,gloomington
 Iowa,OMHR
-Maryland,MD
-Michigan,UM
-Michigan State,MSU
-Minnesota,MN
+Maryland,MD,umd
+Michigan,UM,mich
+Michigan State,MSU,mamu
+Minnesota,MN,min,minn
 Nebraska,NEB
-Northwestern,NW
-Ohio State,O$U
-Penn State,PSU
-Purdue,PUR
-Rutgers,RUT
-Wisconsin,WIS
+Northwestern,NW,nu
+Ohio State,O$U,osu,tosu,to$u
+Penn State,PSU,penn
+Purdue,PUR,pu,p
+Rutgers,RUT,ru,r
+Wisconsin,WIS,wi,w
