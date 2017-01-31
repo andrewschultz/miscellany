@@ -18,6 +18,7 @@ my %schedule;
 my %wins;
 my %losses;
 my %homeAway;
+my %locs;
 
 #defaults, can be tweaked with options
 my $debug = 0;
@@ -44,8 +45,9 @@ my $undoString;
 my @teams;
 my %nickname;
 my %revnick;
-my $nickfile = "elonick.txt";
-my $gamefile = "elosc.txt";
+my $nickFile = "elonick.txt";
+my $gameFile = "elosc.txt";
+my $locFile = "eloloc.txt";
 
 while ($count <= $#ARGV)
 {
@@ -69,15 +71,16 @@ while ($count <= $#ARGV)
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
-	/^-?n(i)?$/ && do { $nickfile = $b; $count += 2; next; };
+	/^-?n(i)?$/ && do { $nickFile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
-    /^-?(re|g)$/ && do { $gamefile = $b; $count += 2; next; };
+    /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
     usage();
   }
 }
 
+readTeamLocs();
 readTeamNicknames();
 readTeamGames();
 doIterations();
@@ -183,7 +186,7 @@ sub ifshort
 ################reads game scores and converts them to (Winner, Loser)
 sub readTeamGames
 {
-open(A, $gamefile) || die ("No team game file");
+open(A, $gameFile) || die ("No team game file");
 
 while ($a = <A>)
 {
@@ -305,11 +308,28 @@ sub teamMod
   if (!$suppressWarnings) { print "WARNING $_[0] could not be modded into a team" . ($. ? " at line $." : "" ) . ".\n"; }
 }
 
+sub readTeamLocs
+{
+  my @l;
+  open(A, $locFile) || die ("No location file $locFile");
+  while ($a=<A>)
+  {
+  if ($a =~ /^#/)
+  { next; }
+  if ($a =~ /^;/)
+  { last; }
+  chomp($a);
+  @l = split (/\t/, $a);
+  if ($#l != -1) { print "WARNING bad line $.: $a\n"; }
+  else { $locs{$l[0]} = $l[1]; }
+  }
+}
+
 ###################reads teams and their short names--short names are handy if we are exporting to an HTML table and want to keep it narrow
 # e.g. names like "Northwestern" make a column really wide
 sub readTeamNicknames
 {
-open(A,  $nickfile) || die ("Can't open $nickfile");
+open(A,  $nickFile) || die ("Can't open $nickFile");
 my @b;
 my $temp;
 while ($a = <A>)
@@ -325,7 +345,7 @@ while ($a = <A>)
 	for (1..$#b)
 	{
 	  $temp = lc($b[$_]);
-	  if ($revnick{$temp}) { die ("$temp was mapped to $revnick{$temp} but $nickfile tries to redefine it as $b[0]."); }
+	  if ($revnick{$temp}) { die ("$temp was mapped to $revnick{$temp} but $nickFile tries to redefine it as $b[0]."); }
 	  $revnick{lc($b[$_])} = $b[0];
     }
   }
