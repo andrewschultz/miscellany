@@ -225,7 +225,7 @@ sub processTerms
 	  if ((! -f $fromFile) && ($fromFile !~ /\*/))
 	  {
 	    print "Oops $fromFile can't be found.\n";
-		$badFileList .= "$fromFile\n"; $badFileCount++; next;
+		$badFileList .= "($.) $fromFile\n"; $badFileCount++; next;
       }
 
 	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
@@ -233,7 +233,7 @@ sub processTerms
 	  if (-d "$gh\\$toFile") { $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
 	  if (compare($fromFile, "$outName"))
 	  {
-	  if (($maxSize) && (-s $fromFile > $maxSize)) { print "Oops $fromFile size is above $maxSize.\n"; $badFileCount++; next; }
+	  if (($maxSize) && (-s $fromFile > $maxSize)) { print "Oops $fromFile size is above $maxSize.\n"; $badFileList .= "($.) (too big) $fromFile\n"; $badFileCount++; next; }
 	  my $thisWild = 0;
       my $cmd = "copy \"$fromFile\" \"$gh\\$toFile\"";
 	  if (($copto{$toFile}) && (! -d "$gh\\$toFile"))
