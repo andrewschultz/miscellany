@@ -6,7 +6,7 @@
 use strict;
 use warnings;
 
-my $count;
+my $count = 0;
 
 my $first = 1;
 my $last = 1;
@@ -25,7 +25,7 @@ while ($count <= $#ARGV)
   }
 }
 
-if ($#ARGV == -1) { print ("Using default @searchies[0].\n"); @searchies = ("jim"); }
+if ($#ARGV == -1) { @searchies = ("jim"); print ("Using default $searchies[0].\n"); }
 
 my $endStr = "";
 my @endAry;

@@ -47,6 +47,7 @@ if ($ARGV[0] eq "?") { usage(); exit(); }
 if ($ARGV[0] =~ /^[=\+]/)
 {
   my $toAdd = $ARGV[0]; $toAdd =~ s/^.//;
+  if ($toAdd =~ /[^a-z]/i) { die ("Bailing, $toAdd contains non-alphabetical characters."); }
   addToDict($toAdd, 0);
   addToErrs($ARGV[0]);
   exit();
