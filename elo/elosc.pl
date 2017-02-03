@@ -11,6 +11,8 @@
 use strict;
 use warnings;
 
+use Win32::Clipboard;
+
 my %rating;
 my %tempRating;
 
@@ -31,6 +33,7 @@ my $maxSingleShift = 0;
 my $fudgefactor = 0.1;
 my $home = 70;
 my $suppressWarnings = 0;
+my $clipboard = 0;
 
 #variables
 my $x;
@@ -65,6 +68,7 @@ while ($count <= $#ARGV)
 	  next;
     };
 	/^-?a$/ && do { $addString = $b; $count += 2; next; };
+	/^-?c(p)?$/ && do { $clipboard = 1; if ($a =~ /p/) { $clipboard = 2; } $count += 2; next; }; # this is not great coding but basically -c sends to clipboard, -p prints too
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
@@ -470,6 +474,8 @@ foreach $x (sort keys %rating)
 #######################here we print out all the ratings
 sub printOutRatings
 {
+my $bigPrint = "";
+
 foreach $x (sort keys %rating)
 {
   $rating{$x} = int($rating{$x} + .5);
@@ -477,16 +483,16 @@ foreach $x (sort keys %rating)
 
  my $rank = 0;
 
- print "<table border=1>\n";
+ $bigPrint .= "<table border=1>\n";
 foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
 {
   $rank++;
-  print "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}\n";
+  $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}\n";
 }
-print "</table>\n";
+$bigPrint .= "</table>\n";
 
 # now to print the table of probabilities
-print "<table border=1><tr><td>";
+$bigPrint .= "<table border=1><tr><td>H/A";
 
 my $t1;
 my $t2;
@@ -494,23 +500,29 @@ my $mult;
 
 for $t1 (sort keys %rating)
   {
-    print "<td>";
-	print ifshort($t1);
+    $bigPrint .= "<td>";
+	$bigPrint .= ifshort($t1);
   }
-print "\n";
+$bigPrint .= "\n";
 for $t1 (sort keys %rating)
   {
-    print "<tr><td>";
-	print ifshort($t1);
+    $bigPrint .= "<tr><td>";
+	$bigPrint .= ifshort($t1);
     for $t2 (sort keys %rating)
 	{
-	  print "<td>";
+	  $bigPrint .= "<td>";
 	  if ($t1 eq $t2) { next; }
-	  printf("%.2f", winPct($t1, $t2, 1));
+	  $bigPrint .= sprintf("%.2f", winPct($t1, $t2, 1));
 	}
-	print "\n";
+	$bigPrint .= "\n";
   }
-  print "</table>";
+  $bigPrint .= "</table>";
+  if ($clipboard)
+  {
+  my $clip = Win32::Clipboard::new();
+  $clip->Set($bigPrint);
+  }
+  if ($clipboard != 1) { print $bigPrint; }
 }
 
 ##################################standard usage file
