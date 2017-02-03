@@ -162,7 +162,7 @@ if (($debugEveryX) && ($count  % $debugEveryX == 0))
 ##################this is the ELO formula for expected wins
 sub winPct
 {
-  my $exp = ($rating{$_[1]} - $rating{$_[0]}) / 400;
+  my $exp = ($rating{$_[1]} - $rating{$_[0]} - $home * $_[2]) / 400;
   return 100/(1+10**$exp);
 }
 
@@ -506,7 +506,7 @@ for $t1 (sort keys %rating)
 	{
 	  print "<td>";
 	  if ($t1 eq $t2) { next; }
-	  printf("%.2f", winPct($t1, $t2));
+	  printf("%.2f", winPct($t1, $t2, 1));
 	}
 	print "\n";
   }
