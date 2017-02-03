@@ -111,8 +111,10 @@ while ($line = <A>)
   }
   $cmdCount = 0;
   my $min = 0;
-  @b = split(/\|/, $line);
-  if ($b[0] eq '"') { $b[0] = $lastTime; $b[0] =~ s/\|.*//; }
+  my $lineMod = $line;
+  $lineMod =~ s/\"/$lastTime/;
+  #print "$lineMod from $lastTime\n";
+  @b = split(/\|/, $lineMod);
   if ($#b == 2)
   {
     my @q = split(/,/, $b[0]);
@@ -200,9 +202,10 @@ while ($line = <A>)
   }
   }
 
-  if ($lastTime ne '"')
+  if ($line !~ /^\"/)
   {
-    $lastTime = $b[0];
+    $lastTime = $line;
+	$lastTime =~ s/\|[^\|]*$//;
   }
 }
 
