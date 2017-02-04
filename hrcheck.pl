@@ -40,10 +40,12 @@ my $min;
 
 my @quarters  = ("t", "p", "h", "b");
 my @tens = (0, 0, 0, 0, 0, 0);
+my $gotTime, my $hourTemp, my $minuteTemp;
 
 if (defined($ARGV[0]))
 {
 if ($ARGV[0] =~ /^(-|\+)?[0-9]+$/) { $adjust += $ARGV[0]; }
+if ($ARGV[0] =~ /^[0-9]+:[0-9]+$/) { my @time = split(/:/, $ARGV[0]); $hourTemp = $time[0]; $minuteTemp = $time[1]; $gotTime = 1; }
 elsif ($ARGV[0] eq "e" || $ARGV[0] eq "-e")
 {
   my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check";
@@ -69,6 +71,11 @@ usage();
 }
 
 my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time + $adjust * 60);
+if ($gotTime)
+{
+  $hour = $hourTemp;
+  $minute = $minuteTemp;
+}
 
 my $defaultBrowser = "";
 
@@ -112,8 +119,16 @@ while ($line = <A>)
   $cmdCount = 0;
   my $min = 0;
   my $lineMod = $line;
+  if ($lineMod =~ /^\"/)
+  {
   $lineMod =~ s/\"/$lastTime/;
-  #print "$lineMod from $lastTime\n";
+  }
+  else
+  {
+  $lastTime = $line;
+  $lastTime =~ s/\|[^\|]*$//;
+  #print "Last time prefix = $lastTime\n";
+  }
   @b = split(/\|/, $lineMod);
   if ($#b == 2)
   {
@@ -205,7 +220,9 @@ while ($line = <A>)
   if ($line !~ /^\"/)
   {
     $lastTime = $line;
+    print "Last time before $lastTime\n";
 	$lastTime =~ s/\|[^\|]*$//;
+    print "Last time after $lastTime\n";
   }
 }
 
@@ -231,6 +248,7 @@ sub validHour
 sub usage
 {
 print<<EOT;
+-(#) or +(#) = add or substract minutes
 e = check stuff to check
 c = check code
 p = check private file

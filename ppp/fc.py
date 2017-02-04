@@ -903,7 +903,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 if len(elements[r2]) > 0:
                     print ('Can\'t move to that non-empty, even with force.')
                     return -1
-                printCond ('Cutting down to ' + onlymove, False)
+                printCond ('Cutting down to ' + str(onlymove), False)
                 return onlymove
         if onlymove < fromline:
             return onlymove
