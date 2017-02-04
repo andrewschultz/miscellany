@@ -367,6 +367,7 @@ misc=icl.pl,
 misc=icl.txt,
 misc=$wd\say.pl,
 misc=ru.pl,
+misc=c:\coding\perl\proj\poly.pl,random
 misc=c:\coding\perl\proj\bjames.pl,random
 misc=c:\coding\perl\kol\relay\hobo_code_file.txt,kol
 misc=c:\coding\perl\kol\relay\relay_hobocode.ash,kol
