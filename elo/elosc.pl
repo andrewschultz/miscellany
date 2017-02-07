@@ -497,6 +497,8 @@ $bigPrint .= "<table border=1><tr><td>H/A";
 my $t1;
 my $t2;
 my $mult;
+my $cellTitle;
+my $bg;
 
 for $t1 (sort keys %rating)
   {
@@ -510,7 +512,9 @@ for $t1 (sort keys %rating)
 	$bigPrint .= ifshort($t1);
     for $t2 (sort keys %rating)
 	{
-	  $bigPrint .= "<td>";
+      $cellTitle  = sprintf("\"%.2f win exp Home+away, %.2f neutral\"", (winPct($t1, $t2, 1) + winPct($t1, $t2, -1))/100, winPct($t1, $t2, 0));
+	  $bg = sprintf("%02x%02x00", 255 - winPct($t1, $t2, 1) * 2.55, winPct($t1, $t2, 1) * 2.55);
+	  $bigPrint .= "<td title=$cellTitle bgcolor=\"$bg\">";
 	  if ($t1 eq $t2) { next; }
 	  $bigPrint .= sprintf("%.2f", winPct($t1, $t2, 1));
 	}
