@@ -30,6 +30,9 @@ my $mod = 0;
 my $cmd = "";
 my $count = 0;
 
+my $overrideSemicolonEnd = 1;
+my $semicolonSeen = 0;
+
 my $popupIfAbort = 0;
 my $gotImportantLine = 0;
 
@@ -57,6 +60,7 @@ while ($count <= $#ARGV)
   /^[0-9]+:[0-9]+$/ && do { my @time = split(/:/, $a); $hourTemp = $time[0]; $minuteTemp = $time[1]; $gotTime = 1; $count++; next; };
   /^(-|\+)?[0-9]+$/ && do { $adjust = $a; $count++; next; };
   /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
+  /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
@@ -99,13 +103,25 @@ my $months = 0;
 while ($line = <A>)
 {
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
-  if ($line =~ /^!!!!!!!!/) { $gotImportantLine = 1; next; }
+  if ($line =~ /^!!!!!!!!/ && (!$semicolonSeen)) { $gotImportantLine = 1; next; }
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
   if ($line =~ /^#/) { next; }
-  if ($line =~ /^;/) { last; }
+  if ($semicolonSeen)
+  {
+    if (($overrideSemicolonEnd) && ($line =~ /^\*/))
+	{
+	}
+	else
+	{
+	  next;
+	}
+  }
+  if ($line =~ /^;/) { $semicolonSeen = 1; next; }
   if ($ignore) { next; }
   chomp($line);
+  $line =~ s/^\*+//;
+
   $months = ($line =~ /^m/i);
   $line =~ s/^m//i;
 
@@ -253,6 +269,8 @@ print<<EOT;
 e = check stuff to check
 c = check code
 p = check private file
+pop = popup if abort early
+is = ignore semicolon for *'d entries
 ? (or anything else) = usage
 EOT
 exit;
