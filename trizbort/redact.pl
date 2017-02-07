@@ -87,7 +87,7 @@ sub readArray
   my $skipThis = 0;
   my $commandToRun = "";
   my $commandSearch = 0;
-  
+
   MYWHILE:
   while ($count <= $#_)
   {

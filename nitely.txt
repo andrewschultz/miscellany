@@ -39,7 +39,7 @@ gen=general tests
 
 misc=miscellaneous
 >gh.pl -t $$
->gh.pl -swt
+>gh.pl -rts -swt
 
 3d=threediopolis
 >gh.pl -t $$

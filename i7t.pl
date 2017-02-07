@@ -187,9 +187,9 @@ while ($a = <A>)
   if ($a =~ /^;/) { last; }
   chomp($a);
   @b = split(/\t/, $a);
-  
+
   if (lc($b[0]) ne lc($project)) { next; }
-  
+
   if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
 
   $ranOneTest = 1;
@@ -203,13 +203,13 @@ while ($a = <A>)
   {
   open(F, $lastOpen) || die ("Can't re-open $lastOpen.");
   }
-  
+
   my $size = 0;
-  
+
   if ($rows{$b[1]}) { $size = $rows{$b[1]}; } else { print "$b[1] has nothing.\n"; }
-  
+
   my $sizeX = $size+1;
-  
+
   my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
 
   $b[3] =~ s/\$\$/$size/g;

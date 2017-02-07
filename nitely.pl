@@ -174,7 +174,7 @@ sub procIt
   my $bkgd;
 
   my @parseAry = split(/\n/, $_[1]); if ($#parseAry == -1) { print ("$_[0] had nothing to parse in the log array.\n"); return; }
-  
+
   $linkBack .= "<br /><a href=\"$_[0].htm\">$_[0].htm</a> / <a href=\"$_[0].txt\">$_[0].txt</a>\n";
 
   $anyTestsRun = 1;

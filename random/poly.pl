@@ -92,7 +92,7 @@ while (($high - $low > $delta) && ($turns < 100))
   if ($gapIdx == -1) { die ("Uh-oh, no new interval found. This is a big bug."); }
   $low = $poss[$gapIdx];
   $high = $poss[$gapIdx+1];
-  
+
   print ("=" x 40);
   print "New range $low to $high.\n";
 }
@@ -107,7 +107,7 @@ sub f
   {
     $sum *= $_[0];
     $sum += $poly[$idx];
-  }  
+  }
   return $sum;
 }
 

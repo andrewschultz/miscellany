@@ -148,9 +148,9 @@ sub doOneBuild
   $outFile = "$_[0]\\Build\\output.$ex";
   $dflag = "$_[1]";
   $infOut = "$_[0]\\Build\\auto.inf";
-  
+
   delIfThere($infOut);
-  
+
   $compileCheck = `\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
   print "BUILD RESULTS\n=================\n$compileCheck";
   if ($compileCheck =~ /has finished/i)
@@ -170,7 +170,7 @@ sub doOneBuild
 
   delIfThere($outFile);
   system("\"$infDir/Compilers/$i6x\" -kw~S$dflag$iflag +include_path=$_[0] $infOut $outFile");
-  
+
   if (! -f $outFile)
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary failed,0,1,0\n";
@@ -187,7 +187,7 @@ sub doOneBuild
   $outFinal = "$_[2]\\Release\\$blorbFileShort";
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
-  
+
   if ((! -f $outFinal) || (-s "\"$outFinal\"" < -s "\"$outFile\""))
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation failed,0,1,0\n";
@@ -195,7 +195,7 @@ sub doOneBuild
   }
 
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation passed,0,0,0\n";
-  
+
   return;
 }
 
@@ -243,9 +243,9 @@ sub modifyBeta
 {
   open(A, "$_[0]") || die ("Can't open source $_[0]");
   open(B, ">$_[1]") || die ("Can't open target $_[1]");
-  
+
   $foundBetaLine = 0;
-  
+
   while ($a = <A>)
   {
     if ($a =~ /^volume beta testing/i) { print B "volume beta testing\n"; $foundBetaLine = 1; }
@@ -285,7 +285,7 @@ sub buildDir
 sub getFile
 {
   open(A, "$_[0]") || die ("No blorb file $_[0]");
-  
+
   while ($a = <A>)
   {
     if ($a =~ / leafname /) { chomp($a); $a =~ s/.* leafname \"//g; $a =~ s/\"//g; return $a; }

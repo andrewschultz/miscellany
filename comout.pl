@@ -50,7 +50,7 @@ while ($a = <A>)
   {
     $project = $a; chomp($project); $project =~ s/^PROJ(ECT)?=//gi; print "Active project $project,\n"; next;
   }
-  if ($project) { $proj{$project} .= $a; print "$project added\n"; next; }  
+  if ($project) { $proj{$project} .= $a; print "$project added\n"; next; }
 }
 
 if (not defined $proj{$myproj}) { die ("No project $myproj.\n"); }

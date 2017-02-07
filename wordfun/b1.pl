@@ -65,7 +65,7 @@ my $wrongs = "";
 if (defined($ARGV[1])) { $wrongs = $ARGV[1]; }
 
 my $line;
- 
+
 open(A, "$misses") || die ("No misses file.");
 while ($line = <A>) { chomp($line); my @q = split(/:/, $line); if (defined($miss{lc($q[0])})) { print "$q[0] duplicated.\n"; } $miss{lc($q[0])} = $q[1]; }
 close(A);
@@ -107,14 +107,14 @@ sub oneHangman
   my %val;
   %f2 = ();
   %freq = ();
-  
+
   my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
   #print "Trying $readFile.\n";
   open(A, "$readFile") || die ("No $readFile");
   my $canAlphabetize = 0;
   my $lastOne;
   my $firstOne;
-  
+
   if ($_[0] =~ /[^a-z.,]/i) { print "Bad characters in $_[0].\n"; return; }
 
   if ($_[0] =~ /^[a-z]/i)
@@ -186,20 +186,20 @@ sub checkForRepeats
 {
   my @a1 = split(//, lc($_[0]));
   my @a2 = split(//, lc($_[1]));
- 
+
   my $a3 = lc($_[0]); $a3 =~ s/\.//g;
 
   for (0..$#a2)
   {
     if (($a1[$_] ne ".") && ($a1[$_] ne ",")) { $a2[$_] = ""; }
   }
-  
+
   my $a4 = join("", @a2);
-  
+
   my @b3 = split(//, $a3);
 
   #print "Now @a1 vs @a2 with @b3\n";
-  
+
   for my $j (@b3)
   {
     if ($a4 =~ /$j/)
@@ -262,7 +262,7 @@ sub showMisses
 	$a =~ s/.*://g;
 	$amt{$a}++;
   }
-  
+
   for my $am (sort keys %amt)
   {
     print "$am misses: $amt{$am}\n";

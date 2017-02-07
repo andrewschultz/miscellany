@@ -20,7 +20,7 @@ print "Processing $_[0].txt\n";
 
 open(A2, ">$_[0]-nd.txt");
 
-print "Writing $_[0]-nd.txt\n"; 
+print "Writing $_[0]-nd.txt\n";
 
 while (my $line = <A>)
 {

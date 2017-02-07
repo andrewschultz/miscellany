@@ -83,7 +83,7 @@ sub strt
     #die();
 	die("$in Line probably needs a character or something:\n$_[0]$quo");
   }
-  
+
   if ($quo =~ /^1 /) { return 1; }
   if ($quo =~ /^[0-9]/) { return "#"; }
   return lc(substr($quo, 0, 1));

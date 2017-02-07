@@ -90,8 +90,8 @@ my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 <title>
 ' . $a . '
 </title>
-		
-	
+
+
 </head>
 <body>
 
@@ -162,7 +162,7 @@ while ($a = <A>)
   }
   }
   $lastLev = $times;
-  
+
   if ($times == 1) { print B "<hr>\n"; }
 
   print B "<h$times>$temp</h$times>\n";

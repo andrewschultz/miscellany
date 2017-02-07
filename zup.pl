@@ -30,7 +30,7 @@ $count = 0;
 while ($a = <A>)
 {
   chomp($a);
-  
+
   $a =~ s/\%/$version/g;
 
   #print "$a: ";

@@ -4,7 +4,7 @@
 #
 # currently only for games.otl but it can be expanded
 #
-# usage salf.pl 
+# usage salf.pl
 #
 # recommended: salf.pl pc, salf.pl sc, salf.pl btp
 
@@ -105,7 +105,7 @@ sub alfThis
   my @uniq_no_case = ();
   if ($noGlobals) { %got = (); }
 
-  
+
   while ($a = <A>)
   {
     chomp($a);

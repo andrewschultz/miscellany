@@ -436,19 +436,19 @@ sub addStatsLine
   open(STA, ">>c:/writing/dstat.txt");
   $localtime = gmtime(time());
   my $newString = "$localtime: ";
-  
+
   for $x (@fileArray)
   {
     if (! -f "c:/writing/$x") { print ("Warning: No $x."); }
     $newString .= $x . "=" . (-s "c:/writing/$x") . ",";
   }
-  
+
   $newString =~ s/,$//g;
-  
+
   print "$newString\n";
   print STA "$newString\n";
   close(STA);
-  
+
   if ($#fileArray > 0) { print "Added latest file stats to writing/dstat.txt."; }
 }
 
@@ -549,7 +549,7 @@ sub isUnix
   binmode(XYZ);
   read(XYZ, $buffer, 1000, 0);
   close(XYZ);
-  
+
   foreach (split(//, $buffer)) {
     if ($_ eq chr(13)) { return 0; }
 	}

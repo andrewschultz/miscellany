@@ -820,7 +820,7 @@ sub expandOneColumn
 	  if (!$stack[$emcheck][0])
 	  { if ($rows[0]) { $rows[1] = $emcheck; } else { $rows[0] = $emcheck; } }
 	}
-	
+
 	if (($mySillyOpt) && (!columnHasKing($_[0]))) { ($rows[1], $rows[0]) = ($rows[0], $rows[1]); }
 
 	my $tempAsc = ascending($thisRow);
@@ -3505,7 +3505,7 @@ sub allBut
 	@{$stack[4]} = @t4; @{$stack[3]} = @t3; @{$stack[2]} = @t2; @{$stack[1]} = @t1;
 	$stack[1] = (); @{$stack[3]} = (@t1, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4-under-1: "; solve720(1);
 	$stack[2] = (); @{$stack[3]} = (@t2, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 4/3-under-1: "; solve720(1);
-	@{$stack[4]} = @t4; @{$stack[3]} = @t3; @{$stack[2]} = @t2; @{$stack[1]} = @t1; 
+	@{$stack[4]} = @t4; @{$stack[3]} = @t3; @{$stack[2]} = @t2; @{$stack[1]} = @t1;
 	$stack[1] = (); $stack[2] = (); @{$stack[4]} = (@t2, @{$stack[4]});  @{$stack[3]} = (@t1, @{$stack[3]}); for (@cardArray) { $inStack{$_} = 1; } @undoArray = ($_[0]); $drawsLeft = 1; $hidCards = 0; print "Trying $missCards ($theClass), 3-under-1, 4-under-2: "; solve720(1);
 	return;
   }

@@ -40,7 +40,7 @@ while ($a = <A>)
     if ($thisValid) { print "$funcBlock\n"; }
     $funcBlock = "";
   }
-  
+
 }
 
 sub itMatches

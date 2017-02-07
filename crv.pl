@@ -52,7 +52,7 @@ $shortDir =~ s/\.inform.*//gi; $shortDir =~ s/.*[\/\\]//g; $shortDir = lc($short
 while ($a = <A>)
 {
   chomp($a);
-  
+
   if ($a =~ /\[fill-in-here\]/)
   {
     push (@fillLines, $.);
@@ -69,7 +69,7 @@ while ($a = <A>)
     $inBeta = 0;
     $inTest = 0;
 	$foundComments = 0;
-	
+
 	if ($newVol =~ /^stubs/)
 	{
 	$foundStubs = 1;
@@ -78,7 +78,7 @@ while ($a = <A>)
 	$inTest = 1;
 	}
 	}
-	
+
     if ($newVol =~ /^beta testing/)
     {
 	if ($newVol !~ /- not for release/) { print "WARNING! Mark $a as Not For Release.\n"; $betaBomb = 1; } else { print "Yay, $a is NFR.\n"; $NFRB = 1; }

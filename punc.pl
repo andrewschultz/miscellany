@@ -79,7 +79,7 @@ if (defined($ARGV[0]))
 my @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from");
 addTitles();
 
-if (-f $rf) 
+if (-f $rf)
 {
 open(A, "$rf") || die ("Can't open $rf.");
 }
@@ -347,7 +347,7 @@ sub lookUp
       my $temp = $_[0];
 	  my $temp2;
 	  my $count;
-	  
+
 	  if ($temp =~ /\ttrue/) { $adNotTitle = 1; }
       $temp =~ s/^\"//gi;
       $temp =~ s/\".*//g;

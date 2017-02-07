@@ -83,7 +83,7 @@ while ($ARGV[$count])
 	/^-w$/ && do { $showOK = 0; $count++; next; };
 	/^-v(h)?$/ && do { $verifyHeadings = 1; $count++; next; };
 	usage();
-  }  
+  }
 }
 
 if ($printToErrorFile) { open(EL, ">$elog"); }
@@ -158,7 +158,7 @@ sub processDaily
 	return;
   }
   my $betterDie = 0;
-  
+
   if (! -f $_[0]) { return; }
   if ($debug) { print ("$_[0] exists.\n"); }
 
@@ -166,27 +166,27 @@ sub processDaily
   if (-s $_[0] == 0) { printExt("Zero byte file $_[0], skipping.\n"); return; }
 
   my $shortName = $_[0]; $shortName =~ s/.*[\\\/]//g;
-  
+
   my %startLine;
 
   open(A, "$_[0]");
- 
+
   my $lines = 0;
   my @myHdr = ();
- 
+
   my $gotNames = 0;
- 
+
   $bigWarn .= $warning;
   $warning = "";
- 
+
   my $limericks = 0;
   my $lineToGo = 0;
   my @myAry;
- 
+
  if ($showProc) { print "Processing $_[0]...\n"; }
- 
+
  if ($onlyLim) { processLim($_[0]); return; }
- 
+
 my $hasSomething = 0;
 
  while (my $line = <A>)
@@ -295,7 +295,7 @@ for (0..$#r)
   if (!defined($mapTo{$r[$_]})) { next; }
   if ($found{$mapTo{$r[$_]}} ) { printExt("    $r[$_] -> $mapTo{$r[$_]} overlaps in $_[0].\n"); $betterDie++; }
  }
- 
+
  ##for $x (keys %sortOrd) { print "$x $sortOrd{$x}\n"; } die;
 my @q = sort {
   my $a2; my $b2;
@@ -353,11 +353,11 @@ move("$_[0].bak", "$_[0]");
 sub findHeader
 {
   open(THISDAY, $_[0]) || die ("No file $_[0].\n");
-  
+
   my $thisFileYet = 0;
   my $processHeader = 0;
   my $headString = $_[0];
-  
+
   my $limChar = 0;
   my $isLim = 0;
   my $limLines = 0;
@@ -412,7 +412,7 @@ sub isUnix
   read(XYZ, $buffer, 1000, 0);
   close(XYZ);
   my $retval = 0;
-  
+
   foreach (split(//, $buffer)) {
     if ($_ eq chr(13)) { return 0;}
     if ($_ eq chr(10)) { return 1;}
