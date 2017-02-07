@@ -475,7 +475,7 @@ rmt=$ws\mc.bat,stubs
 rmt=stubs\README.md,stubs
 rmt=txt2bmp\txt2bmp.c,txt2bmp
 -b:rmt=txt2bmp\txt2bmp.exe,txt2bmp sz:120000
-########################specific games below here
+########################specific games for mapconv/mapcpy below here
 #2400 AD
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
@@ -505,6 +505,15 @@ rmt=dw\dw-purgatory.map,samples\dragon-wars
 rmt=dw\dw-dilmun.map,samples\dragon-wars
 rmt=dw\dw-dilmun-e.map,samples\dragon-wars
 rmt=dw\dw-nisir.map,samples\dragon-wars
+#Magic Candle series
+rmt=c:\games\blo\blo.txt,samples\magic-candle
+rmt=c:\games\mc2\mc2.txt,samples\magic-candle
+rmt=c:\games\mc3\mc3.txt,samples\magic-candle
+#Phantasie
+rmt=phantasie\p1.txt,samples\phantasie
+rmt=phantasie\p2.txt,samples\phantasie
+rmt=phantasie\p3.txt,samples\phantasie
+##########################################programs
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map

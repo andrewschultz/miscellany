@@ -220,9 +220,9 @@ while ($line = <A>)
   if ($line !~ /^\"/)
   {
     $lastTime = $line;
-    print "Last time before $lastTime\n";
+    #print "Last time before $lastTime\n";
 	$lastTime =~ s/\|[^\|]*$//;
-    print "Last time after $lastTime\n";
+    #print "Last time after $lastTime\n";
   }
 }
 
