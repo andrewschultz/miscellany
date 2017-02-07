@@ -23,6 +23,7 @@ my $defaultString;
 my $testResults = 0;
 my $runTrivialTests = 0;
 my $byFile = 0;
+my $removeTrailingSpace = 0;
 
 my $reverse = 0;
 
@@ -76,6 +77,7 @@ while ($count <= $#ARGV)
   /^-?v$/i && do { $verbose = 1; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
+  /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
   /^-?(sw|ws)(t)?/i && do
   {
     readReplace();
@@ -83,8 +85,8 @@ while ($count <= $#ARGV)
 	strictWarn($ghp);
 	if ($a =~ /t/)
 	{
-	printf("TEST RESULTS: strict-warn,%d,0,gh.pl -sw(t),%s\n", (scalar keys %gws), join("<br />", %gws));
-	printf("TEST RESULTS: trailing-space,%d,0,gh.pl -sw(t),%s\n", (scalar keys %gwt), join("<br />", %gwt));
+	printf("TEST RESULTS: strict-warn,%d,0,0,gh.pl -sw(t),%s\n", (scalar keys %gws), join("<br />", %gws));
+	printf("TEST RESULTS: trailing-space,%d,0,0,gh.pl -sw(t),%s\n", (scalar keys %gwt), join("<br />", %gwt));
 	}
 	else
 	{
@@ -480,7 +482,26 @@ sub checkWarnings
   if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
   if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
   if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
-  if ($trailingSpace) { $gwt{$_[0]} = 1; }
+  if ($trailingSpace)
+  {
+    $gwt{$_[0]} = 1;
+	if ($removeTrailingSpace)
+	{
+      my $tempfile = "c:\\writing\\scripts\\temp-perl.temp";
+	  open(F1, "$_[0]");
+	  open(F2, ">$tempfile");
+	  my $l;
+	  while ($l = <F1>)
+	  {
+	    $l =~ s/[ \t]*$//;
+		print F2 $l;
+	  }
+	  close(F1);
+	  close(F2);
+	  `copy \"$tempfile\" \"$_[0]\"`;
+	  #die("copy \"$tempfile\" \"$_[0]\"");
+	}
+  }
 }
 
 sub rehash
