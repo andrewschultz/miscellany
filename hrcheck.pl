@@ -23,12 +23,16 @@ my $check = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
+my $xtraFile = "c:\\writing\\scripts\\hrcheckx.txt";
+
 my $lastTime = "";
 my $adjust = 0;
 my $cmdCount = 0;
 my $mod = 0;
 my $cmd = "";
 my $count = 0;
+
+my @extraFiles = ();
 
 my $overrideSemicolonEnd = 1;
 my $semicolonSeen = 0;
@@ -61,6 +65,8 @@ while ($count <= $#ARGV)
   /^(-|\+)?[0-9]+$/ && do { $adjust = $a; $count++; next; };
   /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
+  /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
+  /^-?x$/i && do { @extraFiles = (@extraFiles, $xtraFile); $count++; next; };
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
@@ -86,9 +92,16 @@ if (($popupIfAbort) && (!$gotImportantLine))
 
 hrcheck($check2);
 
+for my $tocheck (@extraFiles)
+{
+  hrcheck($tocheck);
+}
+
 sub hrcheck
 {
 open(A, "$_[0]") || die ("No $_[0]");
+
+print "Reading $_[0]...\n";
 
 my $line;
 
