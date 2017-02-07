@@ -14,9 +14,10 @@
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
 
-use strict;
+use strict; 
 use warnings;
-use POSIX;
+use Win32;
+use POSIX qw (floor);
 
 my $check = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
@@ -26,6 +27,11 @@ my $lastTime = "";
 my $adjust = 0;
 my $cmdCount = 0;
 my $mod = 0;
+my $cmd = "";
+my $count = 0;
+
+my $popupIfAbort = 0;
+my $gotImportantLine = 0;
 
 my @times;
 my $thistime;
@@ -42,32 +48,20 @@ my @quarters  = ("t", "p", "h", "b");
 my @tens = (0, 0, 0, 0, 0, 0);
 my $gotTime, my $hourTemp, my $minuteTemp;
 
-if (defined($ARGV[0]))
+while ($count <= $#ARGV)
 {
-if ($ARGV[0] =~ /^(-|\+)?[0-9]+$/) { $adjust += $ARGV[0]; }
-if ($ARGV[0] =~ /^[0-9]+:[0-9]+$/) { my @time = split(/:/, $ARGV[0]); $hourTemp = $time[0]; $minuteTemp = $time[1]; $gotTime = 1; }
-elsif ($ARGV[0] eq "e" || $ARGV[0] eq "-e")
-{
-  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check";
-  `$cmd`;
-  exit;
-}
-elsif ($ARGV[0] eq "p" || $ARGV[0] eq "-p")
-{
-  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2";
-  `$cmd`;
-  exit;
-}
-elsif ($ARGV[0] eq "c" || $ARGV[0] eq "-c")
-{
-  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code";
-  `$cmd`;
-  exit;
-}
-else
-{
-usage();
-}
+  $a = $ARGV[$count];
+  if (defined($ARGV[$count])) { $b = $ARGV[$count+1]; }
+  for ($a)
+  {
+  /^[0-9]+:[0-9]+$/ && do { my @time = split(/:/, $a); $hourTemp = $time[0]; $minuteTemp = $time[1]; $gotTime = 1; $count++; next; };
+  /^(-|\+)?[0-9]+$/ && do { $adjust = $a; $count++; next; };
+  /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
+  /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
+  /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
+  /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
+  usage();
+  }
 }
 
 my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time + $adjust * 60);
@@ -80,6 +74,12 @@ if ($gotTime)
 my $defaultBrowser = "";
 
 hrcheck($check);
+
+if (($popupIfAbort) && (!$gotImportantLine))
+{
+  Win32::MsgBox("Remember to remove any semicolons for debugging, so HRCHECK reads in everything!");
+}
+
 hrcheck($check2);
 
 sub hrcheck
@@ -99,6 +99,7 @@ my $months = 0;
 while ($line = <A>)
 {
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
+  if ($line =~ /^!!!!!!!!/) { $gotImportantLine = 1; next; }
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
   if ($line =~ /^#/) { next; }
@@ -149,14 +150,14 @@ while ($line = <A>)
     $cmdCount++;
   }
   @times = split(/,/, $b[$cmdCount]);
-  
+
   $cmdCount++;
-  
+
   for $thistime (@times)
   {
 
   if ($thistime =~ /[m]$/) { $mod = $thistime; $mod =~ s/.*m//g; }
-  
+
   ######################quarter hours
   if ($thistime =~ /[tphb]$/)
   {
@@ -175,7 +176,7 @@ while ($line = <A>)
   }
   #this needs to be outside the loop so it registers
   $min = floor($minute/15);
- 
+
   if ($thistime =~ /:/)
   {
     @tens = (0, 0, 0, 0, 0, 0);
