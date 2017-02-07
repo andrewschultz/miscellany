@@ -261,6 +261,7 @@ sub processTerms
 		{
 		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
 		  {
+	      checkWarnings($fromFile);
 		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
 		  #print "WILDCARD COPY: $cmd\n";
 		  `$cmd`;
@@ -468,6 +469,8 @@ sub checkWarnings
   #print "$_[0]\n";
   open(B,   $_[0]) || do { print "No $_[0], returning.\n"; return; };
 
+  if ($_[0] =~ /\.pl$/i)
+  {
   while ($line2 = <B>)
   {
     chomp($line2);
@@ -475,13 +478,17 @@ sub checkWarnings
     if ($line2 eq "use warnings;") { $gotWarnings++; }
     if ($line2 eq "use strict;") { $gotStrict++; }
   }
+  }
   close(B);
 
   if ($trailingSpace > 0) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
+  if ($_[0] =~ /\.pl$/i)
+  {
   if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0]\n"; $globalStrict++; }
   if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
   if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
   if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
+  }
   if ($trailingSpace)
   {
     $gwt{$_[0]} = 1;
