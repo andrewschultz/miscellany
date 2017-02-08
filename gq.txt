@@ -57,7 +57,7 @@ c:\games\inform\slicker-city.inform\source\books.txt
 
 #OAFS!!!!
 run=oafs
-c:\games\inform\uglyoafs.inform\source\story.ni
+c:\games\inform\ugly-oafs.inform\source\story.ni
 c:\writing\games.otl	uo
 c:\games\inform\triz\mine\ugly-oafs.trizbort
 

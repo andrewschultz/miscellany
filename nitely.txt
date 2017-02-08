@@ -102,7 +102,7 @@ roi=roiling
 >lov.pl g
 >crv.pl $$
 >qq.pl $l
->$d/bma.pl 
+>$d/bma.pl
 >$l/mkbot.pl
 >$l/mkbot.pl taunt
 >tsh.pl $$

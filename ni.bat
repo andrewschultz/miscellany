@@ -288,22 +288,22 @@ goto nodef
 )
 
 if "%1" EQU "uo" (
-set PROJ=uglyoafs
+set PROJ=ugly-oafs
 goto nodef
 )
 
 if "%1" EQU "o" (
-set PROJ=uglyoafs
+set PROJ=ugly-oafs
 goto nodef
 )
 
 if "%1" EQU "oafs" (
-set PROJ=uglyoafs
+set PROJ=ugly-oafs
 goto nodef
 )
 
 if "%1" EQU "14" (
-set PROJ=uglyoafs
+set PROJ=ugly-oafs
 goto nodef
 )
 

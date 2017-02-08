@@ -37,17 +37,17 @@ F=c:\games\inform\fourdiopolis.inform\source\incomp-updates.txt
 tree:c:/games/inform/fourdiopolis materials/Release,play_online
 !
 
-name=uglyoafs,uo,14
+name=ugly-oafs,uo,14
 v=3
 out=ugly_oafs_release_%.zip
->>c::\program files (x86)\OpenOffice 4\program\soffice --headless --convert-to pdf c:/games/inform/uglyoafs.inform/Source/uo.odt --outdir c:/games/inform/uglyoafs.inform/Source --headless
-#>>pdftk c:/games/inform/uglyoafs.inform/Source/uo.pdf c:/games/inform/triz/uoup.pdf c:/games/inform/triz/uodn.pdf cat output ugly-oafs-guide.pdf
->>pdftk A=c:/games/inform/uglyoafs.inform/Source/uo.pdf B=c:/games/inform/triz/mine/uoup.pdf C=c:/games/inform/triz/mine/uodn.pdf cat A1-6 B C A7 output c:\games\inform\zip\ugly-oafs-guide.pdf
+>>c::\program files (x86)\OpenOffice 4\program\soffice --headless --convert-to pdf c:/games/inform/ugly-oafs.inform/Source/uo.odt --outdir c:/games/inform/ugly-oafs.inform/Source --headless
+#>>pdftk c:/games/inform/ugly-oafs.inform/Source/uo.pdf c:/games/inform/triz/uoup.pdf c:/games/inform/triz/uodn.pdf cat output ugly-oafs-guide.pdf
+>>pdftk A=c:/games/inform/ugly-oafs.inform/Source/uo.pdf B=c:/games/inform/triz/mine/uoup.pdf C=c:/games/inform/triz/mine/uodn.pdf cat A1-6 B C A7 output c:\games\inform\zip\ugly-oafs-guide.pdf
 F=c:/games/inform/zip/ugly-oafs-guide.pdf
-F=c:/games/inform/uglyoafs.inform/Source/story.ni
+F=c:/games/inform/ugly-oafs.inform/Source/story.ni
 F=c:\Users\Andrew\Dropbox\notes\ugly_oafs_release_%_notes.txt
-F=C:\games\inform\uglyoafs Materials\Release\Ugly Oafs.gblorb
-F=C:\games\inform\uglyoafs Materials\Release\ugly-oafs-invisiclues.htm
+F=C:\games\inform\ugly-oafs Materials\Release\Ugly Oafs.gblorb
+F=C:\games\inform\ugly-oafs Materials\Release\ugly-oafs-invisiclues.htm
 !
 
 name=roiling,r,ro,aro,s13

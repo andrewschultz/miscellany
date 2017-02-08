@@ -173,7 +173,7 @@ print "FREQUENCIES:";
 #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
 foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} or $a cmp $b} keys %freq)
 {
-  if ($f2{$val} == ($count + $missFound)) { print " **$val**"; next; }
+  if ($f2{$val} == $count) { print " **$val**"; next; }
   print " $val:$f2{$val}/$freq{$val}";
 }
 print "\n";

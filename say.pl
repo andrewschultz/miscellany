@@ -9,7 +9,7 @@ use warnings;
 
 my %init, my %said, my %prefix, my %unused;
 
-my @defAry = ("shuffling", "roiling", "compound", "slicker-city", "threediopolis", "uglyoafs" );
+my @defAry = ("shuffling", "roiling", "compound", "slicker-city", "buck-the-past", "threediopolis", "ugly-oafs" );
 
 if ($#ARGV == -1)
 {

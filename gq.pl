@@ -99,7 +99,7 @@ while ($count <= $#ARGV)
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /,/ && do { @runs = split(/,/, $a); $count++; next; };
-  /^[\\0-9a-z]/ && do { if ($map{$a}) { print "$a -> $map{$a}, use upper case to avoid\n"; push(@thisAry, $map{$a}); } else { push(@thisAry, $a); } $count++; next; }; # if we want to use AS as a word, it would be in upper case
+  /^[\\0-9a-z]/i && do { if ($map{$a}) { print "$a -> $map{$a}, use upper case to avoid\n"; push(@thisAry, $map{$a}); } else { push(@thisAry, $a); } $count++; next; }; # if we want to use AS as a word, it would be in upper case
   print "Argument $a failed.\n"; usage();
   }
 

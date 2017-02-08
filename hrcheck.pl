@@ -14,7 +14,7 @@
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
 
-use strict; 
+use strict;
 use warnings;
 use Win32;
 use POSIX qw (floor);

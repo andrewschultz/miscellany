@@ -49,7 +49,7 @@ shu=$ws\invis\sa.txt,shuffling
 shu=$im\Release\Cover.jpg,shuffling
 shu=$tr\shuffling-around.trizbort,shuffling
 shu=$tr\shuffling-around.pdf,shuffling
-shu=c:\users\andrew\dropbox\notes\shuf*.txt,shuffling
+shu=c:\users\andrew\dropbox\notes\shuf*,shuffling
 shu=$id,shuffling
 shu=$is\roomlist.txt,shuffling
 shu=$is\reg-sa-*,\shuffling\testing
@@ -71,7 +71,7 @@ roi=$im\Release\Cover.png,roiling
 roi=$is\thru.txt,roiling\thru.txt
 roi=$tr\roiling.trizbort,roiling
 roi=$tr\roiling.pdf,roiling
-roi=c:\users\andrew\dropbox\notes\roiling*.txt,roiling
+roi=c:\users\andrew\dropbox\notes\roiling*,roiling
 roi=$is\alf-book.txt,roiling\twitterbot
 roi=$is\alf-taunt.txt,roiling\twitterbot
 roi=$is\anagram-book-pic.png,roiling\twitterbot
@@ -151,7 +151,7 @@ TOBASE=threediopolis
 3d=$is\reg-3d-misc-unit.txt,testing
 3d=$is\reg-3d-nearly-unit.txt,testing
 3d=$is\reg-3d-cheats-unit.txt,testing
-3d=c:\users\andrew\dropbox\notes\threed*.txt,
+3d=c:\users\andrew\dropbox\notes\threediopolis*,
 >3d=i7t.pl -q -s 3d | grep -iE "failed|likely|run this"
 
 #Fourdiopolis files to BitBucket
@@ -172,7 +172,7 @@ TOBASE=fourdiopolis
 4d=$is\reg-4d-misc-unit.txt,testing
 4d=$is\reg-4d-scens-unit.txt,testing
 -b:4d=c:\games\inform\fourdiopolis Materials\Release\fourdiopolis.gblorb
-4d=c:\users\andrew\dropbox\notes\fourd*.txt,
+4d=c:\users\andrew\dropbox\notes\fourdiopolis*,
 >4d=i7t.pl -q -s 4d | grep -iE "failed|likely|run this"
 
 #Ugly Oafs files to GitHub
@@ -183,7 +183,7 @@ oafs=$tr\uoup.pdf
 oafs=$tr\uoup.trizbort
 oafs=$tr\uodn.pdf
 oafs=$tr\uodn.trizbort
-oafs=c:\games\inform\uglyoafs Materials\Release\ugly-oafs-invisiclues.htm
+oafs=c:\games\inform\ugly-oafs Materials\Release\ugly-oafs-invisiclues.htm
 
 #Dirk files to GitHub
 TOBASE=dirk
@@ -456,7 +456,7 @@ rmt=mapcpy\mapcpy.c,mapcpy
 rmt=mapconv\test.ahs,mapconv\testing
 rmt=mapconv\test.nmr,mapconv\testing
 rmt=mapconv\test.bmp,mapconv\testing
--b:rmt=mapcpy\mapcpy.exe,mapcpy sz:50000
+-b:rmt=mapcpy\mapcpy.exe,mapcpy sz:60000
 rmt=mapcpy\README.md,mapcpy
 rmt=editor\icons.bmp,editor
 rmt=editor\walls.bmp,editor
@@ -508,11 +508,15 @@ rmt=dw\dw-nisir.map,samples\dragon-wars
 #Magic Candle series
 rmt=c:\games\blo\blo.txt,samples\magic-candle
 rmt=c:\games\mc2\mc2.txt,samples\magic-candle
+rmt=c:\games\mc2\mcmap.c,samples\magic-candle
+rmt=c:\games\mc2\mcbmp.pl,samples\magic-candle
 rmt=c:\games\mc3\mc3.txt,samples\magic-candle
+rmt=c:\games\mc2\readme.MD,samples\magic-candle
 #Phantasie
 rmt=phantasie\p1.txt,samples\phantasie
 rmt=phantasie\p2.txt,samples\phantasie
 rmt=phantasie\p3.txt,samples\phantasie
+rmt=phantasie\readme.MD,samples\phantasie
 ##########################################programs
 #Ultima IV
 rmt=u4map\README.md,u4map
