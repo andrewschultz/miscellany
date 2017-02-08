@@ -499,6 +499,7 @@ sub checkWarnings
   my $gotWarnings = 0;
   my $gotStrict = 0;
   my $trailingSpace = 0;
+  my $numLines;
 
   my $line2;
 
@@ -512,14 +513,15 @@ sub checkWarnings
     if ($line2 eq "use warnings;") { $gotWarnings++; }
     if ($line2 eq "use strict;") { $gotStrict++; }
   }
+  $numLines = $.;
   close(B);
 
   if ($trailingSpace > 0) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
   if ($_[0] =~ /\.pl$/i)
   {
-  if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0]\n"; $globalStrict++; }
-  if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0]\n"; $globalWarnings++; }
-  if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0]\n"; $globalWarnings++; $globalStrict++; }
+  if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0] ($numLines)\n"; $globalStrict++; }
+  if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0] ($numLines)\n"; $globalWarnings++; }
+  if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0] ($numLines)\n"; $globalWarnings++; $globalStrict++; }
   if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
   }
   if ($trailingSpace)
