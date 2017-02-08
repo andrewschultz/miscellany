@@ -18,7 +18,7 @@ my %repls;
 my %repl2;
 
 my $alph = 1;
-my $procString;
+my $procString = "";
 my $defaultString;
 my $testResults = 0;
 my $runTrivialTests = 0;
@@ -106,11 +106,11 @@ while ($count <= $#ARGV)
     if ($altHash{$a2})
 	{
 	  print "$a2 => $altHash{$a2}\n";
-	  $procString = $altHash{$a2};
+	  $procString .= ",$altHash{$a2}";
 	}
 	else
 	{
-	  $procString = $a2;
+	  $procString .= ",$a2";
 	}
 	$count++;
 	next;
@@ -122,6 +122,7 @@ while ($count <= $#ARGV)
 }
 
 if (!$procString) { $procString = $defaultString; print "Using default string: $procString\n"; }
+$procString =~ s/^,//;
 
 findTerms($ght);
 findTerms($ghp);
@@ -219,7 +220,8 @@ sub processTerms
 	  @d = split(/,/, $c); if ($#d == 0) { push(@d, ""); }
 	  my $fromFile = $d[0];
 	  my $toFile = $d[1];
-	  my $short = $fromFile; $short =~ s/.*[\\\/]//g;
+	  my $short = $fromFile;
+	  $short =~ s/.*[\\\/]//g;
 
 	  if ($fromFile !~ /:/) { $fromFile = "$repl2{fromBase}\\$fromFile"; }
 	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}"; if (defined($d[1])) { $toFile .= "\\$d[1]"; } }
@@ -261,7 +263,6 @@ sub processTerms
 		{
 		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
 		  {
-	      checkWarnings($fromFile);
 		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
 		  #print "WILDCARD COPY: $cmd\n";
 		  `$cmd`;
@@ -277,6 +278,7 @@ sub processTerms
 	  if ($justPrint) { print "$cmd\n"; $fileList .= "$fromFile\n"; }
 	  else
 	  {
+        checkWarnings($fromFile, 1);
 	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } else { $copies++; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; $uncop++; }
       }
 	  }
@@ -420,16 +422,49 @@ sub checkForFile
 
 sub fillProc
 {
-for (@procAry)
-{
-  if ($_ eq "-a")
-  { $alph = 1; next; }
-  if ($altHash{$_}) { $do{$altHash{$_}} = 1; print "$_ => $altHash{$_}\n"; }
-  else
+  my $stillChange = 1;
+  my $d;
+
+  for (@procAry)
   {
-  $do{$_} = 1;
+    $do{$_} = 1;
+	if ($_ eq "-a") { $alph = 1; }
   }
-}
+  while ($stillChange)
+  {
+    $stillChange = 0;
+    for $d (keys %do)
+    {
+      if ($altHash{$d})
+      {
+        #print "$d => $altHash{$d}\n";
+	    if ($altHash{$d} !~ /,/)
+		{
+		if (!defined($do{$altHash{$d}})) { $stillChange = 1; }
+        $do{$altHash{$d}} = 1;
+		}
+		else
+		{
+		  my @alts = split(/,/, $altHash{$d});
+		  for my $al (@alts)
+		  {
+            if (!defined($do{$altHash{$al}})) { $stillChange = 1; }
+            $do{$altHash{$al}} = 1;
+		  }
+		}
+      }
+    }
+  }
+  for $d (keys %do)
+  {
+    if ($d =~ /,/) { delete($do{$d}); print "Deleted $d\n"; }
+	elsif ($altHash{$d})
+	{
+	  delete($do{$d});
+	  #print "Zapped reference $d\n";
+    }
+	else { print "Running $d\n"; }
+  }
 }
 
 sub strictWarn
@@ -453,11 +488,12 @@ sub strictWarn
 	   $line = $repl2{"fromBase"} . "\\$line";
 	   #print "$line\n";
      }
-	 if ($line =~ /\.pl$/) { checkWarnings($line); }
+	 if ($line =~ /\.(pl|ni|txt)$/) { checkWarnings($line, 0); }
   }
   close(A);
 }
 
+###############file name, force remove trailing space
 sub checkWarnings
 {
   my $gotWarnings = 0;
@@ -469,15 +505,12 @@ sub checkWarnings
   #print "$_[0]\n";
   open(B,   $_[0]) || do { print "No $_[0], returning.\n"; return; };
 
-  if ($_[0] =~ /\.pl$/i)
-  {
   while ($line2 = <B>)
   {
     chomp($line2);
 	if ($line2 =~ /[\t ]+$/) { $trailingSpace++; }
     if ($line2 eq "use warnings;") { $gotWarnings++; }
     if ($line2 eq "use strict;") { $gotStrict++; }
-  }
   }
   close(B);
 
@@ -492,7 +525,7 @@ sub checkWarnings
   if ($trailingSpace)
   {
     $gwt{$_[0]} = 1;
-	if ($removeTrailingSpace)
+	if ($removeTrailingSpace || $_[1])
 	{
       my $tempfile = "c:\\writing\\scripts\\temp-perl.temp";
 	  open(F1, "$_[0]");
