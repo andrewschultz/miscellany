@@ -41,6 +41,8 @@ my $suppressWarnings = 0;
 my $clipboard = 0;
 my $zapAdj = 1; # zap adjacent games that are the same
 my $predictFuture = 1;
+my $toHtml = 0;
+my $launch = 0;
 
 #variables
 my $x;
@@ -82,6 +84,7 @@ while ($count <= $#ARGV)
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
+	/^-?o(l)?$/ && do { $toHtml = 1; if ($a =~/l/) { $launch = 1; } $count++; next; };
 	/^-?n(i)?$/ && do { $nickFile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
@@ -503,14 +506,14 @@ foreach $x (sort keys %rating)
 
  if ($predictFuture) { predictFutureWins(); }
 
- $bigPrint .= "<table border=1><th>Rank<th>Team<th>W-L";
-  if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>ExpLeft"; }
+ $bigPrint .= "<table border=1><th>Rank<th>Team<th>W-L<th>Rating";
+  if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
   $bigPrint .= "\n";
   foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
   {
     $rank++;
     $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}";
-    if ($predictFuture) { $bigPrint .= sprintf("<td>%.3f-%.3f(%d-%d)<td>%.2f-%.2f", $wins{$x} + $expWins{$x}, $losses{$x} + $expLoss{$x},
+    if ($predictFuture) { $bigPrint .= sprintf("<td>%.2f-%.2f <td><center>%d-%d</center><td>%.2f-%.2f", $wins{$x} + $expWins{$x}, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $expWins{$x}, $expLoss{$x});
     }
     $bigPrint .= "\n";
@@ -547,6 +550,12 @@ for $t1 (sort keys %rating)
 	$bigPrint .= "\n";
   }
   $bigPrint .= "</table>";
+  if ($toHtml)
+  {
+    open(B, ">elo.htm"); print B $bigPrint; close(B);
+	if ($launch) { `elo.htm`; }
+	return;
+  }
   if ($clipboard)
   {
   my $clip = Win32::Clipboard::new();
@@ -591,19 +600,22 @@ sub usage
 {
 print<<EOT;
 -a adds games
+-c puts stuff to clipboard
 -f flips a game's result (winner first, changed to loser)
--u undoes a game (deletes it)
 -d is debug rating
 -de means send debug information every X iterations
 -ff sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
+-h specifies home advantage
 -i changes number of iterations
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
 -ni changes the nickname file
+-o puts stuff out to HTML file (elo.htm) and  -hl launches
 -p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
 -re/-g is the game result file
 -s suppresses warnings
+-u undoes a game (deletes it)
 EOT
 exit;
 }
