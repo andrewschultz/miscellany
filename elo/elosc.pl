@@ -11,16 +11,21 @@
 use strict;
 use warnings;
 
+use POSIX qw (round);
+
 use Win32::Clipboard;
 
 my %rating;
 my %tempRating;
 
 my %schedule;
+my %skedNext;
 my %wins;
 my %losses;
 my %homeAway;
 my %locs;
+my %expWins;
+my %expLoss;
 
 #defaults, can be tweaked with options
 my $debug = 0;
@@ -34,6 +39,8 @@ my $fudgefactor = 0.1;
 my $home = 70;
 my $suppressWarnings = 0;
 my $clipboard = 0;
+my $zapAdj = 1; # zap adjacent games that are the same
+my $predictFuture = 1;
 
 #variables
 my $x;
@@ -288,6 +295,16 @@ sub addToSched
   {
     if ($tabentry =~ /20[0-9][0-9]/) { next; } # this is a date
 	if ($tabentry !~ /[a-z]/i) { next; } # blank cell, skip it
+	if ($tabentry =~ / at /)
+	{
+	  my @teams = split(/ at /, $tabentry);
+	  if ($#teams != 1) { print ("$tabentry has 'at' text but is not in the form team1\@team2, $#teams.\n"); return; }
+	  if ($zapAdj && ($skedNext{$teams[0]} =~ /,\@$teams[1]$/i)) { return; }
+	  if ($zapAdj && ($skedNext{$teams[1]} =~ /,$teams[0]$/i)) { return; }
+	  $skedNext{$teams[0]} .= "," . "\@" . "$teams[1]";
+	  $skedNext{$teams[1]} .= ",$teams[0]";
+	  return;
+	}
     if ($tabentry !~ /[0-9]/) # might be game location
 	{
 	  for my $loc (keys %locs)
@@ -392,6 +409,7 @@ while ($a = <A>)
 	  $temp = lc($b[$_]);
 	  if ($revnick{$temp}) { die ("$temp was mapped to $revnick{$temp} but $nickFile tries to redefine it as $b[0]."); }
 	  $revnick{lc($b[$_])} = $b[0];
+	  $skedNext{$b[0]} = "";
     }
   }
 }
@@ -483,13 +501,21 @@ foreach $x (sort keys %rating)
 
  my $rank = 0;
 
- $bigPrint .= "<table border=1>\n";
-foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
-{
-  $rank++;
-  $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}\n";
-}
-$bigPrint .= "</table>\n";
+ if ($predictFuture) { predictFutureWins(); }
+
+ $bigPrint .= "<table border=1><th>Rank<th>Team<th>W-L";
+  if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>ExpLeft"; }
+  $bigPrint .= "\n";
+  foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
+  {
+    $rank++;
+    $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}";
+    if ($predictFuture) { $bigPrint .= sprintf("<td>%.3f-%.3f(%d-%d)<td>%.2f-%.2f", $wins{$x} + $expWins{$x}, $losses{$x} + $expLoss{$x},
+	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $expWins{$x}, $expLoss{$x});
+    }
+    $bigPrint .= "\n";
+  }
+  $bigPrint .= "</table>\n";
 
 # now to print the table of probabilities
 $bigPrint .= "<table border=1><tr><td>H/A";
@@ -525,8 +551,39 @@ for $t1 (sort keys %rating)
   {
   my $clip = Win32::Clipboard::new();
   $clip->Set($bigPrint);
+  print "Main data printed to clipboard.";
   }
   if ($clipboard != 1) { print $bigPrint; }
+}
+
+sub predictFutureWins
+{
+
+  my $t1;
+  my @games;
+  my @sk;
+  my $game;
+  my $temp;
+  my $onRoad;
+  my $tw;
+
+  for $t1 (sort keys %rating)
+  {
+    $skedNext{$t1} =~ s/^,//;
+     @sk = split(/,/, $skedNext{$t1});
+	 for $game (@sk)
+	 {
+	   $temp  = $game;
+	   if ($game =~ /^\@/)
+	   {
+	     $temp =~ s/^\@//;
+	     $onRoad = 1;
+	    } else { $onRoad = -1; }
+		$tw = winPct($t1, $temp, $onRoad) / 100;
+        $expWins{$t1} += $tw;
+		$expLoss{$t1} += 1 - $tw;
+	 }
+  }
 }
 
 ##################################standard usage file
