@@ -99,6 +99,7 @@ while ($count <= $#ARGV)
 	/^-?rr$/ && do { $printRound = 1; $count++; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
+	/^-?!$/ && do { $expByWin = 1; $printRemainDist = 1; $printRound = 1; $toHtml = 1; $launch = 1; $count++; next; }; # kitchen sink option
     usage();
   }
 }
@@ -515,7 +516,7 @@ foreach $x (sort keys %rating)
 
  if ($predictFuture) { predictFutureWins(); }
 
- $bigPrint .= "<table border=1><th>Rank<th>Team<th>W-L<th>Rating";
+ $bigPrint .= "<center><font size=+3><b>ELO/Predicted finish table</b></font></center><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
   if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
   $bigPrint .= "\n";
   foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
@@ -530,7 +531,7 @@ foreach $x (sort keys %rating)
   $bigPrint .= "</table>\n";
 
 # now to print the table of probabilities
-$bigPrint .= "<table border=1><tr><td>H/A";
+$bigPrint .= "<center><font size=+3><b>Head to Head</b></font></center><table border=1><tr><td>H/A";
 
 my $t1;
 my $t2;
@@ -569,7 +570,7 @@ for $t1 (sort keys %rating)
   $bigPrint .= "</table>";
   if ($printRound)
   {
-    $bigPrint .= "<table border=1><th>Team<th>RR neutral Wins<th>RR h/a wins\n";
+    $bigPrint .= "<center><font size=+3><b>Round Robin</b></font></center><table border=1><th>Team<th>RR neutral Wins<th>RR h/a wins\n";
 	my $elts = scalar (keys %rating )- 1;
 	for $t1 (sort { $rating{$b} <=> $rating{$a} } keys %rating)
 	{
@@ -580,7 +581,7 @@ for $t1 (sort keys %rating)
   if ($printRemainDist) { $bigPrint .= $expPrint; }
   if($expByWin)
   {
-	  $bigPrint .= "<table border=1>\n<tr><td>Team/WinDist";
+	  $bigPrint .= "<center><font size=+3><b>Round Robin Neutral Expected Wins</b></font></center><table border=1>\n<tr><td>Team/WinDist";
 	for (0..(scalar keys %rating)-1)
 	{
 	  $bigPrint .= "<td>$_";
@@ -652,22 +653,26 @@ sub predictFutureWins
 	     $temp =~ s/^\@//;
 	     $onRoad = 1;
 	    } else { $onRoad = -1; }
-		$tw = winPct($t1, $temp, $onRoad) / 100;
+		$tw = winPct($t1, $temp, -$onRoad) / 100;
         $expWins{$t1} += $tw;
 		$expLoss{$t1} += 1 - $tw;
 		@winDistTemp = (0) x ($#winDist+1);
 		for(0..$#winDist)
 		{
-		  @winDistTemp[$_] += @winDist [$_] * (1-$tw);
-		  @winDistTemp[$_+1] = @winDist [$_] * $tw;
+		  $winDistTemp[$_] += $winDist [$_] * (1-$tw);
+		  $winDistTemp[$_+1] = $winDist [$_] * $tw;
 		}
 		@winDist = @winDistTemp;
 		#print "$tw changes stuff to @winDist\n";
 	 }
 	if ($maxLeft < $#winDist) { $maxLeft = $#winDist; }
-	$expPrint .= "<tr><td>$t1<td>" . join("<td>", map { sprintf("%.2f", $_*100) } @winDist) . "\n";
+	$expPrint .= "<tr><td>$t1";
+	for (0..$#winDist)
+	{
+	  $expPrint .= sprintf("<td title=%d-%d>%.2f%%", $wins{$t1} + $_, $losses{$t1} + $#winDist - $_, $winDist[$_]*100);
+	}
   }
-  $expPrint = "<table border=1><th>Team<th>" . join("<th>", (0..$maxLeft)) . "\n" . $expPrint;
+  $expPrint = "<center><font size=+3><b>Remaining Win Distribution</b></font></center><table border=1><th>Team<th>" . join("<th>", (0..$maxLeft)) . "\n" . $expPrint . "</table>\n";
 }
 
 ##################################standard usage file
@@ -694,6 +699,7 @@ print<<EOT;
 -rr shows round robin results on a neutral floor and double round robin results with home and away
 -s suppresses warnings
 -u undoes a game (deletes it)
+-! is the kitchen sink option to print out everything
 EOT
 exit;
 }
