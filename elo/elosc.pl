@@ -26,6 +26,8 @@ my %homeAway;
 my %locs;
 my %expWins;
 my %expLoss;
+my %roundWin;
+my %roundDubWin;
 
 #defaults, can be tweaked with options
 my $debug = 0;
@@ -43,6 +45,8 @@ my $zapAdj = 1; # zap adjacent games that are the same
 my $predictFuture = 1;
 my $toHtml = 0;
 my $launch = 0;
+my $printRound = 0;
+my $expByWin = 0;
 
 #variables
 my $x;
@@ -78,6 +82,7 @@ while ($count <= $#ARGV)
     };
 	/^-?a$/ && do { $addString = $b; $count += 2; next; };
 	/^-?c(p)?$/ && do { $clipboard = 1; if ($a =~ /p/) { $clipboard = 2; } $count += 2; next; }; # this is not great coding but basically -c sends to clipboard, -p prints too
+	/^-?e$/ && do { $expByWin = 1; $count ++; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
@@ -88,6 +93,7 @@ while ($count <= $#ARGV)
 	/^-?n(i)?$/ && do { $nickFile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
+	/^-?rr$/ && do { $printRound = 1; $count++; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
     usage();
@@ -528,6 +534,9 @@ my $t2;
 my $mult;
 my $cellTitle;
 my $bg;
+my $neutWin;
+my $bothWayWin;
+my $temp;
 
 for $t1 (sort keys %rating)
   {
@@ -541,7 +550,12 @@ for $t1 (sort keys %rating)
 	$bigPrint .= ifshort($t1);
     for $t2 (sort keys %rating)
 	{
-      $cellTitle  = sprintf("\"%.2f win exp Home+away, %.2f neutral\"", (winPct($t1, $t2, 1) + winPct($t1, $t2, -1))/100, winPct($t1, $t2, 0));
+	  $neutWin = winPct($t1, $t2, 0) / 100;
+	  $bothWayWin = (winPct($t1, $t2, 1) + winPct($t1, $t2, -1))/100;
+
+      $cellTitle  = sprintf("\"%.2f win exp Home+away, %.2f neutral\"", $bothWayWin, $neutWin * 100);
+	  $roundWin{$t1} += $neutWin;
+	  $roundDubWin{$t1} += $bothWayWin;
 	  $bg = sprintf("%02x%02x00", 255 - winPct($t1, $t2, 1) * 2.55, winPct($t1, $t2, 1) * 2.55);
 	  $bigPrint .= "<td title=$cellTitle bgcolor=\"$bg\">";
 	  if ($t1 eq $t2) { next; }
@@ -550,6 +564,47 @@ for $t1 (sort keys %rating)
 	$bigPrint .= "\n";
   }
   $bigPrint .= "</table>";
+  if ($printRound)
+  {
+    $bigPrint .= "<table border=1><th>Team<th>RR neutral Wins<th>RR h/a wins\n";
+	my $elts = scalar (keys %rating )- 1;
+	for $t1 (sort { $rating{$b} <=> $rating{$a} } keys %rating)
+	{
+	  $bigPrint .= sprintf("<tr><td>$t1<td>%.2f-%.2f<td>%.2f-%.2f\n", $roundWin{$t1}, $elts - $roundWin{$t1}, $roundDubWin{$t1}, 2 * $elts - $roundDubWin{$t1});
+    }
+	$bigPrint .= "</table>\n";
+  }
+  if($expByWin)
+  {
+	  $bigPrint .= "<table border=1>\n<tr><td>Team/WinDist";
+	for (0..(scalar keys %rating)-1)
+	{
+	  $bigPrint .= "<td>$_";
+	}
+	$bigPrint .= "\n";
+    for $t1 (sort keys %rating)
+	{
+	  my @wins = (1);
+	  my @newWins = ();
+	  for $t2 (sort keys %rating)
+	  {
+	    if ($t1 eq $t2) { next; }
+		for (0..$#wins+1)
+		{
+		  $temp = winPct($t1, $t2, 1)/100;
+		  if ($_ < $#wins+1) { $newWins[$_] = (1-$temp) * $wins[$_]; }
+		  if ($_) { $newWins[$_] += $temp * $wins[$_-1]; }
+		}
+		@wins = @newWins;
+	  }
+	  my $max = 0;
+	  my $maxVal = 0;
+	  for (0..$#newWins) { if ($newWins[$_] > $max) { $maxVal = $_; $max = $newWins[$_]; } }
+        $bigPrint .= "<tr><td>$t1<td>";
+		$bigPrint .= join("<td>", map { sprintf("%s%.2f%s", ($_ == $max) ? "<b>" : "", $_*100, ($_ == $max) ? "</b>" : "") } @wins) . "\n";
+	}
+    $bigPrint .= "</table>\n";
+  }
   if ($toHtml)
   {
     open(B, ">elo.htm"); print B $bigPrint; close(B);
@@ -601,8 +656,9 @@ sub usage
 print<<EOT;
 -a adds games
 -c puts stuff to clipboard
--f flips a game's result (winner first, changed to loser)
 -d is debug rating
+-e shows expected value of each win in a round robin
+-f flips a game's result (winner first, changed to loser)
 -de means send debug information every X iterations
 -ff sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
 -h specifies home advantage
@@ -614,6 +670,7 @@ print<<EOT;
 -p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
 -re/-g is the game result file
+-rr shows round robin results on a neutral floor and double round robin results with home and away
 -s suppresses warnings
 -u undoes a game (deletes it)
 EOT
