@@ -47,6 +47,7 @@ my $toHtml = 0;
 my $launch = 0;
 my $printRound = 0;
 my $expByWin = 0;
+my $printRemainDist;
 
 #variables
 my $x;
@@ -57,6 +58,7 @@ my @allGames;
 my $addString;
 my $flipString;
 my $undoString;
+my $expPrint = "";
 
 my @teams;
 my %nickname;
@@ -93,6 +95,7 @@ while ($count <= $#ARGV)
 	/^-?n(i)?$/ && do { $nickFile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
+	/^-?rd$/ && do { $printRemainDist = 1; $count++; next; };
 	/^-?rr$/ && do { $printRound = 1; $count++; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
@@ -574,6 +577,7 @@ for $t1 (sort keys %rating)
     }
 	$bigPrint .= "</table>\n";
   }
+  if ($printRemainDist) { $bigPrint .= $expPrint; }
   if($expByWin)
   {
 	  $bigPrint .= "<table border=1>\n<tr><td>Team/WinDist";
@@ -630,9 +634,14 @@ sub predictFutureWins
   my $temp;
   my $onRoad;
   my $tw;
+  my @winDist;
+  my @winDistTemp;
+  my $maxLeft = 0;
 
   for $t1 (sort keys %rating)
   {
+    @winDist =(1);
+	@winDistTemp = (0);
     $skedNext{$t1} =~ s/^,//;
      @sk = split(/,/, $skedNext{$t1});
 	 for $game (@sk)
@@ -646,8 +655,19 @@ sub predictFutureWins
 		$tw = winPct($t1, $temp, $onRoad) / 100;
         $expWins{$t1} += $tw;
 		$expLoss{$t1} += 1 - $tw;
+		@winDistTemp = (0) x ($#winDist+1);
+		for(0..$#winDist)
+		{
+		  @winDistTemp[$_] += @winDist [$_] * (1-$tw);
+		  @winDistTemp[$_+1] = @winDist [$_] * $tw;
+		}
+		@winDist = @winDistTemp;
+		#print "$tw changes stuff to @winDist\n";
 	 }
+	if ($maxLeft < $#winDist) { $maxLeft = $#winDist; }
+	$expPrint .= "<tr><td>$t1<td>" . join("<td>", map { sprintf("%.2f", $_*100) } @winDist) . "\n";
   }
+  $expPrint = "<table border=1><th>Team<th>" . join("<th>", (0..$maxLeft)) . "\n" . $expPrint;
 }
 
 ##################################standard usage file
@@ -669,6 +689,7 @@ print<<EOT;
 -o puts stuff out to HTML file (elo.htm) and  -hl launches
 -p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
+-rd shows remaining win distribution
 -re/-g is the game result file
 -rr shows round robin results on a neutral floor and double round robin results with home and away
 -s suppresses warnings
