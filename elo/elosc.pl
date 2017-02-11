@@ -49,6 +49,7 @@ my $printRound = 0;
 my $expByWin = 0;
 my $printRemainDist = 0;
 my $sigFig = 2;
+my $myTeam = "";
 
 #variables
 my $x;
@@ -100,6 +101,7 @@ while ($count <= $#ARGV)
 	/^-?rd$/ && do { $printRemainDist = 1; $count++; next; };
 	/^-?rr$/ && do { $printRound = 1; $count++; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
+	/^-?t$/ && do {  $myTeam = $b; $count += 2; next; };
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
 	/^-?!(c)?$/ && do
 	{
@@ -615,6 +617,27 @@ for $t1 (sort keys %rating)
 	}
     $bigPrint .= "</table>\n";
   }
+
+  if ($myTeam)
+  {
+    my $ni;
+    my $modPrint;
+	my $addModPrint = 0;
+    my @printLines = split(/\n/, $bigPrint);
+	for (@printLines)
+	{
+	  $addModPrint = 0;
+	  if ($_ =~ />$myTeam</i) { $addModPrint = 1; }
+	  for $ni (keys %revnick)
+	  {
+	    if ((lc($revnick{$ni}) eq lc($myTeam)) && ($_ =~ />$ni</i)) { $addModPrint = 1; }
+	  }
+	  if ($addModPrint) { $modPrint .= "$_\n"; }
+	}
+	$bigPrint = $modPrint;
+	$bigPrint =~ s/<td>/,/;
+  }
+
   if ($toHtml)
   {
     open(B, ">elo.htm"); print B $bigPrint; close(B);
