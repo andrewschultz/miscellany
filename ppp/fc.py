@@ -274,7 +274,7 @@ def chainNopeEach():
         if chainNope(i) > 0:
             retval += 1
     return retval
-    
+
 def chainNope(rowcand):
     retval = 0 #note this doesn't consider if we have, say, 7C-Ah-6D
     for v in range (1,len(elements[rowcand])):
@@ -288,7 +288,7 @@ def spareUsed():
         if spares[i]:
             retval += 1
     return retval
-        
+
 def firstEmptyRow():
     for i in range(1,9):
         if len(elements[i]) == 0:
@@ -407,7 +407,7 @@ def maxmove():
 
 def foundable(thiscard):
     whichsuit = (thiscard - 1) // 13
-    whichface = ((thiscard  - 1) % 13) + 1    
+    whichface = ((thiscard  - 1) % 13) + 1
     if found[whichsuit] == whichface - 1:
         return 1
     return 0
@@ -531,7 +531,7 @@ def checkWin():
         if found[y] != 13:
             return 0
     checkWinning()
-    
+
 def initCards():
     x = list(range(1,53))
     shuffle(x)
@@ -1055,7 +1055,7 @@ def undoMoves(toUndo):
     checkFound()
     printCards()
     return 1
-   
+
 
 def loadGame(gameName):
     global time
@@ -1474,12 +1474,18 @@ def readCmd(thisCmd):
             return
     #### two letter commands below here.
     if len(name) > 2:
+        gotReversed = 0
+        oldMoves = len(moveList)
         if name.isdigit:
+            gotReversed = 1
             for jj in reversed(range(0,len(name)-1)):
                 temp = name[jj] + name[len(name)-1]
                 print "Moving " + temp
                 readCmd(name[jj] + name[len(name)-1])
-        print ('Only 2 chars per command.')
+        if gotReversed == 0:
+            print ('Only 2 chars per command.')
+        else:
+            print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         return
     if len(name) < 2:
         print ('Must have 2 chars per command.')

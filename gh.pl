@@ -516,7 +516,7 @@ sub checkWarnings
   $numLines = $.;
   close(B);
 
-  if ($trailingSpace > 0) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
+  if (($removeTrailingSpace || $_[1]) && ($trailingSpace > 0)) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
   if ($_[0] =~ /\.pl$/i)
   {
   if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0] ($numLines)\n"; $globalStrict++; }
