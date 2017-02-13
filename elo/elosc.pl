@@ -29,6 +29,7 @@ my %expLoss;
 my %roundWin;
 my %roundDubWin;
 my %toTrack;
+my %toIgnore;
 
 #defaults, can be tweaked with options
 my $debug = 0;
@@ -116,6 +117,16 @@ while ($count <= $#ARGV)
 	  $count += 2;
 	  next;
 	};
+	/^-?ti$/ && do
+	{
+	  for my $tm (split(/,/, $b))
+	  {
+	    if ($rating{lc($tm)}) { $toIgnore{lc($tm)} = 1; }
+		elsif ($revnick{lc($tm)}) { $toIgnore{$revnick{lc($tm)}} = 1; }
+	  }
+	  $count += 2;
+	  next;
+	};
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
 	/^-?!(c)?$/ && do
 	{
@@ -126,6 +137,14 @@ while ($count <= $#ARGV)
 }
 
 if (!scalar(keys %toTrack)) { %toTrack = %rating; }
+if (scalar(keys %toIgnore))
+{
+  for my $tm (keys %toIgnore)
+  {
+    if (!defined($toTrack{$tm})) { print "$tm not recognized as team or abbreviation.\n"; }
+	else { delete($toTrack{$tm}); }
+  }
+}
 
 readTeamGames();
 doIterations();
@@ -744,7 +763,8 @@ print<<EOT;
 -re/-g changes the game result file(s) (CSV)
 -rr shows round robin results on a neutral floor and double round robin results with home and away
 -s suppresses warnings
--t gives a comma separated list of team names to track
+-t gives a comma separated list of team (nick)names to track
+-ti gives a comma separated list of team (nick)names to ignore
 -u undoes a game (deletes it)
 -! is the kitchen sink option to print out everything (-rr -d -e -ol, -!c exports to clipboard instead of HTML file)
 EOT
