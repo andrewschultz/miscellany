@@ -55,6 +55,7 @@ my $count = 0;
 my $a;
 my $a2;
 my %altHash, my %do, my %poss, my %postproc;
+my $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 
 while ($count <= $#ARGV)
 {
@@ -62,9 +63,10 @@ while ($count <= $#ARGV)
   $a2 = lc($a);
   for ($a2)
   {
-  /^(-p|p)$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghp"); exit; };
-  /^(-e|e)$/ && do { print "Opening external file, -c opens code, -p opens private file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"); exit; };
-  /^(-c|c)$/ && do { print "Opening code, -e opens external .txt file, -p opens private file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"); exit; };
+  /^gh\.pl/ && do { print "############################OOPS! You added the app name.\n"; $count++; next; };
+  /^(-p|p)$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file.\n"; system("start \"\" $np $ghp"); exit; };
+  /^(-e|e)$/ && do { print "Opening external file, -c opens code, -p opens private file.\n"; system("start \"\" $np $ght"); exit; };
+  /^(-c|c)$/ && do { print "Opening code, -e opens external .txt file, -p opens private file.\n"; system("start \"\" $np $ghs"); exit; };
   /^-?(ec|ce)$/ && do
   {
     print "Opening code/external.\n";
