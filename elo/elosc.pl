@@ -28,6 +28,7 @@ my %expWins;
 my %expLoss;
 my %roundWin;
 my %roundDubWin;
+my %toTrack;
 
 #defaults, can be tweaked with options
 my $debug = 0;
@@ -69,6 +70,10 @@ my $nickFile = "elonick.txt";
 my $gameFile = "elosc.txt";
 my $locFile = "eloloc.txt";
 
+#########we need to read these BEFORE the command line, because some options
+readTeamLocs();
+readTeamNicknames();
+
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
@@ -101,7 +106,16 @@ while ($count <= $#ARGV)
 	/^-?rd$/ && do { $printRemainDist = 1; $count++; next; };
 	/^-?rr$/ && do { $printRound = 1; $count++; next; };
 	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
-	/^-?t$/ && do {  $myTeam = $b; $count += 2; next; };
+	/^-?t$/ && do
+	{
+	  for my $tm (split(/,/, $b))
+	  {
+	    if ($rating{lc($tm)}) { $toTrack{lc($tm)} = 1; }
+		elsif ($revnick{lc($tm)}) { $toTrack{$revnick{lc($tm)}} = 1; }
+	  }
+	  $count += 2;
+	  next;
+	};
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
 	/^-?!(c)?$/ && do
 	{
@@ -111,8 +125,8 @@ while ($count <= $#ARGV)
   }
 }
 
-readTeamLocs();
-readTeamNicknames();
+if (!scalar(keys %toTrack)) { %toTrack = %rating; }
+
 readTeamGames();
 doIterations();
 stabilizeRatings();
@@ -517,6 +531,7 @@ my $bigPrint = "";
 foreach $x (sort keys %rating)
 {
   $rating{$x} = int($rating{$x} + .5);
+  #print "$rating{$x}\n";
 }
 
  my $rank = 0;
@@ -529,6 +544,7 @@ foreach $x (sort keys %rating)
   foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
   {
     $rank++;
+	if (!$toTrack{$x}) { next; }
     $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}";
     if ($predictFuture) { $bigPrint .= sprintf("<td>%.*f-%.*f <td><center>%d-%d</center><td>%.*f-%.*f", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
@@ -536,6 +552,7 @@ foreach $x (sort keys %rating)
     $bigPrint .= "\n";
   }
   $bigPrint .= "</table>\n";
+  #die($bigPrint);
 
 # now to print the table of probabilities
 $bigPrint .= "<center><font size=+3><b>Head to Head</b></font></center><br />Text here<br /><table border=1><tr><td>H/A";
@@ -555,7 +572,7 @@ for $t1 (sort keys %rating)
 	$bigPrint .= ifshort($t1);
   }
 $bigPrint .= "\n";
-for $t1 (sort keys %rating)
+for $t1 (sort keys %toTrack)
   {
     $bigPrint .= "<tr><td>";
 	$bigPrint .= ifshort($t1);
@@ -579,7 +596,7 @@ for $t1 (sort keys %rating)
   {
     $bigPrint .= "<center><font size=+3><b>Round Robin</b></font></center><br />Text here<br /><table border=1><th>Team<th>RR neutral Wins<th>RR h/a wins\n";
 	my $elts = scalar (keys %rating )- 1;
-	for $t1 (sort { $rating{$b} <=> $rating{$a} } keys %rating)
+	for $t1 (sort { $rating{$b} <=> $rating{$a} } keys %toTrack)
 	{
 	  $bigPrint .= sprintf("<tr><td>$t1<td>%.*f-%.*f<td>%.*f-%.*f\n", $sigFig, $roundWin{$t1}, $sigFig, $elts - $roundWin{$t1}, $sigFig, $roundDubWin{$t1}, $sigFig, 2 * $elts - $roundDubWin{$t1});
     }
@@ -594,7 +611,7 @@ for $t1 (sort keys %rating)
 	  $bigPrint .= "<td>$_";
 	}
 	$bigPrint .= "\n";
-    for $t1 (sort keys %rating)
+    for $t1 (sort keys %toTrack)
 	{
 	  my @wins = (1);
 	  my @newWins = ();
@@ -727,7 +744,7 @@ print<<EOT;
 -re/-g changes the game result file(s) (CSV)
 -rr shows round robin results on a neutral floor and double round robin results with home and away
 -s suppresses warnings
--t specifies a certain team
+-t gives a comma separated list of team names to track
 -u undoes a game (deletes it)
 -! is the kitchen sink option to print out everything (-rr -d -e -ol, -!c exports to clipboard instead of HTML file)
 EOT
