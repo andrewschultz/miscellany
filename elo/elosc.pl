@@ -42,6 +42,7 @@ my $maxSingleShift = 0;
 my $fudgefactor = 0.1;
 my $home = 70;
 my $suppressWarnings = 0;
+my $totalWarnings = 0;
 my $clipboard = 0;
 my $zapAdj = 1; # zap adjacent games that are the same
 my $predictFuture = 1;
@@ -106,7 +107,7 @@ while ($count <= $#ARGV)
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
 	/^-?rd$/ && do { $printRemainDist = 1; $count++; next; };
 	/^-?rr$/ && do { $printRound = 1; $count++; next; };
-	/^-?s$/ && do { $suppressWarnings = 1; $count++; next; };
+	/^-?(sw|ws)$/ && do { $suppressWarnings = 1; $count++; next; };
 	/^-?t$/ && do
 	{
 	  for my $tm (split(/,/, $b))
@@ -419,7 +420,7 @@ sub teamMod
   {
     if (lc($team) eq lc($_[0])) { return $team; }
   }
-  if (!$suppressWarnings) { print "WARNING $_[0] could not be modded into a team" . ($. ? " at line $." : "" ) . ".\n"; }
+  if (!$suppressWarnings) { $totalWarnings++; print "WARNING $_[0] could not be modded into a team" . ($. ? " at line $." : "" ) . ".\n"; }
 }
 
 sub readTeamLocs
@@ -684,9 +685,10 @@ for $t1 (sort keys %toTrack)
   {
   my $clip = Win32::Clipboard::new();
   $clip->Set($bigPrint);
-  print "Main data printed to clipboard.";
+  print "Main data printed to clipboard.\n";
   }
   if ($clipboard != 1) { print $bigPrint; }
+  if ($totalWarnings) { print "Total warnings = $totalWarnings. Suppress with -sw/-ws.\n"; }
 }
 
 sub predictFutureWins
@@ -762,7 +764,7 @@ print<<EOT;
 -rd shows remaining win distribution
 -re/-g changes the game result file(s) (CSV)
 -rr shows round robin results on a neutral floor and double round robin results with home and away
--s suppresses warnings
+-sw/-ws suppresses warnings
 -t gives a comma separated list of team (nick)names to track
 -ti gives a comma separated list of team (nick)names to ignore
 -u undoes a game (deletes it)
