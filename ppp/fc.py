@@ -1154,7 +1154,9 @@ def goBye():
     print ("Bye!")
     f = open('fctime.txt', 'w')
     f.seek(0)
-    f.write(str(round(time.time())))
+    f.write(str(int(round(time.time()))))
+    f.write('\n')
+    f.write(str(int(highTime)))
     f.close()
     exit()
 
@@ -1680,12 +1682,26 @@ timeMatters = 1
 delay = 43200
 if timeMatters:
     with open(timefile) as f:
-        for line in f:
-            lastTime = int(float(line))
-    curTime = int(time.time())
-    if curTime - lastTime < delay:
-        print "Only " + str(curTime-lastTime) + " of " + str(delay) + " seconds since last time waster."
+        lastTime = int(float(f.readline()))
+        highTime = int(f.readline())
+    timeDelt = int(time.time()) - lastTime
+    if timeDelt < delay:
+        print "Only " + str(timeDelt) + " of " + str(delay) + " seconds since last time waster."
         exit()
+    else:
+        f.close()
+        if timeDelt < 90000000:
+            if timeDelt > highTime:
+                print 'New high of ' + str(timeDelt) + ' seconds since last, yay!'
+                highTime = timeDelt
+                with open(timefile, "w") as f:
+                    f.write(str(lastTime) + '\n')
+                    print str(lastTime)
+                    f.write(str(int(timeDelt)))
+                    print str(timeDelt)
+                    f.close()
+            else:
+                print "Missed the high of " + str(highTime)
 
 readOpts()
 
