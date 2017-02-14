@@ -34,6 +34,8 @@ isc,mis~misc
 ###writing
 wri~writing
 
+all~wri,misc,ecto,rpg,g,sts,3,4,as
+
 #Shuffling files
 TOBASE=stale-tales-slate
 FROMSHORT=shuffling
@@ -517,6 +519,10 @@ rmt=phantasie\p1.txt,samples\phantasie
 rmt=phantasie\p2.txt,samples\phantasie
 rmt=phantasie\p3.txt,samples\phantasie
 rmt=phantasie\readme.MD,samples\phantasie
+#Questron
+rmt=c:\coding\games\questron\q1.txt,samples\questron
+rmt=c:\coding\games\questron\q2.txt,samples\questron
+rmt=c:\coding\games\questron\readme.MD,samples\questron
 ##########################################programs
 #Ultima IV
 rmt=u4map\README.md,u4map
