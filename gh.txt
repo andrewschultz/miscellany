@@ -525,6 +525,14 @@ rmt=phantasie\readme.MD,samples\phantasie
 rmt=c:\coding\games\questron\q1.txt,samples\questron
 rmt=c:\coding\games\questron\q2.txt,samples\questron
 rmt=c:\coding\games\questron\readme.MD,samples\questron
+#Shard of Spring/Demon's Winter
+rmt=c:\coding\games\shard\sos.txt,samples\shard-of-spring
+rmt=c:\coding\games\shard\dw.txt,samples\shard-of-spring
+rmt=c:\coding\games\shard\dw.pl,samples\shard-of-spring
+rmt=c:\coding\games\shard\readme.MD,samples\shard-of-spring
+#Ultima series
+rmt=c:\games\u3\u3.txt,samples\ultima
+rmt=c:\games\u3\readme.MD,samples\ultima
 #Wizard's Crown series
 rmt=c:\coding\games\wizards-crown\wc.txt,samples\wizards-crown
 rmt=c:\coding\games\wizards-crown\ed.txt,samples\wizards-crown
