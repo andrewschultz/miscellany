@@ -280,7 +280,10 @@ sub processTerms
 	  if ($justPrint) { print "$cmd\n"; $fileList .= "$fromFile\n"; }
 	  else
 	  {
+	    if (shouldCheck($fromFile))
+		{
         checkWarnings($fromFile, 1);
+		}
 	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } else { $copies++; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; $uncop++; }
       }
 	  }
@@ -490,7 +493,7 @@ sub strictWarn
 	   $line = $repl2{"fromBase"} . "\\$line";
 	   #print "$line\n";
      }
-	 if ($line =~ /\.(pl|ni|txt)$/) { checkWarnings($line, 0); }
+	 if (shouldCheck($line)) { checkWarnings($line, 0); }
   }
   close(A);
 }
@@ -505,7 +508,7 @@ sub checkWarnings
 
   my $line2;
 
-  #print "$_[0]\n";
+  print "$_[0]\n";
   open(B,   $_[0]) || do { print "No $_[0], returning.\n"; return; };
 
   while ($line2 = <B>)
@@ -566,6 +569,12 @@ sub rehash
     print "WARNING $_[0] -> $temp still has $$ in it.\n";
   }
   return $temp;
+}
+
+sub shouldCheck
+{
+  if ($_[0] =~ /\.(pl|txt|c|cpp|ahs|nmr)$/i) { return 1; }
+  return 0;
 }
 
 sub usage
