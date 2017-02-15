@@ -514,15 +514,18 @@ rmt=c:\games\mc2\mcmap.c,samples\magic-candle
 rmt=c:\games\mc2\mcbmp.pl,samples\magic-candle
 rmt=c:\games\mc3\mc3.txt,samples\magic-candle
 rmt=c:\games\mc2\readme.MD,samples\magic-candle
-#Phantasie
+#Phantasie series
 rmt=phantasie\p1.txt,samples\phantasie
 rmt=phantasie\p2.txt,samples\phantasie
 rmt=phantasie\p3.txt,samples\phantasie
 rmt=phantasie\readme.MD,samples\phantasie
-#Questron
+#Questron series
 rmt=c:\coding\games\questron\q1.txt,samples\questron
 rmt=c:\coding\games\questron\q2.txt,samples\questron
 rmt=c:\coding\games\questron\readme.MD,samples\questron
+#Wizard's Crown series
+rmt=c:\coding\games\wizards-crown\wc.txt,samples\wizards-crown
+rmt=c:\coding\games\wizards-crown\ed.txt,samples\wizards-crown
 ##########################################programs
 #Ultima IV
 rmt=u4map\README.md,u4map
