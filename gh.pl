@@ -508,7 +508,7 @@ sub checkWarnings
 
   my $line2;
 
-  print "$_[0]\n";
+  #print "Warning-checking $_[0]\n";
   open(B,   $_[0]) || do { print "No $_[0], returning.\n"; return; };
 
   while ($line2 = <B>)
@@ -573,7 +573,7 @@ sub rehash
 
 sub shouldCheck
 {
-  if ($_[0] =~ /\.(pl|txt|c|cpp|ahs|nmr)$/i) { return 1; }
+  if ($_[0] =~ /\.(pl|txt|c|md|cpp|ahs|nmr)$/i) { return 1; }
   return 0;
 }
 

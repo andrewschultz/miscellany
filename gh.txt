@@ -531,7 +531,11 @@ rmt=c:\coding\games\shard\dw.txt,samples\shard-of-spring
 rmt=c:\coding\games\shard\dw.pl,samples\shard-of-spring
 rmt=c:\coding\games\shard\readme.MD,samples\shard-of-spring
 #Ultima series
+rmt=c:\games\u1\u1.txt,samples\ultima
+rmt=c:\games\u2\u2.txt,samples\ultima
 rmt=c:\games\u3\u3.txt,samples\ultima
+rmt=c:\games\u4\u4.txt,samples\ultima
+rmt=c:\games\u5\u5.txt,samples\ultima
 rmt=c:\games\u3\readme.MD,samples\ultima
 #Wizard's Crown series
 rmt=c:\coding\games\wizards-crown\wc.txt,samples\wizards-crown
