@@ -478,11 +478,13 @@ rmt=stubs\README.md,stubs
 rmt=txt2bmp\txt2bmp.c,txt2bmp
 -b:rmt=txt2bmp\txt2bmp.exe,txt2bmp sz:120000
 ########################specific games for mapconv/mapcpy below here
+rmt=c:\games\readme.MD,samples
 #2400 AD
 rmt=2400\2400.ahs,samples\2400
 rmt=2400\2400.nmr,samples\2400
 rmt=2400\2400.txt,samples\2400
 rmt=2400\2400u.txt,samples\2400
+rmt=2400\2400pc.txt,samples\2400
 rmt=2400\readme.MD,samples\2400
 #Ancient Legends
 rmt=ancient-legends\al.ahs,samples\ancient-legends
@@ -526,7 +528,12 @@ rmt=c:\coding\games\questron\readme.MD,samples\questron
 #Wizard's Crown series
 rmt=c:\coding\games\wizards-crown\wc.txt,samples\wizards-crown
 rmt=c:\coding\games\wizards-crown\ed.txt,samples\wizards-crown
+rmt=c:\coding\games\wizards-crown\readme.MD,samples\wizards-crown
 ##########################################programs
+################samples-3d
+####Standing Stones
+rmt=stst\stst.c,samples-3d\standing-stones
+rmt=stst\stst.txt,samples-3d\standing-stones
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map
