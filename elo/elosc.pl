@@ -132,7 +132,10 @@ while ($count <= $#ARGV)
 	/^-?!(c)?$/ && do
 	{
 	  $expByWin = 1; $printRemainDist = 1; $printRound = 1;
-	  if ($a =~ /c/) { $clipboard = 1; } else { $toHtml = 1; $launch = 1; } $count++; next; }; # kitchen sink option
+	  if ($a =~ /c/) { $clipboard = 1; } else { $toHtml = 1; $launch = 1; } $count++; next;
+    }; # kitchen sink option
+	/^-?zd$/ && do { $zapAdj = 1; $count++; next; };
+	/^-?kd$/ && do { $zapAdj = 0; $count++; next; };
     usage();
   }
 }
@@ -795,6 +798,7 @@ print<<EOT;
 -t gives a comma separated list of team (nick)names to track
 -ti gives a comma separated list of team (nick)names to ignore
 -u undoes a game (deletes it)
+-zd/kd zaps or keeps duplicate games for a team (e.g. if a game is scheduled for Saturday or Sunday, it can appear twice, default on)
 -! is the kitchen sink option to print out everything (-rr -d -e -ol, -!c exports to clipboard instead of HTML file)
 EOT
 exit;
