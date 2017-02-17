@@ -353,7 +353,7 @@ sub addToSched
 	{
 	  my @teams = split(/ at /, $tabentry);
 	  if ($#teams != 1) { print ("$tabentry has 'at' text but is not in the form team1\@team2, $#teams.\n"); return; }
-	  if ($zapAdj && ($skedNext{$teams[0]} =~ /,\@$teams[1]$/i)) { return; }
+	  if ($zapAdj && ($skedNext{$teams[0]} =~ /,\@$teams[1]$/i)) { print ("Duplicate $teams[0] @ $teams[1]\n"); return; }
 	  if ($zapAdj && ($skedNext{$teams[1]} =~ /,$teams[0]$/i)) { return; }
 	  $skedNext{$teams[0]} .= "," . "\@" . "$teams[1]";
 	  $skedNext{$teams[1]} .= ",$teams[0]";
@@ -679,9 +679,8 @@ for $t1 (sort keys %toTrack)
   {
     open(B, ">elo.htm"); print B $bigPrint; close(B);
 	if ($launch) { `elo.htm`; }
-	return;
   }
-  if ($clipboard)
+  elsif ($clipboard)
   {
   my $clip = Win32::Clipboard::new();
   $clip->Set($bigPrint);
@@ -689,6 +688,34 @@ for $t1 (sort keys %toTrack)
   }
   if ($clipboard != 1) { print $bigPrint; }
   if ($totalWarnings) { print "Total warnings = $totalWarnings. Suppress with -sw/-ws.\n"; }
+
+  checkGameTotals();
+}
+
+sub checkGameTotals
+{
+  my %totalgames;
+  my %gplayedhash;
+  for my $team (keys %rating)
+  {
+    $totalgames{$team} = $wins{$team} + $losses{$team} + round($expWins{$team}) + round($expLoss{$team});
+	$gplayedhash{$totalgames{$team}}++;
+  }
+  my $max = 0;
+  if (scalar keys %gplayedhash > 1)
+  {
+    print "Teams don't all end with the same wins.\n";
+	for my $played (sort { $b <=> $a } keys %gplayedhash)
+	{
+	  if (!$max) { $max = $gplayedhash{$played}; }
+	  print "$gplayedhash{$played} teams played $played games:";
+	  for my $team (keys %rating)
+	  {
+	    if ($totalgames{$team} == $played) { print " $team"; }
+	  }
+	  print "\n";
+	}
+  }
 }
 
 sub predictFutureWins
