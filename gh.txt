@@ -550,6 +550,9 @@ rmt=c:\coding\games\wizards-crown\readme.MD,samples\wizards-crown
 #Wrath of Denethenor
 rmt=c:\coding\games\wrath\wrath.txt,samples\wrath-of-denethenor
 rmt=c:\coding\games\wrath\readme.MD,samples\wrath-of-denethenor
+#Xyphus
+rmt=c:\coding\games\xyphus\xyphus-a.txt,samples\xyphus
+rmt=c:\coding\games\xyphus\xyphus-c.txt,samples\xyphus
 ##########################################programs
 ################samples-3d
 ####Standing Stones
