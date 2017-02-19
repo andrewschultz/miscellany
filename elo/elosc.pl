@@ -557,6 +557,9 @@ foreach $x (sort keys %rating)
   #print "$rating{$x}\n";
 }
 
+my $totalWinRound = 0;
+my $totalLossRound = 0;
+
  my $rank = 0;
 
  if ($predictFuture) { predictFutureWins(); }
@@ -569,12 +572,15 @@ foreach $x (sort keys %rating)
     $rank++;
 	if (!$toTrack{$x}) { next; }
     $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}";
+	$totalWinRound += round($expWins{$x});
+	$totalLossRound += round($expLoss{$x});
     if ($predictFuture) { $bigPrint .= sprintf("<td>%.*f-%.*f <td><center>%d-%d</center><td>%.*f-%.*f", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
     }
     $bigPrint .= "\n";
   }
   $bigPrint .= "</table>\n";
+  if ($totalWinRound != $totalLossRound) { $bigPrint .= "<font size=+2>NOTE: expected wins and losses do not add up to a .500 record due to rounding($totalWinRound - $totalLossRound remaining).</font><br />\n"; }
   #die($bigPrint);
 
 # now to print the table of probabilities
