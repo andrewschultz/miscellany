@@ -35,22 +35,27 @@ $descr{"\%"} = "HASHES";
 
 my $c;
 
+#variables
 my $strict = 0;
 my $warnings = 0;
+my $argCount = 0;
 
+#options
 my $fileToSearch = "";
+my $sortByLine = 0;
 
 if (!defined($ARGV[0])) { usage(); }
 
-if ($ENV{"PATHEXT"} !~ /\.pl;/i) { $ENV{"PATHEXT"} = ".PL;" . $ENV{"PATHEXT"}; }
-my @bins = where($ARGV[0]);
+if ($ARGV[0] eq "-l") { $sortByLine = 1; $argCount++; }
 
-if ($#bins == -1) { die "No file $ARGV[0]."; } else { print "Reading $bins[0].\n"; }
+if ($ENV{"PATHEXT"} !~ /\.pl;/i) { $ENV{"PATHEXT"} = ".PL;" . $ENV{"PATHEXT"}; }
+my @bins = where($ARGV[$argCount]);
+
+if ($#bins == -1) { die "No file $ARGV[$argCount]."; } else { print "Reading $bins[0].\n"; }
 
 if ($#bins > 0) { print "(Note there's >1: @bins)\n"; }
 
 $fileToSearch = $bins[0];
-
 open(A, "$fileToSearch");
 
 $lastsub{"MAIN"} = 0;
@@ -70,7 +75,7 @@ if ($strict + $warnings < 2)
   if (!$warnings) { print "Need USE WARNINGS.\n"; }
   die();
 }
-my $mystr = `$ARGV[0]  -? 2>&1`;
+my $mystr = `$ARGV[$argCount]  -? 2>&1`;
 
 my @warnlines = split(/[\r\n]+/, $mystr);
 
@@ -106,7 +111,10 @@ for $thisline (@warnlines)
 }
 
 my $firstkey = "";
-for my $key (sort keys %low)
+for my $key (sort {
+  ($sortByLine && ((substr($a, 0, 1) cmp substr($b, 0, 1)) || ($low{$a} <=> $low{$b}) || ($high{$a} <=> $high{$b}))) # first we test if the $/%/@ match up, then for actual line numbers
+  || ($a cmp $b) } # then finally for names
+  keys %low)
 {
   my $key1 = substr($key,0,1);
   if ($key1 ne $firstkey) { print "=" x 40 . $descr{$key1} . "\n"; $firstkey = $key1; }
@@ -116,6 +124,7 @@ for my $key (sort keys %low)
   print "\n";
 }
 
+die ($low{"\$actYet"} . " - " . $low{"\$totalTabs"});
 for my $key (sort keys %scalars)
 {
   print "$key has warnings thrown: $scalars{$key}. ";
@@ -123,7 +132,7 @@ for my $key (sort keys %scalars)
 
 print "" . (scalar keys %low) . " total keys read.\n";
 
-if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print " The file seems to pass strict/warnings. Nice job!n"; }
+if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print "The file $fileToSearch seems to pass strict/warnings. Nice job!\n"; }
 
 #####################################
 
