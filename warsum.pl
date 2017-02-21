@@ -35,6 +35,9 @@ $descr{"\%"} = "HASHES";
 
 my $c;
 
+my $strict = 0;
+my $warnings = 0;
+
 my $fileToSearch = "";
 
 if (!defined($ARGV[0])) { usage(); }
@@ -55,10 +58,18 @@ $lastsub{"MAIN"} = 0;
 my $line;
 while ($line = <A>)
 {
+  if ($line =~ /^use strict;/) { $strict = 1; }
+  if ($line =~ /^use warnings;/) { $warnings = 1; }
   if ($line =~ /^sub/) { $line =~ s/^sub //; $line =~ s/ +#.*//; chomp($line); $lastsub{$line} = $.; }
 }
 close(A);
 
+if ($strict + $warnings < 2)
+{
+  if (!$strict) { print "Need USE STRICT.\n"; }
+  if (!$warnings) { print "Need USE WARNINGS.\n"; }
+  die();
+}
 my $mystr = `$ARGV[0]  -? 2>&1`;
 
 my @warnlines = split(/[\r\n]+/, $mystr);
@@ -111,6 +122,8 @@ for my $key (sort keys %scalars)
 }
 
 print "" . (scalar keys %low) . " total keys read.\n";
+
+if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print " The file seems to pass strict/warnings. Nice job!n"; }
 
 #####################################
 
