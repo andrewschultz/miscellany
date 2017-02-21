@@ -528,16 +528,19 @@ my $gotOne;
     @gameMod = split(/\//, $flipString);
 	for $thisGame (@gameMod)
 	{
+	 $thisGame = atTo($thisGame);
      $gotOne = 0;
 	  for (0..$#allGames)
 	  {
+	    print "$thisGame vs $allGames[$_]\n";
 	    if (lc($thisGame) eq lc($allGames[$_]))
 		{
           my $thatGameR = $allGames[$_];
-          $thatGameR =~ s/(.*),(.*)/$2,$1/;
+          $thatGameR =~ s/(.*),(.*),(.*)/$2,$1,$3/;
 		  splice(@allGames, $_, 1);
 		  push(@allGames, $thatGameR);
 		  $gotOne = 1;
+		  last;
 		}
 	  }
       if (!$gotOne) { print "$thisGame didn't happen so it can't be flipped.\n";}
@@ -561,6 +564,15 @@ my $gotOne;
 	}
   }
 
+}
+sub atTo ##############converts @x,y to x,y,1 or whichever
+{
+  my @tempA = split(/,/, $_[0]);
+  if ($#tempA > 1) { return $_[0]; }
+  my $temp = $_[0];
+  $temp =~ s/@//;
+  my @tempB = split(/,/, $temp);
+  return teamMod($tempB[0]) . "," . teamMod($tempB[1]) . "," . (($_[0] =~ /^\@/) - ($_[0] =~ /,\@/));
 }
 
 #########################this stabilizes any significant rounding errors while we are approximating ELO ratings. Everyone gets a +/- til the average is the default rating again.
@@ -604,7 +616,7 @@ my $totalLossRound = 0;
  $bigPrint .= "<center><font size=+3><b>ELO/Predicted finish table</b></font></center><br />Text here<br /><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
   if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
   $bigPrint .= "\n";
-  foreach $x (sort {$rating{$b} <=> $rating{$a}} keys %rating)
+  foreach $x (sort {$rating{$b} <=> $rating{$a} || $wins{$b} <=> $wins{$a} } keys %rating)
   {
     $rank++;
 	if (!$toTrack{$x}) { next; }
@@ -820,7 +832,7 @@ sub usage
 print<<EOT;
 -[2-9] changes signifigant digits, default is 2
 -a adds games to schedule
--ap adds game projections to schedule
+-ap adds game projections to schedule, -apr reverses them
 -c puts stuff to clipboard
 -d is debug rating
 -e shows expected win share in a round robin
