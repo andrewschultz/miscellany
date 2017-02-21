@@ -55,6 +55,7 @@ my $sigFig = 2;
 my $myTeam = "";
 my $projectString = 0;
 my $projectReverse = 0;
+my $outFile = "elo.htm";
 
 #variables
 my $x;
@@ -104,7 +105,14 @@ while ($count <= $#ARGV)
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
-	/^-?o(l)?$/ && do { $toHtml = 1; if ($a =~/l/) { $launch = 1; } $count++; next; };
+	/^-?o(f|l|lf|fl)?$/ && do
+	{
+	  $toHtml = 1;
+	  if ($a =~/l/) { $launch = 1; }
+	  if ($a =~ /f/) { $outFile = $b; $count+= 2; next; }
+	  $count++;
+	  next;
+    };
 	/^-?n(i)?$/ && do { $nickFile = $b; $count += 2; next; };
     /^-?[pw]$/ && do { $pointsPerWin = $b; $count += 2; next; };
     /^-?r$/ && do { $defaultRating = $b; $count += 2; next; };
@@ -532,7 +540,7 @@ my $gotOne;
      $gotOne = 0;
 	  for (0..$#allGames)
 	  {
-	    print "$thisGame vs $allGames[$_]\n";
+	    #print "$thisGame vs $allGames[$_]\n";
 	    if (lc($thisGame) eq lc($allGames[$_]))
 		{
           my $thatGameR = $allGames[$_];
@@ -735,8 +743,8 @@ for $t1 (sort keys %toTrack)
 
   if ($toHtml)
   {
-    open(B, ">elo.htm"); print B $bigPrint; close(B);
-	if ($launch) { `elo.htm`; }
+    open(B, ">$outFile"); print B $bigPrint; close(B);
+	if ($launch) { `$outFile`; }
   }
   elsif ($clipboard)
   {
@@ -844,7 +852,7 @@ print<<EOT;
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
 -ni changes the nickname file
--o puts stuff out to HTML file (elo.htm) and  -ol launches
+-o puts stuff out to HTML file (elo.htm is default) and  -ol launches, -of/-olf/-ofl changes output file
 -p/-w changes the points per win
 -r changes the default rating, which is usually 2000 (expert)
 -rd shows remaining win distribution
