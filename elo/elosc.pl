@@ -54,6 +54,7 @@ my $printRemainDist = 0;
 my $sigFig = 2;
 my $myTeam = "";
 my $projectString = 0;
+my $projectReverse = 0;
 
 #variables
 my $x;
@@ -94,7 +95,7 @@ while ($count <= $#ARGV)
     };
 	/^-?[0-9]$/ && do { $sigFig = $a; $sigFig =~ s/^-//; $count++; next; };
 	/^-?a$/ && do { $addString = $b; $count += 2; next; };
-	/^-?ap$/ && do { $projectString = $b; $count += 2; next; };
+	/^-?ap(r)?$/ && do { $projectReverse = ($a =~ /r/); $projectString = $b; $count += 2; next; };
 	/^-?c(p)?$/ && do { $clipboard = 1; if ($a =~ /p/) { $clipboard = 2; } $count += 2; next; }; # this is not great coding but basically -c sends to clipboard, -p prints too
 	/^-?e$/ && do { $expByWin = 1; $count ++; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
@@ -507,6 +508,7 @@ my $gotOne;
     @gameMod = split(/\//, $projectString);
 	for $thisGame (@gameMod) # this is horrible code but I see no way around it
 	{
+	  if ($projectReverse) { $thisGame =~ s/(.*),(.*)/$2,$1/; }
 	  print "Adding $thisGame to results, deleting from future schedule\n";
 	  addToSched($thisGame);
 	  my $temp = $thisGame;
