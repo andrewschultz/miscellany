@@ -19,7 +19,7 @@ my %rating;
 my %tempRating;
 
 my %schedule;
-my %skedNext;
+my %skedNext; #these are the games ahead
 my %wins;
 my %losses;
 my %homeAway;
@@ -53,6 +53,7 @@ my $expByWin = 0;
 my $printRemainDist = 0;
 my $sigFig = 2;
 my $myTeam = "";
+my $projectString = 0;
 
 #variables
 my $x;
@@ -78,7 +79,7 @@ readTeamNicknames();
 
 while ($count <= $#ARGV)
 {
-  $a = $ARGV[$count];
+  $a = lc($ARGV[$count]);
   $b = $ARGV[$count+1];
   for ($a)
   {
@@ -93,6 +94,7 @@ while ($count <= $#ARGV)
     };
 	/^-?[0-9]$/ && do { $sigFig = $a; $sigFig =~ s/^-//; $count++; next; };
 	/^-?a$/ && do { $addString = $b; $count += 2; next; };
+	/^-?ap$/ && do { $projectString = $b; $count += 2; next; };
 	/^-?c(p)?$/ && do { $clipboard = 1; if ($a =~ /p/) { $clipboard = 2; } $count += 2; next; }; # this is not great coding but basically -c sends to clipboard, -p prints too
 	/^-?e$/ && do { $expByWin = 1; $count ++; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
@@ -332,7 +334,7 @@ sub processInitSchedule
   }
 }
 
-############################adds a game to the schedule.
+############################adds a game to the upcoming schedule.
 sub addToSched
 {
   my $scoreYet;
@@ -417,13 +419,24 @@ sub addToSched
 sub teamMod
 {
   my $team;
-  if ($rating{$_[0]}) { return $_[0]; }
-  if ($revnick{lc($_[0])}) { return $revnick{lc($_[0])}; }
+  my $temp = $_[0];
+
+  $temp =~ s/^@//;
+
+  if ($rating{$temp}) { return $temp; }
+  if ($revnick{lc($temp)}) { return $revnick{lc($temp)}; }
   for $team (keys %rating)
   {
-    if (lc($team) eq lc($_[0])) { return $team; }
+    if (lc($team) eq lc($temp)) { return $team; }
   }
   if (!$suppressWarnings) { $totalWarnings++; print "WARNING $_[0] could not be modded into a team" . ($. ? " at line $." : "" ) . ".\n"; }
+}
+
+######################preserves the @ at the start
+sub teamModExt
+{
+  if ($_[0] =~ /^\@/) { return "\@" . teamMod($_[0]); }
+  return teamMod($_[0]);
 }
 
 sub readTeamLocs
@@ -484,9 +497,31 @@ my $gotOne;
   if ($addString)
   {
     @gameMod = split(/\//, $addString);
-	for $thisGame (@gameMod) { addToSched($thisGame); }
+	for $thisGame (@gameMod)
+	{
+	  addToSched($thisGame);
+    }
   }
-  if ($flipString)
+  if ($projectString)
+  {
+    @gameMod = split(/\//, $projectString);
+	for $thisGame (@gameMod) # this is horrible code but I see no way around it
+	{
+	  print "Adding $thisGame to results, deleting from future schedule\n";
+	  addToSched($thisGame);
+	  my $temp = $thisGame;
+	  $temp =~ s/@//;
+	  my @tms = split(/,/, $thisGame);
+	  my $winner = teamMod($tms[0]);
+	  my $loser = teamMod($tms[1]);
+	  my $winfull = teamModExt($tms[0]);
+	  my $losefull = teamModExt($tms[1]);
+	  $skedNext{$loser} =~ s/,$winfull//;
+	  $skedNext{$winner} =~ s/,$losefull//;
+	  #for my $x (sort keys %skedNext) { print "$x: $skedNext{$x} \n"; } die;
+    }
+  }
+  if ($flipString) # Feature to add: use abbreviations
   {
     @gameMod = split(/\//, $flipString);
 	for $thisGame (@gameMod)
@@ -506,7 +541,7 @@ my $gotOne;
       if (!$gotOne) { print "$thisGame didn't happen so it can't be flipped.\n";}
 	}
   }
-  if ($undoString)
+  if ($undoString) # Feature to add: use abbreviations
   {
     @gameMod = split(/\//, $undoString);
 	for $thisGame (@gameMod)
@@ -520,7 +555,7 @@ my $gotOne;
 		  splice(@allGames, $_, 1);
 		}
 	  }
-      if (!$gotOne) { print "$thisGame didn't happen so it can't be flipped.\n";}
+      if (!$gotOne) { print "$thisGame didn't happen so it can't be undone.\n";}
 	}
   }
 
@@ -782,7 +817,8 @@ sub usage
 {
 print<<EOT;
 -[2-9] changes signifigant digits, default is 2
--a adds games
+-a adds games to schedule
+-ap adds game projections to schedule
 -c puts stuff to clipboard
 -d is debug rating
 -e shows expected win share in a round robin
