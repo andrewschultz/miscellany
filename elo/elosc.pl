@@ -625,7 +625,7 @@ my $totalLossRound = 0;
 
  $bigPrint .= "<center><font size=+3><b>ELO/Predicted finish table</b></font></center><br />Text here<br /><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
   if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
-  if ($compareFlatRecord) { $bigPrint .= "<th>ELO by WL"; }
+  if ($compareFlatRecord) { $bigPrint .= "<th colspan=2>ELO by WL"; }
   $bigPrint .= "\n";
   foreach $x (sort {$rating{$b} <=> $rating{$a} || $wins{$b} <=> $wins{$a} } keys %rating)
   {
@@ -636,7 +636,14 @@ my $totalLossRound = 0;
 	$totalLossRound += round($expLoss{$x});
     if ($predictFuture) { $bigPrint .= sprintf("<td>%.*f-%.*f <td><center>%d-%d</center><td>%.*f-%.*f", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
-	if ($compareFlatRecord) { $bigPrint .= sprintf("<td>%d", $defaultRating + .5 + 400 * log($wins{$x}/$losses{$x}) / log(10)); }
+	if ($compareFlatRecord)
+	{
+	  my $eloPred = round($defaultRating + .5 + 400 * log($wins{$x}/$losses{$x}) / log(10));
+	  my $whatBg = "808080";
+	  if ($rating{$x} - $eloPred > 10) { $whatBg = "00ff00"; }
+	  if ($rating{$x} - $eloPred < -10) { $whatBg = "ff0000"; }
+	  $bigPrint .= sprintf("<td>%d<td bgcolor=%s>%d", $eloPred, $whatBg, $rating{$x} - $eloPred);
+    }
     }
     $bigPrint .= "\n";
   }
