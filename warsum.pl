@@ -33,6 +33,7 @@ $descr{"\$"} = "STRING VARIABLES";
 $descr{"\@"} = "ARRAYS";
 $descr{"\%"} = "HASHES";
 
+my $line;
 my $c;
 
 #variables
@@ -43,10 +44,12 @@ my $argCount = 0;
 #options
 my $fileToSearch = "";
 my $sortByLine = 0;
+my $adjustWarnings = 0;
 
-if (!defined($ARGV[0])) { usage(); }
+if (!defined($ARGV[$argCount])) { usage(); }
 
-if ($ARGV[0] eq "-l") { $sortByLine = 1; $argCount++; }
+if ($ARGV[$argCount] eq "-l") { $sortByLine = 1; $argCount++; }
+if ($ARGV[$argCount] eq "-aw") { $adjustWarnings = 1; $argCount++; }
 
 if (-f "$ARGV[$argCount]")
 {
@@ -66,11 +69,12 @@ $fileToSearch = $bins[0];
 
 if (!$fileToSearch) { die ("Need a file to search,"); }
 
+if ($adjustWarnings) { adjustWarnings($fileToSearch); exit(); }
+
 open(A, "$fileToSearch") || die ("Can't find $fileToSearch");
 
 $lastsub{"MAIN"} = 0;
 
-my $line;
 while ($line = <A>)
 {
   if ($line =~ /^use strict;/) { $strict = 1; }
@@ -85,7 +89,11 @@ if ($strict + $warnings < 2)
   if (!$warnings) { print "Need USE WARNINGS.\n"; }
   die();
 }
-my $mystr = `$ARGV[$argCount]  -? 2>&1`;
+
+my $cmd = "$fileToSearch -? 2>&1";
+print "Running usage for $fileToSearch...\n";
+
+my $mystr = `$cmd`;
 
 my @warnlines = split(/[\r\n]+/, $mystr);
 
@@ -144,7 +152,39 @@ print "" . (scalar keys %low) . " total keys read.\n";
 if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print "The file $fileToSearch seems to pass strict/warnings. Nice job!\n"; }
 
 #####################################
+#
+#subroutines
+#
 
+sub adjustWarnings
+{
+  my $gotOne = 0;
+  my $warout = "c:\\writing\\scripts\\warsum.txt";
+  open(A, "$_[0]") || die ("No such file $_[0]");
+  #if (-f $warout) { die ("Erase $warout before continuing."); }
+  open(B, ">$warout") || die ("Can't open $warout");
+
+  while ($line = <A>)
+  {
+    if ($line =~ /\@([^ ])+\[/)
+	{
+	  $gotOne++;
+	  print "Line $.\n";
+	  #print $line;
+	  $line =~ s/\@([^ ]+)\[/\$$1\[/g;
+	  #print $line;
+	}
+	print B $line;
+  }
+  if ($gotOne)
+  {
+  print "$gotOne potential warning(s) replaced.\n";
+  `xcopy /y /q $warout $_[0]`;
+  }
+  else { print "Didn't find any \@ to convert to \$.\n"; }
+}
+
+######################find the current subroutine for a line
 sub cursub
 {
   my $k;
@@ -154,6 +194,7 @@ sub cursub
   }
 }
 
+######################usage
 sub usage
 {
 print<<EOT;
