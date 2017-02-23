@@ -3,15 +3,21 @@
 #
 #usage aadd.pl word1,word2
 #
+#superseded by wwiw.pl
+
+use strict;
+use warnings;
 
 use File::Copy qw(copy);
 
-if (@ARGV[0] !~ /[a-z]/i) { print "need word or list of words to add."; }
+if ($ARGV[0] !~ /[a-z]/i) { print "need word or list of words to add."; }
 
-@words = split(/,/, uc(@ARGV[0]));
+my @words = split(/,/, uc($ARGV[0]));
 
 my $b1 = "c:/writing/dict/brit-1word.txt";
 my $ta = "c:/writing/dict/temp-alf.txt";
+
+my $l, my $w;
 
 for $w (@words)
 {
@@ -31,7 +37,6 @@ sub addAlf
   open(B, ">$ta");
   while ($a = <A>)
   {
-    $last = $a;
     if ($sorted) { print B $a; next; }
     if (($uc le $a) && ($llc == length($a) - 1))
     {

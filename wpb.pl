@@ -4,13 +4,18 @@
 #prints out all "when play begins" stuff to wpb.txt
 #
 
+use strict;
+use warnings;
+
+my $wpb = "c:\\writing\\scripts\\wpb.txt";
 open(A, "story.ni") || die ("No story.ni");
-open(B, ">wpb.txt");
+open(B, ">$wpb");
+
+my $tr = 0;
 
 while ($a = <A>)
 {
-  $lines++;
-  if ($a =~ /when play begins/) { $tr = 1; print B "Line: $lines\n$a"; next; }
+  if ($a =~ /when play begins/) { $tr = 1; print B "Line: $.\n$a"; next; }
   if ($tr) { print B $a; }
   if ($a !~ /[a-z]/) { $tr = 0; }
 }
@@ -18,6 +23,6 @@ while ($a = <A>)
 close(A);
 close(B);
 
-print "WPB.TXT now has When Play Begins.\n";
+print "$wpb now has When Play Begins.\n";
 
-if (@ARGV[0]) { `wpb.txt`; }
+if ($ARGV[0]) { `$wpb`; }

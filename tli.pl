@@ -5,24 +5,28 @@
 #Usage: no arguments now. You have to go to the relevant directory.
 #
 
+use strict;
+use warnings;
+
 open(A, "story.ni") || die ("No story file.");
 
-@s = ("volume", "book", "part", "chapter", "section");
+my @s = ("volume", "book", "part", "chapter", "section");
+my $comma;
+my %ti;
 
 while ($a = <A>)
 {
-  $line++;
   $a =~ s/[\n\r]//g;
   for (0..$#s)
   {
-  if ($a =~ /^@s[$_] /i)
+  if ($a =~ /^$s[$_] /i)
   {
-    for $x ($_..$#s)
+    for my $x ($_..$#s)
     {
-      $ti{@s[$x]} = "";
-      #print "Wiping @s[$x] ($x) at $a\n";
+      $ti{$s[$x]} = "";
+      #print "Wiping $s[$x] ($x) at $a\n";
     }
-    $ti{@s[$_]} = $a;
+    $ti{$s[$_]} = $a;
   }
   }
 
@@ -30,11 +34,11 @@ while ($a = <A>)
   {
     $a =~ s/ *\[.*//g;
     $comma = 0;
-    print "$a ($line):\n    ";
+    print "$a ($.):\n    ";
     for (0..$#s)
     {
-      if ($ti{@s[$_]})
-      { if ($comma) { print ","; } print " $ti{@s[$_]}"; $comma = 1;}
+      if ($ti{$s[$_]})
+      { if ($comma) { print ","; } print " $ti{$s[$_]}"; $comma = 1;}
     }
     print "\n";
   }

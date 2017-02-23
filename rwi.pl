@@ -4,18 +4,22 @@
 #
 #find rule with (string) in it
 #
+#very crude but part of my utilities
 
-$openAfter = 1;
+use strict;
+use warnings;
+
+my $openAfter = 1;
+my $gotRule = 0;
 
 open(A, "story.ni") || die ("No story.ni.");
 open(B, ">rwi.txt") || die ("Unwritable rwi.txt.");
 
 while ($a = <A>)
 {
-  $line++;
-  if (($a =~ /^[a-z]/) && ($a =~ /@ARGV[0].*:/))
+  if (($a =~ /^[a-z]/) && ($a =~ /$ARGV[0].*:/))
   {
-    print B "Line $line:\n";
+    print B "Line $.:\n";
     $gotRule = 1;
   }
   if ($gotRule) { print B $a; }
