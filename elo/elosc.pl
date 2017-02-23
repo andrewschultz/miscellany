@@ -33,6 +33,7 @@ my %toIgnore;
 
 #defaults, can be tweaked with options
 my $debug = 0;
+my $magnitudeConstant = 400;
 my $iterations = 1000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
@@ -107,6 +108,7 @@ while ($count <= $#ARGV)
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
+	/^-?mc$/ && do { $magnitudeConstant = $b; $count += 2; next; };
 	/^-?o(f|l|lf|fl)?$/ && do
 	{
 	  $toHtml = 1;
@@ -201,7 +203,7 @@ foreach $x (keys %rating)
   for (0..$#b)
   {
   #print "$x, $_, $c[$_], $home: " . ($rating{$b[$_]} + ($c[$_] * $home)) . "\n";
-  $mult = ($rating{$b[$_]} + ($c[$_] * $home) - $rating{$x})/400;
+  $mult = ($rating{$b[$_]} + ($c[$_] * $home) - $rating{$x})/$magnitudeConstant;
   $expWins += 1/(1+10**($mult));
   }
   #printf("$x changes by %.2f.\n", ($wins{$x} - $expWins) * $pointsPerWin);
@@ -243,7 +245,7 @@ if (($debugEveryX) && ($count  % $debugEveryX == 0))
 ##################this is the ELO formula for expected wins
 sub winPct
 {
-  my $exp = ($rating{$_[1]} - $rating{$_[0]} - $home * $_[2]) / 400;
+  my $exp = ($rating{$_[1]} - $rating{$_[0]} - $home * $_[2]) / $magnitudeConstant;
   return 100/(1+10**$exp);
 }
 
@@ -631,18 +633,18 @@ my $totalLossRound = 0;
   {
     $rank++;
 	if (!$toTrack{$x}) { next; }
-    $bigPrint .= "<tr><td>$rank<td>$x<td>$wins{$x}-$losses{$x}<td>$rating{$x}";
+    $bigPrint .= "<tr><td>$rank<td>$x<td><center>$wins{$x}-$losses{$x}</center><td><center>$rating{$x}</center>";
 	$totalWinRound += round($expWins{$x});
 	$totalLossRound += round($expLoss{$x});
-    if ($predictFuture) { $bigPrint .= sprintf("<td>%.*f-%.*f <td><center>%d-%d</center><td>%.*f-%.*f", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
+    if ($predictFuture) { $bigPrint .= sprintf("<td><center>%.*f-%.*f</center><td><center>%d-%d</center><td><center>%.*f-%.*f</center>", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
 	if ($compareFlatRecord)
 	{
-	  my $eloPred = round($defaultRating + .5 + 400 * log($wins{$x}/$losses{$x}) / log(10));
+	  my $eloPred = round($defaultRating + .5 + $magnitudeConstant * log($wins{$x}/$losses{$x}) / log(10));
 	  my $whatBg = "808080";
 	  if ($rating{$x} - $eloPred > 10) { $whatBg = "00ff00"; }
 	  if ($rating{$x} - $eloPred < -10) { $whatBg = "ff0000"; }
-	  $bigPrint .= sprintf("<td>%d<td bgcolor=%s>%d", $eloPred, $whatBg, $rating{$x} - $eloPred);
+	  $bigPrint .= sprintf("<td><center>%d</center><td bgcolor=%s><center>%d</center>", $eloPred, $whatBg, $rating{$x} - $eloPred);
     }
     }
     $bigPrint .= "\n";
@@ -863,6 +865,7 @@ print<<EOT;
 -i changes number of iterations
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
+-mc changes the magnitude constant from 400 (e.g. when 1 team is 10x better than another, or wins 10 to their 1)
 -ni changes the nickname file
 -o puts stuff out to HTML file (elo.htm is default) and  -ol launches, -of/-olf/-ofl changes output file
 -p/-w changes the points per win
