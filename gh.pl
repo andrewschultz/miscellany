@@ -49,6 +49,10 @@ my $globalStrict = 0;
 
 my $copyAuxiliary = 0;
 my $copyBinary = 0;
+my $thisProj;
+
+my $minLines;
+my $minFile;
 
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
@@ -93,6 +97,7 @@ while ($count <= $#ARGV)
 	else
 	{
 	print "Total warnings needed $globalWarnings total strict needed $globalStrict total excess tab files $globalTS\n";
+	print "Shortest file $minFile, $minLines lines.\n";
 	}
 	exit();
   };
@@ -209,6 +214,7 @@ sub processTerms
 	 if ($a =~ /POSTPROC=/i) { $a =~ s/^POSTPROC=//g; my @as = split(/,/, $a); for (@as) { $postproc{$_} = 1; } }
 
     $b =~ s/=.*//g;
+	$thisProj = $b;
     if (hasHash($b))
     {
 
@@ -485,6 +491,8 @@ sub strictWarn
 	 if ($line =~ /FROMSHORT=/) { $temp = $line; $temp =~ s/^FROMSHORT=//g; $repl2{"fromShort"} = $temp; next; }
 	 if ($line !~ /=/) { next; }
 	 if ($line =~ /^[>#]/) { next; }
+	 $thisProj = $line;
+	 $thisProj =~ s/=.*//;
 	 $line =~ s/.*=//;
 	 $line =~ s/,.*//;
 	 $line = rehash($line);
@@ -524,10 +532,21 @@ sub checkWarnings
   if (($removeTrailingSpace || $_[1]) && ($trailingSpace > 0)) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
   if ($_[0] =~ /\.pl$/i)
   {
-  if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0] ($numLines)\n"; $globalStrict++; }
-  if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0] ($numLines)\n"; $globalWarnings++; }
-  if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0] ($numLines)\n"; $globalWarnings++; $globalStrict++; }
-  if ($gotWarnings || $gotStrict) { $gws{$_[0]} = 1; }
+  if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0] ($numLines), project $thisProj\n"; $globalStrict++; }
+  if (!$gotWarnings && $gotStrict) { print "Need warnings in $_[0] ($numLines), project $thisProj\n"; $globalWarnings++; }
+  if (!$gotWarnings && !$gotStrict) { print "Need warnings/strict in $_[0] ($numLines), project $thisProj\n"; $globalWarnings++; $globalStrict++; }
+  if (!$gotStrict || !$gotWarnings)
+  {
+    $gws{$_[0]} = 1;
+  	if ((!$minLines) || ($numLines < $minLines))
+	{
+	  $minFile = $_[0]; $minLines = $numLines;
+	}
+	elsif ($numLines == $minLines)
+	{
+	  $minFile .= ", $_[0]";
+    }
+  }
   }
   if ($trailingSpace)
   {
