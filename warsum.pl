@@ -48,6 +48,12 @@ if (!defined($ARGV[0])) { usage(); }
 
 if ($ARGV[0] eq "-l") { $sortByLine = 1; $argCount++; }
 
+if (-f "$ARGV[$argCount]")
+{
+  $fileToSearch = $ARGV[$argCount];
+}
+else
+{
 if ($ENV{"PATHEXT"} !~ /\.pl;/i) { $ENV{"PATHEXT"} = ".PL;" . $ENV{"PATHEXT"}; }
 my @bins = where($ARGV[$argCount]);
 
@@ -56,7 +62,11 @@ if ($#bins == -1) { die "No file $ARGV[$argCount]."; } else { print "Reading $bi
 if ($#bins > 0) { print "(Note there's >1: @bins)\n"; }
 
 $fileToSearch = $bins[0];
-open(A, "$fileToSearch");
+}
+
+if (!$fileToSearch) { die ("Need a file to search,"); }
+
+open(A, "$fileToSearch") || die ("Can't find $fileToSearch");
 
 $lastsub{"MAIN"} = 0;
 
@@ -124,7 +134,6 @@ for my $key (sort {
   print "\n";
 }
 
-die ($low{"\$actYet"} . " - " . $low{"\$totalTabs"});
 for my $key (sort keys %scalars)
 {
   print "$key has warnings thrown: $scalars{$key}. ";
