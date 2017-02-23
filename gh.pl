@@ -564,9 +564,9 @@ sub rehash
   #print "$repl $repl2{$repl}\n";
   $temp =~ s/\$$repl/$repl2{$repl}/g;
   }
-  if ($temp =~ /$$/)
+  if ($temp =~ /\$/)
   {
-    print "WARNING $_[0] -> $temp still has $$ in it.\n";
+    print "WARNING $_[0] -> $temp still has \$ in it.\n";
   }
   return $temp;
 }
