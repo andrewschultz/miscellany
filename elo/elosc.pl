@@ -33,7 +33,7 @@ my %toIgnore;
 
 #defaults, can be tweaked with options
 my $debug = 0;
-my $iterations = 2000;
+my $iterations = 1000;
 my $pointsPerWin = 32;
 my $defaultRating = 2000;
 my $debugEveryX = 0;
@@ -56,6 +56,7 @@ my $myTeam = "";
 my $projectString = 0;
 my $projectReverse = 0;
 my $outFile = "elo.htm";
+my $compareFlatRecord = 0;
 
 #variables
 my $x;
@@ -99,6 +100,7 @@ while ($count <= $#ARGV)
 	/^-?ap(r)?$/ && do { $projectReverse = ($a =~ /r/); $projectString = $b; $count += 2; next; };
 	/^-?c(p)?$/ && do { $clipboard = 1; if ($a =~ /p/) { $clipboard = 2; } $count += 2; next; }; # this is not great coding but basically -c sends to clipboard, -p prints too
 	/^-?e$/ && do { $expByWin = 1; $count ++; next; };
+	/^-?cf(r)?$/ && do { $compareFlatRecord = 1; $count ++; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
@@ -142,7 +144,7 @@ while ($count <= $#ARGV)
     /^-?(re|g)$/ && do { $gameFile = $b; $count += 2; next; };
 	/^-?!(c)?$/ && do
 	{
-	  $expByWin = 1; $printRemainDist = 1; $printRound = 1;
+	  $expByWin = 1; $printRemainDist = 1; $printRound = 1; $compareFlatRecord = 1;
 	  if ($a =~ /c/) { $clipboard = 1; } else { $toHtml = 1; $launch = 1; } $count++; next;
     }; # kitchen sink option
 	/^-?zd$/ && do { $zapAdj = 1; $count++; next; };
@@ -623,6 +625,7 @@ my $totalLossRound = 0;
 
  $bigPrint .= "<center><font size=+3><b>ELO/Predicted finish table</b></font></center><br />Text here<br /><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
   if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
+  if ($compareFlatRecord) { $bigPrint .= "<th>ELO by WL"; }
   $bigPrint .= "\n";
   foreach $x (sort {$rating{$b} <=> $rating{$a} || $wins{$b} <=> $wins{$a} } keys %rating)
   {
@@ -633,6 +636,7 @@ my $totalLossRound = 0;
 	$totalLossRound += round($expLoss{$x});
     if ($predictFuture) { $bigPrint .= sprintf("<td>%.*f-%.*f <td><center>%d-%d</center><td>%.*f-%.*f", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
+	if ($compareFlatRecord) { $bigPrint .= sprintf("<td>%d", $defaultRating + .5 + 400 * log($wins{$x}/$losses{$x}) / log(10)); }
     }
     $bigPrint .= "\n";
   }
@@ -842,6 +846,7 @@ print<<EOT;
 -a adds games to schedule
 -ap adds game projections to schedule, -apr reverses them
 -c puts stuff to clipboard
+-cf compares flat record e.g. if someone is 12-3 their rating would be approximated at 2000 + 400 log(10) 4 = 2240
 -d is debug rating
 -e shows expected win share in a round robin
 -f flips a game's result (winner first, changed to loser)
