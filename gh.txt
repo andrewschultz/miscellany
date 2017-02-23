@@ -71,8 +71,6 @@ roi=$im\Release\roiling-invisiclues.htm,roiling
 roi=$ws\invis\roi.txt,roiling
 roi=$im\Release\Cover.png,roiling
 roi=$is\thru.txt,roiling\thru.txt
-roi=$tr\roiling.trizbort,roiling
-roi=$tr\roiling.pdf,roiling
 roi=c:\users\andrew\dropbox\notes\roiling*,roiling
 roi=$is\alf-book.txt,roiling\twitterbot
 roi=$is\alf-taunt.txt,roiling\twitterbot
@@ -81,13 +79,24 @@ roi=$is\anagram-taunt-pic.png,roiling\twitterbot
 roi=$is\mkbot.pl,roiling\twitterbot
 roi=$is\book-json.txt,roiling\twitterbot
 roi=$is\taunt-json.txt,roiling\twitterbot
-roi=$tr\voltmaze.trizbort,roiling
-roi=$tr\voltmaze.pdf,roiling
 roi=$id,roiling
 roi=$is\roomlist.txt,roiling
 roi=$is\reg-roi-*,\roiling\testing
 -b:roi=$im\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
+##################################trizbort maps
+roi=$tr\roiling.trizbort,roiling
+roi=$tr\roiling.pdf,roiling
+roi=$tr\voltmaze.trizbort,roiling
+roi=$tr\voltmaze.pdf,roiling
+##################################trizbort walkthrough/flowchart maps
+roi=$is\roiling-h-walkthrough.trizbort,roiling
+roi=$is\roiling-p-walkthrough.trizbort,roiling
+roi=$is\roiling-t-walkthrough.trizbort,roiling
+roi=$is\roiling-u-walkthrough.trizbort,roiling
+roi=$is\roiling-v-walkthrough.trizbort,roiling
+roi=$is\roiling-w-walkthrough.trizbort,roiling
+roi=$is\roiling-y-walkthrough.trizbort,roiling
 
 #Stale Tales Slate scripts
 TOBASE=stale-tales-slate

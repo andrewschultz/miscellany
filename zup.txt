@@ -66,6 +66,13 @@ F=c:\writing\scripts\roiling-invisiclues.htm
 F=c:\Users\Andrew\Dropbox\notes\roiling_release_%_notes.txt
 F=c:\games\inform\roiling.inform\Source\thru.txt
 F=c:\games\inform\roiling.inform\Source\story.ni
+F=c:\games\inform\roiling.inform\Source\roiling-h-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-p-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-t-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-u-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-v-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-w-walkthrough.pdf
+F=c:\games\inform\roiling.inform\Source\roiling-y-walkthrough.pdf
 !
 
 name=dirk,s15
