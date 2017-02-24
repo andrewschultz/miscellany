@@ -12,12 +12,42 @@
 
 #I can and should expand this to do more than one at once
 
-$v6l = 0;
+use strict;
+use warnings;
+
+my %zmac;
+my %proj;
+my %use6l;
+my %forceDir;
+
+#######################options
+my $informBase = 0;
+my $informDir = 0;
+my $infOnly = 0;
+
+my $infDir;
+
+#######################vars
+my @allProj;
+my @compileList;
+my @inDirs;
+my @defaultCompileList;
+
+my $ex;
+my $gz;
+my $iflag;
+my $v6l = 0;
+my $bdir;
+my $mat;
+my $bmat;
+my $i6x;
 
 my $betaDir = "c:\\games\\inform\\beta.inform";
 my $baseDir = "c:\\games\\inform";
 
 open(X, "c:/writing/scripts/icl.txt") || die ("Need icl.txt.");
+
+my $x; my $y;
 
 while ($x = <X>)
 {
@@ -26,12 +56,12 @@ while ($x = <X>)
   if ($x =~ /^#/) { next; }
 
   my @cmd = split(/=/, $x);
-  if (lc(@cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, @cmd[1]); }
-  elsif (lc(@cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
-  elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  @z = split(/=/, $y); $forceDir{@z[0]} = @z[1]; }
+  if (lc($cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, $cmd[1]); }
+  elsif (lc($cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
+  elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
   elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
-  elsif ($#cmd > -1) { @froms = split(/,/, @cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } #print "$_ to $cmd[1].\n";
+  elsif ($#cmd > -1) { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } #print "$_ to $cmd[1].\n";
   }
 }
 #sensible abbreviations
@@ -44,16 +74,17 @@ $zmac{"dirk"} = 1;
 
 $use6l{"compound"} = 0;
 
-$runBeta = 0;
-$debug = 0;
-$release = 1;
+my $runBeta = 0;
+my $debug = 0;
+my $release = 1;
+my $execute = 0;
 
-$count = 0;
+my $count = 0;
 
 while ($count <= $#ARGV)
 {
 
-  $a = @ARGV[$count];
+  $a = $ARGV[$count];
   for ($a)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
@@ -64,20 +95,20 @@ while ($count <= $#ARGV)
   /^-?f$/ && do { $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
-    if ($a =~ /b/) { $runbeta = 1; }
+    if ($a =~ /b/) { $runBeta = 1; }
 	$count++; next;
   };
   /^-?inf$/ && do { $infOnly = 1; $count++; next; };
-  /^-?l$/ && do { $v6l = 1 - $v6l; $informDir = @inDirs[$v6l]; $count++; next; };
-  /^-?ba$/ && do { $informBase = @ARGV[$count+1]; $count++; next; };
-  /^-?be$/ && do { $betaDir = @ARGV[$count+1]; $count++; next; };
+  /^-?l$/ && do { $v6l = 1 - $v6l; $informDir = $inDirs[$v6l]; $count++; next; };
+  /^-?ba$/ && do { $informBase = $ARGV[$count+1]; $count++; next; };
+  /^-?be$/ && do { $betaDir = $ARGV[$count+1]; $count++; next; };
   /^-?nr$/ && do { $release = 0; $count++; next; };
   /^-?yr$/ && do { $release = 1; $count++; next; };
   /^-?nd$/ && do { $debug = 0; $count++; next; };
   /^-?yd$/ && do { $debug = 1; $count++; next; };
   /^-?x$/ && do { $execute = 1; $count++; next; };
   /^-?e$/ && do { `c:\\writing\\scripts\\icl.txt`; exit; };
-  /^-?a$/ && do { for $entry(@allProj) { push(@compileList, $a); } $count++; next; };
+  /^-?a$/ && do { for my $entry (@allProj) { push(@compileList, $a); } $count++; next; };
   /^-\?$/ && do { usage(); exit; };
   /^-/ && do { print "Not a valid option.\n"; usage(); exit; };
   push(@compileList, $a); $count++; next;
@@ -86,21 +117,25 @@ while ($count <= $#ARGV)
 
 if ($#compileList == -1) { print "Nothing in compile list. Using default: @defaultCompileList.\n"; @compileList = @defaultCompileList; }
 
-for $a (@compileList)
+my $myProj;
+
+for my $toComp (@compileList)
 {
-  if ($proj{$a}) { $myProj = $proj{$a}; }
-  elsif ($proj{"-$a"}) { $myProj = $proj{"-$a"}; }
+  if ($proj{$toComp}) { $myProj = $proj{$toComp}; }
+  elsif ($proj{"-$toComp"}) { $myProj = $proj{"-$toComp"}; }
   else {
-  $myProj = "";
-  for $q (keys %proj) { if ($proj{$q} eq "$a") { $myProj = $a; } }
-  if (!$myProj) { die("No project for $a. If you wanted an option, try -?.\n"); }
+  die("No project for $toComp. If you wanted an option, try -?.\n");
   }
-  $infDir = @inDirs[$v6l];
+  $infDir = $inDirs[$v6l];
   runProj($myProj);
   $count++;
 }
 
 if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
+
+####################################################
+#subroutines
+#
 
 sub runProj
 {
@@ -145,13 +180,13 @@ if ($debug)
 
 sub doOneBuild
 {
-  $outFile = "$_[0]\\Build\\output.$ex";
-  $dflag = "$_[1]";
-  $infOut = "$_[0]\\Build\\auto.inf";
+  my $outFile = "$_[0]\\Build\\output.$ex";
+  my $dflag = "$_[1]";
+  my $infOut = "$_[0]\\Build\\auto.inf";
 
   delIfThere($infOut);
 
-  $compileCheck = `\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
+  my $compileCheck = `\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
   print "BUILD RESULTS\n=================\n$compileCheck";
   if ($compileCheck =~ /has finished/i)
   {
@@ -181,10 +216,10 @@ sub doOneBuild
   ####probably not necessary
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary succeeded,0,0,0\n";
 
-  $blorbFileShort = getFile("$_[0]/Release.blurb");
+  my $blorbFileShort = getFile("$_[0]/Release.blurb");
 
   if ($_[3] ne "debug") { $blorbFileShort = "$_[3]-$blorbFileShort"; }
-  $outFinal = "$_[2]\\Release\\$blorbFileShort";
+  my $outFinal = "$_[2]\\Release\\$blorbFileShort";
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
 
@@ -220,9 +255,9 @@ system("copy \"$mtr\\Figures\\*\" \"$bmat\\Figures\"");
 
 print "Searching for cover....\n";
 
-$cover = "$betaDir\\Cover";
-$covr = "$betaDir\\Release\\Cover";
-$smcov = "$betaDir\\Small Cover";
+my $cover = "$betaDir\\Cover";
+my $covr = "$betaDir\\Release\\Cover";
+my $smcov = "$betaDir\\Small Cover";
 if (-f "$cover.jpg") { print "BETA: Erasing old jpg.\n"; system("Erase \"$cover.jpg\""); }
 if (-f "$cover.png") { print "BETA: Erasing old png.\n"; system("Erase \"$cover.png\""); }
 if (-f "$covr.png") { print "BETA: Erasing old Release\png.\n"; system("Erase \"$covr.png\""); }
@@ -244,7 +279,7 @@ sub modifyBeta
   open(A, "$_[0]") || die ("Can't open source $_[0]");
   open(B, ">$_[1]") || die ("Can't open target $_[1]");
 
-  $foundBetaLine = 0;
+  my $foundBetaLine = 0;
 
   while ($a = <A>)
   {
@@ -277,8 +312,8 @@ sub buildDir
   my @altDir = ("c:/program files (x86)/Inform 76L", "d:/program files (x86)/Inform 7");
   for (0..$#altDir)
   {
-    if (-d "@altDir[$_]")
-    { return @altDir[$_]; }
+    if (-d "$altDir[$_]")
+    { return $altDir[$_]; }
   }
 }
 
@@ -290,7 +325,7 @@ sub getFile
   {
     if ($a =~ / leafname /) { chomp($a); $a =~ s/.* leafname \"//g; $a =~ s/\"//g; return $a; }
   }
-  return "output.$ext";
+  return "output.$ex";
 }
 
 sub delIfThere

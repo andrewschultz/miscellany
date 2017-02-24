@@ -6,8 +6,8 @@
 #now a way to do basic code checks so we aren't missing anything obvious
 #
 
-#use strict;
-#use warnings;
+use strict;
+use warnings;
 
 use POSIX qw (getcwd);
 
@@ -15,13 +15,29 @@ use POSIX qw (getcwd);
 my $testStubs = 1;
 
 ##################variables
+my @commentNeed = ();
 my $needComment = 0;
 my $fillIn = 0;
+my @fillLines = ();
+my $NFRB = 0;
+my $betaBomb = 0;
+my $foundComments = 0;
+my $inBeta = 0;
+my $inTest = 0;
+my $testSuccess = 0;
+my $lastChap;
+my $newHeader;
+my $linesToFix;
+my $foundBeta = 0;
+my $foundStubs = 0;
+my $foundTest = 0;
+my $lastHead = 0;
 
 print "Starting code testing.\n";
 
-$dir = ".";
+my $dir = ".";
 
+my %long;
 $long{"roil"} = "roiling";
 $long{"roi"} = "roiling";
 $long{"ro"} = "roiling";
@@ -41,11 +57,12 @@ $long{"btp"} = "buck-the-past";
 $long{"ss"} = "seeker-status";
 
 #1st argument can be either one of the abbrevs above or something longer
-if (@ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/@ARGV[0].inform/source"); tryDir("c:/games/inform/$long{@ARGV[0]}.inform/source"); }
+if ($ARGV[0]) { tryDir($dir); tryDir("c:/games/inform/$ARGV[0].inform/source"); tryDir("c:/games/inform/$long{$ARGV[0]}.inform/source"); }
 
 open(A, "$dir/story.ni") || die ("Can't open $dir/story.ni or any other files I tried.");
 open(C, ">crv.txt");
 
+my $shortDir;
 if ($dir eq ".") { $shortDir = getcwd(); } else { $shortDir = $dir; }
 $shortDir =~ s/\.inform.*//gi; $shortDir =~ s/.*[\/\\]//g; $shortDir = lc($shortDir);
 
@@ -64,7 +81,7 @@ while ($a = <A>)
   {
     checkForComments();
     $newHeader = "";
-    $newVol = lc($a);
+    my $newVol = lc($a);
     $newVol =~ s/^volume *//g;
     $inBeta = 0;
     $inTest = 0;
@@ -122,7 +139,7 @@ while ($a = <A>)
     if ($a =~ /^\[ *\*/)
     {
 	  $testSuccess++;
-      $debugString = "$newHeader: $a";
+      my $debugString = "$newHeader: $a";
       print C "$debugString\n";
       if ($foundComments) { print "========DUPLICATE BELOW\n$debugString\n========DUPLICATE ABOVE\n"; }
 	  $foundComments = 1;
@@ -149,6 +166,10 @@ if (!$needComment) { print "Yay! Success!\n"; }
 if ($betaBomb) { print "COMMENT BETA TESTING OUT BEFORE RELEASE\n" x 5; }
 if (!$NFRB) { print "FORGOT A BETA TEST SECTION\n" x 3; }
 
+################################################
+#subdirectories
+#
+
 sub tryDir
 {
   if (-f "$_[0]/story.ni") { $dir = $_[0]; }
@@ -160,7 +181,7 @@ sub checkForComments
 {
     if (($newHeader) && (!$foundComments))
 	{
-	  $fullStr = "NEEDS COMMENTS ($lastChap) : $newHeader\n";
+	  my $fullStr = "NEEDS COMMENTS ($lastChap) : $newHeader\n";
 	  push(@commentNeed, $lastChap);
 	  print C "$fullStr";
 	  print "$fullStr";
