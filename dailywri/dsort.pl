@@ -1,21 +1,61 @@
-#the hash for what goes where
+##############################################
+#
+#dsort.pl
+#
+#this sorts daily files into the (semi)-organized component files
+#
+#Usual usage is:
+#dsort -home
+#
 
-$daysBack = 120;
+use strict;
+use warnings;
 
-$myNotesFile = "notes9.otl";
+use File::Copy;
+
+#############unix Files
+my %whatWhereHash;
+my %toPrimaryHash;
+my %detailHash;
+
+my $myNotesFile = "notes9.otl";
 my @outFiles;
 my @inDirs;
 my %writings;
 my %whatWhereHash;
 my @fileArray = ( "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl", "lists.otl", "sb.otl", "names.otl", "games.otl", "misc.otl", "f.otl" );
 
-use File::Copy;
+########options
+my $daysBack = 120;
+my $readOnly = 0;
+my $outputHash = 0;
+my $skipOutput = 0;
+my $verifySections = 0;
+my $intoDir;
+my $debug = 0;
+my $verifyFirstLine = 0;
+my $looseTest = 0;
+my $noMove = 0;
+my $quiet = 0;
+my $verbose = 0;
+
+##############variables
+my $unixFiles = "";
+my $procBytes = 0;
+my $bigString = "";
+my $nolet = "";
+
+#############counters
+my $match;
+
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
+my $todaysFile;
 
 initializeGlobals();
 readCmdLine();
 
-$lastDayString = todayString(1);
-$firstDayString = todayString($daysBack);
+my $lastDayString = todayString(1);
+my $firstDayString = todayString($daysBack);
 
 preprocessFileList(@fileArray);
 
@@ -26,11 +66,13 @@ preprocessFileList(@fileArray);
 if ($outputHash) { rewriteHashFile(); }
 if ($skipOutput) { exit; }
 
-$beforeTime = time();
+my $beforeTime = time();
 
-$finalString =  "Before: "; $beforeBytes = readFileSizes();
+my $finalString =  "Before: ";
+my $beforeBytes = readFileSizes();
 
-$foundOne = 0;
+my $foundOne = 0;
+my $dailyDir;
 for $dailyDir (@inDirs) { if (-d $dailyDir) { $foundOne = 1; } }
 
 if (!$foundOne) { die ("No valid dir in " . join(/ /, @inDirs)); }
@@ -65,13 +107,13 @@ for (@dircontents)
 
 }
 
-$unknownBefore = ( -s "$intoDir/undef.txt" );
+my $unknownBefore = ( -s "$intoDir/undef.txt" );
 cleanUpUnknown();
-$unknownAfter = ( -s "$intoDir/undef.txt" );
-$unknownDelta = $unknownAfter - $unknownBefore;
+my $unknownAfter = ( -s "$intoDir/undef.txt" );
+my $unknownDelta = $unknownAfter - $unknownBefore;
 
-$afterTime = time() - $beforeTime;
-$afterBytes = readFileSizes();
+my $afterTime = time() - $beforeTime;
+my $afterBytes = readFileSizes();
 print "Before $beforeBytes After $afterBytes Dif " . ($afterBytes - $beforeBytes) . "\nBytes of files processed=$procBytes\nBytes of unknown=$unknownDelta added, $unknownAfter total.\nProcessing took $afterTime seconds.";
 
 if ($bigString) { $bigString =~ s/\//\\/g; print "\n=============\nFILES TO RERUN:\n$bigString\n"; } else { addStatsLine(); }
@@ -92,10 +134,10 @@ sub cleanUpUnknown
   open(C, ">>$intoDir/undef.txt");
 
   my @stuff = localtime(time);
-  printf C sprintf("Unknown writings log for %02d-%02d-%02d %02d:%02d:%02d\n\n", @stuff[4] + 1, @stuff[3], @stuff[5]+1900,
-    @stuff[2], @stuff[1], @stuff[0]);
+  printf C sprintf("Unknown writings log for %02d-%02d-%02d %02d:%02d:%02d\n\n", $stuff[4] + 1, $stuff[3], $stuff[5]+1900,
+    $stuff[2], $stuff[1], $stuff[0]);
 
-  foreach $qzz (keys %writings)
+  foreach my $qzz (keys %writings)
   {
     if (!$whatWhereHash{$qzz})
     {
@@ -113,6 +155,8 @@ sub cleanUpUnknown
 
 sub firstLineThereOrEmpty
 {
+  my $d;
+
   if (!$quiet) { print "verifying if first line of $_[0] is in $myNotesFile:"; }
   if (-s "$_[0]" == 0) { print "Empty file $_[0].\n"; return 1;}
   open(B, "$_[0]");
@@ -132,47 +176,39 @@ sub firstLineThereOrEmpty
 
 sub chopDailyFile
 {
-
-my @temp;
-
 #print "Processing $_[0]...\n";
-
-####################################
-#start with the main section, always
-####################################
-
 preProcessDailyFile($_[0]);
-
 #print "reading $_[0]\n";
 
 open(A, "$_[0]") || die ("Can't open $_[0]");
 
 #%writings = ();
-$undefinedWritings = "";
+my @temp;
+my $undefinedWritings = "";
 
 my %doubleCheck;
+my %origLines;
 
 #always start with basic ideas. At least for now.
-$currentSection = "ide";
+my $currentSection = "ide";
 
-$returnIt = 0;
-
-$lines = 0;
+my $returnIt = 0;
+my $hashval = "";
+my $cr;
 
 while ($a = <A>)
 {
   chomp($a);
-  $lines++;
   if ($a =~ /^\\/)
-  { $aa = chompy($a);
+  { my $aa = chompy($a);
     if ($toPrimaryHash{$aa}) { $b = $toPrimaryHash{$aa}; die;} else { $b = $aa; }
     if ($doubleCheck{$b} == 1)
 	{
-	  $c = <A>; chomp($c); print("WARNING: $_[0] has duplicate section $b, 2nd line $c copies $origLines{$b}.\nRetry later.\n");
+	  my $c = <A>; chomp($c); print("WARNING: $_[0] has duplicate section $b, 2nd line $c copies $origLines{$b}.\nRetry later.\n");
 	  $c =~ s/ .*//g;
-	  if ($returnIt == 0) { $bigString .= "$_[0]\n"; $returnIt = 1; } $bigString .= "$b == $c ($lines copies $origLines{$b})\n";
+	  if ($returnIt == 0) { $bigString .= "$_[0]\n"; $returnIt = 1; } $bigString .= "$b == $c ($. copies $origLines{$b})\n";
 	}
-    $doubleCheck{$b} = 1; $origLines{$b} = $lines;
+    $doubleCheck{$b} = 1; $origLines{$b} = $.;
   }
   if (($a =~ /[a-z][A-Z]/) && ($a !~ /\t/)) { print "WARNING possible run-on line: $a\n"; }
 }
@@ -192,7 +228,7 @@ while ($a = <A>)
   {
     $currentSection = chompy($a);
     if (!$detailHash{$currentSection}) { print "Undefined section $currentSection\n"; }
-    #print("Reading section @temp[0] aka '$detailHash{@temp[0]}' from $a\n");
+    #print("Reading section $temp[0] aka '$detailHash{$temp[0]}' from $a\n");
     if ($writings{$currentSection})
     { $b = <A>; chomp($b); print "WARNING you have two sections '$detailHash{$currentSection}' starting with $b\n"; $writings{$currentSection} .= $b; }
     next;
@@ -241,7 +277,6 @@ for (@outFiles)
     {
       #print "OK, starting $hashval\n";
       print B $a;
-      $stuffToWrite = "";
       while (($b = <A>) =~ /[a-zA-Z0-9=]/)
       { print B $b; }
       #print "Adding $hashval\n";
@@ -283,13 +318,13 @@ foreach (keys %writings) { print "$_ not deleted.\n"; }
 if ($undefinedWritings)
 {
   open(C, ">>undef.txt");
-  print C "========$myFile\n$undefinedWritings\n";
-  if ($verbose) { print "========$myFile\n$undefinedWritings\n"; }
+  print C "========$_[0]\n$undefinedWritings\n";
+  if ($verbose) { print "========$_[0]\n$undefinedWritings\n"; }
   close(C);
 }
 
-@toFileAry = split(/[\\\/]/, $_[0]);
-$temp = pop(@toFileAry); push(@toFileAry, "done"); push(@toFileAry, $temp);
+my @toFileAry = split(/[\\\/]/, $_[0]);
+my $temp = pop(@toFileAry); push(@toFileAry, "done"); push(@toFileAry, $temp);
 $temp = join('\\', @toFileAry);
 if (!$noMove) { move("$_[0]", "$temp"); }
 
@@ -322,8 +357,7 @@ sub haveWriting
   #print "Testing $temp.\n";
   $temp =~ s/=.*//g;
   $temp =~ s/^\\//g;
-  @q = split(/\|/, $temp);
-  for (@q) { if ($writings{$_}) { return $_; } }
+  for (split(/\|/, $temp)) { if ($writings{$_}) { return $_; } }
   return 0;
 }
 
@@ -371,7 +405,6 @@ $myNotesFile = "notes9.otl";
 }
 
 #look for today's file
-($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
 $todaysFile = sprintf ("%d%02d%02d.txt", $yearOffset+1900, $month + 1, $dayOfMonth);
 
 }
@@ -392,18 +425,18 @@ for $thisFile (@_)
     chomp($a);
     if ($a =~ /^\\[0-9a-z]/)
     { #print "Trying $a in $thisFile\n";
-      @b = split(/=/, $a); if (!@b[1]) { die("You need a descriptor for @b[0] in $thisFile\n"); }
-      @b[0] =~ s/^.//g; #print "Adding @b[0]<->@b[1] $thisFile\n";
-	  @c = split(/\|/, @b[0]);
+      my @b = split(/=/, $a); if (!$b[1]) { die("You need a descriptor for $b[0] in $thisFile\n"); }
+      $b[0] =~ s/^.//g; #print "Adding $b[0]<->$b[1] $thisFile\n";
+	  my @c = split(/\|/, $b[0]);
 	  for (@c) {
-	  if ($_ ne @c[0])
+	  if ($_ ne $c[0])
 	  {
-	  $toPrimaryHash{$_} = @c[0]; #print "$_ -> @c[0]\n";
+	  $toPrimaryHash{$_} = $c[0]; #print "$_ -> $c[0]\n";
 	  } else
 	  {
       $whatWhereHash{$_} = $thisFile;
 	  if ($detailHash{$_}) { die ("Oops. We have 2 descriptors of $_.\n"); }
-      $detailHash{$_}=@b[1];
+      $detailHash{$_}=$b[1];
 	  }
 	  }
     }
@@ -434,10 +467,10 @@ sub addStatsLine
 {
   my @x = ();
   open(STA, ">>c:/writing/dstat.txt");
-  $localtime = gmtime(time());
+  my $localtime = gmtime(time());
   my $newString = "$localtime: ";
 
-  for $x (@fileArray)
+  for my $x (@fileArray)
   {
     if (! -f "c:/writing/$x") { print ("Warning: No $x."); }
     $newString .= $x . "=" . (-s "c:/writing/$x") . ",";
@@ -462,10 +495,12 @@ sub readCmdLine
 
 if ($#ARGV eq -1) { print "No arguments, giving usage.\n"; usage(); }
 
+my $count = 0;
+
 while ($count <= $#ARGV)
 {
-  $a = @ARGV[$count];
-  $b = @ARGV[$count+1];
+  $a = $ARGV[$count];
+  $b = $ARGV[$count+1];
   for ($a)
   {
     /^-fi$/ && do { @fileArray = split(/,/, $b); next; };
@@ -473,11 +508,12 @@ while ($count <= $#ARGV)
     /^-v$/ && do { $verbose = 1; $count++; next; };
     /^-vy$/ && do { $verifyFirstLine = 1; $count++; next; };
     /^-vn$/ && do { $verifyFirstLine = 0; $count++; next; };
-    /^-vs$/ && do { $verifySections = 1; $count++; next; };
+    /^-vs$/ && do { $verifySections = 1; $count++; next; }; #not sure what this does other than make sure sections are valid which seems to be done by default
     /^-flash$/ && do
     { @inDirs = ("e:/daily", "f:/daily", "g:/daily");
       $intoDir = "c:/writing"; $count++; next;
     };
+    /^-lt$/ && do { $looseTest = 1; $count++; next; };
     /^-nt$/ && do { $lastDayString = todayString(1); $count++; next; };
     /^-[2t]$/ && do { $lastDayString = todayString(0); $count++; next; };
     /^-work$/ && do { $intoDir = "c:/coding/perl/daily/bak"; @inDirs = ($intoDir); $count++; next; };
@@ -487,47 +523,19 @@ while ($count <= $#ARGV)
     /^-i$/ && do { @inDirs = split(/,/, $b); $count += 2; next; };
     /^-(w|home)$/ && do { @inDirs = ("c:/writing/daily", "c:/users/andrew/dropbox/daily"); $intoDir = "c:/writing"; $count++; next; };
     /^-(db|bx)$/ && do { @inDirs = ("c:/users/andrew/dropbox/daily"); $intoDir = "c:/writing"; $count++; next; };
-    /^-[efg]$/ && do { @inDirs = ("$a:/daily"); @inDirs[0] =~ s/^-//g; $intoDir = "c:/writing"; $count++; next; };
+    /^-[efg]$/ && do { @inDirs = ("$a:/daily"); $inDirs[0] =~ s/^-//g; $intoDir = "c:/writing"; $count++; next; };
     /^-oo$/ && do { $outputHash = 1; $skipOutput = 1; $count++; next; };
     /^-o$/ && do { $outputHash = 1; $count++; next; };
     /^-nm$/ && do { $noMove = 1; $count++; next; };
    /^-(bl)$/ && do { $lastDayString = $b; $count += 2; next; };
    /^-(af)$/ && do { $firstDayString = $b; $count += 2; next; };
    /^-[0-9]+$/ && do { $daysBack = $a; $daysBack =~ s/^-//g; $count += 2; next; };
+   /^-?\?$/ && do { usage(); exit; };
+   /^-?\?\?$/ && do { usageQuick(); exit; };
     usage();
   }
 }
 
-}
-
-sub usage
-{
-print <<EOT;
-Hits every file in the given directory & merges with OTL and TXT files which have lines
-/subject=description
--home|w = home settings from c:/writing/daily and DropBox folder
--flash  = try e/f/g:/writing
--work   = try test at work
--nm     = don't move files
--nt     = don't count today (default)
--t/2    = count today
--bx/db  = just dropbox directory
-
--b/l = last day string
--a/f = first day string
--! shows debug info
--vy/-vn: verify first line before copying over (default is ON)
--vs verify sections
--fi specifies a file
--d specifies a directory to write to
--i specifies CSV of directories to write from
--o output command line hash
--oo skips output and just rejigs the command line hash
--[efgw] specifies the drive for c:/writing, and w=c
--a = after string (e.g. 20140101) -b = before (e.g. 20140505)
--### = # of days to go back (default = 120)
-EOT
-exit;
 }
 
 sub todayString
@@ -536,15 +544,14 @@ sub todayString
 
       ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime($temp);
 
-      $year = $yearOffset + 1900;
+      my $year = $yearOffset + 1900;
 
-      $ret = sprintf ("%d%02d%02d.txt", $year, $month + 1, $dayOfMonth);
-
-      return $ret;
+      return sprintf ("%d%02d%02d.txt", $year, $month + 1, $dayOfMonth);
 }
 
 sub isUnix
 {
+  my $buffer;
   open(XYZ, $_[0]);
   binmode(XYZ);
   read(XYZ, $buffer, 1000, 0);
@@ -566,3 +573,44 @@ sub readFileSizes
   }
   return $retVal;
 }
+
+sub usageQuick
+{
+print <<EOT;
+dsort.pl -home is the main command to use.
+EOT
+exit;
+}
+
+sub usage
+{
+print <<EOT;
+Hits every file in the given directory & merges with OTL and TXT files which have lines
+/subject=description
+-home|w = home settings from c:/writing/daily and DropBox folder
+-flash  = try e/f/g:/writing
+-work   = try test at work
+-nm     = don't move files
+-nt     = don't count today (default)
+-t/2    = count today
+-bx/db  = just dropbox directory
+
+-b/l = last day string
+-a/f = first day string
+-! shows debug info
+-vy/-vn: verify first line before copying over (default is ON)
+-vs verify sections (deprecated, now forced on by default)
+-fi specifies a file
+-d specifies a directory to write to
+-i specifies CSV of directories to write from
+-lt means loose test
+-o output command line hash
+-oo skips output and just rejigs the command line hash
+-[efgw] specifies the drive for c:/writing, and w=c
+-a = after string (e.g. 20140101) -b = before (e.g. 20140505)
+-### = # of days to go back (default = 120)
+-?? = shows quick usage
+EOT
+exit;
+}
+

@@ -4,6 +4,22 @@
 #this reads in the volumes down to the sections in an Inform 7 source file and prints them out as
 #formatted text, with some minor additional stats.
 #
+#it ignores the actual code but just prints a big outline
+#
+
+use strict;
+use warnings;
+
+my %spc;
+my $idx = 0;
+my $ignoreString = "roi";
+
+my %ig;
+my %inc;
+
+my @depth = ();
+my @lineNum = ();
+my @strs = ();
 
 initializeStuff();
 getIgnoreStrings();
@@ -17,9 +33,6 @@ readMain();
 
 sub initializeStuff
 {
-  $idx = 0;
-
-  $ignoreString = "roi";
 
   $spc{"volume"} = 0;
   $spc{"book"} = 2;
@@ -38,16 +51,16 @@ open(A, "story.ni") || die ("No story.ni in this directory.");
 
 while ($a = <A>)
 {
-  $line++;
   if ($a =~ /^(book|chapter|part|volume|section) /i)
   {
     chomp($a);
-	$ash = $a; $ash =~ s/ .*//g;
-    $b = $a; $b =~ s/ .*//g; $c = " " x $spc{$b}; #print "$spc{$b} spaces for $b.\n";
+	my $ash = $a; $ash =~ s/ .*//g;
+    $b = $a; $b =~ s/ .*//g;
+	my $c = " " x $spc{$b}; #print "$spc{$b} spaces for $b.\n";
 	$inc{lc($ash)}++;
-	@strs[$idx] = "$c$a ($line/";
-	@lineNum[$idx] = $line;
-	@depth[$idx] = $spc{$b} / 2;
+	$strs[$idx] = "$c$a ($./";
+	$lineNum[$idx] = $.;
+	$depth[$idx] = $spc{$b} / 2;
 	$idx++;
   }
 }
@@ -59,21 +72,27 @@ while ($a = <A>)
 #
 sub readMain
 {
+my $views = 0;
+my $total = 0;
+my $foundYet = 0;
+my $ignores = 0;
+
 for (0..$#strs)
 {
   $foundYet = 0;
-  for $j ($_+1..$#strs)
+  for my $j ($_+1..$#strs)
   {
-    if (@depth[$j] <= @depth[$_]) { $temp = @lineNum[$j] - @lineNum[$_]; @strs[$_] .= "$temp)"; $foundYet = 1; last; }
-	if ($j == $#strs) { @strs[$_] .= ($line - @lineNum[$_]) . ")"; }
+    if ($depth[$j] <= $depth[$_]) { my $temp = $lineNum[$j] - $lineNum[$_]; $strs[$_] .= "$temp)"; $foundYet = 1; last; }
+	if ($j == $#strs) { $strs[$_] .= ($. - $lineNum[$_]) . ")"; }
   }
-  if ($foundYet == 0) { @strs[$_] .= ($line - @lineNum[$_]) . ")"; }
+  if ($foundYet == 0) { $strs[$_] .= ($. - $lineNum[$_]) . ")"; }
 }
 
-$printable = 1;
+my $printable = 1;
 for (0..$#strs)
 {
-  $temp = @strs[$_]; $t2 = $temp;
+  my $temp = $strs[$_];
+  my $t2 = $temp;
   $t2 =~ s/ \([0-9].*//g;
   if ($t2 =~ /^volume /)
   {
@@ -87,13 +106,13 @@ for (0..$#strs)
   }
   if ($printable)
   {
-  print @strs[$_] . "\n";
+  print $strs[$_] . "\n";
   }
   }
 
 close(A);
 
-for $x (sort keys %inc) { print "$inc{$x} of $x.\n"; $total += $inc{$x}; }
+for my $x (sort keys %inc) { print "$inc{$x} of $x.\n"; $total += $inc{$x}; }
 
 print "$total total breaks.\n";
 
@@ -109,10 +128,10 @@ sub getIgnoreStrings
 open(A, "c:/writing/scripts/sec-i.txt");
 while ($a = <A>)
 {
-  chomp($a); @b = split(/:/, $a);
-  if (@b[0] eq $ignoreString)
+  chomp($a); my @b = split(/:/, $a);
+  if ($b[0] eq $ignoreString)
   {
-    @ignore = split(/,/, @b[1]);
+    my @ignore = split(/,/, $b[1]);
     for (@ignore)
     {
       $ig{"volume $_"} = 1;

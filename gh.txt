@@ -85,18 +85,25 @@ roi=$is\reg-roi-*,\roiling\testing
 -b:roi=$im\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
 ##################################trizbort maps
-roi=$tr\roiling.trizbort,roiling
-roi=$tr\roiling.pdf,roiling
-roi=$tr\voltmaze.trizbort,roiling
-roi=$tr\voltmaze.pdf,roiling
+roi=$tr\roiling.trizbort,roiling\maps
+roi=$tr\roiling.pdf,roiling\maps
+roi=$tr\voltmaze.trizbort,roiling\maps
+roi=$tr\voltmaze.pdf,roiling\maps
 ##################################trizbort walkthrough/flowchart maps
-roi=$is\roiling-h-walkthrough.trizbort,roiling
-roi=$is\roiling-p-walkthrough.trizbort,roiling
-roi=$is\roiling-t-walkthrough.trizbort,roiling
-roi=$is\roiling-u-walkthrough.trizbort,roiling
-roi=$is\roiling-v-walkthrough.trizbort,roiling
-roi=$is\roiling-w-walkthrough.trizbort,roiling
-roi=$is\roiling-y-walkthrough.trizbort,roiling
+roi=$is\roiling-h-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-h-walkthrough.pdf,roiling\maps
+roi=$is\roiling-p-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-p-walkthrough.pdf,roiling\maps
+roi=$is\roiling-t-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-t-walkthrough.pdf,roiling\maps
+roi=$is\roiling-u-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-u-walkthrough.pdf,roiling\maps
+roi=$is\roiling-v-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-v-walkthrough.pdf,roiling\maps
+roi=$is\roiling-w-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-w-walkthrough.pdf,roiling\maps
+roi=$is\roiling-y-walkthrough.trizbort,roiling\maps
+roi=$is\roiling-y-walkthrough.pdf,roiling\maps
 
 #Stale Tales Slate scripts
 TOBASE=stale-tales-slate

@@ -3,18 +3,33 @@
 # simply counts the remaining lines to process in games.otl
 #
 
-$inFile = "c:/writing/games.otl";
+use strict;
+use warnings;
 
-$totalLines = 0;
+my $inFile = "c:/writing/games.otl";
+
+my $minOkay = 3;
+
+my $sec = 0;
+my $totalLines = 0;
+my $lines = 0;
+
+###########variables
+my %gotYet;
+my $count = 0;
+my $counting = 0;
+my $everFound = 0;
+
+my @starts = ();
 
 while ($count <= $#ARGV)
 {
-  $a = @ARGV[$count];
+  $a = $ARGV[$count];
   for ($a)
   {
     /^-?[0-9]+$/ && do { $minOkay = $a; if ($minOkay < 0) { $minOkay = - $minOkay; } $count++; next; };
 	/^-?\?$/ && do { usage(); exit; };
-	/^-f\?$/ && do { $inFile = @ARGV[$count+1]; $count += 2; next; };
+	/^-f\?$/ && do { $inFile = $ARGV[$count+1]; $count += 2; next; };
 	/^-/ && do { print "Bad flag.\n\n"; usage(); exit; };
 	/[a-z]/ && do { @starts = split(/,/, $a); for (@starts) { $gotYet{$_} = 0; } $count++; next; };
 	die; #should never happen but yeah
@@ -32,14 +47,14 @@ while ($a = <A>)
     #if ($counting) { print "Last line $a"; }
 	if ($counting)
 	{
-    print "TEST RESULTS:games.otl lines for $sec,3,$totalLines,0,<a href=\"file:///c:/writing/games-otl.htm#$sec\">OTL file</a>\n";
+    print "TEST RESULTS:games.otl lines for $sec,$minOkay,$totalLines,0,<a href=\"file:///c:/writing/games-otl.htm#$sec\">OTL file</a>\n";
 	}
 	$totalLines = 0;
     $counting = 0; next;
   }
   if ($a =~ /^\\/)
   {
-    for $st (@starts)
+    for my $st (@starts)
 	{
 	  if ($a =~ /^\\$st[=\|]/) { $gotYet{$st}++; print "Start with $a"; $sec = $a; chomp($sec); $sec =~ s/[\|=].*//g; $sec =~ s/^\\//g; $everFound = 1; $counting = 1; next OUTER; }
 	}

@@ -7,6 +7,12 @@
 #
 #does not rewrite file if everything is ok
 #
+#this is superseded by gh.pl's trailing white space removal for ALL text-ish files
+
+use strict;
+use warnings;
+
+my %long;
 
 $long{"roil"} = "roiling";
 $long{"roi"} = "roiling";
@@ -25,10 +31,11 @@ $long{"4"} = "fourdiopolis";
 $long{"4d"} = "fourdiopolis";
 $long{"sc"} = "slicker-city";
 
-$endspace = 0;
+my $endspace = 0;
+my $myFile = "";
 
-chooseFile("c:/games/inform/@ARGV[0].inform/Source/story.ni");
-chooseFile("c:/games/inform/$long{@ARGV[0]}.inform/Source/story.ni");
+chooseFile("c:/games/inform/$ARGV[0].inform/Source/story.ni");
+chooseFile("c:/games/inform/$long{$ARGV[0]}.inform/Source/story.ni");
 chooseFile("story.ni");
 
 if (!$myFile) { die("No story.ni, and no abbreviation leads to it."); }
@@ -43,16 +50,16 @@ close(A);
 
 if ($endspace)
 {
-print "TEST RESULTS:$long{@ARGV[0]} whitespace,orange,$endspace,0,none\n";
+print "TEST RESULTS:$long{$ARGV[0]} whitespace,orange,$endspace,0,none\n";
 }
 else
 {
-print "TEST RESULTS:$long{@ARGV[0]} whitespace,0,$endspace,0,none\n";
+print "TEST RESULTS:$long{$ARGV[0]} whitespace,0,$endspace,0,none\n";
 }
 
 if ($endspace == 0) { exit; }
 
-if (@ARGV[1])
+if ($ARGV[1])
 {
   my $tempwhite = "c:\\games\\inform\\tempwhite.txt";
   open(A, "$myFile");
