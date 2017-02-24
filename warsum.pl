@@ -46,21 +46,39 @@ my $fileToSearch = "";
 my $sortByLine = 0;
 my $adjustWarnings = 0;
 
+print "SortByLine " . ($sortByLine ? "on" : "off") . " by default.\n";
+
 if (!defined($ARGV[$argCount])) { usage(); }
 
-if ($ARGV[$argCount] eq "-l") { $sortByLine = 1; $argCount++; }
-if ($ARGV[$argCount] eq "-aw") { $adjustWarnings = 1; $argCount++; }
+###############NEED TO FIX THIS
 
-if (-f "$ARGV[$argCount]")
+my $count = 0;
+
+while ($count <= $#ARGV)
 {
-  $fileToSearch = $ARGV[$argCount];
+  my $thisarg = $ARGV[$count];
+  for ($thisarg)
+  {
+    /^-l/ && do { $sortByLine = 1; $count++; next; };
+    /^-nl/ && do { $sortByLine = 0; $count++; next; };
+    /^-aw/ && do { $adjustWarnings = 1; $count++; next; };
+	/\.pl$/i && do
+	{
+	  if ($fileToSearch)
+	  {
+	    print "WARNING: $fileToSearch overwritten as file to search.\n";
+	  }
+      $fileToSearch = $thisarg; $count++; next; };
+	usage();
+  }
 }
-else
+
+if (! -f $fileToSearch)
 {
 if ($ENV{"PATHEXT"} !~ /\.pl;/i) { $ENV{"PATHEXT"} = ".PL;" . $ENV{"PATHEXT"}; }
-my @bins = where($ARGV[$argCount]);
+my @bins = where($fileToSearch);
 
-if ($#bins == -1) { die "No file $ARGV[$argCount]."; } else { print "Reading $bins[0].\n"; }
+if ($#bins == -1) { die "No file $fileToSearch."; } else { print "Reading $bins[0].\n"; }
 
 if ($#bins > 0) { print "(Note there's >1: @bins)\n"; }
 
@@ -136,9 +154,9 @@ for my $key (sort {
 {
   my $key1 = substr($key,0,1);
   if ($key1 ne $firstkey) { print "=" x 40 . $descr{$key1} . "\n"; $firstkey = $key1; }
-  print "$key covers $low{$key} to $high{$key}, $count{$key} incidences.";
-  if (cursub($low{$key}) ne cursub($high{$key})) { printf (" Separate functions: %s vs %s.", cursub($low{$key}), cursub($high{$key})); }
-  else { printf(" Completely contained in %s.", cursub($low{$key})); }
+  print "$key covers $low{$key} to $high{$key}, $count{$key} times.";
+  if (cursub($low{$key}) ne cursub($high{$key})) { printf (" Seen from: %s vs %s.", cursub($low{$key}), cursub($high{$key})); }
+  else { printf(" %s ONLY.", cursub($low{$key})); }
   print "\n";
 }
 
