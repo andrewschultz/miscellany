@@ -144,8 +144,10 @@ for my $key (sort {
 
 for my $key (sort keys %scalars)
 {
-  print "$key has warnings thrown: $scalars{$key}. ";
+  print "$key has warnings thrown: $scalars{$key}.\n";
 }
+
+if (scalar keys %scalars) { print "Rerun with -aw to change \@ to \$.\n"; }
 
 print "" . (scalar keys %low) . " total keys read.\n";
 
@@ -159,6 +161,7 @@ if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print "The file $f
 sub adjustWarnings
 {
   my $gotOne = 0;
+  my $commentChange = 0;
   my $warout = "c:\\writing\\scripts\\warsum.txt";
   open(A, "$_[0]") || die ("No such file $_[0]");
   #if (-f $warout) { die ("Erase $warout before continuing."); }
@@ -169,16 +172,18 @@ sub adjustWarnings
     if ($line =~ /\@([^ ])+\[/)
 	{
 	  $gotOne++;
-	  print "Line $.\n";
+	  #print "Line $.\n";
 	  #print $line;
 	  $line =~ s/\@([^ ]+)\[/\$$1\[/g;
 	  #print $line;
+	  if ($line =~ /^[ \t]*#/) { $commentChange++; }
 	}
 	print B $line;
   }
   if ($gotOne)
   {
   print "$gotOne potential warning(s) replaced.\n";
+  if ($commentChange) { print "NOTE: changed $commentChange inside comments.\n"; }
   `xcopy /y /q $warout $_[0]`;
   }
   else { print "Didn't find any \@ to convert to \$.\n"; }
