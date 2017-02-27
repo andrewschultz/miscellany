@@ -1,3 +1,11 @@
+##########################################
+#
+#bjames.pl
+#
+#this tells us whether a lead is Bill James safe or not
+# (diff + .5 * (have ball)) squared / (time remaining)
+#
+
 use strict;
 use warnings;
 
@@ -18,8 +26,8 @@ while ($count <= $#ARGV)
   for ($a)
   {
     /^-?r/ && do { $temp = $a; $temp =~ s/^-?r//; listReverse($temp); exit(); };
-    /-/ && do { my @score = split(/-/, $a); $dif = $score[0] - $score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
-	/^[0-9]+$/ && do { if ($a > 30) { $secs = $a; } else { $dif = $a; } $count++; next; };
+    /[0-9]-[0-9]/ && do { my @score = split(/-/, $a); $dif = $score[0] - $score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
+	/^-?[0-9]+$/ && do { if ($a < 0) { $a = -$a; print"Assuming nonnegative lead/time.\n"; } if ($a > 30) { $secs = $a; print "Assuming $a seconds.\n"; } else { $dif = $a; print "Assuming $a deficit.\n"; } $count++; next; };
     /[:,\.]/ && do { my @time = split(/[:,\.]/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
     /[ny]/i && do { $haveBall = ($a =~ /y/i); $count++; next; };
     /b/i && do { $boths = 1; $count++; next; };
@@ -27,7 +35,7 @@ while ($count <= $#ARGV)
   }
 }
 
-if (($haveBall == -1) && (!$boths)) { $haveBall = 0; print "Possession not specified, assuming THEM\n"; }
+if (($haveBall == -1) && (!$boths)) { $boths = 1; print "Possession not specified, assuming BOTH\n"; }
 
 if ($secs < 0) { die("Can't have negative seconds!"); }
 
@@ -41,8 +49,15 @@ sub bjames
 {
 my $safeness = 100 * $_[0]**2 / $secs;
 
-if ($safeness > 100) { print "SAFE LEAD: actually, $safeness.\n"; }
-else { print "NOT SAFE: $safeness\n"; }
+  if ($safeness > 100)
+  {
+    print "SAFE LEAD: actually, $safeness.\n";
+  }
+  else
+  {
+    my $delta = $secs - $_[0]**2 + .25;
+    printf("NOT SAFE: $safeness | TIME DELTA: %d:%02d", $delta / 60, $delta % 60);
+  }
 }
 
 sub listReverse
@@ -65,6 +80,7 @@ print<<EOT;
 Usage:
 Score time (has ball) e.g. 78-60 3:45 n/y/b (whether leading team has ball, b = both)
 You can also just give the differential
+The app guesses if a number is time left (>30) or not
 EOT
 exit;
 }
