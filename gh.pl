@@ -11,6 +11,7 @@ use strict;
 use warnings;
 
 use File::Compare;
+use File::stat;
 
 my $warnCanRun = 0;
 
@@ -24,6 +25,7 @@ my $testResults = 0;
 my $runTrivialTests = 0;
 my $byFile = 0;
 my $removeTrailingSpace = 0;
+my $ignoreTrizbort = 0;
 
 my $reverse = 0;
 
@@ -51,8 +53,10 @@ my $copyAuxiliary = 0;
 my $copyBinary = 0;
 my $thisProj;
 
-my $minLines;
-my $minFile;
+my $minLines = 0;
+my $minFile = "";
+
+my @trizFail;
 
 my $gh = "c:\\users\\andrew\\Documents\\github";
 my $count = 0;
@@ -84,6 +88,7 @@ while ($count <= $#ARGV)
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
   /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
+  /^-?rts$/i && do { $ignoreTrizbort = 0; $count++; next; };
   /^-?(sw|ws)(t)?/i && do
   {
     readReplace();
@@ -92,12 +97,13 @@ while ($count <= $#ARGV)
 	if ($a =~ /t/)
 	{
 	printf("TEST RESULTS: strict-warn,%d,0,0,gh.pl -sw(t),%s\n", (scalar keys %gws), join("<br />", %gws));
-	printf("TEST RESULTS: trailing-space,%d,0,0,gh.pl -sw(t),%s\n", (scalar keys %gwt), join("<br />", %gwt));
+	printf("TEST RESULTS: trailing-space,%d,0,0,gh.pl -rts -sw(t),%s\n", (scalar keys %gwt), join("<br />", %gwt));
+	printf("TEST RESULTS: triz-date-fail,%d,0,0,gh.pl -sw(t),%s\n", (scalar @trizFail), join("<br />", @trizFail));
 	}
 	else
 	{
 	print "Total warnings needed $globalWarnings total strict needed $globalStrict total excess tab files $globalTS\n";
-	print "Shortest file $minFile, $minLines lines.\n";
+	if ($minFile) { print "Shortest file $minFile, $minLines lines.\n"; }
 	}
 	exit();
   };
@@ -289,6 +295,10 @@ sub processTerms
 	    if (shouldCheck($fromFile))
 		{
         checkWarnings($fromFile, 1);
+		}
+		if ($fromFile =~ /\.trizbort$/)
+		{
+		  trizCheck($fromFile, 1);
 		}
 	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } else { $copies++; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; $uncop++; }
       }
@@ -501,6 +511,10 @@ sub strictWarn
 	   $line = $repl2{"fromBase"} . "\\$line";
 	   #print "$line\n";
      }
+	 if ($line =~ /\.trizbort$/)
+	 {
+	   trizCheck ($line, 0);
+	 }
 	 if (shouldCheck($line)) { checkWarnings($line, 0); }
   }
   close(A);
@@ -529,6 +543,7 @@ sub checkWarnings
   $numLines = $.;
   close(B);
 
+
   if (($removeTrailingSpace || $_[1]) && ($trailingSpace > 0)) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
   if ($_[0] =~ /\.pl$/i)
   {
@@ -554,8 +569,8 @@ sub checkWarnings
 	if ($removeTrailingSpace || $_[1])
 	{
       my $tempfile = "c:\\writing\\scripts\\temp-perl.temp";
-	  open(F1, "$_[0]");
-	  open(F2, ">$tempfile");
+	  open(F1, "$_[0]") || do { print "Can't open $_[0].\n"; return; };
+	  open(F2, ">$tempfile") || do { print "Can't write to $tempfile.\n"; close(F1); return; };
 	  my $l;
 	  while ($l = <F1>)
 	  {
@@ -565,6 +580,7 @@ sub checkWarnings
 	  close(F1);
 	  close(F2);
 	  `copy \"$tempfile\" \"$_[0]\"`;
+	  delete($gwt{$_[0]});
 	  #die("copy \"$tempfile\" \"$_[0]\"");
 	}
   }
@@ -596,6 +612,24 @@ sub shouldCheck
   return 0;
 }
 
+sub trizCheck
+{
+  my $pdf = $_[0];
+  $pdf =~ s/trizbort$/pdf/;
+  if (! -f $pdf) { return; }
+  #printf("$_[0] %d %d\n", stat($pdf)->mtime, stat($_[0])->mtime);
+  if (stat($pdf)->mtime < stat($_[0])->mtime)
+  {
+    my $delta = stat("$_[0]")->mtime - stat($pdf)->mtime;
+    print ("Oops! Latest $_[0] may not have been saved to PDF--$delta seconds ahead.\n");
+	if ($_[1] && !$ignoreTrizbort)
+	{
+	  die("Bombing out. Set -it to ignore trizbort  fails.");
+    }
+	push(@trizFail, $_[0]);
+  }
+}
+
 sub usage
 {
 print<<EOT;
@@ -609,7 +643,7 @@ print<<EOT;
 -t = print various test results
 -a = copy auxiliary files, -d = copy binary files, -d/ab/ba = -a + -b (eg both)
 -f doesn't look for a whole project but rather for a specific file, then runs that project
--sw/ws = search for need strict/warnings
+-sw/ws = search for need strict/warnings, -t = test, -it = ignore trizbort fails
 Putting = after a command runs tests
 -? = this
 EOT
