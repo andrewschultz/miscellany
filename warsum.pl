@@ -43,7 +43,7 @@ my $argCount = 0;
 
 #options
 my $fileToSearch = "";
-my $sortByLine = 0;
+my $sortByLine = 1;
 my $adjustWarnings = 0;
 
 print "SortByLine " . ($sortByLine ? "on" : "off") . " by default.\n";
@@ -187,12 +187,12 @@ sub adjustWarnings
 
   while ($line = <A>)
   {
-    if ($line =~ /\@([^ ])+\[/)
+    if ($line =~ /\@([^\[ ])+\[.*?]/)
 	{
 	  $gotOne++;
 	  #print "Line $.\n";
 	  #print $line;
-	  $line =~ s/\@([^ ]+)\[/\$$1\[/g;
+	  $line =~ s/\@([^\]]+)(\[.*?\])/\$$1$2/g;
 	  #print $line;
 	  if ($line =~ /^[ \t]*#/) { $commentChange++; }
 	}

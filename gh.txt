@@ -195,12 +195,13 @@ TOBASE=fourdiopolis
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
+oafs=$is\uo.odt,
 oafs=$is\story.ni,
-oafs=$ws\invis\uo.txt
-oafs=$tr\uoup.pdf
-oafs=$tr\uoup.trizbort
-oafs=$tr\uodn.pdf
-oafs=$tr\uodn.trizbort
+oafs=$ws\invis\uo.txt,
+oafs=$tr\uoup.pdf,
+oafs=$tr\uoup.trizbort,
+oafs=$tr\uodn.pdf,
+oafs=$tr\uodn.trizbort,
 oafs=c:\games\inform\ugly-oafs Materials\Release\ugly-oafs-invisiclues.htm
 
 #Dirk files to GitHub
@@ -495,6 +496,7 @@ rmt=txt2bmp\txt2bmp.c,txt2bmp
 -b:rmt=txt2bmp\txt2bmp.exe,txt2bmp sz:120000
 ########################apple DSK specific images here
 rmt=c:\coding\games\apple\dsk.pl,apple
+rmt=c:\writing\fimg\iconrev.pl,perl
 rmt=c:\coding\games\apple\dsk2bmp.pl,apple
 ########################specific games for mapconv/mapcpy below here
 rmt=c:\games\readme.MD,samples

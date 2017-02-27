@@ -57,9 +57,10 @@ name=roiling,r,ro,aro,s13
 >>crv.pl -r >> roil-log.txt
 out=roiling.zip
 v=4
-F=c:/games/inform/roiling.inform/Source/story.ni
+F=c:\games\inform\roiling.inform\Source\story.ni
 F=c:\games\inform\roiling Materials\Release\A Roiling Original.gblorb
 F=c:\games\inform\triz\roiling.pdf
+F=c:\games\inform\triz\voltmaze.pdf
 F=c:\games\inform\roiling.inform\Source\logic.htm
 F=c:\games\inform\roiling.inform\Source\metrics.htm
 F=c:\writing\scripts\roiling-invisiclues.htm
@@ -73,6 +74,7 @@ F=c:\games\inform\roiling.inform\Source\roiling-u-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-v-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-w-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-y-walkthrough.pdf
+>>pdftk A=c:/games/inform/triz/mine/roiling.pdf B=c:/games/inform/triz/mine/voltmaze.pdf C=c:/games/inform/roiling.inform/Source/roiling-h-walkthrough.pdf D=c:/games/inform/roiling.inform/Source/roiling-p-walkthrough.pdf E=c:/games/inform/roiling.inform/Source/roiling-t-walkthrough.pdf F=c:/games/inform/roiling.inform/Source/roiling-u-walkthrough.pdf G=c:/games/inform/roiling.inform/Source/roiling-v-walkthrough.pdf H=c:/games/inform/roiling.inform/Source/roiling-w-walkthrough.pdf I=c:/games/inform/roiling.inform/Source/roiling-y-walkthrough.pdf cat A B C D E F G H I output c:\games\inform\roiling.inform\Source\roiling-all-maps.pdf
 !
 
 name=dirk,s15
