@@ -56,13 +56,15 @@ while ($x = <X>)
   if ($x =~ /^#/) { next; }
 
   my @cmd = split(/=/, $x);
-  if (lc($cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, $cmd[1]); }
-  elsif (lc($cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
+  if (defined($cmd[0]))
+  {
+    if (lc($cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, $cmd[1]); }
+    elsif (lc($cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
+	else { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } }
+  }
   elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
   elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
-  elsif ($#cmd > -1) { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } #print "$_ to $cmd[1].\n";
-  }
 }
 #sensible abbreviations
 
@@ -260,8 +262,8 @@ my $covr = "$betaDir\\Release\\Cover";
 my $smcov = "$betaDir\\Small Cover";
 if (-f "$cover.jpg") { print "BETA: Erasing old jpg.\n"; system("Erase \"$cover.jpg\""); }
 if (-f "$cover.png") { print "BETA: Erasing old png.\n"; system("Erase \"$cover.png\""); }
-if (-f "$covr.png") { print "BETA: Erasing old Release\png.\n"; system("Erase \"$covr.png\""); }
-if (-f "$covr.jpg") { print "BETA: Erasing old Release\jpg.\n"; system("Erase \"$covr.jpg\""); }
+if (-f "$covr.png") { print "BETA: Erasing old Release\\png.\n"; system("Erase \"$covr.png\""); }
+if (-f "$covr.jpg") { print "BETA: Erasing old Release\\jpg.\n"; system("Erase \"$covr.jpg\""); }
 if (-f "$smcov.jpg") { print "BETA: Erasing old small jpg.\n"; system("Erase \"$smcov.jpg\""); }
 if (-f "$smcov.png") { print "BETA: Erasing old small png.\n"; system("erase \"$smcov.png\""); }
 
