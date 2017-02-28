@@ -49,14 +49,26 @@ shu=$is\dial.htm,shuffling\shuffling-random.htm
 shu=$im\Release\shuffling-invisiclues.htm,shuffling
 shu=$ws\invis\sa.txt,shuffling
 shu=$im\Release\Cover.jpg,shuffling
-shu=$tr\shuffling-around.trizbort,shuffling
-shu=$tr\shuffling-around.pdf,shuffling
 shu=c:\users\andrew\dropbox\notes\shuf*,shuffling
 shu=$id,shuffling
 shu=$is\roomlist.txt,shuffling
 shu=$is\reg-sa-*,\shuffling\testing
 -b:shu=$im\Release\Shuffling Around.gblorb,shuffling
 -b:shu=c:\games\inform\beta Materials\Release\beta-Shuffling Around.gblorb,shuffling
+##################################big walkthrough index
+shu=$is\sa.odt,shuffling\maps
+##################################trizbort maps
+shu=$tr\shuffling-around.trizbort,shuffling\maps
+shu=$tr\shuffling-around.pdf,shuffling\maps
+##################################trizbort walkthrough/flowchart maps
+shu=$is\shuffling-around-f-walkthrough.trizbort,shuffling\maps
+shu=$is\shuffling-around-f-walkthrough.pdf,shuffling\maps
+shu=$is\shuffling-around-i-walkthrough.trizbort,shuffling\maps
+shu=$is\shuffling-around-i-walkthrough.pdf,shuffling\maps
+shu=$is\shuffling-around-m-walkthrough.trizbort,shuffling\maps
+shu=$is\shuffling-around-m-walkthrough.pdf,shuffling\maps
+shu=$is\shuffling-around-r-walkthrough.trizbort,shuffling\maps
+shu=$is\shuffling-around-r-walkthrough.pdf,shuffling\maps
 
 #Roiling files
 TOBASE=stale-tales-slate
@@ -84,6 +96,8 @@ roi=$is\roomlist.txt,roiling
 roi=$is\reg-roi-*,\roiling\testing
 -b:roi=$im\Release\A Roiling Original.gblorb,roiling
 -b:roi=c:\games\inform\beta Materials\Release\beta-A Roiling Original.gblorb,roiling
+##################################big walkthrough index
+roi=$is\roiling.odt,roiling\maps
 ##################################trizbort maps
 roi=$tr\roiling.trizbort,roiling\maps
 roi=$tr\roiling.pdf,roiling\maps
@@ -195,7 +209,7 @@ TOBASE=fourdiopolis
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
-oafs=$is\uo.odt,
+oafs=$is\uo.odt ,
 oafs=$is\story.ni,
 oafs=$ws\invis\uo.txt,
 oafs=$tr\uoup.pdf,

@@ -12,6 +12,8 @@ F=c:\games\inform\triz\shuffling-around.pdf
 F=c:\games\inform\shuffling.inform\Source\shuffling-logic.txt
 F=c:\writing\scripts\shuffling-invisiclues.htm
 F=c:\Users\Andrew\Dropbox\notes\shuffling_around_release_%_notes.txt
+>>"C:\Program Files (x86)\LibreOffice 5\program\soffice.exe" -headless -convert-to txt:"Text" -outdir c:\games\inform\shuffling.inform\Source "c:\games\inform\shuffling.inform\Source\sa.odt"
+>>pdftk A=c:/games/inform/shuffling.inform/Source/shuffling.pdf B=c:/games/inform/triz/mine/shuffling-around.pdf C=c:/games/inform/shuffling.inform/Source/shuffling-around-walkthrough-f.pdf D=c:/games/inform/shuffling.inform/Source/shuffling-around-walkthrough-i.pdf E=c:/games/inform/shuffling.inform/Source/shuffling-around-walkthrough-m.pdf F=c:/games/inform/shuffling.inform/Source/shuffling-around-walkthrough-r.pdf A B C D E F output c:\games\inform\shuffling.inform\Source\shuffling-all-maps.pdf
 !
 
 name=3dop,3d,13
@@ -40,7 +42,7 @@ tree:c:/games/inform/fourdiopolis materials/Release,play_online
 name=ugly-oafs,uo,14
 v=3
 out=ugly_oafs_release_%.zip
->>c::\program files (x86)\OpenOffice 4\program\soffice --headless --convert-to pdf c:/games/inform/ugly-oafs.inform/Source/uo.odt --outdir c:/games/inform/ugly-oafs.inform/Source --headless
+>>"c:\program files (x86)\LibreOffice 5\program\lowriter" -headless -convert-to pdf c:\games\inform\ugly-oafs.inform\Source\uo.odt -outdir c:\games\inform\ugly-oafs.inform\Source
 #>>pdftk c:/games/inform/ugly-oafs.inform/Source/uo.pdf c:/games/inform/triz/uoup.pdf c:/games/inform/triz/uodn.pdf cat output ugly-oafs-guide.pdf
 >>pdftk A=c:/games/inform/ugly-oafs.inform/Source/uo.pdf B=c:/games/inform/triz/mine/uoup.pdf C=c:/games/inform/triz/mine/uodn.pdf cat A1-6 B C A7 output c:\games\inform\zip\ugly-oafs-guide.pdf
 F=c:/games/inform/zip/ugly-oafs-guide.pdf
@@ -74,7 +76,8 @@ F=c:\games\inform\roiling.inform\Source\roiling-u-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-v-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-w-walkthrough.pdf
 F=c:\games\inform\roiling.inform\Source\roiling-y-walkthrough.pdf
->>pdftk A=c:/games/inform/triz/mine/roiling.pdf B=c:/games/inform/triz/mine/voltmaze.pdf C=c:/games/inform/roiling.inform/Source/roiling-h-walkthrough.pdf D=c:/games/inform/roiling.inform/Source/roiling-p-walkthrough.pdf E=c:/games/inform/roiling.inform/Source/roiling-t-walkthrough.pdf F=c:/games/inform/roiling.inform/Source/roiling-u-walkthrough.pdf G=c:/games/inform/roiling.inform/Source/roiling-v-walkthrough.pdf H=c:/games/inform/roiling.inform/Source/roiling-w-walkthrough.pdf I=c:/games/inform/roiling.inform/Source/roiling-y-walkthrough.pdf cat A B C D E F G H I output c:\games\inform\roiling.inform\Source\roiling-all-maps.pdf
+>>"c:\program files (x86)\LibreOffice 5\program\soffice" -headless -convert-to pdf c:\games\inform\roiling.inform\Source\roiling.odt -outdir c:\games\inform\roiling.inform\Source -headless
+>>pdftk A=c:/games/inform/roiling.inform/Source/roiling.pdf B=c:/games/inform/triz/mine/roiling.pdf C=c:/games/inform/triz/mine/voltmaze.pdf D=c:/games/inform/roiling.inform/Source/roiling-h-walkthrough.pdf E=c:/games/inform/roiling.inform/Source/roiling-p-walkthrough.pdf F=c:/games/inform/roiling.inform/Source/roiling-t-walkthrough.pdf G=c:/games/inform/roiling.inform/Source/roiling-u-walkthrough.pdf H=c:/games/inform/roiling.inform/Source/roiling-v-walkthrough.pdf I=c:/games/inform/roiling.inform/Source/roiling-w-walkthrough.pdf J=c:/games/inform/roiling.inform/Source/roiling-y-walkthrough.pdf cat A B C D E F G H I J output c:\games\inform\roiling.inform\Source\roiling-all-maps.pdf
 !
 
 name=dirk,s15
