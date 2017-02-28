@@ -680,11 +680,21 @@ for $t1 (sort keys %toTrack)
 	  $neutWin = winPct($t1, $t2, 0) / 100;
 	  $bothWayWin = (winPct($t1, $t2, 1) + winPct($t1, $t2, -1))/100;
 
-      $cellTitle  = sprintf("\"%.*f win exp Home+away, %.*f neutral\"", $sigFig, $bothWayWin, $sigFig, $neutWin * 100);
 	  $roundWin{$t1} += $neutWin;
 	  $roundDubWin{$t1} += $bothWayWin;
+
+      if ($t2 eq $t1)
+	  {
+	  $cellTitle = "n/a";
+	  $bg = "808080";
+	  }
+	  else
+	  {
+	  $cellTitle  = sprintf("%.*f win exp Home+away, %.*f neutral", $sigFig, $bothWayWin, $sigFig, $neutWin * 100);
 	  $bg = sprintf("%02x%02x00", 255 - winPct($t1, $t2, 1) * 2.55, winPct($t1, $t2, 1) * 2.55);
-	  $bigPrint .= "<td title=$cellTitle bgcolor=\"$bg\">";
+	  }
+
+	  $bigPrint .= "<td title=\"$cellTitle\" bgcolor=\"$bg\">";
 	  if ($t1 eq $t2) { next; }
 	  $bigPrint .= sprintf("%.*f", $sigFig, winPct($t1, $t2, 1));
 	}
