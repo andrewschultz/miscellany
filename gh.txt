@@ -258,13 +258,6 @@ prob=$is\story.ni,
 prob=$is\item-ordering.htm,
 prob=$is\termpuz.pl,
 prob=$is\problems-compound-walkthrough.htm,
-prob=$tr\compound.trizbort,
-prob=$tr\compound.pdf,
-prob=$tr\compound-walkthrough.trizbort,
-prob=$tr\compound-walkthrough.pdf,
-prob=$tr\compound-directors-cut.trizbort,
-prob=$tr\compound-directors-cut.pdf,
-prob=$tr\compound-ordering.trizbort,
 prob=$ws\invis\pc.txt,
 prob=$im\Release\problems-compound-invisiclues.htm,
 -b:prob=$im\Release\The Problems Compound.gblorb,
@@ -280,6 +273,16 @@ prob=$is\regpc.bat,testing
 prob=$is\roomlist.txt,testing
 -a:prob=$is\flip.txt,utils
 -a:prob=$is\fliptrack.txt,utils
+###################
+prob=$is\pc.odt
+###################maps
+prob=$tr\compound.trizbort,
+prob=$tr\compound.pdf,
+prob=$tr\compound-walkthrough.trizbort,
+prob=$tr\compound-walkthrough.pdf,
+prob=$tr\compound-directors-cut.trizbort,
+prob=$tr\compound-directors-cut.pdf,
+prob=$tr\compound-ordering.trizbort,
 #concept tracker
 prob=$wd\conc.pl,utils
 prob=$is\reg-pc-*,testing
@@ -345,7 +348,6 @@ past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
 past=$is\pun.pl
-
 >past=$wd\talf.pl -btp
 >past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"

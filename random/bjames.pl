@@ -28,7 +28,7 @@ while ($count <= $#ARGV)
     /^-?r/ && do { $temp = $a; $temp =~ s/^-?r//; listReverse($temp); exit(); };
     /[0-9]-[0-9]/ && do { my @score = split(/-/, $a); $dif = $score[0] - $score[1]; if ($dif < 0) { $dif = - $dif; } $count++; next; };
 	/^-?[0-9]+$/ && do { if ($a < 0) { $a = -$a; print"Assuming nonnegative lead/time.\n"; } if ($a > 30) { $secs = $a; print "Assuming $a seconds.\n"; } else { $dif = $a; print "Assuming $a deficit.\n"; } $count++; next; };
-    /[:,\.]/ && do { my @time = split(/[:,\.]/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
+    /[;:,\.]/ && do { my @time = split(/[;:,\.]/, $a); $secs = $time[0]*60 + $time[1]; $count++; next; };
     /[ny]/i && do { $haveBall = ($a =~ /y/i); $count++; next; };
     /b/i && do { $boths = 1; $count++; next; };
     usage();
@@ -56,7 +56,7 @@ my $safeness = 100 * $_[0]**2 / $secs;
   else
   {
     my $delta = $secs - $_[0]**2 + .25;
-    printf("NOT SAFE: $safeness | TIME DELTA: %d:%02d", $delta / 60, $delta % 60);
+    printf("NOT SAFE: $safeness | TIME DELTA: %d:%02d\n", $delta / 60, $delta % 60);
   }
 }
 
