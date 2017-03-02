@@ -39,6 +39,7 @@ all~wri,misc,ecto,rpg,g,sts,3,4,as
 #Shuffling files
 TOBASE=stale-tales-slate
 FROMSHORT=shuffling
+$ws\invis\sa.txt<$im\Release\shuffling-invisiclues.htm
 shu=$is\story.ni,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling random text.i7x,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling nudges.i7x,shuffling
@@ -73,6 +74,7 @@ shu=$is\shuffling-around-r-walkthrough.pdf,shuffling\maps
 #Roiling files
 TOBASE=stale-tales-slate
 FROMSHORT=roiling
+$ws\invis\roi.txt<$im\Release\roiling-invisiclues.htm
 roi=$is\story.ni,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling random text.i7x,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling nudges.i7x,roiling
@@ -171,6 +173,7 @@ roi=$wd\settler.txt,roiling
 
 #Threediopolis files to GitHub
 TOBASE=threediopolis
+$ws\invis\3d.txt<$im\Release\threediopolis-invisiclues.htm
 3d=$is\story.ni,
 3d=$is\testcase.txt,
 3d=$is\logic.txt,
@@ -209,6 +212,7 @@ TOBASE=fourdiopolis
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
+$ws\invis\uo.txt<$im\Release\ugly-oafs-invisiclues.htm
 oafs=$is\uo.odt ,
 oafs=$is\story.ni,
 oafs=$ws\invis\uo.txt,
@@ -254,6 +258,7 @@ ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
 #Problems files to GitHub
 TOBASE=the-problems-compound
 FROMSHORT=compound
+$ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm
 prob=$is\story.ni,
 prob=$is\item-ordering.htm,
 prob=$is\termpuz.pl,
@@ -294,6 +299,7 @@ prob=$is\reg-pc-*,testing
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
+$ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm
 city=$is\story.ni,
 city=$im\Release\slicker-city-invisiclues.htm,
 -b:city=$im\Release\release-Slicker City.zblorb,
@@ -328,6 +334,7 @@ city=$wd\olap.txt,
 >city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
+$ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm
 past=$is\btpbk.pl,
 past=$is\story.ni,
 past=$is\from-sc.ni,
@@ -355,6 +362,7 @@ past=$is\pun.pl
 
 #Grubbyville files
 TOBASE=grubbyville
+$ws\invis\gru.txt<$im\Release\grubbyville-invisiclues.htm
 gru=$is\intro-thru.txt,
 gru=$is\walkthru.txt,
 gru=$is\story.ni,

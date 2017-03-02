@@ -211,20 +211,24 @@ sub processTerms
 
 	if ($a =~ /</)
 	{
-	  my @timeArray = split(/</, $a);
+	  my @timeArray = split(/</, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
+	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
+	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime > stat($timeArray[1])->mtime)
 	  {
-	    print("$timeArray[0] occurs after $timeArray[1], which should not happen");
+	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen");
 	  }
 	}
 	if ($a =~ />/)
 	{
-	  my @timeArray = split(/>/, $a);
+	  my @timeArray = split(/>/, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
+	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
+	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime < stat($timeArray[1])->mtime)
 	  {
-	    print("$timeArray[0] occurs before $timeArray[1], which should not happen");
+	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen");
 	  }
 	}
 	##################note prefix like -a (auxiliary) and -b (build)
