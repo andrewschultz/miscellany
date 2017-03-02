@@ -208,6 +208,25 @@ sub processTerms
 	  else { $warnCanRun = 1; next; }
 	  next;
     }
+
+	if ($a =~ /</)
+	{
+	  my @timeArray = split(/</, $a);
+	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
+	  if (stat($timeArray[0])->mtime > stat($timeArray[1])->mtime)
+	  {
+	    print("$timeArray[0] occurs after $timeArray[1], which should not happen");
+	  }
+	}
+	if ($a =~ />/)
+	{
+	  my @timeArray = split(/>/, $a);
+	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
+	  if (stat($timeArray[0])->mtime < stat($timeArray[1])->mtime)
+	  {
+	    print("$timeArray[0] occurs before $timeArray[1], which should not happen");
+	  }
+	}
 	##################note prefix like -a (auxiliary) and -b (build)
 	#this is because auxiliary or binary files could be quite large
 	#format is -a:
