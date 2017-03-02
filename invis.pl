@@ -41,6 +41,7 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   for ($a)
   {
+  /^-\?$/ && do { listAllOutput(); exit; };
   /^-?a$/ && do { printAllFiles(0); exit; };
   /^-?d$/ && do { $debug = 1; $count++; next; };
   /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
@@ -52,6 +53,7 @@ while ($count <= $#ARGV)
   if (!defined($ARGV[$count+1])) { `$invDir\\$default.txt`; }
   else { `$invDir\\$ARGV[$count+1].txt`; }
   exit; };
+  /^-/ && do { usage(); exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }
@@ -69,7 +71,7 @@ open(A, "$filename") || die ("Can't open input file " . $filename);
 
 $a = <A>;
 
-if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "c:\\writing\\scripts\\invis\\$a"; $a = <A>; }
+if ($a =~ /^out=/i) { $a =~ s/^out=//i; chomp($a); $outname = "$invDir\\$a"; $a = <A>; }
 
 if ($updateOnly && defined(-M $outname))
 {
@@ -233,7 +235,7 @@ sub cbr
 
 sub printAllFiles
 {
-  opendir(DIR, "c:\\writing\\scripts\\invis");
+  opendir(DIR, $invDir);
   my @dfi = sort(readdir DIR);
   for my $fi (@dfi)
   {
@@ -243,6 +245,30 @@ sub printAllFiles
 	  else
 	  { print "$fi\n"; }
 	}
+  }
+}
+
+sub listAllOutput
+{
+  opendir(DIR, $invDir);
+  my @dfi = sort(readdir DIR);
+  my $dname;
+  my $fname;
+
+  for my $fi (@dfi)
+  {
+    $dname  = "(default)";
+    $fname  = "(default)";
+	if (! -f "$invDir\\$fi") { next; }
+	if ($fi !~ /txt$/i) { next; }
+    open(A, "$invDir\\$fi");
+	while ($a = <A>)
+	{
+	  if ($a =~ /^out=/) { $fname = $a; $fname =~ s/^out=//; chomp($fname); }
+	  if ($a =~ /^->/) { $dname = $a; $dname =~ s/^->//; chomp($dname); $dname =~ s/\//\\/g; }
+    }
+	close(A);
+	print "$invDir\\$fi: $dname\\$fname\n";
   }
 }
 
