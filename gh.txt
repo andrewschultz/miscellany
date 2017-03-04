@@ -493,6 +493,7 @@ FROMBASE=c:\coding\games
 TOBASE=rpg-mapping-tools
 rmt=README.md,
 rmt=mapconv\mapconv.c,mapconv
+rmt=mapconv\mapconv-help.h,mapconv
 -b:rmt=mapconv\mapconv.exe,mapconv sz:90000
 rmt=mapconv\README.md,mapconv
 rmt=mapcpy\mapcpy.c,mapcpy
@@ -585,6 +586,10 @@ rmt=c:\coding\games\shard\readme.MD,samples\shard-of-spring
 rmt=c:\games\u1\u1.txt,samples\ultima
 rmt=c:\games\u2\u2.txt,samples\ultima
 rmt=c:\games\u3\u3.txt,samples\ultima
+rmt=c:\games\u3\u3.nmr,samples\ultima
+rmt=c:\games\u3\u3.ahs,samples\ultima
+rmt=c:\games\u3\u3.xtr,samples\ultima
+rmt=c:\games\u3\u3d.ahs,samples\ultima
 rmt=c:\games\u4\u4.txt,samples\ultima
 rmt=c:\games\u5\u5.txt,samples\ultima
 rmt=c:\games\u3\readme.MD,samples\ultima
@@ -603,6 +608,7 @@ rmt=c:\coding\games\xyphus\xyphus-c.txt,samples\xyphus
 ####Standing Stones
 rmt=stst\stst.c,samples-3d\standing-stones
 rmt=stst\stst.txt,samples-3d\standing-stones
+##########################################Windows GUI stuff
 #Ultima IV
 rmt=u4map\README.md,u4map
 rmt=u4map\level.bmp,u4map
