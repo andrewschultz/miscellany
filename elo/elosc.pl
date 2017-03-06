@@ -621,24 +621,29 @@ foreach $x (sort keys %rating)
 sub printOutRatings
 {
 my $bigPrint = "";
+my $canProject = 0;
 
 foreach $x (sort keys %rating)
 {
+  if (defined($expWins{$x}) || defined($expLoss{$x}))
+  {
+    $canProject = 1;
+  }
   if (!defined($expWins{$x})) { $expWins{$x} = 0; }
   if (!defined($expLoss{$x})) { $expLoss{$x} = 0; }
   $rating{$x} = int($rating{$x} + .5);
   #print "$rating{$x}\n";
 }
 
-my $totalWinRound = 0;
-my $totalLossRound = 0;
+  my $totalWinRound = 0;
+  my $totalLossRound = 0;
 
- my $rank = 0;
+  my $rank = 0;
 
- if ($predictFuture) { predictFutureWins(); }
+  if ($predictFuture && $canProject) { predictFutureWins(); }
 
- $bigPrint .= "<center><font size=+3><b>ELO/Predicted finish table</b></font></center><br />Text here<br /><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
-  if ($predictFuture) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
+  $bigPrint .= "<center><font size=+3><b>ELO" . ($canProject ? "/Predicted finish table" : "") . "</b></font></center><br />Text here<br /><table border=1><th>Rank<th>Team<th>W-L<th>Rating";
+  if ($predictFuture && $canProject) { $bigPrint .= "<th>ExpTotal<th>Rounded<th>ExpLeft"; }
   if ($compareFlatRecord) { $bigPrint .= "<th colspan=2>ELO by WL"; }
   $bigPrint .= "\n";
   foreach $x (sort {$rating{$b} <=> $rating{$a} || $wins{$b} <=> $wins{$a} } keys %rating)
@@ -648,8 +653,10 @@ my $totalLossRound = 0;
     $bigPrint .= "<tr><td>$rank<td>$x<td><center>$wins{$x}-$losses{$x}</center><td><center>$rating{$x}</center>";
 	$totalWinRound += round($expWins{$x});
 	$totalLossRound += round($expLoss{$x});
-    if ($predictFuture) { $bigPrint .= sprintf("<td><center>%.*f-%.*f</center><td><center>%d-%d</center><td><center>%.*f-%.*f</center>", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
+    if ($predictFuture && $canProject)
+	{ $bigPrint .= sprintf("<td><center>%.*f-%.*f</center><td><center>%d-%d</center><td><center>%.*f-%.*f</center>", $sigFig, $wins{$x} + $expWins{$x}, $sigFig, $losses{$x} + $expLoss{$x},
 	  round($wins{$x} + $expWins{$x}), round($losses{$x} + $expLoss{$x}), $sigFig, $expWins{$x}, $sigFig, $expLoss{$x});
+    }
 	if ($compareFlatRecord)
 	{
 	  my $eloPred = round($defaultRating + .5 + $magnitudeConstant * log($wins{$x}/$losses{$x}) / log(10));
@@ -658,7 +665,6 @@ my $totalLossRound = 0;
 	  if ($rating{$x} - $eloPred < -10) { $whatBg = "ff0000"; }
 	  $bigPrint .= sprintf("<td><center>%d</center><td bgcolor=%s><center>%d</center>", $eloPred, $whatBg, $rating{$x} - $eloPred);
     }
-    }
     $bigPrint .= "\n";
   }
   $bigPrint .= "</table>\n";
@@ -666,7 +672,7 @@ my $totalLossRound = 0;
   #die($bigPrint);
 
 # now to print the table of probabilities
-$bigPrint .= "<center><font size=+3><b>Head to Head</b></font></center><br />Text here<br /><table border=1><tr><td>H/A";
+$bigPrint .= "<center><font size=+3><b>Head to Head</b></font></center><br />Text here<br /><table border=1><tr><th>H/A</th>";
 
 my $t1;
 my $t2;
@@ -679,14 +685,14 @@ my $temp;
 
 for $t1 (sort keys %rating)
   {
-    $bigPrint .= "<td>";
-	$bigPrint .= ifshort($t1);
+    $bigPrint .= "<th>";
+	$bigPrint .= "<center>" . ifshort($t1) . "</center></th>";
   }
 $bigPrint .= "\n";
 for $t1 (sort keys %toTrack)
   {
     $bigPrint .= "<tr><td>";
-	$bigPrint .= ifshort($t1);
+	$bigPrint .= "<b>" . ifshort($t1) . "</b></td>";
     for $t2 (sort keys %rating)
 	{
 	  $neutWin = winPct($t1, $t2, 0) / 100;
@@ -708,7 +714,7 @@ for $t1 (sort keys %toTrack)
 
 	  $bigPrint .= "<td title=\"$cellTitle\" bgcolor=\"$bg\">";
 	  if ($t1 eq $t2) { next; }
-	  $bigPrint .= sprintf("%.*f", $sigFig, winPct($t1, $t2, 1));
+	  $bigPrint .= sprintf("<center>%.*f</center>", $sigFig, winPct($t1, $t2, 1));
 	}
 	$bigPrint .= "\n";
   }
@@ -719,7 +725,7 @@ for $t1 (sort keys %toTrack)
 	my $elts = scalar (keys %rating )- 1;
 	for $t1 (sort { $rating{$b} <=> $rating{$a} } keys %toTrack)
 	{
-	  $bigPrint .= sprintf("<tr><td>$t1<td>%.*f-%.*f<td>%.*f-%.*f\n", $sigFig, $roundWin{$t1}, $sigFig, $elts - $roundWin{$t1}, $sigFig, $roundDubWin{$t1}, $sigFig, 2 * $elts - $roundDubWin{$t1});
+	  $bigPrint .= sprintf("<tr><td>$t1</td><td><center>%.*f-%.*f</center></td><td><center>%.*f-%.*f</center></td></tr>\n", $sigFig, $roundWin{$t1}, $sigFig, $elts - $roundWin{$t1}, $sigFig, $roundDubWin{$t1}, $sigFig, 2 * $elts - $roundDubWin{$t1});
     }
 	$bigPrint .= "</table>\n";
   }
@@ -751,7 +757,7 @@ for $t1 (sort keys %toTrack)
 	  my $maxVal = 0;
 	  for (0..$#newWins) { if ($newWins[$_] > $max) { $maxVal = $_; $max = $newWins[$_]; } }
         $bigPrint .= "<tr><td>$t1<td>";
-		$bigPrint .= join("<td>", map { sprintf("%s%.*f%s", ($_ == $max) ? "<b>" : "", $sigFig, $_*100, ($_ == $max) ? "</b>" : "") } @wins) . "\n";
+		$bigPrint .= join("<td>", map { sprintf("<center>%s%.*f%s</center>", ($_ == $max) ? "<b>" : "", $sigFig, $_*100, ($_ == $max) ? "</b>" : "") } @wins) . "\n";
 	}
     $bigPrint .= "</table>\n";
   }
