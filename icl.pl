@@ -225,7 +225,7 @@ sub doOneBuild
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
 
-  if ((! -f $outFinal) || (-s "\"$outFinal\"" < -s "\"$outFile\""))
+  if ((! -f $outFinal) || (-s "$outFinal" < -s "$outFile"))
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation failed,0,1,0\n";
 	return;

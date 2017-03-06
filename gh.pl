@@ -631,7 +631,7 @@ sub rehash
 
 sub shouldCheck
 {
-  if ($_[0] =~ /\.(pl|txt|c|md|cpp|ahs|nmr)$/i) { return 1; }
+  if ($_[0] =~ /\.(pl|txt|c|md|ni|cpp|ahs|nmr)$/i) { return 1; }
   return 0;
 }
 
