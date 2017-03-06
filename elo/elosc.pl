@@ -58,6 +58,8 @@ my $projectString = 0;
 my $projectReverse = 0;
 my $outFile = "elo.htm";
 my $compareFlatRecord = 0;
+my $tourney = 0;
+my $tourneyFile = "eloko.txt";
 
 #variables
 my $x;
@@ -103,9 +105,10 @@ while ($count <= $#ARGV)
 	/^-?e$/ && do { $expByWin = 1; $count ++; next; };
 	/^-?cf(r)?$/ && do { $compareFlatRecord = 1; $count ++; next; };
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
-	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
+    /^-?k(o)?(f)?$/ && do { $tourney = 1; $count += 1 + ($b  =~ /f/); if ($count =~ /f/) { $tourneyFile = $b; } next; };
+	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
 	/^-?mc$/ && do { $magnitudeConstant = $b; $count += 2; next; };
@@ -169,6 +172,7 @@ readTeamGames();
 doIterations();
 stabilizeRatings();
 printOutRatings();
+if ($tourney) { printTourney(); }
 
 ##########################################################################subroutines
 
@@ -242,7 +246,13 @@ if (($debugEveryX) && ($count  % $debugEveryX == 0))
 
 }
 
-##################this is the ELO formula for expected wins
+##################this is the ELO formula for expected wins $_[0] vs $_[1] and $_[2] = if 0 is at home (1) or on the road (-1)
+sub winProb
+{
+  my $exp = ($rating{$_[1]} - $rating{$_[0]} - $home * $_[2]) / $magnitudeConstant;
+  return 1/(1+10**$exp);
+}
+
 sub winPct
 {
   my $exp = ($rating{$_[1]} - $rating{$_[0]} - $home * $_[2]) / $magnitudeConstant;
@@ -614,6 +624,8 @@ my $bigPrint = "";
 
 foreach $x (sort keys %rating)
 {
+  if (!defined($expWins{$x})) { $expWins{$x} = 0; }
+  if (!defined($expLoss{$x})) { $expLoss{$x} = 0; }
   $rating{$x} = int($rating{$x} + .5);
   #print "$rating{$x}\n";
 }
@@ -855,6 +867,116 @@ sub predictFutureWins
 	}
   }
   $expPrint = "<center><font size=+3><b>Remaining Win Distribution</b></font></center><br />Text here<br /><table border=1><th>Team<th>" . join("<th>", (0..$maxLeft)) . "\n" . $expPrint . "</table>\n";
+}
+
+sub printTourney
+{
+  my @tourneyGames = ();
+  my @nextRound = ();
+  my @left;
+  my @right;
+  my @all;
+  my @temp;
+  my %thisRoundTotals;
+  my %nextRoundTotals;
+  my @thisGame;
+
+  my $tg;
+  my $t1;
+  my $t2;
+  my $thisProb;
+  my $round = 0;
+
+  open(A, $tourneyFile) || die ("No $tourneyFile.");
+  while ($a = <A>)
+  {
+     chomp($a);
+	 push(@tourneyGames, $a);
+  }
+
+  while ($#tourneyGames >= 0)
+  {
+  @nextRound = ();
+  for (@tourneyGames)
+  {
+    if ($tourneyGames[0] =~ /\/$/) { last; }
+    %thisRoundTotals = ();
+	%nextRoundTotals = ();
+    @thisGame = split(/\//, $_);
+	if ($#tourneyGames)
+	{
+	if (lc($thisGame[1]) eq "bye" || lc($thisGame[1] eq "bye=1"))
+	{
+	  if ($thisGame[0] !~ /=/) { $thisGame[0] .= "=1"; }
+	  push(@nextRound, $thisGame[0]);
+	  next;
+    }
+	elsif (lc($thisGame[0]) eq "bye" || lc($thisGame[0] eq "bye=1"))
+	{
+	  if ($thisGame[1] !~ /=/) { $thisGame[1] .= "=1"; }
+	  push(@nextRound, $thisGame[1]);
+	  next;
+    }
+	}
+	@left=split(/;/ ,   $thisGame[0]);
+	@right=split(/;/ ,   $thisGame[1]);
+	@all = (@left, @right);
+
+	 for $t1 (@left)
+	 {
+	   @temp = split(/=/,  $t1);
+	   if ($#temp == 0) { $thisRoundTotals{$temp[0]} = 1; }
+	   else { $thisRoundTotals{$temp[0]} = $temp[1]; }
+	    $t1 =~ s/=.*//;
+ 	 }
+
+	 for $t1 (@right)
+	 {
+	   @temp = split(/=/,  $t1);
+	   if ($#temp == 0) { $thisRoundTotals{$temp[0]} = 1; }
+	   else { $thisRoundTotals{$temp[0]} = $temp[1]; }
+	    $t1 =~ s/=.*//;
+	 }
+
+	 for $t1 (@left)
+	 {
+	   for $t2 (@right)
+	   {
+	     #print "$t1 vs $t2, $rating{$t1}, $rating{$t2}\n";
+		 if ((lc($t1) eq "bye") || (lc($t1) eq "bye=1")) { $thisProb  = 0; }
+		 elsif ((lc($t2) eq "bye") || (lc($t2) eq "bye=1")) { $thisProb  = 1; }
+	     else { $thisProb = winProb($t1, $t2, 0); }
+
+		 #print "$t1 gets " . $thisRoundTotals{$t2} * $thisRoundTotals{$t1} * $thisProb . "\n";
+		 #print "$t2 gets " . $thisRoundTotals{$t2} * $thisRoundTotals{$t1} * (1-$thisProb) . "\n";
+	     $nextRoundTotals{$t1}  += $thisRoundTotals{$t2} * $thisRoundTotals{$t1} * $thisProb;
+	     $nextRoundTotals{$t2}  += $thisRoundTotals{$t2} * $thisRoundTotals{$t1} * (1 - $thisProb);
+	   }
+	 }
+ 	 for $tg (keys %nextRoundTotals)
+	 {
+	   $nextRoundTotals{$tg}  = sprintf("%.5f", $nextRoundTotals{$tg});
+	 }
+	 push(@nextRound, join(";", map { "$_=$nextRoundTotals{$_}" } keys %nextRoundTotals));
+  }
+  $round++;
+  print "Round $round:\n";
+  @tourneyGames = ();
+  if ($nextRound[0] =~ /\/$/)
+  {
+  @tourneyGames[0] = $nextRound[0];
+  }
+  for (0..$#nextRound/2)
+  {
+    @tourneyGames[$_] = "@nextRound[$_*2]/@nextRound[$_*2+1]";
+  }
+  print "" . (join("\n", @tourneyGames)) . "\n";
+  if ($round == 6)
+  {
+  die($#nextRound);
+  }
+  }
+  close(A);
 }
 
 ##################################standard usage file
