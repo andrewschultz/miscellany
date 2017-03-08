@@ -8,13 +8,16 @@
 
 use strict;
 use warnings;
+use File::Copy qw (copy);
 
 if ($#ARGV == -1) { die ("Need name of file."); }
 
 my $filename = $ARGV[0];
 my $outfile = $filename;
+
 $outfile =~ s/\./-despace\./;
-if ($outfile eq $filename) { $outfile .= "-despace";
+
+if ($outfile eq $filename) { $outfile .= "-despace"; }
 
 my $outFileText = "";
 
@@ -27,6 +30,12 @@ my $parzap = 0;
 
 if (!defined($ARGV[0])) { die ("Need a file name to proceed."); }
 
+if (defined($ARGV[1]))
+{
+  if ($ARGV[1] =~ /^-?y$/i) { $copyBackOver = 1; }
+  if ($ARGV[1] =~ /^-?n$/i) { $copyBackOver = 0; }
+}
+
 open(A, "$ARGV[0]") || die ("Can't find $ARGV[0].");
 
 print "$filename to $outfile\n";
@@ -35,6 +44,7 @@ my $gotMarkup = 0;
 
 while (my $line = <A>)
 {
+  if ($line =~ /  OUTLINE/) { die ("You may want to delete your manual outline so that the ='s are not duplicated."); }
   $line =~ s/schultz.andrew\@earthlink.net/blurglecruncheno\@gmali.cmo \(anti spam typo\)/g;
 
   ###############fix numerical outlines to ='s
@@ -79,4 +89,5 @@ if ($copyBackOver)
 {
   print "Copying $outfile back over.";
   copy($outfile, $filename);
+  if (-f $outfile && -f $filename) { unlink<$outfile>; }
 }
