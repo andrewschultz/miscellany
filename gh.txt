@@ -431,8 +431,6 @@ misc=gh.bat,
 misc=tts.pl,
 misc=lnct.pl,
 misc=c:\scripts\unch.pl,
-misc=salf.pl,wrifi
-misc=noter.pl,wrifi
 misc=$wd\aadd.pl,
 misc=pch.pl,
 misc=pch.txt,
@@ -443,6 +441,11 @@ misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
 misc=unco.pl,
 misc=$wd\fl.pl,
+#################Fiction  or FAQ rewriting
+misc=salf.pl,wrifi
+misc=noter.pl,wrifi
+misc=c:\writing\faqs\desp.pl,wrifi
+##################ELO rating
 misc=c:\coding\perl\elo\elosc.pl,elo
 misc=c:\coding\perl\elo\elonick.txt,elo
 misc=c:\coding\perl\elo\elotest1.txt,elo
