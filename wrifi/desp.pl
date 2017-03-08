@@ -23,6 +23,7 @@ my $outFileText = "";
 
 my $lastLineText = 0;
 my $spacesFound = 0;
+my $outlines = 0;
 
 my $copyBackOver = 1;
 
@@ -44,12 +45,14 @@ my $gotMarkup = 0;
 
 while (my $line = <A>)
 {
+  if ($line =~ /;format:gf-markup/) { die ("This has already been converted. Delete the first line to try again."); }
   if ($line =~ /  OUTLINE/) { die ("You may want to delete your manual outline so that the ='s are not duplicated."); }
   $line =~ s/schultz.andrew\@earthlink.net/blurglecruncheno\@gmali.cmo \(anti spam typo\)/g;
 
   ###############fix numerical outlines to ='s
   if (($line =~ /^(  )*[0-9].*\./) && ($line !~ /[a-z]/))
   {
+    $outlines++;
     chomp($line);
     my $line2 = $line;
 	$line2 =~ s/.*\. *//;
@@ -84,10 +87,11 @@ print B $outFileText;
 close(B);
 
 printf("%d bytes to %d bytes, total spaces = %d.\n", -s "$filename", -s "$outfile", $spacesFound);
+print "Outline sections found: $outlines\n";
 
 if ($copyBackOver)
 {
-  print "Copying $outfile back over.";
+  print "Copying $outfile back over.\n";
   copy($outfile, $filename);
-  if (-f $outfile && -f $filename) { unlink<$outfile>; }
+  if (-f "$outfile" && -f "$filename") { unlink $outfile; print "Deleting $outfile\n"; }
 }
