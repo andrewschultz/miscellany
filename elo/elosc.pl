@@ -62,6 +62,7 @@ my $tourney = 0;
 my $tourneyFile = "eloko.txt";
 
 #variables
+my $bigPrint = "";
 my $x;
 my $closeEnough = 0;
 my $count = 0;
@@ -171,8 +172,11 @@ if (scalar(keys %toIgnore))
 readTeamGames();
 doIterations();
 stabilizeRatings();
-printOutRatings();
+
 if ($tourney) { printTourney(); }
+
+#ok tourney is not technically part of ratings but it is a projection
+printOutRatings();
 
 ##########################################################################subroutines
 
@@ -620,7 +624,6 @@ foreach $x (sort keys %rating)
 #######################here we print out all the ratings
 sub printOutRatings
 {
-my $bigPrint = "";
 my $canProject = 0;
 
 foreach $x (sort keys %rating)
@@ -893,6 +896,9 @@ sub printTourney
   my $thisProb;
   my $round = 0;
 
+  my $tablePrint = "<table border=1>\n<th>Team";
+  my %teamProbs;
+
   open(A, $tourneyFile) || die ("No $tourneyFile.");
   while ($a = <A>)
   {
@@ -900,7 +906,7 @@ sub printTourney
 	 push(@tourneyGames, $a);
   }
 
-  while ($#tourneyGames >= 0)
+  while (($#tourneyGames > 0) || ($tourneyGames[0] =~ /=.*\/.*=/))
   {
   @nextRound = ();
   for (@tourneyGames)
@@ -913,12 +919,14 @@ sub printTourney
 	{
 	if (lc($thisGame[1]) eq "bye" || lc($thisGame[1] eq "bye=1"))
 	{
+	  $teamProbs{$thisGame[0]} .= "<td>100.00%</td>";
 	  if ($thisGame[0] !~ /=/) { $thisGame[0] .= "=1"; }
 	  push(@nextRound, $thisGame[0]);
 	  next;
     }
 	elsif (lc($thisGame[0]) eq "bye" || lc($thisGame[0] eq "bye=1"))
 	{
+	  $teamProbs{$thisGame[1]} .= "<td>100.00%</td>";
 	  if ($thisGame[1] !~ /=/) { $thisGame[1] .= "=1"; }
 	  push(@nextRound, $thisGame[1]);
 	  next;
@@ -962,26 +970,41 @@ sub printTourney
  	 for $tg (keys %nextRoundTotals)
 	 {
 	   $nextRoundTotals{$tg}  = sprintf("%.5f", $nextRoundTotals{$tg});
+	   $teamProbs{$tg} .= sprintf("<td bgcolor=\"%02x%02x00\">%.2f%%</td>", 255.9*(1-$nextRoundTotals{$tg}), 255.9*($nextRoundTotals{$tg}), $nextRoundTotals{$tg} * 100);
 	 }
 	 push(@nextRound, join(";", map { "$_=$nextRoundTotals{$_}" } keys %nextRoundTotals));
   }
   $round++;
-  print "Round $round:\n";
+  $tablePrint .= "<th>Round " . $round;
+  #print "Round $round:\n";
   @tourneyGames = ();
   if ($nextRound[0] =~ /\/$/)
   {
   @tourneyGames[0] = $nextRound[0];
   }
+  if ($#nextRound)
+  {
   for (0..$#nextRound/2)
   {
     @tourneyGames[$_] = "@nextRound[$_*2]/@nextRound[$_*2+1]";
   }
-  print "" . (join("\n", @tourneyGames)) . "\n";
+  }
+  else { last; }
+  #print "" . (join("\n", @tourneyGames)) . "\n";
   if ($round == 6)
   {
   die($#nextRound);
   }
   }
+
+  delete($teamProbs{"Bye"});
+  for (sort keys %teamProbs)
+  {
+    $tablePrint .= "<tr><td>$_$teamProbs{$_}\n";
+  }
+  $tablePrint .= "</table>";
+
+  $bigPrint .= $tablePrint;
   close(A);
 }
 
@@ -1001,6 +1024,7 @@ print<<EOT;
 -ff sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
 -h specifies home advantage
 -i changes number of iterations
+-k(o) sets up knockout tourney (of optional) file = eloko.txt with -f tacked on
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
 -mc changes the magnitude constant from 400 (e.g. when 1 team is 10x better than another, or wins 10 to their 1)
