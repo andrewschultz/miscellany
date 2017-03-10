@@ -72,6 +72,7 @@ my $addString;
 my $flipString;
 my $undoString;
 my $expPrint = "";
+my @tourneyElim = ();
 
 my @teams;
 my %nickname;
@@ -109,6 +110,7 @@ while ($count <= $#ARGV)
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
     /^-?k(o)?(f)?$/ && do { $tourney = 1; $count += 1 + ($b  =~ /f/); if ($count =~ /f/) { $tourneyFile = $b; } next; };
+    /^-?ke$/ && do { @tourneyElim = split(/,/, lc($b)); $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
 	/^-?m$/ && do { $maxTotalShift = $b; $count += 2; next; };
 	/^-?m1$/ && do { $maxSingleShift = $b; $count += 2; next; };
@@ -889,6 +891,7 @@ sub printTourney
   my %thisRoundTotals;
   my %nextRoundTotals;
   my @thisGame;
+  my %forceOut;
 
   my $tg;
   my $t1;
@@ -899,12 +902,18 @@ sub printTourney
   my $tablePrint = "<table border=1>\n<th>Team";
   my %teamProbs;
 
+  for (@tourneyElim) { $forceOut{$_} = 1; }
   open(A, $tourneyFile) || die ("No $tourneyFile.");
   while ($a = <A>)
   {
+	 if ($a =~ /^;/) { last; }
      chomp($a);
+	 @temp = split(/\//, $a);
+	 for (@temp) { if ($forceOut{lc($_)}) { $_ = "Bye"; } }
+	 $a = join("/", @temp);
 	 push(@tourneyGames, $a);
   }
+  close(A);
 
   while (($#tourneyGames > 0) || ($tourneyGames[0] =~ /=.*\/.*=/))
   {
@@ -917,14 +926,14 @@ sub printTourney
     @thisGame = split(/\//, $_);
 	if ($#tourneyGames)
 	{
-	if (lc($thisGame[1]) eq "bye" || lc($thisGame[1] eq "bye=1"))
+	if ((lc($thisGame[1]) eq "bye") || (lc($thisGame[1]) eq "bye=1"))
 	{
 	  $teamProbs{$thisGame[0]} .= "<td>100.00%</td>";
 	  if ($thisGame[0] !~ /=/) { $thisGame[0] .= "=1"; }
 	  push(@nextRound, $thisGame[0]);
 	  next;
     }
-	elsif (lc($thisGame[0]) eq "bye" || lc($thisGame[0] eq "bye=1"))
+	elsif ((lc($thisGame[0]) eq "bye") || (lc($thisGame[0]) eq "bye=1"))
 	{
 	  $teamProbs{$thisGame[1]} .= "<td>100.00%</td>";
 	  if ($thisGame[1] !~ /=/) { $thisGame[1] .= "=1"; }
