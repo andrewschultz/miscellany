@@ -28,7 +28,8 @@ my $bigWarn;
 my $warning = "";
 my $checkHeaders;
 my $inDir = "";
-my $fileToOpen;
+my $fileToOpen = "";
+my $bailFileToOpen = "";
 my $showOK = 0; my $showProc = 0; my $showFile = 0; my $showWarn = 0;
 my $onlyLim = 0;
 my $viewErrorFile = 0;
@@ -111,12 +112,7 @@ if ($verifyHeadings)
 if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
 else { print "" . ($#allDailyFiles + 1) . " daily files in $lastDay days: @allDailyFiles.\n"; }
 
-if ($testing)
-{
-  print "TEST RESULTS: daily file big errors,$bigErrs,0,$testErrList";
-  $bigWarn =~ s/\n/<br \/>\n/g;
-  print "TEST RESULTS: daily file warning,$warns,10,$bigWarn";
-}
+testResults();
 
 if(!fileno(EL)) { close(EL); } if ($viewErrorFile) { `$elog`; }
 
@@ -171,7 +167,6 @@ sub processDaily
 
   open(A, "$_[0]");
 
-  my $lines = 0;
   my @myHdr = ();
 
   my $gotNames = 0;
@@ -193,12 +188,11 @@ my $hasSomething = 0;
 {
   if (($line =~ /[a-z]/i) && ($line !~ /^\\/)) { $hasSomething = 1; }
   $b = $line; chomp($b);
-  $lines++;
   if ($line =~ /====/) { $limericks = 1; }
   if ($line =~ /\\nam/) { $gotNames = 1; }
   if (($curIdx > 0) && (!defined($myAry[$curIdx])) && ($line !~ /\\/))
   {
-    if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $lines of $shortName.\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $lines; } next; } #this is to make sure that double carriage returns don't bomb out;
+    if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $. of $shortName.\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $.; } next; } #this is to make sure that double carriage returns don't bomb out;
     printErrExt("You don't have a header in $shortName: $line");
     if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
 	$betterDie++;
@@ -207,9 +201,10 @@ my $hasSomething = 0;
   { if (lc($b) ne $b) { if ($showWarn) { $warns++; $warning .= "WARNING header $b not in lower case.\n"; } }
     $b = lc($b);
     if ($myAry[$curIdx]) { printErrExt("Header needs spacing: $line"); $betterDie++;   $fileToOpen = $_[0]; }
-	else { if ($startLine{$b}) { printErrExt ("    $shortName: $b: line $lines duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $lines; }
-      if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
-	} else { $startLine{$b} = $lines; } $myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $lines; } } }
+	else { if ($startLine{$b}) { printErrExt ("    $shortName: $b: line $. duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $.; }
+      #if (($openFile) && (!$fileToOpen))
+	  { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+	} else { $startLine{$b} = $.; } $myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $.; } } }
   }
   $myAry[$curIdx] .= $line;
   if ($line !~ /[a-z=]/i) { $curIdx++; next; }
@@ -314,7 +309,7 @@ if ($betterDie)
   print ("Fix stuff in $_[0] before sorting.\n");
   if ($openFile)
   {
-    my $fileOpenCmd = "start \"\" \"c:\\program files (x86)\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; exit;
+	my $fileOpenCmd = "start \"\" \"c:\\program files (x86)\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; testResults(); exit;
   }
   if ($clipboard)
   {
@@ -472,6 +467,16 @@ sub printExt
 {
   if ($printToErrorFile) { print EL $_[0]; }
   print $_[0];
+}
+
+sub testResults
+{
+if ($testing)
+{
+  print "TEST RESULTS: daily file big errors,$bigErrs,0,$testErrList\n";
+  $bigWarn =~ s/\n/<br \/>\n/g;
+  print "TEST RESULTS: daily file warning,$warns,10,$bigWarn";
+}
 }
 
 sub usage

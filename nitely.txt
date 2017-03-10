@@ -165,5 +165,5 @@ uo=uglyoafs
 wri=writing
 >dfi.pl
 >limcheck.pl
->a.pl -eo
+>a.pl -eh -t
 ;

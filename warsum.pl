@@ -222,6 +222,9 @@ sub usage
 {
 print<<EOT;
 You need to type in the name of a program to check for strict/warnings violations.
+-l sort by line
+-nl don't sort by line
+-aw adjust warnings eg \@variable[] to \$variable[]
 EOT
 exit()
 }
