@@ -67,6 +67,7 @@ while ($count <= $#ARGV)
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
   /^-?x$/i && do { @extraFiles = (@extraFiles, $xtraFile); $count++; next; };
+  /^-?t(x)?$/i && do { searchHR($b, $a =~ /x/i); exit(); };
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
@@ -273,6 +274,22 @@ sub validHour
   }
   }
   return 0;
+}
+
+sub searchHR
+{
+  my @files = ($check, $check2, $xtraFile);
+
+  for (@files)
+  {
+  open(A, "$_");
+  while ($a = <A>)
+  {
+	if ($_[1] && ($a =~ /\b$_[0]\b/i)) { print "$_ ($.): $a"; }
+	if (!$_[1] && ($a =~ /$_[0]/i)) { print "$_ ($.): $a"; }
+  }
+  close(A);
+  }
 }
 
 sub usage
