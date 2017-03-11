@@ -435,7 +435,14 @@ sub processLim
 
 sub limPan
 {
-if ($_[0] != 5) { print "******$_[3]: Bad limerick $_[0]-$_[1], $_[2]\n"; }
+  my $badLimerick;
+  if ($_[0] != 5)
+  {
+  $badLimerick = "$_[3]: Bad limerick $_[0]-$_[1], $_[2]";
+  print "******$badLimerick";
+  $testErrList .= "$badLimerick<br />\n";
+  $betterDie++;
+  }
 #else { print "Ok limerick $_[0] to $_[1]\n"; }
 }
 
@@ -473,9 +480,9 @@ sub testResults
 {
 if ($testing)
 {
-  print "TEST RESULTS: daily file big errors,$bigErrs,0,$testErrList\n";
+  print "TEST RESULTS: daily file big errors,$bigErrs,0,0,$testErrList\n";
   $bigWarn =~ s/\n/<br \/>\n/g;
-  print "TEST RESULTS: daily file warning,$warns,10,$bigWarn";
+  print "TEST RESULTS: daily file warning,$warns,10,0,$bigWarn";
 }
 }
 
