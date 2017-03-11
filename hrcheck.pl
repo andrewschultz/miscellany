@@ -31,6 +31,7 @@ my $cmdCount = 0;
 my $mod = 0;
 my $cmd = "";
 my $count = 0;
+my $printOnly = 0;
 
 my @extraFiles = ();
 
@@ -67,6 +68,7 @@ while ($count <= $#ARGV)
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
   /^-?x$/i && do { @extraFiles = (@extraFiles, $xtraFile); $count++; next; };
+  /^-?o$/i && do { $printOnly = 1; $count++; next; };
   /^-?t(x)?$/i && do { searchHR($b, $a =~ /x/i); exit(); };
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
@@ -242,8 +244,15 @@ while ($line = <A>)
         if (-s "$b[$cmdCount]" == 0) { print "Skipping empty file $b[$cmdCount].\n"; next; }
       }
 	  if ($b[0] eq "*") { print "WILD CARD: "; }
+	  if ($printOnly)
+	  {
+	    print "Without -o, we would run $b[$cmdCount]\n";
+	  }
+	  else
+	  {
 	  print "Running $b[$cmdCount]\n";
 	  print `$b[$cmdCount]`;
+	  }
 	}
   }
   }
@@ -299,6 +308,8 @@ print<<EOT;
 e = check stuff to check
 c = check code
 p = check private file
+o = only print
+t = search for text in the scheduling files
 pop = popup if abort early
 is = ignore semicolon for *'d entries
 ? (or anything else) = usage
