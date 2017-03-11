@@ -47,7 +47,7 @@ while (my $line = <A>)
 {
   if ($line =~ /;format:gf-markup/) { die ("This has already been converted. Delete the first line to try again."); }
   if ($line =~ /  OUTLINE/) { die ("You may want to delete your manual outline so that the ='s are not duplicated."); }
-  $line =~ s/schultz.andrew\@earthlink.net/blurglecruncheno\@gmali.cmo \(anti spam typo\)/g;
+  $line =~ s/schultza\@earthlink.net/blurglecruncheno\@gmali.cmo \(anti spam letter flip\)/g;
 
   ###############fix numerical outlines to ='s
   if (($line =~ /^(  )*[0-9].*\./) && ($line !~ /[a-z]/))
@@ -62,8 +62,9 @@ while (my $line = <A>)
   }
 
    if ($line eq ";format:gf-markup\n") { $gotMarkup = 1; }
-  $line =~ s/schultz.andrew\@sbcglobal.net/blurglecruncheno\@gmail\.cmo/g; # change email address
-  $line =~ s/schultza\@earthlink.net/blurglecruncheno\@gmail\.cmo/g; # change email address
+  $line =~ s/schultw.andrez\@sbcglobal.net/blurglecruncheno\@gmail\.cmo \(anti spam letter flip\)/g; # change email address
+  $line =~ s/schultz.andrew\@sbcglobal.net/blurglecruncheno\@gmail\.cmo \(anti spam letter flip\)/g; # change email address
+  $line =~ s/schultza\@earthlink.net/blurglecruncheno\@gmail\.cmo \(anti spam letter flip\)/g; # change email address
   if (($line =~ /[a-z\. '\\"\*\_]/i) && (length($line) > 65) && ($line !~ /^[\#\*\|]/))
   {
     if (($parzap == 1) && ($line =~ /^  [A-Z]/)) { $line =~ s/^  //g; }
@@ -71,6 +72,7 @@ while (my $line = <A>)
     $lastLineText = 1;
     chomp($line);
     $spacesFound++;
+	if ($outFileText =~ /[a-z]$/i) { $outFileText .= " "
     $outFileText .= $line;
   }
   else

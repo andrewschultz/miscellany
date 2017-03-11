@@ -5,11 +5,24 @@ echo Need an argument
 goto end
 )
 
+if "%1" equ "?" OR "%1" equ "-?" (
+echo USAGE\
+echo f = create empty file named (2nd arg)
+echo h = starter.htm
+echo b = go to notepad backup directory
+echo . = go to unix file (old)
+echo g = games.otl
+echo l = limericks.otl
+echo sr = standard rules
+echo search for: x.pl, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x.pl, writing\dict\x.pl, x.bat
+}
+
 if "%1" equ "-f" (
 goto f
 )
 
 if "%1" equ "f" (
+:f
 echo creating empty file/appending nothing to existing, ignore error.
 "abc" >> "%2"
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%2"
@@ -20,7 +33,12 @@ if "%1" equ "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
 )
 
+if "%1" equ "b" (
+goto b
+)
+
 if "%1" equ "-b" (
+:b
 cd %APPDATA\notepad++\backup
 dir /od
 goto end
@@ -140,6 +158,11 @@ goto end
 if EXIST "c:\scripts\%1.pl" (
 echo file is in scripts
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1.pl
+goto end
+)
+
+if EXIST "%1.txt" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" %1.txt
 goto end
 )
 

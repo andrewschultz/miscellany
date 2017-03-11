@@ -495,6 +495,7 @@ writing=scripts\cov.pl,
 FROMBASE=c:\coding\games
 TOBASE=rpg-mapping-tools
 rmt=README.md,
+#########################Mapconv and utils
 rmt=mapconv\mapconv.c,mapconv
 rmt=mapconv\mapconv-help.h,mapconv
 -b:rmt=mapconv\mapconv.exe,mapconv sz:90000
@@ -503,8 +504,11 @@ rmt=mapcpy\mapcpy.c,mapcpy
 rmt=mapconv\test.ahs,mapconv\testing
 rmt=mapconv\test.nmr,mapconv\testing
 rmt=mapconv\test.bmp,mapconv\testing
+rmt=mapconv\ahsort.pl,mapconv\utils
+############################Mapcpy and utils
 -b:rmt=mapcpy\mapcpy.exe,mapcpy sz:60000
 rmt=mapcpy\README.md,mapcpy
+############################Editor and utils
 rmt=editor\icons.bmp,editor
 rmt=editor\walls.bmp,editor
 rmt=editor\README.md,editor
@@ -514,9 +518,11 @@ rmt=editor\editor.dsw,editor
 -b:rmt=editor\editor.exe,editor sz:280000
 rmt=editor\editor.h,editor
 rmt=editor\editor.rc,editor
+###############################Editor samples
 rmt=editor\skeep1.map,samples\shadowkeep
 rmt=editor\skeep2.map,samples\shadowkeep
 rmt=c:\coding\games\editor\test\*.map,editor\test
+###############################Stubs
 rmt=$ws\cg.bat,stubs
 rmt=$ws\mc.bat,stubs
 rmt=stubs\README.md,stubs
