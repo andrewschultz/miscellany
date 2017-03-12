@@ -88,7 +88,7 @@ readTeamNicknames();
 while ($count <= $#ARGV)
 {
   $a = lc($ARGV[$count]);
-  $b = $ARGV[$count+1];
+  $b = ""; if (defined($ARGV[$count+1])) { $b = $ARGV[$count+1]; }
   for ($a)
   {
     /^-?d$/ && do { $debug=1; $count++; next; };
@@ -109,6 +109,7 @@ while ($count <= $#ARGV)
 	/^-?f$/ && do { $flipString = $b; $count += 2; next; };
 	/^-?h$/ && do { $home  = $b; $count += 2; next; };
     /^-?i$/ && do { $iterations = $b; $count += 2; next; };
+	/^-?jr[0-9]*$/ && do { if ($a =~ /[0-9]/) { $a =~ s/.*r//; ratingsList($a); } else { ratingsList($b); } exit(); };
     /^-?k(o)?(f)?$/ && do { $tourney = 1; $count += 1 + ($b  =~ /f/); if ($count =~ /f/) { $tourneyFile = $b; } next; };
     /^-?ke$/ && do { @tourneyElim = split(/,/, lc($b)); $count += 2; next; };
 	/^-?u$/ && do { $undoString = $b; $count += 2; next; };
@@ -1017,6 +1018,21 @@ sub printTourney
   close(A);
 }
 
+sub ratingsList
+{
+  my $wins;
+  my $losses;
+  my $rating;
+  if ($_[0]<2) { print "You need at least 2 games to have meaningful records (both with wins and losses). Actually, it's not very interesting with 2.\n"; }
+  for $wins (1..$_[0]-1)
+  {
+    $losses = $_[0] - $wins;
+	$rating = (log($wins/$losses) * $magnitudeConstant / log(10)) + $defaultRating;
+	printf("%d-%d: rating = %.2f\n", $wins, $losses, $rating);
+  }
+  exit();
+}
+
 ##################################standard usage file
 sub usage
 {
@@ -1033,6 +1049,7 @@ print<<EOT;
 -ff sets the fudge factor for winless/undefeated teams so their ratings aren't undefined (currently .1 of a game, max .5)
 -h specifies home advantage
 -i changes number of iterations
+-jr shows just ratings for X number of games
 -k(o) sets up knockout tourney (of optional) file = eloko.txt with -f tacked on
 -m is the minimum total rating shift to try another iteration
 -m1 is the minimum maximum rating shift by any one team to try another iteration
