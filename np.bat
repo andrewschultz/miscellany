@@ -5,17 +5,18 @@ echo Need an argument
 goto end
 )
 
-if "%1" equ "?" OR "%1" equ "-?" (
-echo USAGE\
-echo f = create empty file named (2nd arg)
+if "%1" equ "q" (
+echo USAGE============================
+echo f = create empty file named 2nd arg
 echo h = starter.htm
 echo b = go to notepad backup directory
-echo . = go to unix file (old)
+echo . = go to unix file, OLD
 echo g = games.otl
 echo l = limericks.otl
 echo sr = standard rules
 echo search for: x.pl, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x.pl, writing\dict\x.pl, x.bat
-}
+goto end
+)
 
 if "%1" equ "-f" (
 goto f
@@ -125,6 +126,13 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\scripts\%1.bat"
 goto end
 )
 
+if EXIST "c:\writing\scripts\%1.bat" (
+echo Found BAT file in scripts.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\scripts\%1.bat"
+goto end
+)
+
 if EXIST "c:\writing\scripts\%1.pl" (
 echo Found PL file.
 
@@ -177,8 +185,6 @@ goto end
 )
 
 echo No %1, %1.pl, %1.bat or %1.txt.
-echo h opens starter home page
-echo -b goes to backup directory
-echo -f/f forces you to create file
+goto usage
 
 :end

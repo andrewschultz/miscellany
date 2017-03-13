@@ -8,6 +8,7 @@ my $lastDay = 0;
 
 my $clip = Win32::Clipboard::new();
 
+my $betterDie;
 my $openOnWarn = 0;
 my $warns = 0;
 my $bigErrs = 0;
@@ -153,7 +154,7 @@ sub processDaily
     findHeader($_[0]);
 	return;
   }
-  my $betterDie = 0;
+  $betterDie = 0;
 
   if (! -f $_[0]) { return; }
   if ($debug) { print ("$_[0] exists.\n"); }
