@@ -29,6 +29,7 @@ my $ignoreTrizbort = 0;
 
 my $reverse = 0;
 
+my $ghl = "c:\\writing\\scripts\\gh-last.txt";
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
@@ -134,7 +135,21 @@ while ($count <= $#ARGV)
   }
 }
 
-if (!$procString) { $procString = $defaultString; print "Using default string: $procString\n"; }
+if (!$procString)
+{
+  if (-f $ghl)
+  {
+  open(A, "$ghl");
+  $procString = <A>; chomp($procString);
+  close(A);
+  print "Using last string $ghl\n";
+  }
+else
+  {
+  $procString = $defaultString; print "Using default string: $procString\n";
+  }
+}
+
 $procString =~ s/^,//;
 
 findTerms($ght);
@@ -160,6 +175,8 @@ if (!processTerms($ght, $ghp))
   }
 }
 
+open(A, ">$ghl");
+print A $procAry[$#procAry];
 
 ##########################################
 #the main function
