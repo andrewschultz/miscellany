@@ -13,6 +13,9 @@ import sys
 from random import shuffle
 import time
 import traceback
+import ConfigParser
+
+config = ConfigParser.SafeConfigParser()
 
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
@@ -43,12 +46,13 @@ lastReset = 0
 startTime = 0
 
 #options to define. How to do better?
-vertical = False
-doubles = False
-autoReshuf = False
+vertical = True
+dblSzCards = False
+autoReshuf = True
 savePosition = False
 saveOnWin = False
-annoyingNudge = False
+# this can't be toggled in game
+annoyingNudge = True
 
 lastscore = 0
 highlight = 0
@@ -303,70 +307,33 @@ def firstMatchableRow(cardval):
     return 0
 
 def readOpts():
+    config.read("fcopt.txt")
     global vertical
+    vertical = config.getboolean('Section1', 'vertical')
     global autoReshuf
-    global doubles
+    autoReshuf = config.getboolean('Section1', 'autoReshuf')
+    global dblSzCards
+    dblSzCards = config.getboolean('Section1', 'dblSzCards')
     global saveOnWin
+    saveOnWin = config.getboolean('Section1', 'saveOnWin')
     global savePosition
+    savePosition = config.getboolean('Section1', 'savePosition')
     global annoyingNudge
-    infile = "fcopt.txt"
-    with open(infile) as f:
-        for line in f:
-            gotOne = 1
-            if line[0] == '#': #ignore comments
-                continue
-            q=re.sub(r'.*=', '', line.rstrip())
-            if "autoReshuf".lower() in line.lower():
-                autoReshuf = TOrF(q)
-            if "savePosition".lower() in line.lower():
-                savePosition = TOrF(q)
-            if "saveOnWin".lower() in line.lower():
-                saveOnWin = TOrF(q)
-            if "vertical".lower() in line.lower():
-                vertical = TOrF(q)
-            if "doubles".lower() in line.lower():
-                doubles = TOrF(q)
-            if "annoyingNudge".lower() in line.lower() and TOrF(q) is True and debug is False:
-                annoyingNudge = TOrF(q)
-    if gotOne:
-        print "Options file read."
-        f.close()
-    else:
-        print "Failed to read options file."
+    annoyingNudge = config.getboolean('Section1', 'annoyingNudge')
     return
 
 def sendOpts():
-    o1 = re.compile(r'^vertical=')
-    o2 = re.compile(r'^doubles=')
-    o3 = re.compile(r'^autoReshuf=')
-    o4 = re.compile(r'^saveOnWin=')
-    o5 = re.compile(r'^savePosition=')
-    infile = "fcopt.txt"
-    fileString = ""
-    gotOne = 0
-    with open(infile) as f:
-        for line in f:
-            gotOne = 1
-            if (o1.match(line)):
-                fileString += "vertical=" + str(int(vertical)) + "\n"
-            elif (o2.match(line)):
-                fileString += "doubles=" + str(int(doubles)) + "\n"
-            elif (o3.match(line)):
-                fileString += "autoReshuf=" + str(int(autoReshuf)) + "\n"
-            elif (o4.match(line)):
-                fileString += "saveOnWin=" + str(int(saveOnWin)) + "\n"
-            elif (o5.match(line)):
-                fileString += "savePosition=" + str(int(savePosition)) + "\n"
-            else:
-                fileString += line
-    if gotOne:
-        f.close()
-        f2 = open(infile, 'w')
-        f2.write(fileString)
-        print "Got options file, rewrote it."
-        f2.close()
-    else:
-        print "Failed to get options file."
+    if not config.has_section('Section1'):
+        config.add_section("Section1")
+    config.set('Section1', 'vertical', str(vertical))
+    config.set('Section1', 'autoReshuf', str(autoReshuf))
+    config.set('Section1', 'dblSzCards', str(dblSzCards))
+    config.set('Section1', 'saveOnWin', str(saveOnWin))
+    config.set('Section1', 'savePosition', str(savePosition))
+    config.set('Section1', 'annoyingNudge', str(annoyingNudge))
+    with open('fcopt.txt', 'w') as configfile:
+        config.write(configfile)
+    print("Saved options.")
     return
 
 def initSide(inGameReset):
@@ -564,7 +531,7 @@ def printCards():
     if sum(found) == 52:
         if not checkWinning():
             return
-    if vertical == 1:
+    if vertical:
         printVertical()
     else:
         printHorizontal()
@@ -656,12 +623,12 @@ def printVertical():
             sys.stdout.write(' *' + onedig(chains(y)) + '*')
         else:
             sys.stdout.write(' ' + onedig(chains(y)) + '/' + str(chainNope(y)))
-        if doubles:
+        if dblSzCards:
             sys.stdout.write(' ')
     print ("")
     for y in range (1,9):
         sys.stdout.write(' ' + str(y) + ': ')
-        if doubles:
+        if dblSzCards:
             sys.stdout.write(' ')
     print ("")
     oneMoreTry = 1
@@ -672,7 +639,7 @@ def printVertical():
         for y in range (1,9):
             if len(elements[y]) > count:
                 oneMoreTry = 1
-                if doubles:
+                if dblSzCards:
                     temp = str(tocard(elements[y][count]))
                     if tocard(elements[y][count])[0] == ' ':
                         thisline += temp[1]
@@ -693,12 +660,12 @@ def printVertical():
                     thisline += '+'
                 else:
                     thisline += ' '
-                if doubles:
+                if dblSzCards:
                     thisline += ' '
                     secondLine += ' '
             else:
                 thisline += '    '
-                if doubles:
+                if dblSzCards:
                     thisline += ' '
                     secondLine += '     '
         if oneMoreTry:
@@ -1165,7 +1132,7 @@ def readCmd(thisCmd):
     global wonThisCmd
     global cmdChurn
     global vertical
-    global doubles
+    global dblSzCards
     global autoReshuf
     global elements
     global force
@@ -1397,8 +1364,8 @@ def readCmd(thisCmd):
         printCards()
         return
     if name == '+':
-        doubles = not doubles
-        print ("Toggled doubles to %s." % (onoff[doubles]))
+        dblSzCards = not dblSzCards
+        print ("Toggled dblSzCards to %s." % (onoff[dblSzCards]))
         printCards()
         return
     if name == 'e':
@@ -1408,7 +1375,7 @@ def readCmd(thisCmd):
         printCards()
         return
     if name == 'v':
-        vertical = 1 - vertical
+        vertical = not vertical
         print ("Toggled vertical view to %s." % (onoff[vertical]))
         printCards()
         return
