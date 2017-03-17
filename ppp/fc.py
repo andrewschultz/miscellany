@@ -1481,12 +1481,14 @@ def readCmd(thisCmd):
         if name.isdigit:
             gotReversed = 1
             for jj in reversed(range(0,len(name)-1)):
-                temp = name[jj] + name[len(name)-1]
-                print "Moving " + temp
-                readCmd(name[jj] + name[len(name)-1])
+                if wonThisCmd == False:
+                    if name[jj] != name[jj+1]:
+                        temp = name[jj] + name[len(name)-1]
+                        print "Moving " + temp
+                        readCmd(name[jj] + name[len(name)-1])
         if gotReversed == 0:
             print ('Only 2 chars per command.')
-        elif name.isdigit:
+        elif name.isdigit and wonThisCmd == False:
             print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         return
     if len(name) < 2:

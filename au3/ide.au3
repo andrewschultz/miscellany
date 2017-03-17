@@ -28,6 +28,10 @@ if $CmdLine[0] > 0 Then
     call("openIDE", "Compound");
   ElseIf $CmdLine[$stuff] == "sc" Then
     call("openIDE", "slicker-city");
+  ElseIf $CmdLine[$stuff] == "3" Then
+    call("openIDE", "threediopolis");
+  ElseIf $CmdLine[$stuff] == "4" Then
+    call("openIDE", "fourdiopolis");
   ElseIf $CmdLine[$stuff] == "3d" Then
     call("openIDE", "threediopolis");
   ElseIf $CmdLine[$stuff] == "4d" Then

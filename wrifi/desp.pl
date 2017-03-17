@@ -72,7 +72,7 @@ while (my $line = <A>)
     $lastLineText = 1;
     chomp($line);
     $spacesFound++;
-	if ($outFileText =~ /[a-z]$/i) { $outFileText .= " "
+	if ($outFileText =~ /[a-z]$/i) { $outFileText .= " " }
     $outFileText .= $line;
   }
   else
