@@ -54,6 +54,8 @@ savePosition = False
 saveOnWin = False
 # this can't be toggled in game
 annoyingNudge = True
+#easy mode = A/2 on top
+easy = False
 
 lastscore = 0
 highlight = 0
@@ -307,8 +309,11 @@ def firstMatchableRow(cardval):
 def parseCmdLine():
     global vertical
     global debug
+    global saveOnWin
+    global easy
     parser = optparse.OptionParser(description='Play FreeCell.')
     parser.add_option('--getridofthetimewastenag', action='store_false', dest='annoyingNudge', help='delete annoying nudge')
+    parser.add_option('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
     parser.add_option('-d', '--debug', action='store_true', dest='debug', help='debug on')
     parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
     parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
@@ -323,7 +328,9 @@ def parseCmdLine():
     if opts.debug is not None:
         debug=opts.debug
     if opts.saveOnWin is not None:
-        debug=opts.saveOnWin
+        saveOnWin=opts.saveOnWin
+    if opts.easy is not None:
+        easy=opts.easy
     return
 
 def readOpts():
@@ -522,8 +529,13 @@ def checkWin():
     checkWinning()
 
 def initCards():
-    x = list(range(1,53))
-    shuffle(x)
+    if easy:
+        x = list(range(3,14)) + list(range(16,27)) + list(range(29,40)) + list(range(42,53))
+        shuffle(x)
+        x[:0] = [1,2,14,15,27,28,40,41]
+    else:
+        x = list(range(1,53))
+        shuffle(x)
     global elements
     for y in range(0,7):
         for z in range(1,9):
@@ -585,6 +597,7 @@ def checkWinning():
         print ("%d undo used." % (totalUndo))
     if totalUndo == -1:
         print ("No undo data from loaded game.")
+    print saveOnWin
     if saveOnWin:
         with open(winFile, "a") as myfile:
             winstring = time.strftime("sw=%Y-%m-%d-%H-%M-%S", time.localtime())
