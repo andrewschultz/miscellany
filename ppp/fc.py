@@ -66,6 +66,8 @@ breakMacro = 0
 
 debug = False
 
+cmdList = []
+
 backup = []
 elements = [ [], [], [], [], [], [], [], [], [] ]
 
@@ -311,6 +313,8 @@ def parseCmdLine():
     parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
     parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
     parser.add_option('-V', '--novertical', action='store_false', dest='vertical', help='vertical off')
+    parser.add_option('-s', '--saveonwin', action='store_true', dest='saveOnWin', help='save on win on')
+    parser.add_option('-S', '--nosaveonwin', action='store_false', dest='saveOnWin', help='save on win off')
     (opts, args) = parser.parse_args()
     if opts.annoyingNudge is not None:
         annoyingNudge=opts.annoyingNudge
@@ -318,6 +322,8 @@ def parseCmdLine():
         vertical=opts.vertical
     if opts.debug is not None:
         debug=opts.debug
+    if opts.saveOnWin is not None:
+        debug=opts.saveOnWin
     return
 
 def readOpts():
@@ -367,6 +373,8 @@ def initSide(inGameReset):
         win = 0
         global moveList
         moveList = []
+        global cmdList
+        cmdList = []
     global breakMacro
     breakMacro = 0
 
@@ -1037,7 +1045,6 @@ def undoMoves(toUndo):
     printCards()
     return 1
 
-
 def loadGame(gameName):
     global time
     global totalUndo
@@ -1047,6 +1054,8 @@ def loadGame(gameName):
     startTime = -1
     while True:
         line=original.readline()
+        if line.startswith('moves='):
+            continue
         if gameName == line.strip():
             for y in range (1,9):
                 line=original.readline().strip()
@@ -1105,6 +1114,7 @@ def saveGame(gameName):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + gameName + "\n")
     gn2 = gameName.replace(r'^.=', '')
+    myfile.write("moves=" + ', '.join(cmdList) + '\n')
     print ("Successfully saved game as " + gn2)
     return 0
 
@@ -1163,6 +1173,7 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        cmdList.append(name)
         if name[:2] == 'e ':
             cardEval(name)
             return
