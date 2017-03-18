@@ -14,6 +14,7 @@ from random import shuffle
 import time
 import traceback
 import ConfigParser
+import optparse
 
 config = ConfigParser.SafeConfigParser()
 
@@ -69,11 +70,6 @@ backup = []
 elements = [ [], [], [], [], [], [], [], [], [] ]
 
 name = ""
-
-def cmdUsage():
-    print ("Usage=======================")
-    print ("Right now only -d for debug.")
-    exit()
 
 def TOrF(x):
     if x == "False" or x == "0":
@@ -305,6 +301,24 @@ def firstMatchableRow(cardval):
             if canPut(cardval, elements[i][len(elements[i])-1]):
                 return i
     return 0
+
+def parseCmdLine():
+    global vertical
+    global debug
+    parser = optparse.OptionParser(description='Play FreeCell.')
+    parser.add_option('--getridofthetimewastenag', action='store_false', dest='annoyingNudge', help='delete annoying nudge')
+    parser.add_option('-d', '--debug', action='store_true', dest='debug', help='debug on')
+    parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
+    parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
+    parser.add_option('-V', '--novertical', action='store_false', dest='vertical', help='vertical off')
+    (opts, args) = parser.parse_args()
+    if opts.annoyingNudge is not None:
+        annoyingNudge=opts.annoyingNudge
+    if opts.vertical is not None:
+        vertical=opts.vertical
+    if opts.debug is not None:
+        debug=opts.debug
+    return
 
 def readOpts():
     config.read("fcopt.txt")
@@ -1636,17 +1650,6 @@ def readCmd(thisCmd):
 
 ###################################start main program
 
-if len(sys.argv) > 0:
-    count = 1;
-    while count < len(sys.argv):
-        if sys.argv[count] == 'd' or sys.argv[count] == '-d':
-            debug = True
-            count = count + 1
-            continue
-        print ("Invalid flag " + sys.argv[count] + " position " + str(count))
-        print ("")
-        cmdUsage()
-
 timeMatters = 1
 delay = 43200
 if timeMatters:
@@ -1673,6 +1676,9 @@ if timeMatters:
                 print "Missed the high of " + str(highTime)
 
 readOpts()
+parseCmdLine()
+
+exit
 
 if annoyingNudge:
     try: input = raw_input
