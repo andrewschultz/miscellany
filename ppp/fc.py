@@ -55,7 +55,7 @@ saveOnWin = False
 # this can't be toggled in game
 annoyingNudge = True
 #easy mode = A/2 on top
-easy = False
+cheatIndex = 0
 
 lastscore = 0
 highlight = 0
@@ -310,10 +310,11 @@ def parseCmdLine():
     global vertical
     global debug
     global saveOnWin
-    global easy
+    global cheatIndex
     parser = optparse.OptionParser(description='Play FreeCell.')
     parser.add_option('--getridofthetimewastenag', action='store_false', dest='annoyingNudge', help='delete annoying nudge')
     parser.add_option('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
+    parser.add_option('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13', type='int')
     parser.add_option('-d', '--debug', action='store_true', dest='debug', help='debug on')
     parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
     parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
@@ -329,8 +330,16 @@ def parseCmdLine():
         debug=opts.debug
     if opts.saveOnWin is not None:
         saveOnWin=opts.saveOnWin
-    if opts.easy is not None:
-        easy=opts.easy
+    if opts.cheatIndex is not None:
+        if opts.cheatIndex < 1:
+            print "Too low. The cheat index must be between 1 and 13."
+            sys.exit()
+        elif opts.cheatIndex > 13:
+            print "Too high. The cheat index must be between 1 and 13."
+            sys.exit()        
+        cheatIndex = opts.cheatIndex
+    elif opts.easy is True:
+        cheatIndex = 2
     return
 
 def readOpts():
@@ -529,10 +538,12 @@ def checkWin():
     checkWinning()
 
 def initCards():
-    if easy:
-        x = list(range(3,14)) + list(range(16,27)) + list(range(29,40)) + list(range(42,53))
+    x = []
+    if cheatIndex > 0:
+        x = list(range(cheatIndex+1, 14)) + list(range(cheatIndex+14, 27)) + list(range(cheatIndex+27, 40)) + list(range(cheatIndex+40, 53))
         shuffle(x)
-        x[:0] = [1,2,14,15,27,28,40,41]
+        for y in reversed(range(1,cheatIndex+1)):
+            x[:0] = [y,y+13,y+26,y+39]
     else:
         x = list(range(1,53))
         shuffle(x)
@@ -597,7 +608,6 @@ def checkWinning():
         print ("%d undo used." % (totalUndo))
     if totalUndo == -1:
         print ("No undo data from loaded game.")
-    print saveOnWin
     if saveOnWin:
         with open(winFile, "a") as myfile:
             winstring = time.strftime("sw=%Y-%m-%d-%H-%M-%S", time.localtime())
