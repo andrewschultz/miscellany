@@ -52,6 +52,9 @@ dblSzCards = False
 autoReshuf = True
 savePosition = False
 saveOnWin = False
+# this is an experimental feature to annoy me
+deliberateNuisanceRows = 3
+deliberateNuisanceIncrease = 2
 # this can't be toggled in game
 annoyingNudge = True
 #easy mode = A/2 on top
@@ -628,6 +631,9 @@ def checkWinning():
             if finish[0] == 'n' or finish[0] == 'q':
                 goBye()
             if finish[0] == 'y':
+                global deliberateNuisanceRows
+                if deliberateNuisanceRows > 0:
+                    deliberateNuisanceRows += deliberateNuisanceIncrease
                 initCards()
                 initSide(0)
                 totalUndo = 0
@@ -1192,6 +1198,8 @@ def readCmd(thisCmd):
     force = 0
     checkFound()
     if thisCmd == '':
+        for i in range (0,deliberateNuisanceRows):
+            print "DELIBERATE NUISANCE"
         global input
         try: input = raw_input
         except NameError: pass
