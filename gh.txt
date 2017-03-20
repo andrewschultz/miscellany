@@ -406,6 +406,7 @@ misc=wpb.pl,
 misc=rwi.pl,
 misc=invis.pl,
 misc=$wd\alfit.pl,wordfun
+misc=$wd\wlad.pl,wordfun
 misc=icl.pl,
 misc=icl.txt,
 misc=$wd\say.pl,
