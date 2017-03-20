@@ -1136,8 +1136,8 @@ def saveGame(gameName):
             for y in range (1,9):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + gameName + "\n")
+        myfile.write("moves=" + ', '.join(cmdList) + '\n')
     gn2 = gameName.replace(r'^.=', '')
-    myfile.write("moves=" + ', '.join(cmdList) + '\n')
     print ("Successfully saved game as " + gn2)
     return 0
 
@@ -1493,7 +1493,7 @@ def readCmd(thisCmd):
     if len(name) > 2:
         gotReversed = 0
         oldMoves = len(moveList)
-        if name.isdigit:
+        if name.isdigit():
             gotReversed = 1
             for jj in reversed(range(0,len(name)-1)):
                 if wonThisCmd == False:
@@ -1501,10 +1501,10 @@ def readCmd(thisCmd):
                         temp = name[jj] + name[len(name)-1]
                         print "Moving " + temp
                         readCmd(name[jj] + name[len(name)-1])
+            if name.isdigit() and wonThisCmd == False:
+                print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         if gotReversed == 0:
             print ('Only 2 chars per command.')
-        elif name.isdigit and wonThisCmd == False:
-            print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         return
     if len(name) < 2:
         print ('Must have 2 chars per command.')
