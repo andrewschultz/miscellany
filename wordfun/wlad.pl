@@ -1,10 +1,30 @@
-my $continue = 1;
-my $count = 2;
+###############################################
+#wlad.pl
+#
+#word ladder from argv[0] to argv[1] with argv[2+] (csv) ignored
+#
+#usage = wlad.pl him her hem
+#should give solution with 4 alternates
+
+use strict;
+use warnings;
+
 my $myword = $ARGV[0];
 my $toword = $ARGV[1];
+my $l = length($myword);
+
+#####################
+#ladder lengths and ladder details
 my %ladder;
 my %laddet;
-my $l = length($myword);
+
+######################
+#variables
+my $continue = 1;
+my $count = 2;
+my $temp;
+my $i;
+my $ltr;
 
 if ($l =~ /\?/) { usage(); }
 
@@ -17,7 +37,7 @@ $myword = lc($myword);
 #disable anything that is listed after the first 2 entries
 while (defined($ARGV[$count]))
 {
-  @x = split(/,/, @ARGV[$count]);
+  my @x = split(/,/, $ARGV[$count]);
   for (@x)
   {
 	if (length($_) != length($myword)) { warn("$_ is not the same length as $myword.\n"); next; }
@@ -36,6 +56,7 @@ while ($a = <A>)
   if ($a eq $myword) { $ladder{$a} = 0; }
   elsif (!defined($ladder{$a})) { $ladder{$a} = -1; }
 }
+close(A);
 
 while (($ladder{$toword} < 0) && ($continue == 1))
 {
@@ -50,7 +71,7 @@ while (($ladder{$toword} < 0) && ($continue == 1))
       {
         $temp = $w;
         substr($temp, $i, 1) = $ltr;
-        if ($ladder{$temp} == -1) { $ladder{$temp} = $count + 1; $continue = 1; $laddet{$temp} = "$laddet{$w}-$temp"; }
+        if (defined($ladder{$temp}) && ($ladder{$temp} == -1)) { $ladder{$temp} = $count + 1; $continue = 1; $laddet{$temp} = "$laddet{$w}-$temp"; }
       }
     }
   }
@@ -71,11 +92,11 @@ else
 	  if (substr($temp, $i, 1) eq $ltr) { next; }
       substr($temp, $i, 1) = $ltr;
 	  #print "$temp(?)\n";
-      if ($ladder{$temp} == $count - 1) { print "Alternate: $laddet{$temp}\n"; }
-	  $alts++;
+      if (defined($ladder{$temp}) && ($ladder{$temp} == $count - 1)) { print "Alternate: $laddet{$temp}\n"; $alts++; }
     }
   }
   if (!$alts) { print "No alternates found.\n"; }
+  else { print "Total found: " . ($alts+1) . "\n"; }
 }
 
 sub usage
