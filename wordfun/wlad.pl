@@ -60,7 +60,22 @@ while (($ladder{$toword} < 0) && ($continue == 1))
 if (!$laddet{$toword}) { print "No word ladder found."; }
 else
 {
-print $laddet{$toword} . " in " . $ladder{$toword} . " moves.";
+  my $alts = 0;
+  print $laddet{$toword} . " in " . $ladder{$toword} . " moves.\n";
+  print "Searching for alternates...\n";
+  for ($i = 0; $i < length($myword); $i++)
+  {
+    for $ltr ('a'..'z')
+    {
+      $temp = $toword;
+	  if (substr($temp, $i, 1) eq $ltr) { next; }
+      substr($temp, $i, 1) = $ltr;
+	  #print "$temp(?)\n";
+      if ($ladder{$temp} == $count - 1) { print "Alternate: $laddet{$temp}\n"; }
+	  $alts++;
+    }
+  }
+  if (!$alts) { print "No alternates found.\n"; }
 }
 
 sub usage
