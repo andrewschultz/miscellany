@@ -95,9 +95,9 @@ def shufwarn():
 def dumpTotal(q):
     retval = 0
     for z in range(0,len(elements[q])):
-        if foundable(z):
+        if foundable(elements[q][z]):
             retval += 1
-        if nexties(z):
+        if nexties(elements[q][z]): # not an elif as foundable deserves an extra point
             retval += 1
     return retval
 
@@ -106,12 +106,12 @@ def bestDumpRow():
     bestRow = 0
     bestChains = 10
     for y in range (1,9):
-        if chainNope(y) == 0:
+        if chainNope(y) == 0: # if there is nothing to move or dump, then skip this e.g. empty or already in order
             continue
-        if canDump(y):
-            if dumpTotal(y) > bestScore or (dumpTotal(y) == bestScore and chainTotal(y) < bestChains):
-                bestRow = y
-                bestChains = chainNope(y)
+        if dumpTotal(y) + YNCanDump(y) > bestScore or (dumpTotal(y) == bestScore and chainNope(y) < bestChains):
+            bestRow = y
+            bestChains = chainNope(y)
+            bestScore = dumpTotal(y)
     if bestRow > 0:
         return bestRow
     maxShifts = 10
@@ -180,7 +180,12 @@ def shouldPrint():
         return False
     return True
 
-def canDump(mycol):
+def YNCanDump(mycol): # could also be (int)(not not canDump(myCol)) but that's a bit odd looking
+    if canDump(mycol) > 0:
+        return 1
+    return 0
+
+def canDump(mycol): # returns column you can dump to
     for thatcol in range (1,9):
         if doable(mycol, thatcol, 0) > 0:
             return thatcol
