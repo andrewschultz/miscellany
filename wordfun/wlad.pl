@@ -28,6 +28,8 @@ my $ltr;
 
 if ($l =~ /\?/) { usage(); }
 
+if (!defined($toword)) { die ("Need at least 2 arguments."); }
+
 if ($l != length($toword)) { die ("To and from must have same length."); }
 
 $laddet{$myword} = $myword;
@@ -48,7 +50,7 @@ while (defined($ARGV[$count]))
 
 $count = 0;
 
-open(A, "words-$l.txt");
+open(A, "c:\\writing\\dict\\words-$l.txt");
 
 while ($a = <A>)
 {
@@ -57,6 +59,9 @@ while ($a = <A>)
   elsif (!defined($ladder{$a})) { $ladder{$a} = -1; }
 }
 close(A);
+
+unless (defined($ladder{$myword})) { $ladder{$myword} = 0; print "Didn't find $myword in word list.\n"; }
+unless (defined($ladder{$toword})) { $ladder{$toword} = -1; print "Didn't find $toword in word list.\n"; }
 
 while (($ladder{$toword} < 0) && ($continue == 1))
 {
@@ -92,12 +97,15 @@ else
 	  if (substr($temp, $i, 1) eq $ltr) { next; }
       substr($temp, $i, 1) = $ltr;
 	  #print "$temp(?)\n";
-      if (defined($ladder{$temp}) && ($ladder{$temp} == $count - 1)) { print "Alternate: $laddet{$temp}\n"; $alts++; }
+      if (defined($ladder{$temp}) && ($ladder{$temp} == $count - 1)) { print "Alternate: $laddet{$temp}-$toword\n"; $alts++; }
     }
   }
   if (!$alts) { print "No alternates found.\n"; }
   else { print "Total found: " . ($alts+1) . "\n"; }
 }
+
+############################
+#subroutine(s)
 
 sub usage
 {
