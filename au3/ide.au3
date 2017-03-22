@@ -50,6 +50,8 @@ if $CmdLine[0] > 0 Then
     call("openIDE", "slicker-city");
   ElseIf $CmdLine[$stuff] == "btp" Then
     call("openIDE", "buck-the-past");
+  ElseIf $CmdLine[$stuff] == "bs" Then
+    call("openIDE", "btp-st");
   ElseIf $CmdLine[$stuff] == "in" Then
     call("openIDE", "grubbyville");
   ElseIf $CmdLine[$stuff] == "e16" Then

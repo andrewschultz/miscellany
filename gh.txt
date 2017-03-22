@@ -355,6 +355,12 @@ past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
 past=$is\pun.pl
+###############spring thing initial game
+past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
+past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
+past=c:\games\inform\btp-st.inform\source\walkthru.txt,spring\walkthru.txt
+past=$tr\buck-the-past-st.trizbort,spring
+past=$tr\buck-the-past-st.pdf,spring
 >past=$wd\talf.pl -btp
 >past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"

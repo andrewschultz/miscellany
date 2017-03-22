@@ -272,6 +272,11 @@ set PROJ=buck-the-past
 goto nodef
 )
 
+if "%1" EQU "bs" (
+set PROJ=btp-st
+goto nodef
+)
+
 if "%1" EQU "ss" (
 set PROJ=seeker-status
 goto nodef
