@@ -24,4 +24,4 @@ send("A{BS}^{ENTER}");
 sleep(2000);
 send("^w");
 
-Run('"c:\program files (x86)\mozilla firefox\firefox" "https://www.codecademy.com/profiles/me"');
+ShellExecute("cac.pl")
