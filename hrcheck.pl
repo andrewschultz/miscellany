@@ -24,8 +24,11 @@ my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code = "c:\\writing\\scripts\\hrcheck.pl";
 
 my $xtraFile = "c:\\writing\\scripts\\hrcheckx.txt";
-
 my $anyExtra = 0;
+my @extraFiles = ();
+#comment below out, or not, to change default behavior
+$anyExtra = 1; @extraFiles = ($xtraFile);
+
 my $lastTime = "";
 my $adjust = 0;
 my $cmdCount = 0;
@@ -33,9 +36,6 @@ my $mod = 0;
 my $cmd = "";
 my $count = 0;
 my $printOnly = 0;
-
-my @extraFiles = ();
-#$anyExtra = 1; @extraFiles = ($xtraFile);
 
 my $overrideSemicolonEnd = 1;
 my $semicolonSeen = 0;
@@ -69,7 +69,13 @@ while ($count <= $#ARGV)
   /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
-  /^-?x$/i && do { @extraFiles = (@extraFiles, $xtraFile); $anyExtra = 1; $count++; print "-ex edits the extras file.\n"; next; };
+  /^-?h$/i && do { @extraFiles = (); $anyExtra = 0; $count++; next; };
+  /^-?x$/i && do
+  {
+	if ($extraFiles[0] eq $xtraFile) { print "$xtraFile already in...\n"; } # very lazy coding but I don't plan to write in a lot of extra files
+	else { @extraFiles = (@extraFiles, $xtraFile); $anyExtra = 1; }
+	$count++; print "-ex edits the extras file.\n"; next;
+  };
   /^-?o$/i && do { $printOnly = 1; $count++; next; };
   /^-?t(x)?$/i && do { searchHR($b, $a =~ /x/i); exit(); };
   /^-?ex$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $xtraFile"; `$cmd`; exit; };
@@ -103,6 +109,7 @@ for my $tocheck (@extraFiles)
   hrcheck($tocheck);
 }
 if (!$anyExtra) { print ("For critical stuff to run, you may wish to run -x.\n"); }
+else { print ("If tests you don't want to run are popping up, you may wish to run -h.\n"); }
 
 sub hrcheck
 {
@@ -309,6 +316,7 @@ sub usage
 {
 print<<EOT;
 -(#) or +(#) = add or substract minutes
+h = hide extra file if extra-default is on
 e = check stuff to check (main file of tasks)
 c = check code
 p = check private file
