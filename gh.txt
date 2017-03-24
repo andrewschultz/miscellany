@@ -471,8 +471,11 @@ misc=prt.pl,
 misc=c:\coding\perl\proj\sok.pl,ppp
 misc=c:\coding\perl\proj\sok.py,ppp
 misc=c:\coding\perl\proj\fc.py,ppp
+########################bill james i fi cator
+misc=c:\coding\perl\proj\bj.py,ppp
 misc=c:\coding\perl\proj\fcopt-sample.txt,ppp
 misc=c:\coding\perl\proj\fcsav-sample.txt,ppp
+################other languages including ruby
 misc=c:\coding\perl\proj\fc.rb,ruby
 misc=$ws\comout.pl,
 misc=$ws\comout.txt,
