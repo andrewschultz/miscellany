@@ -1018,29 +1018,37 @@ def shiftcards(r1, r2, amt):
     elements[r2].extend(elements[r1][-amt:])
     del elements[r1][-amt:]
 
-def usage():
+def usageGame():
+    print ('========game moves========')
     print ('r(1-8a-d) sends that card to the foundation. r alone forces everything it can.')
     print ('p(1-8) moves a row as much as you can.')
     print ('p on its own tries to force everything if you\'re near a win.')
-    print ('lo/so loads/saves options.')
     print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
     print ('(1-8)(1-8) = move a row, standard move.')
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
     print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
     print ('h slips a card under eg KH in spares would go under an ordered QC-JD.')
-    print ('- or = = a full boad reset.')
-    print ('l=loads a game, s=saves, lp=load previous/latest saved')
+    print ('- or = = a full board reset.')
+    print ('?/?g ?o ?m games options meta')
+
+def usageOptions():
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
     print ('sw/ws saves on win, sp/ps saves position.')
     print ('+ = toggles double size, e = toggle autoshuffle.')
+    print ('?/?g ?o ?m games options meta')
+    
+def usageMeta():
     print ('========meta========')
+    print ('l=loads a game, s=saves, lp=load previous/latest saved')
+    print ('lo/so loads/saves options.')
     print ('u = undo, u1-u10 undoes that many moves, undo does 11+, tu tracks undo.')
     print ('ua = shows current move/undo array.')
     print ('qu quits (q could be typed by accident).')
     print ('? = usage (this).')
     print ('empty command tries basic reshuffling and prints out the cards again.')
+    print ('?/?g ?o ?m games options meta')
 
 def firstEmptySpare():
     for i in range(0,4):
@@ -1402,7 +1410,15 @@ def readCmd(thisCmd):
         printCards()
         return
     if name[0] == '?':
-        usage()
+        if len(name) is 1 or name[1].lower() == 'g':
+            usageGame()
+        elif name[1].lower() == 'm':
+            usageMeta()
+        elif name[1].lower() == 'o':
+            usageOptions()
+        else:
+            print "Didn't recognize subflag", name[1].lower(), "so doing default of game command usage."
+            usageGame()
         return
     if name == "r" or name == "rr":
         forceFoundation()
