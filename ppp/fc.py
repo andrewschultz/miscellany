@@ -330,7 +330,11 @@ def parseCmdLine():
     parser.add_option('-V', '--novertical', action='store_false', dest='vertical', help='vertical off')
     parser.add_option('-s', '--saveonwin', action='store_true', dest='saveOnWin', help='save on win on')
     parser.add_option('-S', '--nosaveonwin', action='store_false', dest='saveOnWin', help='save on win off')
+    parser.add_option('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file')
     (opts, args) = parser.parse_args()
+    if opts.timefile is True:
+        os.system("fctime.txt")
+        exit()
     if opts.annoyingNudge is not None:
         annoyingNudge=opts.annoyingNudge
     if opts.vertical is not None:
