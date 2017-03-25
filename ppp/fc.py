@@ -10,7 +10,8 @@
 # reshuf after, say, 5r (?)
 import re
 import sys
-from random import shuffle
+import os
+from random import shuffle, randint
 import time
 import traceback
 import ConfigParser
@@ -1177,11 +1178,16 @@ def cardEval(myCmd):
 
 def goBye():
     print ("Bye!")
-    f = open('fctime.txt', 'w')
+    f = open(timefile, 'w')
     f.seek(0)
-    f.write(str(int(round(time.time()))))
-    f.write('\n')
-    f.write(str(int(highTime)))
+    global highTime
+    temptime = int(round(time.time()))
+    f.write(str(temptime) + '\n')
+    f.write(str(highTime) + '\n')
+    randkey = randint(100001,199999)
+    randrem = temptime % randkey
+    f.write(str(randkey) + '\n')
+    f.write(str(randrem) + '\n')
     f.close()
     exit()
 
@@ -1699,10 +1705,34 @@ def readCmd(thisCmd):
 
 timeMatters = 1
 delay = 43200
-if timeMatters:
+highTime = 0
+
+if timeMatters and os.path.exists(timefile) and os.stat(timefile).st_size > 0:
     with open(timefile) as f:
-        lastTime = int(float(f.readline()))
-        highTime = int(f.readline())
+        try:
+            lastTime = int(float(f.readline()))
+        except:
+            lastTim = 0
+        try:
+            highTime = int(f.readline())
+        except:
+            highTime = 0
+        try:
+            modulus = int(f.readline())
+        except:
+            print "No random modulus, bailing."
+            exit()
+        if modulus < 100001 or modulus > 199999:
+            print "Save file corrupted, modulus out of range."
+            exit()
+        try:
+            remainder = int(f.readline())
+        except:
+            print "Need remainder. Set to 15000, modulus to the remainder for (relatively) cheap way through."
+            exit()
+    if (lastTime % modulus != remainder):
+        print "Save file corrupted."
+        exit()
     timeDelt = int(time.time()) - lastTime
     if timeDelt < delay:
         print "Only " + str(timeDelt) + " of " + str(delay) + " seconds since last time waster."

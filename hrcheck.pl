@@ -64,8 +64,16 @@ while ($count <= $#ARGV)
   if (defined($ARGV[$count])) { $b = $ARGV[$count+1]; }
   for ($a)
   {
-  /^[0-9]+:[0-9]+$/ && do { my @time = split(/:/, $a); $hourTemp = $time[0]; $minuteTemp = $time[1]; $gotTime = 1; $count++; next; };
-  /^(-|\+)?[0-9]+$/ && do { $adjust = $a; $count++; next; };
+  /^[0-9]+:[0-9]+$/ && do
+  {
+    my @time = split(/:/, $a);
+	if ($time[0] > 24 or $time[0] < 0) { warn("Odd hour value, going to do the best I can.\n"); }
+	$hourTemp = $time[0] % 24;
+	if ($time[1] > 60 or $time[1] < 0) { warn("Odd minute value, going to do the best I can.\n"); }
+	$minuteTemp = $time[1] % 60;
+	$gotTime = 1; $count++; next;
+  };
+  /^(-|\+)?[0-9]+$/ && do { $adjust = $a; print "Adjusting time from current by $adjust minutes. Use : to try an exact time.\n"; $count++; next; };
   /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
