@@ -17,7 +17,8 @@ import traceback
 import ConfigParser
 import optparse
 
-config = ConfigParser.SafeConfigParser()
+configOpt = ConfigParser.SafeConfigParser()
+configTime = ConfigParser.SafeConfigParser()
 
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
@@ -46,6 +47,12 @@ wonThisCmd = False
 
 lastReset = 0
 startTime = 0
+
+#time before next play variables
+timeMatters = 1
+nagDelay = 43200
+highTime = 0
+maxDelay = 0
 
 #options to define. How to do better?
 vertical = True
@@ -355,33 +362,77 @@ def parseCmdLine():
         cheatIndex = 2
     return
 
+def readTimeFile():
+    global nagDelay
+    global maxDelay
+    configTime.read("fctime.txt")
+    modulus = configTime.getint('Section1', 'modulus')
+    remainder = configTime.getint('Section1', 'remainder')
+    maxDelay = configTime.getint('Section1', 'maxdelay')
+    lasttime = configTime.getint('Section1', 'lasttime')
+    curtime = time.time()
+    delta = int(curtime - lasttime)
+    if delta < nagDelay:
+        print 'Only', str(delta), 'seconds elapsed of',nagDelay
+        exit()
+    if delta > 90000000:
+        print "Save file probably edited to start playing a bit early. I'm not going to judge."
+    elif delta > maxDelay:
+        maxDelay = delta
+        print 'New high delay', delta, 'old was', maxDelay
+    else:
+        print 'Delay', delta, 'did not exceed record of', maxDelay
+    if lasttime % modulus != remainder:
+        print "Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually."
+        print lasttime,modulus,remainder,lasttime%modulus
+        exit()
+    if modulus < 100001 or modulus > 199999:
+        print "Modulus is not in range in fctime.txt."
+        exit()
+    return
+
+def writeTimeFile():
+    if not configTime.has_section('Section1'):
+        configTime.add_section("Section1")
+    lasttime = int(time.time())
+    modulus = randint(100001,199999)
+    remainder = lasttime % modulus
+    global maxDelay
+    configTime.set('Section1', 'modulus', str(modulus))
+    configTime.set('Section1', 'remainder', str(remainder))
+    configTime.set('Section1', 'maxdelay', str(maxDelay))
+    configTime.set('Section1', 'lasttime', str(lasttime))
+    with open('fctime.txt', 'w') as configfile:
+        configTime.write(configfile)
+    return
+
 def readOpts():
-    config.read("fcopt.txt")
+    configOpt.read("fcopt.txt")
     global vertical
-    vertical = config.getboolean('Section1', 'vertical')
+    vertical = configOpt.getboolean('Section1', 'vertical')
     global autoReshuf
-    autoReshuf = config.getboolean('Section1', 'autoReshuf')
+    autoReshuf = configOpt.getboolean('Section1', 'autoReshuf')
     global dblSzCards
-    dblSzCards = config.getboolean('Section1', 'dblSzCards')
+    dblSzCards = configOpt.getboolean('Section1', 'dblSzCards')
     global saveOnWin
-    saveOnWin = config.getboolean('Section1', 'saveOnWin')
+    saveOnWin = configOpt.getboolean('Section1', 'saveOnWin')
     global savePosition
-    savePosition = config.getboolean('Section1', 'savePosition')
+    savePosition = configOpt.getboolean('Section1', 'savePosition')
     global annoyingNudge
-    annoyingNudge = config.getboolean('Section1', 'annoyingNudge')
+    annoyingNudge = configOpt.getboolean('Section1', 'annoyingNudge')
     return
 
 def sendOpts():
-    if not config.has_section('Section1'):
-        config.add_section("Section1")
-    config.set('Section1', 'vertical', str(vertical))
-    config.set('Section1', 'autoReshuf', str(autoReshuf))
-    config.set('Section1', 'dblSzCards', str(dblSzCards))
-    config.set('Section1', 'saveOnWin', str(saveOnWin))
-    config.set('Section1', 'savePosition', str(savePosition))
-    config.set('Section1', 'annoyingNudge', str(annoyingNudge))
+    if not configOpt.has_section('Section1'):
+        configOpt.add_section("Section1")
+    configOpt.set('Section1', 'vertical', str(vertical))
+    configOpt.set('Section1', 'autoReshuf', str(autoReshuf))
+    configOpt.set('Section1', 'dblSzCards', str(dblSzCards))
+    configOpt.set('Section1', 'saveOnWin', str(saveOnWin))
+    configOpt.set('Section1', 'savePosition', str(savePosition))
+    configOpt.set('Section1', 'annoyingNudge', str(annoyingNudge))
     with open('fcopt.txt', 'w') as configfile:
-        config.write(configfile)
+        configOpt.write(configfile)
     print("Saved options.")
     return
 
@@ -1190,17 +1241,7 @@ def cardEval(myCmd):
 
 def goBye():
     print ("Bye!")
-    f = open(timefile, 'w')
-    f.seek(0)
-    global highTime
-    temptime = int(round(time.time()))
-    f.write(str(temptime) + '\n')
-    f.write(str(highTime) + '\n')
-    randkey = randint(100001,199999)
-    randrem = temptime % randkey
-    f.write(str(randkey) + '\n')
-    f.write(str(randrem) + '\n')
-    f.close()
+    writeTimeFile()
     exit()
 
 def readCmd(thisCmd):
@@ -1723,54 +1764,8 @@ def readCmd(thisCmd):
 
 ###################################start main program
 
-timeMatters = 1
-delay = 43200
-highTime = 0
-
 if timeMatters and os.path.exists(timefile) and os.stat(timefile).st_size > 0:
-    with open(timefile) as f:
-        try:
-            lastTime = int(float(f.readline()))
-        except:
-            lastTim = 0
-        try:
-            highTime = int(f.readline())
-        except:
-            highTime = 0
-        try:
-            modulus = int(f.readline())
-        except:
-            print "No random modulus, bailing."
-            exit()
-        if modulus < 100001 or modulus > 199999:
-            print "Save file corrupted, modulus out of range."
-            exit()
-        try:
-            remainder = int(f.readline())
-        except:
-            print "Need remainder. Set to 15000, modulus to the remainder for (relatively) cheap way through."
-            exit()
-    if (lastTime % modulus != remainder):
-        print "Save file corrupted."
-        exit()
-    timeDelt = int(time.time()) - lastTime
-    if timeDelt < delay:
-        print "Only " + str(timeDelt) + " of " + str(delay) + " seconds since last time waster."
-        exit()
-    else:
-        f.close()
-        if timeDelt < 90000000:
-            if timeDelt > highTime:
-                print 'New high of ' + str(timeDelt) + ' seconds since last, yay!'
-                highTime = timeDelt
-                with open(timefile, "w") as f:
-                    f.write(str(lastTime) + '\n')
-                    print str(lastTime)
-                    f.write(str(int(timeDelt)))
-                    print str(timeDelt)
-                    f.close()
-            else:
-                print "Missed the high of " + str(highTime)
+    readTimeFile()
 
 readOpts()
 parseCmdLine()
