@@ -15,8 +15,6 @@ my $zip = Archive::Zip->new();
 my $zup = "c:/writing/scripts/zup.txt";
 my $zupl = "c:/writing/scripts/zup.pl";
 
-open(A, $zup) || die ("$zup not available, bailing.");
-
 my %here;
 my $count = 0;
 my $zipUp = 0;
@@ -31,7 +29,7 @@ while ($count <= $#ARGV)
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-o$/) { $openAfter = 1; $count++; next; }
   if ($a =~ /^e$/) { print "Opening commands file.\n"; `$zup`; exit; }
-  if ($a =~ /^ee$/) { print "Opening script file.\n"; `$zupl`; exit; }
+  if ($a =~ /^ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
   if ($a =~ /,/)
   {
     my @commas = split(/,/, $count);
@@ -44,7 +42,17 @@ while ($count <= $#ARGV)
   $count++;
 }
 
+my $timestamp = "c:\\games\\inform\\zip\\timestamp.txt";
+
+open(A, ">$timestamp");
+
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time());
+print A sprintf("%d-%d-%d %d:%d:%d\n", $yearOffset+1900, $month+1, $dayOfMonth+1, $hour, $minute, $second);
+close(A);
+
 $count = 0;
+
+open(A, $zup) || die ("$zup not available, bailing.");
 
 while ($a = <A>)
 {
@@ -61,7 +69,7 @@ while ($a = <A>)
 	for my $idx(@b)
 	{
 	  #print "$idx\n";
-	  if ($here{$idx}==1)
+	  if (defined($here{$idx}) && ($here{$idx}==1))
 	  {
 	    $triedSomething = 1;
 	    $zipUp = 1;
@@ -122,6 +130,9 @@ sub usage
 {
 print<<EOT;
 USAGE: zup.pl (project)
+-o open after
+-e open commands file zup.txt
+-ee open script file zup.pl
 EOT
 exit;
 }
