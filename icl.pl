@@ -280,6 +280,11 @@ sub modifyBeta
   while ($a = <A>)
   {
     if ($a =~ /^volume beta testing/i) { print B "volume beta testing\n"; $foundBetaLine = 1; }
+	elsif ($a =~ /\t\[showtime\]/)
+	{
+	my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time());
+	print B sprintf("\tsay \"(Debug text, detailed time stamp in case I run 2 builds in a day) %d-%d-%d %d:%02d:%02d\"\n", $yearOffset + 1900, $month+1, $dayOfMonth, $hour, $minute, $second);
+	}
 	else { print B $a; }
   }
   close(A);

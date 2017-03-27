@@ -24,6 +24,7 @@ my %f2;
 my $stdin = 0;
 
 my $del = -1;
+my $crossword = 0;
 
 for (0..$#ARGV) { if ($ARGV[$_] =~ /b1\.pl/) { $del = $_; } }
 if ($del > -1) { print "Oops, it looks like you forgot to delete the command above.\n"; @ARGV=@ARGV[$del+1..$#ARGV]; sleep(1); }
@@ -39,6 +40,7 @@ if ((lc($ARGV[0]) eq "-f") || (lc($ARGV[0]) eq "f"))
 
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
+if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/.//; $crossword = 1; }
 if ($ARGV[0] eq "i") { $stdin = 1; }
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
 if ($ARGV[0] eq "s") { showMisses(); exit(); }
@@ -173,7 +175,7 @@ print "FREQUENCIES:";
 #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
 foreach my $val ( sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} or $a cmp $b} keys %freq)
 {
-  if ($f2{$val} == $count) { print " **$val**"; next; }
+  if (!$crossword) { if ($f2{$val} == $count) { print " **$val**"; next; } }
   print " $val:$f2{$val}/$freq{$val}";
 }
 print "\n";
@@ -187,6 +189,8 @@ sub checkForRepeats
   my @a1 = split(//, lc($_[0]));
   my @a2 = split(//, lc($_[1]));
 
+  if (!$crossword)
+  {
   my $a3 = lc($_[0]); $a3 =~ s/\.//g;
 
   for (0..$#a2)
@@ -207,6 +211,7 @@ sub checkForRepeats
       #print "$_[0] contains extra guessed letters from $_[0] namely $j.\n";
       return;
     }
+  }
   }
   for (@a2) { if ($_) { $freq{$_}++; } }
   my @a2a = uniq(@a2);
@@ -312,6 +317,7 @@ sub usage
 print<<EOT;
 =(word) adds it without admitting wrong
 +(word) adds word or increases its wrong count
+-(word) runs in crossword mode e.g. ad. can be add
 e = run misses file
 s = show misses
 ? = this usage
