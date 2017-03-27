@@ -63,7 +63,7 @@ while ($x = <X>)
 	else { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } }
   }
   elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
-  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; print "Zmac $y.\n"; }
+  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
 }
 #sensible abbreviations
@@ -155,10 +155,10 @@ $i6x = i6exe($_[0]);
 
 if ($runBeta)
 {
-  copyToBeta($bdir);
   $mat = "$baseDir\\$_[0].materials";
-  $bmat = "$baseDir\\beta.materials";
+  $bmat = "$baseDir\\beta Materials";
   if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
+  copyToBeta($bdir);
   doOneBuild($betaDir, "~D", "$baseDir\\beta Materials", "beta", "$_[0]");
 }
 
@@ -238,8 +238,8 @@ sub sysprint
 
 sub copyToBeta
 {
-print("set HOME=$betaDir");
-print "****BETA BUILD****\n";
+print("set HOME=$betaDir\n\n");
+print "****BETA BUILD****\n\n";
 
 my $mtr = $_[0]; $mtr =~ s/\.inform/ materials/g;
 
