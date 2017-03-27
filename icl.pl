@@ -56,23 +56,17 @@ while ($x = <X>)
   if ($x =~ /^#/) { next; }
 
   my @cmd = split(/=/, $x);
-  if (defined($cmd[0]))
+  if (defined($cmd[1]))
   {
     if (lc($cmd[0]) eq lc("default")) { @defaultCompileList = split(/,/, $cmd[1]); }
     elsif (lc($cmd[0] eq lc "allproj")) { @allProj = split(/,/, $cmd[1]); }
 	else { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } }
   }
   elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
-  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
+  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; print "Zmac $y.\n"; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
 }
 #sensible abbreviations
-
-#which projects are z machine? Default is glulx
-$zmac{"compound"} = 0;
-$zmac{"threediopolis"} = 1;
-$zmac{"fourdiopolis"} = 0; #Needed to save states
-$zmac{"dirk"} = 1;
 
 $use6l{"compound"} = 0;
 

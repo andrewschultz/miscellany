@@ -14,8 +14,10 @@ default=sc
 u,uo,14=ugly-oafs
 15,p,pc,tpc=compound
 16,sc=slicker-city
-17,btp=buck-the-past
+btp=buck-the-past
+bs=btp-st
 ss=seeker-status
+17=comp17
 d=dirk
 r,ro,roi=roiling
 
