@@ -23,6 +23,8 @@ my @important = ();
 my $majorTable = 0;
 my $tableList = "";
 
+my @tableReadFiles = ("c:/writing/scripts/i7t.txt", "c:/writing/scripts/i7tp.txt");
+
 ################################
 # options
 my $tableTab = 0; # this lists how many tables have how many tabs
@@ -63,7 +65,7 @@ while ($count <= $#ARGV)
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { print "Opening source. -f opens the data file, -ef both.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
-    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
 	/^-?(ef|fe)$/ && do
     {
       print "Opening data and source.\n";
@@ -71,6 +73,7 @@ while ($count <= $#ARGV)
       `c:\\writing\\scripts\\i7t.pl`;
       next;
     };
+    /^-?p$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `c:\\writing\\scripts\\i7tp.txt`; exit; };
 	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
@@ -172,14 +175,17 @@ print B $sum;
 close(A);
 close(B);
 
-open(A, "c:/writing/scripts/i7t.txt");
-
-my @b;
 my $ranOneTest = 0;
 my $printFail = 0;
 my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
+
+for my $trf (@tableReadFiles)
+{
+open(A, $trf) || do { print "No $trf.\n"; next; };
+
+my @b;
 
 while ($a = <A>)
 {
@@ -245,6 +251,8 @@ while ($a = <A>)
     }
 	$printFail++;
   }
+}
+
 }
 
 if ($printFail)

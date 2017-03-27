@@ -48,6 +48,11 @@ Buck-the-past	xxkmc	"	$$ Hit King chats
 Buck-the-past	xxps	"	$+ Sharing Prophet babbles
 Buck-the-past	ni cr / ni br / ni bpr
 ######################################
+#Buck the Past Spring Thing searching
+#
+#############
+btp-st	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_spring_thing_release_1_notes.txt	$$ off-the-wall
+######################################
 #fourdiopolis searching
 #
 #############
