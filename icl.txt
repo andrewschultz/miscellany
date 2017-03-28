@@ -10,6 +10,9 @@ default=sc
 #project shortcuts
 e11=dash
 e13=ghost
+e14=Candy Rush Sage
+e15=heezy-park
+e16=ectocomp16
 12,s,sa=shuffling
 3,3d,13=threediopolis
 4,4d=fourdiopolis
@@ -34,9 +37,12 @@ z:threediopolis
 z:slicker-city
 
 ########################
-#which can go to z5? (ectocomp)
-z5:dash
-z6:ghost
+#which can go to z5? (mostly ectocomp)
+z5:e11
+z6:e13
+z5:e14
+z6:e15
+z5:e16
 
 #######################
 #using 6l is below here
