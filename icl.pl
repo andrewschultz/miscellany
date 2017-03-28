@@ -64,8 +64,10 @@ while ($x = <X>)
 	else { my @froms = split(/,/, $cmd[0]); for (@froms) { $proj{$_} = $cmd[1]; } }
   }
   elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
-  elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
-  elsif ($x =~ /^z5:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 5; }
+  elsif ($x =~ /^z(8)?:/) { $y = $x; $y =~ s/^z(8)?://g; $zmac{$y} = 1; }
+  elsif ($x =~ /^z5:/) { $y = $x; $y =~ s/^z5://g; $zmac{$y} = 5; }
+  elsif ($x =~ /^z6:/) { $y = $x; $y =~ s/^z6://g; $zmac{$y} = 6; } #z6 is hacky code for z5 in release/beta but z8 in debug
+  elsif ($x =~ /^z7:/) { $y = $x; $y =~ s/^z7://g; $zmac{$y} = 7; } #z7 is hacky code for z5 in release but z8 in debug/beta
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
 }
 #sensible abbreviations
@@ -138,12 +140,6 @@ if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
 
 sub runProj
 {
-$ex = "ulx";
-$gz = "gblorb";
-$iflag = "G";
-if ($zmac{$_[0]} > 1) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
-if ($zmac{$_[0]}) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
-die("$_[0] $iflag");
 
 if (defined($forceDir{$_[0]}))
 {
@@ -179,6 +175,13 @@ if ($debug)
 
 sub doOneBuild
 {
+  $ex = "ulx";
+  $gz = "gblorb";
+  $iflag = "G";
+  if (z5($zmac{$_[4]}, $_[3])) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
+  elsif ($zmac{$_[4]} > 0) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
+  die("$ex");
+
   my $tempSource = "$bdir\\source\\story.ni";
   my $outFile = "$_[0]\\Build\\output.$ex";
   my $dflag = "$_[1]";
@@ -359,6 +362,14 @@ sub getFile
 sub delIfThere
 {
   if (-f "$_[0]") { print "Deleting $_[0]\n"; system("erase \"$_[0]\""); } else { print "No $_[0]\n"; }
+}
+
+sub z5
+{
+  if (($_[0] == 1) || ($_[0] == 8)) { return 0; }
+  if (($_[1] eq "debug") && ($_[0] <= 5)) { return 1; }
+  if (($_[1] eq "beta") && ($_[0] <= 6)) { return 1; }
+  if (($_[1] eq "release") && ($_[0] <= 7)) { return 1; }
 }
 
 sub usage
