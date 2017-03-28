@@ -179,7 +179,7 @@ sub doOneBuild
   $gz = "gblorb";
   $iflag = "G";
   if (z5($zmac{$_[4]}, $_[3])) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
-  elsif ($zmac{$_[4]} > 0) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
+  elsif (defined($zmac{$_[4]}) && ($zmac{$_[4]} > 0)) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
 
   my $tempSource = "$bdir\\source\\story.ni";
   my $outFile = "$_[0]\\Build\\output.$ex";
@@ -365,10 +365,12 @@ sub delIfThere
 
 sub z5
 {
+  if (!defined($_[0]) || ($_[0] !~ /^[0-9]+$/)) { print "WARNING: bad value passed to Z5 function.\n"; return 0; }
   if (($_[0] == 1) || ($_[0] == 8)) { return 0; }
   if (($_[1] eq "debug") && ($_[0] <= 5)) { return 1; }
   if (($_[1] eq "beta") && ($_[0] <= 6)) { return 1; }
   if (($_[1] eq "release") && ($_[0] <= 7)) { return 1; }
+  return 0;
 }
 
 sub p
