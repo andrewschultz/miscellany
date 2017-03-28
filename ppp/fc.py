@@ -77,6 +77,8 @@ trackUndo = 0
 
 breakMacro = 0
 
+undoIdx = 0
+
 debug = False
 
 cmdList = []
@@ -961,6 +963,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
             #print '3 debug stuff:',tocard(elements[r1][n]),n,fromline
     else:
         toTopCard = elements[r2][len(elements[r2])-1]
+        #print str(elements[r2]) + "Row " + str(r2) + " Card " + tocard(toTopCard)
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
             if canPut(elements[r1][n], toTopCard):
@@ -968,6 +971,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
             if n == 0:
                 return 0
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
+                #print ("Can't put " + tocard(elements[r1][n]) + " on " + tocard(elements[r1][n-1]) + " or " + tocard(toTopCard));
                 return 0
     if onlymove > locmaxmove:
         print ("WARNING, %d is greater than the maximum of %d." % (onlymove, locmaxmove))
@@ -1132,12 +1136,14 @@ def undoMoves(toUndo):
             totalUndo += 1
     global inUndo
     inUndo = True
-    for myCmd in moveList:
-        readCmd(str(myCmd))
+    global undoIdx
+    for undoIdx in range (0,len(moveList)):
+        readCmd(str(moveList[undoIdx]))
         if trackUndo == 1:
             inUndo = False
             printCards()
             inUndo = True
+    undoIdx = 0
     inUndo = False
     checkFound()
     printCards()
@@ -1169,8 +1175,9 @@ def loadGame(gameName):
                 moveList = line.split()
             else:
                 moveList = []
-            for myCmd in moveList:
-                readCmd(str(myCmd))
+            global undoIdx
+            for undoIdx in range(0,len(moveList)):
+                readCmd(str(moveList[undoIdx]))
                 if trackUndo == 1:
                     inUndo = False
                     printCards()
@@ -1276,6 +1283,10 @@ def readCmd(thisCmd):
             name = name.replace(' ', '')
     else:
         name = thisCmd
+    if name == '*':
+        while reshuf(-1):
+            next
+        return
     name = name.lower()
     if len(name) % 2 == 0 and len(name) >= 2:
         temp = len(name) / 2
@@ -1289,6 +1300,7 @@ def readCmd(thisCmd):
     if len(name) == 0:
         while reshuf(-1):
             next
+        moveList.append('*')
         printCards()
         return
     if name[0] == '>' and name[1:].isdigit:
@@ -1673,7 +1685,10 @@ def readCmd(thisCmd):
             return
         if tempdoab == 0:
             if inUndo:
-                print ("Move " + str(len(moveList)) + " seems to have gone wrong. Use ua.")
+                #print "Move", str(undoIdx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
+                if undoIdx == 15:
+                    printVertical()
+                    exit
             else:
                 print ('Those cards don\'t match up.')
             return
@@ -1760,7 +1775,7 @@ def readCmd(thisCmd):
         printCards()
         return
     print (name + ' not recognized, displaying usage.')
-    usage()
+    usageGame()
 
 ###################################start main program
 
