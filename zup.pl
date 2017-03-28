@@ -27,7 +27,7 @@ while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
-  if ($a =~ /^-o$/) { $openAfter = 1; $count++; next; }
+  if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; next; }
   if ($a =~ /^e$/) { print "Opening commands file.\n"; `$zup`; exit; }
   if ($a =~ /^ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
   if ($a =~ /,/)
@@ -47,7 +47,7 @@ my $timestamp = "c:\\games\\inform\\zip\\timestamp.txt";
 open(A, ">$timestamp");
 
 my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time());
-print A sprintf("%d-%d-%d %d:%d:%d\n", $yearOffset+1900, $month+1, $dayOfMonth+1, $hour, $minute, $second);
+print A sprintf("%d-%02d-%02d %d:%02d:%02d\n", $yearOffset+1900, $month+1, $dayOfMonth, $hour, $minute, $second);
 close(A);
 
 $count = 0;
@@ -130,7 +130,7 @@ sub usage
 {
 print<<EOT;
 USAGE: zup.pl (project)
--o open after
+-[ol] open after
 -e open commands file zup.txt
 -ee open script file zup.pl
 EOT
