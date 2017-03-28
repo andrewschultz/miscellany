@@ -24,6 +24,7 @@ my %forceDir;
 my $informBase = 0;
 my $informDir = 0;
 my $infOnly = 0;
+my $checkRecentChanges = 0;
 
 my $infDir;
 
@@ -80,7 +81,7 @@ my $count = 0;
 while ($count <= $#ARGV)
 {
 
-  $a = $ARGV[$count];
+  $a = lc($ARGV[$count]);
   for ($a)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
@@ -88,12 +89,13 @@ while ($count <= $#ARGV)
   /^-?jb$/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
   /^-?jd$/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
   /^-?jr$/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
-  /^-?f$/ && do { $release = $debug = $runBeta = 0;
+  /^-?f[rdb]*$/ && do { $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
     if ($a =~ /b/) { $runBeta = 1; }
 	$count++; next;
   };
+  /^-?24$/ && do { $checkRecentChanges = 86000; $count++; next; }; # note it's really 86400 seconds in a day but we need fudge factors for daily builds eg if one starts late and the next starts early
   /^-?inf$/ && do { $infOnly = 1; $count++; next; };
   /^-?l$/ && do { $v6l = 1 - $v6l; $informDir = $inDirs[$v6l]; $count++; next; };
   /^-?ba$/ && do { $informBase = $ARGV[$count+1]; $count++; next; };
@@ -135,13 +137,12 @@ if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
 
 sub runProj
 {
-# this is bad coding but there's only two exceptions for now: Threediopolis and Dirk.
 $ex = "ulx";
 $gz = "gblorb";
 $iflag = "G";
 if ($zmac{$_[0]}) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
 
-if ($forceDir{$_[0]})
+if (defined($forceDir{$_[0]}))
 {
 $bdir = $forceDir{$_[0]};
 }
@@ -158,7 +159,6 @@ if ($runBeta)
   $mat = "$baseDir\\$_[0].materials";
   $bmat = "$baseDir\\beta Materials";
   if ($use6l{$_[0]}) { $mat =~ s/ materials/\.materials/g; $bmat =~ s/ materials/\.materials/g; }
-  copyToBeta($bdir);
   doOneBuild($betaDir, "~D", "$baseDir\\beta Materials", "beta", "$_[0]");
 }
 
@@ -176,9 +176,36 @@ if ($debug)
 
 sub doOneBuild
 {
+  my $tempSource = "$bdir\\source\\story.ni";
   my $outFile = "$_[0]\\Build\\output.$ex";
   my $dflag = "$_[1]";
   my $infOut = "$_[0]\\Build\\auto.inf";
+
+  my $blorbFileShort = getFile("$_[0]/Release.blurb");
+  if ($_[3] ne "debug") { $blorbFileShort = "$_[3]-$blorbFileShort"; }
+  my $outFinal = "$_[2]\\Release\\$blorbFileShort";
+
+  if ($checkRecentChanges)
+  {
+    my $lastmod = (stat($tempSource))[9];
+    my $infmod = -f "$outFinal" ? (stat($outFinal))[9] : 0;
+
+    if (defined($lastmod) && ($lastmod < $infmod))
+    {
+    my $delta1 = time() - $lastmod;
+    if ($delta1 && ($delta1 > $checkRecentChanges))
+    {
+      print "NOT RUNNING BUILD\nToo long since $tempSource was modified\nToo short since $outFinal was modified\n";
+      return;
+    }
+    print "$tempSource:$delta1\n";
+    }
+  }
+
+  if ($_[3] eq "beta")
+  {
+    copyToBeta($bdir);
+  }
 
   delIfThere($infOut);
 
@@ -212,10 +239,7 @@ sub doOneBuild
   ####probably not necessary
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary succeeded,0,0,0\n";
 
-  my $blorbFileShort = getFile("$_[0]/Release.blurb");
-
-  if ($_[3] ne "debug") { $blorbFileShort = "$_[3]-$blorbFileShort"; }
-  my $outFinal = "$_[2]\\Release\\$blorbFileShort";
+  ################this reloads the final output file
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
 
