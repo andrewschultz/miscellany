@@ -65,6 +65,7 @@ while ($x = <X>)
   }
   elsif ($x =~ /^FORCE /) { $y = $x; $y =~ s/^FORCE //g;  my @z = split(/=/, $y); $forceDir{$z[0]} = $z[1]; }
   elsif ($x =~ /^z:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 1; }
+  elsif ($x =~ /^z5:/) { $y = $x; $y =~ s/^z://g; $zmac{$y} = 5; }
   elsif ($x =~ /^6l:/) { $y = $x; $y =~ s/^6l://g; $use6l{$y} = 1; }
 }
 #sensible abbreviations
@@ -140,7 +141,9 @@ sub runProj
 $ex = "ulx";
 $gz = "gblorb";
 $iflag = "G";
+if ($zmac{$_[0]} > 1) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
 if ($zmac{$_[0]}) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
+die("$_[0] $iflag");
 
 if (defined($forceDir{$_[0]}))
 {

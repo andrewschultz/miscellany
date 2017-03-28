@@ -8,6 +8,7 @@ default=sc
 
 ############################
 #project shortcuts
+e11=dash
 12,s,sa=shuffling
 3,3d,13=threediopolis
 4,4d=fourdiopolis
@@ -30,6 +31,11 @@ allproj=s,r,u,p,d,15,16
 z:dirk
 z:threediopolis
 z:slicker-city
+
+########################
+#which can go to z5? (ectocomp)
+z5:dash
+z:ghost
 
 #######################
 #using 6l is below here
