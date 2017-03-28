@@ -57,7 +57,7 @@ goto nodef
 )
 
 if "%1" EQU "e16" (
-set PROJ=ectocomp16
+set PROJ=checkered-haunting
 goto nodef
 )
 

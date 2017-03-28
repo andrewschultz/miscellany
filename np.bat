@@ -129,7 +129,7 @@ goto end
 if EXIST "c:\writing\scripts\%1.bat" (
 echo Found BAT file in scripts.
 
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\scripts\%1.bat"
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\scripts\%1.bat"
 goto end
 )
 

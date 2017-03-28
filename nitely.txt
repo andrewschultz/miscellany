@@ -15,7 +15,7 @@
 #
 opo~3d,4d
 sts~ana,sa,roi
-as~pc,sc,btp
+as~pc,sc,btp,bs
 ec~e11,e13,e14,e15
 
 e11=dash
@@ -49,9 +49,9 @@ misc=miscellaneous
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 
 4d=fourdiopolis
 >gh.pl -t $$
@@ -61,9 +61,9 @@ misc=miscellaneous
 >crv.pl $$
 >qq.pl $l
 >$d/logcheck.pl
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 
 #no specific program but it comprises Stale Tales Slate tests that don't fit into either
 ana=anagrams
@@ -89,9 +89,9 @@ sa=shuffling
 >crv.pl $$
 >qq.pl $l
 >tsh.pl $$
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 
 roi=roiling
 >lnct.pl $$
@@ -106,15 +106,21 @@ roi=roiling
 >$l/mkbot.pl
 >$l/mkbot.pl taunt
 >tsh.pl $$
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
+
+bs=btp-st
+>gh.pl -t $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 
 btp=buck-the-past
 >gh.pl -t $$
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 >lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-auth,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
 >crv.pl $$
 >$l\pun.pl
@@ -134,9 +140,9 @@ sc=slicker-city
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 >$d/grate.pl
 >$d/sctt.pl
 
@@ -152,9 +158,9 @@ c:/games/inform/triz/mine/compound-directors-cut.trizbort>c:/games/inform/triz/m
 >tts.pl $$ y
 >crv.pl $$
 >qq.pl $l
->icl.pl -jr $$
->icl.pl -jb $$
->icl.pl -jd $$
+>icl.pl -jr $$ -24
+>icl.pl -jb $$ -24
+>icl.pl -jd $$ -24
 
 uo=uglyoafs
 >gh.pl uo
