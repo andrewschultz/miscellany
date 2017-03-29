@@ -688,7 +688,7 @@ def checkWinning():
     global wonThisCmd
     wonThisCmd = True
     while True:
-        finish = input("You win! Play again (Y/N, U to undo)?").lower()
+        finish = input("You win in %d commands and %d moves! Play again (Y/N, U to undo)?" % (len(cmdList), len(moveList))).lower()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
@@ -1298,9 +1298,12 @@ def readCmd(thisCmd):
         print ("trackUndo now " + onoff[trackUndo])
         return
     if len(name) == 0:
+        anyReshuf = False
         while reshuf(-1):
+            anyReshuf = True
             next
-        moveList.append('*')
+        if anyReshuf:
+            moveList.append('*')
         printCards()
         return
     if name[0] == '>' and name[1:].isdigit:
