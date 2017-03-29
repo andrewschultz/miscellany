@@ -82,6 +82,7 @@ undoIdx = 0
 debug = False
 
 cmdList = []
+cmdNoMeta = []
 
 backup = []
 elements = [ [], [], [], [], [], [], [], [], [] ]
@@ -457,6 +458,8 @@ def initSide(inGameReset):
         moveList = []
         global cmdList
         cmdList = []
+        global cmdNoMeta
+        cmdNoMeta = []
     global breakMacro
     breakMacro = 0
 
@@ -1065,6 +1068,8 @@ def dumpInfo(x):
     print elements
     print backup
     print moveList
+    print cmdList
+    print cmdNoMeta
     print ("Spares: "% (spares));
     print ("Found: "% (found));
     if abs(x) == 2:
@@ -1104,6 +1109,8 @@ def usageMeta():
     print ('lo/so loads/saves options.')
     print ('u = undo, u1-u10 undoes that many moves, undo does 11+, tu tracks undo.')
     print ('ua = shows current move/undo array.')
+    print ('uc = shows current command list.')
+    print ('ux = shows current command list excluding meta-commands.')
     print ('qu quits (q could be typed by accident).')
     print ('? = usage (this).')
     print ('empty command tries basic reshuffling and prints out the cards again.')
@@ -1275,6 +1282,7 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        cmdNoMeta.append(name)
         cmdList.append(name)
         if name[:2] == 'e ':
             cardEval(name)
@@ -1414,7 +1422,19 @@ def readCmd(thisCmd):
         else:
             name = name[1:]
         if name == 'a':
-            print (moveList)
+            if not inUndo:
+                print 'Move list,', len(moveList), 'moves so far:', (moveList)
+            cmdNoMeta.pop()
+            return
+        if name == 'c':
+            if not inUndo:
+                print 'Command list,', len(cmdList), 'commands so far:', (cmdList)
+            cmdNoMeta.pop()
+            return
+        if name == 'x':
+            if not inUndo:
+                print 'Trimmed command list,', len(cmdNoMeta), 'commands so far:', (cmdNoMeta)
+            cmdNoMeta.pop()
             return
         if name == 's':
             if len(moveList) == 0:
@@ -1428,7 +1448,7 @@ def readCmd(thisCmd):
             print ("Last " + str(temp) + " moves started with " + d1)
             return
         if not name.isdigit():
-            print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing."
+            print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing. C=commands X=commands minus meta."
             return
         if int(name) > len(moveList):
             print ("Tried to do %d undo%s, can only undo %d." % (int(name), plur(int(name)), len(moveList)))
@@ -1600,9 +1620,11 @@ def readCmd(thisCmd):
                 print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         if gotReversed == 0:
             print ('Only 2 chars per command.')
+            cmdListMeta.pop()
         return
     if len(name) < 2:
-        print ('Must have 2 chars per command.')
+        print ('Must have 2 chars per command, unless you are willing to use an implied command.')
+        cmdListMeta.pop()
         return
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
@@ -1617,9 +1639,11 @@ def readCmd(thisCmd):
         if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print ('Not a valid row.')
+                cmdListMeta.pop()
                 return
             if len(elements[temprow]) == 0:
                 print ('Empty row.')
+                cmdListMeta.pop()
                 return
             if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
                 found[(elements[temprow][len(elements[temprow])-1]-1)//13]+= 1
