@@ -691,7 +691,7 @@ def checkWinning():
     global wonThisCmd
     wonThisCmd = True
     while True:
-        finish = input("You win in %d commands and %d moves! Play again (Y/N, U to undo)?" % (len(cmdList), len(moveList))).lower()
+        finish = input("You win in %d commands (%d including extraneous) and %d moves! Play again (Y/N, U to undo)?" % (len(cmdNoMeta), len(cmdList), len(moveList))).lower()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
@@ -1303,7 +1303,9 @@ def readCmd(thisCmd):
             name = name[temp:]
     if name == 'tu':
         trackUndo = 1 - trackUndo
-        print ("trackUndo now " + onoff[trackUndo])
+        if not inUndo:
+            print ("trackUndo now " + onoff[trackUndo])
+        cmdNoMeta.pop()
         return
     if len(name) == 0:
         anyReshuf = False
@@ -1312,10 +1314,13 @@ def readCmd(thisCmd):
             next
         if anyReshuf:
             moveList.append('*')
+        else:
+            cmdNoMeta.pop()
         printCards()
         return
     if name[0] == '>' and name[1:].isdigit:
         print (name[1:], "becomes", tocard(int(name[1:])))
+        cmdNoMeta.pop()
         return
     global onlymove
     onlymove = 0
@@ -1341,31 +1346,40 @@ def readCmd(thisCmd):
         name = "l" + name[1:]
         print ("Loading " + name[2:])
     if name == 'l' or name == 's' or name == 'l=' or name == 's=':
-        print ("load/save needs = and then a name.")
+        print ("load/save needs = and then a name. lp loads the last in the save file.")
+        cmdNoMeta.pop()
         return
     if len(name) > 1:
         if name[0] == 'l' and name[1] == '=':
+            cmdNoMeta.pop()
             loadGame(re.sub(r'^l=', 's=', name))
             return
         if name[0] == 's' and name[1] == '=':
+            cmdNoMeta.pop()
             saveGame(name.strip())
             return
     if name == "lo":
+        cmdNoMeta.pop()
         readOpts()
         return
     if name == "so":
+        cmdNoMeta.pop()
         sendOpts()
         return
     if name == 'q':
+        cmdNoMeta.pop()
         print ("QU needed to quit, so you don't type Q accidentally.")
         return
     if name == 'qu':
+        cmdNoMeta.pop()
         goBye()
     if name == 'ws' or name == 'sw':
+        cmdNoMeta.pop()
         saveOnWin = not saveOnWin
         print ("Save on win is now %s." %("on" if saveOnWin else "off"))
         return
     if name == 'ps' or name == 'sp':
+        cmdNoMeta.pop()
         savePosition = not savePosition
         print ("Save position with moves/start is now %s." %("on" if savePosition else "off"))
         return
@@ -1374,6 +1388,7 @@ def readCmd(thisCmd):
         return
     if name == 'h':
         if not slipUnder():
+            cmdNoMeta.pop()
             print ("No slip-unders found.")
         return
     if name == 'p':
@@ -1422,19 +1437,19 @@ def readCmd(thisCmd):
         else:
             name = name[1:]
         if name == 'a':
+            cmdNoMeta.pop()
             if not inUndo:
                 print 'Move list,', len(moveList), 'moves so far:', (moveList)
-            cmdNoMeta.pop()
             return
         if name == 'c':
+            cmdNoMeta.pop()
             if not inUndo:
                 print 'Command list,', len(cmdList), 'commands so far:', (cmdList)
-            cmdNoMeta.pop()
             return
         if name == 'x':
+            cmdNoMeta.pop()
             if not inUndo:
                 print 'Trimmed command list,', len(cmdNoMeta), 'commands so far:', (cmdNoMeta)
-            cmdNoMeta.pop()
             return
         if name == 's':
             if len(moveList) == 0:
@@ -1463,8 +1478,10 @@ def readCmd(thisCmd):
     if name[0] == '/':
         debug = 1 - debug
         print ('debug', onoff[debug])
+        cmdNoMeta.pop()
         return
     if name[0] == 'h':
+        cmdNoMeta.pop()
         name = re.sub(r'^h', '', name)
         if name.isdigit() == 0:
             if name == 'q':
@@ -1490,6 +1507,7 @@ def readCmd(thisCmd):
         printCards()
         return
     if name[0] == '?':
+        cmdNoMeta.pop()
         if len(name) is 1 or name[1].lower() == 'g':
             usageGame()
         elif name[1].lower() == 'm':
@@ -1521,23 +1539,27 @@ def readCmd(thisCmd):
         totalReset += 1
         return
     if name == "?":
+        cmdNoMeta.pop()
         print ('Maximum card length moves: ', maxmove())
         return
     if name == "":
         printCards()
         return
     if name == '+':
+        cmdNoMeta.pop()
         dblSzCards = not dblSzCards
         print ("Toggled dblSzCards to %s." % (onoff[dblSzCards]))
         printCards()
         return
     if name == 'e':
+        cmdNoMeta.pop()
         autoReshuf = not autoReshuf
         print ("Toggled reshuffling to %s." % (onoff[autoReshuf]))
         reshuf(-1)
         printCards()
         return
     if name == 'v':
+        cmdNoMeta.pop()
         vertical = not vertical
         print ("Toggled vertical view to %s." % (onoff[vertical]))
         printCards()
@@ -1553,12 +1575,15 @@ def readCmd(thisCmd):
                     print ("Assuming you meant to do something with " + name[0] + ".")
                     name = name[0]
                 elif spares[n1-97] > 0 and spares[n2-97] > 0:
+                    cmdNoMeta.pop()
                     print ("Neither cell is empty, though shuffling does nothing.")
                     return
                 elif spares[n1-97] == 0 and spares[n2-97] == 0:
+                    cmdNoMeta.pop()
                     print ("Both cells are empty, so this does nothing.")
                     return
                 else:
+                    cmdNoMeta.pop()
                     print ('Shuffling between empty squares does nothing, so I\'ll just pass here.')
                     return
     if len(name) == 1:
@@ -1568,6 +1593,7 @@ def readCmd(thisCmd):
                 print ('Need 1-8.')
                 return
             if len(elements[i]) is 0:
+                cmdNoMeta.pop()
                 print ('Acting on an empty row.')
                 return
             if anyDoableLimit(i):
@@ -1599,9 +1625,11 @@ def readCmd(thisCmd):
             elif firstEmptyRow() > 0:
                 name = name + str(firstEmptyRow())
             else:
+                cmdNoMeta.pop()
                 print ('No empty row/column to drop from spares.')
                 return
         else:
+            cmdNoMeta.pop()
             print ("Unknown 1-letter command.")
             return
     #### two letter commands below here.
@@ -1635,6 +1663,7 @@ def readCmd(thisCmd):
             tempspare = ord(tofound) - 97
         else:
             print "1-8 a-d are needed with R, or (nothing) tries to force everything."
+            cmdNoMeta.pop()
             return
         if temprow > -1:
             if temprow > 8 or temprow < 1:
@@ -1655,6 +1684,7 @@ def readCmd(thisCmd):
                 printCards()
                 return
             print ('Sorry, found nothing.')
+            cmdNoMeta.pop()
             return
         if tempspare > -1:
             if foundable(spares[tempspare]):
@@ -1674,13 +1704,16 @@ def readCmd(thisCmd):
                 printCards()
             else:
                 print ('Can\'t move from spares.') #/? 3s onto 2s with nothing else, all filled
+                cmdNoMeta.pop()
             return
         print ('Must move 1-8 or a-d.')
+        cmdNoMeta.pop()
         return
     if len(name) == 2 and (name[0] == 'p' or name[1] == 'p'):
         q2 = (name.replace("p", ""))
         if not q2.isdigit():
             print ("p command requires a digit.")
+            cmdNoMeta.pop()
             return
         if ripUp(int(q2)):
             cmdChurn = False
@@ -1694,21 +1727,26 @@ def readCmd(thisCmd):
         t2 = int(name[1])
         if t1 == t2:
             print ('Moving a row to itself does nothing.')
+            cmdNoMeta.pop()
             return
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
             print ("Need digits from 1-8.")
+            cmdNoMeta.pop()
             return ##### don't put anything above this
         if len(elements[t1]) == 0 and not inUndo:
             print ('Nothing to move from.')
+            cmdNoMeta.pop()
             return
         if len(elements[t2]) == 0:
             if chains(t1) == len(elements[t1]) and not cmdChurn and force == 0 and onlymove == 0:
+                cmdNoMeta.pop()
                 shufwarn()
                 return
         tempdoab = doable(t1,t2,1 - preverified)
         if tempdoab == -1:
             if not cmdChurn:
                 print 'Not enough space.'
+                cmdNoMeta.pop()
             return
         if tempdoab == 0:
             if inUndo:
@@ -1718,6 +1756,7 @@ def readCmd(thisCmd):
                     exit
             else:
                 print ('Those cards don\'t match up.')
+                cmdNoMeta.pop()
             return
         oldchain = chains(t1)
         shiftcards(t1, t2, tempdoab)
@@ -1740,13 +1779,16 @@ def readCmd(thisCmd):
         mySpare = ord(name[0]) - 97
         if spares[mySpare] == 0:
             print ('Nothing in slot %d.' % (mySpare + 1))
+            cmdNoMeta.pop()
             return
         if not name[1].isdigit():
             print ('Second letter not recognized.')
+            cmdNoMeta.pop()
             return
         myRow = int(name[1])
         if myRow < 1 or myRow > 8:
             print ('To row must be between 1 and 8.')
+            cmdNoMeta.pop()
             return
         if (len(elements[myRow]) == 0) or (canPut(spares[mySpare], elements[myRow][len(elements[myRow])-1])):
             elements[myRow].append(spares[mySpare])
@@ -1759,24 +1801,29 @@ def readCmd(thisCmd):
             printCards()
             return
         print ("Can't put%s on%s." % (tocardX(spares[mySpare]), tocardX(elements[myRow][len(elements[myRow])-1])))
+        cmdNoMeta.pop()
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102): #1a moves, but also 1e can be A Thing
         if not name[0].isdigit():
+            cmdNoMeta.pop()
             print ('First letter not recognized as a digit.')
             return
         myToSpare = firstEmptySpare()
         if myToSpare == -1:
             if not cmdChurn:
                 print ('Nothing empty to move to. To which to move.')
+                cmdNoMeta.pop()
             return
         if name[1] != 'e':
             myToSpare = ord(name[1]) - 97
         myRow = int(name[0])
         if myRow < 1 or myRow > 8:
             print ('From row must be between 1 and 8.')
+            cmdNoMeta.pop()
             return
         if (len(elements[myRow]) == 0):
             print ('Empty from-row.')
+            cmdNoMeta.pop()
             return
         if spares[myToSpare] > 0:
             for temp in range (0,4):
@@ -1787,6 +1834,7 @@ def readCmd(thisCmd):
                     break
             if spares[myToSpare] > 0:
                 print ("Oops, I somehow see all-full and not all full at the same time.")
+                cmdNoMeta.pop()
                 return
         spares[myToSpare] = elements[myRow].pop()
         if not inUndo:
@@ -1802,6 +1850,7 @@ def readCmd(thisCmd):
         printCards()
         return
     print (name + ' not recognized, displaying usage.')
+    cmdNoMeta.pop()
     usageGame()
 
 ###################################start main program
