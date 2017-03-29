@@ -12,23 +12,31 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 ################constants first
 my $zip = Archive::Zip->new();
-my $zup = "c:/writing/scripts/zup.txt";
-my $zupl = "c:/writing/scripts/zup.pl";
+my $zup = __FILE__;
+my $zupl = $zup; $zupl =~ s/pl$/txt/gi;
 
+##################options
 my %here;
-my $count = 0;
 my $zipUp = 0;
 my $triedSomething = 0;
 my $version = 0;
 my $openAfter = 0;
 my $viewFile = 0;
 my $outFile = "";
+my $executeBeforeZip = 0;
+my $printExecute = 0;
+
+##################variables
+my $count = 0;
+my $temp;
 
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; next; }
+  if ($a =~ /^-?x$/) { print "Executing commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
+  if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
   if ($a =~ /^-?e$/) { print "Opening commands file.\n"; `$zup`; exit; }
   if ($a =~ /^-?v$/) { print "Viewing the output file, if there.\n"; $viewFile = 1; $count++; next; }
   if ($a =~ /^-?ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
@@ -83,7 +91,7 @@ while ($a = <A>)
 
   for ($a)
   {
-  /^v=/ && do { $a =~ s/^v=//g; $version = $a; next; };
+  /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
   /^!/ && do
   {
     print "Writing to c:/games/inform/zip/$outFile...\n";
@@ -92,9 +100,9 @@ while ($a = <A>)
 	if ($openAfter) { print "Opening...\n"; `c:\\games\\inform\\zip\\$outFile`; }
 	exit;
   };
-  /^out=/ && do
+  /^out=/i && do
   {
-    $a =~ s/^out=//g;
+    $a =~ s/^out=//gi;
 	$outFile = $a;
 	if ($viewFile)
 	{
@@ -105,9 +113,10 @@ while ($a = <A>)
 	$zip = Archive::Zip->new();
 	next;
   };
-  /^tree:/ && do { $a =~ s/^tree://g; my @b = split(/,/, $a); $zip->addTree("$b[0]", "$b[1]" ); #print "Added tree: $b[0] to $b[1].\n";
+  /^tree:/i && do { $a =~ s/^tree://gi; my @b = split(/,/, $a); $zip->addTree("$b[0]", "$b[1]" ); #print "Added tree: $b[0] to $b[1].\n";
   next; };
-  /^>>/ && do { my $cmd = $a; $cmd =~ s/^>>//g; `$cmd`; print "Running $cmd\n"; next; };
+  /^>>/ && do { my $cmd = $a; $cmd =~ s/^>>//g; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } next; };
+  /^x:i/ && do { if ($executeBeforeZip) { my $cmd = $a; $cmd =~ s/^x://gi; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } } next; };
   /^F=/i && do
   {
     $a =~ s/^F=//gi;
@@ -118,7 +127,7 @@ while ($a = <A>)
 	#print "Writing $a to $b.\n";
     next;
   };
-  /^c:/ && do
+  /^c:/i && do
   {
     my $cmd .= " \"$a\"";
     if ((! -f "$a") && (! -d "$a")) { print "WARNING: $a doesn't exist.\n"; }
@@ -147,6 +156,9 @@ USAGE: zup.pl (project)
 -[ol] open after
 -e open commands file zup.txt
 -ee open script file zup.pl
+-v view output zip file if already there
+-x execute optional commands
+-p print command execution results
 EOT
 exit;
 }
