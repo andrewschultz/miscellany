@@ -1,6 +1,6 @@
 ########################################################
 #
-#zup.pl
+#zupt.pl
 #
 #given a manifest of files, this zips the latest version into, uh, a zip file
 #
@@ -12,8 +12,9 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 ################constants first
 my $zip = Archive::Zip->new();
-my $zup = __FILE__;
-my $zupl = $zup; $zupl =~ s/pl$/txt/gi;
+my $zupt = __FILE__;
+my $zupl = $zupt;
+$zupt =~ s/pl$/txt/gi; # zupt = file to read, zupl = perl
 
 ##################options
 my %here;
@@ -34,10 +35,10 @@ while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
-  if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; next; }
+  if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; print "Launching the output file after creation.\n"; next; }
   if ($a =~ /^-?x$/) { print "Executing commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
   if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
-  if ($a =~ /^-?e$/) { print "Opening commands file.\n"; `$zup`; exit; }
+  if ($a =~ /^-?e$/) { print "Opening commands file $zupt.\n"; `$zupt`; exit; }
   if ($a =~ /^-?v$/) { print "Viewing the output file, if there.\n"; $viewFile = 1; $count++; next; }
   if ($a =~ /^-?ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
   if ($a =~ /,/)
@@ -62,7 +63,7 @@ close(A);
 
 $count = 0;
 
-open(A, $zup) || die ("$zup not available, bailing.");
+open(A, $zupt) || die ("$zupt not available, bailing.");
 
 while ($a = <A>)
 {
@@ -152,13 +153,13 @@ sub processCmd
 sub usage
 {
 print<<EOT;
-USAGE: zup.pl (project)
--[ol] open after
+USAGE: zupt.pl (project)
 -e open commands file zup.txt
 -ee open script file zup.pl
+-[ol] open after
+-p print command execution results
 -v view output zip file if already there
 -x execute optional commands
--p print command execution results
 EOT
 exit;
 }

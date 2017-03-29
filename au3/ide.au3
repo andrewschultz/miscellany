@@ -74,6 +74,10 @@ Else
 Endif
 
 Func OpenIDE($project)
+  if (WinExists($project & ".inform - Inform")) or (WinExists($project & ".inform* - Inform")) Then
+    WinActivate($project & ".inform");
+    WinWaitActive($project & ".inform");
+  Else
   run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
   sleep(1);
 
@@ -85,6 +89,8 @@ Func OpenIDE($project)
   WinWaitActive("Open a project", "Project &name");
 
   Send("c:\games\inform\" & $project & ".inform!O");
+
+  Endif
 
   if $build == 1 Then
     sleep(1);
