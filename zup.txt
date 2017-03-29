@@ -133,10 +133,13 @@ v=1
 out=buck_the_past_spring_thing_%.zip
 F=c:\games\inform\btp-st.inform\Source\story.ni
 F=c:\games\inform\btp-st.inform\Source\walkthru.txt
+F=c:\games\inform\btp-st.inform\Source\beta-readme.txt
 F=c:\games\inform\zip\timestamp.txt
 F=c:\games\inform\triz\mine\buck-the-past.pdf
 F=c:\games\inform\beta Materials\Release\beta-Buck the Past.gblorb
 F=c:\Users\Andrew\Dropbox\notes\buck_the_past_spring_thing_release_1_notes.txt
+F=c:\games\inform\btp-st Materials\Release\buck-the-past-st-invisiclues.htm
+F=c:\writing\scripts\invis\bs.txt
 !
 
 ;

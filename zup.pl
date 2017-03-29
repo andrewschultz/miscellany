@@ -21,6 +21,7 @@ my $zipUp = 0;
 my $triedSomething = 0;
 my $version = 0;
 my $openAfter = 0;
+my $viewFile = 0;
 my $outFile = "";
 
 while ($count <= $#ARGV)
@@ -28,8 +29,9 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; next; }
-  if ($a =~ /^e$/) { print "Opening commands file.\n"; `$zup`; exit; }
-  if ($a =~ /^ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
+  if ($a =~ /^-?e$/) { print "Opening commands file.\n"; `$zup`; exit; }
+  if ($a =~ /^-?v$/) { print "Viewing the output file, if there.\n"; $viewFile = 1; $count++; next; }
+  if ($a =~ /^-?ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
   if ($a =~ /,/)
   {
     my @commas = split(/,/, $count);
@@ -90,7 +92,19 @@ while ($a = <A>)
 	if ($openAfter) { print "Opening...\n"; `c:\\games\\inform\\zip\\$outFile`; }
 	exit;
   };
-  /^out=/ && do { $a =~ s/^out=//g; $outFile = $a; $zip = Archive::Zip->new(); next; };
+  /^out=/ && do
+  {
+    $a =~ s/^out=//g;
+	$outFile = $a;
+	if ($viewFile)
+	{
+	  if (-f "$outFile") { `$outFile`; }
+	  else { print "No file $outFile.\n"; }
+	  exit();
+    }
+	$zip = Archive::Zip->new();
+	next;
+  };
   /^tree:/ && do { $a =~ s/^tree://g; my @b = split(/,/, $a); $zip->addTree("$b[0]", "$b[1]" ); #print "Added tree: $b[0] to $b[1].\n";
   next; };
   /^>>/ && do { my $cmd = $a; $cmd =~ s/^>>//g; `$cmd`; print "Running $cmd\n"; next; };
