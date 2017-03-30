@@ -103,13 +103,25 @@ def shufwarn():
     if not cmdChurn and not inUndo:
         print ("That won't make progress. F(##) or ##-# let you move part of an in-order stack over.")
 
-def dumpTotal(q):
+def dumpTotal(q): # the doPrint is for debugging purposes. A negative number input means you print. This is not great code but there were so many dumpTotal calls I just got lazy and made a small hack.
     retval = 0
+    doPrint = False
+    if q < 0:
+        q = 0 - q
+        doPrint = True
     for z in range(0,len(elements[q])):
         if foundable(elements[q][z]):
+            if doPrint:
+                print tocard(elements[q][z]), elements[q][z], 'foundable'
             retval += 1
+            if elements[q][z] % 13 == 2: #aces/2's get a special bonus
+                retval += 1
+            if elements[q][z] % 13 == 1: #aces/2's get a special bonus
+                retval += 2
         if nexties(elements[q][z]): # not an elif as foundable deserves an extra point
             retval += 1
+            if doPrint:
+                print tocard(elements[q][z]), elements[q][z], 'nexties'
     return retval
 
 def bestDumpRow():
@@ -141,9 +153,10 @@ def foundable(myc):
         return True
     return False
 
-def nexties(myc):
+def nexties(myc): #note that this may be a bit warped looking if you have 5S 5C 2h 2d for instance
     odds = (myc-1)//13
-    if (myc-1) % 13 < found[(odds+1)%4]+2 and (myc-1) % 13 < found[(odds+3)%4]+2:
+    cardval = (myc-1) % 13
+    if cardval < found[(odds+1)%4]+2 and cardval < found[(odds+3)%4]+2:
         return True
     return False
 
@@ -479,13 +492,6 @@ def maxmove():
             myexp *= 2
     return base * myexp
 
-def foundable(thiscard):
-    whichsuit = (thiscard - 1) // 13
-    whichface = ((thiscard  - 1) % 13) + 1
-    if found[whichsuit] == whichface - 1:
-        return 1
-    return 0
-
 def canPut(lower, higher):
     if lower == 0 or higher == 0:
         return 0
@@ -706,6 +712,7 @@ def checkWinning():
                 totalReset = 0
                 return 1
             if finish[0] == 'u':
+                cmdNoMeta.pop()
                 global inUndo
                 inUndo = True
                 undoMoves(1)
@@ -1648,11 +1655,11 @@ def readCmd(thisCmd):
                 print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         if gotReversed == 0:
             print ('Only 2 chars per command.')
-            cmdListMeta.pop()
+            cmdNoMeta.pop()
         return
     if len(name) < 2:
         print ('Must have 2 chars per command, unless you are willing to use an implied command.')
-        cmdListMeta.pop()
+        cmdNoMeta.pop()
         return
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
@@ -1668,13 +1675,13 @@ def readCmd(thisCmd):
         if temprow > -1:
             if temprow > 8 or temprow < 1:
                 print ('Not a valid row.')
-                cmdListMeta.pop()
+                cmdNoMeta.pop()
                 return
             if len(elements[temprow]) == 0:
                 print ('Empty row.')
-                cmdListMeta.pop()
+                cmdNoMeta.pop()
                 return
-            if foundable(elements[temprow][len(elements[temprow])-1]) == 1:
+            if foundable(elements[temprow][len(elements[temprow])-1]):
                 found[(elements[temprow][len(elements[temprow])-1]-1)//13]+= 1
                 elements[temprow].pop()
                 if not inUndo:
