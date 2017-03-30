@@ -450,6 +450,7 @@ misc=trizrm.py,python
 misc=$wd\b1.pl,wordfun
 misc=unco.pl,
 misc=$wd\fl.pl,
+misc=$ws\ses.pl
 #################Fiction  or FAQ rewriting
 misc=salf.pl,wrifi
 misc=noter.pl,wrifi
