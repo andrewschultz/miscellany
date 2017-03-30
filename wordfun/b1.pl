@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
 
-my $misses = "c:\\writing\\dict\\b1.txt";
+my $misses = __FILE__; $misses =~ s/pl$/txt/gi;
 my @prevMiss = ();
 my %miss;
 my $wrongString;
@@ -45,10 +45,27 @@ if ($ARGV[0] eq "i") { $stdin = 1; }
 if ($ARGV[0] eq "e") { `$misses`; exit(); }
 if ($ARGV[0] eq "s") { showMisses(); exit(); }
 if ($ARGV[0] eq "?") { usage(); exit(); }
+if ($ARGV[0] =~ /[0-9]+$/)
+{
+  my $wordfile = "c:\\writing\\dict\\words-$ARGV[0].txt";
+  if ($ARGV[0] == 0) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
+  if (!$wordfile) { die ("No word file $wordfile.") }
+  `$wordfile`; exit();
+}
 
 if ($ARGV[0] =~ /^[=\+]/)
 {
-  my $toAdd = $ARGV[0]; $toAdd =~ s/^.//;
+  my $toAdd = $ARGV[0]; $toAdd =~ s/^[=+]+//;
+  my $l = length($toAdd);
+  my $inDict = 0;
+  open(A, "c:\\writing\\dict\\words-$l.txt");
+  while ($a = <A>)
+  {
+    chomp($a);
+	if (lc($a) eq lc($toAdd)) { $inDict = 1; }
+  }
+  close(A);
+  if ($inDict==0) { if ($ARGV[0] !~ /^[=+]{2}/) { die("Need extra =/+ for word not in dictionary."); } }
   if ($toAdd =~ /[^a-z]/i) { die ("Bailing, $toAdd contains non-alphabetical characters."); }
   addToDict($toAdd, 0);
   addToErrs($ARGV[0]);
@@ -231,7 +248,7 @@ sub addToErrs
   my $addit = 0;
   if ($_[0] =~ /^\+/) { $addit = 1; }
   my $gotIt = 0;
-  my $toAdd = lc($_[0]); $toAdd =~ s/^[=\+]//g;
+  my $toAdd = lc($_[0]); $toAdd =~ s/^[=\+]+//g;
   if (!$toAdd) { print ("Added nothing."); die; }
   if ($toAdd =~ /[^a-z]/i) { die ("Bad characters in what to add."); }
   open(A, "$misses");
@@ -315,10 +332,11 @@ sub addToDict
 sub usage
 {
 print<<EOT;
+number opens words-(#).txt, 0 the whole big one
 =(word) adds it without admitting wrong
 +(word) adds word or increases its wrong count
 -(word) runs in crossword mode e.g. ad. can be add
-e = run misses file
+e = open misses file b1.txt
 s = show misses
 ? = this usage
 i = use stdin
