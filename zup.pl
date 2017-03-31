@@ -32,6 +32,7 @@ my $printExecute = 0;
 my $dropBinOpen = 0;
 my $dropLinkClip = 0;
 my $noExecute = 0;
+my $dropCopy = 0;
 
 ##################variables
 my $count = 0;
@@ -43,9 +44,10 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; print "Launching the output file after creation.\n"; next; }
-  if ($a =~ /^-?x$/) { print "Executing optional commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
+  if ($a =~ /^-?x$/) { print "Executing optional commands, if there are any.\n"; $executeBeforeZip = 1; $count++; next; }
   if ($a =~ /^-?nx$/) { print "Executing no commands.\n"; $noExecute = 1; exit; }
   if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
+  if ($a =~ /^-?dc$/) { print "Copying to Dropbox afterwards.\n"; $dropCopy = 1; $count++; next; }
   if ($a =~ /^-?db$/) { print "Opening dropbox bin directory afterwards.\n"; $dropBinOpen = 1; $count++; next; }
   if ($a =~ /^-?dl(c)?$/) { print "Dropbox link to clipboard.\n"; $dropLinkClip = 1; $count++; next; }
   if ($a =~ /^-?e$/) { print "Opening commands file $zupt.\n"; `$zupt`; exit; }
@@ -77,6 +79,13 @@ readZupFile($zupp);
 
 if (!$triedSomething) { print "Didn't find any projects in (@ARGV).\n"; }
 
+if ($dropCopy)
+{
+  print "Starting Dropbox copy...\n";
+  `dropbox.pl -x`;
+  print "Dropbox copy done.\n";
+}
+
 if ($dropBinOpen)
 {
   `start https://www.dropbox.com/home/bins`;
@@ -90,6 +99,7 @@ sub readZupFile
 {
 
 $count = 0;
+$zipUp = 0;
 
 open(A, $_[0]) || die ("$_[0] not available, bailing.");
 
@@ -133,7 +143,7 @@ while ($a = <A>)
 	die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK;
 	print "Writing successful.\n";
 	if ($openAfter) { print "Opening...\n"; `c:\\games\\inform\\zip\\$outFile`; }
-	exit;
+	return;
   };
   /^out=/i && do
   {
@@ -213,6 +223,7 @@ USAGE: zupt.pl (project)
 -e open commands file zup.txt
 -ee open script file zup.pl
 -db open Dropbox bin after
+-dc copies over to Dropbox after
 -[ol] open after
 -p print command execution results
 -v view output zip file if already there
