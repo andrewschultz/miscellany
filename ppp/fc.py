@@ -394,8 +394,8 @@ def readTimeFile():
     if delta > 90000000:
         print "Save file probably edited to start playing a bit early. I'm not going to judge."
     elif delta > maxDelay:
-        maxDelay = delta
         print 'New high delay', delta, 'old was', maxDelay
+        maxDelay = delta
     else:
         print 'Delay', delta, 'did not exceed record of', maxDelay
     if lasttime % modulus != remainder:
@@ -1095,7 +1095,7 @@ def usageGame():
     print ('p(1-8) moves a row as much as you can.')
     print ('p on its own tries to force everything if you\'re near a win.')
     print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
-    print ('(1-8)(1-8) = move a row, standard move.')
+    print ('(1-8)(1-8) = move a row, standard move. You can also string moves together, or 646 goes back and forth.')
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
     print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
     print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
@@ -1643,6 +1643,11 @@ def readCmd(thisCmd):
     if len(name) > 2:
         gotReversed = 0
         oldMoves = len(moveList)
+        if len(name) == 3 and name.isdigit: #special case for reversing a move e.g. 64 46 can become 646
+            if name[0] == name[2]:
+                readCmd(name[0] + name[1])
+                readCmd(name[1] + name[0])
+                return
         if name.isdigit():
             gotReversed = 1
             for jj in reversed(range(0,len(name)-1)):
