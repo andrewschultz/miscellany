@@ -31,6 +31,7 @@ my $executeBeforeZip = 0;
 my $printExecute = 0;
 my $dropBinOpen = 0;
 my $dropLinkClip = 0;
+my $noExecute = 0;
 
 ##################variables
 my $count = 0;
@@ -42,7 +43,8 @@ while ($count <= $#ARGV)
   $a = $ARGV[$count];
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; print "Launching the output file after creation.\n"; next; }
-  if ($a =~ /^-?x$/) { print "Executing commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
+  if ($a =~ /^-?x$/) { print "Executing optional commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
+  if ($a =~ /^-?nx$/) { print "Executing no commands.\n"; $noExecute = 1; exit; }
   if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
   if ($a =~ /^-?db$/) { print "Opening dropbox bin directory afterwards.\n"; $dropBinOpen = 1; $count++; next; }
   if ($a =~ /^-?dl(c)?$/) { print "Dropbox link to clipboard.\n"; $dropLinkClip = 1; $count++; next; }
@@ -70,9 +72,26 @@ my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayO
 print A sprintf("%d-%02d-%02d %d:%02d:%02d\n", $yearOffset+1900, $month+1, $dayOfMonth, $hour, $minute, $second);
 close(A);
 
+readZupFile($zupt);
+readZupFile($zupp);
+
+if (!$triedSomething) { print "Didn't find any projects in (@ARGV).\n"; }
+
+if ($dropBinOpen)
+{
+  `start https://www.dropbox.com/home/bins`;
+}
+
+#################################
+#subroutines
+#
+
+sub readZupFile
+{
+
 $count = 0;
 
-open(A, $zupt) || die ("$zupt not available, bailing.");
+open(A, $_[0]) || die ("$_[0] not available, bailing.");
 
 while ($a = <A>)
 {
@@ -109,6 +128,7 @@ while ($a = <A>)
 	  print "There is no dropbox link clip for this project.\n";
 	  exit;
 	}
+	if (!$outFile) { die("OutFile not defined. You need a line with out=X.ZIP in $_[0]."); }
     print "Writing to c:/games/inform/zip/$outFile...\n";
 	die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK;
 	print "Writing successful.\n";
@@ -130,8 +150,17 @@ while ($a = <A>)
   };
   /^tree:/i && do { $a =~ s/^tree://gi; my @b = split(/,/, $a); $zip->addTree("$b[0]", "$b[1]" ); #print "Added tree: $b[0] to $b[1].\n";
   next; };
-  /^>>/ && do { my $cmd = $a; $cmd =~ s/^>>//g; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } next; };
-  /^x:i/ && do { if ($executeBeforeZip) { my $cmd = $a; $cmd =~ s/^x://gi; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } } next; };
+  /^>>/ && do { if ($noExecute) { next; } my $cmd = $a; $cmd =~ s/^>>//g; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } next; };
+  /^x:i/ && do
+  {
+    if ($executeBeforeZip && !$noExecute)
+	{
+	  my $cmd = $a; $cmd =~ s/^x://gi;
+	  print "Running $cmd\n"; $temp = `$cmd`;
+	  if ($printExecute) { print $temp; }
+    }
+	next;
+  };
   /^dl=/i && do
   {
     $dropboxLink = $a;
@@ -169,11 +198,6 @@ while ($a = <A>)
 
 close(A);
 
-if (!$triedSomething) { print "Didn't find anything in @ARGV.\n"; }
-
-if ($dropBinOpen)
-{
-  `start https://www.dropbox.com/home/bins`;
 }
 
 sub processCmd
@@ -193,6 +217,8 @@ USAGE: zupt.pl (project)
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands
+-nx execute nothing (overrides -x)
+-dl get dropbox link if available (overrides creating a zip)
 EOT
 exit;
 }
