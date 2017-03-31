@@ -8,6 +8,8 @@
 use strict;
 use warnings;
 
+use Win32::Clipboard;
+
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 ################constants first
@@ -15,6 +17,7 @@ my $zip = Archive::Zip->new();
 my $zupt = __FILE__;
 my $zupl = $zupt;
 $zupt =~ s/pl$/txt/gi; # zupt = file to read, zupl = perl
+my $zupp = $zupt; $zupp =~ s/\.txt$/p\.txt/;
 
 ##################options
 my %here;
@@ -26,10 +29,13 @@ my $viewFile = 0;
 my $outFile = "";
 my $executeBeforeZip = 0;
 my $printExecute = 0;
+my $dropBinOpen = 0;
+my $dropLinkClip = 0;
 
 ##################variables
 my $count = 0;
 my $temp;
+my $dropboxLink = "";
 
 while ($count <= $#ARGV)
 {
@@ -38,9 +44,12 @@ while ($count <= $#ARGV)
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; print "Launching the output file after creation.\n"; next; }
   if ($a =~ /^-?x$/) { print "Executing commands, if there are any.\n"; $executeBeforeZip = 1; exit; }
   if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
+  if ($a =~ /^-?db$/) { print "Opening dropbox bin directory afterwards.\n"; $dropBinOpen = 1; $count++; next; }
+  if ($a =~ /^-?dl(c)?$/) { print "Dropbox link to clipboard.\n"; $dropLinkClip = 1; $count++; next; }
   if ($a =~ /^-?e$/) { print "Opening commands file $zupt.\n"; `$zupt`; exit; }
   if ($a =~ /^-?v$/) { print "Viewing the output file, if there.\n"; $viewFile = 1; $count++; next; }
   if ($a =~ /^-?ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
+  if ($a =~ /^-/) { print "Bad flag $a.\n"; usage(); }
   if ($a =~ /,/)
   {
     my @commas = split(/,/, $count);
@@ -95,6 +104,11 @@ while ($a = <A>)
   /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
   /^!/ && do
   {
+    if ($dropLinkClip)
+	{
+	  print "There is no dropbox link clip for this project.\n";
+	  exit;
+	}
     print "Writing to c:/games/inform/zip/$outFile...\n";
 	die 'write error' unless $zip->writeToFileNamed( "c:/games/inform/zip/$outFile" ) == AZ_OK;
 	print "Writing successful.\n";
@@ -118,6 +132,19 @@ while ($a = <A>)
   next; };
   /^>>/ && do { my $cmd = $a; $cmd =~ s/^>>//g; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } next; };
   /^x:i/ && do { if ($executeBeforeZip) { my $cmd = $a; $cmd =~ s/^x://gi; print "Running $cmd\n"; $temp = `$cmd`; if ($printExecute) { print $temp; } } next; };
+  /^dl=/i && do
+  {
+    $dropboxLink = $a;
+	$dropboxLink =~ s/^dl=//i;
+	if ($dropLinkClip)
+	{
+      my $clip = Win32::Clipboard::new();
+	  $clip->Set("$dropboxLink");
+	  print "$dropboxLink\n";
+	  exit();
+	}
+	next;
+  };
   /^F=/i && do
   {
     $a =~ s/^F=//gi;
@@ -144,6 +171,11 @@ close(A);
 
 if (!$triedSomething) { print "Didn't find anything in @ARGV.\n"; }
 
+if ($dropBinOpen)
+{
+  `start https://www.dropbox.com/home/bins`;
+}
+
 sub processCmd
 {
   print "$_[0]\n";
@@ -156,6 +188,7 @@ print<<EOT;
 USAGE: zupt.pl (project)
 -e open commands file zup.txt
 -ee open script file zup.pl
+-db open Dropbox bin after
 -[ol] open after
 -p print command execution results
 -v view output zip file if already there

@@ -130,6 +130,8 @@ F=c:\Users\Andrew\Dropbox\notes\slicker_city_release_%_notes.txt
 
 name=bs
 v=1
+dl=https://www.dropbox.com/s/a7gxks0lebegieh/buck_the_past_spring_thing_1.zip?dl=0
+x:icl.pl -jb bs
 out=buck_the_past_spring_thing_%.zip
 F=c:\games\inform\btp-st.inform\Source\story.ni
 F=c:\games\inform\btp-st.inform\Source\walkthru.txt
