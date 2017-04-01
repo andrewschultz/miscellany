@@ -50,7 +50,7 @@ startTime = 0
 
 #time before next play variables
 timeMatters = 1
-nagDelay = 43200
+nagDelay = 30000
 highTime = 0
 maxDelay = 0
 
@@ -343,6 +343,7 @@ def parseCmdLine():
     global debug
     global saveOnWin
     global cheatIndex
+    openAnyFile = False
     parser = optparse.OptionParser(description='Play FreeCell.')
     parser.add_option('--getridofthetimewastenag', action='store_false', dest='annoyingNudge', help='delete annoying nudge')
     parser.add_option('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
@@ -351,12 +352,26 @@ def parseCmdLine():
     parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
     parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
     parser.add_option('-V', '--novertical', action='store_false', dest='vertical', help='vertical off')
-    parser.add_option('-s', '--saveonwin', action='store_true', dest='saveOnWin', help='save on win on')
-    parser.add_option('-S', '--nosaveonwin', action='store_false', dest='saveOnWin', help='save on win off')
+    parser.add_option('-s', '--saveonwin', action='store_true', dest='saveOnWin', help='save-on-win on')
+    parser.add_option('-S', '--nosaveonwin', action='store_false', dest='saveOnWin', help='save-on-win off')
     parser.add_option('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file')
+    parser.add_option('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
+    parser.add_option('-l', '--loadsavefile', action='store_true', dest='savefile', help='open save file')
+    parser.add_option('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python file')
     (opts, args) = parser.parse_args()
     if opts.timefile is True:
         os.system("fctime.txt")
+        openAnyFile = True
+    if opts.optfile is True:
+        os.system("fcopt.txt")
+        openAnyFile = True
+    if opts.savefile is True:
+        os.system("fcsav.txt")
+        openAnyFile = True
+    if opts.pythonfile is True:
+        os.system("\"c:\\Program Files (x86)\\Notepad++\\notepad++\" fc.py")
+        openAnyFile = True
+    if openAnyFile:
         exit()
     if opts.annoyingNudge is not None:
         annoyingNudge=opts.annoyingNudge
@@ -1232,7 +1247,8 @@ def saveGame(gameName):
             for y in range (1,9):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + gameName + "\n")
-        myfile.write("moves=" + ', '.join(cmdList) + '\n')
+        myfile.write("#cmdNoMeta=" + ', '.join(cmdNoMeta) + '\n')
+        myfile.write("#cmdList=" + ', '.join(cmdList) + '\n')
     gn2 = gameName.replace(r'^.=', '')
     print ("Successfully saved game as " + gn2)
     return 0
@@ -1289,6 +1305,7 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        name = re.sub('[\\\/]', '', name)
         cmdNoMeta.append(name)
         cmdList.append(name)
         if name[:2] == 'e ':
@@ -1867,13 +1884,12 @@ def readCmd(thisCmd):
 
 ###################################start main program
 
+parseCmdLine()
+
 if timeMatters and os.path.exists(timefile) and os.stat(timefile).st_size > 0:
     readTimeFile()
 
 readOpts()
-parseCmdLine()
-
-exit
 
 if annoyingNudge:
     try: input = raw_input
