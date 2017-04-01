@@ -345,14 +345,14 @@ def parseCmdLine():
     global cheatIndex
     global annoyingNudge
     openAnyFile = False
-    parser = argparse.ArgumentParser(description='Play FreeCell.')
+    parser = argparse.ArgumentParser(description='Play FreeCell.', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
     parser.add_argument('-l', '--loadsavefile', action='store_true', dest='savefile', help='open save file')
     parser.add_argument('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python source file')
-    parser.add_argument('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file')
+    parser.add_argument('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file\n\n')
     parser.add_argument('--getridofthetimewastenag', action='store_false', dest='annoyingNudge')
     parser.add_argument('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13', type=int)
-    parser.add_argument('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
+    parser.add_argument('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)\n\n')
     parser.add_argument('-d', '--debug', action='store_true', dest='debugOn', help='debug on')
     parser.add_argument('-nd', '--nodebug', action='store_true', dest='debugOff', help='debug off')
     parser.add_argument('-v', '--vertical', action='store_true', dest='verticalOn', help='vertical on')
@@ -967,7 +967,7 @@ def anyDoableLimit (ii):
 def anyDoable (ii, emptyOK):
     tempret = 0
     for y in range (1,9):
-        tempval = doable(ii, y, 0);
+        tempval = doable(ii, y, 0)
         if emptyOK or len(elements[y]) > 0:
             if tempval > 0:
                 return y
@@ -1015,7 +1015,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
             if n == 0:
                 return 0
             if canPut(elements[r1][n], elements[r1][n-1]) == 0:
-                #print ("Can't put " + tocard(elements[r1][n]) + " on " + tocard(elements[r1][n-1]) + " or " + tocard(toTopCard));
+                #print ("Can't put " + tocard(elements[r1][n]) + " on " + tocard(elements[r1][n-1]) + " or " + tocard(toTopCard))
                 return 0
     if onlymove > locmaxmove:
         print ("WARNING, %d is greater than the maximum of %d." % (onlymove, locmaxmove))
@@ -1111,8 +1111,8 @@ def dumpInfo(x):
     print moveList
     print cmdList
     print cmdNoMeta
-    print ("Spares: "% (spares));
-    print ("Found: "% (found));
+    print ("Spares: "% (spares))
+    print ("Found: "% (found))
     if abs(x) == 2:
         printVertical()
     if x < 0:
@@ -1874,6 +1874,18 @@ def readCmd(thisCmd):
             cmdNoMeta.pop()
             return
         if spares[myToSpare] > 0:
+            myFirstE = firstEmptyRow()
+            if (myFirstE > 0):
+                myRow = int(name[0])
+                rowIdx = len(elements[myRow])-1
+                gotOne = canPut(elements[myRow][rowIdx], spares[myToSpare])
+                while rowIdx > 0 and (canPut(elements[myRow][rowIdx], spares[myToSpare]) or canPut(elements[myRow][rowIdx], elements[myRow][rowIdx-1])):
+                    rowIdx = rowIdx - 1
+                    gotOne = True
+                if gotOne is True:
+                    readCmd(name[1] + str(myFirstE))
+                    readCmd(name[0] + str(myFirstE))
+                    return
             for temp in range (0,4):
                 if spares[(myToSpare + temp) % 4] <= 0:
                     print ("Spare %d already filled, picking %d instead" % (myToSpare + 1, (myToSpare + temp) % 4 + 1))
