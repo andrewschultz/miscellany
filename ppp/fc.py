@@ -15,7 +15,7 @@ from random import shuffle, randint
 import time
 import traceback
 import ConfigParser
-import optparse
+import argparse
 
 configOpt = ConfigParser.SafeConfigParser()
 configTime = ConfigParser.SafeConfigParser()
@@ -50,7 +50,7 @@ startTime = 0
 
 #time before next play variables
 timeMatters = 1
-nagDelay = 30000
+nagDelay = 10000
 highTime = 0
 maxDelay = 0
 
@@ -343,54 +343,73 @@ def parseCmdLine():
     global debug
     global saveOnWin
     global cheatIndex
+    global annoyingNudge
     openAnyFile = False
-    parser = optparse.OptionParser(description='Play FreeCell.')
-    parser.add_option('--getridofthetimewastenag', action='store_false', dest='annoyingNudge', help='delete annoying nudge')
-    parser.add_option('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
-    parser.add_option('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13', type='int')
-    parser.add_option('-d', '--debug', action='store_true', dest='debug', help='debug on')
-    parser.add_option('-D', '--nodebug', action='store_false', dest='debug', help='debug off')
-    parser.add_option('-v', '--vertical', action='store_true', dest='vertical', help='vertical on')
-    parser.add_option('-V', '--novertical', action='store_false', dest='vertical', help='vertical off')
-    parser.add_option('-s', '--saveonwin', action='store_true', dest='saveOnWin', help='save-on-win on')
-    parser.add_option('-S', '--nosaveonwin', action='store_false', dest='saveOnWin', help='save-on-win off')
-    parser.add_option('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file')
-    parser.add_option('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
-    parser.add_option('-l', '--loadsavefile', action='store_true', dest='savefile', help='open save file')
-    parser.add_option('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python file')
-    (opts, args) = parser.parse_args()
-    if opts.timefile is True:
-        os.system("fctime.txt")
-        openAnyFile = True
-    if opts.optfile is True:
+    parser = argparse.ArgumentParser(description='Play FreeCell.')
+    parser.add_argument('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
+    parser.add_argument('-l', '--loadsavefile', action='store_true', dest='savefile', help='open save file')
+    parser.add_argument('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python source file')
+    parser.add_argument('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file')
+    parser.add_argument('--getridofthetimewastenag', action='store_false', dest='annoyingNudge')
+    parser.add_argument('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13', type=int)
+    parser.add_argument('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)')
+    parser.add_argument('-d', '--debug', action='store_true', dest='debugOn', help='debug on')
+    parser.add_argument('-nd', '--nodebug', action='store_true', dest='debugOff', help='debug off')
+    parser.add_argument('-v', '--vertical', action='store_true', dest='verticalOn', help='vertical on')
+    parser.add_argument('-nv', '--novertical', action='store_true', dest='verticalOff', help='vertical off')
+    parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
+    parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
+    args = parser.parse_args()
+    # let's see if we tried to open any files, first
+    if args.optfile is True:
         os.system("fcopt.txt")
         openAnyFile = True
-    if opts.savefile is True:
+    if args.savefile is True:
         os.system("fcsav.txt")
         openAnyFile = True
-    if opts.pythonfile is True:
+    if args.pythonfile is True:
         os.system("\"c:\\Program Files (x86)\\Notepad++\\notepad++\" fc.py")
+        openAnyFile = True
+    if args.timefile is True:
+        os.system("fctime.txt")
         openAnyFile = True
     if openAnyFile:
         exit()
-    if opts.annoyingNudge is not None:
-        annoyingNudge=opts.annoyingNudge
-    if opts.vertical is not None:
-        vertical=opts.vertical
-    if opts.debug is not None:
-        debug=opts.debug
-    if opts.saveOnWin is not None:
-        saveOnWin=opts.saveOnWin
-    if opts.cheatIndex is not None:
-        if opts.cheatIndex < 1:
+    # then let's see about the annoying nudge and cheating
+    if args.annoyingNudge is not None:
+        annoyingNudge=args.annoyingNudge
+    if args.cheatIndex is not None:
+        if args.cheatIndex < 1:
             print "Too low. The cheat index must be between 1 and 13."
             sys.exit()
-        elif opts.cheatIndex > 13:
+        elif args.cheatIndex > 13:
             print "Too high. The cheat index must be between 1 and 13."
             sys.exit()        
-        cheatIndex = opts.cheatIndex
-    elif opts.easy is True:
+        cheatIndex = args.cheatIndex
+    elif args.easy is True:
         cheatIndex = 2
+    # now let's go to the booleans we can change
+    if args.debugOn:
+        if args.debugOff:
+            print "Debug set both ways on command line. Bailing."
+            exit()
+        debug = True
+    if args.debugOff:
+        debug = False
+    if args.verticalOn:
+        if args.verticalOff:
+            print "Vertical set both ways on command line. Bailing."
+            exit()
+        vertical = True
+    if args.verticalOff:
+        vertical = False
+    if args.saveOnWinOn:
+        if args.saveOnWinOff:
+            print "Save both ways set both ways on command line. Bailing."
+            exit()
+        saveOnWin = True
+    if args.saveOnWinOff:
+        saveOnWin = False
     return
 
 def readTimeFile():
@@ -1884,12 +1903,13 @@ def readCmd(thisCmd):
 
 ###################################start main program
 
+readOpts()
+
+#note that the Cmd line overrides what is in the options file
 parseCmdLine()
 
 if timeMatters and os.path.exists(timefile) and os.stat(timefile).st_size > 0:
     readTimeFile()
-
-readOpts()
 
 if annoyingNudge:
     try: input = raw_input
