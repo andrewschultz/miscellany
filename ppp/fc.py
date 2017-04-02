@@ -53,6 +53,8 @@ timeMatters = 1
 nagDelay = 43200
 highTime = 0
 maxDelay = 0
+curGames = 0
+maxGames = 5
 
 #options to define. How to do better?
 vertical = True
@@ -347,6 +349,7 @@ def parseCmdLine():
     global annoyingNudge
     global quickBail
     global nagDelay
+    global maxGames
     openAnyFile = False
     parser = argparse.ArgumentParser(description='Play FreeCell.', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
@@ -364,6 +367,7 @@ def parseCmdLine():
     parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
     parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
     parser.add_argument('-w', '--waittilnext', action='store', dest='nagDelay', type=int, help='adjust nagDelay')
+    parser.add_argument('-mg', '--maxgames', action='store', dest='maxGames', type=int, help='adjust maxGames')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.optfile is True:
@@ -424,6 +428,8 @@ def parseCmdLine():
         if args.nagDelay > 43200:
             print "Whoah, going above the default!"
         nagDelay = args.nagDelay
+    if args.maxGames > 0:
+        maxGames = args.maxGames
     return
 
 def readTimeFile():
@@ -742,6 +748,13 @@ def checkWinning():
         print ("Saved " + winstring)
     global breakMacro
     breakMacro = 1
+    if maxGames > 0:
+        global curGames
+        curGames = curGames + 1
+        print 'Won', curGames, 'of', maxGames, 'so far.'
+        if curGames == maxGames:
+            print "Well, that's it. Looks like you've played all your games."
+            goBye()
     global wonThisCmd
     wonThisCmd = True
     while True:
