@@ -60,6 +60,7 @@ dblSzCards = False
 autoReshuf = True
 savePosition = False
 saveOnWin = False
+quickBail = False
 # this is an experimental feature to annoy me
 deliberateNuisanceRows = 3
 deliberateNuisanceIncrease = 2
@@ -344,6 +345,8 @@ def parseCmdLine():
     global saveOnWin
     global cheatIndex
     global annoyingNudge
+    global quickBail
+    global nagDelay
     openAnyFile = False
     parser = argparse.ArgumentParser(description='Play FreeCell.', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
@@ -359,6 +362,7 @@ def parseCmdLine():
     parser.add_argument('-nv', '--novertical', action='store_true', dest='verticalOff', help='vertical off')
     parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
     parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
+    parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.optfile is True:
@@ -410,6 +414,8 @@ def parseCmdLine():
         saveOnWin = True
     if args.saveOnWinOff:
         saveOnWin = False
+    if args.quickBail:
+        quickBail = True
     return
 
 def readTimeFile():
@@ -737,6 +743,9 @@ def checkWinning():
             if finish[0] == 'n' or finish[0] == 'q':
                 goBye()
             if finish[0] == 'y':
+                if quickBail:
+                    print "Oops! Quick bailing."
+                    goBye()
                 global deliberateNuisanceRows
                 if deliberateNuisanceRows > 0:
                     deliberateNuisanceRows += deliberateNuisanceIncrease
