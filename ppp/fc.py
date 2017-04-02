@@ -50,7 +50,7 @@ startTime = 0
 
 #time before next play variables
 timeMatters = 1
-nagDelay = 10000
+nagDelay = 43200
 highTime = 0
 maxDelay = 0
 
@@ -363,6 +363,7 @@ def parseCmdLine():
     parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
     parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
     parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
+    parser.add_argument('-w', '--waittilnext', action='store', dest='nagDelay', type=int, help='adjust nagDelay')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.optfile is True:
@@ -416,6 +417,13 @@ def parseCmdLine():
         saveOnWin = False
     if args.quickBail:
         quickBail = True
+    if args.nagDelay > 0:
+        if args.nagDelay < 10000:
+            print "Too soon, need > 10000."
+            exit()
+        if args.nagDelay > 43200:
+            print "Whoah, going above the default!"
+        nagDelay = args.nagDelay
     return
 
 def readTimeFile():
