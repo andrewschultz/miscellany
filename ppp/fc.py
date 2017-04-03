@@ -16,6 +16,7 @@ import time
 import traceback
 import ConfigParser
 import argparse
+from math import sqrt
 
 configOpt = ConfigParser.SafeConfigParser()
 configTime = ConfigParser.SafeConfigParser()
@@ -51,6 +52,7 @@ startTime = 0
 #time before next play variables
 timeMatters = 1
 nagDelay = 43200
+minDelay = 30000
 highTime = 0
 maxDelay = 0
 curGames = 0
@@ -91,6 +93,21 @@ backup = []
 elements = [ [], [], [], [], [], [], [], [], [] ]
 
 name = ""
+
+def isPrime(x):
+    for a in range(2,int(sqrt(x))):
+        if x % a == 0:
+            return False
+    return True
+
+def randprime():
+    primes = []
+    tb = time.time()
+    for j in range(100001,200001,2):
+        if isPrime(j):
+            #print j
+            primes.append(j)
+    return primes[randint(0,len(primes)-1)]
 
 def TOrF(x):
     if x == "False" or x == "0":
@@ -422,8 +439,8 @@ def parseCmdLine():
     if args.quickBail:
         quickBail = True
     if args.nagDelay > 0:
-        if args.nagDelay < 10000:
-            print "Too soon, need > 10000."
+        if args.nagDelay < minDelay:
+            print 'Too soon, need > ', minDelay
             exit()
         if args.nagDelay > 43200:
             print "Whoah, going above the default!"
@@ -459,13 +476,16 @@ def readTimeFile():
     if modulus < 100001 or modulus > 199999:
         print "Modulus is not in range in fctime.txt."
         exit()
+    if not isPrime(modulus):
+        print "Modulus" , modulus , "is not prime."
+        exit()
     return
 
 def writeTimeFile():
     if not configTime.has_section('Section1'):
         configTime.add_section("Section1")
     lasttime = int(time.time())
-    modulus = randint(100001,199999)
+    modulus = randprime()
     remainder = lasttime % modulus
     global maxDelay
     configTime.set('Section1', 'modulus', str(modulus))
