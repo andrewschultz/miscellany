@@ -82,6 +82,7 @@ F=c:\games\inform\roiling.inform\Source\roiling-y-walkthrough.pdf
 
 name=dirk,s15
 out=dirk.zip
+dl=https://www.dropbox.com/s/uxk4erugn39a0y7/dirk.zblorb?dl=0
 #v=2
 F=c:\games\inform\dirk.inform\Source\dirk_walkthrough.txt
 F=c:\games\inform\dirk.inform\Source\story.ni
@@ -129,6 +130,18 @@ F=c:\Users\Andrew\Dropbox\notes\slicker_city_release_%_notes.txt
 !
 
 name=bs
+v=1
+x:icl.pl -jr bs
+dl=https://www.dropbox.com/s/a7gxks0lebegieh/buck_the_past_spring_thing_1_release.zip?dl=0
+out=buck_the_past_spring_thing_%_release.zip
+F=c:\games\inform\btp-st.inform\Source\story.ni
+F=c:\games\inform\btp-st.inform\Source\walkthru.txt
+F=c:\games\inform\triz\mine\buck-the-past.pdf
+F=c:\games\inform\beta Materials\Release\Buck the Past.gblorb
+F=c:\Users\Andrew\Dropbox\notes\buck_the_past_spring_thing_release_1_notes.txt
+F=c:\games\inform\btp-st Materials\Release\buck-the-past-st-invisiclues.htm
+
+name=bsb
 v=1
 dl=https://www.dropbox.com/s/a7gxks0lebegieh/buck_the_past_spring_thing_1.zip?dl=0
 x:icl.pl -jb bs

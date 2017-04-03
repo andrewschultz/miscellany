@@ -45,6 +45,7 @@ while ($count <= $#ARGV)
   if ($a =~ /\?/) { usage(); }
   if ($a =~ /^-[ol]$/) { $openAfter = 1; $count++; print "Launching the output file after creation.\n"; next; }
   if ($a =~ /^-?x$/) { print "Executing optional commands, if there are any.\n"; $executeBeforeZip = 1; $count++; next; }
+  if ($a =~ /^-?a$/) { print "Kitchen sink flags for ZUP.\n"; $executeBeforeZip = $dropCopy = $dropBinOpen = $openAfter = 1; $count++; next; }
   if ($a =~ /^-?nx$/) { print "Executing no commands.\n"; $noExecute = 1; exit; }
   if ($a =~ /^-?p$/) { print "Printing result of executed commands, if there are any.\n"; $printExecute = 1; exit; }
   if ($a =~ /^-?dc$/) { print "Copying to Dropbox afterwards.\n"; $dropCopy = 1; $count++; next; }
@@ -230,6 +231,7 @@ USAGE: zupt.pl (project)
 -x execute optional commands
 -nx execute nothing (overrides -x)
 -dl get dropbox link if available (overrides creating a zip)
+-a = -x -db -dc -o
 EOT
 exit;
 }
