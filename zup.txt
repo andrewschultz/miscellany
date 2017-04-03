@@ -131,15 +131,27 @@ F=c:\Users\Andrew\Dropbox\notes\slicker_city_release_%_notes.txt
 
 name=bs
 v=1
-x:icl.pl -jr bs
+#x:icl.pl -jr bs
 dl=https://www.dropbox.com/s/a7gxks0lebegieh/buck_the_past_spring_thing_1_release.zip?dl=0
 out=buck_the_past_spring_thing_%_release.zip
+D=play_online
+D=play_online\interpreter
 F=c:\games\inform\btp-st.inform\Source\story.ni
 F=c:\games\inform\btp-st.inform\Source\walkthru.txt
 F=c:\games\inform\triz\mine\buck-the-past.pdf
-F=c:\games\inform\beta Materials\Release\Buck the Past.gblorb
+F=c:\games\inform\btp-st Materials\Release\Buck the Past.gblorb
 F=c:\Users\Andrew\Dropbox\notes\buck_the_past_spring_thing_release_1_notes.txt
 F=c:\games\inform\btp-st Materials\Release\buck-the-past-st-invisiclues.htm
+F=c:\games\inform\btp-st Materials\Release\index.html	play_online\index.html
+F=c:\games\inform\btp-st Materials\Release\play.html	play_online\play.html
+F=c:\games\inform\btp-st Materials\Release\style.css	play_online\style.css
+F=c:\games\inform\btp-st Materials\Release\interpreter\Buck the Past.gblorb.js	play_online\interpreter\Buck the Past.gblorb.js
+F=c:\games\inform\btp-st Materials\Release\interpreter\dialog.css	play_online\interpreter\dialog.css
+F=c:\games\inform\btp-st Materials\Release\interpreter\glkote.css	play_online\interpreter\glkote.css
+F=c:\games\inform\btp-st Materials\Release\interpreter\glkote.min.js	play_online\interpreter\glkote.min.js
+F=c:\games\inform\btp-st Materials\Release\interpreter\quixe.min.js	play_online\interpreter\quixe.min.js
+F=c:\games\inform\btp-st Materials\Release\interpreter\waiting.gif	play_online\interpreter\waiting.gif
+!
 
 name=bsb
 v=1

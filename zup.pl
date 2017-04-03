@@ -148,6 +148,7 @@ while ($a = <A>)
   };
   /^out=/i && do
   {
+    print "$a\n";
     $a =~ s/^out=//gi;
 	$outFile = $a;
 	if ($viewFile)
@@ -185,12 +186,27 @@ while ($a = <A>)
 	}
 	next;
   };
+  /^D=/i && do
+  {
+    $b = $a; $b =~ s/^d=//i;
+	$zip->addDirectory("$b");
+	next;
+  };
   /^F=/i && do
   {
     $a =~ s/^F=//gi;
     #$fileName =~ s/\./_release_$a\./g;
+	$b = $a;
+	if ($b =~ /\t/)
+	{
+	  $b =~ s/.*\t//;
+	  $a =~ s/\t.*//;
+	}
+	else
+	{
+	$b =~ s/.*[\\\/]//g;
+	}
 	if ((! -f "$a") && (! -d "$a") && ($a !~ /\*/)) { print "No file/directory $a.\n"; }
-	$b = $a; $b =~ s/.*[\\\/]//g;
     $zip->addFile("$a", "$b");
 	#print "Writing $a to $b.\n";
     next;
