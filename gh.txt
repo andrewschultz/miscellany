@@ -367,6 +367,8 @@ past=$ws\invis\bs.txt,
 >past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
 >past=$is\pun.pl grep -iE ",[0-9]"
+>past=conc.pl -c -ro -bs
+>past=i7t.pl -o -q -s bs | grep -iE "failed|likely|run this"
 
 #Grubbyville files
 TOBASE=grubbyville

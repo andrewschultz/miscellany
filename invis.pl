@@ -23,11 +23,7 @@ my $launchRaw = 0;
 my $count = 0;
 my $forceRunThrough = 0;
 my $debug = 0;
-
-###trickier variables
-my $cmd = "";
-my $invDir = "c:\\writing\\scripts\\invis";
-my $filename = "";
+my $launchRawFile = 0;
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
@@ -35,6 +31,11 @@ $exp{"0"} = "sc";
 $exp{"1"} = "sa";
 $exp{"2"} = "roi";
 $exp{"3"} = "3d";
+
+###trickier variables
+my $cmd = "";
+my $invDir = "c:\\writing\\scripts\\invis";
+my $filename = $default;
 
 while ($count <= $#ARGV)
 {
@@ -49,16 +50,15 @@ while ($count <= $#ARGV)
   /^-?l$/ && do { $launchAfter = 1; $count++; next; };
   /^-?r$/ && do { $launchRaw = 1; $count++; next; };
   /-?(lr|rl)$/ && do { $launchRaw = 1; $launchAfter = 1; $count++; next; };
-  /^-?e$/ && do {
-  if (!defined($ARGV[$count+1])) { `$invDir\\$default.txt`; }
-  else { `$invDir\\$ARGV[$count+1].txt`; }
-  exit; };
+  /^-?e$/ && do { $launchRawFile = 1; $count++; next; };
   /^-/ && do { usage(); exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }
 
 if (! -f "$invDir/$filename") { print "No filename, going to usage.\n"; usage(); }
+
+if ($launchRawFile) { `c:\\writing\\scripts\\invis\\$filename`; exit(); }
 
 my $outname = "$invDir\\invis-$filename";
 $outname =~ s/txt$/htm/gi;

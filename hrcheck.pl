@@ -64,11 +64,12 @@ while ($count <= $#ARGV)
   if (defined($ARGV[$count])) { $b = $ARGV[$count+1]; }
   for ($a)
   {
-  /^[0-9]+:[0-9]+$/ && do
+  /^[0-9]+:[0-9]+/ && do
   {
     my @time = split(/:/, $a);
 	if ($time[0] > 24 or $time[0] < 0) { warn("Odd hour value, going to do the best I can.\n"); }
 	$hourTemp = $time[0] % 24;
+	$time[1] =~ s/[^0-9]*$//;
 	if ($time[1] > 60 or $time[1] < 0) { warn("Odd minute value, going to do the best I can.\n"); }
 	$minuteTemp = $time[1] % 60;
 	$gotTime = 1; $count++; next;
