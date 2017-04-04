@@ -38,6 +38,7 @@ my $dropCopy = 0;
 my $count = 0;
 my $temp;
 my $dropboxLink = "";
+my $needExclam = 0;
 
 while ($count <= $#ARGV)
 {
@@ -114,6 +115,8 @@ while ($a = <A>)
 
   if ($a =~ /^name=/i)
   {
+    if ($needExclam) { die ("Need exclamation mark before $a"); }
+	$needExclam = 1;
     $a =~ s/^name=//gi;
     my @b = split(/,/, $a);
 	for my $idx(@b)
@@ -134,6 +137,7 @@ while ($a = <A>)
   /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
   /^!/ && do
   {
+    $needExclam = 0;
     if ($dropLinkClip)
 	{
 	  print "There is no dropbox link clip for this project.\n";
