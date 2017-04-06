@@ -19,9 +19,18 @@ my %sizes;
 
 my $totalFiles=0;
 my $newFiles=0;
+my $tabsOverStreak = 0;
+my $newOverStreak = 0;
+my $lastTabs = 0;
+my $lastNew = 0;
+my $newInc = 0;
+my $tabsInc = 0;
 
+my $tabMax = 25;
+my $newMax = 15;
 #########################option(s)
 my $toOutput = 0;
+my $analyze = 0;
 
 if (defined($ARGV[0]))
 {
@@ -33,6 +42,10 @@ if (defined($ARGV[0]))
   if ($ARGV[0] =~ /^-?o$/)
   {
     $toOutput = 1;
+  }
+  if ($ARGV[0] =~ /^-?a$/)
+  {
+    $analyze = 1;
   }
 }
 
@@ -73,8 +86,28 @@ print "TEST RESULTS:Notepad++ new files,15,$newFiles,0,$news\n";
 
 if ($toOutput)
 {
-  open(A, ">$outputFile");
+  open(A, ">>$outputFile");
   my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime(time());
   print A sprintf("%d-%02d-%02d %02d:%02d:%02d: $totalFiles total files, $newFiles new files.\n", $yearOffset+1900, $month+1, $dayOfMonth, $hour, $minute, $second);
-  close(A)
+  close(A);
+}
+
+if ($analyze)
+{
+  my @b;
+  open(A, "$outputFile");
+  while ($a = <A>)
+  {
+    chomp($a);
+    $a =~ s/.*: //;
+    @b = split(/, /, $a);
+	for (@b) { $_ =~ s/ .*//g; }
+	if ($b[0] > $tabMax) { $tabsOverStreak++; } else { $tabsOverStreak = 0; }
+	if ($b[1] > $newMax) { $newOverStreak++; } else { $newOverStreak = 0; }
+	$lastNew = $b[1];
+	$lastTabs = $b[0];
+	print "$b[0] / $b[1].\n";
+  }
+ if ($newOverStreak > 1) { print "YOU NEED TO CLEAR NEW TABS: $lastNew.\n"; }
+ if ($tabsOverStreak > 1) { print "YOU NEED TO CLEAR TABS IN GENERAL: $lastTabs.\n"; }
 }
