@@ -13,6 +13,8 @@ use warnings;
 my $outputFile = __FILE__;
 $outputFile =~ s/pl$/txt/i;
 my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
+my $tabMax = 25;
+my $newMax = 15;
 
 #######################variable(s)
 my %sizes;
@@ -26,26 +28,24 @@ my $lastNew = 0;
 my $newInc = 0;
 my $tabsInc = 0;
 
-my $tabMax = 25;
-my $newMax = 15;
+my $count = 0;
+
 #########################option(s)
 my $toOutput = 0;
 my $analyze = 0;
+my $htmlGen = 0;
 
-if (defined($ARGV[0]))
+while ($count <= $#ARGV)
 {
-  if ($ARGV[0] =~ /^-?e$/)
+  my $arg = $ARGV[$count];
+
+  for ($arg)
   {
-    `$npSes`;
-    exit();
-  }
-  if ($ARGV[0] =~ /^-?o$/)
-  {
-    $toOutput = 1;
-  }
-  if ($ARGV[0] =~ /^-?a$/)
-  {
-    $analyze = 1;
+  /^-?e$/ && do { `$npSes`; exit(); };
+  /^-?o$/ && do { $toOutput = 1; $count++; next; };
+  /^-?a$/ && do { $analyze = 1; $count++; next; };
+  /^-?h$/ && do { $htmlGen = 1; $count++; next; };
+  usage();
   }
 }
 
@@ -71,9 +71,7 @@ while ($a = <A>)
 
 }
 
-
 my $news;
-my $count = 0;
 
 for my $x (sort {$sizes{$a} <=> $sizes{$b}} keys %sizes)
 {
@@ -104,10 +102,47 @@ if ($analyze)
 	for (@b) { $_ =~ s/ .*//g; }
 	if ($b[0] > $tabMax) { $tabsOverStreak++; } else { $tabsOverStreak = 0; }
 	if ($b[1] > $newMax) { $newOverStreak++; } else { $newOverStreak = 0; }
+	if ($b[0] > $lastTabs) { $tabsInc++; } else { $tabsInc = 0; }
+	if ($b[1] > $newMax) { $newInc++; } else { $newInc = 0; }
 	$lastNew = $b[1];
 	$lastTabs = $b[0];
 	print "$b[0] / $b[1].\n";
   }
- if ($newOverStreak > 1) { print "YOU NEED TO CLEAR NEW TABS: $lastNew.\n"; }
- if ($tabsOverStreak > 1) { print "YOU NEED TO CLEAR TABS IN GENERAL: $lastTabs.\n"; }
+
+  my @errs;
+  if ($newOverStreak > 1) { push (@errs, "NEW TABS too big $newOverStreak days in a row."); }
+  if ($newInc > 1) { push (@errs, "NEW TABS grew $newOverStreak days in a row."); }
+  if ($tabsOverStreak > 1) { push (@errs, "OVERALL TABS too big $tabsOverStreak days in a row."); }
+  if ($tabsInc > 1) { push (@errs, "OVERALL TABS grew $tabsOverStreak days in a row."); }
+  if ($#errs > -1)
+  {
+    if ($htmlGen)
+	{
+	  open(B, ">c:\\writing\\scripts\\ses.htm");
+	  print B "<html><title>Streak Error Stuff</title><body bgcolor=red>\n";
+	  for (@errs) { print B "<font size=+3>$_</font>\n"; }
+	  close(B);
+	}
+	else
+	{
+	  print join("\n", @errs);
+	}
+  }
+  else
+  {
+    print "All good!\n";
+  }
+}
+
+###############################
+
+sub usage
+{
+print<<EOT;
+-a = analyze
+-h = to html
+-o = output to file
+-e = edit source file
+EOT
+exit;
 }
