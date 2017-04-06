@@ -54,7 +54,7 @@ while ($count <= $#ARGV)
   if ($a =~ /^-?dl(c)?$/) { print "Dropbox link to clipboard.\n"; $dropLinkClip = 1; $count++; next; }
   if ($a =~ /^-?e$/) { print "Opening commands file $zupt.\n"; `$zupt`; exit; }
   if ($a =~ /^-?v$/) { print "Viewing the output file, if there.\n"; $viewFile = 1; $count++; next; }
-  if ($a =~ /^-?ee$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
+  if ($a =~ /^-?(c|ee)$/) { print "Opening script file.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"); exit; }
   if ($a =~ /^-/) { print "Bad flag $a.\n"; usage(); }
   if ($a =~ /,/)
   {
@@ -116,7 +116,6 @@ while ($a = <A>)
   if ($a =~ /^name=/i)
   {
     if ($needExclam) { die ("Need exclamation mark before $a"); }
-	$needExclam = 1;
     $a =~ s/^name=//gi;
     my @b = split(/,/, $a);
 	for my $idx(@b)
@@ -124,6 +123,7 @@ while ($a = <A>)
 	  #print "$idx\n";
 	  if (defined($here{$idx}) && ($here{$idx}==1))
 	  {
+	    $needExclam = 1;
 	    $triedSomething = 1;
 	    $zipUp = 1;
 	  }
@@ -152,7 +152,6 @@ while ($a = <A>)
   };
   /^out=/i && do
   {
-    print "$a\n";
     $a =~ s/^out=//gi;
 	$outFile = $a;
 	if ($viewFile)
@@ -193,12 +192,15 @@ while ($a = <A>)
   /^D=/i && do
   {
     $b = $a; $b =~ s/^d=//i;
+	$b =~ s/\\/\//g;
 	$zip->addDirectory("$b");
 	next;
   };
   /^F=/i && do
   {
+    if ($a =~ /\\/) { warn("WARNING Line $. ($a) has wrong slash direction.\n"); }
     $a =~ s/^F=//gi;
+	$a =~ s/\\/\//g;
     #$fileName =~ s/\./_release_$a\./g;
 	$b = $a;
 	if ($b =~ /\t/)
@@ -242,7 +244,7 @@ sub usage
 print<<EOT;
 USAGE: zupt.pl (project)
 -e open commands file zup.txt
--ee open script file zup.pl
+-c/ee open script file zup.pl
 -db open Dropbox bin after
 -dc copies over to Dropbox after
 -[ol] open after

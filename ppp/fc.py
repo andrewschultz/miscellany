@@ -796,6 +796,7 @@ def checkWinning():
                 totalReset = 0
                 return 1
             if finish[0] == 'u':
+                curGames -= 1
                 cmdNoMeta.pop()
                 global inUndo
                 inUndo = True

@@ -48,6 +48,7 @@ $exp{"4d"} = "fourdiopolis";
 $exp{"pc"} = "Compound";
 $exp{"sc"} = "Slicker-City";
 $exp{"btp"} = "buck-the-past";
+$exp{"bs"} = "btp-st";
 
 my $countMismatch = 0;
 my $writeDir = "c:\\writing\\dict";
