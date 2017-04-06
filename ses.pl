@@ -15,6 +15,8 @@ $outputFile =~ s/pl$/txt/i;
 my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 my $tabMax = 25;
 my $newMax = 15;
+my $tabMin = 10;
+my $newMin = 5;
 
 #######################variable(s)
 my %sizes;
@@ -63,7 +65,7 @@ while ($a = <A>)
     $totalFiles++;
     if ($a =~ /\"new [0-9]+\"/)
     { $newFiles++; }
-	if ($fileName =~ /^new [0-9]/)
+	if ($fileName =~ /^new [0-9]/ && (-f "$fileBackup"))
 	{
 	  $sizes{$fileName} = -s "$fileBackup";
 	}
@@ -102,11 +104,10 @@ if ($analyze)
 	for (@b) { $_ =~ s/ .*//g; }
 	if ($b[0] > $tabMax) { $tabsOverStreak++; } else { $tabsOverStreak = 0; }
 	if ($b[1] > $newMax) { $newOverStreak++; } else { $newOverStreak = 0; }
-	if ($b[0] > $lastTabs) { $tabsInc++; } else { $tabsInc = 0; }
-	if ($b[1] > $newMax) { $newInc++; } else { $newInc = 0; }
+	if (($b[0] > $lastTabs) && ($lastTabs > $tabMin)) { $tabsInc++; } else { $tabsInc = 0; }
+	if (($b[1] > $lastNew) && ($lastNew > $newMin)) { $newInc++; } else { $newInc = 0; }
 	$lastNew = $b[1];
 	$lastTabs = $b[0];
-	print "$b[0] / $b[1].\n";
   }
 
   my @errs;
