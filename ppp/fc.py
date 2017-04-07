@@ -3,6 +3,10 @@
 #
 #no frills Python Freecell game
 #
+#this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
+#
+# 1) timeMatters = 0 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2 4) annoyingNudge = False
+
 
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
@@ -21,6 +25,7 @@ from math import sqrt
 configOpt = ConfigParser.SafeConfigParser()
 configTime = ConfigParser.SafeConfigParser()
 
+optfile = "fcopt.txt"
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
 timefile = "fctime.txt"
@@ -51,7 +56,7 @@ startTime = 0
 
 #time before next play variables
 timeMatters = 1
-nagDelay = 43200
+nagDelay = 43200 # set this to zero if you don't want to restrict the games you can play
 minDelay = 30000
 highTime = 0
 maxDelay = 0
@@ -68,7 +73,7 @@ quickBail = False
 # this is an experimental feature to annoy me
 deliberateNuisanceRows = 3
 deliberateNuisanceIncrease = 2
-# this can't be toggled in game
+# this can't be toggled in game but you can beforehand
 annoyingNudge = True
 #easy mode = A/2 on top
 cheatIndex = 0
@@ -383,12 +388,12 @@ def parseCmdLine():
     parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
     parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
     parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
-    parser.add_argument('-w', '--waittilnext', action='store', dest='nagDelay', type=int, help='adjust nagDelay')
+    parser.add_argument('--waittilnext', action='store', dest='nagDelay', type=int, help='adjust nagDelay')
     parser.add_argument('-mg', '--maxgames', action='store', dest='maxGames', type=int, help='adjust maxGames')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.optfile is True:
-        os.system("fcopt.txt")
+        os.system(optfile)
         openAnyFile = True
     if args.savefile is True:
         os.system("fcsav.txt")
@@ -452,7 +457,13 @@ def parseCmdLine():
 def readTimeFile():
     global nagDelay
     global maxDelay
-    configTime.read("fctime.txt")
+    if os.access(timefile, os.W_OK):
+        print "Time file should not have write access outside of the game. attrib -r " + timefile + " or chmod 333 to get things going."
+        exit()
+    if not os.path.isfile(timefile):
+        print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
+        exit()
+    configTime.read(timefile)
     modulus = configTime.getint('Section1', 'modulus')
     remainder = configTime.getint('Section1', 'remainder')
     maxDelay = configTime.getint('Section1', 'maxdelay')
@@ -482,6 +493,7 @@ def readTimeFile():
     return
 
 def writeTimeFile():
+    os.system("attrib -r " + timefile)
     if not configTime.has_section('Section1'):
         configTime.add_section("Section1")
     lasttime = int(time.time())
@@ -494,10 +506,14 @@ def writeTimeFile():
     configTime.set('Section1', 'lasttime', str(lasttime))
     with open('fctime.txt', 'w') as configfile:
         configTime.write(configfile)
+    os.system("attrib +r " + timefile)
     return
 
 def readOpts():
-    configOpt.read("fcopt.txt")
+    if not os.path.isfile(optfile):
+        print "No", optfile, "so using default options."
+        return
+    configOpt.read(optfile)
     global vertical
     vertical = configOpt.getboolean('Section1', 'vertical')
     global autoReshuf
@@ -521,7 +537,7 @@ def sendOpts():
     configOpt.set('Section1', 'saveOnWin', str(saveOnWin))
     configOpt.set('Section1', 'savePosition', str(savePosition))
     configOpt.set('Section1', 'annoyingNudge', str(annoyingNudge))
-    with open('fcopt.txt', 'w') as configfile:
+    with open(optfile, 'w') as configfile:
         configOpt.write(configfile)
     print("Saved options.")
     return
@@ -1348,7 +1364,8 @@ def cardEval(myCmd):
 
 def goBye():
     print ("Bye!")
-    writeTimeFile()
+    if timeMatters:
+        writeTimeFile()
     exit()
 
 def readCmd(thisCmd):
