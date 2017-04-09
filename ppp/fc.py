@@ -5,8 +5,7 @@
 #
 #this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
 #
-# 1) timeMatters = 0 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2 4) annoyingNudge = False
-
+# 1) timeMatters = 43200 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2 4) annoyingNudge = False (set to 0 or false)
 
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
@@ -61,9 +60,10 @@ minDelay = 30000
 highTime = 0
 maxDelay = 0
 curGames = 0
-maxGames = 5
+maxGames = 0
 
 #options to define. How to do better?
+chainShowAll = False
 vertical = True
 dblSzCards = False
 autoReshuf = True
@@ -526,6 +526,8 @@ def readOpts():
     savePosition = configOpt.getboolean('Section1', 'savePosition')
     global annoyingNudge
     annoyingNudge = configOpt.getboolean('Section1', 'annoyingNudge')
+    global chainShowAll
+    chainShowAll = configOpt.getboolean('Section1', 'chainShowAll')
     return
 
 def sendOpts():
@@ -537,6 +539,7 @@ def sendOpts():
     configOpt.set('Section1', 'saveOnWin', str(saveOnWin))
     configOpt.set('Section1', 'savePosition', str(savePosition))
     configOpt.set('Section1', 'annoyingNudge', str(annoyingNudge))
+    configOpt.set('Section1', 'annoyingNudge', str(chainshowall))
     with open(optfile, 'w') as configfile:
         configOpt.write(configfile)
     print("Saved options.")
@@ -1207,6 +1210,7 @@ def usageGame():
 def usageOptions():
     print ('========options========')
     print ('v toggles vertical, + toggles card size (only vertical right now).')
+    print ('cs toggles chainShowAll e.g. if 823 shows intermediate move.')
     print ('sw/ws saves on win, sp/ps saves position.')
     print ('+ = toggles double size, e = toggle autoshuffle.')
     print ('?/?g ?o ?m games options meta')
@@ -1662,6 +1666,12 @@ def readCmd(thisCmd):
         print ("Toggled dblSzCards to %s." % (onoff[dblSzCards]))
         printCards()
         return
+    if name == 'cs':
+        cmdNoMeta.pop()
+        chainShowAll = not chainShowAll
+        print ("Toggled chainShowAll to %s." % (onoff[chainShowAll]))
+        printCards()
+        return
     if name == 'e':
         cmdNoMeta.pop()
         autoReshuf = not autoReshuf
@@ -1752,14 +1762,19 @@ def readCmd(thisCmd):
                 readCmd(name[0] + name[1])
                 readCmd(name[1] + name[0])
                 return
-        if name.isdigit():
+        if name.isdigit(): # for, say ,6873 to move 73 83 63
             gotReversed = 1
+            cmdChurn = not chainshowall
+            oldTurns = len(moveList)
             for jj in reversed(range(0,len(name)-1)):
                 if wonThisCmd == False:
                     if name[jj] != name[jj+1]:
                         temp = name[jj] + name[len(name)-1]
                         print "Moving " + temp
                         readCmd(name[jj] + name[len(name)-1])
+            cmdChurn = False
+            if len(moveList) > oldTurns and not chainshowall:
+                printCards()
             if name.isdigit() and wonThisCmd == False:
                 print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
         if gotReversed == 0:
