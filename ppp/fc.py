@@ -60,7 +60,7 @@ minDelay = 30000
 highTime = 0
 maxDelay = 0
 curGames = 0
-maxGames = 0
+maxGames = 5
 
 #options to define. How to do better?
 chainShowAll = False
@@ -539,7 +539,7 @@ def sendOpts():
     configOpt.set('Section1', 'saveOnWin', str(saveOnWin))
     configOpt.set('Section1', 'savePosition', str(savePosition))
     configOpt.set('Section1', 'annoyingNudge', str(annoyingNudge))
-    configOpt.set('Section1', 'annoyingNudge', str(chainshowall))
+    configOpt.set('Section1', 'annoyingNudge', str(chainShowAll))
     with open(optfile, 'w') as configfile:
         configOpt.write(configfile)
     print("Saved options.")
@@ -1385,6 +1385,7 @@ def readCmd(thisCmd):
     global totalReset
     global saveOnWin
     global savePosition
+    global chainShowAll
     wonThisCmd = False
     prefix = ''
     force = 0
@@ -1764,7 +1765,7 @@ def readCmd(thisCmd):
                 return
         if name.isdigit(): # for, say ,6873 to move 73 83 63
             gotReversed = 1
-            cmdChurn = not chainshowall
+            cmdChurn = not chainShowAll
             oldTurns = len(moveList)
             for jj in reversed(range(0,len(name)-1)):
                 if wonThisCmd == False:
@@ -1773,7 +1774,7 @@ def readCmd(thisCmd):
                         print "Moving " + temp
                         readCmd(name[jj] + name[len(name)-1])
             cmdChurn = False
-            if len(moveList) > oldTurns and not chainshowall:
+            if len(moveList) > oldTurns and not chainShowAll:
                 printCards()
             if name.isdigit() and wonThisCmd == False:
                 print ('Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name)-1) + ' moves successfully.')
