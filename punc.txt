@@ -108,8 +108,8 @@ lame talk shows	0,2,-1,-1
 lame tv shows	0,2,-1,-1
 laughhouses	0,2,-1,-1
 lousy hit songs	0,2,-1,-1
-oldies singers	0,2,-1,-1
 mob chants	0,1,1,0
+oldies singers	0,2,-1,-1
 random books	0,2,-1,-1
 sports chatter	0,1,1,0
 ########stores
