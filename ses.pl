@@ -10,7 +10,8 @@ use strict;
 use warnings;
 
 #######################constant(s)
-my $outputFile = __FILE__;
+my $sourceFile  = __FILE__;
+my $outputFile = $sourceFile;
 $outputFile =~ s/pl$/txt/i;
 my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 my $tabMax = 25;
@@ -43,10 +44,18 @@ while ($count <= $#ARGV)
 
   for ($arg)
   {
-  /^-?e$/ && do { `$npSes`; exit(); };
-  /^-?o$/ && do { $toOutput = 1; $count++; next; };
   /^-?a$/ && do { $analyze = 1; $count++; next; };
+  /^-?c$/ && do
+  {
+    my $cmd = 'start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" ';
+	$cmd .= "\"$sourceFile\"";
+	`$cmd`;
+	exit();
+  };
+  /^-?e$/ && do { `$outputFile`; exit(); };
   /^-?h$/ && do { $htmlGen = 1; $count++; next; };
+  /^-?o$/ && do { $toOutput = 1; $count++; next; };
+  /^-?x$/ && do { `$npSes`; exit(); };
   usage();
   }
 }
@@ -141,9 +150,11 @@ sub usage
 {
 print<<EOT;
 -a = analyze
+-c = edit source code
+-e = edit stat file
 -h = to html
--o = output to file
--e = edit source file
+-o = output to stat file
+-x = edit XML tabs file
 EOT
 exit;
 }
