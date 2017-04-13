@@ -473,6 +473,8 @@ misc=$ws\hrcheck.pl,
 misc=proj.txt,
 misc=i7proj.pm,
 misc=prt.pl,
+#################trying perl modules etc
+misc=$ws\i7.pm,
 ##############ppp = perl python port
 misc=c:\coding\perl\proj\sok.pl,ppp
 misc=c:\coding\perl\proj\sok.py,ppp
@@ -504,6 +506,7 @@ writing=starter.htm,
 writing=cheatsheet.txt,
 writing=limericks.otl,
 writing=limwork.txt,
+writing=$ws\limd.pl,
 writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
 writing=scripts\cov.pl,
 
