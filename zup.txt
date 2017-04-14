@@ -136,6 +136,7 @@ dl=https://www.dropbox.com/s/a7gxks0lebegieh/buck_the_past_spring_thing_1_releas
 out=buck_the_past_spring_thing_%_release.zip
 D=play_online
 D=play_online/interpreter
+?:c:/games/inform/btp-st Materials/Release/Buck the Past.gblorb>c:/games/inform/btp-st.inform/Source/story.ni
 F=c:/games/inform/btp-st.inform/Source/story.ni
 F=c:/games/inform/btp-st.inform/Source/walkthru.txt
 F=c:/games/inform/triz/mine/buck-the-past.pdf

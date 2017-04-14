@@ -7,6 +7,7 @@
 
 use strict;
 use warnings;
+use File::stat;
 
 use Win32::Clipboard;
 
@@ -195,6 +196,35 @@ while ($a = <A>)
 	$b =~ s/\\/\//g;
 	$zip->addDirectory("$b");
 	next;
+  };
+  /^\?:/i && do
+  {
+    $a =~ s/^..//;
+    if ($a =~ /[><]/)
+	{
+      my $compare;
+
+	  if (($a =~ />/) && ($a =~ /</)) { die ("<> found in $a\n"); }
+	  my $gtlt = ($a =~ />/);
+	  $compare = $a;
+	  $a =~ s/[<>].*//;
+	  $compare =~ s/.*[<>]//;
+	  my @comp2 = split(/,/, $compare);
+	  if (! -f "$a") { die "No file $a."; }
+	  for (@comp2)
+	  {
+	    if (! -f "$_") { die "No file $_."; }
+	    if ((stat($a)->mtime < stat($_)->mtime) && ($gtlt))
+		{
+		  die ("$a dated before $_, should be other way around.");
+		}
+	    if ((stat($a)->mtime > stat($_)->mtime) && (!$gtlt))
+		{
+		  die ("$a dated after $_, should be other way around.");
+		}
+	  }
+    }
+    next;
   };
   /^F=/i && do
   {
