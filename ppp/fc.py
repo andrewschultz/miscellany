@@ -5,7 +5,7 @@
 #
 #this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
 #
-# 1) timeMatters = 43200 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2 4) annoyingNudge = False (set to 0 or false)
+# 1) timeMatters = 86400 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2 4) annoyingNudge = False (set to 0 or false)
 
 #?? P (all) doesn't show what went to foundation
 #> and < to bookend macro-type undoables. Skip if in Undo
@@ -55,8 +55,8 @@ startTime = 0
 
 #time before next play variables
 timeMatters = 1
-nagDelay = 43200 # set this to zero if you don't want to restrict the games you can play
-minDelay = 30000
+nagDelay = 86400 # set this to zero if you don't want to restrict the games you can play
+minDelay = 70000 # if we can cheat one time
 highTime = 0
 maxDelay = 0
 curGames = 0
@@ -930,6 +930,37 @@ def orgit(myList = []):
                         myList.insert(0, temp)
     return  ' ' + ' '.join(myList)
 
+def botcard(mycol):
+    return elements[mycol][len(elements[mycol])-1]
+
+def automove():
+    mincard = 0
+    mincand = 0
+    fromcand = 0
+    tocand = 0
+    for z1 in range (1,9):
+        if len(elements[z1]) == 0:
+            continue
+        for z2 in range (1,9):
+            if z1 == z2:
+                continue
+            if len(elements[z2]) == 0:
+                continue
+            thisdo = doable(z1, z2, 0)
+            if thisdo > 0:
+                if not canPut(elements[z1][len(elements[z1])-thisdo], elements[z1][len(elements[z1])-thisdo-1]):
+                    mincand = botcard(z1) % 13 # this is a bit slick, as we might have problems with a king--but doable already disallows king onto ace, plus aces automatically go to foundation
+                    if mincand > mincard:
+                            mincard = mincand
+                            fromcand = z1
+                            tocand = z2
+    if fromcand > 0:
+        myauto = str(fromcand)+str(tocand)
+        print "Auto moved " + myauto
+        readCmd(myauto)
+        return 1
+    return 0
+
 def printOthers():
     checkWin()
     coolmoves = []
@@ -1198,6 +1229,7 @@ def usageGame():
     print ('r(1-8a-d) sends that card to the foundation. r alone forces everything it can.')
     print ('p(1-8) moves a row as much as you can.')
     print ('p on its own tries to force everything if you\'re near a win.')
+    print ('\\ tries all available moves starting with the highest card to match eg 10-9 comes before 7-6.')
     print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
     print ('(1-8)(1-8) = move a row, standard move. You can also string moves together, or 646 goes back and forth.')
     print ('(1-8a-d) (1-8a-d) move to spares and back.')
@@ -1288,6 +1320,10 @@ def loadGame(gameName):
             original.close()
             global moveList
             global inUndo
+            global cmdList
+            global cmdNoMeta
+            cmdList = []
+            cmdNoMeta = []
             inUndo = True
             initSide(0)
             if len(line) > 0 and line[0] != '#':
@@ -1397,6 +1433,27 @@ def readCmd(thisCmd):
         try: input = raw_input
         except NameError: pass
         name = input("Move:").strip()
+        if name == '/': # special case for slash/backslash
+            debug = 1 - debug
+            print ('debug', onoff[debug])
+            cmdList.append(name)
+            return
+        if name == '\\':
+            temp = len(moveList)
+            totalmoves = 0
+            cmdChurn = 1
+            while (automove()):
+                totalmoves = totalmoves + 1
+                next
+            cmdChurn = 0
+            if temp == len(moveList):
+                print "No moves done."
+            else:
+                printCards()
+                print totalmoves,"total moves."
+            cmdNoMeta.append(name)
+            cmdList.append(name)
+            return
         name = re.sub('[\\\/]', '', name)
         cmdNoMeta.append(name)
         cmdList.append(name)
@@ -1590,11 +1647,6 @@ def readCmd(thisCmd):
                 return
             print ("UNDOing more than 10 moves.")
         undoMoves(int(name))
-        return
-    if name[0] == '/':
-        debug = 1 - debug
-        print ('debug', onoff[debug])
-        cmdNoMeta.pop()
         return
     if name[0] == 'h':
         cmdNoMeta.pop()
@@ -1884,7 +1936,7 @@ def readCmd(thisCmd):
             if inUndo:
                 #print "Move", str(undoIdx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
                 if undoIdx == 15:
-                    printVertical()
+                    printCards()
                     exit
             else:
                 print ('Those cards don\'t match up.')
