@@ -78,6 +78,8 @@ annoyingNudge = True
 #easy mode = A/2 on top
 cheatIndex = 0
 
+disallowWriteSource = True;
+
 lastscore = 0
 highlight = 0
 
@@ -458,7 +460,7 @@ def readTimeFile():
     global nagDelay
     global maxDelay
     if os.access(timefile, os.W_OK):
-        print "Time file should not have write access outside of the game. attrib -r " + timefile + " or chmod 333 to get things going."
+        print "Time file should not have write access outside of the game. attrib -R " + timefile + " or chmod 333 to get things going."
         exit()
     if not os.path.isfile(timefile):
         print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
@@ -2050,6 +2052,10 @@ def readCmd(thisCmd):
     usageGame()
 
 ###################################start main program
+
+if disallowWriteSource and os.access(__file__, os.W_OK):
+        print "Source file should not have write access outside of the game. attrib -R " + __file__ + " or chmod 333 to get things going."
+        exit()
 
 readOpts()
 
