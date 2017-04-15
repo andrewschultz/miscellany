@@ -28,6 +28,7 @@ optfile = "fcopt.txt"
 savefile = "fcsav.txt"
 winFile = "fcwins.txt"
 timefile = "fctime.txt"
+lockfile = "fclock.txt"
 
 onoff = ['off', 'on']
 
@@ -78,7 +79,9 @@ annoyingNudge = True
 #easy mode = A/2 on top
 cheatIndex = 0
 
-disallowWriteSource = True;
+###########################making the game extra secure, not playing 2 at once or tinkering with timing file
+haveLockFile = True
+disallowWriteSource = True
 
 lastscore = 0
 highlight = 0
@@ -365,6 +368,21 @@ def firstMatchableRow(cardval):
                 return i
     return 0
 
+def openLockFile():
+    if os.path.exists(lockfile):
+        print 'There seems to be another game running. Close it first, or if necessary, delete' ,lockfile
+        exit()
+    f = open(lockfile, 'w')
+    f.write('This is a lockfile')
+    f.close()
+    os.system("attrib +r " + lockfile)
+
+def closeLockFile():
+    os.system("attrib -r " + lockfile)
+    os.remove(lockfile)
+    if os.path.exists(lockfile):
+        print 'I wasn\'t able to delete' ,lockfile
+
 def parseCmdLine():
     global vertical
     global debug
@@ -506,7 +524,7 @@ def writeTimeFile():
     configTime.set('Section1', 'remainder', str(remainder))
     configTime.set('Section1', 'maxdelay', str(maxDelay))
     configTime.set('Section1', 'lasttime', str(lasttime))
-    with open('fctime.txt', 'w') as configfile:
+    with open(timefile, 'w') as configfile:
         configTime.write(configfile)
     os.system("attrib +r " + timefile)
     return
@@ -1408,6 +1426,7 @@ def goBye():
     print ("Bye!")
     if timeMatters:
         writeTimeFile()
+    closeLockFile()
     exit()
 
 def readCmd(thisCmd):
@@ -1452,6 +1471,7 @@ def readCmd(thisCmd):
                 print "No moves done."
             else:
                 printCards()
+                printFound()
                 print totalmoves,"total moves."
             cmdNoMeta.append(name)
             cmdList.append(name)
@@ -2076,6 +2096,8 @@ if annoyingNudge:
             exit()
         print ("Type I am wasting time, or you can't play.")
         exit()
+
+openLockFile()
 
 initSide(0)
 initCards()
