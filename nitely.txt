@@ -172,5 +172,4 @@ wri=writing
 >dfi.pl
 >limcheck.pl
 >a.pl -eh -t
->ses.pl -a -h -e
 ;
