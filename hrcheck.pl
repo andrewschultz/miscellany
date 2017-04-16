@@ -151,10 +151,18 @@ my $months = 0;
 
 while ($line = <A>)
 {
+  chomp($line);
   if ($line =~ /^ABORT/i) { die ("Abort found in $_[0], line $.."); }
   if ($line =~ /^!!!!!!!!/ && (!$semicolonSeen)) { $gotImportantLine = 1; next; }
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
+  if ($line eq "==") { $autoBookmark = 0; next; }
+  if ($bookmarkLook)
+  {
+    if ($line eq "=$bookmarkLook") { $autoBookmark = 1; next; }
+	if ($autoBookmark == 0) { next; }
+  }
+  elsif ($line =~ /^=/) { next; }
   if ($line =~ /^#/) { next; }
   if ($semicolonSeen)
   {
@@ -168,18 +176,11 @@ while ($line = <A>)
   }
   if ($line =~ /^;/) { $semicolonSeen = 1; next; }
   if ($ignore) { next; }
-  chomp($line);
   if ($line =~ /^DEF=/)
   {
     $defaultBrowser = $line;
 	$defaultBrowser =~ s/^DEF=//;
 	next;
-  }
-  if ($bookmarkLook)
-  {
-    if ($line eq "=$bookmarkLook") { $autoBookmark = 1; next; }
-	if ($autoBookmark == 0) { next; }
-	if ($line eq "==") { $autoBookmark = 0; next; }
   }
   $line =~ s/^\*+//;
 
@@ -277,7 +278,6 @@ while ($line = <A>)
   if (validHour($thistime))
   {
     #print "$hour, $times[$#times] good so far ($min): @qhr, @tens.\n";
-	print "1\n";
     if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($thistime < 0)) || $autoBookmark)
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
