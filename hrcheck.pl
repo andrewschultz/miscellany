@@ -43,6 +43,10 @@ my $semicolonSeen = 0;
 my $popupIfAbort = 0;
 my $gotImportantLine = 0;
 
+
+my $autoBookmark = 0;
+my $bookmarkLook = "";
+
 my @times;
 my $thistime;
 
@@ -61,6 +65,14 @@ my $gotTime, my $hourTemp, my $minuteTemp;
 while ($count <= $#ARGV)
 {
   $a = $ARGV[$count];
+  if (defined($ARGV[$count+1]))
+  {
+    $b = $ARGV[$count+1];
+  }
+  else
+  {
+    $b = "";
+  }
   if (defined($ARGV[$count])) { $b = $ARGV[$count+1]; }
   for ($a)
   {
@@ -91,6 +103,7 @@ while ($count <= $#ARGV)
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
+  /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
   usage();
   }
 }
@@ -156,6 +169,18 @@ while ($line = <A>)
   if ($line =~ /^;/) { $semicolonSeen = 1; next; }
   if ($ignore) { next; }
   chomp($line);
+  if ($line =~ /^DEF=/)
+  {
+    $defaultBrowser = $line;
+	$defaultBrowser =~ s/^DEF=//;
+	next;
+  }
+  if ($bookmarkLook)
+  {
+    if ($line eq "=$bookmarkLook") { $autoBookmark = 1; next; }
+	if ($autoBookmark == 0) { next; }
+	if ($line eq "==") { $autoBookmark = 0; next; }
+  }
   $line =~ s/^\*+//;
 
   $months = ($line =~ /^m/i);
@@ -163,12 +188,6 @@ while ($line = <A>)
 
   @qhr = (1, 0, 0, 0);
   $mod = 0;
-  if ($line =~ /^DEF=/)
-  {
-    $defaultBrowser = $line;
-	$defaultBrowser =~ s/^DEF=//;
-	next;
-  }
   $cmdCount = 0;
   my $min = 0;
   my $lineMod = $line;
@@ -201,6 +220,7 @@ while ($line = <A>)
 	if (!$gotOne) { next; }
     $cmdCount++;
   }
+
   @times = split(/,/, $b[$cmdCount]);
 
   $cmdCount++;
@@ -257,7 +277,8 @@ while ($line = <A>)
   if (validHour($thistime))
   {
     #print "$hour, $times[$#times] good so far ($min): @qhr, @tens.\n";
-    if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($thistime < 0)))
+	print "1\n";
+    if (($b[0] eq "*") || ($qhr[$min] || $tens[$min] || ($thistime < 0)) || $autoBookmark)
 	{
       if (-f "$b[$cmdCount]" && ($b[$cmdCount] =~ /(txt|otl)$/i)) # skip over empty text file
       {
@@ -274,6 +295,7 @@ while ($line = <A>)
 	  print `$b[$cmdCount]`;
 	  }
 	}
+	last;
   }
   }
 
@@ -291,6 +313,7 @@ close(A);
 
 sub validHour
 {
+  if ($bookmarkLook) { return $autoBookmark; }
   if ($_[0] eq "*") { return 1; }
   my @ha = split(/,/, $hour);
   for my $h (@ha)

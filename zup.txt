@@ -139,7 +139,7 @@ D=play_online/interpreter
 ?:c:/games/inform/btp-st Materials/Release/Buck the Past.gblorb>c:/games/inform/btp-st.inform/Source/story.ni
 F=c:/games/inform/btp-st.inform/Source/story.ni
 F=c:/games/inform/btp-st.inform/Source/walkthru.txt
-F=c:/games/inform/triz/mine/buck-the-past.pdf
+F=c:/games/inform/triz/mine/buck-the-past-st.pdf
 F=c:/games/inform/btp-st Materials/Release/Buck the Past.gblorb
 F=c:/Users/Andrew/Dropbox/notes/buck_the_past_spring_thing_release_1_notes.txt
 F=c:/games/inform/btp-st Materials/Release/buck-the-past-st-invisiclues.htm
