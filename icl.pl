@@ -25,6 +25,7 @@ my $informBase = 0;
 my $informDir = 0;
 my $infOnly = 0;
 my $checkRecentChanges = 0;
+my $ignoreDRBPrefix = 0;
 
 my $infDir;
 
@@ -92,6 +93,7 @@ while ($count <= $#ARGV)
   /^-?jb$/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
   /^-?jd$/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
   /^-?jr$/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-?jrn$/ && do { $ignoreDRBPrefix = 1; $release = 1; $debug = $runBeta = 0; $count++; next; };
   /^-?f[rdb]*$/ && do { $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
@@ -103,6 +105,7 @@ while ($count <= $#ARGV)
   /^-?l$/ && do { $v6l = 1 - $v6l; $informDir = $inDirs[$v6l]; $count++; next; };
   /^-?ba$/ && do { $informBase = $ARGV[$count+1]; $count++; next; };
   /^-?be$/ && do { $betaDir = $ARGV[$count+1]; $count++; next; };
+  /^-?np$/ && do { $ignoreDRBPrefix = 1; $count++; next; };
   /^-?nr$/ && do { $release = 0; $count++; next; };
   /^-?yr$/ && do { $release = 1; $count++; next; };
   /^-?nd$/ && do { $debug = 0; $count++; next; };
@@ -178,7 +181,7 @@ sub doOneBuild
   $ex = "ulx";
   $gz = "gblorb";
   $iflag = "G";
-  if (z5($zmac{$_[4]}, $_[3])) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
+  if (defined($zmac{$_[4]}) && z5($zmac{$_[4]}, $_[3])) { $ex = "z5"; $gz = "zblorb"; $iflag = "v5"; }
   elsif (defined($zmac{$_[4]}) && ($zmac{$_[4]} > 0)) { $ex = "z8"; $gz = "zblorb"; $iflag = "v8"; }
 
   my $tempSource = "$bdir\\source\\story.ni";
@@ -187,7 +190,7 @@ sub doOneBuild
   my $infOut = "$_[0]\\Build\\auto.inf";
 
   my $blorbFileShort = getFile("$_[0]/Release.blurb");
-  if ($_[3] ne "debug") { $blorbFileShort = "$_[3]-$blorbFileShort"; }
+  if ($_[3] ne "debug" && !($ignoreDRBPrefix)) { $blorbFileShort = "$_[3]-$blorbFileShort"; }
   my $outFinal = "$_[2]\\Release\\$blorbFileShort";
 
   if ($checkRecentChanges)
@@ -388,6 +391,7 @@ USAGE
 -inf = create INF file only, no binary build
 -jb -jd -jr just build/release/debug
 -e edits the icl.txt file
+-np = no prefix in export file
 EOT
 exit
 }
