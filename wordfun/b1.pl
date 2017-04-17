@@ -127,6 +127,8 @@ sub oneHangman
   %f2 = ();
   %freq = ();
 
+  $_[1] =~ s/[\\\/]//g;
+
   my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
   #print "Trying $readFile.\n";
   open(A, "$readFile") || die ("No $readFile");

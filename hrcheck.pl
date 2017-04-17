@@ -104,6 +104,7 @@ while ($count <= $#ARGV)
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
   /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
+  /^-?bp$/i && do { for ($check, $check2, $xtraFile) { printBkmk($_); } exit(); };
   usage();
   }
 }
@@ -157,12 +158,6 @@ while ($line = <A>)
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
   if ($line eq "==") { $autoBookmark = 0; next; }
-  if ($bookmarkLook)
-  {
-    if ($line eq "=$bookmarkLook") { $autoBookmark = 1; next; }
-	if ($autoBookmark == 0) { next; }
-  }
-  elsif ($line =~ /^=/) { next; }
   if ($line =~ /^#/) { next; }
   if ($semicolonSeen)
   {
@@ -182,6 +177,12 @@ while ($line = <A>)
 	$defaultBrowser =~ s/^DEF=//;
 	next;
   }
+  if ($bookmarkLook)
+  {
+    if ($line =~ /^=$bookmarkLook[\W:]/) { $autoBookmark = 1; next; }
+	if ($autoBookmark == 0) { next; }
+  }
+  elsif ($line =~ /^=/) { next; }
   $line =~ s/^\*+//;
 
   $months = ($line =~ /^m/i);
@@ -344,10 +345,22 @@ sub searchHR
   }
 }
 
+sub printBkmk
+{
+  open(A, $_[0]) || do { warn("$_[0] not found as an hrcheck file.\n"); return; };
+  while ($a = <A>)
+  {
+    if ($a =~ /^=[^=]/) { chomp($a); print "$_[0]: $a\n"; }
+  }
+  close(A);
+}
+
 sub usage
 {
 print<<EOT;
 -(#) or +(#) = add or substract minutes
+b = looks for a bookmark to execute (so = stack overflow)
+bp = prints all bookmarks
 h = hide extra file if extra-default is on
 e = check stuff to check (main file of tasks)
 c = check code
