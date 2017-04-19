@@ -104,6 +104,7 @@ while ($count <= $#ARGV)
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
   /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
+  /^=/i && do { $bookmarkLook = $a; $bookmarkLook =~ s/^=//; $count ++; next; };
   /^-?bp$/i && do { for ($check, $check2, $xtraFile) { printBkmk($_); } exit(); };
   usage();
   }
@@ -359,7 +360,7 @@ sub usage
 {
 print<<EOT;
 -(#) or +(#) = add or substract minutes
-b = looks for a bookmark to execute (so = stack overflow)
+b = looks for a bookmark to execute (so = stack overflow) (= also)
 bp = prints all bookmarks
 h = hide extra file if extra-default is on
 e = check stuff to check (main file of tasks)

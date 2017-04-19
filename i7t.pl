@@ -23,7 +23,10 @@ my @important = ();
 my $majorTable = 0;
 my $tableList = "";
 
-my @tableReadFiles = ("c:/writing/scripts/i7t.txt", "c:/writing/scripts/i7tp.txt");
+my $tabfile = "c:/writing/scripts/i7t.txt";
+my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
+
+my @tableReadFiles = ($tabfile, $tabfilepriv);
 
 ################################
 # options
@@ -66,7 +69,7 @@ while ($count <= $#ARGV)
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
     /^-?e$/ && do { print "Opening source. -f opens the data file, -ef both.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
-    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `c:\\writing\\scripts\\i7t.txt`; exit; };
+    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `$tabfile`; exit; };
 	/^-?(ef|fe)$/ && do
     {
       print "Opening data and source.\n";
@@ -74,7 +77,7 @@ while ($count <= $#ARGV)
       `c:\\writing\\scripts\\i7t.pl`;
       next;
     };
-    /^-?p$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `c:\\writing\\scripts\\i7tp.txt`; exit; };
+    /^-?ep$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `$tabfilepriv`; exit; };
 	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
@@ -106,15 +109,16 @@ my $tableRow = 0;
 
 while ($a = <A>)
 {
-  if ($a =~ /^(\[table|table) /) #we want to be able to make a fake table if we can
+  if ($a =~ /^(\[)?table /) #we want to be able to make a fake table if we can
   {
     my $aorig = $a;
     @tableCount = ();
-    if ($a =~ /^\[/) { $a =~ s/[\[\]]//g;
+    if ($a =~ /^\[/)
+	{ $a =~ s/[\[\]]//g;
 	#commented out for a non-table in BTP
 	#print "--$a";
 	}
-	$a =~ s/ \(continued\)//g;
+	$a =~ s/ \(continued\).*?\[//g;
     $a =~ s/^\[//g;
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
@@ -199,6 +203,7 @@ while ($a = <A>)
 
   if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
 
+  #print "parsing @b\n";
   $ranOneTest = 1;
 
   if ($b[2] ne "\"")

@@ -120,7 +120,7 @@ if ($analyze)
 	if (($b[1] > $lastNew) && ($lastNew >= $newMin)) { $newInc++; } else { $newInc = 0; }
 	$lastNew = $b[1];
 	$lastTabs = $b[0];
-	print "$b[0] $b[1] $tabsOverStreak $newOverStreak $tabsInc $newInc\n";
+	#print "$b[0] $b[1] $tabsOverStreak $newOverStreak $tabsInc $newInc\n";
   }
 
   my @errs;
