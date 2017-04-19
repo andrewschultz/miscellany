@@ -31,6 +31,9 @@ if ($del > -1) { print "Oops, it looks like you forgot to delete the command abo
 
 if (!defined($ARGV[0])) { die ("Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"); }
 
+my $argtrim = $ARGV[0];
+$argtrim =~ s/^-//;
+
 if ((lc($ARGV[0]) eq "-f") || (lc($ARGV[0]) eq "f"))
 {
   if (!defined($ARGV[1])) { die ("Need a word to force into the list."); }
@@ -40,22 +43,23 @@ if ((lc($ARGV[0]) eq "-f") || (lc($ARGV[0]) eq "f"))
 
 if (defined($ARGV[2])) { die ("Only 2 arguments max: word and missed letters.\n"); }
 
-if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/.//; $crossword = 1; }
-if ($ARGV[0] eq "i") { $stdin = 1; }
-if ($ARGV[0] eq "e") { `$misses`; exit(); }
-if ($ARGV[0] eq "s") { showMisses(); exit(); }
-if ($ARGV[0] eq "?") { usage(); exit(); }
-if ($ARGV[0] =~ /[0-9]+$/)
+if ($argtrim =~ /^[\*#]/) { $argtrim =~ s/.//; $crossword = 1; }
+if ($argtrim eq "i") { $stdin = 1; }
+if ($argtrim eq "e") { `$misses`; exit(); }
+if ($argtrim eq "c") { my $cmd = 'start "" "notepad++.exe" ' . (__FILE__); `$cmd`; exit(); }
+if ($argtrim eq "s") { showMisses(); exit(); }
+if ($argtrim eq "?") { usage(); exit(); }
+if ($argtrim =~ /[0-9]+$/)
 {
-  my $wordfile = "c:\\writing\\dict\\words-$ARGV[0].txt";
-  if ($ARGV[0] == 0) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
+  my $wordfile = "c:\\writing\\dict\\words-$argtrim.txt";
+  if ($argtrim == 0) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
   if (!$wordfile) { die ("No word file $wordfile.") }
   `$wordfile`; exit();
 }
 
-if ($ARGV[0] =~ /^[=\+]/)
+if ($ARGV[0] =~ /^[-=\+]/)
 {
-  my $toAdd = $ARGV[0]; $toAdd =~ s/^[=+]+//;
+  my $toAdd = $ARGV[0]; $toAdd =~ s/^[-=+]+//;
   my $l = length($toAdd);
   my $inDict = 0;
   open(A, "c:\\writing\\dict\\words-$l.txt");
@@ -249,8 +253,9 @@ sub addToErrs
   my %val;
   my $addit = 0;
   if ($_[0] =~ /^\+/) { $addit = 1; }
+  if ($_[0] =~ /^\-/) { $addit = -1; }
   my $gotIt = 0;
-  my $toAdd = lc($_[0]); $toAdd =~ s/^[=\+]+//g;
+  my $toAdd = lc($_[0]); $toAdd =~ s/^[-=\+]+//g;
   if (!$toAdd) { print ("Added nothing."); die; }
   if ($toAdd =~ /[^a-z]/i) { die ("Bad characters in what to add."); }
   open(A, "$misses");
@@ -270,7 +275,11 @@ sub addToErrs
     }
   }
   close(A);
-  if (!$gotIt) { print "Added $toAdd to misses file with value $addit.\n"; $val{$toAdd}+= $addit; }
+  if (!$gotIt)
+  {
+    if ($addit == -1) { print "Did not find $toAdd, so I won't subtract an occurrence.\n"; return; }
+    print "Added $toAdd to misses file with value $addit.\n"; $val{$toAdd}+= $addit;
+  }
   open(B, ">$misses");
   for my $z (sort keys %val) { print B "$z:$val{$z}\n"; }
   close(B);
@@ -337,8 +346,10 @@ print<<EOT;
 number opens words-(#).txt, 0 the whole big one
 =(word) adds it without admitting wrong
 +(word) adds word or increases its wrong count
--(word) runs in crossword mode e.g. ad. can be add
+-(word) decreases a word's wrong count
+[#*](word) runs in crossword mode e.g. ad. can be add
 e = open misses file b1.txt
+c = open this code file
 s = show misses
 ? = this usage
 i = use stdin
