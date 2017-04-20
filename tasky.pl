@@ -15,7 +15,7 @@ my %lastdone;
 my %lastwarn;
 
 my $parseAll = 0;
-my $overwriteData = 0; # most of the time we will want to overwrite the data in tasky.txt, but if we are testing, we want to set this to zero.
+my $modifyTimesFile = 0; # most of the time we will want to modifyTimesFile the data in tasky.txt, but if we are testing, we want to set this to zero.
 
 my $key;
 
@@ -34,6 +34,7 @@ while ($a = <A>)
   if ($a =~ /^;/) { next; }
   chomp($a);
   my @l = split(/\t/, $a);
+  if ($l[0] eq "ACTIVE") { $modifyTimesFile = $l[1]; next; }
   $short{$l[0]} = $l[1];
   $halfhr{$l[0]} = $l[2];
   $reremind{$l[0]} = $l[3];
@@ -48,9 +49,11 @@ if ($ARGV[0])
   my $arg = lc($ARGV[0]);
   for ($arg)
   {
+  /^-?test$/ && do { $modifyTimesFile = 0; };
+  /^-?real$/ && do { $modifyTimesFile = 1; };
   /^-?c$/ && do { `start "" notepad++ __FILE__`; exit(); };
   /^-?e$/ && do { `start "" notepad++ $taskText`; exit(); };
-  /^-\?$/ && do { listArgs(); exit(); };
+  /^-\?$/ && do { listArgs(); print "-? shows these all\n-test in test mode (tasky.txt not updated)\n-c open the source\n-e open tasky.txt\n-ee open tasky-test.txt\n-real in real mode (tasky.txt updated)\n"; exit(); };
   }
   if ($short{$arg})
   {
@@ -59,7 +62,7 @@ if ($ARGV[0])
   }
   else
   {
-    print "No task $arg.\n";
+    print "No task $arg-- -? gives full options.\n";
 	listArgs();
   }
   exit();
@@ -70,25 +73,22 @@ my $timeTo = "";
 
 for $key (sort keys %short)
 {
-  if ($lastdone{$key} + 1790 * $halfhr{$key} < $time) # 1790 is a fudge factor that accounts for timing not being perfect, instead of 1800
+  if ($lastdone{$key} + 1790 * $halfhr{$key} >= $time) # ok, if we have done the task recently, skip it
   {
-    if (($lastdone{$key} + 3600 * $halfhr{$key} > $time) && (!$parseAll))
-	{
-	  next;
-	}
-    if ($lastwarn{$key} >= $lastdone{$key})
-	{
-	  if ($lastwarn{$key} + $reremind{$key} * 1790 < $time)
-	  {
-	    $lastwarn{$key} = $time;
-	    $timeTo .= "<font size=+5><center>RE-REMINDER: $short{$key}</center></font>\n";
-		next;
-	  }
-	}
-    $lastwarn{$key} = time();
+    next;
+  }
+  if ($lastwarn{$key} <= $lastdone{$key}) # if we haven't given an initial warning yet...
+  {
     $timeTo .= "<font size=+5><center>FIRST REMINDER: $short{$key}</center></font>\n";
     $lastwarn{$key} = $time;
+	next;
   }
+  if (($lastdone{$key} + 3580 * $halfhr{$key} > $time) && (!$parseAll))
+  {
+    next;
+  }
+  $lastwarn{$key} = $time;
+  $timeTo .= "<font size=+5><center>RE-REMINDER: $short{$key}</center></font>\n";
 }
 
 if ($timeTo)
@@ -113,6 +113,7 @@ sub reprintTaskFile
   while ($a = <A>)
   {
     @r = split(/\t/, $a);
+	if ($r[0] eq "ACTIVE") { $outString .= "ACTIVE\t$modifyTimesFile\n"; next; }
 	if ($short{$r[0]})
 	{
 	  $outString .= "$r[0]\t$short{$r[0]}\t$halfhr{$r[0]}\t$reremind{$r[0]}\t$lastdone{$r[0]}\t$lastwarn{$r[0]}\n";
@@ -121,7 +122,7 @@ sub reprintTaskFile
   }
   close(A);
   my $theFile = $taskTest;
-  if ($overwriteData)
+  if ($modifyTimesFile)
   {
     $theFile = "$taskText";
   }
