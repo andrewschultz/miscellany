@@ -469,6 +469,9 @@ misc=c:\scripts\ca.au3,au3
 #################daily tasks
 misc=$ws\hrcheck.pl,
 #misc=$ws\hrcheck.txt,
+misc=c:\scripts\tasky.pl
+#misc=c:\scripts\tasky.txt
+#misc=c:\scripts\tasky-test.txt
 #################3 files for copying regr suite over
 misc=proj.txt,
 misc=i7proj.pm,
