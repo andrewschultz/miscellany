@@ -29,6 +29,7 @@ my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 ###################duplicate detector hashes
 my %tableDup;
 my %twoRows;
+my %ignoreDup;
 
 my @tableReadFiles = ($tabfile, $tabfilepriv);
 
@@ -210,6 +211,14 @@ while ($a = <A>)
   {
     $b[1] =~ s/^2row://;
 	$twoRows{$b[1]} = 1;
+	next;
+  }
+
+  if ($b[1] =~ /^igdup:/)
+  {
+    $b[1] =~ s/^igdup://;
+	$ignoreDup{$b[1]} = 1;
+	next;
   }
 
   if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
@@ -301,7 +310,7 @@ open(A, "$fileName") || die ("$fileName doesn't exist.");
 	  $curTable = "";
 	  next;
 	}
-	if ($curTable)
+	if ($curTable && (!$ignoreDup{$curTable}))
 	{
 	  my @tempAry = split(/\t/, $a);
 	  my $unique = $tempAry[0];
