@@ -15,7 +15,8 @@ my %lastdone;
 my %lastwarn;
 
 my $parseAll = 0;
-my $modifyTimesFile = 0; # most of the time we will want to modifyTimesFile the data in tasky.txt, but if we are testing, we want to set this to zero.
+my $modifyTimesFile = 0; # most of the time we will want to modifyTimesFile the data in tasky.txt, but if we are testing, we want to set this to zero. (ACTIVE)
+my $launchAfter = 0; # most of the time we will want to modifyTimesFile the data in tasky.txt, but if we are testing, we want to set this to zero. (LAUNCH)
 
 my $key;
 
@@ -35,6 +36,7 @@ while ($a = <A>)
   chomp($a);
   my @l = split(/\t/, $a);
   if ($l[0] eq "ACTIVE") { $modifyTimesFile = $l[1]; next; }
+  if ($l[0] eq "LAUNCH") { $launchAfter = $l[1]; next; }
   $short{$l[0]} = $l[1];
   $halfhr{$l[0]} = $l[2];
   $reremind{$l[0]} = $l[3];
@@ -49,6 +51,7 @@ if ($ARGV[0])
   my $arg = lc($ARGV[0]);
   for ($arg)
   {
+  /^t$/i && do { my $time = time(); if (defined($ARGV[1])) { $time -= $ARGV[1]; } print "Time: $time\n"; exit(); };
   /^-?test$/ && do { $modifyTimesFile = 0; };
   /^-?real$/ && do { $modifyTimesFile = 1; };
   /^-?c$/ && do { `start "" notepad++ __FILE__`; exit(); };
@@ -83,8 +86,11 @@ for $key (sort keys %short)
     $lastwarn{$key} = $time;
 	next;
   }
-  if (($lastdone{$key} + 3580 * $halfhr{$key} > $time) && (!$parseAll))
+  #print ($lastdone{$key} + 3580 * $halfhr{$key} - $time);
+  #printf("$key: %d to %d, but it's $time now.\n", $lastdone{$key} + 1790 * $halfhr{$key}, $lastdone{$key} + 3580 * $halfhr{$key});
+  if (($lastdone{$key} + 3580 * $halfhr{$key} < $time) && (!$parseAll))
   {
+    printf("$key\'s warning time ranges from %d to %d, but it's $time now.\n", $lastdone{$key} + 1790 * $halfhr{$key}, $lastdone{$key} + 3580 * $halfhr{$key});
     next;
   }
   $lastwarn{$key} = $time;
@@ -101,7 +107,10 @@ if ($timeTo)
   `$taskHtm`;
 }
 
+if ($timeTo)
+{
 reprintTaskFile();
+}
 
 ###############################################
 
