@@ -26,6 +26,8 @@ my $tableList = "";
 my $tabfile = "c:/writing/scripts/i7t.txt";
 my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 
+my %tableDup;
+
 my @tableReadFiles = ($tabfile, $tabfilepriv);
 
 ################################
@@ -118,7 +120,8 @@ while ($a = <A>)
 	#commented out for a non-table in BTP
 	#print "--$a";
 	}
-	$a =~ s/ \(continued\).*?\[//g;
+	$a =~ s/ \(continued\).*?\[/ \[/g;
+	#if ($aorig =~ /continued/) { print "#####################$a"; }
     $a =~ s/^\[//g;
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
@@ -139,6 +142,8 @@ while ($a = <A>)
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
+	  if ($tableDup{$curTable}{$tempAry[0]}) { print "Duplicate at line $.: $curTable/$tempAry[0] also at $tableDup{$curTable}{$tempAry[0]}\n"; }
+	  $tableDup{$curTable}{$tempAry[0]} = $.;
 	  if ($#tempAry > $#tableCount) { $maxString = $a; }
 	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
 	  $tableCount[$#tempAry]++;
