@@ -19,6 +19,8 @@ Compound	ni pr
 #Slicker City searching
 #
 #############
+Slicker-City	2row:table of useons
+Slicker-City	2row:table of rotation responses
 Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
 Slicker-City	xxtgtn	"	$$ cluing tries
 Slicker-City	xxenos	"	$$ guys named Enos

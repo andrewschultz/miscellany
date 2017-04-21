@@ -26,7 +26,9 @@ my $tableList = "";
 my $tabfile = "c:/writing/scripts/i7t.txt";
 my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 
+###################duplicate detector hashes
 my %tableDup;
+my %twoRows;
 
 my @tableReadFiles = ($tabfile, $tabfilepriv);
 
@@ -142,8 +144,6 @@ while ($a = <A>)
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
-	  if ($tableDup{$curTable}{$tempAry[0]}) { print "Duplicate at line $.: $curTable/$tempAry[0] also at $tableDup{$curTable}{$tempAry[0]}\n"; }
-	  $tableDup{$curTable}{$tempAry[0]} = $.;
 	  if ($#tempAry > $#tableCount) { $maxString = $a; }
 	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
 	  $tableCount[$#tempAry]++;
@@ -206,6 +206,12 @@ while ($a = <A>)
 
   if (lc($b[0]) ne lc($project)) { next; }
 
+  if ($b[1] =~ /^2row:/)
+  {
+    $b[1] =~ s/^2row://;
+	$twoRows{$b[1]} = 1;
+  }
+
   if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
 
   #print "parsing @b\n";
@@ -264,6 +270,56 @@ while ($a = <A>)
   }
 }
 
+}
+
+###########################
+#this can/should be done better
+#
+#we can/should move this in with the main while for A with the while-loop to do table counts
+#
+my $dupFail = 0;
+my $dupLog = "";
+
+close(A);
+close(B);
+close(F);
+
+open(A, "$fileName") || die ("$fileName doesn't exist.");
+{
+  while ($a = <A>)
+  {
+    if ($a =~ /^table +of/i)
+	{
+	  chomp($a);
+	  $curTable = lc($a);
+	  $curTable =~ s/ [\(\[].*//;
+	  <A>;
+	  next;
+	}
+	if ($a !~ /[a-z]/i)
+	{
+	  $curTable = "";
+	  next;
+	}
+	if ($curTable)
+	{
+	  my @tempAry = split(/\t/, $a);
+	  my $unique = $tempAry[0];
+	  if ($twoRows{$curTable}) { $unique .= "/$tempAry[1]"; }
+	  if ($tableDup{$curTable}{$unique})
+	  {
+	    print "Duplicate at line $.: $curTable/$unique also at $tableDup{$curTable}{$unique}\n";
+		$dupLog .= "$unique/$tableDup{$curTable}{$unique}<br />";
+		$dupFail++;
+      }
+	  $tableDup{$curTable}{$unique} = $.;
+    }
+  }
+}
+
+if ($dupFail)
+{
+  print "TEST RESULTS:(notes) $project-tabledup,0,$dupFail,0,$dupLog\n";
 }
 
 if ($printFail)
