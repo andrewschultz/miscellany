@@ -3,6 +3,10 @@
 #
 #############
 #the first one is xxadd since there are several Table of Explanations
+Compound	xrow:3:table of annotations
+Compound	xrow:2:table of accel-text
+Compound	xrow:2:table of fin - fingerings
+Compound	xrow:2:table of logic game wins
 Compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
 Compound	xxdb	"	$$ bits of wisdom, up from 8
 #horrible books and horrible songs
@@ -20,8 +24,8 @@ Compound	ni pr
 #
 #############
 Slicker-City	igdup:table of final question options
-Slicker-City	2row:table of useons
-Slicker-City	2row:table of rotation responses
+Slicker-City	xrow:2:table of useons
+Slicker-City	xrow:2:table of rotation responses
 Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
 Slicker-City	xxtgtn	"	$$ cluing tries
 Slicker-City	xxenos	"	$$ guys named Enos

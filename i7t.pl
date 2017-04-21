@@ -28,7 +28,7 @@ my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 
 ###################duplicate detector hashes
 my %tableDup;
-my %twoRows;
+my %extraRows;
 my %ignoreDup;
 
 my @tableReadFiles = ($tabfile, $tabfilepriv);
@@ -207,10 +207,10 @@ while ($a = <A>)
 
   if (lc($b[0]) ne lc($project)) { next; }
 
-  if ($b[1] =~ /^2row:/)
+  if ($b[1] =~ /^xrow:/)
   {
-    $b[1] =~ s/^2row://;
-	$twoRows{$b[1]} = 1;
+    my @q = split(/:/, $b[1]);
+	$extraRows{$q[2]} = $q[1];
 	next;
   }
 
@@ -314,7 +314,7 @@ open(A, "$fileName") || die ("$fileName doesn't exist.");
 	{
 	  my @tempAry = split(/\t/, $a);
 	  my $unique = $tempAry[0];
-	  if ($twoRows{$curTable}) { $unique .= "/$tempAry[1]"; }
+	  if ($extraRows{$curTable}) { $unique = join("/", @tempAry[0..$extraRows{$curTable}-1]); }
 	  if ($tableDup{$curTable}{$unique})
 	  {
 	    print "Duplicate at line $.: $curTable/$unique also at $tableDup{$curTable}{$unique}\n";
@@ -344,7 +344,7 @@ if ($majorList)
 
 if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
 
-if ($ranOneTest && !$printFail) { print "EVERYTHING WORKED! YAY!\n"; }
+if ($ranOneTest && !$printFail && !$dupFail) { print "EVERYTHING WORKED! YAY!\n"; }
 
 if ($openPost)
 {
