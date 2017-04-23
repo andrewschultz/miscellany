@@ -170,6 +170,10 @@ uo=uglyoafs
 
 wri=writing
 >dfi.pl
->limcheck.pl
 >a.pl -eh -t
+
+lim=limericks
+>limcheck.pl
+>limd.pl -0 > c:\writing\last-lim-track.txt
+>`c:\writing\last-lim-track.txt`
 ;

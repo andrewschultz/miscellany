@@ -57,12 +57,13 @@ if ($argtrim =~ /[0-9]+$/)
   `$wordfile`; exit();
 }
 
-if ($ARGV[0] =~ /^[-=\+]/)
+if ($ARGV[0] =~ /^[-=\+]/i)
 {
+  if ($ARGV[0] !~ /[a-z]/) { print "No spaces between +=- and a letter.\n"; exit(); }
   my $toAdd = $ARGV[0]; $toAdd =~ s/^[-=+]+//;
   my $l = length($toAdd);
   my $inDict = 0;
-  open(A, "c:\\writing\\dict\\words-$l.txt");
+  open(A, "c:\\writing\\dict\\words-$l.txt") || do { print "No file for words of length $l.\n"; exit(); };
   while ($a = <A>)
   {
     chomp($a);
@@ -135,6 +136,7 @@ sub oneHangman
 
   my $readFile = sprintf("c:\\writing\\dict\\words-%d.txt", length($_[0]));
   #print "Trying $readFile.\n";
+  if (length($_[0]) < 3) { print "$_[0] too short.\n"; return; }
   open(A, "$readFile") || die ("No $readFile");
   my $canAlphabetize = 0;
   my $lastOne;
@@ -192,7 +194,7 @@ if ($#prevMiss > -1)
   }
 }
 
-if ($count + $missFound > 1)
+if ($count > 1)
 {
 print "FREQUENCIES:";
 #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
