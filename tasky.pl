@@ -7,6 +7,7 @@
 
 use strict;
 use warnings;
+use File::stat;
 
 my %short;
 my %halfhr;
@@ -37,10 +38,24 @@ while ($a = <A>)
   my @l = split(/\t/, $a);
   if ($l[0] eq "ACTIVE") { $modifyTimesFile = $l[1]; next; }
   if ($l[0] eq "LAUNCH") { $launchAfter = $l[1]; next; }
+  if ($l[1] ne "FILE")
+  {
   $short{$l[0]} = $l[1];
+  }
+  else
+  {
+  $short{$l[0]} = "EDIT FILE $l[0]";
+  }
   $halfhr{$l[0]} = $l[2];
   $reremind{$l[0]} = $l[3];
+  if ($l[1] ne "FILE")
+  {
   $lastdone{$l[0]} = $l[4];
+  }
+  else
+  {
+  $lastdone{$l[0]} = stat($l[0])->mtime;
+  }
   $lastwarn{$l[0]} = $l[5];
 }
 
@@ -76,6 +91,7 @@ my $timeTo = "";
 
 for $key (sort keys %short)
 {
+  print $key . " " . ($lastdone{$key} + 1790 * $halfhr{$key}) . " " . $time . "\n";
   if ($lastdone{$key} + 1790 * $halfhr{$key} >= $time) # ok, if we have done the task recently, skip it
   {
     next;
@@ -125,7 +141,7 @@ sub reprintTaskFile
 	if ($r[0] eq "ACTIVE") { $outString .= "ACTIVE\t$modifyTimesFile\n"; next; }
 	if ($short{$r[0]})
 	{
-	  $outString .= "$r[0]\t$short{$r[0]}\t$halfhr{$r[0]}\t$reremind{$r[0]}\t$lastdone{$r[0]}\t$lastwarn{$r[0]}\n";
+	  $outString .= sprintf("$r[0]\t%s\t$halfhr{$r[0]}\t$reremind{$r[0]}\t$lastdone{$r[0]}\t$lastwarn{$r[0]}\n", $short{$r[0]} =~ /^EDIT FILE/ ? "FILE" : $short{$r[0]});
 	}
 	else { $outString .= $a; }
   }
