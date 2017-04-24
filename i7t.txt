@@ -42,19 +42,26 @@ Slicker-City	ni scr
 #Buck the Past searching
 #
 #############
+#file proper
+Buck-the-Past	xrow:2:table of useons
+Buck-the-Past	xrow:2:table of generic nonviolence
+Buck-the-Past	xrow:3:table of final question options
+Buck-the-Past	xrow:2:table of amusingness
+Buck-the-Past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
+#############
+#random stuff
 #table of life shelf books
-Buck-the-past	xrow:3:table of final question options
-Buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
+btpt	xrow:2:table of animal silliness
+btpt	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
 #authors for the books
-Buck-the-past	xxtia	"	$+ insightful authors
+btpt	xxtia	"	$+ insightful authors
 #ideas not in game proper
-Buck-the-past	xxadd	"	$$ off-the-wall
-Buck-the-past	xxui	"	$$ friendly inns
-Buck-the-past	xxdi	"	$$ unfriendly inns
-Buck-the-past	xxfarm	"	$$ farm animal antics
-Buck-the-past	xxkmc	"	$$ Hit King chats
-Buck-the-past	xxps	"	$+ Sharing Prophet babbles
-Buck-the-past	ni cr / ni br / ni bpr
+btpt	xxui	"	$$ friendly inns
+btpt	xxdi	"	$$ unfriendly inns
+btpt	xxfarm	"	$$ farm animal antics
+btpt	xxkmc	"	$$ Hit King chats
+btpt	xxps	"	$+ Sharing Prophet babbles
+btpt	ni cr / ni br / ni bpr
 ######################################
 #Buck the Past Spring Thing searching
 #

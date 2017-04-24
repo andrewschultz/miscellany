@@ -404,20 +404,33 @@ if "%2" EQU "t" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\%PROJ%%EXT%\source\story.ni"
 )
 
+if "%2" EQU "ta" (
+echo %PROJ% buck-the-past
+if "%PROJ%" EQU "buck-the-past" (
+  start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Buck the Past tables.i7x"
+  goto end
+  )
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% tables.i7x"
+goto end
+
 if "%2" EQU "ra" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% Random Text.i7x"
+goto end
 )
 
 if "%2" EQU "-" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% Random Text.i7x"
+goto end
 )
 
 if "%2" EQU "nu" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% Nudges.i7x"
+goto end
 )
 
 if "%2" EQU "tc" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" \games\inform\%PROJ%%EXT%\source\testcase.txt
+goto end
 )
 
   if EXIST "\games\inform\tries\%PROJ%%EXT%\%SOREL%" ( 
@@ -449,5 +462,6 @@ echo gr = grubbyville, ua = ugly oafs
 echo current project = sc, pc/t2 = problems compound, btp/bp/17/t3 = Buck the Past
 echo ========================
 echo Non-Inform source: tr = trizbort, rt/st = anagram sorter, an = anagram list
+echo ta = tables
 
 :end

@@ -73,27 +73,28 @@ while ($count <= $#ARGV)
   {
     /^-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
-    /^-?e$/ && do { print "Opening source. -f opens the data file, -ef both.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
-    /^-?f$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `$tabfile`; exit; };
-	/^-?(ef|fe)$/ && do
+    /^-?c$/ && do { print "Opening source. -e opens the data file, -ec/ce both, -pr private.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
+    /^-?e$/ && do { print "Opening data file. -c opens the source, -ec/ce both, -pr private.\n"; `$tabfile`; exit; };
+	/^-?(ec|ce)$/ && do
     {
       print "Opening data and source.\n";
       `c:\\writing\\scripts\\i7t.txt`;
       `c:\\writing\\scripts\\i7t.pl`;
       next;
     };
-    /^-?ep$/ && do { print "Opening data file. -e opens the source, -ef both. -p private.\n"; `$tabfilepriv`; exit; };
+    /^-?pr$/ && do { print "Opening private file. -e opens the source, -ef both. -p private.\n"; `$tabfilepriv`; exit; };
 	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-tl$/ && do { $quietTables = 0; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
+	/^btpt$/ && do { $maxString = 1; $tableTab = 1; $project = "btpt"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Buck the Past tables.i7x"; $count++; next; };
 	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x"; $count++; next; };
 	/^ras$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Random Text.i7x"; $count++; next; };
 	/^nur$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Nudges.i7x"; $count++; next; };
 	/^nus$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x"; $count++; next; };
-	/^-c$/ && do { $writeDir = "."; $count++; next; };
+	/^-?\.$/ && do { $writeDir = "."; $count++; next; };
     /-p/ && do { $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; print "Note -p forces you to write out the project, so -s may be more appropriate.\n"; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
@@ -260,7 +261,7 @@ while ($a = <A>)
   close(F);
   if ($success)
   {
-    if ($printSuccesses) { print "$thisFile search for $b[3] PASSED:\n  $f\n"; }
+    if ($printSuccesses) { print "$thisFile search for $b[3] PASSED:\n  $f"; }
   }
   else
   {
@@ -314,7 +315,15 @@ open(A, "$fileName") || die ("$fileName doesn't exist.");
 	{
 	  my @tempAry = split(/\t/, $a);
 	  my $unique = $tempAry[0];
-	  if ($extraRows{$curTable}) { $unique = join("/", @tempAry[0..$extraRows{$curTable}-1]); }
+	  if ($extraRows{$curTable})
+	  {
+		if ($#tempAry < $extraRows{$curTable} - 1)
+		{
+		  print "Warning: may be ignoring too many rows in $curTable, line $.: @tempAry\n";
+		  $extraRows{$curTable} = $#tempAry + 1;
+		}
+	    $unique = join("/", @tempAry[0..$extraRows{$curTable}-1]);
+	  }
 	  if ($tableDup{$curTable}{$unique})
 	  {
 	    print "Duplicate at line $.: $curTable/$unique also at $tableDup{$curTable}{$unique}\n";
