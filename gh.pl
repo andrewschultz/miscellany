@@ -73,9 +73,10 @@ while ($count <= $#ARGV)
   for ($a2)
   {
   /^gh\.pl/ && do { print "############################OOPS! You added the app name.\n"; $count++; next; };
-  /^(-p|p)$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file.\n"; system("start \"\" $np $ghp"); exit; };
-  /^(-e|e)$/ && do { print "Opening external file, -c opens code, -p opens private file.\n"; system("start \"\" $np $ght"); exit; };
-  /^(-c|c)$/ && do { print "Opening code, -e opens external .txt file, -p opens private file.\n"; system("start \"\" $np $ghs"); exit; };
+  /^-?r$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghreg"); exit; };
+  /^-?p$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghp"); exit; };
+  /^-?e$/ && do { print "Opening external file, -c opens code, -p opens private file, -r opens regex file.\n"; system("start \"\" $np $ght"); exit; };
+  /^-?c$/ && do { print "Opening code, -e opens external .txt file, -p opens private file, -r opens regex file.\n"; system("start \"\" $np $ghs"); exit; };
   /^-?(ec|ce)$/ && do
   {
     print "Opening code/external.\n";

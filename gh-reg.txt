@@ -5,4 +5,5 @@ if	$fromBase
 is	c:\games\inform\$fromShort.inform\source
 im	c:\games\inform\$fromShort materials
 id	c:\games\inform\$fromShort.inform\uuid.txt
+i7	c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz
 ;
