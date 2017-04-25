@@ -5,12 +5,12 @@ set EXT=.inform
 set PROJ=buck-the-past
 set SOREL=source
 
-if "%1" == "h" (
+if "%1" EQU "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
 goto end
 )
 
-if "%1" == "?" (
+if "%1" EQU "?" (
 goto usage
 )
 
@@ -405,13 +405,13 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\%PROJ
 )
 
 if "%2" EQU "ta" (
-echo %PROJ% buck-the-past
 if "%PROJ%" EQU "buck-the-past" (
   start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Buck the Past tables.i7x"
   goto end
   )
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% tables.i7x"
 goto end
+)
 
 if "%2" EQU "ra" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% Random Text.i7x"
@@ -432,6 +432,7 @@ if "%2" EQU "tc" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" \games\inform\%PROJ%%EXT%\source\testcase.txt
 goto end
 )
+
 
   if EXIST "\games\inform\tries\%PROJ%%EXT%\%SOREL%" ( 
     c:

@@ -238,7 +238,7 @@ while ($a = <A>)
   if ($currentSection)
   {
     #print "$currentSection====$a";
-    if (($currentSection != "nam") && ($a !~ /\n$/)) { print "Warning $a==no carriage return.\n"; $a .= "\n"; }
+    if (($currentSection ne "nam") && ($a !~ /\n$/)) { print "Warning $a==no carriage return.\n"; $a .= "\n"; }
     $writings{$currentSection} .= $a;
   } else { $undefinedWritings .= $a; }
 

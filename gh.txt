@@ -261,6 +261,8 @@ TOBASE=the-problems-compound
 FROMSHORT=compound
 $ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm
 prob=$is\story.ni,
+prob=$i7\Compound tables.i7x,
+prob=$i7\Compound debug tables.i7x,
 prob=$is\item-ordering.htm,
 prob=$is\termpuz.pl,
 prob=$is\problems-compound-walkthrough.htm,
@@ -302,6 +304,8 @@ prob=$is\reg-pc-*,testing
 TOBASE=slicker-city
 $ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm
 city=$is\story.ni,
+city=$i7\Slicker City tables.i7x,
+city=$i7\Slicker City debug tables.i7x,
 city=$im\Release\slicker-city-invisiclues.htm,
 -b:city=$im\Release\release-Slicker City.zblorb,
 city=$tr\slicker-city.trizbort,
@@ -339,6 +343,7 @@ $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm
 past=$is\btpbk.pl,
 past=$is\story.ni,
 past=$i7\Buck the Past Tables.i7x
+past=$i7\Buck the Past debug Tables.i7x
 past=$is\scratchwork.txt,
 past=$is\from-sc.ni,
 past=$is\walkthru.txt,

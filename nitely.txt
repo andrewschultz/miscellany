@@ -171,6 +171,7 @@ uo=uglyoafs
 wri=writing
 >dfi.pl
 >a.pl -eh -t
+>dsort.pl -dc
 
 lim=limericks
 >limcheck.pl

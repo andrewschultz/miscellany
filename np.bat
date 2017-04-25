@@ -7,6 +7,7 @@ goto end
 
 if "%1" equ "q" (
 echo USAGE============================
+echo u = undefined
 echo f = create empty file named 2nd arg
 echo h = starter.htm
 echo b = go to notepad backup directory
@@ -32,6 +33,12 @@ goto end
 
 if "%1" equ "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
+goto end
+)
+
+if "%1" equ "u" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\undef.txt
+goto end
 )
 
 if "%1" equ "b" (
