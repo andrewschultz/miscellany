@@ -26,6 +26,7 @@ my $informDir = 0;
 my $infOnly = 0;
 my $checkRecentChanges = 0;
 my $ignoreDRBPrefix = 0;
+my $debugTables = 0;
 
 my $infDir;
 
@@ -110,6 +111,8 @@ while ($count <= $#ARGV)
   /^-?yr$/ && do { $release = 1; $count++; next; };
   /^-?nd$/ && do { $debug = 0; $count++; next; };
   /^-?yd$/ && do { $debug = 1; $count++; next; };
+  /^-(dt|td)$/ && do { $debugTables = 1; $count++; next; };
+  /^-(ndt|ntd)$/ && do { $debugTables = -1; $count++; next; };
   /^-?x$/ && do { $execute = 1; $count++; next; };
   /^-?e$/ && do { `c:\\writing\\scripts\\icl.txt`; exit; };
   /^-?a$/ && do { for my $entry (@allProj) { push(@compileList, $a); } $count++; next; };
@@ -144,6 +147,8 @@ if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
 sub runProj
 {
 
+my $bakfile = "c:\\games\\inform\\story.bak";
+
 if (defined($forceDir{$_[0]}))
 {
 $bdir = $forceDir{$_[0]};
@@ -155,6 +160,37 @@ $bdir = "$baseDir\\$_[0].inform";
 
 $infDir = buildDir($_[0]);
 $i6x = i6exe($_[0]);
+
+if ($debugTables != 0)
+{
+  `copy $bdir\\source\\story.ni $bakfile`;
+  open(A, "$bakfile");
+  open(B, ">$bdir\\source\\story.ni");
+  while ($a = <A>)
+  {
+    if ($a eq "[debug table switch]\n")
+	{
+	print B $a;
+	my $temp = <A>;
+	if ($debugTables == 1)
+	{
+	  $temp =~ s/ (debug )?tables/ debug tables/i;
+	}
+	else
+	{
+	  $temp =~ s/ (debug )?tables/ tables/i;
+	}
+	print B $temp;
+	next;
+	}
+	else
+	{
+	print B $a;
+	}
+  }
+  close(A);
+  close(B);
+}
 
 if ($runBeta)
 {
@@ -172,6 +208,11 @@ if ($release)
 if ($debug)
 {
   doOneBuild("$bdir", "D", "$baseDir\\$_[0] Materials", "debug", "$_[0]");
+}
+
+if ($debugTables != 0)
+{
+  `copy $bakfile $bdir\\source\\story.ni`;
 }
 
 }
@@ -392,6 +433,7 @@ USAGE
 -jb -jd -jr just build/release/debug
 -e edits the icl.txt file
 -np = no prefix in export file
+-td/dt = debug tables on, -ndt/ntd off
 EOT
 exit
 }
