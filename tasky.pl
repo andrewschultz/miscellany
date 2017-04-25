@@ -61,15 +61,20 @@ while ($a = <A>)
 
 close(A);
 
-if ($ARGV[0])
+my $count = 0;
+
+OUTER:
+while ($count <= $#ARGV)
 {
-  my $arg = lc($ARGV[0]);
+  my $arg = lc($ARGV[$count]);
   for ($arg)
   {
   /^t$/i && do { my $time = time(); if (defined($ARGV[1])) { $time -= $ARGV[1]; } print "Time: $time\n"; exit(); };
-  /^-?test$/ && do { $modifyTimesFile = 0; };
-  /^-?real$/ && do { $modifyTimesFile = 1; };
-  /^-?c$/ && do { `start "" notepad++ __FILE__`; exit(); };
+  /^-?test$/ && do { $modifyTimesFile = 0; $count++; next; };
+  /^-?real$/ && do { $modifyTimesFile = 1; $count++; next; };
+  /^-?l[n0]$/ && do { $launchAfter = 0; $count++; next OUTER; };
+  /^-?l[y1]$/ && do { $launchAfter = 1; $count++; next OUTER; };
+  /^-?c$/ && do { `start "" notepad++ $taskFile`; exit(); };
   /^-?e$/ && do { `start "" notepad++ $taskText`; exit(); };
   /^-\?$/ && do { listArgs(); print "-? shows these all\n-test in test mode (tasky.txt not updated)\n-c open the source\n-e open tasky.txt\n-ee open tasky-test.txt\n-real in real mode (tasky.txt updated)\n"; exit(); };
   }
