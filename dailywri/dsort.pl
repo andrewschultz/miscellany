@@ -22,7 +22,6 @@ my $myNotesFile = "notes9.otl";
 my @outFiles;
 my @inDirs;
 my %writings;
-my %whatWhereHash;
 my @fileArray = ( "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl", "lists.otl", "sb.otl", "names.otl", "games.otl", "misc.otl", "f.otl" );
 
 ########options
@@ -75,7 +74,7 @@ my $foundOne = 0;
 my $dailyDir;
 for $dailyDir (@inDirs) { if (-d $dailyDir) { $foundOne = 1; } }
 
-if (!$foundOne) { die ("No valid dir in " . join(/ /, @inDirs)); }
+if (!$foundOne) { die ("No valid dir in " . join(" ", @inDirs)); }
 
 for $dailyDir (@inDirs)
 {
@@ -202,7 +201,7 @@ while ($a = <A>)
   if ($a =~ /^\\/)
   { my $aa = chompy($a);
     if ($toPrimaryHash{$aa}) { $b = $toPrimaryHash{$aa}; die;} else { $b = $aa; }
-    if ($doubleCheck{$b} == 1)
+    if (defined($doubleCheck{$b}) && ($doubleCheck{$b} == 1))
 	{
 	  my $c = <A>; chomp($c); print("WARNING: $_[0] has duplicate section $b, 2nd line $c copies $origLines{$b}.\nRetry later.\n");
 	  $c =~ s/ .*//g;
@@ -253,6 +252,7 @@ close(A);
 
 foreach (keys %whatWhereHash)
 {
+  if (!defined($writings{$_})) { next; }
   if (!"$writings{$_}") { next; }
   #print "Got $_ $whatWhereHash{$_}\n";
 
@@ -513,6 +513,7 @@ while ($count <= $#ARGV)
     { @inDirs = ("e:/daily", "f:/daily", "g:/daily");
       $intoDir = "c:/writing"; $count++; next;
     };
+	/^-dc$/ && do { duplicateCheck(); exit(); };
     /^-lt$/ && do { $looseTest = 1; $count++; next; };
     /^-nt$/ && do { $lastDayString = todayString(1); $count++; next; };
     /^-[2t]$/ && do { $lastDayString = todayString(0); $count++; next; };
@@ -574,6 +575,29 @@ sub readFileSizes
   return $retVal;
 }
 
+sub duplicateCheck
+{
+  opendir(DIR, "c:\\writing\\daily");
+
+  my @dir = readdir DIR;
+  my @dupes = ();
+
+  for my $f (@dir)
+  {
+    if ($f =~ /2[0-9]{7}.txt/)
+	{
+	  if (-f "c:\\writing\\daily\\done")
+	  {
+	    print "DUPLICATE FILE $f.\n";
+		push(@dupes, $f);
+	  }
+	}
+  }
+
+  printf("TEST RESULTS:daily duplicate files,%d,0,0,%s\n", $#dupes+1, join(" / ", @dupes));
+
+}
+
 sub usageQuick
 {
 print <<EOT;
@@ -594,6 +618,7 @@ Hits every file in the given directory & merges with OTL and TXT files which hav
 -nt     = don't count today (default)
 -t/2    = count today
 -bx/db  = just dropbox directory
+-dc = duplicate count
 
 -b/l = last day string
 -a/f = first day string

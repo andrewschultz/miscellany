@@ -440,7 +440,7 @@ sub limPan
   if ($_[0] != 5)
   {
   $badLimerick = "$_[3]: Bad limerick $_[0]-$_[1], $_[2]";
-  print "******$badLimerick";
+  print "******$. $badLimerick\n";
   $testErrList .= "$badLimerick<br />\n";
   $betterDie++;
   }
