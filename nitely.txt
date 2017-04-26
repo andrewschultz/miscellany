@@ -124,6 +124,7 @@ btp=buck-the-past
 >lnct.pl 10 $$,btp1,btp2,btp3,btp4,btp-auth,btp-farm,btp-a,btp-b,btp-c,btp-d,btp-e,btp-dis,btp-book
 >crv.pl $$
 >$l\pun.pl
+>$is\ifs.pl
 
 sc=slicker-city
 >gq.pl $$ -x search.string

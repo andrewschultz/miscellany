@@ -90,6 +90,8 @@ while ($count <= $#ARGV)
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
 	/^btpt$/ && do { $maxString = 1; $tableTab = 1; $project = "btpt"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Buck the Past tables.i7x"; $count++; next; };
+	/^pct$/ && do { $maxString = 1; $tableTab = 1; $project = "pct"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Compound tables.i7x"; $count++; next; };
+	/^sct$/ && do { $maxString = 1; $tableTab = 1; $project = "sct"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Slicker City tables.i7x"; $count++; next; };
 	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x"; $count++; next; };
 	/^ras$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Random Text.i7x"; $count++; next; };
 	/^nur$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Nudges.i7x"; $count++; next; };

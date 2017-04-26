@@ -8,17 +8,19 @@ Compound	xrow:2:table of accel-text
 Compound	xrow:2:table of fin - fingerings
 Compound	xrow:2:table of logic game wins
 Compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
-Compound	xxdb	"	$$ bits of wisdom, up from 8
-#horrible books and horrible songs
-Compound	xxhs	"	$$, up from 13
-Compound	xxhb	"	$$. up from 38
-Compound	xxbgw	"	$$ random important administrative and philosophical matters
-Compound	xxjgt	"	jerks/groaners now have $$ "grown-up"
-Compound	xxss	"	$$ sleep stories
-Compound	xxisv	"	To be precise, $+
-Compound	xxbr	"	there are now $$ Basher Bible references
-#command to run if things are wrong
 Compound	ni pr
+#############################compound tables
+pct	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
+#horrible books and horrible songs
+pct	xxhs	"	$$, up from 13
+pct	xxhb	"	$$. up from 38
+pct	xxbgw	"	$$ random important administrative and philosophical matters
+pct	xxjgt	"	jerks/groaners now have $$ "grown-up"
+pct	xxss	"	$$ sleep stories
+Compound	xxisv	"	To be precise, $+
+pct	xxbr	"	there are now $$ Basher Bible references
+#command to run if things are wrong
+pct	ni pr
 ######################################
 #Slicker City searching
 #
@@ -26,18 +28,19 @@ Compound	ni pr
 Slicker-City	xrow:3:table of final question options
 Slicker-City	xrow:2:table of useons
 Slicker-City	xrow:2:table of rotation responses
-Slicker-City	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
-Slicker-City	xxtgtn	"	$$ cluing tries
-Slicker-City	xxenos	"	$$ guys named Enos
+Slicker-City	xxenos	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ guys named Enos
 Slicker-City	xxles	"	$$ guys named Les
 Slicker-City	xxlee	"	$$ guys named Lee
 Slicker-City	xxcom	"	$$ companies
 Slicker-City	xxadd	"	$$ total concepts
-Slicker-City	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
-Slicker-City	xxtgtn	"	and $$ cluing verbs
-Slicker-City	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
-Slicker-City	xxtgtn	"	And there are $$ good guesses.
 Slicker-City	ni scr
+sct	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
+sct	xxtgtn	"	$$ cluing tries
+sct	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
+sct	xxtgtn	"	and $$ cluing verbs
+sct	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
+sct	xxtgtn	"	And there are $$ good guesses.
+sct	ni scr
 ######################################
 #Buck the Past searching
 #
@@ -48,6 +51,7 @@ Buck-the-Past	xrow:2:table of generic nonviolence
 Buck-the-Past	xrow:3:table of final question options
 Buck-the-Past	xrow:2:table of amusingness
 Buck-the-Past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
+Buck-the-Past	ni cr / ni br / ni bpr
 #############
 #random stuff
 #table of life shelf books
