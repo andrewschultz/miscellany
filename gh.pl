@@ -143,7 +143,7 @@ if (!$procString)
   open(A, "$ghl");
   $procString = <A>; chomp($procString);
   close(A);
-  print "Using last string $ghl\n";
+  print "Using last string from $ghl, **$procString**\n";
   }
 else
   {
@@ -199,6 +199,8 @@ sub processTerms
   my $temp;
   my %copto;
 
+  my $xtraCmd;
+
   for my $thisFile (@_)
   {
   open(A, $thisFile) || die ("No $thisFile");
@@ -206,6 +208,13 @@ sub processTerms
   {
     chomp($a);
     my $b = $a;
+	$xtraCmd = "";
+	if ($a =~ /&/)
+	{
+	  $xtraCmd = $a;
+	  $xtraCmd =~ s/.*&//;
+	  $a =~ s/&.*//;
+	}
 	$maxSize = 0;
 
 	if ($a !~ /[a-z]/) { $dirName = ""; }
@@ -235,7 +244,7 @@ sub processTerms
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime > stat($timeArray[1])->mtime)
 	  {
-	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen");
+	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen" . $xtraCmd ? " (try running $xtraCmd)" : "");
 	  }
 	}
 	if ($a =~ />/)
@@ -246,7 +255,7 @@ sub processTerms
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime < stat($timeArray[1])->mtime)
 	  {
-	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen");
+	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen" . $xtraCmd ? " (try running $xtraCmd)" : "");
 	  }
 	}
 	##################note prefix like -a (auxiliary) and -b (build)
@@ -339,7 +348,7 @@ sub processTerms
 		}
 		if ($fromFile =~ /\.trizbort$/)
 		{
-		  trizCheck($fromFile, 1);
+		  trizCheck($fromFile, 1, $xtraCmd);
 		}
 	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } else { $copies++; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; $uncop++; }
       }
@@ -554,7 +563,7 @@ sub strictWarn
      }
 	 if ($line =~ /\.trizbort$/)
 	 {
-	   trizCheck ($line, 0);
+	   trizCheck ($line, 0, "");
 	 }
 	 if (shouldCheck($line)) { checkWarnings($line, 0); }
   }
@@ -656,6 +665,7 @@ sub shouldCheck
 sub trizCheck
 {
   my $pdf = $_[0];
+
   $pdf =~ s/trizbort$/pdf/;
   if (! -f $pdf) { return; }
   #printf("$_[0] %d %d\n", stat($pdf)->mtime, stat($_[0])->mtime);
@@ -663,9 +673,10 @@ sub trizCheck
   {
     my $delta = stat("$_[0]")->mtime - stat($pdf)->mtime;
     print ("Oops! Latest $_[0] may not have been saved to PDF--$delta seconds ahead.\n");
+	if ($_[2]) { print "Recommended command: $_[2]\n"; }
 	if ($_[1] && !$ignoreTrizbort)
 	{
-	  die("Bombing out. Set -it to ignore trizbort  fails.");
+	  die("Bombing out. Set -it to ignore trizbort fails.");
     }
 	push(@trizFail, $_[0]);
   }

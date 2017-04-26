@@ -74,7 +74,7 @@ shu=$is\shuffling-around-r-walkthrough.pdf,shuffling\maps
 #Roiling files
 TOBASE=stale-tales-slate
 FROMSHORT=roiling
-$ws\invis\roi.txt<$im\Release\roiling-invisiclues.htm
+$ws\invis\roi.txt<$im\Release\roiling-invisiclues.htm&invis.pl roi
 roi=$is\story.ni,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling random text.i7x,roiling
 roi=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\roiling nudges.i7x,roiling
@@ -284,7 +284,7 @@ prob=$is\roomlist.txt,testing
 ###################
 prob=$is\pc.odt
 ###################maps
-prob=$tr\compound.trizbort,
+prob=$tr\compound.trizbort,&redact.pl -q pc
 prob=$tr\compound.pdf,
 prob=$tr\compound-walkthrough.trizbort,
 prob=$tr\compound-walkthrough.pdf,
@@ -302,7 +302,7 @@ prob=$is\reg-pc-*,testing
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
-$ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm
+$ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm&invis.pl sc
 city=$is\story.ni,
 city=$i7\Slicker City tables.i7x,
 city=$i7\Slicker City debug tables.i7x,
@@ -339,7 +339,7 @@ city=$wd\olap.txt,
 >city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
-$ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm
+$ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
 past=$is\btpbk.pl,
 past=$is\story.ni,
 past=$i7\Buck the Past Tables.i7x
@@ -363,6 +363,7 @@ past=$is\plot.txt
 past=$is\graf.pl
 past=$is\graf.txt
 past=$is\pun.pl
+past=$is\ifs.pl
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
@@ -380,7 +381,7 @@ past=$ws\invis\bs.txt,
 
 #Grubbyville files
 TOBASE=grubbyville
-$ws\invis\gru.txt<$im\Release\grubbyville-invisiclues.htm
+$ws\invis\gru.txt<$im\Release\grubbyville-invisiclues.htm&invis.pl gru
 gru=$is\intro-thru.txt,
 gru=$is\walkthru.txt,
 gru=$is\story.ni,
@@ -549,6 +550,7 @@ rmt=editor\editor.dsw,editor
 rmt=editor\editor.h,editor
 rmt=editor\editor.rc,editor
 ###############################Editor samples
+rmt=editor\lady-tut.map,editor\samples
 rmt=editor\skeep1.map,samples\shadowkeep
 rmt=editor\skeep2.map,samples\shadowkeep
 rmt=c:\coding\games\editor\test\*.map,editor\test
