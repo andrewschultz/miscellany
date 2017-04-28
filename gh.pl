@@ -244,7 +244,7 @@ sub processTerms
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime > stat($timeArray[1])->mtime)
 	  {
-	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen" . $xtraCmd ? " (try running $xtraCmd)" : "");
+	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
 	  }
 	}
 	if ($a =~ />/)
@@ -255,7 +255,7 @@ sub processTerms
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
 	  if (stat($timeArray[0])->mtime < stat($timeArray[1])->mtime)
 	  {
-	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen" . $xtraCmd ? " (try running $xtraCmd)" : "");
+	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
 	  }
 	}
 	##################note prefix like -a (auxiliary) and -b (build)

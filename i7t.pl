@@ -268,7 +268,11 @@ while ($a = <A>)
   else
   {
     $countMismatch++;
+	if ($b[3] =~ /\W0\W/) { print "Did not find table *$b[1]* for the check *$b[3]\*.\n"; }
+	else
+	{
 	print "$thisFile search for $b[3] FAILED\n";
+	}
 	if (!$filesToOpen{$thisFile}) { $filesToOpen{$thisFile} = $.; }
 	$errLog .= "$b[3] needs to be in<br />\n";
 	if ($nearSuccess)

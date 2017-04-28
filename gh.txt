@@ -374,6 +374,7 @@ past=c:\games\inform\btp-st materials\Release\buck-the-past-st-invisiclues.htm,
 past=$ws\invis\bs.txt,
 >past=$wd\talf.pl -btp
 >past=conc.pl -c -ro -btp
+>past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
 >past=i7t.pl -o -q btpt | grep -iE "failed|likely|run this"
 >past=$is\pun.pl grep -iE ",[0-9]"
 >past=conc.pl -c -ro -bs
