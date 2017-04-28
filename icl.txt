@@ -1,6 +1,6 @@
 ############################
 #what's the default project?
-default=sc
+default=btp
 
 ############################
 #force directories

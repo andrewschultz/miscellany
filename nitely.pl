@@ -180,7 +180,9 @@ sub procIt
   $anyTestsRun = 1;
 
   open(B, ">$x");
-  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0]</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+  my $time = strftime("%Y-%m-%d %H:%M:%S", localtime(time()));
+
+  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0] at $time</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
   for $a (@parseAry)
   {
     if ($a =~ /^TEST ?RESULT(S?):/)
@@ -272,6 +274,8 @@ sub getArgs
 	  /^-s$/ && do { $showSuccesses = 1; $count++; next; };
 	  /^-q$/ && do { $build = -1; my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
+	  if (-f "c:\\nightly\\$a.htm") { `"c:\\nightly\\$a.htm"`; exit(); }
+	  if (-f "c:\\nightly\\$a.txt") { `"c:\\nightly\\$a.txt"`; exit(); }
 	  print "Invalid flag $a specified.\n";
 	  usage();
 	}

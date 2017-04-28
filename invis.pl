@@ -85,6 +85,8 @@ if ($a !~ /^!/) { print ("The first line (other than out=) must begin with a (!)
 
 $a =~ s/^!//g;
 
+chomp($a);
+
 my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -93,12 +95,10 @@ my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 ' . $a . '
 </title>
 
-
 </head>
 <body>
 
 <noscript><p style="color:#633;font-weight:bold;">This page requires JavaScript enabled in your browser to see the hints.</p></noscript>
-
 
 <center><h1>' . $a . '</h1></center>
 <center><h2>Invisiclues hint javascript thanks to <a href="http://nitku.net/blog">Undo Restart Restore</a></h2></center>

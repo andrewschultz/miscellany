@@ -1,5 +1,7 @@
-use strict;
+################################
+#sokoban solution rotator
 
+use strict;
 use warnings;
 
 my $file = "sok.txt";
