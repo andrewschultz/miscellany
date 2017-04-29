@@ -22,6 +22,7 @@ my $myNotesFile = "notes9.otl";
 my @outFiles;
 my @inDirs;
 my %writings;
+my %skipReading;
 my @fileArray = ( "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl", "lists.otl", "sb.otl", "names.otl", "games.otl", "misc.otl", "f.otl" );
 
 ########options
@@ -76,6 +77,28 @@ for $dailyDir (@inDirs) { if (-d $dailyDir) { $foundOne = 1; } }
 
 if (!$foundOne) { die ("No valid dir in " . join(" ", @inDirs)); }
 
+my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
+open(X, $npSes) || die ("Can't open $npSes");
+
+my $line;
+
+while ($line = <X>)
+{
+  if ($line =~ /backupFilePath=\"c/i)
+  {
+    $line =~ s/.* filename=.//;
+	$line =~ s/\".*//g;
+	#print "$line";
+	chomp($line);
+	if ($line =~ /c:\\writing\\daily\\2[0-9]{7}\.txt/i)
+	{
+	  print "WARNING daily file $line needs to be saved before processing\n";
+	  $line =~ s/.*\\//g;
+	  $skipReading{$line} = 1;
+    }
+  }
+}
+
 for $dailyDir (@inDirs)
 {
 
@@ -85,17 +108,18 @@ my @dircontents = readdir(DIR);
 
 for (@dircontents)
 {
-  if ($_ !~ /txt/i) { next; }
-  print "Trying $dailyDir/$_\n";
+  if ($_ !~ /txt$/i) { next; }
+  #print "Trying $dailyDir/$_\n";
   if ($_ !~ /^20[0-9]{6}\.txt/i) { next; }
+  if ($skipReading{$_}) { print "Unsaved $_, skipping.\n"; next; }
+  if (($lastDayString) && ($_ gt $lastDayString)) { print "$_ too soon\n"; next; }
   #print "Trying $dailyDir/$_\n";
-  if (($lastDayString) && ($_ gt $lastDayString)) { next; }
-  #print "Trying $dailyDir/$_\n";
-  if (($firstDayString) && ($_ lt $firstDayString)) { next; }
+  if (($firstDayString) && ($_ lt $firstDayString)) { print "$_ too late\n"; next; }
   #print "Making sure $_ is not 0-byte\n";
-  if (-s "$dailyDir/$_" == 0) { next; }
+  if (-s "$dailyDir/$_" == 0) { print "$_ has 0 bytes\n"; next; }
   #print "Trying $dailyDir/$_\n";
-  if (-d "$intoDir/$_") { next; }
+  if (-d "$intoDir/$_") { print "$_ is in output directory\n"; next; }
+  next;
   #print "Trying $dailyDir/$_\n";
   if ($verifyFirstLine) { if (firstLineThereOrEmpty("$dailyDir/$_")) { next; } }
   #print "Reading $intoDir/$_\n";

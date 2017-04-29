@@ -295,7 +295,7 @@ prob=$tr\compound-ordering.trizbort,
 prob=$wd\conc.pl,utils
 prob=$is\reg-pc-*,testing
 >prob=conc.pl -c -ro -pc
->prob=$wd\talf.pl -pc
+>prob=$wd\talf.pl -pc | grep -i fail
 >prob=i7t.pl -o -q -s pc | grep -iE "failed|likely|run this"
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
@@ -332,10 +332,10 @@ city=$wd\olap.pl,
 city=$wd\olap.txt,
 #################################
 #commands to run
->city=$wd\talf.pl -sc
+>city=$wd\talf.pl -sc | grep -i fail
 >city=conc.pl -c -ro -sc
 >city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
->city=$is\grate.pl
+>city=$is\grate.pl | grep -i test
 >city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
@@ -372,7 +372,7 @@ past=$tr\buck-the-past-st.trizbort,spring
 past=$tr\buck-the-past-st.pdf,spring
 past=c:\games\inform\btp-st materials\Release\buck-the-past-st-invisiclues.htm,
 past=$ws\invis\bs.txt,
->past=$wd\talf.pl -btp
+>past=$wd\talf.pl -btp | grep -i fail
 >past=conc.pl -c -ro -btp
 >past=i7t.pl -o -q -s btp | grep -iE "failed|likely|run this"
 >past=i7t.pl -o -q btpt | grep -iE "failed|likely|run this"
