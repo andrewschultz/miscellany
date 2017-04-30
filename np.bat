@@ -104,6 +104,10 @@ if "%1" EQU "g" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
 )
 
+if "%1" EQU "sm" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\smart.otl"
+)
+
 if "%1" EQU "l" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
 )

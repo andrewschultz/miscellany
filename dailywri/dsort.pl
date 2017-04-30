@@ -23,7 +23,7 @@ my @outFiles;
 my @inDirs;
 my %writings;
 my %skipReading;
-my @fileArray = ( "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl", "lists.otl", "sb.otl", "names.otl", "games.otl", "misc.otl", "f.otl" );
+my @fileArray = ( "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl", "lists.otl", "sb.otl", "names.otl", "games.otl", "misc.otl", "f.otl", "smart.otl" );
 
 ########options
 my $daysBack = 120;

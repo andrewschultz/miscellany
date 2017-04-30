@@ -342,6 +342,9 @@ TOBASE=buck-the-past
 $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
 past=$is\btpbk.pl,
 past=$is\story.ni,
+past=$is\roadmap.txt,
+past=$tr\buck-the-past-walkthrough.trizbort,
+past=$tr\buck-the-past-walkthrough.pdf,
 past=$i7\Buck the Past Tables.i7x
 past=$i7\Buck the Past debug Tables.i7x
 past=$is\scratchwork.txt,
@@ -364,6 +367,8 @@ past=$is\graf.pl
 past=$is\graf.txt
 past=$is\pun.pl
 past=$is\ifs.pl
+#############open at right section
+past=$is\bs.pl
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
@@ -522,6 +527,8 @@ writing=limwork.txt,
 writing=$ws\limd.pl,
 writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
 writing=scripts\cov.pl,
+###########this could go in BTP and may later, but right now it is writing raw materials
+writing=smart.otl,
 
 #rpg mapping tools
 FROMBASE=c:\coding\games

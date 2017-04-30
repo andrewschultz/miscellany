@@ -27,7 +27,7 @@ c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Roiling Random
 c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Shuffling Nudges.i7x
 c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Shuffling Random Text.i7x
 c:\games\inform\roiling.inform\Source\tosort.txt
-c:\writing\games.otl	sa,ifbrave,if-manor,if-towers,if-troves,if-oyster,if-routes,if-presto,if-otters,roi
+c:\writing\smart.otl	sa,ifbrave,if-manor,if-towers,if-troves,if-oyster,if-routes,if-presto,if-otters,roi
 c:\writing\dict\sts.txt
 c:\games\inform\triz\mine\shuffling-around.trizbort
 c:\games\inform\triz\mine\roiling.trizbort
@@ -37,28 +37,35 @@ c:\games\inform\triz\mine\voltmaze.trizbort
 run=opo
 c:\games\inform\threediopolis.inform\source\story.ni
 c:\games\inform\fourdiopolis.inform\source\story.ni
-c:\writing\games.otl	3d,4d
+c:\writing\smart.otl	3d,4d
 
 #alec smart
 run=as
 c:\games\inform\compound.inform\source\story.ni
-c:\games\inform\slicker-city.inform\source\story.ni
-c:\games\inform\buck-the-past.inform\source\story.ni
-c:\games\inform\seeker-status.inform\source\story.ni
-c:\games\inform\buck-the-past.inform\source\from-sc.ni
-c:\writing\games.otl	pc,sc,btp,btp-e,btp-d,btp-c,btp-b,btp-a,btp-book,btp-farm,btp-auth,btp-rej,btp-dis
 c:\games\inform\triz\mine\compound-directors-cut.trizbort
 c:\games\inform\triz\mine\compound-walkthrough.trizbort
 c:\games\inform\triz\mine\compound.trizbort
+#######################
+c:\games\inform\slicker-city.inform\source\story.ni
 c:\games\inform\triz\mine\slicker-city.trizbort
+c:\games\inform\triz\mine\slicker-city-walkthrough.trizbort
+#######################
+c:\games\inform\buck-the-past.inform\source\story.ni
+c:\games\inform\buck-the-past.inform\source\from-sc.ni
+c:\games\inform\buck-the-past.inform\source\scratchwork.ni
+c:\games\inform\buck-the-past.inform\source\roadmap.ni
 c:\games\inform\triz\mine\buck-the-past.trizbort
+c:\games\inform\triz\mine\buck-the-past-wallkthrough.trizbort
+#######################
+c:\games\inform\seeker-status.inform\source\story.ni
+c:\writing\smart.otl	pc,sc,btp,btp-e,btp-d,btp-c,btp-b,btp-a,btp-book,btp-farm,btp-auth,btp-rej,btp-dis
 c:\games\inform\triz\mine\seeker-status.trizbort
 c:\games\inform\slicker-city.inform\source\books.txt
 
 #OAFS!!!!
 run=oafs
 c:\games\inform\ugly-oafs.inform\source\story.ni
-c:\writing\games.otl	uo
+c:\writing\smart.otl	uo
 c:\games\inform\triz\mine\ugly-oafs.trizbort
 
 #ectocomp
