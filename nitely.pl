@@ -259,21 +259,22 @@ sub getArgs
 	if ($count <= $#ARGV) { $b = $ARGV[$count+1]; } else { $b = ""; }
 	for ($a)
 	{
+	  /^-?\/$/ && do { printAvailFiles(); exit; };
 	  /^-?\?$/ && do { usage(); exit; };
-	  /^-a$/ && do { @raw = ("gen", "as", "sts", "wri"); $count++; next; }; # -opo is inactive
-	  /^-aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
-	  /^-b$/ && do { $build = 1; $count++; next; };
-	  /^-d$/ && do { $debug = 1; $count++; next; };
+	  /^-?a$/ && do { @raw = ("gen", "as", "sts", "wri", "lim"); $count++; next; }; # -opo is inactive, limericks are separate from writing now
+	  /^-?aa$/ && do { for $x (sort keys %cmd) { push(@raw, $x); } $count++; next; };
+	  /^-?b$/ && do { $build = 1; $count++; next; };
+	  /^-?d$/ && do { $debug = 1; $count++; next; };
 	  /^-?e$/ && do { `$nmain`; exit; };
 	  /^-?p$/ && do { `$npriv`; exit; };
 	  /^-f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `$nitedir/errs.htm`; exit; };
-	  /^-jr$/ && do { $justRelease = -1; $count++; next; };
-	  /^-n(b?)$/ && do { $build = -1; $count++; next; };
-	  /^-w$/ && do { $quiet = 1; $count++; next; };
-	  /^-s$/ && do { $showSuccesses = 1; $count++; next; };
-	  /^-q$/ && do { $build = -1; my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
-	  /^-t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
+	  /^-?jr$/ && do { $justRelease = -1; $count++; next; };
+	  /^-?n(b?)$/ && do { $build = -1; $count++; next; };
+	  /^-?w$/ && do { $quiet = 1; $count++; next; };
+	  /^-?s$/ && do { $showSuccesses = 1; $count++; next; };
+	  /^-?q$/ && do { $build = -1; my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
+	  /^-?t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  if (-f "c:\\nightly\\$a.htm") { `"c:\\nightly\\$a.htm"`; exit(); }
 	  if (-f "c:\\nightly\\$a.txt") { `"c:\\nightly\\$a.txt"`; exit(); }
 	  print "Invalid flag $a specified.\n";
@@ -289,6 +290,25 @@ sub getArgs
 	  for $zz (@plist) { push(@projs, $zz); }
 	} else { push(@projs, $k); }
   }
+}
+
+sub printAvailFiles
+{
+  my @txt = ();
+  my @htm = ();
+
+  opendir(DIR, "c:\\nightly");
+
+  my @dir = readdir(DIR);
+
+  for (@dir)
+  {
+    if ($_ =~ /txt$/i) { push(@txt, $_); next; }
+    if ($_ =~ /htm$/i) { push(@htm, $_); next; }
+  }
+
+  print "TXT: " . join(", ", @txt) . "\n";
+  print "HTM: " . join(", ", @htm) . "\n";
 }
 
 sub openLatest
