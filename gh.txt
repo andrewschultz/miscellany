@@ -293,6 +293,7 @@ prob=$tr\compound-directors-cut.pdf,
 prob=$tr\compound-ordering.trizbort,
 #concept tracker
 prob=$wd\conc.pl,utils
+prob=$wd\conc-dupe.txt,utils
 prob=$is\reg-pc-*,testing
 >prob=conc.pl -c -ro -pc
 >prob=$wd\talf.pl -pc | grep -i fail
@@ -335,6 +336,7 @@ city=$wd\olap.txt,
 >city=$wd\talf.pl -sc | grep -i fail
 >city=conc.pl -c -ro -sc
 >city=i7t.pl -o -q -s sc | grep -iE "failed|likely|run this"
+>city=i7t.pl -o -q sct | grep -iE "failed|likely|run this"
 >city=$is\grate.pl | grep -i test
 >city=$wd\olap.pl -sc
 
@@ -361,6 +363,8 @@ past=$is\tra.txt,
 past=c:\users\andrew\dropbox\notes\buck_the_past_release_1_notes.txt
 past=$is\gotl.pl
 #############utilities
+past=$is\farmdup.pl
+past=$is\abkdup.pl
 past=$is\excl.pl
 past=$is\plot.txt
 past=$is\graf.pl

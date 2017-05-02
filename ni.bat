@@ -19,6 +19,10 @@ set SOREL=build
 shift /1
 )
 
+if "%1" EQU "ta" (
+goto tableread
+)
+
 if "%2" EQU "b" (
 set SOREL=build
 )
@@ -405,8 +409,13 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\%PROJ
 )
 
 if "%2" EQU "ta" (
+:tableread
 if "%PROJ%" EQU "buck-the-past" (
   start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Buck the Past tables.i7x"
+  goto end
+  )
+if "%PROJ%" EQU "slicker-city" (
+  start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Slicker City tables.i7x"
   goto end
   )
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\%PROJ% tables.i7x"
