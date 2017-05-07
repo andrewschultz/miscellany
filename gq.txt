@@ -61,6 +61,10 @@ c:\games\inform\seeker-status.inform\source\story.ni
 c:\writing\smart.otl	pc,sc,btp,btp-e,btp-d,btp-c,btp-b,btp-a,btp-book,btp-farm,btp-auth,btp-rej,btp-dis
 c:\games\inform\triz\mine\seeker-status.trizbort
 c:\games\inform\buck-the-past.inform\source\books.txt
+#########################
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\compound tables.i7x
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\buck the past tables.i7x
+c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\slicker city tables.i7x
 
 #OAFS!!!!
 run=oafs

@@ -5,6 +5,25 @@ echo Need an argument
 goto end
 )
 
+rem the stuff below needs to stay there because it's important shortcuts
+
+if "%1" EQU "g" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
+goto end
+)
+
+if "%1" EQU "sm" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\smart.otl"
+goto end
+)
+
+if "%1" EQU "l" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
+goto end
+)
+
+rem the stuff above needs to stay there because it's important shortcuts
+
 if "%1" equ "q" (
 echo USAGE============================
 echo u = undefined
@@ -98,18 +117,6 @@ echo Found OTL file.
 
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1.otl"
 goto end
-)
-
-if "%1" EQU "g" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
-)
-
-if "%1" EQU "sm" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\smart.otl"
-)
-
-if "%1" EQU "l" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
 )
 
 if "%1" EQU "sr" (

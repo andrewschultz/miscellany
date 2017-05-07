@@ -195,7 +195,7 @@ my $hasSomething = 0;
   {
     if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $. of $shortName.\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $.; } next; } #this is to make sure that double carriage returns don't bomb out;
     printErrExt("You don't have a header in $shortName: $line");
-    if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+    if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; }
 	$betterDie++;
   }
   if ($line =~ /^\\/)
@@ -204,7 +204,7 @@ my $hasSomething = 0;
     if ($myAry[$curIdx]) { printErrExt("Header needs spacing: $line"); $betterDie++;   $fileToOpen = $_[0]; }
 	else { if ($startLine{$b}) { printErrExt ("    $shortName: $b: line $. duplicates line $startLine{$b}.\n"); $betterDie++; if (!$lineToGo) { $lineToGo = $.; }
       #if (($openFile) && (!$fileToOpen))
-	  { $fileToOpen = $_[0]; printExt("Tagging $_[0].\n"); }
+	  { $fileToOpen = $_[0]; }
 	} else { $startLine{$b} = $.; } $myHdr[$curIdx] = $b; if ((!$vh{$b}) && ($verifyHeadings)) { $warns++; $warning .= "  $shortName BAD HEADER: $b\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $.; } } }
   }
   $myAry[$curIdx] .= $line;
