@@ -10,7 +10,7 @@ use Win32;
 use POSIX qw(strftime);
 
 use File::stat;
-use Time::localtime;
+#use Time::localtime;
 
 use warnings;
 use strict;
@@ -32,6 +32,7 @@ my $opo = 0;
 my $quiet = 0;
 my %cmd;
 my %subs;
+my %long;
 my $before;
 
 my $nmain = "c:/writing/scripts/nitely.txt";
@@ -87,6 +88,7 @@ sub projMap
 	  my @b = split(/=/, $a);
 	  $curProj = $b[0];
 	  $curLong = $b[1];
+	  $long{$curProj} = $curLong;
 	  next;
 	}
 	if ($a =~ /^D:/i) { $a =~ s/^d://gi; if (-M $a < 1.01) { $a = <A>; $cmd{$curProj} .= "$a"; } next; }
@@ -180,9 +182,9 @@ sub procIt
   $anyTestsRun = 1;
 
   open(B, ">$x");
-  my $time = strftime("%Y-%m-%d %H:%M:%S", localtime(time()));
+  my $time = strftime "%Y-%m-%d %H:%M:%S", localtime();
 
-  print B "<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR $_[0] at $time</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n";
+  print B sprintf("<html><title>$_[0] Test Results</title><body><center><font size=+4>TEST RESULTS FOR %s at $time</font><br \/><table border=1><tr><td>Test Name</td><td>Failures allowed</td><td>Failures</td><td>Passes</td><td>Comments</td></tr>\n", defined($long{$_[0]}) ? $long{$_[0]} : $_[0]);
   for $a (@parseAry)
   {
     if ($a =~ /^TEST ?RESULT(S?):/)
@@ -219,7 +221,7 @@ sub opoNightly
 {
 my $q;
 my $outfile = "$nitedir/opolis-latest.txt";
-my $datefile = strftime "$nitedir/opolis-errs-%m-%d-%Y.txt", localtime;
+my $datefile = strftime "$nitedir/opolis-errs-%m-%d-%Y.txt", localtime();
 
 my $threed = "c:/games/inform/threediopolis.inform/source/story.ni";
 my $fourd = "c:/games/inform/fourdiopolis.inform/source/story.ni";

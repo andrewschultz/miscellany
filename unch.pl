@@ -59,7 +59,7 @@ if (!$test)
 else
 {
   $bigString =~ s/\n/<br \/>/g;
-  print "TEST RESULTS:unchecked in projects,4,$file,0,$bigString\n";
+  print "TEST RESULTS:unchecked in projects (unch.pl),4,$file,0,$bigString\n";
   my $projLeft = join(" &amp; ", sort keys %projs);
   print "TEST RESULTS:unchecked in files,2,$proj,0,$projLeft\n";
 }

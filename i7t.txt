@@ -15,7 +15,7 @@ pct	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ 
 pct	xxhs	"	$$, up from 13
 pct	xxhb	"	$$. up from 38
 pct	xxbgw	"	$$ random important administrative and philosophical matters
-pct	xxjgt	"	jerks/groaners now have $$ "grown-up"
+pct	xxjmt	"	jerks/groaners now have $$ "grown-up"
 pct	xxss	"	$$ sleep stories
 Compound	xxisv	"	To be precise, $+
 pct	xxbr	"	there are now $$ Basher Bible references

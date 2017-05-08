@@ -298,6 +298,7 @@ prob=$is\reg-pc-*,testing
 >prob=conc.pl -c -ro -pc
 >prob=$wd\talf.pl -pc | grep -i fail
 >prob=i7t.pl -o -q -s pc | grep -iE "failed|likely|run this"
+>prob=i7t.pl -o -q pct | grep -iE "failed|likely|run this"
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
