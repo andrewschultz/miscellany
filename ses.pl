@@ -13,8 +13,8 @@ use warnings;
 my $sourceFile  = __FILE__;
 my $outputFile = $sourceFile;
 $outputFile =~ s/pl$/txt/i;
-my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 my $ses = "c:\\writing\\scripts\\ses.htm";
+my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 my $tabMax = 25;
 my $newMax = 15;
 my $tabMin = 10;
@@ -135,6 +135,8 @@ if ($analyze)
 	  open(B, ">$ses");
 	  print B "<html><title>Streak Error Stuff</title><body bgcolor=red><center><font size=+5>SES.PL RESULTS:</font></center>\n";
 	  for (@errs) { print B "<center><font size=+3>$_</font></center>\n"; }
+	  print B "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
+	  print B "</body></html>\n";
 	  close(B);
 	  if ($launch)
 	  {
