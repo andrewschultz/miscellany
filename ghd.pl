@@ -12,25 +12,36 @@ use warnings;
 my %repo;
 my %repoSum;
 my %count;
+my %siteArray;
 my $popup = strftime "Results for %m/%d/%Y\n", localtime;
 
 my $ghbase = "c:\\Users\\Andrew\\Documents\\GitHub";
-my @bitbucket = ("buck-the-past", "slicker-city");
-my @github = ("the-problems-compound", "misc", "threediopolis", "fourdiopolis");
-
-my @repos = (@bitbucket, @github);
 
 my $sum;
 
-for (@bitbucket) { $repo{$_} = "bitbucket"; }
-for (@github) { $repo{$_} = "github"; }
+my $siteFile = __FILE__;
+$siteFile =~ s/pl$/txt/i;
+
+open(A, "$siteFile") || die("No $siteFile");
+while ($a = <A>)
+{
+  chomp($a);
+  my @b = split(/:/, $a);
+  my @c = split(/,/, $b[1]);
+  $siteArray{$b[0]} = \@c;
+  for (@c) { $repo{$_} = $b[0]; }
+}
+
+close(A);
+
+my @repos = (@{$siteArray{"bitbucket"}}, @{$siteArray{"github"}});
 
 my $r;
 my $thislog;
 
 for $r (@repos)
 {
-  chdir("$ghbase\\$r") or die "fail $ghbase\\$r";
+  chdir("$ghbase\\$r") or do { warn "fail $ghbase\\$r"; next; };
   $thislog = `git log --since="12am"`;
   $count{$r} = () = $thislog =~ /^commit/gi;
   $repoSum{$repo{$r}} += $count{$r};
