@@ -44,6 +44,7 @@ preProcessHashes($ghp);
 #these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
 my $justPrint = 0;
 my $verbose = 0;
+my $verboseTest = 0;
 my $myBase = "";
 
 my $globalTS = 0;
@@ -87,6 +88,7 @@ while ($count <= $#ARGV)
   /^-?j$/i && do { $justPrint = 1; $count++; next; };
   /^-?f$/i && do { $byFile = 1; $count++; next; };
   /^-?v$/i && do { $verbose = 1; $count++; next; };
+  /^-?vt$/i && do { $verboseTest = 1; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
   /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
@@ -230,6 +232,7 @@ sub processTerms
 	  {
 	  $b = $a; $b =~ s/.*=//g;
 	  $b = rehash($b);
+	  if ($verboseTest) { $quickCheck .= "test command>>>>>$a\n"; }
 	  $quickCheck .= `$b`;
 	  }
 	  else { $warnCanRun = 1; next; }
@@ -382,7 +385,7 @@ sub processTerms
 	if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
 	if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList"; }
   }
-  if ($quickCheck) { print "\n========quick verifications\n$quickCheck"; }
+  if ($quickCheck) { printf("\n========quick verifications%s\n$quickCheck", $verboseTest ? "" : " (-vt to show verbose)"); }
   if ($warnCanRun) { print "\nYou could have run code checking by tacking on an =."; }
   return $didOne;
 }
@@ -690,6 +693,7 @@ print<<EOT;
 -c edits gh.pl
 -p edits private file
 -v = verbose output
+-vt = verbose test
 -rt/-nrt = flag running trivial tests
 -j = just print commands instead of executing
 -t = print various test results

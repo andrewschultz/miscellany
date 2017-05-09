@@ -415,6 +415,8 @@ misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Trivial N
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Object-Based Hinting.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Line Topical Hints.i7x,i7x
 misc=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\In-Game Mapping.i7x,i7x
+#######daily commit checks
+misc=ghd.pl,
 ##############formerly STS but  can be used on any inform files
 misc=$wd\punc.pl,
 misc=$wd\punc.txt,

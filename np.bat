@@ -130,24 +130,15 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\%1.otl"
 goto end
 )
 
-if EXIST "%1.bat" (
-echo Found BAT file locally.
-
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1.bat"
+if EXIST "c:\scripts\%1" (
+echo file is in scripts
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1
 goto end
 )
 
-if EXIST "c:\scripts\%1.bat" (
-echo Found BAT file in scripts.
-
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\scripts\%1.bat"
-goto end
-)
-
-if EXIST "c:\writing\scripts\%1.bat" (
-echo Found BAT file in scripts.
-
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\scripts\%1.bat"
+if EXIST "c:\scripts\%1.pl" (
+echo file is in scripts
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1.pl
 goto end
 )
 
@@ -175,15 +166,24 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\scripts\%1
 goto end
 )
 
-if EXIST "c:\scripts\%1" (
-echo file is in scripts
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1
+if EXIST "%1.bat" (
+echo Found BAT file locally.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1.bat"
 goto end
 )
 
-if EXIST "c:\scripts\%1.pl" (
-echo file is in scripts
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\scripts\%1.pl
+if EXIST "c:\scripts\%1.bat" (
+echo Found BAT file in scripts.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\scripts\%1.bat"
+goto end
+)
+
+if EXIST "c:\writing\scripts\%1.bat" (
+echo Found BAT file in scripts.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\scripts\%1.bat"
 goto end
 )
 
