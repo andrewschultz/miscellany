@@ -16,14 +16,16 @@ use Win32;
 use strict;
 use warnings;
 
+########################hashes
 my %repo;
 my %repoSum;
 my %count;
 my %siteArray;
-my $popupText = strftime "Results for %m/%d/%Y\n", localtime;
 
+#######################variables
 my $ghBase = "";
-
+my $popupText = strftime "Results for %m/%d/%Y\n", localtime;
+my $overallSum;
 my $sum;
 
 my $siteFile = __FILE__;
@@ -64,6 +66,9 @@ for my $k (sort keys %repoSum)
 {
   $popupText .= "====$k: $repoSum{$k}\n";
   if (!$repoSum{$k}) { `c:\\nightly\\see-$k.htm`; }
+  $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
 }
+
+if ($overallSum) { $popupText .= "====$overallSum total extra changes\n"; }
 
 Win32::MsgBox($popupText);
