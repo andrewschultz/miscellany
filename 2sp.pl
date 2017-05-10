@@ -14,6 +14,8 @@ my $makeDifFile = 1;
 
 #####################variables
 my $inI6 = 0;
+my $inComment = 0;
+my $count;
 
 my $projYet = 0;
 my $dir = ".";
@@ -24,7 +26,7 @@ my $foundDif = 0;
 
 while ($count < $#ARGV)
 {
-  my $arg = $ARGV[$arg];
+  my $arg = $ARGV[$count];
   print $arg;
   for ($arg)
   {
@@ -69,12 +71,14 @@ open(C, ">$dif");
 while ($a = <A>)
 {
   if ($a =~ /^-\)/) { $inI6 = 0; print B $a; next; }
+  if (($a =~ /^\[/) && ($a !~ /\]/)) { $inComment = 1; print B $a; next; }
+  if (($inComment) && ($a =~ /\]/)) { $inComment = 0; print B $a; next; }
   if ($a =~ /^Include \(-/i) { $inI6 = 1; print B $a; next; }
   if ($a =~ /^\[line break/) { print B $a; next; }
 
   $b = $a;
 
-  if (!$inI6)
+  if ((!$inI6) && (!$inComment))
   {
   if (($b =~ /  /) && !ignore($b))
   {
@@ -82,7 +86,7 @@ while ($a = <A>)
   if ($makeDifFile)
   {
   $a =~ s/  /\*\*\*\*\*\*  /;
-  print C "before:$a" . "after:$b";
+  print C "$. before:$a" . "$. after:$b";
   $foundDif = 1;
   }
   }
@@ -121,9 +125,8 @@ if ($copy)
 
 sub ignore
 {
-  for my $regex (keys %{$ignoreHash{$proj}})
+  for my $regex (keys %{$ignoreHash{$myProj}})
   {
-    print "$regex\n";
     if ($_[0] =~ /$regex/) { return 1; }
   }
   return 0;
