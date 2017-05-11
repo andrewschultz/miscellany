@@ -426,9 +426,11 @@ misc=c:\coding\perl\proj\al.pl,autumn-leaves
 misc=c:\coding\perl\proj\al.txt,autumn-leaves
 misc=c:\coding\perl\proj\alt.txt,autumn-leaves
 misc=c:\coding\perl\proj\pts.pl,autumn-leaves
-#Trizbort changer
+#Trizbort changer(s)/trawlers
 misc=c:\tech\trizbort\redact.pl,trizbort
 misc=c:\tech\trizbort\redact.txt,trizbort
+misc=trizx.pl,
+####################other stuff
 misc=tli.pl,
 misc=sec.pl,
 misc=typo.pl,
