@@ -11,7 +11,27 @@ use warnings;
 
 my %objArray;
 my %roomHash;
-my @changeIDs = getChangeIDs("buck-the-past", "buck-the-past.trizbort");
+my $proj = "buck-the-past";
+my $gh = "c:\\users\\andrew\\documents\\github";
+my $projYet = 0;
+my $verbose = 0;
+my $count = 0;
+
+while ($count <= $#ARGV)
+{
+  my $arg = $ARGV[$count];
+  for ($arg)
+  {
+  /^-?v$/i && do { $verbose = 1; $count++; next; };
+  if ($projYet) { die ("Can't have 2 projects"); }
+  $projYet = 1;
+  $proj = $arg;
+  unless (-d "$gh\\$proj") { die ("No directory $gh\\$proj."); }
+  $count++;
+  }
+}
+
+my @changeIDs = getChangeIDs($proj, "$proj.trizbort");
 
 #parseOneXml('c:\games\inform\triz\mine\buck-the-past.trizbort');
 
@@ -21,7 +41,7 @@ my $eq = '=' x 30;
 
 print "$eq", "OBJECTS", "$eq\n";
 
-for (sort {$objArray{$a} <=> $objArray{$b}} keys %objArray)
+for (sort {$objArray{$b} <=> $objArray{$a}} keys %objArray)
 {
   print "$_ $objArray{$_}\n";
 }
@@ -58,12 +78,12 @@ for my $obj($xmldoc->findnodes('/trizbort/map/room'))
 sub getChangeIDs
 {
   if (!defined($_[0]) || !$_[0]) { return; }
-  chdir("c:\\users\\andrew\\documents\\github\\$_[0]");
+  chdir("$gh\\$_[0]");
   my $commits = `git rev-list --all --objects -- $_[1]`;
   my @list = split(/\n/, $commits);
   my $tempTriz = "c:\\games\\inform\\temp.trizbort";
   #die(join("\n", @list));
-  @list = grep { $_ !~ /buck-the/ } @list;
+  @list = grep { $_ !~ / [a-z]/ } @list;
   my $count = 0;
   my $xmltext;
 
@@ -71,8 +91,8 @@ sub getChangeIDs
   {
     $_ =~ s/ *$//;
     $count++;
-    printf("Opening commit $_ $count of %d\n", scalar @list);
-    $xmltext = `git show $_:buck-the-past.trizbort`;
+    if ($verbose) { printf("Opening commit $_ $count of %d\n", scalar @list); }
+    $xmltext = `git show $_:$_[0].trizbort`;
 	open(B, ">$tempTriz");
 	print B $xmltext;
 	close(B);
