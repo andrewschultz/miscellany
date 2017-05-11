@@ -15,7 +15,7 @@ my $makeDifFile = 1;
 #####################variables
 my $inI6 = 0;
 my $inComment = 0;
-my $count;
+my $count = 0;
 
 my $projYet = 0;
 my $dir = ".";
@@ -24,10 +24,10 @@ my %ignoreHash;
 my $myProj = initGuess();
 my $foundDif = 0;
 
-while ($count < $#ARGV)
+while ($count <= $#ARGV)
 {
   my $arg = $ARGV[$count];
-  print $arg;
+  print "$count $arg\n";
   for ($arg)
   {
   /^-?d$/ && do { $difference = 1; $copy = 0; $makeDifFile = 1; $count++; next; };
@@ -38,6 +38,7 @@ while ($count < $#ARGV)
   $myProj = $ARGV[0];
   $dir = "c:\\games\\inform\\$myProj.inform\\Source";
   $projYet = 1;
+  $count++;
   }
 }
 
