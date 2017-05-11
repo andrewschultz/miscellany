@@ -69,6 +69,6 @@ for my $k (sort keys %repoSum)
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
 }
 
-if ($overallSum) { $popupText .= "====$overallSum total extra changes\n"; }
+if ($overallSum) { $popupText .= "====$overallSum total extra changes\nRun UNCH.PL to see if there are any more to commit/push."; }
 
 Win32::MsgBox($popupText);

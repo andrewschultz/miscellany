@@ -239,9 +239,9 @@ sub processTerms
 	  next;
     }
 
-	if ($a =~ /</)
+	if ($a =~ / *< */)
 	{
-	  my @timeArray = split(/</, rehash($a));
+	  my @timeArray = split(/ *< */, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
 	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }
@@ -250,9 +250,9 @@ sub processTerms
 	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
 	  }
 	}
-	if ($a =~ />/)
+	if ($a =~ / *> */)
 	{
-	  my @timeArray = split(/>/, rehash($a));
+	  my @timeArray = split(/ *> */, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
 	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
 	  if (! -f $timeArray[1]) { die("$timeArray[1] is not a valid file."); }

@@ -141,9 +141,9 @@ sub ignore
   if ($_[1] == 1) { return 0; }
   for my $regex (keys %{$ignoreHash{$myProj}})
   {
-    print "REGEX $regex ~? LINE $_[0]";
+    #print "REGEX $regex ~? LINE $_[0]";
     if ($_[0] =~ /$regex/) { return 1; }
-	print "FAILED\n";
+	#print "FAILED\n";
   }
   return 0;
 }
