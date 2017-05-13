@@ -7,7 +7,8 @@
 #or run it in a directory with story.ni
 #
 
-use POSIX;
+use POSIX (getcwd);
+use Win32;
 
 use strict;
 use warnings;
@@ -15,6 +16,8 @@ use warnings;
 my $newDir = ".";
 my $project = "Project";
 
+#######################################varaiables
+my $popupString = "";
 my $sum = "";
 my $tables = 0;
 my $count = 0;
@@ -41,6 +44,7 @@ my $quietTables = 1;
 my $openTableFile = 0;
 my $openPost = 0;
 my $maxString = 0;
+my $spawnPopup = 0;
 
 my %rows;
 my %exp;
@@ -84,6 +88,7 @@ while ($count <= $#ARGV)
     };
     /^-?pr$/ && do { print "Opening private file. -e opens the source, -ef both. -p private.\n"; `$tabfilepriv`; exit; };
 	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
+	/^-sp$/ && do { $spawnPopup = 1; $count++; next; };
 	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-q$/ && do { $quietTables = 1; $count++; next; };
 	/^-tl$/ && do { $quietTables = 0; $count++; next; };
@@ -106,9 +111,12 @@ while ($count <= $#ARGV)
 
 if (!$fileName) { $fileName = "$newDir/story.ni"; }
 
-open(A, "$fileName") || die ("$fileName doesn't exist.");
 my $tableFile = "$writeDir\\tables-$project.i7";
 open(B, ">$tableFile");
+close(B);
+
+open(A, "$fileName") || die ("$fileName doesn't exist.");
+open(B, ">>$tableFile");
 
 my $tableShort;
 my $table = 0;
@@ -272,6 +280,7 @@ while ($a = <A>)
 	else
 	{
 	print "$thisFile search for $b[3] FAILED\n";
+	$popupString .= "* $b[3]\n";
 	}
 	if (!$filesToOpen{$thisFile}) { $filesToOpen{$thisFile} = $.; }
 	$errLog .= "$b[3] needs to be in<br />\n";
@@ -370,6 +379,10 @@ if ($openPost)
 	my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $myfi";
 	if ($filesToOpen{$myfi}) { $openCmd .= " -n$filesToOpen{$myfi}"; }
     `$openCmd`;
+	if ($spawnPopup && $popupString)
+	{
+	  Win32::MsgBox("$popupString", 0, "I7T.PL results");
+	}
   }
   if (!scalar keys %filesToOpen) { print "No error files to open!\n"; }
   if (scalar keys %doubleErr)

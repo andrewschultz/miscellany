@@ -71,4 +71,4 @@ for my $k (sort keys %repoSum)
 
 if ($overallSum) { $popupText .= "====$overallSum total extra changes\nRun UNCH.PL to see if there are any more to commit/push."; }
 
-Win32::MsgBox($popupText);
+Win32::MsgBox("$popupText",0,"GHD.PL");

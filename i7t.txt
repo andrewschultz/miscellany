@@ -50,6 +50,7 @@ Buck-the-Past	xrow:2:table of useons
 Buck-the-Past	xrow:2:table of generic nonviolence
 Buck-the-Past	xrow:3:table of final question options
 Buck-the-Past	xrow:2:table of amusingness
+Buck-the-Past	xrow:2:table of oscar nonsense
 Buck-the-Past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
 Buck-the-Past	ni cr / ni br / ni bpr
 #############
@@ -62,8 +63,8 @@ btpt	xxtia	"	$+ insightful authors
 #ideas not in game proper
 btpt	xxui	"	$$ friendly inns
 btpt	xxdi	"	$$ unfriendly inns
-btpt	xxfarm	"	$$ farm animal antics
-btpt	xxkmc	"	$$ Hit King chats
+btpt	xxfarm	"	$+ farm animal antics
+btpt	xxtmc	"	$+ Torment Mentor chats
 btpt	xxps	"	$+ Sharing Prophet babbles
 btpt	ni cr / ni br / ni bpr
 ######################################
