@@ -299,7 +299,6 @@ prob=$is\reg-pc-*,testing
 >prob=conc.pl -c -ro -rc -pc
 >prob=$wd\talf.pl -pc | grep -i fail
 >prob=i7t.pl -o -q -sp -s pc | grep -iE "failed|likely|run this"
->prob=i7t.pl -o -q -sp pct | grep -iE "failed|likely|run this"
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
@@ -338,7 +337,6 @@ city=$wd\olap.txt,
 >city=$wd\talf.pl -sc | grep -i fail
 >city=conc.pl -c -ro -rc -sc
 >city=i7t.pl -o -q -sp -s sc | grep -iE "failed|likely|run this"
->city=i7t.pl -o -q -sp sct | grep -iE "failed|likely|run this"
 >city=$is\grate.pl | grep -i test
 >city=$wd\olap.pl -sc
 
@@ -386,10 +384,10 @@ past=$ws\invis\bs.txt,
 >past=$wd\talf.pl -btp | grep -i fail
 >past=conc.pl -c -ro -rc -btp
 >past=i7t.pl -o -q -sp -s btp | grep -iE "failed|likely|run this"
->past=i7t.pl -o -q -sp btpt | grep -iE "failed|likely|run this"
 >past=$is\pun.pl grep -iE ",[0-9]"
->past=conc.pl -c -ro -bs
->past=i7t.pl -o -q -s bs | grep -iE "failed|likely|run this"
+#############old Spring Thing checks, not relevant any more as this code branch is not updated
+#>past=conc.pl -c -ro -bs
+#>past=i7t.pl -o -q -s bs | grep -iE "failed|likely|run this"
 
 #Grubbyville files
 TOBASE=grubbyville

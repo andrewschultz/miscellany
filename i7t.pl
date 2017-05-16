@@ -100,8 +100,14 @@ while ($count <= $#ARGV)
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
 	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
 	/^-?\.$/ && do { $writeDir = "."; $count++; next; };
-    /-p/ && do { $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; print "Note -p forces you to write out the project, so -s may be more appropriate.\n"; next; };
-	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
+    /-[ps]$/ && do
+	{
+	  $project = $b;
+	  $newDir = "c:/games/inform/$project.inform/Source";
+	  $count+= 2;
+	  if ($exp{$project}) { print "Found brief project, so changing $project to $exp{$project}.\n"; $project = $exp{$project}; }
+	  next;
+    };
     /[\\\/]/ && do { $newDir = $a; $count++; next; };
 	usage();
   }
@@ -457,8 +463,7 @@ csv = tables to highlight
 -q quiets out the printing of tables
 -tl lists them (currently the default)
 -ps prints out successes as well
--p specifies the project
--s specifies the project in shorthand
+-[ps] specifies the project, written out or in shorthand
 (directory) looks for story.ni in a different directory
 (ra|nu)(r|s) does random text or nudges for roiling or shuffling
 EOT
