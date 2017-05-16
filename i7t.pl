@@ -464,6 +464,7 @@ csv = tables to highlight
 -tl lists them (currently the default)
 -ps prints out successes as well
 -[ps] specifies the project, written out or in shorthand
+-sp spawns a popup Windows message box to tell what to replace, if valid
 (directory) looks for story.ni in a different directory
 (ra|nu)(r|s) does random text or nudges for roiling or shuffling
 EOT

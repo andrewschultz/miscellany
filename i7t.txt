@@ -9,42 +9,42 @@ stale-tales-slate	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schu
 #
 #############
 #the first one is xxadd since there are several Table of Explanations
-xtra	Compound	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Compound tables.i7x
-xtra	Slicker-City	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Slicker City tables.i7x
+xtra	compound	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/compound tables.i7x
+xtra	slicker-city	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Slicker City tables.i7x
 xtra	buck-the-past	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Buck the Past tables.i7x
-story	Compound
-Compound	xrow:3:table of annotations
-Compound	xrow:2:table of accel-text
-Compound	xrow:2:table of fin - fingerings
-Compound	xrow:2:table of logic game wins
-Compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
-Compound	ni pr
+story	compound
+compound	xrow:3:table of annotations
+compound	xrow:2:table of accel-text
+compound	xrow:2:table of fin - fingerings
+compound	xrow:2:table of logic game wins
+compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
+compound	ni pr
 #############################compound tables
-Compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
+compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
 #horrible books and horrible songs
-Compound	xxhs	"	$$, up from 13
-Compound	xxhb	"	$$. up from 38
-Compound	xxbgw	"	$$ random important administrative and philosophical matters
-Compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
-Compound	xxss	"	$$ sleep stories
-Compound	xxisv	"	To be precise, $+
-Compound	xxbr	"	there are now $$ Basher Bible references
+compound	xxhs	"	$$, up from 13
+compound	xxhb	"	$$. up from 38
+compound	xxbgw	"	$$ random important administrative and philosophical matters
+compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
+compound	xxss	"	$$ sleep stories
+compound	xxisv	"	To be precise, $+
+compound	xxbr	"	there are now $$ Basher Bible references
 #command to run if things are wrong
-Compound	ni pr
+compound	ni pr
 ######################################
 #Slicker City searching
 #
 #############
-story	Slicker-City
-Slicker-City	xrow:3:table of final question options
-Slicker-City	xrow:2:table of useons
-Slicker-City	xrow:2:table of rotation responses
-Slicker-City	xxenos	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ guys named Enos
-Slicker-City	xxles	"	$$ guys named Les
-Slicker-City	xxlee	"	$$ guys named Lee
-Slicker-City	xxcom	"	$$ companies
-Slicker-City	xxadd	"	$$ total concepts
-Slicker-City	ni scr
+story	slicker-city
+slicker-city	xrow:3:table of final question options
+slicker-city	xrow:2:table of useons
+slicker-city	xrow:2:table of rotation responses
+slicker-city	xxenos	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ guys named Enos
+slicker-city	xxles	"	$$ guys named Les
+slicker-city	xxlee	"	$$ guys named Lee
+slicker-city	xxcom	"	$$ companies
+slicker-city	xxadd	"	$$ total concepts
+slicker-city	ni scr
 slicker-city	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
 slicker-city	xxtgtn	"	$$ cluing tries
 slicker-city	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
