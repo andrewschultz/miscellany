@@ -1,8 +1,18 @@
 ######################################
+#Stale Tales Slate searching
+stale-tales-slate	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x
+stale-tales-slate	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Random Text.i7x
+stale-tales-slate	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x
+stale-tales-slate	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x
+######################################
 #Problems Compound searching
 #
 #############
 #the first one is xxadd since there are several Table of Explanations
+xtra	Compound	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Compound tables.i7x
+xtra	Slicker-City	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Slicker City tables.i7x
+xtra	buck-the-past	c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Buck the Past tables.i7x
+story	Compound
 Compound	xrow:3:table of annotations
 Compound	xrow:2:table of accel-text
 Compound	xrow:2:table of fin - fingerings
@@ -10,21 +20,22 @@ Compound	xrow:2:table of logic game wins
 Compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
 Compound	ni pr
 #############################compound tables
-pct	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
+Compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
 #horrible books and horrible songs
-pct	xxhs	"	$$, up from 13
-pct	xxhb	"	$$. up from 38
-pct	xxbgw	"	$$ random important administrative and philosophical matters
-pct	xxjmt	"	jerks/groaners now have $$ "grown-up"
-pct	xxss	"	$$ sleep stories
+Compound	xxhs	"	$$, up from 13
+Compound	xxhb	"	$$. up from 38
+Compound	xxbgw	"	$$ random important administrative and philosophical matters
+Compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
+Compound	xxss	"	$$ sleep stories
 Compound	xxisv	"	To be precise, $+
-pct	xxbr	"	there are now $$ Basher Bible references
+Compound	xxbr	"	there are now $$ Basher Bible references
 #command to run if things are wrong
-pct	ni pr
+Compound	ni pr
 ######################################
 #Slicker City searching
 #
 #############
+story	Slicker-City
 Slicker-City	xrow:3:table of final question options
 Slicker-City	xrow:2:table of useons
 Slicker-City	xrow:2:table of rotation responses
@@ -34,39 +45,40 @@ Slicker-City	xxlee	"	$$ guys named Lee
 Slicker-City	xxcom	"	$$ companies
 Slicker-City	xxadd	"	$$ total concepts
 Slicker-City	ni scr
-sct	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
-sct	xxtgtn	"	$$ cluing tries
-sct	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
-sct	xxtgtn	"	and $$ cluing verbs
-sct	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
-sct	xxtgtn	"	And there are $$ good guesses.
-sct	ni scr
+slicker-city	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
+slicker-city	xxtgtn	"	$$ cluing tries
+slicker-city	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
+slicker-city	xxtgtn	"	and $$ cluing verbs
+slicker-city	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
+slicker-city	xxtgtn	"	And there are $$ good guesses.
+slicker-city	ni scr
 ######################################
 #Buck the Past searching
 #
 #############
 #file proper
-Buck-the-Past	xrow:2:table of useons
-Buck-the-Past	xrow:2:table of generic nonviolence
-Buck-the-Past	xrow:3:table of final question options
-Buck-the-Past	xrow:2:table of amusingness
-Buck-the-Past	xrow:2:table of oscar nonsense
-Buck-the-Past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ off-the-wall
-Buck-the-Past	ni cr / ni br / ni bpr
+story	buck-the-past
+buck-the-past	xrow:2:table of useons
+buck-the-past	xrow:2:table of generic nonviolence
+buck-the-past	xrow:3:table of final question options
+buck-the-past	xrow:2:table of amusingness
+buck-the-past	xrow:2:table of oscar nonsense
+buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ reversal
+buck-the-past	ni cr / ni br / ni bpr
 #############
 #random stuff
 #table of life shelf books
-btpt	xrow:2:table of animal silliness
-btpt	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
+buck-the-past	xrow:2:table of animal silliness
+buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
 #authors for the books
-btpt	xxtia	"	$+ insightful authors
+buck-the-past	xxtia	"	$+ insightful authors
 #ideas not in game proper
-btpt	xxui	"	$$ friendly inns
-btpt	xxdi	"	$$ unfriendly inns
-btpt	xxfarm	"	$+ farm animal antics
-btpt	xxtmc	"	$+ Torment Mentor chats
-btpt	xxps	"	$+ Sharing Prophet babbles
-btpt	ni cr / ni br / ni bpr
+buck-the-past	xxui	"	$$ friendly inns
+buck-the-past	xxdi	"	$$ unfriendly inns
+buck-the-past	xxfarm	"	$+ farm animal antics
+buck-the-past	xxtmc	"	$+ Torment Mentor chats
+buck-the-past	xxps	"	$+ Sharing Prophet babbles
+buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #Buck the Past Spring Thing searching
 #
@@ -77,6 +89,7 @@ btp-st	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_spring_thing_release_1_
 #
 #############
 #table of scenery
+story	fourdiopolis
 fourdiopolis	table of scenery	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ pieces of scenery
 fourdiopolis	table of silly randoms	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ silly events
 fourdiopolis	table of last names	C:/Users/Andrew/Dropbox/notes/fourdiopolis_release_2_notes.txt	$$ last names now,
@@ -86,6 +99,7 @@ fourdiopolis	ni 4r
 #
 #############
 #table of scenery
+story	threediopolis
 threediopolis	table of observies	C:/Users/Andrew/Dropbox/notes/threediopolis_release_4_notes.txt	$$ silly random events, up from 72
 threediopolis	ni 3r
 ;

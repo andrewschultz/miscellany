@@ -29,12 +29,16 @@ my $tableList = "";
 my $tabfile = "c:/writing/scripts/i7t.txt";
 my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 
+my %xtraFiles;
+
 ###################duplicate detector hashes
 my %tableDup;
 my %extraRows;
 my %ignoreDup;
 
 my @tableReadFiles = ($tabfile, $tabfilepriv);
+
+my @filesToRead = ();
 
 ################################
 # options
@@ -57,15 +61,15 @@ my @tableCount = ();
 
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
-$exp{"pc"} = "Compound";
-$exp{"sc"} = "Slicker-City";
+$exp{"pc"} = "compound";
+$exp{"sc"} = "slicker-city";
 $exp{"btp"} = "buck-the-past";
 $exp{"bs"} = "btp-st";
 
 my $countMismatch = 0;
 my $writeDir = "c:\\writing\\dict";
 
-if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; }
+if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; $project =~ s/.*[\\\/]//g; $project = lc($project); }
 
 my $fileName;
 
@@ -94,13 +98,7 @@ while ($count <= $#ARGV)
 	/^-tl$/ && do { $quietTables = 0; $count++; next; };
 	/^-o$/ && do { $openPost = 1; $count++; next; };
 	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
-	/^btpt$/ && do { $maxString = 1; $tableTab = 1; $project = "btpt"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Buck the Past tables.i7x"; $count++; next; };
-	/^pct$/ && do { $maxString = 1; $tableTab = 1; $project = "pct"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Compound tables.i7x"; $count++; next; };
-	/^sct$/ && do { $maxString = 1; $tableTab = 1; $project = "sct"; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Slicker City tables.i7x"; $count++; next; };
-	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Random Text.i7x"; $count++; next; };
-	/^ras$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Random Text.i7x"; $count++; next; };
-	/^nur$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Roiling Nudges.i7x"; $count++; next; };
-	/^nus$/ && do { $maxString = 1; $tableTab = 1; $fileName = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Shuffling Nudges.i7x"; $count++; next; };
+	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
 	/^-?\.$/ && do { $writeDir = "."; $count++; next; };
     /-p/ && do { $project = $b; $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; print "Note -p forces you to write out the project, so -s may be more appropriate.\n"; next; };
 	/-s/ && do { if ($exp{$b}) { $project = $exp{$b}; } else { $project = $b; } $newDir = "c:/games/inform/$project.inform/Source"; $count+= 2; next; };
@@ -109,19 +107,32 @@ while ($count <= $#ARGV)
   }
 }
 
-if (!$fileName) { $fileName = "$newDir/story.ni"; }
+for (@tableReadFiles)
+{
+  findExtraFiles($_);
+}
 
 my $tableFile = "$writeDir\\tables-$project.i7";
 open(B, ">$tableFile");
 close(B);
 
-open(A, "$fileName") || die ("$fileName doesn't exist.");
-open(B, ">>$tableFile");
+my $sourceFile;
+
+if (!defined($xtraFiles{$project})) { die ("No project defined for $project.\n"); }
+
+my @sourceFileList = @{$xtraFiles{$project}};
 
 my $tableShort;
 my $table = 0;
 my $majorList = "";
 my $tableRow = 0;
+
+for $sourceFile (@sourceFileList)
+{
+
+print "Reading $sourceFile...\n";
+open(A, "$sourceFile") || die ("$sourceFile in $project doesn't exist.");
+open(B, ">>$tableFile");
 
 while ($a = <A>)
 {
@@ -196,6 +207,7 @@ print $sum;
 print B $sum;
 close(A);
 close(B);
+}
 
 my $ranOneTest = 0;
 my $printFail = 0;
@@ -309,8 +321,9 @@ close(A);
 close(B);
 close(F);
 
-open(A, "$fileName") || die ("$fileName doesn't exist.");
+for $sourceFile (@sourceFileList)
 {
+  open(A, "$sourceFile") || die ("$sourceFile in $project doesn't exist.");
   while ($a = <A>)
   {
     if ($a =~ /^table +of/i)
@@ -348,6 +361,7 @@ open(A, "$fileName") || die ("$fileName doesn't exist.");
 	  $tableDup{$curTable}{$unique} = $.;
     }
   }
+  close(A);
 }
 
 if ($dupFail)
@@ -400,6 +414,31 @@ if ($openTableFile)
 {
   my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile";
   `$openCmd`;
+}
+
+sub findExtraFiles
+{
+  open(A, "$_[0]") || die ("No file $_[0]");
+  while ($a = <A>)
+  {
+    if ($a =~ /^xtra/)
+	{
+	  chomp($a);
+	  my @filemap = split(/\t/, $a);
+	  if ($#filemap != 2) { warn "Need 3 fields in $.: $a\n"; next; }
+	  if (!defined($xtraFiles{$filemap[1]})) { $xtraFiles{$filemap[1]} = []; }
+	  push(@{$xtraFiles{$filemap[1]}}, $filemap[2]);
+	}
+    if ($a =~ /^story/)
+	{
+	  chomp($a);
+	  my @filemap = split(/\t/, $a);
+	  if ($#filemap != 1) { warn "Need 2 fields in $.: $a\n"; next; }
+	  if (!defined($xtraFiles{$filemap[1]})) { $xtraFiles{$filemap[1]} = []; }
+	  push(@{$xtraFiles{$filemap[1]}}, "c:/games/inform/$filemap[1].inform/Source/story.ni");
+	}
+  }
+  close(A);
 }
 
 sub usage
