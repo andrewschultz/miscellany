@@ -8,7 +8,7 @@ use warnings;
 use POSIX;
 
 ###################options
-my $test = 1;
+my $test = 0;
 my $testAll = 0;
 my $testMajor = 0;
 
@@ -40,6 +40,21 @@ if ($testAll && $testMajor) { die ("Conflicting options added."); }
 
 if ($testAll)
 {
+  my %inMajor;
+  for (@majorDirs) { $inMajor{$_} = 1; }
+  opendir(DIR, "c:/games/inform");
+  my @dir = readdir DIR;
+  for (@dir)
+  {
+    my $tempdir = "c:/games/inform/$_";
+    if (! -d $tempdir) { next; }
+	if ($_ !~ /\.inform/) { next; }
+    if (! -d "$tempdir/Source") { print "No source subdir for $_\n"; next; }
+	if (readOneDir("$tempdir/Source", 0) && !$inMajor{$_})
+	{
+	  print "c:/games/inform/$_/Source has reg file that needs de-wronging, but it is not in MAJOR files.\n";
+	}
+  }
 }
 elsif ($testMajor)
 {
@@ -117,4 +132,5 @@ sub readOneDir
       if ($_[1]) { print "No WRONG appears in reg-*.txt for $_[0]\n"; }
     }
   }
+  return $wrongDefault;
 }
