@@ -7,15 +7,20 @@ use strict;
 use warnings;
 use POSIX;
 
+###################options
 my $test = 1;
+my $testAll = 0;
+my $testMajor = 0;
 
-my $wrongDefault = 0;
 my $default = "buck-the-past";
 
 my @myDirs = ();
+my @majorDirs = ("shuffling", "roiling", "threediopolis", "fourdiopolis", "compound", "slicker-city", "buck-the-past");
+
+my %lineErr;
 
 if (-f "story.ni") { @myDirs = (getcwd()); }
-else { @myDirs = ("c:/games/inform/$default/source"); }
+else { @myDirs = ("c:/games/inform/$default.inform/source"); }
 
 my $count = 0;
 while ($count <= $#ARGV)
@@ -23,17 +28,37 @@ while ($count <= $#ARGV)
   my $arg = $ARGV[$count];
   for ($arg)
   {
-  /-t/ && do { $test = 1; $count++; next; };
+  /^-a$/ && do { $testMajor = 1; $count++; next; };
+  /^-aa$/ && do { $testAll = 1; $count++; next; };
+  /^-t$/ && do { $test = 1; $count++; next; };
   /-(nt|tn)/ && do { $test = 0; $count++; next; };
   usage();
   }
 }
 
-for (@myDirs) { readOneDir($_); }
+if ($testAll && $testMajor) { die ("Conflicting options added."); }
+
+if ($testAll)
+{
+}
+elsif ($testMajor)
+{
+  for (@majorDirs)
+  {
+    readOneDir("c:/games/inform/$_.inform/source", 1);
+  }
+}
+else
+{
+  for (@myDirs) { readOneDir($_, 0); }
+}
 
 ###############################################
 #subroutines
 #
+
+#############readOneDir
+#1st arg = directory, 2nd = should we warn if nothing found
 
 sub readOneDir
 {
@@ -47,11 +72,17 @@ sub readOneDir
 
   close(DIR);
 
+  my $thisErr;
+  my $success = 0;
   my $wrongDefault = 0;
+  my $anyFile = 0;
+
   for (@dir)
   {
     if ($_ =~ /reg-.*\.txt$/)
     {
+	  $thisErr = 0;
+	  $anyFile = 1;
       open(A, "$_[0]/$_");
       while ($a = <A>)
       {
@@ -59,18 +90,21 @@ sub readOneDir
 		{
 		  $wrongDefault++;
 		  $fileHash{$_}++;
-		  if (!$lineErr{$_})
+		  $thisErr = 1;
+		  if (!defined($lineErr{$_}))
 		  {
 		    $lineErr{$_} = $.;
 		  }
 		}
       }
+	  close(A);
+	  if (!$thisErr) { $success++; }
     }
   }
-  my $results = join($test ? "<br />" : "\n", map { "$_ $fileHash{$_}" } sort { $a cmp $b } keys %fileHash);
+  my $results = join($test ? "<br />" : "\n", map { "$_ $fileHash{$_}($lineErr{$_})" } sort { $a cmp $b } keys %fileHash);
   if ($test)
   {
-    print "TEST RESULTS: $short-wrongs,$wrongDefault,0,0,$results\n";
+    print "TEST RESULTS: $short-wrongs,$wrongDefault,0,$success,$results\n";
   }
   else
   {
@@ -80,7 +114,7 @@ sub readOneDir
     }
     else
     {
-      print "No WRONG appears in reg-*.txt\n";
+      if ($_[1]) { print "No WRONG appears in reg-*.txt for $_[0]\n"; }
     }
   }
 }

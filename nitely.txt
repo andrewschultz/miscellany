@@ -36,6 +36,7 @@ e15=heezy-park
 
 gen=general tests
 >unch.pl -t
+>wrong.pl -a
 
 misc=miscellaneous
 >gh.pl -t $$
