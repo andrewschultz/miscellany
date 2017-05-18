@@ -371,6 +371,7 @@ past=$is\graf.txt,utils
 past=$is\pun.pl,utils
 past=$is\ifs.pl,utils
 past=$is\nmrot.pl,utils
+past=$ws\swear.pl,utils
 #############open smart.otl at right section
 past=$is\bs.pl,utils
 ###############spring thing initial game

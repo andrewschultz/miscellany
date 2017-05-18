@@ -11,6 +11,8 @@ use strict;
 use warnings;
 
 use File::Compare;
+use File::Copy;
+use File::Spec;
 use File::stat;
 
 my $warnCanRun = 0;
@@ -291,7 +293,7 @@ sub processTerms
 	  $short =~ s/.*[\\\/]//g;
 
 	  if ($fromFile !~ /:/) { $fromFile = "$repl2{fromBase}\\$fromFile"; }
-	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}"; if (defined($d[1])) { $toFile .= "\\$d[1]"; } }
+	  if ($repl2{"toBase"}) { $toFile = "$repl2{toBase}"; if (defined($d[1]) && $d[1]) { $toFile .= "\\$d[1]"; } }
 
 	  if ((! -f $fromFile) && ($fromFile !~ /\*/))
 	  {
@@ -315,29 +317,24 @@ sub processTerms
 	  if ($reverse) { if ($short =~ /\*/) { next; } $cmd = "copy \"$gh\\$toFile\\$short\" \"$fromFile\""; }
 	  if ($fromFile =~ /\*/)
 	  {
-		my $wildYet = 0;
-		my $wildFrom = $c; $wildFrom =~ s/,.*//g; $wildFrom =~ s/\\[^\\]+$//;
-		my $wildCheck = $c; $wildCheck =~ s/,.*//g; $wildCheck =~ s/.*\\//; $wildCheck =~ s/\*/\.\*/g;
-		opendir(DIR, "$wildFrom") || do { print "$wildFrom dir doesn't exist.\n"; next; };
-		my @x = readdir(DIR);
-		my @y = ();
-		for (@x)
+		my $ctemp = $c;
+		$ctemp =~ s/,$//;
+		my @fileList = glob "$ctemp";
+		if ($#fileList == -1) { print "No matches for $ctemp.\n"; next; }
+		$wildSwipes++;
+		for (@fileList)
 		{
-		  if ($_ =~ /$wildCheck/) { push (@y, $_); }
-		}
-		if ($#y == -1) { print "No matches for $wildFrom/$wildCheck.\n"; next; }
-		for (@y)
-		{
-		  if (compare("$wildFrom\\$_", "$gh\\$toFile\\$_"))
+		  my ($vol, $dir, $file) = File::Spec->splitpath($_);
+		  if (compare("$_", "$gh\\$toFile\\$file"))
 		  {
-		  $cmd = "copy $wildFrom\\$_ $gh\\$toFile\\$_";
-		  #print "WILDCARD COPY: $cmd\n";
-		  `$cmd`;
-		  $fileList .= "$wildFrom\\$_\n";
-		  #print "$cmd\n$toBase\n$toFile\n";
+            if (shouldCheck($_))
+            {
+            checkWarnings($_, 1);
+            }
+		  copy("$_", "$gh/$file") || die ("Copy $_ to $gh\\$file failed");
+		  $fileList .= "$_\n";
 		  $wildcards++;
 		  $copies++;
-		  if (!$wildYet) { $wildYet++; $wildSwipes++; }
 		  }
 		}
 		next;
@@ -353,7 +350,19 @@ sub processTerms
 		{
 		  trizCheck($fromFile, 1, $xtraCmd);
 		}
-	    if (shouldRun($prefix)) { $fileList .= "$fromFile\n"; $wc = `$cmd`; if ($thisWild) { print "====WILD CARD COPY-OVER OUTPUT\n$wc"; } else { $copies++; } } else { print "$cmd not run, need to set $prefix flags.\n"; $uncopiedList .= "$fromFile\n"; $uncop++; }
+	    if (shouldRun($prefix))
+		{
+		  $fileList .= "$fromFile\n";
+		  #die "$fromFile to $gh\\$toFile\\$short";
+		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\ $toFile\\$_");
+		  if (!$thisWild) { $copies++; }
+        }
+		else
+		{
+		  print "$cmd not run, need to set $prefix flags.\n";
+		  $uncopiedList .= "$fromFile\n";
+		  $uncop++;
+        }
       }
 	  }
 	  else
@@ -579,6 +588,7 @@ sub checkWarnings
   my $gotWarnings = 0;
   my $gotStrict = 0;
   my $trailingSpace = 0;
+  my $spaceThenTab = 0;
   my $numLines;
 
   my $line2;
@@ -590,6 +600,7 @@ sub checkWarnings
   {
     chomp($line2);
 	if ($line2 =~ /[\t ]+$/) { $trailingSpace++; }
+	if ($line2 =~ /^ +\t/) { $spaceThenTab++; }
     if ($line2 eq "use warnings;") { $gotWarnings++; }
     if ($line2 eq "use strict;") { $gotStrict++; }
   }
@@ -606,7 +617,7 @@ sub checkWarnings
   if (!$gotStrict || !$gotWarnings)
   {
     $gws{$_[0]} = 1;
-  	if ((!$minLines) || ($numLines < $minLines))
+	if ((!$minLines) || ($numLines < $minLines))
 	{
 	  $minFile = $_[0]; $minLines = $numLines;
 	}
@@ -616,7 +627,7 @@ sub checkWarnings
     }
   }
   }
-  if ($trailingSpace)
+  if ($trailingSpace || $spaceThenTab)
   {
     $gwt{$_[0]} = 1;
 	if ($removeTrailingSpace || $_[1])
@@ -628,6 +639,7 @@ sub checkWarnings
 	  while ($l = <F1>)
 	  {
 	    $l =~ s/[ \t]*$//;
+		$l =~ s/^ +\t/\t/;
 		print F2 $l;
 	  }
 	  close(F1);
