@@ -480,6 +480,7 @@ misc=ses.pl,
 misc=frn.pl,
 misc=2sp.pl,
 misc=wrong.pl,
+misc=qq.pl,
 #################Fiction  or FAQ rewriting
 misc=salf.pl,wrifi
 misc=noter.pl,wrifi
