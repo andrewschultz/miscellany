@@ -201,6 +201,20 @@ carry out auing:
 to say auto-set:
 	say "[if yn-auto is 1]auto-yes[else if yn-auto is -1]auto-no[else]no auto[end if]";
 
+chapter direction stubs
+
+definition: a direction (called d) is diagonal:
+	if d is northwest or d is northeast or d is southwest or d is southeast, decide yes;
+	decide no;
+
+definition: a direction (called d) is cardinal:
+	if d is west or d is east or d is south or d is north, decide yes;
+	decide no;
+
+definition: a direction (called thedir) is planar:
+	if thedir is cardinal or thedir is diagonal, decide yes;
+	decide no;
+
 chapter basic consents
 	
 to decide whether the player test-consents:
