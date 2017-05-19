@@ -39,7 +39,7 @@ all~wri,misc,ecto,rpg,g,sts,3,4,as
 #Shuffling files
 TOBASE=stale-tales-slate
 FROMSHORT=shuffling
-$ws\invis\sa.txt<$im\Release\shuffling-invisiclues.htm
+$ws\invis\sa.txt<$im\Release\shuffling-invisiclues.htm&invis.pl sa
 shu=$is\story.ni,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling random text.i7x,shuffling
 shu=c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\shuffling nudges.i7x,shuffling
@@ -175,7 +175,7 @@ roi=$wd\settler.txt,roiling
 
 #Threediopolis files to GitHub
 TOBASE=threediopolis
-$ws\invis\3d.txt<$im\Release\threediopolis-invisiclues.htm
+$ws\invis\3d.txt<$im\Release\threediopolis-invisiclues.htm&invis.pl 3d
 3d=$is\story.ni,
 3d=$is\testcase.txt,
 3d=$is\logic.txt,
@@ -214,7 +214,7 @@ TOBASE=fourdiopolis
 
 #Ugly Oafs files to GitHub
 TOBASE=ugly-oafs
-$ws\invis\uo.txt<$im\Release\ugly-oafs-invisiclues.htm
+$ws\invis\uo.txt<$im\Release\ugly-oafs-invisiclues.htm&invis.pl uo
 oafs=$is\uo.odt ,
 oafs=$is\story.ni,
 oafs=$ws\invis\uo.txt,
@@ -260,7 +260,7 @@ ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
 #Problems files to GitHub
 TOBASE=the-problems-compound
 FROMSHORT=compound
-$ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm
+$ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm&invis.pl pc
 prob=$is\story.ni,
 prob=$i7\Compound tables.i7x,
 prob=$i7\Compound debug tables.i7x,

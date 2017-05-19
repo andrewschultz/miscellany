@@ -23,7 +23,8 @@ my $launchRaw = 0;
 my $count = 0;
 my $forceRunThrough = 0;
 my $debug = 0;
-my $launchRawFile = 0;
+my $launchTextFile = 0;
+my $createTextFile = 0;
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
@@ -50,15 +51,38 @@ while ($count <= $#ARGV)
   /^-?l$/ && do { $launchAfter = 1; $count++; next; };
   /^-?r$/ && do { $launchRaw = 1; $count++; next; };
   /-?(lr|rl)$/ && do { $launchRaw = 1; $launchAfter = 1; $count++; next; };
-  /^-?e$/ && do { $launchRawFile = 1; $count++; next; };
+  /^-?e$/ && do { $launchTextFile = 1; $count++; next; };
+  /^-?en$/ && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
   /^-/ && do { usage(); exit; };
   do { if ($exp{$a}) { $filename = "$exp{$a}.txt"; } else { $filename = "$a.txt"; } $count++; };
   }
 }
 
-if (! -f "$invDir/$filename") { print "No filename, going to usage.\n"; usage(); }
+if ((! -f "$invDir/$filename") && (!$createTextFile)) { print "No filename, going to usage.\n"; usage(); }
 
-if ($launchRawFile) { `c:\\writing\\scripts\\invis\\$filename`; exit(); }
+if ($launchTextFile)
+{
+  my $longFile = "c:\\writing\\scripts\\invis\\$filename";
+  if ($createTextFile || (-f $longFile))
+  {
+    if ($createTextFile && (-f $longFile))
+	{
+	  print "Note: $filename already exists.\n";
+	}
+    if (-f $longFile) { `$longFile`; }
+	else
+	{
+	  my $cmd = "start \"\" \"c:\\program files (x86)\\Notepad++\\Notepad++\" \"$longFile\"";
+	  `$cmd`;
+	  die($cmd);
+    }
+  }
+  else
+  {
+    print "$filename doesn't exist. Use -en to create it by force.\n";
+  }
+  exit();
+}
 
 my $outname = "$invDir\\invis-$filename";
 $outname =~ s/txt$/htm/gi;
@@ -279,6 +303,7 @@ print<<EOT;
 -a = show all files
 -d = debug
 -e = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
+-en = edits a new text file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
 -f = force a redo if HTM file's mod date >= the generating file
 -l = launch HTM invisiclues after
 -r = launch raw (e.g. spoiler file showing everything, launched after -l)
