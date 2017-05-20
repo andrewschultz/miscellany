@@ -22,6 +22,11 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.
 goto end
 )
 
+if "%1" EQU "li" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
+goto end
+)
+
 rem the stuff above needs to stay there because it's important shortcuts
 
 if "%1" equ "q" (
@@ -32,7 +37,7 @@ echo h = starter.htm
 echo b = go to notepad backup directory
 echo . = go to unix file, OLD
 echo g = games.otl
-echo l = limericks.otl
+echo l/li = limericks.otl
 echo sr = standard rules
 echo search for: x.pl, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x.pl, writing\dict\x.pl, x.bat
 goto end

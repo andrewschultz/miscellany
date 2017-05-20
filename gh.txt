@@ -365,7 +365,7 @@ past=$is\gotl.pl,utils
 #############utilities, simple or complex
 past=$is\specdup.pl,utils
 past=$is\abkdup.pl,utils
-past=$is\excl.pl,utils
+past=$is\smso.pl,utils
 past=$is\graf.pl,utils
 past=$is\graf.txt,utils
 past=$is\pun.pl,utils

@@ -3,24 +3,37 @@
 #
 #quick question (double question) finding script for source files
 #
-#TODO: look for header files as well
-#
-#TODO: also allow for TODO with separate test
 
 use POSIX;
 use strict;
 use warnings;
 
+##############################options
+my $test = 0;
+my $gotYet = 0;
+
+##############################variables
 my @fileArray = ();
 my $mainFile;
 my $shortName;
+my $count;
 
-if ($ARGV[0])
+while ($count < $#ARGV)
 {
-  $mainFile = "c:/games/inform/$ARGV[0].inform/Source/story.ni";
-  $shortName = lc($ARGV[0]);
+  my $arg = $ARGV[$count];
+  for ($arg)
+  {
+    /^-?t/i && do { $test = 1; $count++; next; };
+    /^-?(nt|tn)/i && do { $test = 0; $count++; next; };
+	if ($gotYet) { die ("Only one project at a time."); }
+    $mainFile = "c:/games/inform/$arg.inform/Source/story.ni";
+    $shortName = lc($arg);
+	$count++;
+	$gotYet = 1;
+  }
 }
-elsif (-f "story.ni")
+
+if (!$mainFile && (-f "story.ni"))
 {
   $mainFile = "story.ni";
   $shortName = getcwd();
@@ -28,11 +41,15 @@ elsif (-f "story.ni")
   $shortName =~ s/.*[\\\/]//g;
 }
 
-push(@fileArray, $mainFile);
+if (! -f $mainFile) { die ("No file $mainFile."); }
 
-for (@fileArray)
+scanForQs($mainFile, 1);
+
+my $inc;
+
+for $inc (@fileArray)
 {
-  scanForQs($_);
+  scanForQs($inc, 0);
 }
 
 ######################################
@@ -48,6 +65,7 @@ my @badLines;
 my $comment = 0;
 my @dele;
 my $deletables = 0;
+my $sweepIncludes = $_[1];
 
 if (! -f $_[0]) { die ("No file $_[0]."); }
 
@@ -55,11 +73,21 @@ open(A, "$_[0]");
 
 while ($line = <A>)
 {
+  if ($sweepIncludes && ($line =~ /^include.*by Andrew Schultz/i))
+  {
+    my $temp = $line;
+	chomp($temp);
+	$temp =~ s/ by .*//;
+	$temp =~ s/include +//;
+	$temp = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp.i7x";
+	push (@fileArray, $temp);
+  }
   if (($line =~ /\[/) && ($line !~ /\]/)) { $comment = 1; }
-  if ($line =~ /\[todo/i)
+  if ($line =~ /\[(todo|expound)/i)
   {
     $count++;
-	$line =~ s/.*todo//;
+	$line =~ s/.*\[(todo|expound)//i;
+	print "$.: $line\n";
 	push(@badLines, $line);
   }
   if ($line =~ /\[[^\]]*\?\?/)
@@ -86,11 +114,16 @@ while ($line = <A>)
   }
 }
 
+close(A);
+
 my $errs = $#badLines + 1;
-print "TEST RESULTS:$shortName double-question/todo,2,$errs,0," . join(" / ", @badLines) . "\n";
+if ($test)
+{
+print "TEST RESULTS:$shortName double-question/todo/expound,2,$errs,0," . join(" / ", @badLines) . "\n";
 if ($deletables)
 {
 print "TEST RESULTS:$shortName deletable debug text,0,$deletables,0," . join(" / ", @dele) . "\n";
+}
 }
 close(A);
 
