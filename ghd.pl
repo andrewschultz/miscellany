@@ -4,7 +4,7 @@
 #did I do something today?
 #no arguments. Set to run at 11:30 PM.
 #
-#requires ghd.txt
+#requires ghd.txt to see where to sort which projects
 #
 #BASE=c:\users\me\documents\github
 #github=threediopolis
@@ -22,7 +22,12 @@ my %repoSum;
 my %count;
 my %siteArray;
 
+################options
+my $debug = 0;
+my $popup = 0;
+
 #######################variables
+my $count = 0;
 my $ghBase = "";
 my $popupText;
 my $overallSum;
@@ -32,9 +37,18 @@ my $daysAgo = 0;
 my $siteFile = __FILE__;
 $siteFile =~ s/pl$/txt/i;
 
-if (defined($ARGV[0]))
+while ($count <= $#ARGV)
 {
-  if ($ARGV[0] =~ /^-?\d+/) { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); }
+  my $arg = $ARGV[0];
+  for ($arg)
+  {
+  /^-?d/ && do { $debug = 1; $count++; next; };
+  /^-?p/ && do { $popup = 1; $count++; next; };
+  /^-?\d+$/ && do { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); $count++; next; };
+  /^-?\?/ && do { usage(); };
+  print "Unknown cmd line parameter $arg\n";
+  usage();
+  }
 }
 
 $popupText = strftime "Results for %m/%d/%Y\n", localtime(time()-86400);
@@ -59,21 +73,15 @@ my @repos = (@{$siteArray{"bitbucket"}}, @{$siteArray{"github"}});
 
 my $r;
 my $thisLog = "";
-my $cmd;
+my $cmd = $daysAgo ? sprintf("git log --since=\"%d days ago\" --until=\"%d days ago\"", $daysAgo, $daysAgo - 1) : "git log --since=\"12 am\""; #yes, git log accepts "1 days ago" which is nice
+
+print "Running on all dirs: $cmd\n";
 
 for $r (@repos)
 {
   chdir("$ghBase\\$r") or do { warn "fail $ghBase\\$r"; next; };
-  if ($daysAgo)
-  {
-  $cmd = sprintf("git log --since=\"$daysAgo days ago\" --until=\"%s days ago\"", $daysAgo - 1); #yes, git log accepts "1 days ago" which is nice
-  }
-  else
-  {
-  $cmd = "git log --since=\"today\"";
-  }
   $thisLog = `$cmd`;
-  print "$cmd\n$thisLog";
+  if ($debug) { print getcwd() . ": $cmd\n$thisLog"; }
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
   $repoSum{$repo{$r}} += $count{$r};
 }
@@ -89,4 +97,25 @@ for my $k (sort keys %repoSum)
 
 if ($overallSum) { $popupText .= "====$overallSum total extra changes\nRun UNCH.PL to see if there are any more to commit/push."; }
 
+if ($popup)
+{
 Win32::MsgBox("$popupText",0,"GHD.PL");
+}
+else
+{
+print "$popupText";
+}
+
+#######################################
+#subroutines
+
+sub usage
+{
+print<<EOT;
+==========basic usage==========
+-d debug
+-p pop up results
+-(#) how many days back (default = 0, today)
+EOT
+exit();
+}
