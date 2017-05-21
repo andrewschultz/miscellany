@@ -24,12 +24,20 @@ my %siteArray;
 
 #######################variables
 my $ghBase = "";
-my $popupText = strftime "Results for %m/%d/%Y\n", localtime;
+my $popupText;
 my $overallSum;
 my $sum;
+my $daysAgo = 0;
 
 my $siteFile = __FILE__;
 $siteFile =~ s/pl$/txt/i;
+
+if (defined($ARGV[0]))
+{
+  if ($ARGV[0] =~ /^-?\d+/) { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); }
+}
+
+$popupText = strftime "Results for %m/%d/%Y\n", localtime(time()-86400);
 
 open(A, "$siteFile") || die("No $siteFile");
 while ($a = <A>)
@@ -50,12 +58,22 @@ unless (-d "$ghBase") { die ("$ghBase in $siteFile is not a valid directory."); 
 my @repos = (@{$siteArray{"bitbucket"}}, @{$siteArray{"github"}});
 
 my $r;
-my $thisLog;
+my $thisLog = "";
+my $cmd;
 
 for $r (@repos)
 {
   chdir("$ghBase\\$r") or do { warn "fail $ghBase\\$r"; next; };
-  $thisLog = `git log --since="12am"`;
+  if ($daysAgo)
+  {
+  $cmd = sprintf("git log --since=\"$daysAgo days ago\" --until=\"%s days ago\"", $daysAgo - 1); #yes, git log accepts "1 days ago" which is nice
+  }
+  else
+  {
+  $cmd = "git log --since=\"today\"";
+  }
+  $thisLog = `$cmd`;
+  print "$cmd\n$thisLog";
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
   $repoSum{$repo{$r}} += $count{$r};
 }
@@ -65,7 +83,7 @@ $popupText .= "Repos above, sites below\n";
 for my $k (sort keys %repoSum)
 {
   $popupText .= "====$k: $repoSum{$k}\n";
-  if (!$repoSum{$k}) { `c:\\nightly\\see-$k.htm`; }
+  if ((!$repoSum{$k}) && (!$daysAgo)) { `c:\\nightly\\see-$k.htm`; }
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
 }
 
