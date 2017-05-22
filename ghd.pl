@@ -91,7 +91,17 @@ $popupText .= "Repos above, sites below\n";
 for my $k (sort keys %repoSum)
 {
   $popupText .= "====$k: $repoSum{$k}\n";
-  if ((!$repoSum{$k}) && (!$daysAgo)) { `c:\\nightly\\see-$k.htm`; }
+  if ((!$repoSum{$k}) && (!$daysAgo))
+  {
+    if ($popup)
+	{
+    `c:\\nightly\\see-$k.htm`;
+	}
+	else
+	{
+	print "\n*************************SEE $k today\n\n";
+	}
+  }
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
 }
 
