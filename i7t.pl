@@ -286,14 +286,16 @@ while ($a = <A>)
   #most of the time, the 5th element (oh hi, Bruce Willis!) will be a 1 to signify that there is a message once the table comes to an end. But I can adjust this if I want.
   #This used to be $+ instead of $$ but then I had other things I wanted to track for partial tables.
 
-  if (defined($b[4])) { $size += $b[4]; }
+  my $adjust = 0;
+  if (defined($b[4])) { $adjust = $b[4]; } else { print "WARNING: line $. should have a 5th column for fudging extra row counts\n"; }
+  if (defined($b[5])) { print "WARNING line $. has too many lines.\n"; }
 
   my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
 
-  $b[3] =~ s/\$\$/$size/g;
-  $b[3] =~ s/\$c/$smartIdeas{$b[1]}/g;
-  $b[3] =~ s/\$f/$falseRows{$b[1]}/g;
-  $b[3] =~ s/\$t/$trueRows{$b[1]}/g;
+  $b[3] =~ s/\$\$/$size+$adjust/ge;
+  $b[3] =~ s/\$c/$smartIdeas{$b[1]}+$adjust/ge;
+  $b[3] =~ s/\$f/$falseRows{$b[1]}+$adjust/ge;
+  $b[3] =~ s/\$t/$trueRows{$b[1]}+$adjust/ge;
 
   #print "Looking for this text: $b[3]\n";
   my $success = 0;
@@ -314,7 +316,10 @@ while ($a = <A>)
   else
   {
     $countMismatch++;
-	if ($b[3] =~ /\W0\W/) { print "Did not find table *$b[1]* for the check *$b[3]\*.\n"; }
+	if ($b[3] =~ /[^\w\+]0\W/)
+	{
+	  print "Did not find table *$b[1]* for the check *$b[3]\*.\n";
+    } #todo: find a way to do this less hackily, x+0 now throws an error
 	else
 	{
 	print "$thisFile search for $b[3] FAILED\n";
@@ -421,7 +426,8 @@ if ($openPost)
     `$openCmd`;
 	if ($spawnPopup && $popupString)
 	{
-	  Win32::MsgBox("$popupString", 0, "I7T.PL results");
+	  my $myShort = $myfi; $myShort =~ s/.*[\/\\]//;
+	  Win32::MsgBox("Miscounts in $myShort\n" . ('=' x 20) . "\n$popupString", 0, "I7T.PL results");
 	}
   }
   if (!scalar keys %filesToOpen) { print "No error files to open!\n"; }
@@ -434,6 +440,10 @@ if ($openPost)
 	  print "$myfi: $doubleErr{$myfi} total focus-able errors.\n";
 	}
   }
+}
+elsif ($spawnPopup)
+{
+  print "The program forces you to type -o with spawnPopup, because otherwise you just see a popup and then have to type in the file to edit anyway.\n";
 }
 
 if ($openTableFile)

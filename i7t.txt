@@ -17,19 +17,19 @@ compound	xrow:3:table of annotations
 compound	xrow:2:table of accel-text
 compound	xrow:2:table of fin - fingerings
 compound	xrow:2:table of logic game wins
-compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66
+compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66	0
 compound	ni pr
 #############################compound tables
-compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8
+compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8	0
 #horrible books and horrible songs
-compound	xxhs	"	$$, up from 13
-compound	xxhb	"	$$. up from 38
-compound	xxbgw	"	$$ random important administrative and philosophical matters
-compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
-compound	xxjmt	"	$c total hat tips
-compound	xxss	"	$$ sleep stories
+compound	xxhs	"	$$, up from 13	0
+compound	xxhb	"	$$. up from 38	0
+compound	xxbgw	"	$$ random important administrative and philosophical matters	0
+compound	xxjmt	"	jerks/groaners now have $$ "grown-up"	0
+compound	xxjmt	"	$c total hat tips	0
+compound	xxss	"	$$ sleep stories	0
 compound	xxisv	"	To be precise, $$	1
-compound	xxbr	"	there are now $$ Basher Bible references
+compound	xxbr	"	there are now $$ Basher Bible references	0
 #command to run if things are wrong
 compound	ni pr
 ######################################
@@ -40,18 +40,18 @@ story	slicker-city
 slicker-city	xrow:3:table of final question options
 slicker-city	xrow:2:table of useons
 slicker-city	xrow:2:table of rotation responses
-slicker-city	xxenos	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ guys named Enos
-slicker-city	xxles	"	$$ guys named Les
-slicker-city	xxlee	"	$$ guys named Lee
-slicker-city	xxcom	"	$$ companies
-slicker-city	xxadd	"	$$ total concepts
+slicker-city	xxenos	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ guys named Enos	0
+slicker-city	xxles	"	$$ guys named Les	0
+slicker-city	xxlee	"	$$ guys named Lee	0
+slicker-city	xxcom	"	$$ companies	0
+slicker-city	xxadd	"	$$ total concepts	0
 slicker-city	ni scr
-slicker-city	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries
-slicker-city	xxtgtn	"	$$ cluing tries
-slicker-city	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs
-slicker-city	xxtgtn	"	and $$ cluing verbs
-slicker-city	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.
-slicker-city	xxtgtn	"	And there are $$ good guesses.
+slicker-city	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries	0
+slicker-city	xxtgtn	"	$$ cluing tries	0
+slicker-city	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs	0
+slicker-city	xxtgtn	"	and $$ cluing verbs	0
+slicker-city	xxtgty	c:/writing/scripts/invis/sc.txt	By last count, $$.	0
+slicker-city	xxtgtn	"	And there are $$ good guesses.	0
 slicker-city	ni scr
 ######################################
 #Buck the Past searching
@@ -64,24 +64,24 @@ buck-the-past	xrow:2:table of generic nonviolence
 buck-the-past	xrow:3:table of final question options
 buck-the-past	xrow:2:table of amusingness
 buck-the-past	xrow:2:table of oscar nonsense
-buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ reversal
+buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ reversal	0
 buck-the-past	ni cr / ni br / ni bpr
 #############
 #random stuff
 #table of life shelf books
 buck-the-past	xrow:2:table of animal silliness
 buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ first-rate self-help books	1
-buck-the-past	xxlsb	"	$f uncensorable
+buck-the-past	xxlsb	"	$f uncensorable	0
 #authors for the books
 buck-the-past	xxtia	"	$$ insightful authors	1
-buck-the-past	xxtia	"	$f reputable
+buck-the-past	xxtia	"	$f reputable	0
 #random ideas
 buck-the-past	xxton	"	$$ witticisms	1
-buck-the-past	xxui	"	$$ friendly inns
-buck-the-past	xxdi	"	$$ unfriendly inns
+buck-the-past	xxui	"	$$ friendly inns	0
+buck-the-past	xxdi	"	$$ unfriendly inns	0
 buck-the-past	xxfarm	"	$$ farm animal lines	1
-buck-the-past	xxfarm	"	$c overall animal reverses
-buck-the-past	xxfarm	"	$f clean
+buck-the-past	xxfarm	"	$c overall animal reverses	0
+buck-the-past	xxfarm	"	$f clean	0
 buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
 buck-the-past	xxtmc	"	$$ total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
