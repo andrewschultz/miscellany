@@ -51,6 +51,8 @@ my $maxString = 0;
 my $spawnPopup = 0;
 
 my %rows;
+my %falseRows;
+my %trueRows;
 my %exp;
 my %failCmd;
 
@@ -132,6 +134,8 @@ my $tableShort;
 my $table = 0;
 my $majorList = "";
 my $tableRow = 0;
+my $falseRow = 0;
+my $trueRow = 0;
 
 for $sourceFile (@sourceFileList)
 {
@@ -157,6 +161,7 @@ while ($a = <A>)
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
 	$curTable =~ s/ *\[.*//g; $tableRow = -3;
+	$falseRow = $trueRow = 0;
 	if ($aorig =~ /^\[table/) { $tableRow++; }
 	$curTable =~ s/ - .*//g;
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
@@ -170,6 +175,8 @@ while ($a = <A>)
   if ($table)
   {
     print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
+	if ($a =~ /(false\t|\tfalse)/) { $falseRow++; }
+	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
@@ -200,6 +207,8 @@ while ($a = <A>)
 	}
 	#if ($rows{$tableShort}) { print "Tacking on $tableRow to $tableShort, up from $rows{$tableShort}.\n"; }
 	$rows{$tableShort} += $tableRow;
+	$falseRows{$tableShort} += $falseRow;
+	$trueRows{$tableShort} += $trueRow;
 	if ($majorTable) { $majorList .= "$curTable: $tableRow rows<br />"; } $majorTable = 0;
   }
 }
@@ -255,7 +264,7 @@ while ($a = <A>)
   #print "parsing @b\n";
   $ranOneTest = 1;
 
-  if ($b[2] ne "\"")
+  if (($b[2] ne "\"") && ($b[2] ne "\"\""))
   {
   open(F, $b[2]) || die ("Can't find release notes file $b[2].");
   $thisFile = $lastOpen = $b[2];
@@ -269,12 +278,17 @@ while ($a = <A>)
 
   if ($rows{$b[1]}) { $size = $rows{$b[1]}; } else { print "$b[1] has nothing.\n"; }
 
-  my $sizeX = $size+1;
+  #most of the time, the 5th element (oh hi, Bruce Willis!) will be a 1 to signify that there is a message once the table comes to an end. But I can adjust this if I want.
+  #This used to be $+ instead of $$ but then I had other things I wanted to track for partial tables.
+
+  if (defined($b[4])) { $size += $b[4]; }
 
   my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
 
   $b[3] =~ s/\$\$/$size/g;
-  $b[3] =~ s/\$\+/$sizeX/g;
+  $b[3] =~ s/\$f/$falseRows{$b[1]}/g;
+  $b[3] =~ s/\$t/$trueRows{$b[1]}/g;
+
   #print "Looking for this text: $b[3]\n";
   my $success = 0;
   my $nearSuccess = "";

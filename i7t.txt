@@ -27,7 +27,7 @@ compound	xxhb	"	$$. up from 38
 compound	xxbgw	"	$$ random important administrative and philosophical matters
 compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
 compound	xxss	"	$$ sleep stories
-compound	xxisv	"	To be precise, $+
+compound	xxisv	"	To be precise, $$	1
 compound	xxbr	"	there are now $$ Basher Bible references
 #command to run if things are wrong
 compound	ni pr
@@ -69,15 +69,18 @@ buck-the-past	ni cr / ni br / ni bpr
 #random stuff
 #table of life shelf books
 buck-the-past	xrow:2:table of animal silliness
-buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$+ first-rate self-help books
+buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ first-rate self-help books	1
+buck-the-past	xxlsb	"	$f uncensorable
 #authors for the books
-buck-the-past	xxtia	"	$+ insightful authors
+buck-the-past	xxtia	"	$$ insightful authors	1
+buck-the-past	xxtia	"	$f reputable
 #ideas not in game proper
 buck-the-past	xxui	"	$$ friendly inns
 buck-the-past	xxdi	"	$$ unfriendly inns
-buck-the-past	xxfarm	"	$+ farm animal antics
-buck-the-past	xxtmc	"	$+ Torment Mentor chats
-buck-the-past	xxps	"	$+ Sharing Prophet babbles
+buck-the-past	xxfarm	"	$$ farm animal antics	1
+buck-the-past	xxfarm	"	$f clean
+buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
+buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
 buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #Buck the Past Spring Thing searching
