@@ -53,6 +53,7 @@ my $spawnPopup = 0;
 my %rows;
 my %falseRows;
 my %trueRows;
+my %smartIdeas;
 my %exp;
 my %failCmd;
 
@@ -136,6 +137,7 @@ my $majorList = "";
 my $tableRow = 0;
 my $falseRow = 0;
 my $trueRow = 0;
+my $smartIdea = 0;
 
 for $sourceFile (@sourceFileList)
 {
@@ -161,7 +163,7 @@ while ($a = <A>)
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
 	$curTable =~ s/ *\[.*//g; $tableRow = -3;
-	$falseRow = $trueRow = 0;
+	$falseRow = $trueRow = $smartIdea = 0;
 	if ($aorig =~ /^\[table/) { $tableRow++; }
 	$curTable =~ s/ - .*//g;
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
@@ -177,6 +179,8 @@ while ($a = <A>)
     print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
 	if ($a =~ /(false\t|\tfalse)/) { $falseRow++; }
 	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
+	my $y = $a;
+	$smartIdea += ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
@@ -206,6 +210,7 @@ while ($a = <A>)
 	  $tableList .= ": $tableRow rows\n";
 	}
 	#if ($rows{$tableShort}) { print "Tacking on $tableRow to $tableShort, up from $rows{$tableShort}.\n"; }
+	$smartIdeas{$tableShort} += $smartIdea;
 	$rows{$tableShort} += $tableRow;
 	$falseRows{$tableShort} += $falseRow;
 	$trueRows{$tableShort} += $trueRow;
@@ -286,6 +291,7 @@ while ($a = <A>)
   my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
 
   $b[3] =~ s/\$\$/$size/g;
+  $b[3] =~ s/\$c/$smartIdeas{$b[1]}/g;
   $b[3] =~ s/\$f/$falseRows{$b[1]}/g;
   $b[3] =~ s/\$t/$trueRows{$b[1]}/g;
 

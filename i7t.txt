@@ -26,6 +26,7 @@ compound	xxhs	"	$$, up from 13
 compound	xxhb	"	$$. up from 38
 compound	xxbgw	"	$$ random important administrative and philosophical matters
 compound	xxjmt	"	jerks/groaners now have $$ "grown-up"
+compound	xxjmt	"	$c total hat tips
 compound	xxss	"	$$ sleep stories
 compound	xxisv	"	To be precise, $$	1
 compound	xxbr	"	there are now $$ Basher Bible references
@@ -74,12 +75,15 @@ buck-the-past	xxlsb	"	$f uncensorable
 #authors for the books
 buck-the-past	xxtia	"	$$ insightful authors	1
 buck-the-past	xxtia	"	$f reputable
-#ideas not in game proper
+#random ideas
+buck-the-past	xxton	"	$$ witticisms	1
 buck-the-past	xxui	"	$$ friendly inns
 buck-the-past	xxdi	"	$$ unfriendly inns
-buck-the-past	xxfarm	"	$$ farm animal antics	1
+buck-the-past	xxfarm	"	$$ farm animal lines	1
+buck-the-past	xxfarm	"	$c overall animal reverses
 buck-the-past	xxfarm	"	$f clean
 buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
+buck-the-past	xxtmc	"	$$ total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
 buck-the-past	ni cr / ni br / ni bpr
 ######################################
