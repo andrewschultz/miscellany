@@ -2,7 +2,7 @@
 #salf.pl
 #section alphabetizer
 #
-# currently only for games.otl but it can be expanded
+# currently only for smart.otl but it can be expanded
 #
 # usage salf.pl
 #
@@ -59,8 +59,8 @@ if (!$toSplit == -1) { print "Need a CSV of sections, or use -pc for ProbComp, -
 
 @sects = split(/,/, $toSplit);
 
-my $infile = "c:\\writing\\games.otl";
-my $outfile = "c:\\writing\\temp\\games.otl";
+my $infile = "c:\\writing\\smart.otl";
+my $outfile = "c:\\writing\\temp\\smart.otl";
 
 open(A, "$infile");
 open(B, ">$outfile");

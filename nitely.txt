@@ -15,7 +15,7 @@
 #
 opo~3d,4d
 sts~ana,sa,roi
-as~pc,sc,btp,bs
+as~pc,sc,btp
 ec~e11,e13,e14,e15
 
 e11=dash
