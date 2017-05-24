@@ -1,4 +1,4 @@
-@echo off
+`@echo off
 
 set TEMPDIR=c:\users\andrew\documents\github
 
@@ -14,6 +14,16 @@ goto end
 
 if "%1" EQU "h" (
 %TEMPDIR%\git-tips.txt
+goto end
+)
+
+if "%1" EQU "r" (
+%TEMPDIR%\regex.txt
+goto end
+)
+
+if "%1" EQU "re" (
+%TEMPDIR%\regex.txt
 goto end
 )
 

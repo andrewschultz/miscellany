@@ -162,9 +162,8 @@ while ($a = <A>)
     $a =~ s/^\[//g;
     $table = 1; $tables++; $curTable = $a; chomp($curTable);
 	$tableShort = $curTable;
-	$curTable =~ s/ *\[.*//g; $tableRow = -3;
+	$curTable =~ s/ *\[.*//g;
 	$falseRow = $trueRow = $smartIdea = 0;
-	if ($aorig =~ /^\[table/) { $tableRow++; }
 	$curTable =~ s/ - .*//g;
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
 	if ($tableShort =~ / \[/) { $tableShort =~ s/ \[.*//g; }
@@ -173,21 +172,13 @@ while ($a = <A>)
 	{
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
 	}
-  }
-  if ($table)
-  {
-    print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
-	if ($a =~ /(false\t|\tfalse)/) { $falseRow++; }
-	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
-	my $y = $a;
-	$smartIdea += ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
-	if (($a =~ /[a-z]/i) && ($tableRow > -1))
+	$tableRow = 0;
+    if ($aorig =~ /^\[table/) { }
+	else
 	{
-	  my @tempAry = split(/\t/, $a);
-	  if ($#tempAry > $#tableCount) { $maxString = $a; }
-	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
-	  $tableCount[$#tempAry]++;
+	  <A>;
 	}
+	next;
   }
   if ($a !~ /[a-z]/)
   {
@@ -215,6 +206,26 @@ while ($a = <A>)
 	$falseRows{$tableShort} += $falseRow;
 	$trueRows{$tableShort} += $trueRow;
 	if ($majorTable) { $majorList .= "$curTable: $tableRow rows<br />"; } $majorTable = 0;
+  }
+  if ($table)
+  {
+    print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
+	if ($a =~ /(false\t|\tfalse)/) { $falseRow++; }
+	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
+	my $y = $a;
+	my $tempAdd = ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
+	if (($tempAdd < 1) && $smartIdea)
+	{
+	  print "Line $. in $sourceFile has no activations.\n";
+	}
+	$smartIdea += $tempAdd;
+	if (($a =~ /[a-z]/i) && ($tableRow > -1))
+	{
+	  my @tempAry = split(/\t/, $a);
+	  if ($#tempAry > $#tableCount) { $maxString = $a; }
+	  elsif ($#tempAry == $#tableCount) { $maxString .= $a; }
+	  $tableCount[$#tempAry]++;
+	}
   }
 }
 
@@ -443,7 +454,7 @@ if ($openPost)
 }
 elsif ($spawnPopup)
 {
-  print "The program forces you to type -o with spawnPopup, because otherwise you just see a popup and then have to type in the file to edit anyway.\n";
+  print "'\nNOTE: The program forces you to type -o with spawnPopup (-sp), because otherwise you just see a popup and then have to type in the file to edit anyway.\n";
 }
 
 if ($openTableFile)

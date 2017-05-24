@@ -376,6 +376,7 @@ past=$is\rmnm.pl,utils
 past=$is\c2t.pl,utils
 #############open smart.otl at right section
 past=$is\bs.pl,utils
+past=$is\bs.bat,utils
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
@@ -484,7 +485,7 @@ misc=2sp.pl,
 misc=wrong.pl,
 misc=qq.pl,
 misc=verb.pl,
-#################Fiction  or FAQ rewriting
+#################Fiction or FAQ rewriting
 misc=salf.pl,wrifi
 misc=noter.pl,wrifi
 misc=c:\writing\faqs\desp.pl,wrifi
