@@ -26,7 +26,7 @@ compound	xxhs	"	$$, up from 13	0
 compound	xxhb	"	$$. up from 38	0
 compound	xxbgw	"	$$ random important administrative and philosophical matters	0
 compound	xxjmt	"	jerks/groaners now have $$ "grown-up"	0
-compound	xxjmt	"	$c total hat tips	0
+compound	xxjmt	"	$c total gossip subjects	0
 compound	xxss	"	$$ sleep stories	0
 compound	xxisv	"	To be precise, $$	1
 compound	xxbr	"	there are now $$ Basher Bible references	0
@@ -86,6 +86,8 @@ buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
 buck-the-past	xxtmc	"	$$ total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
 buck-the-past	xxatt	"	$$ responses to attacking	0
+buck-the-past	xxwm	"	$$ responses to waiting	0
+buck-the-past	xxwm	"	$f clean	0
 buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #Buck the Past Spring Thing searching

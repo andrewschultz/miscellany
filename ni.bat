@@ -382,6 +382,11 @@ if "%1" EQU "br" (
 goto end
 )
 
+if "%1" EQU "bsr" (
+%NOTES%\buck_the_past_spring_thing_release_1_notes.txt
+goto end
+)
+
 if "%1" EQU "rr" (
 %NOTES%\roiling_release_4_notes.txt
 goto end
