@@ -484,6 +484,7 @@ misc=frn.pl,
 misc=2sp.pl,
 misc=wrong.pl,
 misc=qq.pl,
+misc=rgo.pl,
 misc=verb.pl,
 #################Fiction or FAQ rewriting
 misc=salf.pl,wrifi
