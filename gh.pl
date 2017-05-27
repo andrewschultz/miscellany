@@ -322,7 +322,7 @@ sub processTerms
 	  if ($fromFile =~ /\*/)
 	  {
 		my $ctemp = $c;
-		$ctemp =~ s/,$//;
+		$ctemp =~ s/,[a-z0-9-]*$//;
 		my @fileList = glob "$ctemp";
 		if ($#fileList == -1) { print "No matches for $ctemp.\n"; next; }
 		$wildSwipes++;

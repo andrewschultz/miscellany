@@ -1,4 +1,4 @@
-`@echo off
+@echo off
 
 set TEMPDIR=c:\users\andrew\documents\github
 

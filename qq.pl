@@ -16,7 +16,7 @@ my $gotYet = 0;
 my @fileArray = ();
 my $mainFile;
 my $shortName;
-my $count;
+my $count = 0;
 
 while ($count < $#ARGV)
 {
@@ -122,7 +122,7 @@ if ($test)
 print "TEST RESULTS:$shortName double-question/todo/expound,2,$errs,0," . join(" / ", @badLines) . "\n";
 if ($deletables)
 {
-print "TEST RESULTS:$shortName deletable debug text,0,$deletables,0," . join(" / ", @dele) . "\n";
+print "TEST RESULTS:$shortName deletable debug text, (tdl)0,$deletables,0," . join(" / ", @dele) . "\n";
 }
 }
 close(A);
