@@ -45,10 +45,10 @@ if (! -f $mainFile) { die ("No file $mainFile."); }
 
 scanForQs($mainFile, 1);
 
-my $inc;
-
-for $inc (@fileArray)
+for my $inc (@fileArray)
 {
+  if ($inc =~ /trivial niceties/i) { next; } # we could make a hash of stuff we shouldn't read
+  if ($inc =~ /in-game mapping/i) { next; }
   scanForQs($inc, 0);
 }
 
@@ -62,6 +62,7 @@ sub scanForQs
 my $line;
 my $count = 0;
 my @badLines;
+my @todoLines;
 my $comment = 0;
 my @dele;
 my $deletables = 0;
@@ -70,6 +71,8 @@ my $sweepIncludes = $_[1];
 if (! -f $_[0]) { die ("No file $_[0]."); }
 
 open(A, "$_[0]");
+
+print "Scanning $_[0]...\n";
 
 while ($line = <A>)
 {
@@ -88,7 +91,7 @@ while ($line = <A>)
     $count++;
 	$line =~ s/.*\[(todo|expound)//i;
 	print "$.: $line\n";
-	push(@badLines, $line);
+	push(@todoLines, $line);
   }
   if ($line =~ /\[[^\]]*\?\?/)
   {
@@ -109,7 +112,7 @@ while ($line = <A>)
   if ($line =~ /\tdl/)
   {
     $deletables++;
-	print "Line $. deletable text #$deletables\n";
+	print "Line $. deletable text\n";
 	push (@dele, $line);
   }
 }
@@ -119,11 +122,15 @@ close(A);
 my $errs = $#badLines + 1;
 if ($test)
 {
-print "TEST RESULTS:$shortName double-question/todo/expound,2,$errs,0," . join(" / ", @badLines) . "\n";
-if ($deletables)
-{
-print "TEST RESULTS:$shortName deletable debug text, (tdl)0,$deletables,0," . join(" / ", @dele) . "\n";
+printf("TEST RESULTS:$shortName todo/expound,2,%d,0,%s\n", (scalar @todoLines), join(" / ", @todoLines));
+printf("TEST RESULTS:$shortName double-question,2,%d,0,%s\n", (scalar @badLines), join(" / ", @badLines));
+printf("TEST RESULTS:$shortName deletable debug text, (tdl)0,%d,0,%s\n", (scalar @dele), join(" / ", @dele));
 }
+else
+{
+printf("$shortName has " . (scalar @badLines) . " double-questions\n");
+printf("$shortName has " . (scalar @todoLines) . " todo/expound\n");
+printf("$shortName has " . (scalar @dele) . " deletables\n");
 }
 close(A);
 
