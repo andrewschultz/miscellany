@@ -83,7 +83,7 @@ buck-the-past	xxfarm	"	$$ farm animal lines	1
 buck-the-past	xxfarm	"	$c overall animal reverses	0
 buck-the-past	xxfarm	"	$f clean	0
 buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
-buck-the-past	xxtmc	"	$$ total important issues	1
+buck-the-past	xxtmc	"	$c total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
 buck-the-past	xxatt	"	$$ responses to attacking	0
 buck-the-past	xxwm	"	$$ responses to waiting	0
