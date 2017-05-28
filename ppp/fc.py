@@ -20,6 +20,8 @@ import traceback
 import ConfigParser
 import argparse
 from math import sqrt
+#####need vc14 for this to work
+#from gmpy import invert
 
 configOpt = ConfigParser.SafeConfigParser()
 configTime = ConfigParser.SafeConfigParser()
@@ -103,6 +105,21 @@ backup = []
 elements = [ [], [], [], [], [], [], [], [], [] ]
 
 name = ""
+
+def extended_gcd(aa, bb):
+    lastremainder, remainder = abs(aa), abs(bb)
+    x, lastx, y, lasty = 0, 1, 1, 0
+    while remainder:
+        lastremainder, (quotient, remainder) = remainder, divmod(lastremainder, remainder)
+        x, lastx = lastx - quotient*x, x
+        y, lasty = lasty - quotient*y, y
+    return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
+ 
+def modinv(a, m):
+	g, x, y = extended_gcd(a, m)
+	if g != 1:
+		raise ValueError
+	return x % m
 
 def isPrime(x):
     for a in range(2,int(sqrt(x))):
@@ -484,7 +501,7 @@ def readTimeFile():
         print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
         exit()
     configTime.read(timefile)
-    modulus = configTime.getint('Section1', 'modulus')
+    modulus = modinv(configTime.getint('Section1', 'modulus'), 200003)
     remainder = configTime.getint('Section1', 'remainder')
     maxDelay = configTime.getint('Section1', 'maxdelay')
     lasttime = configTime.getint('Section1', 'lasttime')
@@ -520,7 +537,7 @@ def writeTimeFile():
     modulus = randprime()
     remainder = lasttime % modulus
     global maxDelay
-    configTime.set('Section1', 'modulus', str(modulus))
+    configTime.set('Section1', 'modulus', str(modinv(modulus, 200003))) # 200003 is prime. I checked!
     configTime.set('Section1', 'remainder', str(remainder))
     configTime.set('Section1', 'maxdelay', str(maxDelay))
     configTime.set('Section1', 'lasttime', str(lasttime))
