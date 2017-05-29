@@ -2,39 +2,50 @@
 #unch.pl
 #un-checked-in changes in GIT
 #run nightly
+#
+#-h gives HTML
+#-t gives test results
+#-l lists default values
+#
+#-a may, in the future, list all my github subdirectories
 
 use warnings;
 use strict;
 
 use POSIX;
 
-my %exp;
+my %exp = ( "3d" => "threediopolis",
+  "4d" => "fourdiopolis",
+  "ec" => "ectocomp",
+  "sa" => "stale-tales-slate",
+  "roi" => "stale-tales-slate",
+  "pc" => "the-problems-compound",
+  "sc" => "slicker-city",
+  "uo" => "ugly-oafs",
+  "tr" => "trizbort"
+);
+
 my %projs;
-my @projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing");
+my @projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "seeker-status", "curate");
 
-$exp{"3d"} = "threediopolis";
-$exp{"4d"} = "fourdiopolis";
-$exp{"ec"} = "ectocomp";
-$exp{"sa"} = "stale-tales-slate";
-$exp{"roi"} = "stale-tales-slate";
-$exp{"pc"} = "the-problems-compound";
-$exp{"sc"} = "slicker-city";
-$exp{"uo"} = "ugly-oafs";
-$exp{"tr"} = "trizbort";
-
+#####################variables
 my $count = 0;
 my $bigString = "";
 
+#######################options
+my $html = 0;
 my $file = 0;
 my $proj = 0;
 my $test = 0;
 
 while ($count <= $#ARGV)
 {
-  $a = $ARGV[$count];
-  for ($a)
+  my $arg = $ARGV[$count];
+  for ($arg)
   {
+    /^-?l$/ && do { for (@projAry) { print "$_\n"; } exit(); };
     /^-?t$/ && do { $test = 1; $count++; next; };
+    /^-?h$/ && do { $html = 1; $count++; next; };
 	/^[a-z]/ && do { @projAry = split(/,/, $b); $count += 2; next; };
 	usage();
   }
@@ -64,6 +75,17 @@ else
   print "TEST RESULTS:unchecked in files,2,$proj,0,$projLeft\n";
 }
 
+if ($html)
+{
+  my $htmlString = $bigString;
+  my $hfile = 'c:\writing\scripts\unch.htm';
+  $htmlString =~ s/\n/<br \/>\n/g;
+  open(H, ">$hfile");
+  print H "<html>\n<title>Unchanged Files</title>\n<body>$htmlString</body></html> ";
+  close(H);
+  `$hfile`;
+}
+
 ###########################subroutines
 
 sub checkProject
@@ -88,6 +110,7 @@ print<<EOT;
 -t says this outputs test results
 CSV tells projects to run
 -l lists the default that is run
+-h creates and runs an html file
 EOT
 exit;
 }
