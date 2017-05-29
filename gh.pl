@@ -358,7 +358,18 @@ sub processTerms
 		{
 		  $fileList .= "$fromFile\n";
 		  #die "$fromFile to $gh\\$toFile\\$short";
+		  my $fileTo = "$gh\\$toFile\\$short";
+          my $info    = stat($fileTo);
+          my $retMode = $info->mode & 0777;
+		  if ($retMode & 0222 != 0222)
+		  {
+		    chmod 777, $fileTo;
+		  }
 		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short");
+		  if ($retMode & 0222 != 0222)
+		  {
+		    chmod $retMode, $fileTo;
+		  }
 		  if (!$thisWild) { $copies++; }
         }
 		else
