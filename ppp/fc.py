@@ -26,13 +26,13 @@ from math import sqrt
 configOpt = ConfigParser.SafeConfigParser()
 configTime = ConfigParser.SafeConfigParser()
 
-optfile = "fcopt.txt"
-savefile = "fcsav.txt"
+optFile = "fcopt.txt"
+saveFile = "fcsav.txt"
 winFile = "fcwins.txt"
-timefile = "fctime.txt"
+timeFile = "fctime.txt"
 lockfile = "fclock.txt"
 
-onoff = ['off', 'on']
+onOff = ['off', 'on']
 
 suits = ['C', 'd', 'S', 'h']
 
@@ -85,7 +85,7 @@ cheatIndex = 0
 haveLockFile = True
 disallowWriteSource = True
 
-lastscore = 0
+lastScore = 0
 highlight = 0
 
 onlymove = 0
@@ -411,10 +411,11 @@ def parseCmdLine():
     global maxGames
     openAnyFile = False
     parser = argparse.ArgumentParser(description='Play FreeCell.', formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('-o', '--optfile', action='store_true', dest='optfile', help='open options file')
-    parser.add_argument('-l', '--loadsavefile', action='store_true', dest='savefile', help='open save file')
+    parser.add_argument('-o', '--optFile', action='store_true', dest='optFile', help='open options file')
+    parser.add_argument('-l', '--loadsaveFile', action='store_true', dest='saveFile', help='open save file')
     parser.add_argument('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python source file')
-    parser.add_argument('-t', '--textfile', action='store_true', dest='timefile', help='open text/time file\n\n')
+    parser.add_argument('-t', '--textfile', action='store_true', dest='timeFile', help='open text/time file\n\n')
+    parser.add_argument('-r', '--resettime', action='store_true', dest='resettime', help='open text/time file\n\n')
     parser.add_argument('--getridofthetimewastenag', action='store_false', dest='annoyingNudge')
     parser.add_argument('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13', type=int)
     parser.add_argument('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)\n\n')
@@ -429,16 +430,20 @@ def parseCmdLine():
     parser.add_argument('-mg', '--maxgames', action='store', dest='maxGames', type=int, help='adjust maxGames')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
-    if args.optfile is True:
-        os.system(optfile)
+    if args.resettime is True:
+        print "Resetting the time file", timeFile;
+        writeTimeFile()
+        exit()
+    if args.optFile is True:
+        os.system(optFile)
         openAnyFile = True
-    if args.savefile is True:
+    if args.saveFile is True:
         os.system("fcsav.txt")
         openAnyFile = True
     if args.pythonfile is True:
         os.system("\"c:\\Program Files (x86)\\Notepad++\\notepad++\" fc.py")
         openAnyFile = True
-    if args.timefile is True:
+    if args.timeFile is True:
         os.system("fctime.txt")
         openAnyFile = True
     if openAnyFile:
@@ -494,13 +499,13 @@ def parseCmdLine():
 def readTimeFile():
     global nagDelay
     global maxDelay
-    if os.access(timefile, os.W_OK):
-        print "Time file should not have write access outside of the game. attrib -R " + timefile + " or chmod 333 to get things going."
+    if os.access(timeFile, os.W_OK):
+        print "Time file should not have write access outside of the game. attrib -R " + timeFile + " or chmod 333 to get things going."
         exit()
-    if not os.path.isfile(timefile):
+    if not os.path.isfile(timeFile):
         print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
         exit()
-    configTime.read(timefile)
+    configTime.read(timeFile)
     modulus = modinv(configTime.getint('Section1', 'modulus'), 200003)
     remainder = configTime.getint('Section1', 'remainder')
     maxDelay = configTime.getint('Section1', 'maxdelay')
@@ -530,7 +535,7 @@ def readTimeFile():
     return
 
 def writeTimeFile():
-    os.system("attrib -r " + timefile)
+    os.system("attrib -r " + timeFile)
     if not configTime.has_section('Section1'):
         configTime.add_section("Section1")
     lasttime = int(time.time())
@@ -541,16 +546,16 @@ def writeTimeFile():
     configTime.set('Section1', 'remainder', str(remainder))
     configTime.set('Section1', 'maxdelay', str(maxDelay))
     configTime.set('Section1', 'lasttime', str(lasttime))
-    with open(timefile, 'w') as configfile:
+    with open(timeFile, 'w') as configfile:
         configTime.write(configfile)
-    os.system("attrib +r " + timefile)
+    os.system("attrib +r " + timeFile)
     return
 
 def readOpts():
-    if not os.path.isfile(optfile):
-        print "No", optfile, "so using default options."
+    if not os.path.isfile(optFile):
+        print "No", optFile, "so using default options."
         return
-    configOpt.read(optfile)
+    configOpt.read(optFile)
     global vertical
     vertical = configOpt.getboolean('Section1', 'vertical')
     global autoReshuf
@@ -577,7 +582,7 @@ def sendOpts():
     configOpt.set('Section1', 'savePosition', str(savePosition))
     configOpt.set('Section1', 'annoyingNudge', str(annoyingNudge))
     configOpt.set('Section1', 'annoyingNudge', str(chainShowAll))
-    with open(optfile, 'w') as configfile:
+    with open(optFile, 'w') as configfile:
         configOpt.write(configfile)
     print("Saved options.")
     return
@@ -1077,20 +1082,20 @@ def printOthers():
         else:
             sys.stdout.write(' ')
     sys.stdout.write('\nFoundation: ')
-    foundscore = 0
+    foundScore = 0
     for y in [0, 2, 1, 3]:
-        foundscore += found[y]
+        foundScore += found[y]
         if found[y] == 0:
             sys.stdout.write(' ---')
         else:
             sys.stdout.write(' ' + tocard(found[y] + y * 13))
-    sys.stdout.write(' (' + str(foundscore) + ' point' + plur(foundscore))
-    global lastscore
-    if (lastscore < foundscore):
-        sys.stdout.write(', up ' + str(foundscore - lastscore))
+    sys.stdout.write(' (' + str(foundScore) + ' point' + plur(foundScore))
+    global lastScore
+    if (lastScore < foundScore):
+        sys.stdout.write(', up ' + str(foundScore - lastScore))
     sys.stdout.write(', ' + str(chainTotal()) + ' pairs in order, ' + str(chainNopeBig()) + ' out of order, ' + str(chainNopeEach()) + ' cols unordered')
     sys.stdout.write(')\n')
-    lastscore = foundscore
+    lastScore = foundScore
 
 def anyDoableLimit (ii):
     tempval = 0
@@ -1342,7 +1347,7 @@ def loadGame(gameName):
     global totalUndo
     global totalReset
     global startTime
-    original = open(savefile, "r")
+    original = open(saveFile, "r")
     startTime = -1
     while True:
         line=original.readline()
@@ -1393,7 +1398,7 @@ def loadGame(gameName):
     return 0
 
 def saveGame(gameName):
-    savfi = open(savefile, "r")
+    savfi = open(saveFile, "r")
     linecount = 0
     for line in savfi:
         linecount += 1
@@ -1401,7 +1406,7 @@ def saveGame(gameName):
             print ("Duplicate save game name found at line %d." % linecount)
             return
     savfi.close()
-    with open(savefile, "a") as myfile:
+    with open(saveFile, "a") as myfile:
         myfile.write(gameName + "\n")
         for y in range (1,9):
             myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
@@ -1473,7 +1478,7 @@ def readCmd(thisCmd):
         name = input("Move:").strip()
         if name == '/': # special case for slash/backslash
             debug = 1 - debug
-            print ('debug', onoff[debug])
+            print ('debug', onOff[debug])
             cmdList.append(name)
             return
         if name == '\\':
@@ -1516,7 +1521,7 @@ def readCmd(thisCmd):
     if name == 'tu':
         trackUndo = 1 - trackUndo
         if not inUndo:
-            print ("trackUndo now " + onoff[trackUndo])
+            print ("trackUndo now " + onOff[trackUndo])
         cmdNoMeta.pop()
         return
     if len(name) == 0:
@@ -1546,7 +1551,7 @@ def readCmd(thisCmd):
             name = re.sub(r'-.*', '', name)
     #### saving/loading comes first.
     if name == 'lp':
-        original = open(savefile, "r")
+        original = open(saveFile, "r")
         o1 = re.compile(r'^s=')
         while True:
             line=original.readline()
@@ -1755,26 +1760,26 @@ def readCmd(thisCmd):
     if name == '+':
         cmdNoMeta.pop()
         dblSzCards = not dblSzCards
-        print ("Toggled dblSzCards to %s." % (onoff[dblSzCards]))
+        print ("Toggled dblSzCards to %s." % (onOff[dblSzCards]))
         printCards()
         return
     if name == 'cs':
         cmdNoMeta.pop()
         chainShowAll = not chainShowAll
-        print ("Toggled chainShowAll to %s." % (onoff[chainShowAll]))
+        print ("Toggled chainShowAll to %s." % (onOff[chainShowAll]))
         printCards()
         return
     if name == 'e':
         cmdNoMeta.pop()
         autoReshuf = not autoReshuf
-        print ("Toggled reshuffling to %s." % (onoff[autoReshuf]))
+        print ("Toggled reshuffling to %s." % (onOff[autoReshuf]))
         reshuf(-1)
         printCards()
         return
     if name == 'v':
         cmdNoMeta.pop()
         vertical = not vertical
-        print ("Toggled vertical view to %s." % (onoff[vertical]))
+        print ("Toggled vertical view to %s." % (onOff[vertical]))
         printCards()
         return
     #### mostly meta commands above here. Keep them there.
@@ -2099,7 +2104,7 @@ readOpts()
 #note that the Cmd line overrides what is in the options file
 parseCmdLine()
 
-if timeMatters and os.path.exists(timefile) and os.stat(timefile).st_size > 0:
+if timeMatters and os.path.exists(timeFile) and os.stat(timeFile).st_size > 0:
     readTimeFile()
 
 if annoyingNudge:
