@@ -25,6 +25,8 @@ my $curTable = "";
 my @important = ();
 my $majorTable = 0;
 my $tableList = "";
+my $noAct = 0;
+my $actLog = "";
 
 my $tabfile = "c:/writing/scripts/i7t.txt";
 my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
@@ -216,7 +218,9 @@ while ($a = <A>)
 	my $tempAdd = ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
 	if (($tempAdd < 1) && $smartIdea)
 	{
-	  print "Line $. in $sourceFile has no activations.\n";
+	  print "Line $. in $sourceFile has no activations/e2/na.\n";
+	  $noAct++;
+	  $actLog .= " $.";
 	}
 	$smartIdea += $tempAdd;
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
@@ -413,7 +417,12 @@ if ($dupFail)
 
 if ($printFail)
 {
-  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog";
+  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog\n";
+}
+
+if ($noAct)
+{
+  print "TEST RESULTS:(notes) $project-activations,0,$noAct,0,Look <a href=\"file:///$thisFile\">here</a>\n$actLog\n";
 }
 
 if ($majorList)
@@ -424,7 +433,7 @@ if ($majorList)
 
 if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
 
-if ($ranOneTest && !$printFail && !$dupFail) { print "EVERYTHING WORKED! YAY!\n"; }
+if ($ranOneTest && !$printFail && !$dupFail && !$noAct && !$majorList) { print "EVERYTHING WORKED! YAY!\n"; }
 
 if ($openPost)
 {

@@ -64,6 +64,7 @@ buck-the-past	xrow:2:table of generic nonviolence
 buck-the-past	xrow:3:table of final question options
 buck-the-past	xrow:2:table of amusingness
 buck-the-past	xrow:2:table of oscar nonsense
+buck-the-past	xrow:2:table of wait messages
 buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ reversal	0
 buck-the-past	ni cr / ni br / ni bpr
 #############
@@ -71,17 +72,17 @@ buck-the-past	ni cr / ni br / ni bpr
 #table of life shelf books
 buck-the-past	xrow:2:table of animal silliness
 buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ first-rate self-help books	1
-buck-the-past	xxlsb	"	$f uncensorable	0
+buck-the-past	xxlsb	"	$t censorable	0
 #authors for the books
 buck-the-past	xxtia	"	$$ insightful authors	1
-buck-the-past	xxtia	"	$f reputable	0
+buck-the-past	xxtia	"	$t disreputable	0
 #random ideas
 buck-the-past	xxton	"	$$ witticisms	1
 buck-the-past	xxui	"	$$ friendly inns	0
 buck-the-past	xxdi	"	$$ unfriendly inns	0
 buck-the-past	xxfarm	"	$$ farm animal lines	1
 buck-the-past	xxfarm	"	$c overall animal reverses	0
-buck-the-past	xxfarm	"	$f clean	0
+buck-the-past	xxfarm	"	$t risque	0
 buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
 buck-the-past	xxtmc	"	$c total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
