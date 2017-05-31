@@ -1909,6 +1909,7 @@ def readCmd(thisCmd):
                     moveList.append(name)
                 slipUnder()
                 checkFound()
+                reshuf(-1)
                 printCards()
                 return
             print ('Sorry, found nothing.')
@@ -1929,6 +1930,7 @@ def readCmd(thisCmd):
                         checkAgain |= reshuf(-1)
                     pass
                 checkFound()
+                reshuf(-1)
                 printCards()
             else:
                 print ('Can\'t move from spares.') #/? 3s onto 2s with nothing else, all filled
