@@ -169,15 +169,22 @@ sub addSaveFile
   while ($a = <A>)
   {
     chomp($a);
-	if ($a =~ / /)
+	$a = lc($a);
+	if ($a =~ /[ \.-]/)
 	{
-	  my @words = split(/ /, lc($a));
+	  my @words = split(/[ \.-]/, lc$a);
 	  if ($saveHash{"$words[1]$words[0]"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[1]s$words[0]"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[1]$words[0]s"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[1]s$words[0]s"}) { print "$a already in save list.\n"; next; }
 	  if ($saveHash{"$words[0]$words[1]"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[0]s$words[1]"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[0]$words[1]s"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[0]s$words[1]s"}) { print "$a already in save list.\n"; next; }
 	}
 	else
 	{
-	  if ($saveHash{lc($a)}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{$a} || $saveHash{"${a}s"}) { print "$a already in save list.\n"; next; } # trick/reference: how to separate perl variables from interpolated strings
 	}
 	$a =~ s/ //g;
 	if ($a eq $q) { $dontrewrite = 1; }

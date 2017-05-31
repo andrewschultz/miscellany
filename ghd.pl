@@ -25,6 +25,7 @@ my %siteArray;
 ################options
 my $debug = 0;
 my $popup = 0;
+my $unchAfter = 0;
 
 #######################variables
 my $count = 0;
@@ -44,6 +45,7 @@ while ($count <= $#ARGV)
   {
   /^-?d/ && do { $debug = 1; $count++; next; };
   /^-?p/ && do { $popup = 1; $count++; next; };
+  /^-?u/ && do { $unchAfter = 1; $count++; next; };
   /^-?\d+$/ && do { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); $count++; next; };
   /^-?\?/ && do { usage(); };
   print "Unknown cmd line parameter $arg\n";
@@ -116,6 +118,11 @@ else
 print "$popupText";
 }
 
+if ($unchAfter)
+{
+  `unch.pl -h`;
+}
+
 #######################################
 #subroutines
 
@@ -125,6 +132,7 @@ print<<EOT;
 ==========basic usage==========
 -d debug
 -p pop up results
+-u run unch.pl afterwards
 -(#) how many days back (default = 0, today)
 EOT
 exit();
