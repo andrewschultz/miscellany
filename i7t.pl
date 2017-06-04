@@ -65,6 +65,11 @@ my %doubleErr;
 
 my @tableCount = ();
 
+################very bad hard coding but it will have to do for now
+$ignoreDup{"xxu"} = 1;
+$ignoreDup{"xxton"} = 1;
+$ignoreDup{"xxuse"} = 1;
+
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
 $exp{"pc"} = "compound";
@@ -217,7 +222,7 @@ while ($a = <A>)
 	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
 	my $y = $a;
 	my $tempAdd = ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
-	if (($tempAdd < 1) && $smartIdea)
+	if (($tempAdd < 1) && $smartIdea && (!defined($ignoreDup{$tableShort})))
 	{
 	  print "Line $. in $sourceFile has no activations/e2/na.\n";
 	  $noAct++;
