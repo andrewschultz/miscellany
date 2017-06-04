@@ -90,6 +90,7 @@ buck-the-past	xxatt	"	$$ responses to attacking	0
 buck-the-past	xxwm	"	$$ responses to waiting	0
 buck-the-past	xxwm	"	$f clean	0
 buck-the-past	xxnocuss	"	$$ responses to swearing	0
+buck-the-past	xxmov	"	$$ movies	0
 buck-the-past	ni cr / ni br / ni bpr
 ######################################
 #Buck the Past Spring Thing searching

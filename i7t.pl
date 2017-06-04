@@ -17,6 +17,7 @@ my $newDir = ".";
 my $project = "Project";
 
 #######################################varaiables
+my @popupLines = ();
 my $popupString = "";
 my $sum = "";
 my $tables = 0;
@@ -316,12 +317,13 @@ while ($a = <A>)
   my $success = 0;
   my $nearSuccess = "";
   my $f;
+  my $possLine = 0;
 
   while ($f = <F>)
   {
     #print "$b[3] =~? $f";
     if ($f =~ /\b$b[3]/) { $success = 1; last; }
-	if ($f =~ /$almost/) { if ($filesToOpen{$lastOpen}) { $doubleErr{$lastOpen}++; } else { $filesToOpen{$lastOpen} = $.; } }
+	if ($f =~ /$almost/) { if ($filesToOpen{$lastOpen}) { $doubleErr{$lastOpen}++; } else { $filesToOpen{$lastOpen} = $.; } $possLine = $.; }
   }
   close(F);
   if ($success)
@@ -339,6 +341,7 @@ while ($a = <A>)
 	{
 	print "$thisFile search for $b[3] FAILED\n";
 	$popupString .= "* $b[3]\n";
+	if ($possLine) { push (@popupLines, $possLine); }
 	}
 	if (!$filesToOpen{$thisFile}) { $filesToOpen{$thisFile} = $.; }
 	$errLog .= "$b[3] needs to be in<br />\n";
@@ -446,6 +449,7 @@ if ($openPost)
     `$openCmd`;
 	if ($spawnPopup && $popupString)
 	{
+	  if (scalar @popupLines) { $popupString .= "Lines: " . join(", ", sort(@popupLines)) . "\n"; }
 	  my $myShort = $myfi; $myShort =~ s/.*[\/\\]//;
 	  Win32::MsgBox("Miscounts in $myShort\n" . ('=' x 20) . "\n$popupString", 0, "I7T.PL results");
 	}
