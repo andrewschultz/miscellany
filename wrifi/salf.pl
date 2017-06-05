@@ -19,14 +19,23 @@ use POSIX;
 use strict;
 use warnings;
 
+##########################
+#options
+
+my $undoQuestionComments = 0;
+
+##########################
+#variables
+
 my $didSomething = 0;
 my $dupBytes = 0;
 my %got = ();
 my $noGlobals = 0;
 my $dupes;
-
 my @sects = ();
 my $toSplit = "";
+my $count = 0;
+
 
 my $myd = getcwd();
 
@@ -39,29 +48,32 @@ if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc
 if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; }
 if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; }
 
-if (!defined($ARGV[0]))
+while ($count < $#ARGV)
 {
-  if (!$toSplit)
+  my $arg = $ARGV[$count];
+  for ($arg)
   {
-  print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit;
+    /^-?q$/ && do { $undoQuestionComments = 1; $count++; next; }
   }
-}
-else
-{
-  if ($ARGV[0] =~ /^-/) { $ARGV[0] =~ s/^-//; }
-  if (defined($list{$ARGV[0]}))
-  {
-    $toSplit = $list{$ARGV[0]};
-  }
+  if ($toSplit) { die ("Second split-command."); }
+  if ($list{$ARGV[$count]}) { $toSplit = $ARGV[$count]; }
   else
   {
-    $toSplit = $ARGV[0];
+  $toSplit = $ARGV[$count];
   }
+  $count++;
 }
 
-if (!$toSplit == -1) { print "Need a CSV of sections, or use -pc for ProbComp, -sc or BTP.\n"; exit; }
+if (!$toSplit)
+{
+  print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit;
+}
+
+if ($toSplit =~ /^-/) { $toSplit =~ s/^-//; }
 
 @sects = split(/,/, $toSplit);
+
+if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp, -sc or BTP.\n"; exit; }
 
 my $infile = "c:\\writing\\smart.otl";
 my $outfile = "c:\\writing\\temp\\smart.otl";
@@ -92,7 +104,7 @@ my $outDup = (-s $outfile) + $dupBytes;
 
 if ((-s $infile) != $outDup)
 {
-  print "Uh oh, $infile and $outfile(+$dupBytes) didn't match sizes. Bailing.\n";
+  print "Uh oh, $infile and $outfile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes) didn't match sizes. Bailing.\n";
   print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile, total $outDup.\n";
   exit;
 }
@@ -102,6 +114,9 @@ my $cmd = "copy $outfile $infile";
 print "$cmd\n";
 `$cmd`;
 
+#################################################
+#subroutines
+
 sub alfThis
 {
   $didSomething = 1;
@@ -109,10 +124,14 @@ sub alfThis
   my @uniq_no_case = ();
   if ($noGlobals) { %got = (); }
 
-
   while ($a = <A>)
   {
     chomp($a);
+	if ($undoQuestionComments && ($a =~ /^#\?/))
+	{
+	  $a =~ s/^#\?//;
+	  $dupBytes -= 2;
+    }
     if ($a !~ /[a-z0-9]/i)
     {
       #print "Last line $lines[-1]\n";
