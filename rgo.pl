@@ -15,6 +15,7 @@ use warnings;
 #variables
 my $lineTo;
 my $backupLine;
+my $tabLine;
 my $roomSearch = 1;
 
 my $search = "";
@@ -52,6 +53,7 @@ while ($a = <A>)
 {
   #if ($a =~ /^$search/i) { print "$. $a"; }
   if ($a =~ /^$rmOutline .*$search/i) { $backupLine = $.; }
+  if (($a =~ /^$search[^\t]*?\t/i) && (!$tabLine)) { $tabLine = $.; }
 
   if ($roomSearch && ($a =~ /^$search ([a-z ])* is (a room in|(north|south|east|west|up|down|above|below|inside|outside) of)/i))
   {
@@ -65,6 +67,12 @@ if ($backupLine && !$lineTo)
 {
   print "Going with backup part (*) $search\n";
   $lineTo = $backupLine;
+}
+
+if ($tabLine && !$lineTo)
+{
+  print "Going with tab-line (*) $search\n";
+  $lineTo = $tabLine;
 }
 
 if (!$lineTo) { die ("Didn't find string $search"); }
