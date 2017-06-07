@@ -46,7 +46,7 @@ preProcessHashes($ghp);
 #these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
 my $justPrint = 0;
 my $verbose = 0;
-my $verboseTest = 0;
+my $verboseTest = 1;
 my $myBase = "";
 
 my $globalTS = 0;
@@ -91,6 +91,7 @@ while ($count <= $#ARGV)
   /^-?f$/i && do { $byFile = 1; $count++; next; };
   /^-?v$/i && do { $verbose = 1; $count++; next; };
   /^-?vt$/i && do { $verboseTest = 1; $count++; next; };
+  /^-?nvt$/i && do { $verboseTest = 0; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
   /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };

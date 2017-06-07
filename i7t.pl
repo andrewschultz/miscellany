@@ -344,7 +344,7 @@ while ($a = <A>)
     } #todo: find a way to do this less hackily, x+0 now throws an error
 	else
 	{
-	print "$thisFile search for $b[3] FAILED\n";
+	print "$thisFile search for $b[3] FAILED" . ($possLine ? " (line $.)" : "") . ".\n";
 	$popupString .= "* $b[3]\n";
 	if ($possLine) { push (@popupLines, $possLine); }
 	}

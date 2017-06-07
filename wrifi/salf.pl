@@ -48,7 +48,7 @@ if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc
 if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; }
 if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; }
 
-while ($count < $#ARGV)
+while ($count <= $#ARGV)
 {
   my $arg = $ARGV[$count];
   for ($arg)

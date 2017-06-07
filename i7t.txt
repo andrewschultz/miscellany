@@ -23,7 +23,7 @@ compound	ni pr
 compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8	0
 #horrible books and horrible songs
 compound	xxhs	"	$$, up from 13	0
-compound	xxhb	"	$$. up from 38	0
+compound	xxhb	"	$$, up from 38	0
 compound	xxbgw	"	$$ random important administrative and philosophical matters	0
 compound	xxjmt	"	jerks/groaners now have $$ "grown-up"	0
 compound	xxjmt	"	$c total gossip subjects	0
