@@ -649,17 +649,19 @@ sub checkWarnings
 	if ($removeTrailingSpace || $_[1])
 	{
       my $tempfile = "c:\\writing\\scripts\\temp-perl.temp";
-	  open(F1, "$_[0]") || do { print "Can't open $_[0].\n"; return; };
-	  open(F2, ">$tempfile") || do { print "Can't write to $tempfile.\n"; close(F1); return; };
+	  my $origFile;
+	  my $strippedFile;
+	  openWinOrUnix($origFile, "$_[0]") || do { print "Can't open $_[0].\n"; return; };
+	  open($strippedFile, ">$tempfile") || do { print "Can't write to $tempfile.\n"; close($origFile); return; };
 	  my $l;
-	  while ($l = <F1>)
+	  while ($l = <$origFile>)
 	  {
 	    $l =~ s/[ \t]*$//;
 		$l =~ s/^ +\t/\t/;
-		print F2 $l;
+		print $strippedFile $l;
 	  }
-	  close(F1);
-	  close(F2);
+	  close($origFile);
+	  close($strippedFile);
 	  `copy \"$tempfile\" \"$_[0]\"`;
 	  delete($gwt{$_[0]});
 	  #die("copy \"$tempfile\" \"$_[0]\"");

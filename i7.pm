@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %xtraFiles tableFile cutArt);
+@EXPORT      = qw(%i7x %xtraFiles tableFile cutArt openWinOrUnix);
 #@EXPORT_OK   = qw(i7x);
 
 our %i7x = ( "12" => "shuffling",
@@ -52,6 +52,18 @@ sub cutArt
   if ($temp =~ /^a (thing\t|for )/) { return $_[0]; } #A for effort is a special case
   $temp =~ s/^(a thing called |a |the )//gi;
   return $temp;
+}
+
+sub openWinOrUnix
+{
+  open($_[0], $_[1]);
+  my $line = <$_[0]>;
+  if ($line !~ /\r/)
+  {
+    close($_[0]);
+	open($_[0], $_[1]);
+	binmode($_[0]);
+  }
 }
 
 sub tableFile
