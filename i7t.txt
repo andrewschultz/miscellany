@@ -86,6 +86,7 @@ buck-the-past	xxfarm	"	$t risque	0
 buck-the-past	xxtmc	"	$$ Torment Mentor chats	1
 buck-the-past	xxtmc	"	$c total important issues	1
 buck-the-past	xxps	"	$$ Sharing Prophet babbles	1
+buck-the-past	xxgp	"	$$ Welfare General proclamations	1
 buck-the-past	xxatt	"	$$ responses to attacking	0
 buck-the-past	xxwm	"	$$ responses to waiting	0
 buck-the-past	xxwm	"	$f clean	0

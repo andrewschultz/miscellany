@@ -9,6 +9,8 @@
 
 use strict;
 use warnings;
+use lib "c:/writing/scripts";
+use i7;
 
 use File::Compare;
 use File::Copy;
@@ -624,7 +626,7 @@ sub checkWarnings
   close(B);
 
 
-  if (($removeTrailingSpace || $_[1]) && ($trailingSpace > 0)) { print "$trailingSpace trailing spaces in $_[0].\n"; $globalTS++; }
+  if (($removeTrailingSpace || $_[1]) && ($trailingSpace > 0)) { print "$trailingSpace line(s) with trailing space(s) in $_[0].\n"; $globalTS++; }
   if ($_[0] =~ /\.pl$/i)
   {
   if (!$gotStrict && $gotWarnings) { print "Need strict in $_[0] ($numLines), project $thisProj\n"; $globalStrict++; }
@@ -651,8 +653,9 @@ sub checkWarnings
       my $tempfile = "c:\\writing\\scripts\\temp-perl.temp";
 	  my $origFile;
 	  my $strippedFile;
-	  openWinOrUnix($origFile, "$_[0]") || do { print "Can't open $_[0].\n"; return; };
-	  open($strippedFile, ">$tempfile") || do { print "Can't write to $tempfile.\n"; close($origFile); return; };
+	  my $isWin = openWinOrUnix($origFile, "$_[0]");
+	  open($strippedFile, ">", $tempfile) || do { print "Can't write to $tempfile.\n"; close($origFile); return; };
+	  if (!$isWin) { binmode($strippedFile); }
 	  my $l;
 	  while ($l = <$origFile>)
 	  {

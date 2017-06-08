@@ -56,14 +56,16 @@ sub cutArt
 
 sub openWinOrUnix
 {
-  open($_[0], $_[1]);
+  open($_[0], "<", $_[1]);
   my $line = <$_[0]>;
   if ($line !~ /\r/)
   {
     close($_[0]);
-	open($_[0], $_[1]);
+	open($_[0], '<', $_[1]);
 	binmode($_[0]);
+	return 0;
   }
+  return 1;
 }
 
 sub tableFile
