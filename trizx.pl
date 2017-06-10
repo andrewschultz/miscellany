@@ -1,7 +1,7 @@
 #######################
 #trizx.pl
 #
-#extracts trizbort object and room properties
+#extracts trizbort object and room properties from GIT commits
 #
 
 use XML::LibXML;
@@ -31,11 +31,15 @@ while ($count <= $#ARGV)
   }
 }
 
+my $storyChange = 1;
+if ($storyChange)
+{
+  my @storyChange = getChangeIDs($proj, "story.ni");
+}
+
 my @changeIDs = getChangeIDs($proj, "$proj.trizbort");
 
 #parseOneXml('c:\games\inform\triz\mine\buck-the-past.trizbort');
-
-getChangeIDs();
 
 my $eq = '=' x 30;
 
@@ -87,11 +91,35 @@ sub getChangeIDs
   my $count = 0;
   my $xmltext;
 
+  my $numdif = `git rev-list --count HEAD`;
+
+  if ($_[1] =~ /story.ni/)
+  {
+    unlink<"c:\\games\\inform\\$_[0]-swears.txt">;
+    for (0..$numdif - 2)
+	{
+	my $q = $_+1;
+	my $cmd = "git diff HEAD~$_ HEAD~$q story.ni | grep -in \"if swears\"";
+	print "Checking HEAD~$_ vs HEAD~$q\n";
+	#print "$cmd\n";
+    my $sweardif = `$cmd`;
+	if ($sweardif)
+	{
+	open(B, ">>c:\\games\\inform\\$_[0]-swears.txt");
+	print B "$_\n$sweardif\n\n";
+	close(B);
+	}
+	}
+	`c:\\games\\inform\\$_[0]-swears.txt`;
+	exit();
+  }
+
   for (@list)
   {
     $_ =~ s/ *$//;
     $count++;
     if ($verbose) { printf("Opening commit $_ $count of %d\n", scalar @list); }
+
     $xmltext = `git show $_:$_[0].trizbort`;
 	open(B, ">$tempTriz");
 	print B $xmltext;
@@ -99,5 +127,5 @@ sub getChangeIDs
 	if ($xmltext =~ /^tree/i) { print "$_ has bad XML to start\n"; next; }
 	parseOneXml("$tempTriz");
   }
-
+  exit if $_[1] =~ /story.ni/;
 }
