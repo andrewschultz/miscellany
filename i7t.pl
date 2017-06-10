@@ -6,6 +6,7 @@
 #i7t.pl -s pc
 #or run it in a directory with story.ni
 #
+#now you can launch writing with -w
 
 use POSIX (getcwd);
 use Win32;
@@ -36,9 +37,11 @@ my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 my %xtraFiles;
 
 ###################hashes for verifying source
+my %notFound;
 my %tableName;
 my %readFileName;
 my %regex;
+my %regexMod;
 my %delta;
 my %dataFiles;
 
@@ -60,6 +63,8 @@ my $openTableFile = 0;
 my $openPost = 0;
 my $maxString = 0;
 my $spawnPopup = 0;
+my $verbose = 0;
+my $writeRight = 0;
 
 my %rows;
 my %falseRows;
@@ -112,6 +117,8 @@ while ($count <= $#ARGV)
 	/^-?ps$/ && do { $printSuccesses = 1; $count++; next; };
 	/^-?q$/ && do { $quietTables = 1; $count++; next; };
 	/^-?tl$/ && do { $quietTables = 0; $count++; next; };
+	/^-?v$/ && do { $verbose = 1; $count++; next; };
+	/^-?w$/ && do { $writeRight = 1; $count++; next; };
 	/^-?o$/ && do { $openPost = 1; $count++; next; };
 	/^-?ot$/ && do { $openTableFile = 1; $count++; next; };
 	/^-?rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
@@ -262,16 +269,32 @@ my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
 
-#################################this is repetitive and should be sent to processInitData
+for (1..$testCount)
+{
+  my $tn = $tableName{$_};
+
+  $regexMod{$_} = $regex{$_};
+  $regexMod{$_} =~ s/\$./[0-9]+/;
+
+  $regex{$_} =~ s/\$\$/$rows{$tn}+$delta{$_}/ge;
+  $regex{$_} =~ s/\$c/$smartIdeas{$tn}+$delta{$_}/ge;
+  $regex{$_} =~ s/\$f/$falseRows{$tn}+$delta{$_}/ge;
+  $regex{$_} =~ s/\$t/$trueRows{$tn}+$delta{$_}/ge;
+
+  #print "$_ $tableName{$_}=$regex{$_} / $regexMod{$_}\n";
+
+}
 
 for my $dataFile(keys %dataFiles)
 {
   sortDataFile($dataFile);
 }
 
-if (scalar keys %delta) { print "" . (scalar keys %delta) . " text tests not found.\n"; }
+if (scalar keys %notFound) { print "" . (scalar keys %notFound) . " text tests not found.\n"; }
 
 exit();
+
+#################################this is repetitive and should be sent to processInitData
 
 for my $trf (@tableReadFiles)
 {
@@ -520,6 +543,7 @@ sub processInitData
 	  else
 	  {
 		$testCount++;
+		$notFound{$testCount} = 1;
 	    $tableName{$testCount} = $tabElts[1];
 		if ($tabElts[2] eq "\"")
 		{
@@ -557,16 +581,45 @@ sub processInitData
 sub sortDataFile
 {
   my $line;
+  my $tempOut = "c:\\temp\\i7t-temp.txt";
+  my $meaningfulChanges = 0;
+
   open(A, $_[0]) || die ("Can't open data file $_[0]");
+  open(B, ">$tempOut") || die ("Can't open $tempOut for writing.");
   OUTER:
   while ($line = <A>)
   {
-    for (1..$testCount)
+    for (keys %notFound)
 	{
-	  if ($line =~ /$regex{$_}/) { die; }
+	  if ($line =~ /$regex{$_}/)
+	  {
+	    if ($verbose) { print "Line $.: MATCHED $_ $regex{$_} with $line"; }
+		delete($notFound{$_});
+      }
+	  elsif ($line =~ /$regexMod{$_}/)
+	  {
+	    print "Line $.: ALMOST MATCHED (FAILED) regex ($regex{$_}) with $line";
+		delete($notFound{$_});
+		$meaningfulChanges = 1;
+		$line =~ s/$regexMod{$_}/$regex{$_}/;
+      }
 	}
+    print B $line;
   }
   close(A);
+  close(B);
+  if ($writeRight && $meaningfulChanges)
+  {
+    print "Copying modified file over...\n";
+	my $cmd = "copy $tempOut $_[0]";
+	$cmd =~ s/\//\\/g;
+	print "$cmd\n";
+    system($cmd);
+  }
+  elsif ($meaningfulChanges)
+  {
+    print "Run again with -w to fix target file $_[0].\n";
+  }
 }
 
 sub usage
@@ -583,6 +636,8 @@ csv = tables to highlight
 -o opens the offending file post-test
 -ot opens the table file
 -q quiets out the printing of tables
+-v verbose
+-w writeRight option: write the right options in
 -tl lists them (currently the default)
 -ps prints out successes as well
 -[ps] specifies the project, written out or in shorthand
