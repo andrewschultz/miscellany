@@ -18,7 +18,6 @@ compound	xrow:2:table of accel-text
 compound	xrow:2:table of fin - fingerings
 compound	xrow:2:table of logic game wins
 compound	xxadd	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	Up to $$, from 66	0
-compound	ni pr
 #############################compound tables
 compound	xxdb	C:/Users/Andrew/Dropbox/notes/problems_compound_release_3_notes.txt	$$ bits of wisdom, up from 8	0
 #horrible books and horrible songs
@@ -45,7 +44,6 @@ slicker-city	xxles	"	$$ guys named Les	0
 slicker-city	xxlee	"	$$ guys named Lee	0
 slicker-city	xxcom	"	$$ companies	0
 slicker-city	xxadd	"	$$ total concepts	0
-slicker-city	ni scr
 slicker-city	xxtgty	C:/Users/Andrew/Dropbox/notes/slicker_city_release_2_notes.txt	$$ winning tries	0
 slicker-city	xxtgtn	"	$$ cluing tries	0
 slicker-city	xxtgty	c:/games/inform/slicker-city.inform/source/walkthru.txt	There are $$ winning verbs	0
@@ -66,10 +64,8 @@ buck-the-past	xrow:2:table of amusingness
 buck-the-past	xrow:2:table of oscar nonsense
 buck-the-past	xrow:2:table of wait messages
 buck-the-past	xxadd	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ reversal	0
-buck-the-past	ni cr / ni br / ni bpr
 #############
 #random stuff
-#table of life shelf books
 buck-the-past	xrow:2:table of animal silliness
 buck-the-past	xxlsb	C:/Users/Andrew/Dropbox/notes/buck_the_past_release_1_notes.txt	$$ first-rate self-help books	1
 buck-the-past	xxlsb	"	$t censorable	0

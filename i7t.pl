@@ -28,11 +28,19 @@ my $majorTable = 0;
 my $tableList = "";
 my $noAct = 0;
 my $actLog = "";
+my $testCount = 0;
 
 my $tabfile = "c:/writing/scripts/i7t.txt";
 my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 
 my %xtraFiles;
+
+###################hashes for verifying source
+my %tableName;
+my %readFileName;
+my %regex;
+my %delta;
+my %dataFiles;
 
 ###################duplicate detector hashes
 my %tableDup;
@@ -66,9 +74,6 @@ my %doubleErr;
 my @tableCount = ();
 
 ################very bad hard coding but it will have to do for now
-$ignoreDup{"xxu"} = 1;
-$ignoreDup{"xxton"} = 1;
-$ignoreDup{"xxuse"} = 1;
 
 $exp{"3d"} = "threediopolis";
 $exp{"4d"} = "fourdiopolis";
@@ -90,8 +95,8 @@ while ($count <= $#ARGV)
   $b = $ARGV[$count+1];
   for ($a)
   {
-    /^-tt$/ && do { $tableTab = 1; $count++; next; };
-    /^-t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
+    /^?-tt$/ && do { $tableTab = 1; $count++; next; };
+    /^-?t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
     /^-?c$/ && do { print "Opening source. -e opens the data file, -ec/ce both, -pr private.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?e$/ && do { print "Opening data file. -c opens the source, -ec/ce both, -pr private.\n"; `$tabfile`; exit; };
 	/^-?(ec|ce)$/ && do
@@ -102,16 +107,16 @@ while ($count <= $#ARGV)
       next;
     };
     /^-?pr$/ && do { print "Opening private file. -e opens the source, -ef both. -p private.\n"; `$tabfilepriv`; exit; };
-	/^-i$/ && do { @important = split(/,/, $b); $count += 2; next; };
-	/^-sp$/ && do { $spawnPopup = 1; $count++; next; };
-	/^-ps$/ && do { $printSuccesses = 1; $count++; next; };
-	/^-q$/ && do { $quietTables = 1; $count++; next; };
-	/^-tl$/ && do { $quietTables = 0; $count++; next; };
-	/^-o$/ && do { $openPost = 1; $count++; next; };
-	/^-ot$/ && do { $openTableFile = 1; $count++; next; };
-	/^rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
+	/^-?i$/ && do { @important = split(/,/, $b); $count += 2; next; };
+	/^-?sp$/ && do { $spawnPopup = 1; $count++; next; };
+	/^-?ps$/ && do { $printSuccesses = 1; $count++; next; };
+	/^-?q$/ && do { $quietTables = 1; $count++; next; };
+	/^-?tl$/ && do { $quietTables = 0; $count++; next; };
+	/^-?o$/ && do { $openPost = 1; $count++; next; };
+	/^-?ot$/ && do { $openTableFile = 1; $count++; next; };
+	/^-?rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
 	/^-?\.$/ && do { $writeDir = "."; $count++; next; };
-    /-[ps]$/ && do
+    /-?[ps]$/ && do
 	{
 	  $project = $b;
 	  $newDir = "c:/games/inform/$project.inform/Source";
@@ -124,9 +129,10 @@ while ($count <= $#ARGV)
   }
 }
 
+#####first we find all extra files
 for (@tableReadFiles)
 {
-  findExtraFiles($_);
+  processInitData($_);
 }
 
 my $tableFile = "$writeDir\\tables-$project.i7";
@@ -256,6 +262,17 @@ my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
 
+#################################this is repetitive and should be sent to processInitData
+
+for my $dataFile(keys %dataFiles)
+{
+  sortDataFile($dataFile);
+}
+
+if (scalar keys %delta) { print "" . (scalar keys %delta) . " text tests not found.\n"; }
+
+exit();
+
 for my $trf (@tableReadFiles)
 {
 open(A, $trf) || do { print "No $trf.\n"; next; };
@@ -271,21 +288,8 @@ while ($a = <A>)
 
   if (lc($b[0]) ne lc($project)) { next; }
 
-  if ($b[1] =~ /^xrow:/)
-  {
-    my @q = split(/:/, $b[1]);
-	$extraRows{$q[2]} = $q[1];
-	next;
-  }
-
-  if ($b[1] =~ /^igdup:/)
-  {
-    $b[1] =~ s/^igdup://;
-	$ignoreDup{$b[1]} = 1;
-	next;
-  }
-
-  if ($#b == 1) { $failCmd{$project} = $b[1]; next; }
+  #delete this ASAP. It's very bad code.
+  if ($#b == 1) { next; }
 
   #print "parsing @b\n";
   $ranOneTest = 1;
@@ -481,26 +485,85 @@ if ($openTableFile)
   `$openCmd`;
 }
 
-sub findExtraFiles
+sub processInitData
 {
+  my $line;
+  my $currentReadFile;
+
   open(A, "$_[0]") || die ("No file $_[0]");
-  while ($a = <A>)
+  while ($line = <A>)
   {
-    if ($a =~ /^xtra/)
+    if ($line =~ /^#/) { next; }
+    if ($line =~ /^;/) { next; }
+    if ($line =~ /^$project\t/)
 	{
-	  chomp($a);
-	  my @filemap = split(/\t/, $a);
-	  if ($#filemap != 2) { warn "Need 3 fields in $.: $a\n"; next; }
+	  chomp($line);
+	  my @tabElts = split(/\t/, $line);
+	  if ($tabElts[1] =~ /^igdup:/)
+	  {
+	    $tabElts[1] =~ s/^igdup://;
+	    $ignoreDup{$tabElts[1]} = 1;
+		next;
+	  }
+	  if ($tabElts[1] =~ /^xrow:/)
+	  {
+	    my @xrow = split(/:/, $tabElts[1]);
+		$extraRows{$xrow[2]} = $xrow[1];
+		next;
+	  }
+	  if (scalar @tabElts == 2)
+	  {
+	    if (defined($failCmd{$project})) { die ("2 fail commands defined for $project: $failCmd{$project} overwritten by line $line"); }
+	    $failCmd{$project} = $tabElts[1];
+	  }
+	  elsif (scalar @tabElts != 5) { die ("Need project/table name/file name/regex/delta at $line"); }
+	  else
+	  {
+		$testCount++;
+	    $tableName{$testCount} = $tabElts[1];
+		if ($tabElts[2] eq "\"")
+		{
+		  $readFileName{$testCount} = $currentReadFile;
+		}
+		else
+		{
+	      $readFileName{$testCount} = $currentReadFile = $tabElts[2];
+		}
+		if (!defined($dataFiles{$currentReadFile})) { $dataFiles{$currentReadFile} = 1; }
+		$regex{$testCount} = $tabElts[3];
+		$delta{$testCount} = $tabElts[4];
+	  }
+	}
+    if ($line =~ /^xtra/)
+	{
+	  chomp($line);
+	  my @filemap = split(/\t/, $line);
+	  if ($#filemap != 2) { warn "Need 3 fields in $.: $line\n"; next; }
 	  if (!defined($xtraFiles{$filemap[1]})) { $xtraFiles{$filemap[1]} = []; }
 	  push(@{$xtraFiles{$filemap[1]}}, $filemap[2]);
 	}
-    if ($a =~ /^story/)
+    if ($line =~ /^story/)
 	{
-	  chomp($a);
-	  my @filemap = split(/\t/, $a);
-	  if ($#filemap != 1) { warn "Need 2 fields in $.: $a\n"; next; }
+	  chomp($line);
+	  my @filemap = split(/\t/, $line);
+	  if ($#filemap != 1) { warn "Need 2 fields in $.: $line\n"; next; }
 	  if (!defined($xtraFiles{$filemap[1]})) { $xtraFiles{$filemap[1]} = []; }
 	  push(@{$xtraFiles{$filemap[1]}}, "c:/games/inform/$filemap[1].inform/Source/story.ni");
+	}
+  }
+  close(A);
+}
+
+sub sortDataFile
+{
+  my $line;
+  open(A, $_[0]) || die ("Can't open data file $_[0]");
+  OUTER:
+  while ($line = <A>)
+  {
+    for (1..$testCount)
+	{
+	  if ($line =~ /$regex{$_}/) { die; }
 	}
   }
   close(A);

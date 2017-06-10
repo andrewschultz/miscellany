@@ -13,7 +13,7 @@ goto end
 )
 
 if "%1" EQU "sm" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\smart.otl"
+c:\games\inform\buck-the-past.inform\Source\gotl.pl
 goto end
 )
 
