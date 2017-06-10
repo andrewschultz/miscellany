@@ -166,6 +166,9 @@ my $falseRow = 0;
 my $trueRow = 0;
 my $smartIdea = 0;
 
+my $dupFail = 0;
+my $dupLog = "";
+
 for $sourceFile (@sourceFileList)
 {
 
@@ -179,6 +182,27 @@ while ($a = <A>)
   {
     my $aorig = $a;
     @tableCount = ();
+	if ($curTable && (!$ignoreDup{$curTable}))
+	{
+	  my @tempAry = split(/\t/, $a);
+	  my $unique = $tempAry[0];
+	  if ($extraRows{$curTable})
+	  {
+		if ($#tempAry < $extraRows{$curTable} - 1)
+		{
+		  print "Warning: may be ignoring too many rows in $curTable, line $.: @tempAry\n";
+		  $extraRows{$curTable} = $#tempAry + 1;
+		}
+	    $unique = join("/", @tempAry[0..$extraRows{$curTable}-1]);
+	  }
+	  if ($tableDup{$curTable}{$unique})
+	  {
+	    print "Duplicate at line $.: $curTable/$unique also at $tableDup{$curTable}{$unique}\n";
+		$dupLog .= "$unique/$tableDup{$curTable}{$unique}<br />";
+		$dupFail++;
+      }
+	  $tableDup{$curTable}{$unique} = $.;
+    }
     if ($a =~ /^\[/)
 	{ $a =~ s/[\[\]]//g;
 	#commented out for a non-table in BTP
@@ -233,6 +257,7 @@ while ($a = <A>)
 	$falseRows{$tableShort} += $falseRow;
 	$trueRows{$tableShort} += $trueRow;
 	if ($majorTable) { $majorList .= "$curTable: $tableRow rows<br />"; } $majorTable = 0;
+	$curTable = "";
   }
   if ($table)
   {
@@ -298,184 +323,6 @@ for my $dataFile(keys %dataFiles)
 
 if (scalar keys %notFound) { print "" . (scalar keys %notFound) . " text tests not found.\n"; }
 
-exit();
-
-#################################this is repetitive and should be sent to processInitData
-
-for my $trf (@tableReadFiles)
-{
-open(A, $trf) || do { print "No $trf.\n"; next; };
-
-my @b;
-
-while ($a = <A>)
-{
-  if ($a =~ /^#/) { next; }
-  if ($a =~ /^;/) { last; }
-  chomp($a);
-  @b = split(/\t/, $a);
-
-  if (lc($b[0]) ne lc($project)) { next; }
-
-  #delete this ASAP. It's very bad code.
-  if ($#b == 1) { next; }
-
-  #print "parsing @b\n";
-  $ranOneTest = 1;
-
-  if (($b[2] ne "\"") && ($b[2] ne "\"\""))
-  {
-  open(F, $b[2]) || die ("Can't find release notes file $b[2].");
-  $thisFile = $lastOpen = $b[2];
-  }
-  else
-  {
-  open(F, $lastOpen) || die ("Can't re-open $lastOpen.");
-  }
-
-  my $size = 0;
-
-  if ($rows{$b[1]}) { $size = $rows{$b[1]}; } else { print "$b[1] has nothing.\n"; }
-
-  #most of the time, the 5th element (oh hi, Bruce Willis!) will be a 1 to signify that there is a message once the table comes to an end. But I can adjust this if I want.
-  #This used to be $+ instead of $$ but then I had other things I wanted to track for partial tables.
-
-  my $adjust = 0;
-  if (defined($b[4])) { $adjust = $b[4]; } else { print "WARNING: line $. should have a 5th column for fudging extra row counts\n"; }
-  if (defined($b[5])) { print "WARNING line $. has too many lines.\n"; }
-
-  my $almost = $b[3]; $almost =~ s/\$[\+\$]/\[0-9\]\*/g;
-
-  $b[3] =~ s/\$\$/$size+$adjust/ge;
-  $b[3] =~ s/\$c/$smartIdeas{$b[1]}+$adjust/ge;
-  $b[3] =~ s/\$f/$falseRows{$b[1]}+$adjust/ge;
-  $b[3] =~ s/\$t/$trueRows{$b[1]}+$adjust/ge;
-
-  #print "Looking for this text: $b[3]\n";
-  my $success = 0;
-  my $nearSuccess = "";
-  my $f;
-  my $possLine = 0;
-
-  while ($f = <F>)
-  {
-    #print "$b[3] =~? $f";
-    if ($f =~ /\b$b[3]/) { $success = 1; last; }
-	if ($f =~ /$almost/) { if ($filesToOpen{$lastOpen}) { $doubleErr{$lastOpen}++; } else { $filesToOpen{$lastOpen} = $.; } $possLine = $.; }
-  }
-  close(F);
-  if ($success)
-  {
-    if ($printSuccesses) { print "$thisFile search for $b[3] PASSED:\n  $f"; }
-  }
-  else
-  {
-    $countMismatch++;
-	if ($b[3] =~ /[^\w\+]0\W/)
-	{
-	  print "Did not find table *$b[1]* for the check *$b[3]\*.\n";
-    } #todo: find a way to do this less hackily, x+0 now throws an error
-	else
-	{
-	print "$thisFile search for $b[3] FAILED" . ($possLine ? " (line $possLine)" : "") . ".\n";
-	$popupString .= "* $b[3]\n";
-	if ($possLine) { push (@popupLines, $possLine); }
-	}
-	if (!$filesToOpen{$thisFile}) { $filesToOpen{$thisFile} = $.; }
-	$errLog .= "$b[3] needs to be in<br />\n";
-	if ($nearSuccess)
-	{
-	  my $add = "Likely suspect(s): $nearSuccess";
-	  print $add;
-	  chomp($add);
-	  $errLog .= "$add<br />\n";
-    }
-	$printFail++;
-  }
-}
-
-}
-
-###########################
-#this can/should be done better
-#
-#we can/should move this in with the main while for A with the while-loop to do table counts
-#
-my $dupFail = 0;
-my $dupLog = "";
-
-close(A);
-close(B);
-close(F);
-
-for $sourceFile (@sourceFileList)
-{
-  open(A, "$sourceFile") || die ("$sourceFile in $project doesn't exist.");
-  while ($a = <A>)
-  {
-    if ($a =~ /^table +of/i)
-	{
-	  chomp($a);
-	  $curTable = lc($a);
-	  $curTable =~ s/ [\(\[].*//;
-	  <A>;
-	  next;
-	}
-	if ($a !~ /[a-z]/i)
-	{
-	  $curTable = "";
-	  next;
-	}
-	if ($curTable && (!$ignoreDup{$curTable}))
-	{
-	  my @tempAry = split(/\t/, $a);
-	  my $unique = $tempAry[0];
-	  if ($extraRows{$curTable})
-	  {
-		if ($#tempAry < $extraRows{$curTable} - 1)
-		{
-		  print "Warning: may be ignoring too many rows in $curTable, line $.: @tempAry\n";
-		  $extraRows{$curTable} = $#tempAry + 1;
-		}
-	    $unique = join("/", @tempAry[0..$extraRows{$curTable}-1]);
-	  }
-	  if ($tableDup{$curTable}{$unique})
-	  {
-	    print "Duplicate at line $.: $curTable/$unique also at $tableDup{$curTable}{$unique}\n";
-		$dupLog .= "$unique/$tableDup{$curTable}{$unique}<br />";
-		$dupFail++;
-      }
-	  $tableDup{$curTable}{$unique} = $.;
-    }
-  }
-  close(A);
-}
-
-if ($dupFail)
-{
-  print "TEST RESULTS:(notes) $project-tabledup,0,$dupFail,0,$dupLog\n";
-}
-
-if ($printFail)
-{
-  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog\n";
-}
-
-if ($noAct)
-{
-  print "TEST RESULTS:(notes) $project-activations,0,$noAct,0,Look <a href=\"file:///$thisFile\">here</a>\n$actLog\n";
-}
-
-if ($majorList)
-{
-  $majorList =~ s/,//g;
-  print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
-}
-
-if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
-
-if ($ranOneTest && !$printFail && !$dupFail && !$noAct && !$majorList) { print "EVERYTHING WORKED! YAY!\n"; }
-
 if ($openPost)
 {
   my $myfi;
@@ -513,6 +360,37 @@ if ($openTableFile)
   my $openCmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile";
   `$openCmd`;
 }
+
+if ($dupFail)
+{
+  print "TEST RESULTS:(notes) $project-tabledup,0,$dupFail,0,$dupLog\n";
+}
+
+if ($printFail)
+{
+  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog\n";
+}
+
+if ($noAct)
+{
+  print "TEST RESULTS:(notes) $project-activations,0,$noAct,0,Look <a href=\"file:///$thisFile\">here</a>\n$actLog\n";
+}
+
+if ($majorList)
+{
+  $majorList =~ s/,//g;
+  print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
+}
+
+if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
+
+if ($ranOneTest && !$printFail && !$dupFail && !$noAct && !$majorList) { print "EVERYTHING WORKED! YAY!\n"; }
+
+exit();
+
+####################################################
+#subroutines below
+#
 
 sub processInitData
 {
@@ -589,6 +467,7 @@ sub sortDataFile
   my $line;
   my $tempOut = "c:\\temp\\i7t-temp.txt";
   my $meaningfulChanges = 0;
+  my $anyTest = 0;
 
   open(A, $_[0]) || die ("Can't open data file $_[0]");
   open(B, ">$tempOut") || die ("Can't open $tempOut for writing.");
@@ -599,12 +478,15 @@ sub sortDataFile
 	{
 	  if ($line =~ /$regex{$_}/)
 	  {
+	    $anyTest = 1;
 	    if ($verbose) { print "Line $.: MATCHED $_ $regex{$_} with $line"; }
 		delete($notFound{$_});
       }
 	  elsif ($line =~ /$regexMod{$_}/)
 	  {
+	    $anyTest = 1;
 	    print "Line $.: ALMOST MATCHED (FAILED) regex ($regex{$_}) with $line";
+		$filesToOpen{$_[0]} = $.;
 		delete($notFound{$_});
 		$meaningfulChanges = 1;
 		$line =~ s/$regexMod{$_}/$regex{$_}/;
@@ -614,6 +496,8 @@ sub sortDataFile
   }
   close(A);
   close(B);
+  print "Didn't find any lines in $_[0] to compare." if !$anyTest;
+
   if ($writeRight && $meaningfulChanges)
   {
     print "Copying modified file over...\n";
