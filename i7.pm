@@ -56,12 +56,15 @@ sub cutArt
 
 sub openWinOrUnix
 {
-  open($_[0], "<", $_[1]);
-  my $line = <$_[0]>;
+  my $file = $_[0];
+  open($file, "<", $_[1]);
+  binmode($file);
+  my $line = <$file>;
+  close($file);
+
+  open($_[0], '<', $_[1]);
   if ($line !~ /\r/)
   {
-    close($_[0]);
-	open($_[0], '<', $_[1]);
 	binmode($_[0]);
 	return 0;
   }

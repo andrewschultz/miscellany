@@ -654,18 +654,22 @@ sub checkWarnings
 	  my $origFile;
 	  my $strippedFile;
 	  my $isWin = openWinOrUnix($origFile, "$_[0]");
+
 	  open($strippedFile, ">", $tempfile) || do { print "Can't write to $tempfile.\n"; close($origFile); return; };
+
 	  if (!$isWin) { binmode($strippedFile); }
 	  my $l;
 	  while ($l = <$origFile>)
 	  {
-	    $l =~ s/[ \t]*$//;
-		$l =~ s/^ +\t/\t/;
+	    $l =~ s/[ \t]+(\r)?$//g;
+		$l =~ s/^ +\t/\t/g;
 		print $strippedFile $l;
 	  }
 	  close($origFile);
 	  close($strippedFile);
-	  `copy \"$tempfile\" \"$_[0]\"`;
+	  my $cmd = "copy \"$tempfile\" \"$_[0]\"";
+	  print "$cmd\n";
+	  `$cmd`;
 	  delete($gwt{$_[0]});
 	  #die("copy \"$tempfile\" \"$_[0]\"");
 	}
