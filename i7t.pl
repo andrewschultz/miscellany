@@ -94,11 +94,12 @@ if (getcwd() =~ /\.inform/) { $project = getcwd(); $project =~ s/\.inform.*//g; 
 
 my $fileName;
 
+OUTER:
 while ($count <= $#ARGV)
 {
-  $a = $ARGV[$count];
+  my $arg = $ARGV[$count];
   $b = $ARGV[$count+1];
-  for ($a)
+  for ($arg)
   {
     /^?-tt$/ && do { $tableTab = 1; $count++; next; };
     /^-?t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
@@ -123,7 +124,7 @@ while ($count <= $#ARGV)
 	/^-?ot$/ && do { $openTableFile = 1; $count++; next; };
 	/^-?rar$/ && do { $maxString = 1; $tableTab = 1; $fileName = ""; $count++; next; };
 	/^-?\.$/ && do { $writeDir = "."; $count++; next; };
-    /-?[ps]$/ && do
+    /^-?[ps]$/ && do
 	{
 	  $project = $b;
 	  $newDir = "c:/games/inform/$project.inform/Source";
@@ -131,7 +132,12 @@ while ($count <= $#ARGV)
 	  if ($exp{$project}) { print "Found brief project, so changing $project to $exp{$project}.\n"; $project = $exp{$project}; }
 	  next;
     };
-    /[\\\/]/ && do { $newDir = $a; $count++; next; };
+    /[\\\/]/ && do { $newDir = $arg; $count++; next; };
+	for (sort keys %exp) #catch for if we forget -p/-s
+	{
+	  if (lc($arg) eq $_) { $project = lc($exp{$arg}); $count++; next OUTER; }
+	  if (defined($exp{$_}) && (lc($arg) eq $exp{$_})) { $project = lc($arg); $count++; next OUTER; }
+	}
 	usage();
   }
 }
@@ -619,6 +625,10 @@ sub sortDataFile
   elsif ($meaningfulChanges)
   {
     print "Run again with -w to fix target file $_[0].\n";
+  }
+  else
+  {
+    print "Nothing to write for $_[0].\n";
   }
 }
 
