@@ -45,8 +45,8 @@ moveList = []
 
 win = 0
 
-totalUndo = 0
-totalReset = 0
+total_undo = 0
+total_reset = 0
 
 cmdChurn = False
 inUndo = False
@@ -116,32 +116,31 @@ def extended_gcd(aa, bb):
     return lastremainder, lastx * (-1 if aa < 0 else 1), lasty * (-1 if bb < 0 else 1)
  
 def modinv(a, m):
-	g, x, y = extended_gcd(a, m)
-	if g != 1:
-		raise ValueError
-	return x % m
+    g, x, y = extended_gcd(a, m)
+    if g != 1:
+        raise ValueError
+    return x % m
 
-def isPrime(x):
+def is_prime(x):
     for a in range(2,int(sqrt(x))):
         if x % a == 0:
             return False
     return True
 
-def randprime():
+def rand_prime():
     primes = []
-    tb = time.time()
     for j in range(100001,200001,2):
-        if isPrime(j):
+        if is_prime(j):
             #print j
             primes.append(j)
     return primes[randint(0,len(primes)-1)]
 
-def TOrF(x):
+def t_or_f(x):
     if x == "False" or x == "0":
         return False
     return True
 
-def printCond(myString, z):
+def print_cond(myString):
     if not inUndo and not cmdChurn:
         print(myString)
     return
@@ -150,15 +149,15 @@ def shufwarn():
     if not cmdChurn and not inUndo:
         print ("That won't make progress. F(##) or ##-# let you move part of an in-order stack over.")
 
-def dumpTotal(q): # the doPrint is for debugging purposes. A negative number input means you print. This is not great code but there were so many dumpTotal calls I just got lazy and made a small hack.
+def dump_total(q): # the do_print is for debugging purposes. A negative number input means you print. This is not great code but there were so many dump_total calls I just got lazy and made a small hack.
     retval = 0
-    doPrint = False
+    do_print = False
     if q < 0:
         q = 0 - q
-        doPrint = True
+        do_print = True
     for z in range(0,len(elements[q])):
         if foundable(elements[q][z]):
-            if doPrint:
+            if do_print:
                 print tocard(elements[q][z]), elements[q][z], 'foundable'
             retval += 1
             if elements[q][z] % 13 == 2: #aces/2's get a special bonus
@@ -167,23 +166,23 @@ def dumpTotal(q): # the doPrint is for debugging purposes. A negative number inp
                 retval += 2
         if nexties(elements[q][z]): # not an elif as foundable deserves an extra point
             retval += 1
-            if doPrint:
+            if do_print:
                 print tocard(elements[q][z]), elements[q][z], 'nexties'
     return retval
 
-def bestDumpRow():
-    bestScore = -1
-    bestRow = 0
-    bestChains = 10
+def best_dump_row():
+    best_score = -1
+    best_row = 0
+    best_chains = 10
     for y in range (1,9):
         if chainNope(y) == 0: # if there is nothing to move or dump, then skip this e.g. empty or already in order
             continue
-        if dumpTotal(y) + YNCanDump(y) > bestScore or (dumpTotal(y) == bestScore and chainNope(y) < bestChains):
-            bestRow = y
-            bestChains = chainNope(y)
-            bestScore = dumpTotal(y)
-    if bestRow > 0:
-        return bestRow
+        if dump_total(y) + YNCanDump(y) > best_score or (dump_total(y) == best_score and chainNope(y) < best_chains):
+            best_row = y
+            best_chains = chainNope(y)
+            best_score = dump_total(y)
+    if best_row > 0:
+        return best_row
     maxShifts = 10
     for y in range (1,9):
         if chainNope(y) == 0:
@@ -192,8 +191,8 @@ def bestDumpRow():
             for z in range (1,9):
                 if doable(y, z, 0) > 0:
                     maxShifts = chainNope(y)
-                    bestRow = y
-    return bestRow
+                    best_row = y
+    return best_row
 
 def foundable(myc):
     if (myc-1) % 13 == found[(myc-1)//13]:
@@ -240,7 +239,7 @@ def ripUp(q):
     if maxRun == 25:
         print ("Oops potential hang at " + str(q))
     checkFound()
-    if (len(moveList) == movesize):
+    if len(moveList) == movesize:
         print ("Nothing moved.")
     return madeOne
 
@@ -283,7 +282,6 @@ def reshuf(xyz): # this reshuffles the empty cards
         return False
     retval = False
     tryAgain = 1
-    movesBefore = len(moveList)
     while tryAgain:
         tryAgain = 0
         for i in range(0,4):
@@ -431,7 +429,7 @@ def parseCmdLine():
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.resettime is True:
-        print "Resetting the time file", timeFile;
+        print "Resetting the time file", timeFile
         writeTimeFile()
         exit()
     if args.optFile is True:
@@ -453,10 +451,10 @@ def parseCmdLine():
         annoyingNudge=args.annoyingNudge
     if args.cheatIndex is not None:
         if args.cheatIndex < 1:
-            print "Too low. The cheat index must be between 1 and 13."
+            print("Too low. The cheat index must be between 1 and 13.")
             sys.exit()
         elif args.cheatIndex > 13:
-            print "Too high. The cheat index must be between 1 and 13."
+            print("Too high. The cheat index must be between 1 and 13.")
             sys.exit()        
         cheatIndex = args.cheatIndex
     elif args.easy is True:
@@ -464,21 +462,21 @@ def parseCmdLine():
     # now let's go to the booleans we can change
     if args.debugOn:
         if args.debugOff:
-            print "Debug set both ways on command line. Bailing."
+            print("Debug set both ways on command line. Bailing.")
             exit()
         debug = True
     if args.debugOff:
         debug = False
     if args.verticalOn:
         if args.verticalOff:
-            print "Vertical set both ways on command line. Bailing."
+            print("Vertical set both ways on command line. Bailing.")
             exit()
         vertical = True
     if args.verticalOff:
         vertical = False
     if args.saveOnWinOn:
         if args.saveOnWinOff:
-            print "Save both ways set both ways on command line. Bailing."
+            print("Save both ways set both ways on command line. Bailing.")
             exit()
         saveOnWin = True
     if args.saveOnWinOff:
@@ -487,10 +485,10 @@ def parseCmdLine():
         quickBail = True
     if args.nagDelay > 0:
         if args.nagDelay < minDelay:
-            print 'Too soon, need > ', minDelay
+            print('Too soon, need > ', minDelay)
             exit()
         if args.nagDelay > 43200:
-            print "Whoah, going above the default!"
+            print("Whoah, going above the default!")
         nagDelay = args.nagDelay
     if args.maxGames > 0:
         maxGames = args.maxGames
@@ -500,7 +498,7 @@ def readTimeFile():
     global nagDelay
     global maxDelay
     if os.access(timeFile, os.W_OK):
-        print "Time file should not have write access outside of the game. attrib -R " + timeFile + " or chmod 333 to get things going."
+        print "Time file should not have write access outside of the game. attrib +R " + timeFile + " or chmod 333 to get things going."
         exit()
     if not os.path.isfile(timeFile):
         print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
@@ -513,15 +511,15 @@ def readTimeFile():
     curtime = time.time()
     delta = int(curtime - lasttime)
     if delta < nagDelay:
-        print 'Only', str(delta), 'seconds elapsed of',nagDelay
+        print('Only', str(delta), 'seconds elapsed of',nagDelay)
         exit()
     if delta > 90000000:
-        print "Save file probably edited to start playing a bit early. I'm not going to judge."
+        print("Save file probably edited to start playing a bit early. I'm not going to judge.")
     elif delta > maxDelay:
-        print 'New high delay', delta, 'old was', maxDelay
+        print('New high delay', delta, 'old was', maxDelay)
         maxDelay = delta
     else:
-        print 'Delay', delta, 'did not exceed record of', maxDelay
+        print('Delay', delta, 'did not exceed record of', maxDelay)
     if lasttime % modulus != remainder:
         print "Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually."
         print lasttime,modulus,remainder,lasttime%modulus
@@ -529,7 +527,7 @@ def readTimeFile():
     if modulus < 100001 or modulus > 199999:
         print "Modulus is not in range in fctime.txt."
         exit()
-    if not isPrime(modulus):
+    if not is_prime(modulus):
         print "Modulus" , modulus , "is not prime."
         exit()
     return
@@ -539,7 +537,7 @@ def writeTimeFile():
     if not configTime.has_section('Section1'):
         configTime.add_section("Section1")
     lasttime = int(time.time())
-    modulus = randprime()
+    modulus = rand_prime()
     remainder = lasttime % modulus
     global maxDelay
     configTime.set('Section1', 'modulus', str(modinv(modulus, 200003))) # 200003 is prime. I checked!
@@ -620,10 +618,10 @@ def maxmove():
     base = 1
     myexp = 1
     for y in range (0,4):
-        if (spares[y] == 0):
+        if spares[y] == 0:
             base += 1
     for y in range (1,9):
-        if (len(elements[y]) == 0):
+        if len(elements[y]) == 0:
             myexp *= 2
     return base * myexp
 
@@ -731,13 +729,13 @@ def forceFoundation():
     if forceStr:
         if not inUndo:
             moveList.append("r")
-            printCond("Sending all to foundation.", False)
-            printCond("Forced" + forceStr, False)
+            print_cond("Sending all to foundation.")
+            print_cond("Forced" + forceStr)
         reshuf(-1)
         checkFound()
         printCards()
     else:
-        printCond("Nothing to force to foundation.", False)
+        print_cond("Nothing to force to foundation.")
     return
 
 def checkWin():
@@ -758,11 +756,10 @@ def initCards():
         x = list(range(1,53))
         shuffle(x)
     global elements
-    for y in range(0,7):
-        for z in range(1,9):
-            if len(x) == 0:
-                break
-            elements[z].append(x.pop())
+    for z in range(1,9):
+        if len(x) == 0:
+            break
+        elements[z].append(x.pop())
     global backup
     backup = [row[:] for row in elements]
 
@@ -774,7 +771,7 @@ def tocard( cardnum ):
     return retval
 
 def tocardX (cnum):
-    if (cnum % 13 == 10):
+    if cnum % 13 == 10:
         return ' ' + tocard(cnum)
     return tocard(cnum)
 
@@ -795,7 +792,6 @@ def checkWinning():
     global input
     try: input = raw_input
     except NameError: pass
-    finish = ""
     global cmdChurn
     #print ("Churn now false (checkWinning).")
     cmdChurn = False
@@ -805,18 +801,18 @@ def checkWinning():
     if startTime != -1:
         curTime = time.time()
         timeTaken = curTime - startTime
-        print ("%.2f seconds taken." % (timeTaken))
+        print ("%.2f seconds taken." % timeTaken)
         if lastReset > startTime:
             print ("%.2f seconds taken since last reset." % (curTime - lastReset))
     else:
         print ("No time data kept for loaded game.")
-    global totalReset
-    global totalUndo
-    if totalReset > 0:
-        print ("%d reset used." % (totalReset))
-    if totalUndo > 0:
-        print ("%d undo used." % (totalUndo))
-    if totalUndo == -1:
+    global total_reset
+    global total_undo
+    if total_reset > 0:
+        print ("%d reset used." % total_reset)
+    if total_undo > 0:
+        print ("%d undo used." % total_undo)
+    if total_undo == -1:
         print ("No undo data from loaded game.")
     if saveOnWin:
         with open(winFile, "a") as myfile:
@@ -853,8 +849,8 @@ def checkWinning():
                     deliberateNuisanceRows += deliberateNuisanceIncrease
                 initCards()
                 initSide(0)
-                totalUndo = 0
-                totalReset = 0
+                total_undo = 0
+                total_reset = 0
                 return 1
             if finish[0] == 'u':
                 curGames -= 1
@@ -954,7 +950,7 @@ def printHorizontal():
         print
     printOthers()
 
-def orgit(myList = []):
+def org_it(myList):
     globbed = 1
     while globbed:
         globbed = 0
@@ -977,7 +973,6 @@ def botcard(mycol):
 
 def automove():
     mincard = 0
-    mincand = 0
     fromcand = 0
     tocand = 0
     for z1 in range (1,9):
@@ -1006,9 +1001,7 @@ def automove():
 def printOthers():
     checkWin()
     coolmoves = []
-    coolmove = ''
     foundmove = ''
-    canmove = ''
     wackmove = ''
     emmove = ''
     latmove = ''
@@ -1051,22 +1044,16 @@ def printOthers():
             canfwdmove = 1
     if wackmove:
         print ("Not enough room: " + str(wackmove))
-    if coolmove and latmove:
-        coolmove = coolmove + ' |'
-    if (coolmove or latmove) and emmove:
-        emmove = ' |' + emmove
-    elif not coolmove and not latmove:
-        coolmove = '(no row switches)'
-    print ("Possible moves:" + orgit(coolmoves) + foundmove + latmove + " (%d max shift" % (maxmove()) + (", recdumprow=" + str(bestDumpRow()) if bestDumpRow() > 0 else "") + ")" )
+    print ("Possible moves:" + org_it(coolmoves) + foundmove + latmove + " (%d max shift" % (maxmove()) + (", recdumprow=" + str(best_dump_row()) if best_dump_row() > 0 else "") + ")" )
     if not canfwdmove:
-        reallylost = 1
+        really_lost = 1
         for z in range (1,9):
             if len(elements[z]) > 0 and foundable(elements[z][len(elements[z])-1]):
-                reallylost = 0
+                really_lost = 0
         for z in range (0,4):
             if foundable(spares[z]):
-                reallylost = 0
-        if reallylost == 1:
+                really_lost = 0
+        if really_lost == 1:
             print ("Uh oh. You\'re probably lost.")
         else:
             print ("You may have to dump stuff in the foundation.")
@@ -1091,7 +1078,7 @@ def printOthers():
             sys.stdout.write(' ' + tocard(found[y] + y * 13))
     sys.stdout.write(' (' + str(foundScore) + ' point' + plur(foundScore))
     global lastScore
-    if (lastScore < foundScore):
+    if lastScore < foundScore:
         sys.stdout.write(', up ' + str(foundScore - lastScore))
     sys.stdout.write(', ' + str(chainTotal()) + ' pairs in order, ' + str(chainNopeBig()) + ' out of order, ' + str(chainNopeEach()) + ' cols unordered')
     sys.stdout.write(')\n')
@@ -1101,7 +1088,7 @@ def anyDoableLimit (ii):
     tempval = 0
     for y in range (1,9):
         temp2 = doable(ii, y, 0)
-        if len(elements[y]) > 0 and temp2 > 0 and temp2 <= maxmove():
+        if len(elements[y]) > 0 and 0 < temp2 <= maxmove():
             if chains(ii) == temp2:
                 return y
             tempval = y
@@ -1119,7 +1106,6 @@ def anyDoable (ii, emptyOK):
     return tempret
 
 def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no match, -1 = asking too much
-    cardsToMove = 0
     fromline = 0
     locmaxmove = maxmove()
     if r1 < 1 or r2 < 1 or r1 > 8 or r2 > 8:
@@ -1138,7 +1124,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
             return len(elements[r1])
         locmaxmove /= 2
         if showDeets and shouldPrint():
-            print ("Only half moves here down to %d" % (locmaxmove))
+            print ("Only half moves here down to %d" % locmaxmove)
         for n in range(len(elements[r1])-1, -1, -1):
             fromline += 1
             #print '1 debug stuff:',tocard(elements[r1][n]),n,fromline
@@ -1173,7 +1159,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 if len(elements[r2]) > 0:
                     print ('Can\'t move to that non-empty, even with force.')
                     return -1
-                printCond ('Cutting down to ' + str(onlymove), False)
+                print_cond ('Cutting down to ' + str(onlymove))
                 return onlymove
         if onlymove < fromline:
             return onlymove
@@ -1183,7 +1169,7 @@ def doable (r1, r2, showDeets): # return value = # of cards to move. 0 = no matc
                 if len(elements[r2]) > 0:
                     print ('Can\'t move to that non-empty, even with force.')
                     return -1
-                printCond ("Cutting down to " + str(locmaxmove), False)
+                print_cond ("Cutting down to " + str(locmaxmove))
             return locmaxmove
         global cmdChurn
         if showDeets and not cmdChurn:
@@ -1195,10 +1181,10 @@ def maxMoveMod():
     base = 2
     myexp = .5
     for y in range (0,4):
-        if (spares[y] == 0):
+        if spares[y] == 0:
             base += 1
     for y in range (1,9):
-        if (len(elements[y]) == 0):
+        if len(elements[y]) == 0:
             myexp *= 2
     return base * myexp
 
@@ -1209,14 +1195,12 @@ def slipUnder():
     while slipProcess:
         fi = firstEmptyRow()
         slipProcess = False
-        curMove = len(moveList)
-        if (fi == 0):
+        if fi == 0:
             for i in range (1,9):
                 for j in range (0,4):
                     if slipProcess == False and (inOrder(i) or (len(elements[i]) == 1)) and canPut(elements[i][0], spares[j]):
                         #print ("Checking slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
                         if len(elements[i]) + spareUsed() <= 4:
-                            temp = 0
                             elements[i].insert(0, spares[j])
                             spares[j] = 0
                             slipProcess = True
@@ -1229,7 +1213,6 @@ def slipUnder():
                         if spares[j] > 0 and canPut(elements[i][0], spares[j]):
                             #print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
                             if len(elements[i]) <= maxMoveMod():
-                                tst = chr(97+j) + str(fi)
                                 resetChurn = not cmdChurn
                                 cmdChurn = True
                                 elements[fi].append(spares[j])
@@ -1239,11 +1222,6 @@ def slipUnder():
                                     cmdChurn = False
                                 slipProcess = True
                                 everSlip = True #note the below is tricky because we sort of record the move and sort of don't. The best way to do this is to have, say "slip-" + tst as the move and it's only activated if slip (not an option right now) is turned off. Similarly for other options. But that's a lot of work.
-                                #if curMove == len(moveList):
-                                    #cmdChurn = False
-                                    #print ("Tried move" + tst + ", failed.")
-                                    #dumpInfo(-1)
-                                    #printVertical()
                                 break
     return everSlip
 
@@ -1254,8 +1232,8 @@ def dumpInfo(x):
     print moveList
     print cmdList
     print cmdNoMeta
-    print ("Spares: "% (spares))
-    print ("Found: "% (found))
+    print ("Spares: " % spares)
+    print ("Found: " % found)
     if abs(x) == 2:
         printVertical()
     if x < 0:
@@ -1313,7 +1291,7 @@ def undoMoves(toUndo):
         print('No moves undone.')
         return 0
     global moveList
-    global totalUndo
+    global total_undo
     if len(moveList) == 0:
         print ('Nothing to undo.')
         return 0
@@ -1323,10 +1301,10 @@ def undoMoves(toUndo):
     found = [0, 0, 0, 0]
     global spares
     spares = [0, 0, 0, 0]
-    for i in range (0,toUndo):
+    for _ in range (0,toUndo):
         moveList.pop()
-        if totalUndo > -1:
-            totalUndo += 1
+        if total_undo > -1:
+            total_undo += 1
     global inUndo
     inUndo = True
     global undoIdx
@@ -1342,10 +1320,10 @@ def undoMoves(toUndo):
     printCards()
     return 1
 
-def loadGame(gameName):
+def loadGame(game_name):
     global time
-    global totalUndo
-    global totalReset
+    global total_undo
+    global total_reset
     global startTime
     original = open(saveFile, "r")
     startTime = -1
@@ -1353,7 +1331,7 @@ def loadGame(gameName):
         line=original.readline()
         if line.startswith('moves='):
             continue
-        if gameName == line.strip():
+        if game_name == line.strip():
             for y in range (1,9):
                 line=original.readline().strip()
                 elements[y] = [int(i) for i in line.split()]
@@ -1386,38 +1364,38 @@ def loadGame(gameName):
             global cardlist
             totalFoundThisTime = 0
             cardlist = ''
+            print ("Successfully loaded " + game_name.replace(r'^.=', ''))
+            #this was in unreachable code and is probably wrong but I can check to delete it later (?)
+            #total_undo = -1
+            #total_reset = -1
             return 1
         if not line:
-            print (re.sub(r'^.=', '', gameName) + ' save game not found.')
-            original.close()
-            return 0
-    gn2 = gameName.replace(r'^.=', '')
-    print ("Successfully loaded " + gn2)
-    totalUndo = -1
-    totalReset = -1
+            break
+    print (re.sub(r'^.=', '', game_name) + ' save game not found.')
+    original.close()
     return 0
 
-def saveGame(gameName):
+def saveGame(game_name):
     savfi = open(saveFile, "r")
     linecount = 0
     for line in savfi:
         linecount += 1
-        if line.strip() == gameName:
+        if line.strip() == game_name:
             print ("Duplicate save game name found at line %d." % linecount)
             return
     savfi.close()
     with open(saveFile, "a") as myfile:
-        myfile.write(gameName + "\n")
+        myfile.write(game_name + "\n")
         for y in range (1,9):
             myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
         myfile.write(' '.join(moveList) + "\n")
         if savePosition:
             for y in range (1,9):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
-        myfile.write("###end of " + gameName + "\n")
+        myfile.write("###end of " + game_name + "\n")
         myfile.write("#cmdNoMeta=" + ', '.join(cmdNoMeta) + '\n')
         myfile.write("#cmdList=" + ', '.join(cmdList) + '\n')
-    gn2 = gameName.replace(r'^.=', '')
+    gn2 = game_name.replace(r'^.=', '')
     print ("Successfully saved game as " + gn2)
     return 0
 
@@ -1461,7 +1439,7 @@ def readCmd(thisCmd):
     global elements
     global force
     global trackUndo
-    global totalReset
+    global total_reset
     global saveOnWin
     global savePosition
     global chainShowAll
@@ -1470,8 +1448,8 @@ def readCmd(thisCmd):
     force = 0
     checkFound()
     if thisCmd == '':
-        for i in range (0,deliberateNuisanceRows):
-            print "DELIBERATE NUISANCE"
+        for _ in range (0,deliberateNuisanceRows):
+            print("DELIBERATE NUISANCE")
         global input
         try: input = raw_input
         except NameError: pass
@@ -1485,12 +1463,11 @@ def readCmd(thisCmd):
             temp = len(moveList)
             totalmoves = 0
             cmdChurn = 1
-            while (automove()):
+            while automove():
                 totalmoves = totalmoves + 1
-                next
             cmdChurn = 0
             if temp == len(moveList):
-                print "No moves done."
+                print("No moves done.")
             else:
                 printCards()
                 printFound()
@@ -1510,7 +1487,7 @@ def readCmd(thisCmd):
         name = thisCmd
     if name == '*':
         while reshuf(-1):
-            next
+            pass
         return
     name = name.lower()
     if len(name) % 2 == 0 and len(name) >= 2:
@@ -1528,7 +1505,6 @@ def readCmd(thisCmd):
         anyReshuf = False
         while reshuf(-1):
             anyReshuf = True
-            next
         if anyReshuf:
             moveList.append('*')
         else:
@@ -1553,6 +1529,7 @@ def readCmd(thisCmd):
     if name == 'lp':
         original = open(saveFile, "r")
         o1 = re.compile(r'^s=')
+        newSave = ""
         while True:
             line=original.readline()
             if o1.match(line):
@@ -1612,9 +1589,9 @@ def readCmd(thisCmd):
         oldMoves = len(moveList)
         anyDump = 0
         global breakMacro
-        while bestDumpRow() > 0:
+        while best_dump_row() > 0:
             anyDump = 1
-            newDump = bestDumpRow()
+            newDump = best_dump_row()
             print ("Dumping row " + str(newDump))
             if chains(newDump) == len(elements[newDump]) and not cmdChurn:
                 shufwarn()
@@ -1622,7 +1599,7 @@ def readCmd(thisCmd):
             ripUp(newDump)
             if len(elements[newDump]) > 0:
                 if inOrder(newDump) != 1: #or elements[newDump][0] % 13 != 0
-                    print ("Row %d didn't unfold all the way." % (newDump))
+                    print ("Row %d didn't unfold all the way." % newDump)
                     break
             if breakMacro == 1:
                 breakMacro = 0
@@ -1748,7 +1725,7 @@ def readCmd(thisCmd):
         initSide(1)
         printCards()
         checkFound()
-        totalReset += 1
+        total_reset += 1
         return
     if name == "?":
         cmdNoMeta.pop()
@@ -1836,8 +1813,8 @@ def readCmd(thisCmd):
             else:
                 name = name + 'e'
             if shouldPrint():
-                print ("New implied command %s." % (name))
-        elif ord(name[0]) < 101 and ord(name[0]) > 96:
+                print ("New implied command %s." % name)
+        elif 101 > ord(name[0]) > 96:
             if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
                 name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
             elif firstEmptyRow() > 0:
@@ -1864,7 +1841,7 @@ def readCmd(thisCmd):
             cmdChurn = not chainShowAll
             oldTurns = len(moveList)
             for jj in reversed(range(0,len(name)-1)):
-                if wonThisCmd == False:
+                if not wonThisCmd:
                     if name[jj] != name[jj+1]:
                         temp = name[jj] + name[len(name)-1]
                         print "Moving " + temp
@@ -1885,6 +1862,7 @@ def readCmd(thisCmd):
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
         temprow = -1
+        tempspare = -1
         if tofound.isdigit():
             temprow = int(tofound)
         elif (ord(tofound) > 96) and (ord(tofound) < 101):
@@ -1983,7 +1961,7 @@ def readCmd(thisCmd):
                 #print "Move", str(undoIdx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
                 if undoIdx == 15:
                     printCards()
-                    exit
+                    exit()
             else:
                 print ('Those cards don\'t match up.')
                 cmdNoMeta.pop()
@@ -2051,13 +2029,13 @@ def readCmd(thisCmd):
             print ('From row must be between 1 and 8.')
             cmdNoMeta.pop()
             return
-        if (len(elements[myRow]) == 0):
+        if len(elements[myRow]) == 0:
             print ('Empty from-row.')
             cmdNoMeta.pop()
             return
         if spares[myToSpare] > 0:
             myFirstE = firstEmptyRow()
-            if (myFirstE > 0):
+            if myFirstE > 0:
                 myRow = int(name[0])
                 rowIdx = len(elements[myRow])-1
                 gotOne = canPut(elements[myRow][rowIdx], spares[myToSpare])
@@ -2129,4 +2107,3 @@ printCards()
 
 while win == 0:
     readCmd('')
-endwhile
