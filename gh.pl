@@ -362,6 +362,8 @@ sub processTerms
 		  $fileList .= "$fromFile\n";
 		  #die "$fromFile to $gh\\$toFile\\$short";
 		  my $fileTo = "$gh\\$toFile\\$short";
+		  if (-f $fileTo)
+		  {
           my $info    = stat($fileTo);
           my $retMode = $info->mode & 0777;
 		  if ($retMode & 0222 != 0222)
@@ -372,6 +374,7 @@ sub processTerms
 		  if ($retMode & 0222 != 0222)
 		  {
 		    chmod $retMode, $fileTo;
+		  }
 		  }
 		  if (!$thisWild) { $copies++; }
         }

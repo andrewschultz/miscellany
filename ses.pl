@@ -125,9 +125,9 @@ if ($analyze)
 
   my @errs;
   if ($newOverStreak > 1) { push (@errs, "NEW TABS too big $newOverStreak times in a row."); }
-  if ($newInc > 1) { push (@errs, "NEW TABS grew $newOverStreak times in a row."); }
+  if ($newInc > 1) { push (@errs, "NEW TABS grew $newInc times in a row."); }
   if ($tabsOverStreak > 1) { push (@errs, "OVERALL TABS too big $tabsOverStreak times in a row."); }
-  if ($tabsInc > 1) { push (@errs, "OVERALL TABS grew $tabsOverStreak times in a row."); }
+  if ($tabsInc > 1) { push (@errs, "OVERALL TABS grew $tabsInc times in a row."); }
   if ($#errs > -1)
   {
     if ($htmlGen)

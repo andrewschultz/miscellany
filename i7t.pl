@@ -295,7 +295,6 @@ close(B);
 }
 
 my $ranOneTest = 0;
-my $printFail = 0;
 my $errLog = "";
 my $thisFile = "";
 my $lastOpen = "";
@@ -321,7 +320,10 @@ for my $dataFile(keys %dataFiles)
   sortDataFile($dataFile);
 }
 
-if (scalar keys %notFound) { print "" . (scalar keys %notFound) . " text tests not found.\n"; }
+if (scalar keys %notFound)
+{
+  print "" . (scalar keys %notFound) . " text tests not found.\n";
+  }
 
 if ($openPost)
 {
@@ -366,11 +368,6 @@ if ($dupFail)
   print "TEST RESULTS:(notes) $project-tabledup,0,$dupFail,0,$dupLog\n";
 }
 
-if ($printFail)
-{
-  print "TEST RESULTS:(notes) $project-tables,0,$printFail,0,Look <a href=\"file:///$thisFile\">here</a>\n$errLog\n";
-}
-
 if ($noAct)
 {
   print "TEST RESULTS:(notes) $project-activations,0,$noAct,0,Look <a href=\"file:///$thisFile\">here</a>\n$actLog\n";
@@ -382,9 +379,7 @@ if ($majorList)
   print "TEST RESULTS:$project table count,0,$countMismatch,0,$majorList\n";
 }
 
-if ($printFail && $failCmd{$project}) { print "RUN THIS: $failCmd{$project}\n"; }
-
-if ($ranOneTest && !$printFail && !$dupFail && !$noAct && !$majorList) { print "EVERYTHING WORKED! YAY!\n"; }
+if ($ranOneTest && !$dupFail && !$noAct && !$majorList) { print "EVERYTHING WORKED! YAY!\n"; }
 
 exit();
 
