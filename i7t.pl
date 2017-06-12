@@ -165,6 +165,7 @@ my $tableRow = 0;
 my $falseRow = 0;
 my $trueRow = 0;
 my $smartIdea = 0;
+my $thisTableRow = 0;
 
 my $dupFail = 0;
 my $dupLog = "";
@@ -224,13 +225,18 @@ while ($a = <A>)
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
 	}
 	$tableRow = 0;
-    if ($aorig =~ /^\[table/) { }
+    if ($aorig =~ /^\[table/)
+	{
+	  $thisTableRow = 0;
+	}
 	else
 	{
-	  <A>;
+	  $a = <A>;
+	  $thisTableRow = (scalar split(/\t/, $a));
 	}
 	next;
   }
+  if ($table && ($a =~ /^\[/)) { next; }
   if ($a !~ /[a-z]/)
   {
     if (!$table) { next; }
@@ -261,7 +267,31 @@ while ($a = <A>)
   }
   if ($table)
   {
-    print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "WARNING: $curTable has a comment which may throw the counter off.\n"; }
+    if ($a =~ /(\"\"|--)/)
+	{
+	  my @cols = split(/\t/, $a);
+	  for (0..$#cols)
+	  {
+	    if (($cols[$_] eq "--") || ($cols[$_] eq "\|\|"))
+		{
+          print "Empty entry at $curTable, line $., column $_.\n";
+		}
+	  }
+	}
+    if ($thisTableRow)
+	{
+	  my $tempLine = $a;
+      while ($tempLine =~ /[\t ]\[[^\]]*\]$/i)
+      {
+        $tempLine =~ s/[\t ]\[[^\]]*\]$//gi;
+      }
+	  my $columnsThisRow = (scalar split(/\t/, $tempLine));
+	  if ($columnsThisRow != $thisTableRow)
+	  {
+	    print "WARNING: Table $curTable line $. has $columnsThisRow rows, should have $thisTableRow.\n";
+	  }
+    }
+    print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "ROW MISMATCH: $curTable has a comment which may throw the counter off.\n"; }
 	if ($a =~ /(false\t|\tfalse)/) { $falseRow++; }
 	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
 	my $y = $a;
@@ -387,6 +417,10 @@ exit();
 #subroutines below
 #
 
+####################################################
+#this processes the i7t.txt / i7tp.txt files
+#
+
 sub processInitData
 {
   my $line;
@@ -456,6 +490,10 @@ sub processInitData
   }
   close(A);
 }
+
+#####################################
+#this processes the data files like x_release_1.txt
+#
 
 sub sortDataFile
 {
