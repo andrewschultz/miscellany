@@ -49,6 +49,7 @@ my %dataFiles;
 my %tableDup;
 my %extraRows;
 my %ignoreDup;
+my %ignoreBlankCols;
 
 my @tableReadFiles = ($tabfile, $tabfilepriv);
 
@@ -267,15 +268,19 @@ while ($a = <A>)
   }
   if ($table)
   {
-    if ($a =~ /(\"\"|--)/)
+    my @cols = split("\t", $a);
+    if ($a =~ /(\"\"|--|\t\t)/)
 	{
-	  my @cols = split(/\t/, $a);
 	  for (0..$#cols)
 	  {
 	    if (($cols[$_] eq "--") || ($cols[$_] eq "\|\|"))
 		{
-          print "Empty entry at $curTable, line $., column $_.\n";
+          print "Empty entry at $tableShort $curTable, line $., column $_.\n" if !defined($ignoreBlankCols{"$tableShort:$_"});
 		}
+        if ($cols[$_] eq "")
+        {
+          print "Double tab at $tableShort $curTable, line $., column $_-" . ($_+1) . "\n";
+        }
 	  }
 	}
     if ($thisTableRow)
@@ -285,7 +290,7 @@ while ($a = <A>)
       {
         $tempLine =~ s/[\t ]\[[^\]]*\]$//gi;
       }
-	  my $columnsThisRow = (scalar split(/\t/, $tempLine));
+	  my $columnsThisRow = (scalar split(/[\t]+/, $tempLine));
 	  if ($columnsThisRow != $thisTableRow)
 	  {
 	    print "WARNING: Table $curTable line $. has $columnsThisRow rows, should have $thisTableRow.\n";
@@ -439,6 +444,12 @@ sub processInitData
 	  {
 	    $tabElts[1] =~ s/^igdup://;
 	    $ignoreDup{$tabElts[1]} = 1;
+		next;
+	  }
+	  if ($tabElts[1] =~ /^igcol:/)
+	  {
+	    $tabElts[1] =~ s/^igcol://;
+	    $ignoreBlankCols{$tabElts[1]} = 1;
 		next;
 	  }
 	  if ($tabElts[1] =~ /^xrow:/)

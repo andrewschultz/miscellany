@@ -94,6 +94,13 @@ buck-the-past	igdup:xxu
 buck-the-past	igdup:xxuse
 buck-the-past	igdup:xxton
 ######################################
+rows to ignore in BTP
+buck-the-past	igcol:xxu:1
+buck-the-past	igcol:xxtoa:0
+buck-the-past	igcol:xxuse:2
+buck-the-past	igcol:xxuse:3
+buck-the-past	igcol:xxuse:4
+######################################
 #Buck the Past Spring Thing searching
 #
 #############
