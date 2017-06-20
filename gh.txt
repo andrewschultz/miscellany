@@ -375,6 +375,7 @@ past=$ws\swear.pl,utils
 past=$is\rmnm.pl,utils
 past=$is\c2t.pl,utils
 past=$is\sco.pl,utils
+past=$is\XXX.py,utils
 #############open smart.otl at right section
 past=$is\bs.pl,utils
 past=$is\bs.bat,utils

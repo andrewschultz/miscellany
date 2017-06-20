@@ -304,6 +304,12 @@ sub processTerms
 
 	  if ((! -f $fromFile) && ($fromFile !~ /\*/))
 	  {
+	    if (-f $toFile)
+		{
+		  print "BACKCOPY: copy \"$toFile\" \"$fromFile\"\n";
+		  $backcopy++;
+		  next;
+		}
 	    print "Oops $fromFile can't be found.\n";
 		$badFileList .= "($.) $fromFile\n"; $badFileCount++; next;
       }
@@ -392,6 +398,10 @@ sub processTerms
 		  my $fileTo = "$gh\\$toFile\\$short";
 		  if (-f $fileTo)
 		  {
+		  if (! -f $fromFile)
+		  {
+		    print "BACKCOPY: copy \"$fromFile\" \"$fileTo\"\n";
+		  }
           my $info    = stat($fileTo);
           my $retMode = $info->mode & 0777;
 		  if ($retMode & 0222 != 0222)
