@@ -63,6 +63,12 @@ to say wfak-d:
 	if debug-state is false:
 		wfak;
 
+book basic math
+
+to decide what number is abs of (n - a number):
+	if n < 0, decide on 0 - n;
+	decide on n;
+
 book style abbreviations
 
 to say r:

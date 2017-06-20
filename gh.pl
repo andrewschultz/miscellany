@@ -376,6 +376,10 @@ sub processTerms
 		    chmod $retMode, $fileTo;
 		  }
 		  }
+		  else
+		  {
+		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short");
+		  }
 		  if (!$thisWild) { $copies++; }
         }
 		else

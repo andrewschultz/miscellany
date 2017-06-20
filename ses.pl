@@ -116,8 +116,8 @@ if ($analyze)
 	for (@b) { $_ =~ s/ .*//g; }
 	if ($b[0] > $tabMax) { $tabsOverStreak++; } else { $tabsOverStreak = 0; }
 	if ($b[1] > $newMax) { $newOverStreak++; } else { $newOverStreak = 0; }
-	if (($b[0] > $lastTabs) && ($lastTabs >= $tabMin)) { $tabsInc++; } else { $tabsInc = 0; }
-	if (($b[1] > $lastNew) && ($lastNew >= $newMin)) { $newInc++; } else { $newInc = 0; }
+	if (($b[0] > $lastTabs) && ($lastTabs >= $tabMin)) { $tabsInc++; } elsif ($b[0] < $lastTabs) { $tabsInc = 0; }
+	if (($b[1] > $lastNew) && ($lastNew >= $newMin)) { $newInc++; } elsif ($b[1] < $lastNew) { $newInc = 0; }
 	$lastNew = $b[1];
 	$lastTabs = $b[0];
 	#print "$b[0] $b[1] $tabsOverStreak $newOverStreak $tabsInc $newInc\n";
