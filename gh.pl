@@ -30,6 +30,7 @@ my $runTrivialTests = 0;
 my $byFile = 0;
 my $removeTrailingSpace = 0;
 my $ignoreTrizbort = 0;
+my $backcopy = 0;
 
 my $reverse = 0;
 
@@ -45,7 +46,9 @@ my %gwt;
 preProcessHashes($ght);
 preProcessHashes($ghp);
 
-#these can't be changed on the command line. I'm too lazy to write in command line parsing right now, so the
+#################options
+my $executeBackCopy = 0;
+
 my $justPrint = 0;
 my $verbose = 0;
 my $verboseTest = 1;
@@ -94,6 +97,7 @@ while ($count <= $#ARGV)
   /^-?v$/i && do { $verbose = 1; $count++; next; };
   /^-?vt$/i && do { $verboseTest = 1; $count++; next; };
   /^-?nvt$/i && do { $verboseTest = 0; $count++; next; };
+  /^-?bc$/i && do { $executeBackCopy = 1; $count++; next; };
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
   /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
@@ -328,6 +332,30 @@ sub processTerms
 		$ctemp =~ s/,[a-z0-9-]*$//;
 		my @fileList = glob "$ctemp";
 		if ($#fileList == -1) { print "No matches for $ctemp.\n"; next; }
+
+		my $wild = $ctemp;
+		$wild =~ s/.*[\\\/]//;
+		my @fileList2 = glob "$gh\\$toFile\\$wild";
+		my $ctempdir = $ctemp; $ctempdir =~ s/[\\\/][^\\\/]*$//;
+
+		for (@fileList2)
+		{
+		  my ($vol, $dir, $file) = File::Spec->splitpath($_);
+		  if (! -f "$ctempdir\\$file")
+		  {
+		    if ($executeBackCopy)
+			{
+		    copy("$_", "$ctempdir\\$file");
+		    print("$_ copied backwards to $ctempdir\\$file.\n");
+			}
+			else
+			{
+		    print("BACKCOPY: copy \"$_\" \"$ctempdir\\$file\"\n");
+			}
+			$backcopy++;
+		  }
+		}
+
 		$wildSwipes++;
 		for (@fileList)
 		{
@@ -408,6 +436,7 @@ sub processTerms
   else
   {
     print "Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
+	print "Also, " . ($executeBackCopy ? "back-copied" : "use -bc to back-copy" ) . " $backcopy file(s).\n" if ($backcopy);
 	my $cbf = $copies+$badFileCount;
 	my $proc2 = join("/", split(/,/, $procString));
 	if ($testResults && $cbf)
