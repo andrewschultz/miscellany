@@ -39,7 +39,7 @@ echo . = go to unix file, OLD
 echo g = games.otl
 echo l/li = limericks.otl
 echo sr = standard rules
-echo search for: x.pl, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x.pl, writing\dict\x.pl, x.bat
+echo search for: x.pl, x.pm, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x.pl, writing\dict\x.pl, x.bat
 goto end
 )
 
@@ -96,6 +96,13 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" %1.py
 goto end
 )
 
+if EXIST "%1.pm" (
+echo Found PL file.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" %1.pm
+goto end
+)
+
 if EXIST "c:\scripts\%1.py" (
 echo Found PY file in scripts.
 
@@ -110,10 +117,24 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\scripts\%1
 goto end
 )
 
+if EXIST "c:\writing\scripts\%1.pm" (
+echo Found PL file.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\scripts\%1.pm"
+goto end
+)
+
 if EXIST "c:\writing\dict\%1.py" (
 echo Found PY file.
 
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\dict\%1.py"
+goto end
+)
+
+if EXIST "c:\writing\dict\%1.pm" (
+echo Found PL file.
+
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\dict\%1.pm"
 goto end
 )
 

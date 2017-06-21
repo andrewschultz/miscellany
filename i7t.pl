@@ -358,7 +358,11 @@ for my $dataFile(keys %dataFiles)
 if (scalar keys %notFound)
 {
   print "" . (scalar keys %notFound) . " text tests not found.\n";
+  for (keys %notFound)
+  {
+    print "FAILED: No close match found for string $regex{$_}\n";
   }
+}
 
 if ($openPost)
 {

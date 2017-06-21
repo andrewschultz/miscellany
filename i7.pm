@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %xtraFiles tableFile cutArt openWinOrUnix);
+@EXPORT      = qw(%i7x %xtraFiles tableFile cutArt openWinOrUnix sourceFile);
 #@EXPORT_OK   = qw(i7x);
 
 our %i7x = ( "12" => "shuffling",
@@ -76,6 +76,13 @@ sub tableFile
   my $temp = $_[0];
   $temp =~ s/-/ /g;
   return "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp tables.i7x";
+}
+
+sub sourceFile
+{
+  my $temp = $_[0];
+  $temp = $i7x{$temp} if defined($i7x{$temp});
+  return "c:\\games\\inform\\$temp.inform\\Source\\story.ni";
 }
 
 1;
