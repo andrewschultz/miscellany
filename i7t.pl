@@ -66,6 +66,7 @@ my $maxString = 0;
 my $spawnPopup = 0;
 my $verbose = 0;
 my $writeRight = 0;
+my $superVerbose = 0;
 
 my %rows;
 my %falseRows;
@@ -120,6 +121,7 @@ while ($count <= $#ARGV)
 	/^-?q$/ && do { $quietTables = 1; $count++; next; };
 	/^-?tl$/ && do { $quietTables = 0; $count++; next; };
 	/^-?v$/ && do { $verbose = 1; $count++; next; };
+	/^-?(vs|sv)$/ && do { $superVerbose = $verbose = 1; $count++; next; };
 	/^-?w$/ && do { $writeRight = 1; $count++; next; };
 	/^-?o$/ && do { $openPost = 1; $count++; next; };
 	/^-?ot$/ && do { $openTableFile = 1; $count++; next; };
@@ -308,6 +310,7 @@ while ($a = <A>)
 	  $actLog .= " $.";
 	}
 	$smartIdea += $tempAdd;
+	print "$smartIdea ideas now after $tableRow rows, $curTable, $a\n" if $superVerbose && $smartIdea;
 	if (($a =~ /[a-z]/i) && ($tableRow > -1))
 	{
 	  my @tempAry = split(/\t/, $a);
@@ -578,7 +581,7 @@ csv = tables to highlight
 -o opens the offending file post-test
 -ot opens the table file
 -q quiets out the printing of tables
--v verbose
+-v verbose, -sv/vs super verbose
 -w writeRight option: write the right options in
 -tl lists them (currently the default)
 -ps prints out successes as well

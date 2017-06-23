@@ -260,8 +260,8 @@ ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
 #Problems files to GitHub
 TOBASE=the-problems-compound
 FROMSHORT=compound
-$ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm&invis.pl pc
 prob=$is\story.ni,
+$ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm&invis.pl pc
 prob=$i7\Compound tables.i7x,
 prob=$i7\Compound debug tables.i7x,
 prob=$is\item-ordering.htm,
@@ -304,8 +304,8 @@ prob=$is\reg-pc-*,testing
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
-$ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm&invis.pl sc
 city=$is\story.ni,
+$ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm&invis.pl sc
 city=$i7\Slicker City tables.i7x,
 city=$i7\Slicker City debug tables.i7x,
 city=$im\Release\slicker-city-invisiclues.htm,
@@ -326,12 +326,12 @@ city=$is\roomlist.txt,testing
 city=$is\postmortem_ifcomp.txt,
 ##############################
 #perl scripts
-city=$is\excl.pl,
-city=$wd\talf.pl,
-city=$is\grate.pl,
-city=$is\sctt.pl,
-city=$wd\olap.pl,
-city=$wd\olap.txt,
+city=$is\excl.pl,utils
+city=$wd\talf.pl,utils
+city=$is\grate.pl,utils
+city=$is\sctt.pl,utils
+city=$wd\olap.pl,utils
+city=$wd\olap.txt,utils
 #################################
 #commands to run
 >city=$wd\talf.pl -sc | grep -i fail
@@ -368,13 +368,14 @@ past=$is\abkdup.pl,utils
 past=$is\smso.pl,utils
 past=$is\graf.pl,utils
 past=$is\graf.txt,utils
-past=$is\pun.pl,utils
+past=$is\bsr.pl,utils
 past=$is\ifs.pl,utils
 past=$is\nmrot.pl,utils
 past=$ws\swear.pl,utils
 past=$is\rmnm.pl,utils
 past=$is\c2t.pl,utils
 past=$is\sco.pl,utils
+past=$is\m2so.py,utils
 #############open smart.otl at right section
 past=$is\bs.pl,utils
 past=$is\bs.bat,utils
