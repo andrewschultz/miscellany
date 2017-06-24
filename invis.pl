@@ -25,6 +25,7 @@ my $forceRunThrough = 0;
 my $debug = 0;
 my $launchTextFile = 0;
 my $createTextFile = 0;
+my $verbose = 0;
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
@@ -40,7 +41,7 @@ my $filename = $default;
 
 while ($count <= $#ARGV)
 {
-  $a = $ARGV[$count];
+  $a = lc($ARGV[$count]);
   for ($a)
   {
   /^-\?$/ && do { listAllOutput(); exit; };
@@ -48,9 +49,8 @@ while ($count <= $#ARGV)
   /^-?d$/ && do { $debug = 1; $count++; next; };
   /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
   /^-?u$/ && do { $updateOnly = 1; $count++; next; };
-  /^-?l$/ && do { $launchAfter = 1; $count++; next; };
-  /^-?r$/ && do { $launchRaw = 1; $count++; next; };
-  /-?(lr|rl)$/ && do { $launchRaw = 1; $launchAfter = 1; $count++; next; };
+  /^-?[lr]+$/ && do { $launchAfter = ($a =~ /l/); $launchRaw = ($a =~ /r/); $count++; next; };
+  /^-?v$/ && do { $verbose = 1; $count++; next; };
   /^-?e$/ && do { $launchTextFile = 1; $count++; next; };
   /^-?en$/ && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
   /^-/ && do { usage(); exit; };
@@ -101,7 +101,7 @@ if ($updateOnly && defined(-M $outname))
 {
   #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
   if ($debug) { print "" . ((-M $filename) . " $filename | $outname " . (-M $outname)) . "\n"; }
-  if ((-M $filename > -M $outname) && (!$forceRunThrough)) { print "$outname is already up to date. Run with -f to force things.\n"; exit; }
+  if ((-M $filename > -M $outname) && (!$forceRunThrough)) { print "$outname is already up to date. Run with -f to force things.\n"; launchIt(); exit; }
   else { print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n"; }
 }
 
@@ -142,10 +142,11 @@ my $theDir = "";
 
 while ($a = <A>)
 {
+  print $a if $verbose;
   chomp($a);
   if ($a =~ /^->/) { $a =~ s/^->//g; $theDir = $a; next; }
   if ($a =~ /^\#/) { next; } #comments
-  if ($a =~ /;/) { last; }
+  if ($a =~ /^;/) { last; }
   if ($a !~ /^[\?>]/)
   {
     $levels[$lastLev]++;
@@ -225,8 +226,7 @@ while ($a = <B>)
 close(B);
 close(C);
 
-if ($launchAfter) { `$outname`; }
-if ($launchRaw) { `$rawFile`; }
+launchIt();
 
 if ($theDir)
 {
@@ -294,6 +294,12 @@ sub listAllOutput
 	close(A);
 	print "$invDir\\$fi: $dname\\$fname\n";
   }
+}
+
+sub launchIt
+{
+if ($launchAfter) { `$outname`; }
+if ($launchRaw) { `$rawFile`; }
 }
 
 sub usage

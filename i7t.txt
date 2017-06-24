@@ -74,6 +74,7 @@ buck-the-past	xxtia	"	$$ insightful authors	1
 buck-the-past	xxtia	"	$t disreputable	0
 #random ideas
 buck-the-past	xxton	"	$$ witticisms	1
+buck-the-past	xxton	"	$t licentious	0
 buck-the-past	xxui	"	$$ friendly inns	0
 buck-the-past	xxdi	"	$$ unfriendly inns	0
 buck-the-past	xxfarm	"	$$ farm animal lines	1

@@ -375,10 +375,10 @@ past=$ws\swear.pl,utils
 past=$is\rmnm.pl,utils
 past=$is\c2t.pl,utils
 past=$is\sco.pl,utils
-past=$is\m2so.py,utils
 #############open smart.otl at right section
 past=$is\bs.pl,utils
 past=$is\bs.bat,utils
+past=$is\ac2gt.py,utils
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
@@ -527,6 +527,9 @@ misc=$ws\comout.txt,
 misc=$ws\trsw.pl,
 misc=$ws\gt.pl
 misc=$ws\gt.bat
+###############python-ish
+#now done by symlink
+#misc=$ws\m2so.py,utils
 
 #PlotEx
 FROMBASE=c:\games\inform
