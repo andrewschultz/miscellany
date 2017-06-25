@@ -190,7 +190,7 @@ if ($#prevMiss > -1)
   {
     $count++;
 	$missFound++;
-	print "**** $count ($missFound) $_\n";
+	print "**** $count ($missFound) $_ $miss{$_}x\n";
   }
 }
 
