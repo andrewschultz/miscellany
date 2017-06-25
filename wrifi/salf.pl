@@ -35,7 +35,7 @@ my $dupes;
 my @sects = ();
 my $toSplit = "";
 my $count = 0;
-
+my $defDir = "";
 
 my $myd = getcwd();
 
@@ -44,9 +44,9 @@ $list{"pc"} = "pc";
 $list{"sc"} = "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca";
 $list{"btp"} = "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
 
-if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc"}; }
-if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; }
-if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; }
+if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc"}; $defDir = "sc"; }
+if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; $defDir = "sc"; }
+if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
 
 while ($count <= $#ARGV)
 {
@@ -55,7 +55,8 @@ while ($count <= $#ARGV)
   {
     /^-?q$/ && do { $undoQuestionComments = 1; $count++; next; }
   }
-  if ($toSplit) { die ("Second split-command."); }
+  if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
+  if ($toSplit) { die ("Second split-command $arg tried to overwrite $toSplit at $count."); }
   if ($list{$ARGV[$count]}) { $toSplit = $ARGV[$count]; }
   else
   {
