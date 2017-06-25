@@ -45,6 +45,8 @@ my $mat;
 my $bmat;
 my $i6x;
 
+my $buildSpecified = 0;
+
 my $betaDir = "c:\\games\\inform\\beta.inform";
 my $baseDir = "c:\\games\\inform";
 
@@ -90,12 +92,15 @@ while ($count <= $#ARGV)
   for ($a)
   {
   #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
-  /^(b|beta)$/ && do { $runBeta = 1 - $runBeta; $count++; next; };
-  /^-?jb$/ && do { $runBeta = 1; $debug = $release = 0; $count++; next; };
-  /^-?jd$/ && do { $debug = 1; $runBeta = $release = 0; $count++; next; };
-  /^-?jr$/ && do { $release = 1; $debug = $runBeta = 0; $count++; next; };
-  /^-?jrn$/ && do { $ignoreDRBPrefix = 1; $release = 1; $debug = $runBeta = 0; $count++; next; };
-  /^-?f[rdb]*$/ && do { $release = $debug = $runBeta = 0;
+  /^(b|beta)$/ && do { $buildSpecified = 1; $runBeta = 1 - $runBeta; $count++; next; };
+  /^-?jb$/ && do { $buildSpecified = 1; $runBeta = 1; $debug = $release = 0; $count++; next; };
+  /^-?jd$/ && do { $buildSpecified = 1; $debug = 1; $runBeta = $release = 0; $count++; next; };
+  /^-?jr$/ && do { $buildSpecified = 1; $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-?jrn$/ && do { $buildSpecified = 1; $ignoreDRBPrefix = 1; $release = 1; $debug = $runBeta = 0; $count++; next; };
+  /^-?f[rdb]*$/ && do
+  {
+    $buildSpecified = 1;
+    $release = $debug = $runBeta = 0;
     if ($a =~ /r/) { $release = 1; }
     if ($a =~ /d/) { $debug = 1; }
     if ($a =~ /b/) { $runBeta = 1; }
@@ -107,10 +112,10 @@ while ($count <= $#ARGV)
   /^-?ba$/ && do { $informBase = $ARGV[$count+1]; $count++; next; };
   /^-?be$/ && do { $betaDir = $ARGV[$count+1]; $count++; next; };
   /^-?np$/ && do { $ignoreDRBPrefix = 1; $count++; next; };
-  /^-?nr$/ && do { $release = 0; $count++; next; };
-  /^-?yr$/ && do { $release = 1; $count++; next; };
-  /^-?nd$/ && do { $debug = 0; $count++; next; };
-  /^-?yd$/ && do { $debug = 1; $count++; next; };
+  /^-?nr$/ && do { $buildSpecified = 1; $release = 0; $count++; next; };
+  /^-?yr$/ && do { $buildSpecified = 1; $release = 1; $count++; next; };
+  /^-?nd$/ && do { $buildSpecified = 1; $debug = 0; $count++; next; };
+  /^-?yd$/ && do { $buildSpecified = 1; $debug = 1; $count++; next; };
   /^-(dt|td)$/ && do { $debugTables = 1; $count++; next; };
   /^-(ndt|ntd)$/ && do { $debugTables = -1; $count++; next; };
   /^-?x$/ && do { $execute = 1; $count++; next; };
@@ -123,6 +128,10 @@ while ($count <= $#ARGV)
 }
 
 if ($#compileList == -1) { print "Nothing in compile list. Using default: @defaultCompileList.\n"; @compileList = @defaultCompileList; }
+
+if ($release + $debug + $runBeta == 0) { die ("None of release/debug/beta chosen."); }
+
+if ($buildSpecified == 0) { print "No builds chosen, going with default list:" . ($release ? " release" : "") . ($debug ? " debug" : "") . ($runBeta ? " beta" : "") . "\n"; }
 
 my $myProj;
 
