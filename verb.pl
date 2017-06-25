@@ -29,20 +29,22 @@ for $v (@verbs)
 
   if ($vo =~ /w-/) { print "Defining out of world action $v.\n"; }
   elsif ($vo =~ /a-/) { print "Defining instead rule for $v.\n"; $code = sprintf("%sinstead of doing something with $v:\n\tif action is procedural:\n\t\tcontinue the action;\n\tsay \"[fill-in-here\]\";\n\n", $code); }
+  elsif ($vo =~ /d-/) { print "Defining action applying to one direction $v.\n"; }
   elsif ($vo =~ /o-/) { print "Defining action applying to one thing $v.\n"; }
   elsif ($vo =~ /p-/) { print "Defining action applying to one person $v.\n"; }
   elsif ($vo =~ /#-/) { print "Defining action applying to one number $v.\n"; }
   else { print "Defining action applying to nothing $v.\n"; }
 
 $oow = "applying to nothing";
-if ($v =~ /w-/) { $oow = "out of world"; $v =~ s/w-//g;}
+if ($vo =~ /w-/) { $oow = "out of world"; }
 
 #print "$b from $v\n"; next;
-if (($v =~ /^ts-/) || ($v =~ /^t-/))
+
+if (($vo =~ /^ts-/) || ($vo =~ /^t-/))
 {
   $code = sprintf("%s%s is a truth state that varies. %s is usually false.\n\n", $code, $v, $v);
   }
-  elsif ($v =~ /^#-/)
+  elsif ($vo =~ /^#-/)
   {
   $code = sprintf("%schapter %sing\n\n%sing is an action applying to one number.
 
@@ -55,7 +57,7 @@ carry out %sing:
 
 ", $code, $v, $v, $v, $v, $v, $v);
   }
-  elsif ($v =~ /^o-/)
+  elsif ($vo =~ /^o-/)
   {
   $code = sprintf("%schapter %sing\n\n%sing is an action applying to one thing.
 
@@ -68,7 +70,20 @@ carry out %sing:
 
 ", $code, $v, $v, $v, $v, $v, $v);
   }
-  elsif ($v =~ /^p-/)
+  elsif ($vo =~ /^d-/)
+  {
+  $code = sprintf("%schapter %sing\n\n%sing is an action applying to one direction.
+
+understand the command \"%s\" as something new.
+
+understand \"%s [direction]\" as %sing.
+
+carry out %sing:
+	the rule succeeds.
+
+", $code, $v, $v, $v, $v, $v, $v);
+  }
+  elsif ($vo =~ /^p-/)
   {
   $code = sprintf("%schapter %sing\n\n%sing is an action applying to one person.
 
@@ -81,17 +96,17 @@ carry out %sing:
 
 ", $code, $v, $v, $v, $v, $v, $v);
   }
-  elsif ($v =~ /^n-/)
+  elsif ($vo =~ /^n-/)
   {
   print "Defining number $v.\n";
   $code = sprintf("%s%s is a number that varies. %s is usually 0.\n\n", $code, $v, $v);
   }
-  elsif ($v =~ /^rm-/)
+  elsif ($vo =~ /^rm-/)
   {
   print "Defining blocked room $v.\n";
   $code = sprintf("%schapter %s\n\n%s is a room. \"DESCRIPTION PLEASE\".\n\ncheck going in %s:\n\tcontinue the action;\n\n", $code, $v, $v, $v);
   }
-  elsif ($v =~ /^r-/)
+  elsif ($vo =~ /^r-/)
   {
   print "Defining room $v.\n";
   $code = sprintf("%schapter %s\n\n%s is a room. %s is DIR of ??.\n\n %s is in region ??.\n\n", $code, $v, $v, $v, $v);
