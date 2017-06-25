@@ -19,9 +19,14 @@ use POSIX;
 use strict;
 use warnings;
 
+########################constants
+my $logFile = __FILE__;
+$logFile =~ s/.pl$/-log.txt/i;
+
 ##########################
 #options
 
+my $runTest = 0;
 my $undoQuestionComments = 0;
 
 ##########################
@@ -36,7 +41,6 @@ my @sects = ();
 my $toSplit = "";
 my $count = 0;
 my $defDir = "";
-
 my $myd = getcwd();
 
 my %list;
@@ -48,11 +52,19 @@ if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc
 if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; $defDir = "sc"; }
 if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
 
+my $defaultProj = "btp";
+
 while ($count <= $#ARGV)
 {
-  my $arg = $ARGV[$count];
+  my $arg = lc($ARGV[$count]);
   for ($arg)
   {
+    /^-?(c|tc|ct)$/ && do
+	{
+	  if ($arg =~ /t/) { $runTest = 1; }
+	  checkLastRun(defined($ARGV[$count+1]) ? $ARGV[$count+1] : $defaultProj);
+	  exit;
+    };
     /^-?q$/ && do { $undoQuestionComments = 1; $count++; next; }
   }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
@@ -177,4 +189,28 @@ sub comm
 {
   if ($_[0] =~ /^#/) { return 1; }
   return 0;
+}
+
+sub updateLogFile
+{
+}
+
+sub checkLastRun
+{
+  my $t = time();
+  my $line;
+
+  open(A, $logFile) || die ("Can't open $logFile.");
+
+  while ($line = <A>)
+  {
+    my @time = split(/,/, $line);
+	if ($#time < 2) { print "Line $. ($_[0]) needs to be of the form project,okay wait time,last time run.\n"; }
+	my $delta = $t - $time[1] + $time[2];
+	if ($delta > 0)
+	{
+	  if ($runTest) { print "TEST RESULTS: $t,0,1,0,$delta seconds overdue: salf.pl $t\n"; }
+	  else { print "Project $t needs to be run. It is $delta seconds overdue.\n"; }
+	}
+  }
 }
