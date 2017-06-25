@@ -19,9 +19,6 @@ use File::stat;
 
 my $warnCanRun = 0;
 
-my %repls;
-my %repl2;
-
 my $alph = 1;
 my $procString = "";
 my $defaultString;
@@ -32,19 +29,23 @@ my $removeTrailingSpace = 0;
 my $ignoreTrizbort = 0;
 my $backcopy = 0;
 
-my $reverse = 0;
-
+##########################
+#constants
+my $gh = "c:\\users\\andrew\\Documents\\github";
 my $ghl = "c:\\writing\\scripts\\gh-last.txt";
 my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
 my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
+my $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 
+###########################
+#hashes
 my %gws;
 my %gwt;
-
-preProcessHashes($ght);
-preProcessHashes($ghp);
+my %repls;
+my %repl2;
+my %altHash, my %do, my %poss, my %postproc;
 
 #################options
 my $executeBackCopy = 0;
@@ -67,18 +68,23 @@ my $minFile = "";
 
 my @trizFail;
 
-my $gh = "c:\\users\\andrew\\Documents\\github";
+########################
+#variables
+my $cmdYet = 0;
+my $warnYet = 0;
+my $zeroOkay = 0;
+
+my $reverse = 0;
+
 my $count = 0;
-my $a;
-my $a2;
-my %altHash, my %do, my %poss, my %postproc;
-my $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
+
+preProcessHashes($ght);
+preProcessHashes($ghp);
 
 while ($count <= $#ARGV)
 {
-  $a = $ARGV[$count];
-  $a2 = lc($a);
-  for ($a2)
+  my $arg = lc($ARGV[$count]);
+  for ($arg)
   {
   /^gh\.pl/ && do { print "############################OOPS! You added the app name.\n"; $count++; next; };
   /^-?r$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghreg"); exit; };
@@ -127,22 +133,22 @@ while ($count <= $#ARGV)
   /^-?reverse$/i && do { $reverse = 1; $count++; next; };
   /^[a-z34]/i && do
   {
-    if ($a2 =~ /-$/) { $a2 =~ s/-$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 0; } else { $postproc{$a2} = 0; } } # sc- means you don't run trivials
-    if ($a2 =~ /=$/) { $a2 =~ s/=$//g; if ($altHash{$a2}) { $postproc{$altHash{$a2}} = 1; } else { $postproc{$a2} = 1; } } # sc= means you do run trivials
-    if ($altHash{$a2})
+    if ($arg =~ /-$/) { $arg =~ s/-$//g; if ($altHash{$arg}) { $postproc{$altHash{$arg}} = 0; } else { $postproc{$arg} = 0; } } # sc- means you don't run trivials
+    if ($arg =~ /=$/) { $arg =~ s/=$//g; if ($altHash{$arg}) { $postproc{$altHash{$arg}} = 1; } else { $postproc{$arg} = 1; } } # sc= means you do run trivials
+    if ($altHash{$arg})
 	{
-	  print "$a2 => $altHash{$a2}\n";
-	  $procString .= ",$altHash{$a2}";
+	  print "$arg => $altHash{$arg}\n";
+	  $procString .= ",$altHash{$arg}";
 	}
 	else
 	{
-	  $procString .= ",$a2";
+	  $procString .= ",$arg";
 	}
 	$count++;
 	next;
   };
   /^-\?/ && do { usage(); };
-  print "$a2 not recognized.\n";
+  print "$arg not recognized.\n";
   usage();
   }
 }
@@ -232,6 +238,7 @@ sub processTerms
 
     if ($a =~ /^#/) { next; }
 	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
+	if ($a =~ /^0/) { $a =~ s/^0//; $zeroOkay = 1; } else { $zeroOkay = 0; }
 	if ($a =~ /^>/)
 	{
 	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
@@ -243,6 +250,7 @@ sub processTerms
 	  $b = rehash($b);
 	  if ($verboseTest) { $quickCheck .= "test command>>>>>$a\n"; }
 	  $quickCheck .= `$b`;
+	  $cmdYet = 1;
 	  }
 	  else { $warnCanRun = 1; next; }
 	  next;
@@ -319,7 +327,7 @@ sub processTerms
 	  if (-d "$gh\\$toFile") { $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
 	  if (-f $fromFile && (-s $fromFile == 0))
 	  {
-	    die ("Uh oh. I found a 0 byte file: $fromFile\n\nI am bailing immediately, because this should never happen. It may've been deleted, so you'll need to pull it back up with git revert or something.");
+	    die ("Uh oh. I found a 0 byte file: $fromFile\n\nI am bailing immediately, because this should never happen. It may've been deleted, so you'll need to pull it back up with git revert or something.") if !$zeroOkay && shouldRun($a);
 	  }
 	  if (compare($fromFile, "$outName"))
 	  {
@@ -372,8 +380,9 @@ sub processTerms
             {
             checkWarnings($_, 1);
             }
-		  copy("$_", "$gh\\$toFile\\$file") || die ("Copy $_ to $gh\\$file failed");
+		  copy("$_", "$gh\\$toFile\\$file") || die ("Copy $_ to $gh\\$toFile\\$file failed");
 		  $fileList .= "$_\n";
+		  if ($cmdYet && !$warnYet) { print "You are running a command before copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
 		  $wildcards++;
 		  $copies++;
 		  }
@@ -394,6 +403,7 @@ sub processTerms
 	    if (shouldRun($prefix))
 		{
 		  $fileList .= "$fromFile\n";
+		  if ($cmdYet && !$warnYet) { print "You are running a command before copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
 		  #die "$fromFile to $gh\\$toFile\\$short";
 		  my $fileTo = "$gh\\$toFile\\$short";
 		  if (-f $fileTo)
