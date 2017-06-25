@@ -37,7 +37,7 @@ $exp{"3"} = "3d";
 ###trickier variables
 my $cmd = "";
 my $invDir = "c:\\writing\\scripts\\invis";
-my $filename = $default;
+my $filename = "$default.txt";
 
 while ($count <= $#ARGV)
 {
@@ -50,6 +50,7 @@ while ($count <= $#ARGV)
   /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
   /^-?u$/ && do { $updateOnly = 1; $count++; next; };
   /^-?[lr]+$/ && do { $launchAfter = ($a =~ /l/); $launchRaw = ($a =~ /r/); $count++; next; };
+  /^-?s$/ && do { print "DEFAULT=$default\n"; for (sort keys %exp) { print "$_ -> $exp{$_}\n"; } exit(); };
   /^-?v$/ && do { $verbose = 1; $count++; next; };
   /^-?e$/ && do { $launchTextFile = 1; $count++; next; };
   /^-?en$/ && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
@@ -313,7 +314,9 @@ print<<EOT;
 -f = force a redo if HTM file's mod date >= the generating file
 -l = launch HTM invisiclues after
 -r = launch raw (e.g. spoiler file showing everything, launched after -l)
+-s = print shortcuts
 -u = update only (opposite of -f, currently the default)
+-v = verbose output
 EOT
 
 print "Current files in directory:"; printAllFiles(1); print "\n";

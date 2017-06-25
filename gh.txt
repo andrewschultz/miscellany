@@ -260,6 +260,9 @@ ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
 #Problems files to GitHub
 TOBASE=the-problems-compound
 FROMSHORT=compound
+>prob=conc.pl -c -ro -rc -pc
+>prob=$wd\talf.pl -pc | grep -i fail
+>prob=i7t.pl -w -o -q -sp -s pc | grep -iE "failed|likely|run this"
 prob=$is\story.ni,
 $ws\invis\pc.txt<$im\Release\problems-compound-invisiclues.htm&invis.pl pc
 prob=$i7\Compound tables.i7x,
@@ -296,14 +299,16 @@ prob=$tr\compound-ordering.trizbort,
 prob=$wd\conc.pl,utils
 prob=$wd\conc-dupe.txt,utils
 prob=$is\reg-pc-*,testing
->prob=conc.pl -c -ro -rc -pc
->prob=$wd\talf.pl -pc | grep -i fail
->prob=i7t.pl -w -o -q -sp -s pc | grep -iE "failed|likely|run this"
 
 #https://github.com/andrewschultz/the-problems-compound/tree/master/testing
 
 #Slicker City files to BitBucket (for now)
 TOBASE=slicker-city
+>city=$wd\talf.pl -sc | grep -i fail
+>city=conc.pl -c -ro -rc -sc
+>city=i7t.pl -w -o -q -sp -s sc | grep -iE "failed|likely|run this"
+>city=$is\grate.pl | grep -i test
+>city=$wd\olap.pl -sc
 city=$is\story.ni,
 $ws\invis\sc.txt<$im\Release\slicker-city-invisiclues.htm&invis.pl sc
 city=$i7\Slicker City tables.i7x,
@@ -334,14 +339,16 @@ city=$wd\olap.pl,utils
 city=$wd\olap.txt,utils
 #################################
 #commands to run
->city=$wd\talf.pl -sc | grep -i fail
->city=conc.pl -c -ro -rc -sc
->city=i7t.pl -w -o -q -sp -s sc | grep -iE "failed|likely|run this"
->city=$is\grate.pl | grep -i test
->city=$wd\olap.pl -sc
 
 TOBASE=buck-the-past
 $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
+>past=$wd\talf.pl -btp | grep -i fail
+>past=conc.pl -c -ro -rc -btp
+>past=i7t.pl -w -o -q -sp -s btp | grep -iE "failed|likely|run this"
+>past=$is\pun.pl grep -iE ",[0-9]"
+#############old Spring Thing checks, not relevant any more as this code branch is not updated
+#>past=conc.pl -c -ro -bs
+#>past=i7t.pl -w -o -q -s bs | grep -iE "failed|likely|run this"
 past=$is\btpbk.pl,utils
 past=$is\story.ni,
 past=$is\roadmap.txt,
@@ -379,6 +386,7 @@ past=$is\sco.pl,utils
 past=$is\bs.pl,utils
 past=$is\bs.bat,utils
 past=$is\ac2gt.py,utils
+past=$is\blaz.py,utils
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni
@@ -387,13 +395,6 @@ past=$tr\buck-the-past-st.trizbort,spring
 past=$tr\buck-the-past-st.pdf,spring
 past=c:\games\inform\btp-st materials\Release\buck-the-past-st-invisiclues.htm,
 past=$ws\invis\bs.txt,
->past=$wd\talf.pl -btp | grep -i fail
->past=conc.pl -c -ro -rc -btp
->past=i7t.pl -w -o -q -sp -s btp | grep -iE "failed|likely|run this"
->past=$is\pun.pl grep -iE ",[0-9]"
-#############old Spring Thing checks, not relevant any more as this code branch is not updated
-#>past=conc.pl -c -ro -bs
-#>past=i7t.pl -w -o -q -s bs | grep -iE "failed|likely|run this"
 
 #Grubbyville files
 TOBASE=grubbyville
