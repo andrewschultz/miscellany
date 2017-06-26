@@ -15,6 +15,7 @@
 #use Data::Dumper qw(Dumper);
 #use List::MoreUtils qw(uniq);
 use POSIX;
+use File::Compare (compare);
 
 use strict;
 use warnings;
@@ -32,6 +33,7 @@ my $undoQuestionComments = 0;
 ##########################
 #variables
 
+my $t = time();
 my $didSomething = 0;
 my $dupBytes = 0;
 my %got = ();
@@ -53,12 +55,14 @@ if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list
 if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
 
 my $defaultProj = "btp";
+my $logFileEdit = $defaultProj;
 
 while ($count <= $#ARGV)
 {
   my $arg = lc($ARGV[$count]);
   for ($arg)
   {
+    /^-?e$/ && do { `$logFile`; exit(); };
     /^-?(c|tc|ct)$/ && do
 	{
 	  if ($arg =~ /t/) { $runTest = 1; }
@@ -72,14 +76,14 @@ while ($count <= $#ARGV)
   if ($list{$ARGV[$count]}) { $toSplit = $ARGV[$count]; }
   else
   {
-  $toSplit = $ARGV[$count];
+  $logFileEdit = $toSplit = $ARGV[$count];
   }
   $count++;
 }
 
 if (!$toSplit)
 {
-  print ("Need alphabetical to sort, or -btp for all of BTP. PC and SC are largely redundant."); exit;
+  print "Need to either\n1) be in a source directory, or\n2) -btp for all of BTP. -pc/-sc for PC and SC are also possible but won't do much."; exit;
 }
 
 if ($toSplit =~ /^-/) { $toSplit =~ s/^-//; }
@@ -110,6 +114,8 @@ while ($a = <A>)
 
 close(A);
 close(B);
+
+if (!compare($infile, $outfile)) { print "Nothing changed after sorting. No recopying done.\n"; exit(); }
 
 if (!$didSomething) { print "Didn't sort anything!\n"; exit; }
 
@@ -193,11 +199,33 @@ sub comm
 
 sub updateLogFile
 {
+  my $writeString = "";
+  my $gotOne = 0;
+  open(A, $logFile) || die("Can't update $logFile.");
+  while ($a = <A>)
+  {
+    if ($a =~ /^#/) { next; }
+    chomp($a);
+    my @csv = split(/,/, $a);
+    if ($a =~ /^$logFileEdit/)
+	{
+	  $writeString .= "$logFileEdit,$csv[1],$t\n";
+	  $gotOne = 1;
+	}
+	else
+	{
+	  $writeString .= $a;
+	}
+  }
+  close(A);
+  open(A, ">$logFile") || die ("Can't open $logFile for editing.");
+  if (!$gotOne) { print A "$logFileEdit,7,$t\n"; print "Got a new entry for $logFileEdit, put into $logFile.\n"; }
+  print A $writeString;
+  close(A);
 }
 
 sub checkLastRun
 {
-  my $t = time();
   my $line;
 
   open(A, $logFile) || die ("Can't open $logFile.");
@@ -206,6 +234,7 @@ sub checkLastRun
   {
     my @time = split(/,/, $line);
 	if ($#time < 2) { print "Line $. ($_[0]) needs to be of the form project,okay wait time,last time run.\n"; }
+	if ($time[2] < 500) { $time[2] *= 86400; } # can specify days not seconds
 	my $delta = $t - $time[1] + $time[2];
 	if ($delta > 0)
 	{
@@ -213,4 +242,5 @@ sub checkLastRun
 	  else { print "Project $t needs to be run. It is $delta seconds overdue.\n"; }
 	}
   }
+  close(A);
 }
