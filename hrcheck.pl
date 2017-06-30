@@ -159,6 +159,7 @@ while ($line = <A>)
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
   if ($line eq "==") { $autoBookmark = 0; next; }
+  if ($autoBookmark && ($line =~ /^=[^=]/)) { die ("Forgot to close with == before opening another = tab."); }
   if ($line =~ /^#/) { next; }
   if ($semicolonSeen)
   {
@@ -240,7 +241,7 @@ while ($line = <A>)
     while ($thistime =~ /[tphb]$/)
     {
       for (0..3)
- 	  {
+	  {
 	    if ($thistime =~ /$quarters[$_]$/)
 	    {
 	      $qhr[$_] = 1;

@@ -344,7 +344,7 @@ TOBASE=buck-the-past
 $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
 >past=conc.pl -c -ro -rc -btp
 >past=i7t.pl -w -o -q -sp -s btp | grep -iE "failed|likely|run this"
->past=$is\pun.pl grep -iE ",[0-9]"
+>past=$is\bsr.pl grep -iE ",[0-9]"
 >past=$wd\talf.pl -btp | grep -i fail
 #############old Spring Thing checks, not relevant any more as this code branch is not updated
 #>past=conc.pl -c -ro -bs
@@ -387,6 +387,7 @@ past=$is\bs.pl,utils
 past=$is\bs.bat,utils
 past=$is\ac2gt.py,utils
 past=$is\blaz.py,utils
+past=$is\perm.py,utils
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni

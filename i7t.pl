@@ -536,7 +536,7 @@ sub sortDataFile
 	  elsif ($line =~ /$regexMod{$_}/)
 	  {
 	    $anyTest = 1;
-	    print "Line $.: ALMOST MATCHED (FAILED) regex ($regex{$_}) with $line";
+	    print "Line $.: ALMOST MATCHED (FAILED" . ($writeRight ? "/WILL BE UPDATED" : "") . ") regex ($regex{$_}) with $line";
 		$filesToOpen{$_[0]} = $.;
 		delete($notFound{$_});
 		$meaningfulChanges = 1;
