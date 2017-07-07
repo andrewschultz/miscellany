@@ -43,9 +43,10 @@ while ($count <= $#ARGV)
   my $arg = $ARGV[0];
   for ($arg)
   {
-  /^-?d/ && do { $debug = 1; $count++; next; };
-  /^-?p/ && do { $popup = 1; $count++; next; };
-  /^-?u/ && do { $unchAfter = 1; $count++; next; };
+  /^-?d$/ && do { $debug = 1; $count++; next; };
+  /^-?p$/ && do { $popup = 1; $count++; next; };
+  /^-?u$/ && do { $unchAfter = 1; $count++; next; };
+  /^-?s$/ && do { `$siteFile`; exit(); };
   /^-?\d+$/ && do { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); $count++; next; };
   /^-?\?/ && do { usage(); };
   print "Unknown cmd line parameter $arg\n";
@@ -63,6 +64,7 @@ while ($a = <A>)
   my @b = split(/:/, $a);
   my @c = split(/,/, $b[1]);
   $siteArray{$b[0]} = \@c;
+  print "Defining siteArray $b[0] = $b[1]\n" if $debug;
   for (@c) { $repo{$_} = $b[0]; }
 }
 
@@ -71,7 +73,11 @@ close(A);
 unless ($ghBase) { die ("Need BASE= in $siteFile."); }
 unless (-d "$ghBase") { die ("$ghBase in $siteFile is not a valid directory."); }
 
-my @repos = (@{$siteArray{"bitbucket"}}, @{$siteArray{"github"}});
+my @repos = ();
+for (sort keys %siteArray)
+{
+  @repos = (@repos, @{$siteArray{$_}});
+}
 
 my $r;
 my $thisLog = "";
@@ -83,7 +89,7 @@ for $r (@repos)
 {
   chdir("$ghBase\\$r") or do { warn "fail $ghBase\\$r"; next; };
   $thisLog = `$cmd`;
-  if ($debug) { print getcwd() . ": $cmd\n$thisLog"; }
+  print getcwd() . ": $cmd\n$thisLog" if $debug;
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
   $repoSum{$repo{$r}} += $count{$r};
 }
@@ -101,7 +107,7 @@ for my $k (sort keys %repoSum)
 	}
 	else
 	{
-	print "\n*************************SEE $k today\n\n";
+	print "\n*************************SEE $k today (" . (join(", ", @{$siteArray{"newproj"}})) . ")\n\n";
 	}
   }
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
@@ -132,6 +138,7 @@ print<<EOT;
 ==========basic usage==========
 -d debug
 -p pop up results
+-s open site file
 -u run unch.pl afterwards
 -(#) how many days back (default = 0, today)
 EOT
