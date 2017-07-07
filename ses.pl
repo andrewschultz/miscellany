@@ -23,6 +23,7 @@ my $newMin = 5;
 #######################variable(s)
 my %sizes;
 
+my @newFiles;
 my $totalFiles=0;
 my $newFiles=0;
 my $tabsOverStreak = 0;
@@ -35,6 +36,7 @@ my $tabsInc = 0;
 my $count = 0;
 
 #########################option(s)
+my $printNewFiles = 0;
 my $toOutput = 0;
 my $analyze = 0;
 my $htmlGen = 0;
@@ -57,6 +59,7 @@ while ($count <= $#ARGV)
   /^-?e$/ && do { `$outputFile`; exit(); };
   /^-?h$/ && do { $htmlGen = 1; $count++; next; };
   /^-?l$/ && do { $launch = 1; $count++; next; };
+  /^-?n$/ && do { $printNewFiles = 1; $count++; next; };
   /^-?o$/ && do { $toOutput = 1; $count++; next; };
   /^-?x$/ && do { `$npSes`; exit(); };
   usage();
@@ -76,8 +79,8 @@ while ($a = <A>)
   {
     $totalFiles++;
     if ($a =~ /\"new [0-9]+\"/)
-    { $newFiles++; }
-	if ($fileName =~ /^new [0-9]/ && (-f "$fileBackup"))
+    { $newFiles++; push (@newFiles, $fileName); }
+	if ($fileName =~ /^new [0-9]+$/ && (-f "$fileBackup"))
 	{
 	  $sizes{$fileName} = -s "$fileBackup";
 	}
@@ -103,6 +106,9 @@ if ($toOutput)
   print A sprintf("%d-%02d-%02d %02d:%02d:%02d: $totalFiles total files, $newFiles new files.\n", $yearOffset+1900, $month+1, $dayOfMonth, $hour, $minute, $second);
   close(A);
 }
+
+@newFiles = sort {numVal($a) <=> numVal($b)} (@newFiles);
+if ($printNewFiles) { print join(", ", @newFiles) . "\n"; }
 
 if ($analyze)
 {
@@ -136,6 +142,7 @@ if ($analyze)
 	  print B "<html><title>Streak Error Stuff</title><body bgcolor=red><center><font size=+5>SES.PL RESULTS:</font></center>\n";
 	  for (@errs) { print B "<center><font size=+3>$_</font></center>\n"; }
 	  print B "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
+	  print B join(", ", @newFiles) if ($newFiles);
 	  print B "</body></html>\n";
 	  close(B);
 	  if ($launch)
@@ -160,6 +167,13 @@ if ($analyze)
 
 ###############################
 
+sub numVal
+{
+  my $temp = $_[0];
+  $temp =~ s/.* //;
+  return $temp;
+}
+
 sub usage
 {
 print<<EOT;
@@ -168,6 +182,7 @@ print<<EOT;
 -e = edit stat file
 -h = to html
 -l = launch HTML file created with -a -h
+-n = show all new files
 -o = output to stat file
 -x = edit XML tabs file
 EOT

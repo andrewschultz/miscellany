@@ -277,8 +277,8 @@ sub getArgs
 	  /^-?s$/ && do { $showSuccesses = 1; $count++; next; };
 	  /^-?q$/ && do { $build = -1; my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
 	  /^-?t$/ && do { my @mylist = split(/,/, $b); for $x (@mylist) { push(@raw, $x) } $count += 2; next; };
-	  if (-f "c:\\nightly\\$a.htm") { `"c:\\nightly\\$a.htm"`; exit(); }
-	  if (-f "c:\\nightly\\$a.txt") { `"c:\\nightly\\$a.txt"`; exit(); }
+	  if (-f "c:\\nightly\\$a.htm") { `"$nitedir\\$a.htm"`; exit(); }
+	  if (-f "c:\\nightly\\$a.txt") { `"$nitedir\\$a.txt"`; exit(); }
 	  print "Invalid flag $a specified.\n";
 	  usage();
 	}
