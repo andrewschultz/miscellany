@@ -344,7 +344,7 @@ TOBASE=buck-the-past
 $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
 >past=conc.pl -c -ro -rc -btp
 >past=i7t.pl -w -o -q -sp -s btp | grep -iE "failed|likely|run this"
->past=$is\bsr.pl grep -iE ",[0-9]"
+>past=$is\bsr.pl | grep -i fail
 >past=$wd\talf.pl -btp | grep -i fail
 #############old Spring Thing checks, not relevant any more as this code branch is not updated
 #>past=conc.pl -c -ro -bs

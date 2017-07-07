@@ -262,8 +262,10 @@ while ($line = <A>)
 	$min = floor($minute/10);
   }
 
+  print "Warning Line $. of $_[0] has no command defined.\n" if !defined($b[$cmdCount]);
+
   #print "$b[1]\n"; exit;
-  if ($defaultBrowser)
+  if ($defaultBrowser && defined($b[$cmdCount]))
   {
   $b[$cmdCount] =~ s/^DEF/$defaultBrowser/;
   }
