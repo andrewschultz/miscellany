@@ -119,7 +119,6 @@ for (@dircontents)
   if (-s "$dailyDir/$_" == 0) { print "$_ has 0 bytes\n"; next; }
   #print "Trying $dailyDir/$_\n";
   if (-d "$intoDir/$_") { print "$_ is in output directory\n"; next; }
-  next;
   #print "Trying $dailyDir/$_\n";
   if ($verifyFirstLine) { if (firstLineThereOrEmpty("$dailyDir/$_")) { next; } }
   #print "Reading $intoDir/$_\n";

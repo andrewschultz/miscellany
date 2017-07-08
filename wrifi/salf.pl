@@ -73,7 +73,7 @@ while ($count <= $#ARGV)
   }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
   if ($toSplit) { die ("Second split-command $arg tried to overwrite $toSplit at $count."); }
-  if ($list{$ARGV[$count]}) { $toSplit = $ARGV[$count]; }
+  if ($list{$ARGV[$count]}) { $toSplit = $list{$ARGV[$count]}; }
   else
   {
   $logFileEdit = $toSplit = $ARGV[$count];
@@ -107,7 +107,7 @@ while ($a = <A>)
   {
     for $mysect (@sects)
 	{
-	  if ($a =~ /^\\$mysect[=\|]/) { alfThis(); }
+	  if ($a =~ /^\\$mysect[=\|]/) { print "Alphabetizing $a\n"; alfThis(); }
 	}
   }
 }
