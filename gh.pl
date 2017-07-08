@@ -127,6 +127,8 @@ while ($count <= $#ARGV)
 	exit();
   };
   /^-?t$/i && do { $testResults = 1; $count++; next; };
+  /^-?all$/i && do { $procString = allProjs("$ght", "$ghp"); $count++; next; };
+  /^-?alb$/i && do { $procString = allProjs("$ght"); $count++; next; };
   /^-?a$/i && do { $copyAuxiliary = 1; $count++; next; };
   /^-?b$/i && do { $copyBinary = 1; $count++; next; };
   /^-?(d|ab|ba)$/i && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
@@ -776,6 +778,27 @@ sub trizCheck
     }
 	push(@trizFail, $_[0]);
   }
+}
+
+sub allProjs
+{
+  my %projHash;
+
+  for (@_)
+  {
+  open(A, $_);
+  while ($a = <A>)
+  {
+    if ($a =~ /^[0-9a-z]+=/)
+	{
+	  $a =~ s/=.*//;
+	  chomp($a);
+	  $projHash{$a} = 1;
+	}
+  }
+  close(A);
+  }
+  return join(",", keys %projHash);
 }
 
 sub usage
