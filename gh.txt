@@ -8,7 +8,7 @@ d:btp
 ######################similarities
 ###alec smart
 as~pc,sc,btp
-com,pc,tpc~prob
+compound,com,pc,tpc~prob
 sc~city
 btp~past
 ###stale tales slate
@@ -27,7 +27,7 @@ g,gr~gru
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
 ###ecto
-ec,ect~ecto
+ec,ect,ectocomp~ecto
 ###misc
 #################typo protection
 isc,mis~misc
@@ -251,11 +251,11 @@ ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
 ecto=c:\games\inform\heezy-park.inform\uuid.txt,2015
 ecto=c:\games\inform\heezy-park.inform\source\README.md,2015
 -b:ecto=c:\games\inform\heezy-park Materials\release\Heezy Park.zblorb,2015 sz:316000
-ecto=c:\games\inform\ectocomp16.inform\source\story.ni,2016
-ecto=c:\games\inform\ectocomp16.inform\source\walkthrough.txt,2016
-ecto=c:\games\inform\ectocomp16.inform\uuid.txt,2016
-ecto=c:\games\inform\ectocomp16.inform\source\ach-postmortem.txt,2016
-ecto=c:\games\inform\ectocomp16.inform\source\README.md,2016
+ecto=c:\games\inform\checkered-haunting.inform\source\story.ni,2016
+ecto=c:\games\inform\checkered-haunting.inform\source\walkthrough.txt,2016
+ecto=c:\games\inform\checkered-haunting.inform\uuid.txt,2016
+ecto=c:\games\inform\checkered-haunting.inform\source\ach-postmortem.txt,2016
+ecto=c:\games\inform\checkered-haunting.inform\source\README.md,2016
 
 #Problems files to GitHub
 TOBASE=the-problems-compound

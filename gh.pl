@@ -88,7 +88,7 @@ while ($count <= $#ARGV)
   {
   /^gh\.pl/ && do { print "############################OOPS! You added the app name.\n"; $count++; next; };
   /^-?r$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghreg"); exit; };
-  /^-?p$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghp"); exit; };
+  /^-?e?p$/ && do { print "Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n"; system("start \"\" $np $ghp"); exit; };
   /^-?e$/ && do { print "Opening external file, -c opens code, -p opens private file, -r opens regex file.\n"; system("start \"\" $np $ght"); exit; };
   /^-?c$/ && do { print "Opening code, -e opens external .txt file, -p opens private file, -r opens regex file.\n"; system("start \"\" $np $ghs"); exit; };
   /^-?(ec|ce)$/ && do
