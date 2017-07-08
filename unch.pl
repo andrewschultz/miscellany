@@ -73,6 +73,7 @@ else
   print "TEST RESULTS:unchecked in projects (unch.pl),4,$file,0,$bigString\n";
   my $projLeft = join(" &amp; ", sort keys %projs);
   print "TEST RESULTS:unchecked in files,2,$proj,0,$projLeft\n";
+  print "gh.pl -all copies everything over, gh.pl -alb only public stuff.";
 }
 
 if ($html)
@@ -80,6 +81,7 @@ if ($html)
   my $htmlString = $bigString;
   my $hfile = 'c:\writing\scripts\unch.htm';
   $htmlString =~ s/\n/<br \/>\n/g;
+  $htmlString .= "<br />gh.pl -all copies everything over, gh.pl -alb only public stuff.";
   open(H, ">$hfile");
   print H "<html>\n<title>Unchanged Files</title>\n<body>$htmlString</body></html> ";
   close(H);

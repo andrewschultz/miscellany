@@ -551,6 +551,7 @@ writing=limwork.txt,
 writing=$ws\limd.pl,
 writing=c:\Users\Andrew\Documents\GitHub\git-tips.txt
 writing=scripts\cov.pl,
+writing=scripts\limsim.py,
 ###########this could go in BTP and may later, but right now it is writing raw materials
 writing=smart.otl,
 
