@@ -47,8 +47,10 @@ my $thisFile = "";
 my $testing = 0;
 my $testErrList = "";
 
-#what is this for????
-my %vh;
+my @badFiles = ();
+my @goodFiles = ();
+
+my %vh; # this is to verify headers
 
 setGlobals();
 
@@ -125,7 +127,30 @@ if ($verifyHeadings)
 @allDailyFiles = sort(@allDailyFiles);
 
 if ($onlyLim) { print "$numLim limericks in $lastDay days.\n"; }
-else { print "" . ($#allDailyFiles + 1) . " daily files in $lastDay days: @allDailyFiles.\n"; }
+else
+{
+  local $" = ", ";
+  print "" . (scalar @allDailyFiles) . " daily files in $lastDay days: @allDailyFiles.\n";
+  if (scalar @allDailyFiles > 1)
+  {
+  if (scalar @goodFiles)
+  {
+  print "" . (scalar @goodFiles) . " good file(s): @goodFiles.\n";
+  }
+  else
+  {
+  print "No files passed.\n";
+  }
+  if (scalar @badFiles)
+  {
+  print "" . (scalar @badFiles) . " bad file(s): @badFiles.\n";
+  }
+  else
+  {
+  print "No bad files!\n";
+  }
+  }
+}
 
 testResults();
 
@@ -322,6 +347,7 @@ if ($betterDie)
 {
   if ($warning) { print $warning; }
   print ("Fix stuff in $_[0] before sorting.\n");
+  push (@badFiles, $shortName);
   if ($openFile)
   {
 	my $fileOpenCmd = "start \"\" \"c:\\program files (x86)\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; testResults(); exit;
@@ -333,6 +359,10 @@ if ($betterDie)
   if ($openFile && !$fileToOpen)
   { $fileToOpen = $_[0]; print "Tagging $fileToOpen.\n"; }
   return;
+}
+else
+{
+  push(@goodFiles, $shortName);
 }
 
 if ($justCheck)
