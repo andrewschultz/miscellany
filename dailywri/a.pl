@@ -1,3 +1,9 @@
+###############################################
+#
+# a.pl: goes through the daily files and makes sure they're arranged correctly
+#
+#
+
 use File::Copy;
 use Win32::Clipboard;
 
@@ -58,6 +64,14 @@ while ($ARGV[$count])
   my $mya = $ARGV[$count];
   for ($mya)
   {
+    /^-?2h/ && do
+	{
+	  my $wriout = "c:\\writing\\scripts\\daily-results.htm";
+	  my $cmd = "a.pl -180 -a | perl -pe \"s/^/<br \\\/>/g\" > $wriout";
+	  `$cmd`;
+	  `$wriout`;
+	  exit();
+	};
     /^-?[0-9]/ && do { $howFar = $mya; if ($howFar le 0) { $howFar = 0 - $howFar; } $count++; next; };
 	/^-a$/ && do { $allBack = 1; $count++; next; };
 	/^-b$/ && do { $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
@@ -251,7 +265,7 @@ if (($myAry[0] !~ /[a-z]/) && ($showWarn))
 
 for (1..$#myAry)
 {
-  if ($myAry[$_] !~ /\n[a-z0-9\t]/i)
+  if ($myAry[$_] !~ /\n[\(\)a-z0-9\t]/i)
   {
     if ($showWarn && defined($myHdr[$_]))
 	{
