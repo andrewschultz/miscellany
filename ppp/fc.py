@@ -14,15 +14,15 @@ import os
 from random import shuffle, randint
 import time
 import traceback
-import ConfigParser
+import configparser
 import argparse
 from math import sqrt
 
 ## need vc14 for below to work
 ## from gmpy import invert
 
-config_opt = ConfigParser.SafeConfigParser()
-config_time = ConfigParser.SafeConfigParser()
+config_opt = configparser.SafeConfigParser()
+config_time = configparser.SafeConfigParser()
 
 opt_file = "fcopt.txt"
 save_file = "fcsav.txt"
@@ -166,7 +166,7 @@ def dump_total(q):  # Negative q means you print. Mostly for debugging.
     for z in range(0, len(elements[q])):
         if foundable(elements[q][z]):
             if do_print:
-                print tocard(elements[q][z]), elements[q][z], 'foundable'
+                print (tocard(elements[q][z]), elements[q][z], 'foundable')
             retval += 1
             if elements[q][z] % 13 == 2:  # aces/2's get a special bonus
                 retval += 1
@@ -175,7 +175,7 @@ def dump_total(q):  # Negative q means you print. Mostly for debugging.
         if nexties(elements[q][z]):  # not an elif as foundable deserves an extra point
             retval += 1
             if do_print:
-                print tocard(elements[q][z]), elements[q][z], 'nexties'
+                print (tocard(elements[q][z]), elements[q][z], 'nexties')
     return retval
 
 
@@ -408,7 +408,7 @@ def firstMatchableRow(cardval):
 
 def openLockFile():
     if os.path.exists(lockfile):
-        print 'There seems to be another game running. Close it first, or if necessary, delete', lockfile
+        print ('There seems to be another game running. Close it first, or if necessary, delete', lockfile)
         exit()
     f = open(lockfile, 'w')
     f.write('This is a lockfile')
@@ -420,7 +420,7 @@ def closeLockFile():
     os.system("attrib -r " + lockfile)
     os.remove(lockfile)
     if os.path.exists(lockfile):
-        print 'I wasn\'t able to delete', lockfile
+        print ('I wasn\'t able to delete', lockfile)
 
 
 def parseCmdLine():
@@ -455,7 +455,7 @@ def parseCmdLine():
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.resettime is True:
-        print "Resetting the time file", time_file
+        print ("Resetting the time file", time_file)
         writeTimeFile()
         exit()
     if args.opt_file is True:
@@ -509,14 +509,14 @@ def parseCmdLine():
         saveOnWin = False
     if args.quickBail:
         quickBail = True
-    if args.nagDelay > 0:
+    if type(args.nagDelay) == int() and args.nagDelay > 0:
         if args.nagDelay < minDelay:
             print('Too soon, need > ', minDelay)
             exit()
         if args.nagDelay > nagDelay:
             print("Whoah, going above the default!")
         nagDelay = args.nagDelay
-    if args.maxGames > 0:
+    if type(args.maxGames) == int() and args.maxGames > 0:
         maxGames = args.maxGames
     return
 
@@ -525,12 +525,12 @@ def readTimeFile():
     global nagDelay
     global maxDelay
     if os.access(time_file, os.W_OK):
-        print "Time file should not have write access outside of the game. attrib +R " + time_file + \
-              " or chmod 333 to get things going."
+        print ("Time file should not have write access outside of the game. attrib +R " + time_file + \
+              " or chmod 333 to get things going.")
         exit()
     if not os.path.isfile(time_file):
-        print "You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931" \
-              "\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739."
+        print ("You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931" \
+              "\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739.")
         exit()
     config_time.read(time_file)
     modulus = modinv(config_time.getint('Section1', 'modulus'), 200003)
@@ -550,14 +550,14 @@ def readTimeFile():
     else:
         print('Delay', delta, 'did not exceed record of', maxDelay)
     if lasttime % modulus != remainder:
-        print "Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually."
-        print lasttime, modulus, remainder, lasttime % modulus
+        print ("Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually.")
+        print (lasttime, modulus, remainder, lasttime % modulus)
         exit()
     if modulus < 100001 or modulus > 199999:
-        print "Modulus is not in range in fctime.txt."
+        print ("Modulus is not in range in fctime.txt.")
         exit()
     if not is_prime(modulus):
-        print "Modulus", modulus, "is not prime."
+        print ("Modulus", modulus, "is not prime.")
         exit()
     return
 
@@ -582,7 +582,7 @@ def writeTimeFile():
 
 def readOpts():
     if not os.path.isfile(opt_file):
-        print "No", opt_file, "so using default options."
+        print ("No", opt_file, "so using default options.")
         return
     config_opt.read(opt_file)
     global vertical
@@ -878,9 +878,9 @@ def checkWinning():
     if maxGames > 0:
         global curGames
         curGames = curGames + 1
-        print 'Won', curGames, 'of', maxGames, 'so far.'
+        print ('Won', curGames, 'of', maxGames, 'so far.')
         if curGames == maxGames:
-            print "Well, that's it. Looks like you've played all your games."
+            print ("Well, that's it. Looks like you've played all your games.")
             goBye()
     global wonThisCmd
     wonThisCmd = True
@@ -893,7 +893,7 @@ def checkWinning():
                 goBye()
             if finish[0] == 'y':
                 if quickBail:
-                    print "Oops! Quick bailing."
+                    print ("Oops! Quick bailing.")
                     goBye()
                 global deliberateNuisanceRows
                 if deliberateNuisanceRows > 0:
@@ -1051,7 +1051,7 @@ def automove():
                         tocand = z2
     if fromcand > 0:
         myauto = str(fromcand) + str(tocand)
-        print "Auto moved " + myauto
+        print ("Auto moved " + myauto)
         read_cmd(myauto)
         return 1
     return 0
@@ -1295,11 +1295,11 @@ def slipUnder():
 
 def dumpInfo(x):
     print ("Uh oh, big error avoided")
-    print elements
-    print backup
-    print moveList
-    print cmdList
-    print cmdNoMeta
+    print (elements)
+    print (backup)
+    print (moveList)
+    print (cmdList)
+    print (cmdNoMeta)
     print ("Spares: " % spares)
     print ("Found: " % found)
     if abs(x) == 2:
@@ -1502,7 +1502,14 @@ def cardEval(myCmd):
 
 
 def goBye():
-    print ("Bye!")
+    global curGames
+    global maxGames
+    if curGames * 2 < maxGames:
+        print ("Great job, leaving well before you played all you could've.")
+    elif curGames < maxGames:
+        print ("Good job, leaving before you played all you could've.")
+    else:
+        print ("Bye!")
     if time_matters:
         writeTimeFile()
     closeLockFile()
@@ -1553,7 +1560,7 @@ def read_cmd(thisCmd):
             else:
                 printCards()
                 printFound()
-                print totalmoves, "total moves."
+                print (totalmoves, "total moves.")
             cmdNoMeta.append(name)
             cmdList.append(name)
             return
@@ -1715,17 +1722,17 @@ def read_cmd(thisCmd):
         if name == 'a':
             cmdNoMeta.pop()
             if not in_undo:
-                print 'Move list,', len(moveList), 'moves so far:', (moveList)
+                print ('Move list,', len(moveList), 'moves so far:', (moveList))
             return
         if name == 'c':
             cmdNoMeta.pop()
             if not in_undo:
-                print 'Command list,', len(cmdList), 'commands so far:', (cmdList)
+                print ('Command list,', len(cmdList), 'commands so far:', (cmdList))
             return
         if name == 'x':
             cmdNoMeta.pop()
             if not in_undo:
-                print 'Trimmed command list,', len(cmdNoMeta), 'commands so far:', (cmdNoMeta)
+                print ('Trimmed command list,', len(cmdNoMeta), 'commands so far:', (cmdNoMeta))
             return
         if name == 's':
             if len(moveList) == 0:
@@ -1739,8 +1746,8 @@ def read_cmd(thisCmd):
             print ("Last " + str(temp) + " moves started with " + d1)
             return
         if not name.isdigit():
-            print "Need to undo a number, or A for a list, S for same row as most recent move, or nothing." \
-                  " C=commands X=commands minus meta."
+            print ("Need to undo a number, or A for a list, S for same row as most recent move, or nothing." \
+                  " C=commands X=commands minus meta.")
             return
         if int(name) > len(moveList):
             print ("Tried to do %d undo%s, can only undo %d." % (int(name), plur(int(name)), len(moveList)))
@@ -1789,7 +1796,7 @@ def read_cmd(thisCmd):
         elif name[1].lower() == 'o':
             usageOptions()
         else:
-            print "Didn't recognize subflag", name[1].lower(), "so doing default of game command usage."
+            print ("Didn't recognize subflag", name[1].lower(), "so doing default of game command usage.")
             usageGame()
         return
     if name == "r" or name == "rr":
@@ -1929,7 +1936,7 @@ def read_cmd(thisCmd):
                 if not wonThisCmd:
                     if name[jj] != name[jj + 1]:
                         temp = name[jj] + name[len(name) - 1]
-                        print "Moving " + temp
+                        print ("Moving " + temp)
                         read_cmd(name[jj] + name[len(name) - 1])
             cmd_churn = False
             if len(moveList) > oldTurns and not chainShowAll:
@@ -1954,7 +1961,7 @@ def read_cmd(thisCmd):
         elif (ord(tofound) > 96) and (ord(tofound) < 101):
             tempspare = ord(tofound) - 97
         else:
-            print "1-8 a-d are needed with R, or (nothing) tries to force everything."
+            print ("1-8 a-d are needed with R, or (nothing) tries to force everything.")
             cmdNoMeta.pop()
             return
         if temprow > -1:
@@ -2039,7 +2046,7 @@ def read_cmd(thisCmd):
         tempdoab = doable(t1, t2, 1 - preverified)
         if tempdoab == -1:
             if not cmd_churn:
-                print 'Not enough space.'
+                print ('Not enough space.')
                 cmdNoMeta.pop()
             return
         if tempdoab == 0:
@@ -2166,8 +2173,8 @@ def read_cmd(thisCmd):
 # start main program
 
 if disallowWriteSource and os.access(__file__, os.W_OK):
-    print "Source file should not have write access outside of the game. attrib -R " + __file__ + \
-          " or chmod 333 to get things going."
+    print ("Source file should not have write access outside of the game. attrib -R " + __file__ + \
+          " or chmod 333 to get things going.")
     exit()
 
 readOpts()
