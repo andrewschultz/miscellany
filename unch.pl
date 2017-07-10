@@ -21,11 +21,14 @@ my %exp = ( "3d" => "threediopolis",
   "roi" => "stale-tales-slate",
   "pc" => "the-problems-compound",
   "sc" => "slicker-city",
+  "ss" => "seeker-status",
+  "cu" => "curate",
   "uo" => "ugly-oafs",
   "tr" => "trizbort"
 );
 
 my %projs;
+# note that the bottom projects are the most important as they are least likely to go off the page
 my @projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "seeker-status", "curate");
 
 #####################variables
@@ -43,14 +46,16 @@ while ($count <= $#ARGV)
   my $arg = $ARGV[$count];
   for ($arg)
   {
-    /^-?l$/ && do { for (@projAry) { print "$_\n"; } exit(); };
-    /^-?t$/ && do { $test = 1; $count++; next; };
-    /^-?h$/ && do { $html = 1; $count++; next; };
-	/^[a-z]/ && do { @projAry = split(/,/, $b); $count += 2; next; };
+    /^-?a$/i && do { $alphabetical = 1; $count++; next; };
+    /^-?l$/i && do { for (@projAry) { print "$_\n"; } exit(); };
+    /^-?t$/i && do { $test = 1; $count++; next; };
+    /^-?h$/i && do { $html = 1; $count++; next; };
+	/^[a-z]{2}/i && do { @projAry = split(/,/, $b); $count += 2; next; };
 	usage();
   }
 }
 
+@projAry = sort(@projAry) if $alphabetical;
 my $gitRoot = "c:\\users\\andrew\\documents\\github";
 
 for my $dir (@projAry)
@@ -109,6 +114,7 @@ sub checkProject
 sub usage
 {
 print<<EOT;
+-a alphabetizes instead of listing by priority
 -t says this outputs test results
 CSV tells projects to run
 -l lists the default that is run
