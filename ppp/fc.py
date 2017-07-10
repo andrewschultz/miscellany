@@ -1310,8 +1310,8 @@ def dumpInfo(x):
 
 
 def shiftcards(r1, r2, amt):
-    elements[r2].extend(elements[r1][-amt:])
-    del elements[r1][-amt:]
+    elements[r2].extend(elements[r1][int(-amt):])
+    del elements[r1][int(-amt):]
 
 
 def usageGame():
@@ -1580,8 +1580,8 @@ def read_cmd(thisCmd):
         return
     name = name.lower()
     if len(name) % 2 == 0 and len(name) >= 2:
-        temp = len(name) / 2
-        if name[:temp] == name[temp:]:
+        temp = int(len(name) / 2)
+        if name[:] == name[temp:]:
             print ("Looks like a duplicate command, so I'm cutting it in half.")
             name = name[temp:]
     if name == 'tu':
