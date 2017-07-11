@@ -352,6 +352,7 @@ $ws\invis\btp.txt<$im\Release\buck-the-past-invisiclues.htm&invis.pl btp
 past=$is\btpbk.pl,utils
 past=$is\story.ni,
 past=$is\roadmap.txt,
+past=$is\oldcode.txt,
 past=$tr\buck-the-past-walkthrough.trizbort,
 past=$tr\buck-the-past-walkthrough.pdf,
 past=$i7\Buck the Past Tables.i7x

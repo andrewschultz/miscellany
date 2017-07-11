@@ -14,6 +14,8 @@ use strict;
 
 use POSIX;
 
+my $alphabetical = 0;
+
 my %exp = ( "3d" => "threediopolis",
   "4d" => "fourdiopolis",
   "ec" => "ectocomp",
@@ -114,11 +116,11 @@ sub checkProject
 sub usage
 {
 print<<EOT;
+CSV tells projects to run or look at
 -a alphabetizes instead of listing by priority
--t says this outputs test results
-CSV tells projects to run
 -l lists the default that is run
 -h creates and runs an html file
+-t has unch output test results
 EOT
 exit;
 }
