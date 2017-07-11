@@ -94,7 +94,7 @@ trackUndo = 0
 
 breakMacro = 0
 
-undoIdx = 0
+undo_idx = 0
 
 debug = False
 
@@ -511,7 +511,7 @@ def parseCmdLine():
         quickBail = True
     if args.nagDelay and args.nagDelay > 0:
         if args.nagDelay < minDelay:
-            print('Too soon, need > ', minDelay)
+            print('Too soon, need >', minDelay)
             exit()
         if args.nagDelay > nagDelay:
             print("Whoah, going above the default!")
@@ -908,7 +908,7 @@ def checkWinning():
                 cmdNoMeta.pop()
                 global in_undo
                 in_undo = True
-                undoMoves(1)
+                undo_moves(1)
                 in_undo = False
                 return 0
         print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
@@ -1336,10 +1336,10 @@ def usageOptions():
     print ('cs toggles chainShowAll e.g. if 823 shows intermediate move.')
     print ('sw/ws saves on win, sp/ps saves position.')
     print ('+ = toggles double size, e = toggle autoshuffle.')
-    print ('?/?g ?o ?m games options meta')
+    print ('?/?g ?o ?m games options meta, g is default.')
 
 
-def usageMeta():
+def usage_meta():
     print ('========meta========')
     print ('l=loads a game, s=saves, lp=load previous/latest saved')
     print ('lo/so loads/saves options.')
@@ -1350,18 +1350,18 @@ def usageMeta():
     print ('qu quits (q could be typed by accident).')
     print ('? = usage (this).')
     print ('empty command tries basic reshuffling and prints out the cards again.')
-    print ('?/?g ?o ?m games options meta')
+    print ('? gives hints: /?g ?o ?m games options meta, g is default.')
 
 
-def firstEmptySpare():
+def first_empty_spare():
     for i in range(0, 4):
         if spares[i] == 0:
             return i
     return -1
 
 
-def undoMoves(toUndo):
-    if toUndo == 0:
+def undo_moves(to_undo):
+    if to_undo == 0:
         print('No moves undone.')
         return 0
     global moveList
@@ -1375,27 +1375,27 @@ def undoMoves(toUndo):
     found = [0, 0, 0, 0]
     global spares
     spares = [0, 0, 0, 0]
-    for _ in range(0, toUndo):
+    for _ in range(0, to_undo):
         moveList.pop()
         if total_undo > -1:
             total_undo += 1
     global in_undo
     in_undo = True
-    global undoIdx
-    for undoIdx in range(0, len(moveList)):
-        read_cmd(str(moveList[undoIdx]))
+    global undo_idx
+    for undo_idx in range(0, len(moveList)):
+        read_cmd(str(moveList[undo_idx]))
         if trackUndo == 1:
             in_undo = False
             printCards()
             in_undo = True
-    undoIdx = 0
+    undo_idx = 0
     in_undo = False
     checkFound()
     printCards()
     return 1
 
 
-def loadGame(game_name):
+def load_game(game_name):
     global time
     global total_undo
     global total_reset
@@ -1411,23 +1411,33 @@ def loadGame(game_name):
                 line = original.readline().strip()
                 elements[y] = [int(i) for i in line.split()]
                 backup[y] = [int(i) for i in line.split()]
-            line = original.readline().strip()
-            original.close()
             global moveList
-            global in_undo
+            templine = original.readline()
+            moveList = templine.strip().split() # this is the list of moves
             global cmdList
             global cmdNoMeta
             cmdList = []
             cmdNoMeta = []
+            line = original.readline().strip()
+            while (re.search("^#end of", line) == False):
+                print(line + " read in")
+                if re.search("^#cmdNoMeta", line):
+                    cmdNoMeta = re.sub("^#cmdNoMeta=", "", line).split(',')
+                if re.search("^#cmdList", line):
+                    cmdList = re.sub("^#cmdList=", "", line).split(',')
+                line = original.readline().strip()
+            original.close()
+            if len(moveList) > 0:
+                if len(cmdNoMeta) == 0:
+                    cmdNoMeta = list(moveList)
+                if len(cmdList) == 0:
+                    cmdList = list(moveList)
+            global in_undo
             in_undo = True
             initSide(0)
-            if len(line) > 0 and line[0] != '#':
-                moveList = line.split()
-            else:
-                moveList = []
-            global undoIdx
-            for undoIdx in range(0, len(moveList)):
-                read_cmd(str(moveList[undoIdx]))
+            global undo_idx
+            for undo_idx in range(0, len(moveList)):
+                read_cmd(str(moveList[undo_idx]))
                 if trackUndo == 1:
                     in_undo = False
                     printCards()
@@ -1635,7 +1645,7 @@ def read_cmd(thisCmd):
     if len(name) > 1:
         if name[0] == 'l' and name[1] == '=':
             cmdNoMeta.pop()
-            loadGame(re.sub(r'^l=', 's=', name))
+            load_game(re.sub(r'^l=', 's=', name))
             return
         if name[0] == 's' and name[1] == '=':
             cmdNoMeta.pop()
@@ -1667,7 +1677,7 @@ def read_cmd(thisCmd):
         print ("Save position with moves/start is now %s." % ("on" if savePosition else "off"))
         return
     if name == 'u':
-        undoMoves(1)
+        undo_moves(1)
         return
     if name == 'h':
         if not slipUnder():
@@ -1742,7 +1752,7 @@ def read_cmd(thisCmd):
             temp = 0
             while (temp < len(moveList) - 1) and (d1 == moveList[len(moveList) - temp - 1][0]):
                 temp += 1
-            undoMoves(temp)
+            undo_moves(temp)
             print ("Last " + str(temp) + " moves started with " + d1)
             return
         if not name.isdigit():
@@ -1759,7 +1769,7 @@ def read_cmd(thisCmd):
                     " because u78 would be kind of bogus if you changed your mind from undoing to moving.")
                 return
             print ("UNDOing more than 10 moves.")
-        undoMoves(int(name))
+        undo_moves(int(name))
         return
     if name[0] == 'h':
         cmdNoMeta.pop()
@@ -1792,7 +1802,7 @@ def read_cmd(thisCmd):
         if len(name) is 1 or name[1].lower() == 'g':
             usageGame()
         elif name[1].lower() == 'm':
-            usageMeta()
+            usage_meta()
         elif name[1].lower() == 'o':
             usageOptions()
         else:
@@ -2051,8 +2061,8 @@ def read_cmd(thisCmd):
             return
         if tempdoab == 0:
             if in_undo:
-                # print "Move", str(undoIdx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
-                if undoIdx == 15:
+                # print "Move", str(undo_idx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
+                if undo_idx == 15:
                     printCards()
                     exit()
             else:
@@ -2064,6 +2074,8 @@ def read_cmd(thisCmd):
         if not in_undo:
             if tempdoab < oldchain and len(elements[t2]) == 0:
                 moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
+            elif onlymove > 0:
+                moveList.append(name + "-" + str(onlymove))
             else:
                 moveList.append(prefix + name)
         checkAgain = True
@@ -2106,10 +2118,9 @@ def read_cmd(thisCmd):
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102):  # 1a moves, but also 1e can be A Thing
         if not name[0].isdigit():
-            cmdNoMeta.pop()
             print ('First letter not recognized as a digit.')
             return
-        myToSpare = firstEmptySpare()
+        myToSpare = first_empty_spare()
         if myToSpare == -1:
             if not cmd_churn:
                 print ('Nothing empty to move to. To which to move.')
@@ -2197,7 +2208,7 @@ if annoyingNudge:
             print ("Remember to put it in alternate caps case! I did this on purpose, to make it that much harder.")
             exit()
         print ("Type I am wasting time, or you can't play.")
-        exit()
+        # exit()
 
 openLockFile()
 
