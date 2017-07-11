@@ -29,6 +29,7 @@ my @extraFiles = ();
 #comment below out, or not, to change default behavior
 $anyExtra = 1; @extraFiles = ($xtraFile);
 
+my $allBookmarks = 0;
 my $lastTime = "";
 my $adjust = 0;
 my $cmdCount = 0;
@@ -46,6 +47,7 @@ my $gotImportantLine = 0;
 
 my $autoBookmark = 0;
 my $bookmarkLook = "";
+my $bookmarkNote = 0;
 
 my @times;
 my $thistime;
@@ -103,6 +105,7 @@ while ($count <= $#ARGV)
   /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
   /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
   /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
+  /^-?ab$/i && do { $allBookmarks = 1; next; };
   /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
   /^=/i && do { $bookmarkLook = $a; $bookmarkLook =~ s/^=//; $count ++; next; };
   /^-?bp$/i && do { for ($check, $check2, $xtraFile) { printBkmk($_); } exit(); };
@@ -151,6 +154,8 @@ my @b;
 
 my $months = 0;
 
+my $ignoreHiddenBookmark = 0;
+
 while ($line = <A>)
 {
   chomp($line);
@@ -158,7 +163,7 @@ while ($line = <A>)
   if ($line =~ /^!!!!!!!!/ && (!$semicolonSeen)) { $gotImportantLine = 1; next; }
   if ($line =~ /^--/) { $ignore = 1; next; }
   if ($line =~ /^\+\+/) { $ignore = 0; next; }
-  if ($line eq "==") { $autoBookmark = 0; next; }
+  if ($line eq "==") { $autoBookmark = 0; $ignoreHiddenBookmark = 0; next; }
   if ($autoBookmark && ($line =~ /^=[^=]/)) { die ("Forgot to close with == before opening another = tab."); }
   if ($line =~ /^#/) { next; }
   if ($semicolonSeen)
@@ -181,9 +186,10 @@ while ($line = <A>)
   }
   if ($bookmarkLook)
   {
-    if ($line =~ /^=$bookmarkLook[\W:]/) { $autoBookmark = 1; next; }
+    if ($line =~ /^=(\/)?$bookmarkLook[\W:]/) { $autoBookmark = 1; next; }
 	if ($autoBookmark == 0) { next; }
   }
+  elsif ($line =~ /^=\//) { $ignoreHiddenBookmark = 1; next; }
   elsif ($line =~ /^=/) { next; }
   $line =~ s/^\*+//;
 
@@ -296,8 +302,12 @@ while ($line = <A>)
 	  }
 	  else
 	  {
+	  if ($ignoreHiddenBookmark && !$allBookmarks) { print "Not running $b[$cmdCount]" . ($bookmarkNote ? "" : " (-ab to run this and others)" ) . "\n"; $bookmarkNote = 1; }
+	  else
+	  {
 	  print "Running $b[$cmdCount]\n";
 	  print `$b[$cmdCount]`;
+	  }
 	  }
 	}
 	last;
@@ -354,7 +364,7 @@ sub printBkmk
   open(A, $_[0]) || do { warn("$_[0] not found as an hrcheck file.\n"); return; };
   while ($a = <A>)
   {
-    if ($a =~ /^=[^=]/) { chomp($a); print "$_[0]: $a\n"; }
+    if ($a =~ /^=[^=]/) { chomp($a); if ($a =~ /^=\//) { print "HIDDEN: "; } $a =~ s/^=\//=/; print "$_[0]: $a\n"; }
   }
   close(A);
 }
