@@ -58,7 +58,7 @@ startTime = 0
 
 time_matters = 1
 nagDelay = 86400  # set this to zero if you don't want to restrict the games you can play
-minDelay = 55000  # if we can cheat one time
+minDelay = 70000  # if we can cheat one time
 highTime = 0
 maxDelay = 0
 curGames = 0
@@ -450,8 +450,8 @@ def parseCmdLine():
     parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
     parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
     parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
-    parser.add_argument('--waittilnext', action='store', dest='nagDelay', type=int, help='adjust nagDelay')
-    parser.add_argument('-mg', '--maxgames', action='store', dest='maxGames', type=int, help='adjust maxGames')
+    parser.add_argument("--waittilnext", dest='nagDelay', type=int, help='adjust nagDelay')
+    parser.add_argument('-mg', '--maxgames', nargs=1, dest='maxGames', type=int, help='adjust maxGames')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.resettime is True:
@@ -509,15 +509,15 @@ def parseCmdLine():
         saveOnWin = False
     if args.quickBail:
         quickBail = True
-    if type(args.nagDelay) == int() and args.nagDelay > 0:
+    if args.nagDelay and args.nagDelay > 0:
         if args.nagDelay < minDelay:
             print('Too soon, need > ', minDelay)
             exit()
         if args.nagDelay > nagDelay:
             print("Whoah, going above the default!")
         nagDelay = args.nagDelay
-    if type(args.maxGames) == int() and args.maxGames > 0:
-        maxGames = args.maxGames
+    if args.maxGames and args.maxGames > 0:
+            maxGames = args.maxGames
     return
 
 
