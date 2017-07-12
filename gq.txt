@@ -52,12 +52,13 @@ c:\games\inform\triz\mine\slicker-city-walkthrough.trizbort
 #######################
 c:\games\inform\buck-the-past.inform\source\story.ni
 c:\games\inform\buck-the-past.inform\source\from-sc.ni
-c:\games\inform\buck-the-past.inform\source\scratchwork.txt
+c:\games\inform\buck-the-past.inform\source\notes.txt
 c:\games\inform\buck-the-past.inform\source\roadmap.txt
 c:\games\inform\triz\mine\buck-the-past.trizbort
 c:\games\inform\triz\mine\buck-the-past-walkthrough.trizbort
 #######################
 c:\games\inform\seeker-status.inform\source\story.ni
+c:\games\inform\seeker-status.inform\source\notes.txt
 c:\writing\smart.otl	pc,sc,btp,btp-e,btp-d,btp-c,btp-b,btp-a,btp-book,btp-farm,btp-auth,btp-rej,btp-dis
 c:\games\inform\triz\mine\seeker-status.trizbort
 c:\games\inform\buck-the-past.inform\source\books.txt

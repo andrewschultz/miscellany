@@ -1,5 +1,6 @@
 @echo off
 
+set NOTES=0
 set OPENSOURCE=0
 set TABLE=0
 set RANDTEXT=0
@@ -40,7 +41,7 @@ cd \writing\dict\nightly
 goto end
 )
 
-if "%1" EQU "no" (
+if "%1" EQU "rn" (
 cd \users\andrew\dropbox\notes
 goto end
 )
@@ -159,6 +160,12 @@ goto parse
 
 if "%1" EQU "nu" (
 set NUDGE=1
+shift /1
+goto parse
+)
+
+if "%1" EQU "no" (
+set NOTES=1
 shift /1
 goto parse
 )
@@ -517,6 +524,11 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\Program Files (x86
 goto end
 )
 
+if "%NOTES%" EQU "1" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\%PROJ%.inform\source\notes.txt"
+goto end
+)
+
 if "%TESTCASE%" EQU "1" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" \games\inform\%PROJ%%EXT%\source\testcase.txt
 goto end
@@ -542,7 +554,7 @@ goto end
 echo Did not find %PROJ% in tries, tmbg or the default.
 
 :usage
-echo Global tweaks: nu = nudges, ra = random (for Stale Tales Slate)
+echo Global tweaks: nu = nudges, ra = random (for Stale Tales Slate), no = notes
 echo m as 1st argument = materials, b as 1st argument = build
 echo ========================
 echo r = roiling, sa = shuffling
@@ -553,5 +565,6 @@ echo current project = sc, pc/t2 = problems compound, btp/bp/17/t3 = Buck the Pa
 echo ========================
 echo Non-Inform source: tr = trizbort, rt/st = anagram sorter, an = anagram list
 echo ta = tables
+echo rn = release notes (1 argument)
 
 :end

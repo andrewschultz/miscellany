@@ -27,6 +27,11 @@ if "%1" EQU "re" (
 goto end
 )
 
+if "%1" EQU "hw" (
+cd %TEMPDIR%\habitica\website\common\locales\en
+goto end
+)
+
 if "%1" EQU "ll" (
 cd %TEMPDIR%\lawless-legends
 goto end
