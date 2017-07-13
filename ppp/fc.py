@@ -515,7 +515,7 @@ def parse_cmd_line():
         quick_bail = True
     if args.nag_delay and args.nag_delay > 0:
         if args.nag_delay < min_delay:
-            print(str(args.nag_delay),'is not enough. You need a delay of at least', min_delay, '.')
+            print(str(args.nag_delay), 'is not enough. You need a delay of at least', str(min_delay) + '.')
             exit()
         if args.nag_delay > nag_delay:
             print("Whoah, going above the default!")
@@ -528,6 +528,7 @@ def parse_cmd_line():
 def read_time_file():
     global nag_delay
     global max_delay
+    last_time = modulus = remainder = 0
     if os.access(time_file, os.W_OK):
         print("Time file should not have write access outside of the game. attrib +R " + time_file + 
               " or chmod 333 to get things going.")
@@ -540,29 +541,29 @@ def read_time_file():
     config_time.read(time_file)
     try:
         modulus = modinv(config_time.getint('Section1', 'modulus'), 200003)
-    except:
+    except configparser.NoOptionError:
         print("Time file needs modulus.")
         exit()
     try:
         remainder = config_time.getint('Section1', 'remainder')
-    except:
+    except configparser.NoOptionError:
         print("Time file needs remainder.")
         exit()
     try:
         max_delay = config_time.getint('Section1', 'max_delay')
-    except:
+    except configparser.NoOptionError:
         print("Time file needs max_delay.")
         exit()
     try:
         last_time = config_time.getint('Section1', 'last_time')
-    except:
+    except configparser.NoOptionError:
         print("Time file needs last_time.")
         exit()
     cur_time = time.time()
     global delta
     delta = int(cur_time - last_time)
     if delta < nag_delay:
-        print('Only', str(delta), 'seconds elapsed of', nag_delay)
+        print('Only', str(delta), 'seconds elapsed of', str(nag_delay) + '.')
         exit()
     if delta > 90000000:
         print("Save file probably edited to start playing a bit early. I'm not going to judge.")
@@ -610,43 +611,43 @@ def read_opts():
     global vertical
     try:
         vertical = config_opt.getboolean('Section1', 'vertical')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs vertical T/F.")
         exit()
     global auto_reshuf
     try:
         auto_reshuf = config_opt.getboolean('Section1', 'auto_reshuf')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs auto_reshuf T/F.")
         exit()
     global dbl_sz_cards
     try:
         dbl_sz_cards = config_opt.getboolean('Section1', 'dbl_sz_cards')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs dbl_sz_cards T/F.")
         exit()
     global save_on_win
     try:
         save_on_win = config_opt.getboolean('Section1', 'save_on_win')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs save_on_win T/F.")
         exit()
     global save_position
     try:
         save_position = config_opt.getboolean('Section1', 'save_position')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs save_position T/F.")
         exit()
     global annoying_nudge
     try:
         annoying_nudge = config_opt.getboolean('Section1', 'annoying_nudge')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs annoying_nudge T/F.")
         exit()
     global chain_show_all
     try:
         chain_show_all = config_opt.getboolean('Section1', 'chain_show_all')
-    except:
+    except configparser.NoOptionError:
         print("Opts file needs chain_show_all T/F.")
         exit()
     return
