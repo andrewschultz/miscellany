@@ -45,6 +45,8 @@ force = 0
 
 move_list = []
 
+delta = 0
+ 
 win = 0
 
 total_undo = 0
@@ -456,20 +458,20 @@ def parse_cmd_line():
     parser.add_argument('-mg', '--maxgames', nargs=1, dest='max_games', type=int, help='adjust max_games')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
-    if args.resettime is True:
+    if args.resettime:
         print("Resetting the time file", time_file)
         write_time_file()
         exit()
-    if args.opt_file is True:
+    if args.opt_file:
         os.system(opt_file)
         open_any_file = True
-    if args.save_file is True:
+    if args.save_file:
         os.system("fcsav.txt")
         open_any_file = True
-    if args.pythonfile is True:
+    if args.pythonfile:
         os.system("\"c:\\Program Files (x86)\\Notepad++\\notepad++\" fc.py")
         open_any_file = True
-    if args.time_file is True:
+    if args.time_file:
         os.system("fctime.txt")
         open_any_file = True
     if open_any_file:
@@ -513,7 +515,7 @@ def parse_cmd_line():
         quick_bail = True
     if args.nag_delay and args.nag_delay > 0:
         if args.nag_delay < min_delay:
-            print('Too soon, need >', min_delay)
+            print(str(args.nag_delay),'is not enough. You need a delay of at least', min_delay, '.')
             exit()
         if args.nag_delay > nag_delay:
             print("Whoah, going above the default!")
@@ -530,16 +532,34 @@ def read_time_file():
         print("Time file should not have write access outside of the game. attrib +R " + time_file + 
               " or chmod 333 to get things going.")
         exit()
+        # zap above to debug
     if not os.path.isfile(time_file):
         print("You need to create fctime.txt with (sample)\n[Section1]\nlast_time = 1491562931" +
               "\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739.")
         exit()
     config_time.read(time_file)
-    modulus = modinv(config_time.getint('Section1', 'modulus'), 200003)
-    remainder = config_time.getint('Section1', 'remainder')
-    max_delay = config_time.getint('Section1', 'max_delay')
-    last_time = config_time.getint('Section1', 'last_time')
+    try:
+        modulus = modinv(config_time.getint('Section1', 'modulus'), 200003)
+    except:
+        print("Time file needs modulus.")
+        exit()
+    try:
+        remainder = config_time.getint('Section1', 'remainder')
+    except:
+        print("Time file needs remainder.")
+        exit()
+    try:
+        max_delay = config_time.getint('Section1', 'max_delay')
+    except:
+        print("Time file needs max_delay.")
+        exit()
+    try:
+        last_time = config_time.getint('Section1', 'last_time')
+    except:
+        print("Time file needs last_time.")
+        exit()
     cur_time = time.time()
+    global delta
     delta = int(cur_time - last_time)
     if delta < nag_delay:
         print('Only', str(delta), 'seconds elapsed of', nag_delay)
@@ -588,19 +608,47 @@ def read_opts():
         return
     config_opt.read(opt_file)
     global vertical
-    vertical = config_opt.getboolean('Section1', 'vertical')
+    try:
+        vertical = config_opt.getboolean('Section1', 'vertical')
+    except:
+        print("Opts file needs vertical T/F.")
+        exit()
     global auto_reshuf
-    auto_reshuf = config_opt.getboolean('Section1', 'auto_reshuf')
+    try:
+        auto_reshuf = config_opt.getboolean('Section1', 'auto_reshuf')
+    except:
+        print("Opts file needs auto_reshuf T/F.")
+        exit()
     global dbl_sz_cards
-    dbl_sz_cards = config_opt.getboolean('Section1', 'dbl_sz_cards')
+    try:
+        dbl_sz_cards = config_opt.getboolean('Section1', 'dbl_sz_cards')
+    except:
+        print("Opts file needs dbl_sz_cards T/F.")
+        exit()
     global save_on_win
-    save_on_win = config_opt.getboolean('Section1', 'save_on_win')
+    try:
+        save_on_win = config_opt.getboolean('Section1', 'save_on_win')
+    except:
+        print("Opts file needs save_on_win T/F.")
+        exit()
     global save_position
-    save_position = config_opt.getboolean('Section1', 'save_position')
+    try:
+        save_position = config_opt.getboolean('Section1', 'save_position')
+    except:
+        print("Opts file needs save_position T/F.")
+        exit()
     global annoying_nudge
-    annoying_nudge = config_opt.getboolean('Section1', 'annoying_nudge')
+    try:
+        annoying_nudge = config_opt.getboolean('Section1', 'annoying_nudge')
+    except:
+        print("Opts file needs annoying_nudge T/F.")
+        exit()
     global chain_show_all
-    chain_show_all = config_opt.getboolean('Section1', 'chain_show_all')
+    try:
+        chain_show_all = config_opt.getboolean('Section1', 'chain_show_all')
+    except:
+        print("Opts file needs chain_show_all T/F.")
+        exit()
     return
 
 
@@ -2174,9 +2222,10 @@ def read_cmd(this_cmd):
 # start main program
 
 if disallow_write_source and os.access(__file__, os.W_OK):
-    print("Source file should not have write access outside of the game. attrib -R " + __file__ + 
+    print("Source file should not have write access outside of the game. attrib +R " + __file__ + 
           " or chmod 333 to get things going.")
     exit()
+    # zap above to debug
 
 read_opts()
 
