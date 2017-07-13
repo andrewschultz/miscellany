@@ -1,36 +1,36 @@
 ######################################
-## fc.py
-##
-## no frills Python Freecell game
-##
-## this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
-##
-## 1) time_matters = 86400 2) deliberateNuisanceRows = 3 3) deliberateNuisanceIncrease = 2
-## 4) annoyingNudge = False (set to 0 or false)
+# fc.py
+#
+# no frills Python Freecell game
+#
+# this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
+#
+# 1) time_matters = 86400 2) deliberate_nuisance_rows = 3 3) deliberateNuisanceIncrease = 2
+# 4) annoying_nudge = False (set to 0 or false)
 
 import re
 import sys
 import os
 from random import shuffle, randint
 import time
-import traceback
+# import traceback
 import configparser
 import argparse
 from math import sqrt
 
-## need vc14 for below to work
-## from gmpy import invert
+# need vc14 for below to work
+# from gmpy import invert
 
-config_opt = configparser.SafeConfigParser()
-config_time = configparser.SafeConfigParser()
+config_opt = configparser.ConfigParser()
+config_time = configparser.ConfigParser()
 
 opt_file = "fcopt.txt"
 save_file = "fcsav.txt"
 win_file = "fcwins.txt"
 time_file = "fctime.txt"
-lockfile = "fclock.txt"
+lock_file = "fclock.txt"
 
-onOff = ['off', 'on']
+on_off = ['off', 'on']
 
 suits = ['C', 'd', 'S', 'h']
 
@@ -39,7 +39,11 @@ cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q',
 top = ['CL', 'di', 'SP', 'he']
 btm = ['UB', 'am', 'AD', 'ar']
 
-moveList = []
+spares = [0, 0, 0, 0]
+found = [0, 0, 0, 0]
+force = 0
+
+move_list = []
 
 win = 0
 
@@ -49,62 +53,60 @@ total_reset = 0
 cmd_churn = False
 in_undo = False
 
-wonThisCmd = False
+won_this_cmd = False
 
-lastReset = 0
-startTime = 0
+last_reset = 0
+start_time = 0
 
-## time before next play variables
+# time before next play variables
 
 time_matters = 1
-nagDelay = 86400  # set this to zero if you don't want to restrict the games you can play
-minDelay = 70000  # if we can cheat one time
-highTime = 0
-maxDelay = 0
-curGames = 0
-maxGames = 5
+nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
+min_delay = 70000  # if we can cheat one time
+high_time = 0
+max_delay = 0
+cur_games = 0
+max_games = 5
 
-## options to define. How to do better?
-chainShowAll = False
+# options to define. How to do better?
+chain_show_all = False
 vertical = True
-dblSzCards = False
-autoReshuf = True
-savePosition = False
-saveOnWin = False
-quickBail = False
-## this is an experimental feature to annoy me
-deliberateNuisanceRows = 3
+dbl_sz_cards = False
+auto_reshuf = True
+save_position = False
+save_on_win = False
+quick_bail = False
+# this is an experimental feature to annoy me
+deliberate_nuisance_rows = 3
 deliberateNuisanceIncrease = 2
-## this can't be toggled in game but you can beforehand
-annoyingNudge = True
+# this can't be toggled in game but you can beforehand
+annoying_nudge = True
 
-## easy mode = A/2 on top. Cheat index tells how many cards of each suit are sorted to the bottom.
-cheatIndex = 0
+# easy mode = A/2 on top. Cheat index tells how many cards of each suit are sorted to the bottom.
+cheat_index = 0
 
-## making the game extra secure, not playing 2 at once or tinkering with timing file
-haveLockFile = True
-disallowWriteSource = True
+# making the game extra secure, not playing 2 at once or tinkering with timing file
+have_lock_file = True
+disallow_write_source = True
 
-lastScore = 0
+last_score = 0
 highlight = 0
 
-onlymove = 0
+only_move = 0
 
-trackUndo = 0
+track_undo = 0
 
-breakMacro = 0
+break_macro = 0
 
 undo_idx = 0
 
 debug = False
 
-cmdList = []
-cmdNoMeta = []
+cmd_list = []
+cmd_no_meta = []
 
 backup = []
 elements = [[], [], [], [], [], [], [], [], []]
-
-name = ""
 
 
 def extended_gcd(aa, bb):
@@ -154,7 +156,7 @@ def print_cond(my_string):
 
 def shufwarn():
     if not cmd_churn and not in_undo:
-        print ("That won't make progress. F(##) or ##-# let you move part of an in-order stack over.")
+        print("That won't make progress. F(##) or ##-# let you move part of an in-order stack over.")
 
 
 def dump_total(q):  # Negative q means you print. Mostly for debugging.
@@ -166,7 +168,7 @@ def dump_total(q):  # Negative q means you print. Mostly for debugging.
     for z in range(0, len(elements[q])):
         if foundable(elements[q][z]):
             if do_print:
-                print (tocard(elements[q][z]), elements[q][z], 'foundable')
+                print(to_card(elements[q][z]), elements[q][z], 'foundable')
             retval += 1
             if elements[q][z] % 13 == 2:  # aces/2's get a special bonus
                 retval += 1
@@ -175,7 +177,7 @@ def dump_total(q):  # Negative q means you print. Mostly for debugging.
         if nexties(elements[q][z]):  # not an elif as foundable deserves an extra point
             retval += 1
             if do_print:
-                print (tocard(elements[q][z]), elements[q][z], 'nexties')
+                print(to_card(elements[q][z]), elements[q][z], 'nexties')
     return retval
 
 
@@ -222,15 +224,15 @@ def nexties(myc):  # note that this may be a bit warped looking if you have 5S 5
 def rip_up(q):
     made_one = False
     if q < 1 or q > 8:
-        print ("Column/row needs to be 1-8.")
+        print("Column/row needs to be 1-8.")
         return False
     if len(elements[q]) == 0:
-        print ("Already no elements.")
+        print("Already no elements.")
         return True
     go_again = 1
     global cmd_churn
     cmd_churn = True
-    movesize = len(moveList)
+    movesize = len(move_list)
     max_run = 0
     while go_again == 1 and len(elements[q]) > 0 and max_run < 25 and not in_order(q):
         should_reshuf = True
@@ -239,21 +241,21 @@ def rip_up(q):
                 should_reshuf = False
         max_run += 1
         go_again = 0
-        temp_ary_size = len(moveList)
+        temp_ary_size = len(move_list)
         read_cmd(str(q))
-        if len(moveList) > temp_ary_size:
+        if len(move_list) > temp_ary_size:
             go_again = 1
             made_one = True
-        checkFound()
+        check_found()
         if should_reshuf:
             reshuf(-1)
-        forceFoundation()
-        slipUnder()
+        force_foundation()
+        slip_under()
     if max_run == 25:
-        print ("Oops potential hang at " + str(q))
-    checkFound()
-    if len(moveList) == movesize:
-        print ("Nothing moved.")
+        print("Oops potential hang at " + str(q))
+    check_found()
+    if len(move_list) == movesize:
+        print("Nothing moved.")
     return made_one
 
 
@@ -286,7 +288,7 @@ def can_dump(mycol):  # returns column you can dump to
     for x in range(0, 4):
         if found[x] == 0:
             dump_space = dump_space + 1
-    if chains(mycol) > maxmove() / 2:
+    if chains(mycol) > maxmove() // 2:
         return 0
     for tocol in range(1, 9):
         if len(elements[tocol]) == 0:
@@ -295,7 +297,7 @@ def can_dump(mycol):  # returns column you can dump to
 
 
 def reshuf(xyz):  # this reshuffles the empty cards
-    if not autoReshuf:
+    if not auto_reshuf:
         return False
     retval = False
     try_again = 1
@@ -315,15 +317,15 @@ def reshuf(xyz):  # this reshuffles the empty cards
                             spares[i] = 0
                             try_again = 1
                             retval = True
-                            # stupid bug here with if we change autoReshuf in the middle of the game
-                            # solution is to create "ar(x)(y)" which only triggers if autoReshuf = 0
+                            # stupid bug here with if we change auto_reshuf in the middle of the game
+                            # solution is to create "ar(x)(y)" which only triggers if auto_reshuf = 0
     shifties = 0
-    if force == 1 or onlymove > 0:
+    if force == 1 or only_move > 0:
         return retval
     while auto_shift():
         shifties += 1
         if shifties == 12:
-            print ('Oops, broke an infinite loop.')
+            print('Oops, broke an infinite loop.')
             return False
     return retval
 
@@ -336,22 +338,22 @@ def auto_shift():  # this shifts rows
             if len(elements[j]) > 0 and len(elements[i]) <= maxmove():
                 if can_put(elements[i][0], elements[j][len(elements[j]) - 1]):
                     if not cmd_churn and not in_undo:
-                        print ("Autoshifted " + str(i) + " to " + str(j) + ".")
+                        print("Autoshifted " + str(i) + " to " + str(j) + ".")
                     shiftcards(i, j, len(elements[i]))
                     return True
     return False
 
 
-def in_order(rowNum):
-    if len(elements[rowNum]) < 2:
+def in_order(row_num):
+    if len(elements[row_num]) < 2:
         return 0
-    for i in range(1, len(elements[rowNum])):
-        if not can_put(elements[rowNum][i], elements[rowNum][i - 1]):
+    for i in range(1, len(elements[row_num])):
+        if not can_put(elements[row_num][i], elements[row_num][i - 1]):
             return 0
     return 1
 
 
-def chainTotal():
+def chain_total():
     retval = 0
     for i in range(0, 9):
         for v in range(1, len(elements[i])):
@@ -383,7 +385,7 @@ def chain_nope(rowcand):
     return retval
 
 
-def spareUsed():
+def spare_used():
     retval = 0
     for i in range(0, 4):
         if spares[i]:
@@ -391,14 +393,14 @@ def spareUsed():
     return retval
 
 
-def firstEmptyRow():
+def first_empty_row():
     for i in range(1, 9):
         if len(elements[i]) == 0:
             return i
     return 0
 
 
-def firstMatchableRow(cardval):
+def first_matchable_row(cardval):
     for i in range(1, 9):
         if len(elements[i]) > 0:
             if can_put(cardval, elements[i][len(elements[i]) - 1]):
@@ -406,85 +408,85 @@ def firstMatchableRow(cardval):
     return 0
 
 
-def openLockFile():
-    if os.path.exists(lockfile):
-        print ('There seems to be another game running. Close it first, or if necessary, delete', lockfile)
+def open_lock_file():
+    if os.path.exists(lock_file):
+        print('There seems to be another game running. Close it first, or if necessary, delete', lock_file)
         exit()
-    f = open(lockfile, 'w')
-    f.write('This is a lockfile')
+    f = open(lock_file, 'w')
+    f.write('This is a lock_file')
     f.close()
-    os.system("attrib +r " + lockfile)
+    os.system("attrib +r " + lock_file)
 
 
-def closeLockFile():
-    os.system("attrib -r " + lockfile)
-    os.remove(lockfile)
-    if os.path.exists(lockfile):
-        print ('I wasn\'t able to delete', lockfile)
+def close_lock_file():
+    os.system("attrib -r " + lock_file)
+    os.remove(lock_file)
+    if os.path.exists(lock_file):
+        print('I wasn\'t able to delete', lock_file)
 
 
-def parseCmdLine():
+def parse_cmd_line():
     global vertical
     global debug
-    global saveOnWin
-    global cheatIndex
-    global annoyingNudge
-    global quickBail
-    global nagDelay
-    global maxGames
-    openAnyFile = False
+    global save_on_win
+    global cheat_index
+    global annoying_nudge
+    global quick_bail
+    global nag_delay
+    global max_games
+    open_any_file = False
     parser = argparse.ArgumentParser(description='Play FreeCell.', formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-o', '--opt_file', action='store_true', dest='opt_file', help='open options file')
     parser.add_argument('-l', '--loadsaveFile', action='store_true', dest='save_file', help='open save file')
     parser.add_argument('-p', '--pythonfile', action='store_true', dest='pythonfile', help='open python source file')
     parser.add_argument('-t', '--textfile', action='store_true', dest='time_file', help='open text/time file\n\n')
     parser.add_argument('-r', '--resettime', action='store_true', dest='resettime', help='open text/time file\n\n')
-    parser.add_argument('--getridofthetimewastenag', action='store_false', dest='annoyingNudge')
-    parser.add_argument('-c', '--cheatindex', action='store', dest='cheatIndex', help='specify cheat index 1-13',
+    parser.add_argument('--getridofthetimewastenag', action='store_false', dest='annoying_nudge')
+    parser.add_argument('-c', '--cheat_index', action='store', dest='cheat_index', help='specify cheat index 1-13',
                         type=int)
     parser.add_argument('-e', '--easy', action='store_true', dest='easy', help='easy mode on (A and 2 on top)\n\n')
     parser.add_argument('-d', '--debug', action='store_true', dest='debugOn', help='debug on')
     parser.add_argument('-nd', '--nodebug', action='store_true', dest='debugOff', help='debug off')
     parser.add_argument('-v', '--vertical', action='store_true', dest='verticalOn', help='vertical on')
     parser.add_argument('-nv', '--novertical', action='store_true', dest='verticalOff', help='vertical off')
-    parser.add_argument('-s', '--saveonwin', action='store_true', dest='saveOnWinOn', help='save-on-win on')
-    parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='saveOnWinOff', help='save-on-win off')
-    parser.add_argument('-q', '--quickbail', action='store_true', dest='quickBail', help='quick bail after one win')
-    parser.add_argument("--waittilnext", dest='nagDelay', type=int, help='adjust nagDelay')
-    parser.add_argument('-mg', '--maxgames', nargs=1, dest='maxGames', type=int, help='adjust maxGames')
+    parser.add_argument('-s', '--saveonwin', action='store_true', dest='save_on_winOn', help='save-on-win on')
+    parser.add_argument('-ns', '--nosaveonwin', action='store_true', dest='save_on_winOff', help='save-on-win off')
+    parser.add_argument('-q', '--quickbail', action='store_true', dest='quick_bail', help='quick bail after one win')
+    parser.add_argument("--waittilnext", dest='nag_delay', type=int, help='adjust nag_delay')
+    parser.add_argument('-mg', '--maxgames', nargs=1, dest='max_games', type=int, help='adjust max_games')
     args = parser.parse_args()
     # let's see if we tried to open any files, first
     if args.resettime is True:
-        print ("Resetting the time file", time_file)
-        writeTimeFile()
+        print("Resetting the time file", time_file)
+        write_time_file()
         exit()
     if args.opt_file is True:
         os.system(opt_file)
-        openAnyFile = True
+        open_any_file = True
     if args.save_file is True:
         os.system("fcsav.txt")
-        openAnyFile = True
+        open_any_file = True
     if args.pythonfile is True:
         os.system("\"c:\\Program Files (x86)\\Notepad++\\notepad++\" fc.py")
-        openAnyFile = True
+        open_any_file = True
     if args.time_file is True:
         os.system("fctime.txt")
-        openAnyFile = True
-    if openAnyFile:
+        open_any_file = True
+    if open_any_file:
         exit()
     # then let's see about the annoying nudge and cheating
-    if args.annoyingNudge is not None:
-        annoyingNudge = args.annoyingNudge
-    if args.cheatIndex is not None:
-        if args.cheatIndex < 1:
+    if args.annoying_nudge is not None:
+        annoying_nudge = args.annoying_nudge
+    if args.cheat_index is not None:
+        if args.cheat_index < 1:
             print("Too low. The cheat index must be between 1 and 13.")
             sys.exit()
-        elif args.cheatIndex > 13:
+        elif args.cheat_index > 13:
             print("Too high. The cheat index must be between 1 and 13.")
             sys.exit()
-        cheatIndex = args.cheatIndex
+        cheat_index = args.cheat_index
     elif args.easy is True:
-        cheatIndex = 2
+        cheat_index = 2
     # now let's go to the booleans we can change
     if args.debugOn:
         if args.debugOff:
@@ -500,147 +502,147 @@ def parseCmdLine():
         vertical = True
     if args.verticalOff:
         vertical = False
-    if args.saveOnWinOn:
-        if args.saveOnWinOff:
+    if args.save_on_winOn:
+        if args.save_on_winOff:
             print("Save both ways set both ways on command line. Bailing.")
             exit()
-        saveOnWin = True
-    if args.saveOnWinOff:
-        saveOnWin = False
-    if args.quickBail:
-        quickBail = True
-    if args.nagDelay and args.nagDelay > 0:
-        if args.nagDelay < minDelay:
-            print('Too soon, need >', minDelay)
+        save_on_win = True
+    if args.save_on_winOff:
+        save_on_win = False
+    if args.quick_bail:
+        quick_bail = True
+    if args.nag_delay and args.nag_delay > 0:
+        if args.nag_delay < min_delay:
+            print('Too soon, need >', min_delay)
             exit()
-        if args.nagDelay > nagDelay:
+        if args.nag_delay > nag_delay:
             print("Whoah, going above the default!")
-        nagDelay = args.nagDelay
-    if args.maxGames and args.maxGames > 0:
-            maxGames = args.maxGames
+        nag_delay = args.nag_delay
+    if args.max_games and args.max_games > 0:
+            max_games = args.max_games
     return
 
 
-def readTimeFile():
-    global nagDelay
-    global maxDelay
+def read_time_file():
+    global nag_delay
+    global max_delay
     if os.access(time_file, os.W_OK):
-        print ("Time file should not have write access outside of the game. attrib +R " + time_file + \
+        print("Time file should not have write access outside of the game. attrib +R " + time_file + 
               " or chmod 333 to get things going.")
         exit()
     if not os.path.isfile(time_file):
-        print ("You need to create fctime.txt with (sample)\n[Section1]\nlasttime = 1491562931" \
+        print("You need to create fctime.txt with (sample)\n[Section1]\nlast_time = 1491562931" +
               "\nmaxdelay = 0\nmodulus = 178067\nremainder = 73739.")
         exit()
     config_time.read(time_file)
     modulus = modinv(config_time.getint('Section1', 'modulus'), 200003)
     remainder = config_time.getint('Section1', 'remainder')
-    maxDelay = config_time.getint('Section1', 'maxdelay')
-    lasttime = config_time.getint('Section1', 'lasttime')
-    curtime = time.time()
-    delta = int(curtime - lasttime)
-    if delta < nagDelay:
-        print('Only', str(delta), 'seconds elapsed of', nagDelay)
+    max_delay = config_time.getint('Section1', 'max_delay')
+    last_time = config_time.getint('Section1', 'last_time')
+    cur_time = time.time()
+    delta = int(cur_time - last_time)
+    if delta < nag_delay:
+        print('Only', str(delta), 'seconds elapsed of', nag_delay)
         exit()
     if delta > 90000000:
         print("Save file probably edited to start playing a bit early. I'm not going to judge.")
-    elif delta > maxDelay:
-        print('New high delay', delta, 'old was', maxDelay)
-        maxDelay = delta
+    elif delta > max_delay:
+        print('New high delay', delta, 'old was', max_delay)
+        max_delay = delta
     else:
-        print('Delay', delta, 'did not exceed record of', maxDelay)
-    if lasttime % modulus != remainder:
-        print ("Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually.")
-        print (lasttime, modulus, remainder, lasttime % modulus)
+        print('Delay', delta, 'did not exceed record of', max_delay)
+    if last_time % modulus != remainder:
+        print("Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually.")
+        print(last_time, modulus, remainder, last_time % modulus)
         exit()
     if modulus < 100001 or modulus > 199999:
-        print ("Modulus is not in range in fctime.txt.")
+        print("Modulus is not in range in fctime.txt.")
         exit()
     if not is_prime(modulus):
-        print ("Modulus", modulus, "is not prime.")
+        print("Modulus", modulus, "is not prime.")
         exit()
     return
 
 
-def writeTimeFile():
+def write_time_file():
     os.system("attrib -r " + time_file)
     if not config_time.has_section('Section1'):
         config_time.add_section("Section1")
-    lasttime = int(time.time())
+    last_time = int(time.time())
     modulus = rand_prime()
-    remainder = lasttime % modulus
-    global maxDelay
+    remainder = last_time % modulus
+    global max_delay
     config_time.set('Section1', 'modulus', str(modinv(modulus, 200003)))  # 200003 is prime. I checked!
     config_time.set('Section1', 'remainder', str(remainder))
-    config_time.set('Section1', 'maxdelay', str(maxDelay))
-    config_time.set('Section1', 'lasttime', str(lasttime))
+    config_time.set('Section1', 'max_delay', str(max_delay))
+    config_time.set('Section1', 'last_time', str(last_time))
     with open(time_file, 'w') as configfile:
         config_time.write(configfile)
     os.system("attrib +r " + time_file)
     return
 
 
-def readOpts():
+def read_opts():
     if not os.path.isfile(opt_file):
-        print ("No", opt_file, "so using default options.")
+        print("No", opt_file, "so using default options.")
         return
     config_opt.read(opt_file)
     global vertical
     vertical = config_opt.getboolean('Section1', 'vertical')
-    global autoReshuf
-    autoReshuf = config_opt.getboolean('Section1', 'autoReshuf')
-    global dblSzCards
-    dblSzCards = config_opt.getboolean('Section1', 'dblSzCards')
-    global saveOnWin
-    saveOnWin = config_opt.getboolean('Section1', 'saveOnWin')
-    global savePosition
-    savePosition = config_opt.getboolean('Section1', 'savePosition')
-    global annoyingNudge
-    annoyingNudge = config_opt.getboolean('Section1', 'annoyingNudge')
-    global chainShowAll
-    chainShowAll = config_opt.getboolean('Section1', 'chainShowAll')
+    global auto_reshuf
+    auto_reshuf = config_opt.getboolean('Section1', 'auto_reshuf')
+    global dbl_sz_cards
+    dbl_sz_cards = config_opt.getboolean('Section1', 'dbl_sz_cards')
+    global save_on_win
+    save_on_win = config_opt.getboolean('Section1', 'save_on_win')
+    global save_position
+    save_position = config_opt.getboolean('Section1', 'save_position')
+    global annoying_nudge
+    annoying_nudge = config_opt.getboolean('Section1', 'annoying_nudge')
+    global chain_show_all
+    chain_show_all = config_opt.getboolean('Section1', 'chain_show_all')
     return
 
 
-def sendOpts():
+def send_opts():
     if not config_opt.has_section('Section1'):
         config_opt.add_section("Section1")
     config_opt.set('Section1', 'vertical', str(vertical))
-    config_opt.set('Section1', 'autoReshuf', str(autoReshuf))
-    config_opt.set('Section1', 'dblSzCards', str(dblSzCards))
-    config_opt.set('Section1', 'saveOnWin', str(saveOnWin))
-    config_opt.set('Section1', 'savePosition', str(savePosition))
-    config_opt.set('Section1', 'annoyingNudge', str(annoyingNudge))
-    config_opt.set('Section1', 'annoyingNudge', str(chainShowAll))
+    config_opt.set('Section1', 'auto_reshuf', str(auto_reshuf))
+    config_opt.set('Section1', 'dbl_sz_cards', str(dbl_sz_cards))
+    config_opt.set('Section1', 'save_on_win', str(save_on_win))
+    config_opt.set('Section1', 'save_position', str(save_position))
+    config_opt.set('Section1', 'annoying_nudge', str(annoying_nudge))
+    config_opt.set('Section1', 'annoying_nudge', str(chain_show_all))
     with open(opt_file, 'w') as configfile:
         config_opt.write(configfile)
     print("Saved options.")
     return
 
 
-def initSide(inGameReset):
+def init_side(in_game_reset):
     global spares
     spares = [0, 0, 0, 0]
     global found
     found = [0, 0, 0, 0]
     global highlight
-    global startTime
-    global lastReset
+    global start_time
+    global last_reset
     highlight = 0
     if not in_undo:
-        lastReset = time.time()
-        if inGameReset != 1:
-            startTime = lastReset
+        last_reset = time.time()
+        if in_game_reset != 1:
+            start_time = last_reset
         global win
         win = 0
-        global moveList
-        moveList = []
-        global cmdList
-        cmdList = []
-        global cmdNoMeta
-        cmdNoMeta = []
-    global breakMacro
-    breakMacro = 0
+        global move_list
+        move_list = []
+        global cmd_list
+        cmd_list = []
+        global cmd_no_meta
+        cmd_no_meta = []
+    global break_macro
+    break_macro = 0
 
 
 def plur(a):
@@ -679,16 +681,16 @@ totalFoundThisTime = 0
 cardlist = ''
 
 
-def checkFound():
+def check_found():
     retval = False
-    needToCheck = 1
+    need_to_check = 1
     global totalFoundThisTime
     global cardlist
     if not cmd_churn:
         totalFoundThisTime = 0
         cardlist = ''
-    while needToCheck:
-        needToCheck = 0
+    while need_to_check:
+        need_to_check = 0
         for y in range(1, 9):
             if len(elements[y]) > 0:
                 while elements[y][len(elements[y]) - 1] % 13 == (
@@ -698,39 +700,39 @@ def checkFound():
                         break
                     if found[(basesuit + 3) % 4] < found[basesuit] - 1:
                         break
-                    needToCheck = 1
+                    need_to_check = 1
                     retval = True
                     totalFoundThisTime += 1
                     found[(elements[y][len(elements[y]) - 1] - 1) // 13] = found[(elements[y][len(
                         elements[y]) - 1] - 1) // 13] + 1
-                    cardlist = cardlist + tocardX(elements[y][len(elements[y]) - 1])
+                    cardlist = cardlist + to_card_x(elements[y][len(elements[y]) - 1])
                     elements[y].pop()
                     if len(elements[y]) == 0:
                         break
         for y in range(0, 4):
-            # print 'checking ',y,tocard(spares[y])
+            # print 'checking ',y,to_card(spares[y])
             if spares[y] > 0:
                 if (spares[y] - 1) % 13 == found[(spares[y] - 1) // 13]:
                     sparesuit = (spares[y] - 1) // 13
                     if debug:
-                        print ('position', y, 'suit', suits[(spares[y] - 1) / 13], 'card', tocard(spares[y]))
+                        print('position', y, 'suit', suits[(spares[y] - 1) // 13], 'card', to_card(spares[y]))
                     if found[(sparesuit + 3) % 4] < found[sparesuit] - 1:
                         continue
                     if found[(sparesuit + 1) % 4] < found[sparesuit] - 1:
                         continue
-                    cardlist = cardlist + tocardX(spares[y])
+                    cardlist = cardlist + to_card_x(spares[y])
                     totalFoundThisTime += 1
                     found[(spares[y] - 1) // 13] += 1
                     spares[y] = 0
-                    needToCheck = 1
+                    need_to_check = 1
                     retval = True
-    # print (str(totalFoundThisTime) + " undo " + str(in_undo) + " churn " + str(cmd_churn) + " " + str(should_print()))
+    # print(str(totalFoundThisTime) + " undo " + str(in_undo) + " churn " + str(cmd_churn) + " " + str(should_print()))
     # traceback.print_stack()
-    printFound()
+    print_found()
     return retval
 
 
-def printFound():
+def print_found():
     global totalFoundThisTime
     global cardlist
     if totalFoundThisTime > 0 and should_print():
@@ -740,75 +742,70 @@ def printFound():
         cardlist = ''
 
 
-def forceFoundation():
+def force_foundation():
     global in_undo
-    checkAgain = 1
-    forceStr = ""
+    check_again = 1
+    force_str = ""
     global cardlist
     global totalFoundThisTime
-    while checkAgain:
-        checkAgain = 0
+    while check_again:
+        check_again = 0
         for row in range(1, 9):
             if len(elements[row]) > 0:
                 if foundable(elements[row][len(elements[row]) - 1]) == 1:
                     found[(elements[row][len(elements[row]) - 1] - 1) // 13] += 1
-                    forceStr = forceStr + tocardX(elements[row][len(elements[row]) - 1])
+                    force_str = force_str + to_card_x(elements[row][len(elements[row]) - 1])
                     if not in_undo:
-                        cardlist = cardlist + tocardX(elements[row][len(elements[row]) - 1])
+                        cardlist = cardlist + to_card_x(elements[row][len(elements[row]) - 1])
                         totalFoundThisTime += 1
                     elements[row].pop()
-                    checkAgain = 1
+                    check_again = 1
         for xx in range(0, 4):
             if spares[xx]:
-                # print ("Checking" + tocardX(spares[xx]))
+                # print("Checking" + to_card_x(spares[xx]))
                 if foundable(spares[xx]):
-                    forceStr = forceStr + tocardX(spares[xx])
+                    force_str = force_str + to_card_x(spares[xx])
                     if not in_undo:
-                        cardlist = cardlist + tocardX(spares[xx])
+                        cardlist = cardlist + to_card_x(spares[xx])
                         totalFoundThisTime += 1
                     found[(spares[xx] - 1) // 13] += 1
                     spares[xx] = 0
-                    checkAgain = 1
-    if forceStr:
+                    check_again = 1
+    if force_str:
         if not in_undo:
-            moveList.append("r")
+            move_list.append("r")
             print_cond("Sending all to foundation.")
-            print_cond("Forced" + forceStr)
+            print_cond("Forced" + force_str)
         reshuf(-1)
-        checkFound()
-        printCards()
+        check_found()
+        print_cards()
     else:
         print_cond("Nothing to force to foundation.")
     return
 
 
-def checkWin():
+def check_win():
     for y in range(0, 4):
         # print y,found[y]
         if found[y] != 13:
             return 0
-    checkWinning()
+    check_winning()
 
 
-def initCards():
-    x = []
+def init_cards():
     global elements
-    if cheatIndex > 0:
-        x = list(range(cheatIndex + 1, 14)) + list(range(cheatIndex + 14, 27)) + list(
-            range(cheatIndex + 27, 40)) + list(range(cheatIndex + 40, 53))
-        shuffle(x)
-        for y in reversed(range(1, cheatIndex + 1)):
-            x[:0] = [y, y + 13, y + 26, y + 39]
-    else:
-        x = list(range(1, 53))
-        shuffle(x)
+    x = list(range(cheat_index + 1, 14)) + list(range(cheat_index + 14, 27)) + list(
+      range(cheat_index + 27, 40)) + list(range(cheat_index + 40, 53))
+    shuffle(x)
+    for y in reversed(range(1, cheat_index + 1)):
+        x[:0] = [y, y + 13, y + 26, y + 39]
     for z in range(0, 52):
         elements[z % 8 + 1].append(x.pop())
     global backup
     backup = [row[:] for row in elements]
 
 
-def tocard(cardnum):
+def to_card(cardnum):
     if cardnum == 0:
         return '---'
     temp = cardnum - 1
@@ -816,55 +813,50 @@ def tocard(cardnum):
     return retval
 
 
-def tocardX(cnum):
+def to_card_x(cnum):
     if cnum % 13 == 10:
-        return ' ' + tocard(cnum)
-    return tocard(cnum)
+        return ' ' + to_card(cnum)
+    return to_card(cnum)
 
 
-def printCards():
+def print_cards():
     if cmd_churn:
         return
     if in_undo:
         return
     if sum(found) == 52:
-        if not checkWinning():
+        if not check_winning():
             return
     if vertical:
-        printVertical()
+        print_vertical()
     else:
-        printHorizontal()
+        print_horizontal()
 
 
-def checkWinning():
-    global input
-    try:
-        input = raw_input
-    except NameError:
-        pass
+def check_winning():
     global cmd_churn
-    # print ("Churn now false (checkWinning).")
+    # print("Churn now false (check_winning).")
     cmd_churn = False
-    printFound()
-    global startTime
-    global lastReset
-    if startTime != -1:
-        curTime = time.time()
-        timeTaken = curTime - startTime
-        print ("%.2f seconds taken." % timeTaken)
-        if lastReset > startTime:
-            print ("%.2f seconds taken since last reset." % (curTime - lastReset))
+    print_found()
+    global start_time
+    global last_reset
+    if start_time != -1:
+        cur_time = time.time()
+        time_taken = cur_time - start_time
+        print("%.2f seconds taken." % time_taken)
+        if last_reset > start_time:
+            print("%.2f seconds taken since last reset." % (cur_time - last_reset))
     else:
-        print ("No time data kept for loaded game.")
+        print("No time data kept for loaded game.")
     global total_reset
     global total_undo
     if total_reset > 0:
-        print ("%d reset used." % total_reset)
+        print("%d reset used." % total_reset)
     if total_undo > 0:
-        print ("%d undo used." % total_undo)
+        print("%d undo used." % total_undo)
     if total_undo == -1:
-        print ("No undo data from loaded game.")
-    if saveOnWin:
+        print("No undo data from loaded game.")
+    if save_on_win:
         with open(win_file, "a") as myfile:
             winstring = time.strftime("sw=%Y-%m-%d-%H-%M-%S", time.localtime())
             myfile.write(winstring)
@@ -872,165 +864,165 @@ def checkWinning():
             global backup
             for i in range(1, 9):
                 myfile.write(' '.join(str(x) for x in backup[i]) + "\n")
-        print ("Saved " + winstring)
-    global breakMacro
-    breakMacro = 1
-    if maxGames > 0:
-        global curGames
-        curGames = curGames + 1
-        print ('Won', curGames, 'of', maxGames, 'so far.')
-        if curGames == maxGames:
-            print ("Well, that's it. Looks like you've played all your games.")
-            goBye()
-    global wonThisCmd
-    wonThisCmd = True
+        print("Saved " + winstring)
+    global break_macro
+    break_macro = 1
+    if max_games > 0:
+        global cur_games
+        cur_games = cur_games + 1
+        print('Won', cur_games, 'of', max_games, 'so far.')
+        if cur_games == max_games:
+            print("Well, that's it. Looks like you've played all your games.")
+            go_bye()
+    global won_this_cmd
+    won_this_cmd = True
     while True:
-        finish = input("You win in %d commands (%d including extraneous) and %d moves! Play again (Y/N, U to undo)?" % (
-            len(cmdNoMeta), len(cmdList), len(moveList))).lower()
+        finish = input(
+            "You win in %d commands (%d including extraneous) and %d moves! Play again (Y/N, U to undo)?" %
+            (len(cmd_no_meta), len(cmd_list), len(move_list))).lower()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
-                goBye()
+                go_bye()
             if finish[0] == 'y':
-                if quickBail:
-                    print ("Oops! Quick bailing.")
-                    goBye()
-                global deliberateNuisanceRows
-                if deliberateNuisanceRows > 0:
-                    deliberateNuisanceRows += deliberateNuisanceIncrease
-                initCards()
-                initSide(0)
+                if quick_bail:
+                    print("Oops! Quick bailing.")
+                    go_bye()
+                global deliberate_nuisance_rows
+                if deliberate_nuisance_rows > 0:
+                    deliberate_nuisance_rows += deliberateNuisanceIncrease
+                init_cards()
+                init_side(0)
                 total_undo = 0
                 total_reset = 0
                 return 1
             if finish[0] == 'u':
-                curGames -= 1
-                cmdNoMeta.pop()
+                cur_games -= 1
+                cmd_no_meta.pop()
                 global in_undo
                 in_undo = True
                 undo_moves(1)
                 in_undo = False
                 return 0
-        print ("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
+        print("Y or N (or U to undo). Case insensitive, cuz I'm a sensitive guy.")
 
 
 # this detects how long a chain is, e.g. how many in a row
 # 10d-9s-8d-7s is 4 not 3
-def chains(myrow):
-    if len(elements[myrow]) == 0:
+def chains(my_row):
+    if len(elements[my_row]) == 0:
         return 0
     retval = 1
-    mytemp = len(elements[myrow]) - 1
-    while mytemp > 0:
-        if can_put(elements[myrow][mytemp], elements[myrow][mytemp - 1]):
+    my_temp = len(elements[my_row]) - 1
+    while my_temp > 0:
+        if can_put(elements[my_row][my_temp], elements[my_row][my_temp - 1]):
             retval += 1
-            mytemp = mytemp - 1
+            my_temp = my_temp - 1
         else:
             return retval
     return retval
 
 
-def onedig(y):
+def one_dig(y):
     if y < 10:
         return str(y)
     return "+"
 
 
-def printVertical():
+def print_vertical():
     count = 0
     for y in range(1, 9):
         if chain_nope(y) == 0:
-            sys.stdout.write(' *' + onedig(chains(y)) + '*')
+            sys.stdout.write(' *' + one_dig(chains(y)) + '*')
         else:
-            sys.stdout.write(' ' + onedig(chains(y)) + '/' + str(chain_nope(y)))
-        if dblSzCards:
+            sys.stdout.write(' ' + one_dig(chains(y)) + '/' + str(chain_nope(y)))
+        if dbl_sz_cards:
             sys.stdout.write(' ')
-    print ("")
+    print("")
     for y in range(1, 9):
         sys.stdout.write(' ' + str(y) + ': ')
-        if dblSzCards:
+        if dbl_sz_cards:
             sys.stdout.write(' ')
-    print ("")
-    oneMoreTry = 1
-    while oneMoreTry:
-        thisline = ''
-        secondLine = ''
-        oneMoreTry = 0
+    print("")
+    one_more_try = 1
+    while one_more_try:
+        this_line = ''
+        second_line = ''
+        one_more_try = 0
         for y in range(1, 9):
             if len(elements[y]) > count:
-                oneMoreTry = 1
-                if dblSzCards:
-                    temp = str(tocard(elements[y][count]))
-                    if tocard(elements[y][count])[0] == ' ':
-                        thisline += temp[1]
-                        secondLine += temp[0]
+                one_more_try = 1
+                if dbl_sz_cards:
+                    temp = str(to_card(elements[y][count]))
+                    if to_card(elements[y][count])[0] == ' ':
+                        this_line += temp[1]
+                        second_line += temp[0]
                     else:
-                        thisline += temp[0]
-                        secondLine += temp[1]
-                    thisline += top[(elements[y][count] - 1) // 13]
-                    secondLine += btm[(elements[y][count] - 1) // 13] + ' '
+                        this_line += temp[0]
+                        second_line += temp[1]
+                    this_line += top[(elements[y][count] - 1) // 13]
+                    second_line += btm[(elements[y][count] - 1) // 13] + ' '
                 else:
-                    thisline += str(tocard(elements[y][count]))
+                    this_line += str(to_card(elements[y][count]))
                 if foundable(elements[y][count]):
                     if nexties(elements[y][count]):
-                        thisline += '!'
+                        this_line += '!'
                     else:
-                        thisline += '*'
+                        this_line += '*'
                 elif highlight and (((elements[y][count] - 1) % 13) == highlight - 1):
-                    thisline += '+'
+                    this_line += '+'
                 else:
-                    thisline += ' '
-                if dblSzCards:
-                    thisline += ' '
-                    secondLine += ' '
+                    this_line += ' '
+                if dbl_sz_cards:
+                    this_line += ' '
+                    second_line += ' '
             else:
-                thisline += '    '
-                if dblSzCards:
-                    thisline += ' '
-                    secondLine += '     '
-        if oneMoreTry:
-            print (thisline)
-            if secondLine:
-                print (secondLine)
+                this_line += '    '
+                if dbl_sz_cards:
+                    this_line += ' '
+                    second_line += '     '
+        if one_more_try:
+            print(this_line)
+            if second_line:
+                print(second_line)
         count += 1
-    printOthers()
+    print_others()
     # traceback.print_stack()
 
 
-def printHorizontal():
+def print_horizontal():
     for y in range(1, 9):
         sys.stdout.write(str(y) + ':')
         for z in elements[y]:
-            sys.stdout.write(' ' + tocard(z))
-        print
-    printOthers()
+            sys.stdout.write(' ' + to_card(z))
+    print_others()
 
 
-def org_it(myList):
+def org_it(my_list):
     globbed = 1
     while globbed:
         globbed = 0
-        for x1 in range(0, len(myList)):
-            for x2 in range(0, len(myList)):
+        for x1 in range(0, len(my_list)):
+            for x2 in range(0, len(my_list)):
                 if globbed == 0:
-                    if myList[x1][0] == myList[x2][-1]:
+                    if my_list[x1][0] == my_list[x2][-1]:
                         globbed = 1
-                        temp = myList[x2] + myList[x1][1:]
-                        del myList[x2]
+                        temp = my_list[x2] + my_list[x1][1:]
+                        del my_list[x2]
                         if x1 > x2:
-                            del myList[x1 - 1]
+                            del my_list[x1 - 1]
                         else:
-                            del myList[x1]
-                        myList.insert(0, temp)
-    return ' ' + ' '.join(myList)
+                            del my_list[x1]
+                        my_list.insert(0, temp)
+    return ' ' + ' '.join(my_list)
 
 
-def botcard(mycol):
+def bot_card(mycol):
     return elements[mycol][len(elements[mycol]) - 1]
 
 
 def automove():
-    mincard = 0
+    min_card = 0
     fromcand = 0
     tocand = 0
     for z1 in range(1, 9):
@@ -1044,21 +1036,21 @@ def automove():
             thisdo = doable(z1, z2, 0)
             if thisdo > 0:
                 if not can_put(elements[z1][len(elements[z1]) - thisdo], elements[z1][len(elements[z1]) - thisdo - 1]):
-                    mincand = botcard(z1) % 13
-                    if mincand > mincard:
-                        mincard = mincand
+                    mincand = bot_card(z1) % 13
+                    if mincand > min_card:
+                        min_card = mincand
                         fromcand = z1
                         tocand = z2
     if fromcand > 0:
         myauto = str(fromcand) + str(tocand)
-        print ("Auto moved " + myauto)
+        print("Auto moved " + myauto)
         read_cmd(myauto)
         return 1
     return 0
 
 
-def printOthers():
-    checkWin()
+def print_others():
+    check_win()
     coolmoves = []
     foundmove = ''
     wackmove = ''
@@ -1103,8 +1095,8 @@ def printOthers():
             foundmove = ' >' + chr(z1 + 97) + foundmove
             canfwdmove = 1
     if wackmove:
-        print ("Not enough room: " + str(wackmove))
-    print ("Possible moves:" + org_it(coolmoves) + foundmove + latmove + " (%d max shift" % (maxmove()) + (
+        print("Not enough room: " + str(wackmove))
+    print("Possible moves:" + org_it(coolmoves) + foundmove + latmove + " (%d max shift" % (maxmove()) + (
         ", recdumprow=" + str(best_dump_row()) if best_dump_row() > 0 else "") + ")")
     if not canfwdmove:
         really_lost = 1
@@ -1115,12 +1107,12 @@ def printOthers():
             if foundable(spares[z]):
                 really_lost = 0
         if really_lost == 1:
-            print ("Uh oh. You\'re probably lost.")
+            print("Uh oh. You\'re probably lost.")
         else:
-            print ("You may have to dump stuff in the foundation.")
+            print("You may have to dump stuff in the foundation.")
     sys.stdout.write('Empty slots: ')
     for y in range(0, 4):
-        sys.stdout.write(tocard(spares[y]))
+        sys.stdout.write(to_card(spares[y]))
         for z in range(1, 9):
             if len(elements[z]) and can_put(spares[y], elements[z][len(elements[z]) - 1]):
                 sys.stdout.write('<')
@@ -1130,119 +1122,119 @@ def printOthers():
         else:
             sys.stdout.write(' ')
     sys.stdout.write('\nFoundation: ')
-    foundScore = 0
+    found_score = 0
     for y in [0, 2, 1, 3]:
-        foundScore += found[y]
+        found_score += found[y]
         if found[y] == 0:
             sys.stdout.write(' ---')
         else:
-            sys.stdout.write(' ' + tocard(found[y] + y * 13))
-    sys.stdout.write(' (' + str(foundScore) + ' point' + plur(foundScore))
-    global lastScore
-    if lastScore < foundScore:
-        sys.stdout.write(', up ' + str(foundScore - lastScore))
-    sys.stdout.write(', ' + str(chainTotal()) + ' pairs in order, ' + str(chain_nope_big()) + ' out of order, ' + str(
+            sys.stdout.write(' ' + to_card(found[y] + y * 13))
+    sys.stdout.write(' (' + str(found_score) + ' point' + plur(found_score))
+    global last_score
+    if last_score < found_score:
+        sys.stdout.write(', up ' + str(found_score - last_score))
+    sys.stdout.write(', ' + str(chain_total()) + ' pairs in order, ' + str(chain_nope_big()) + ' out of order, ' + str(
         chain_nope_each()) + ' cols unordered')
     sys.stdout.write(')\n')
-    lastScore = foundScore
+    last_score = found_score
 
 
 def any_doable_limit(ii):
-    tempval = 0
+    temp_val = 0
     for y in range(1, 9):
         temp2 = doable(ii, y, 0)
         if len(elements[y]) > 0 and 0 < temp2 <= maxmove():
             if chains(ii) == temp2:
                 return y
-            tempval = y
-    return tempval
+            temp_val = y
+    return temp_val
 
 
-def anyDoable(ii, emptyOK):
-    tempret = 0
+def any_doable(ii, empty_ok):
+    temp_ret = 0
     for y in range(1, 9):
-        tempval = doable(ii, y, 0)
-        if emptyOK or len(elements[y]) > 0:
-            if tempval > 0:
+        temp_val = doable(ii, y, 0)
+        if empty_ok or len(elements[y]) > 0:
+            if temp_val > 0:
                 return y
-        if len(elements[y]) > 0 and tempval > 0:
-            tempret = y
-    return tempret
+        if len(elements[y]) > 0 and temp_val > 0:
+            temp_ret = y
+    return temp_ret
 
 
-def doable(r1, r2, showDeets):  # return value = # of cards to move. 0 = no match, -1 = asking too much
-    fromline = 0
-    locmaxmove = maxmove()
+def doable(r1, r2, show_details):  # return value = # of cards to move. 0 = no match, -1 = asking too much
+    from_line = 0
+    loc_max_move = maxmove()
     if r1 < 1 or r2 < 1 or r1 > 8 or r2 > 8:
-        print ("This shouldn't have happened, but one of the rows is invalid.")
-        trackback.print_tb()
+        print("This shouldn't have happened, but one of the rows is invalid.")
+        # trackback.print_tb()
         return 0
-    global onlymove
+    global only_move
     if len(elements[r2]) == 0:
         if len(elements[r1]) == 0:
-            if showDeets:
-                print ("Empty-empty move.")
+            if show_details:
+                print("Empty-empty move.")
             return 0
-        if in_order(r1) and onlymove == len(elements[r1]):
-            if showDeets:
-                print ('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
+        if in_order(r1) and only_move == len(elements[r1]):
+            if show_details:
+                print('OK, moved the already-sorted row, though this doesn\'t really change the game state.')
             return len(elements[r1])
-        locmaxmove /= 2
-        if showDeets and should_print():
-            print ("Only half moves here down to %d" % locmaxmove)
+        loc_max_move /= 2
+        if show_details and should_print():
+            print("Only half moves here down to %d" % loc_max_move)
         for n in range(len(elements[r1]) - 1, -1, -1):
-            fromline += 1
-            # print '1 debug stuff:',tocard(elements[r1][n]),n,fromline
+            from_line += 1
+            # print '1 debug stuff:',to_card(elements[r1][n]),n,from_line
             if n == 0:
                 break
-            # print '2 debug stuff:',tocard(elements[r1][n]),n,fromline
+            # print '2 debug stuff:',to_card(elements[r1][n]),n,from_line
             if can_put(elements[r1][n], elements[r1][n - 1]) == 0:
                 break
-                # print '3 debug stuff:',tocard(elements[r1][n]),n,fromline
+                # print '3 debug stuff:',to_card(elements[r1][n]),n,from_line
     else:
-        toTopCard = elements[r2][len(elements[r2]) - 1]
-        # print str(elements[r2]) + "Row " + str(r2) + " Card " + tocard(toTopCard)
+        to_top_card = elements[r2][len(elements[r2]) - 1]
+        # print str(elements[r2]) + "Row " + str(r2) + " Card " + to_card(to_top_card)
         for n in range(len(elements[r1]) - 1, -1, -1):
-            fromline += 1
-            if can_put(elements[r1][n], toTopCard):
+            from_line += 1
+            if can_put(elements[r1][n], to_top_card):
                 break
             if n == 0:
                 return 0
             if can_put(elements[r1][n], elements[r1][n - 1]) == 0:
                 return 0
-    if onlymove > locmaxmove:
-        print ("WARNING, %d is greater than the maximum of %d." % (onlymove, locmaxmove))
-        onlymove = 0
+    if only_move > loc_max_move:
+        print("WARNING, %d is greater than the maximum of %d." % (only_move, loc_max_move))
+        only_move = 0
     if len(elements[r1]) == 0:
-        if showDeets:
-            print ('Tried to move from empty.')
+        if show_details:
+            print('Tried to move from empty.')
         return 0
-    if onlymove > 0:
-        if onlymove < locmaxmove:
-            if showDeets:
+    if only_move > 0:
+        if only_move < loc_max_move:
+            if show_details:
                 if len(elements[r2]) > 0:
-                    print ('Can\'t move to that non-empty, even with force.')
+                    print('Can\'t move to that non-empty, even with force.')
                     return -1
-                print_cond('Cutting down to ' + str(onlymove))
-                return onlymove
-        if onlymove < fromline:
-            return onlymove
-    if fromline > locmaxmove:
+                print_cond('Cutting down to ' + str(only_move))
+                return only_move
+        if only_move < from_line:
+            return only_move
+    if from_line > loc_max_move:
         if force == 1:
-            if showDeets:
+            if show_details:
                 if len(elements[r2]) > 0:
-                    print ('Can\'t move to that non-empty, even with force.')
+                    print('Can\'t move to that non-empty, even with force.')
                     return -1
-                print_cond("Cutting down to " + str(locmaxmove))
-            return locmaxmove
+                print_cond("Cutting down to " + str(loc_max_move))
+            return loc_max_move
         global cmd_churn
-        if showDeets and not cmd_churn:
-            print ("Not enough open. Have %d, need %d" % (locmaxmove, fromline))
+        if show_details and not cmd_churn:
+            print("Not enough open. Have %d, need %d" % (loc_max_move, from_line))
         return -1
-    return fromline
+    return from_line
 
 
-def maxMoveMod():
+def max_move_mod():
     base = 2
     myexp = .5
     for y in range(0, 4):
@@ -1254,56 +1246,57 @@ def maxMoveMod():
     return base * myexp
 
 
-def slipUnder():
-    slipProcess = True
-    everSlip = False
+def slip_under():
+    slip_process = True
+    ever_slip = False
     global cmd_churn
-    while slipProcess:
-        fi = firstEmptyRow()
-        slipProcess = False
+    while slip_process:
+        fi = first_empty_row()
+        slip_process = False
         if fi == 0:
             for i in range(1, 9):
                 for j in range(0, 4):
-                    if slipProcess is False and (in_order(i) or (len(elements[i]) == 1)) and can_put(elements[i][0],
-                                                                                                     spares[j]):
-                        # print ("Checking slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
-                        if len(elements[i]) + spareUsed() <= 4:
+                    if slip_process is False and\
+                            (in_order(i) or (len(elements[i]) == 1)) and\
+                            can_put(elements[i][0], spares[j]):
+                        # print("Checking slip under %d %d %d %d %d" % (fi, i, j, elements[i][0], spares[j]))
+                        if len(elements[i]) + spare_used() <= 4:
                             elements[i].insert(0, spares[j])
                             spares[j] = 0
-                            slipProcess = True
+                            slip_process = True
         else:
             for i in range(1, 9):
-                if slipProcess is False and ((len(elements[i]) > 0 and in_order(i)) or (len(elements[i]) == 1)):
-                    # print ("%d %d %d %d" % (i, len(elements[i]), in_order(i), slipProcess))
+                if slip_process is False and ((len(elements[i]) > 0 and in_order(i)) or (len(elements[i]) == 1)):
+                    # print("%d %d %d %d" % (i, len(elements[i]), in_order(i), slip_process))
                     for j in range(0, 4):
-                        # print ("%d %d %d %d" % (i, j, spares[j], can_put(elements[i][0], spares[j])))
+                        # print("%d %d %d %d" % (i, j, spares[j], can_put(elements[i][0], spares[j])))
                         if spares[j] > 0 and can_put(elements[i][0], spares[j]):
-                            # print ("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), maxMoveMod()))
-                            if len(elements[i]) <= maxMoveMod():
-                                resetChurn = not cmd_churn
+                            # print("OK, giving a look %d -> %d | %d %d" % (i, fi, len(elements[i]), max_move_mod()))
+                            if len(elements[i]) <= max_move_mod():
+                                reset_churn = not cmd_churn
                                 cmd_churn = True
                                 elements[fi].append(spares[j])
                                 spares[j] = 0
                                 shiftcards(i, fi, len(elements[i]))
-                                if resetChurn:
+                                if reset_churn:
                                     cmd_churn = False
-                                slipProcess = True
-                                everSlip = True
+                                slip_process = True
+                                ever_slip = True
                                 break
-    return everSlip
+    return ever_slip
 
 
-def dumpInfo(x):
-    print ("Uh oh, big error avoided")
-    print (elements)
-    print (backup)
-    print (moveList)
-    print (cmdList)
-    print (cmdNoMeta)
-    print ("Spares: " % spares)
-    print ("Found: " % found)
+def dump_info(x):
+    print("Uh oh, big error avoided")
+    print(elements)
+    print(backup)
+    print(move_list)
+    print(cmd_list)
+    print(cmd_no_meta)
+    print("Spares: " % spares)
+    print("Found: " % found)
     if abs(x) == 2:
-        printVertical()
+        print_vertical()
     if x < 0:
         exit()
     return
@@ -1314,43 +1307,43 @@ def shiftcards(r1, r2, amt):
     del elements[r1][int(-amt):]
 
 
-def usageGame():
-    print ('========game moves========')
-    print ('r(1-8a-d) sends that card to the foundation. r alone forces everything it can.')
-    print ('p(1-8) moves a row as much as you can.')
-    print ('p on its own tries to force everything if you\'re near a win.')
-    print ('\\ tries all available moves starting with the highest card to match eg 10-9 comes before 7-6.')
-    print ('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
-    print ('(1-8)(1-8) = move a row, standard move. You can also string moves together, or 646 goes back and forth.')
-    print ('(1-8a-d) (1-8a-d) move to spares and back.')
-    print ('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
-    print ('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
-    print ('h slips a card under eg KH in spares would go under an ordered QC-JD.')
-    print ('- or = = a full board reset.')
-    print ('?/?g ?o ?m games options meta')
+def usage_game():
+    print('========game moves========')
+    print('r(1-8a-d) sends that card to the foundation. r alone forces everything it can.')
+    print('p(1-8) moves a row as much as you can.')
+    print('p on its own tries to force everything if you\'re near a win.')
+    print('\\ tries all available moves starting with the highest card to match eg 10-9 comes before 7-6.')
+    print('(1-8) attempts a \'smart move\' where the game tries progress, then shifting.')
+    print('(1-8)(1-8) = move a row, standard move. You can also string moves together, or 646 goes back and forth.')
+    print('(1-8a-d) (1-8a-d) move to spares and back.')
+    print('f(1-8)(1-8) forces what you can (eg half of what can change between nonempty rows) onto an empty square.')
+    print('(1-8)(1-8)-(#) forces # cards onto a row, if possible.')
+    print('h slips a card under eg KH in spares would go under an ordered QC-JD.')
+    print('- or = = a full board reset.')
+    print('?/?g ?o ?m games options meta')
 
 
-def usageOptions():
-    print ('========options========')
-    print ('v toggles vertical, + toggles card size (only vertical right now).')
-    print ('cs toggles chainShowAll e.g. if 823 shows intermediate move.')
-    print ('sw/ws saves on win, sp/ps saves position.')
-    print ('+ = toggles double size, e = toggle autoshuffle.')
-    print ('?/?g ?o ?m games options meta, g is default.')
+def usage_options():
+    print('========options========')
+    print('v toggles vertical, + toggles card size (only vertical right now).')
+    print('cs toggles chain_show_all e.g. if 823 shows intermediate move.')
+    print('sw/ws saves on win, sp/ps saves position.')
+    print('+ = toggles double size, e = toggle autoshuffle.')
+    print('?/?g ?o ?m games options meta, g is default.')
 
 
 def usage_meta():
-    print ('========meta========')
-    print ('l=loads a game, s=saves, lp=load previous/latest saved')
-    print ('lo/so loads/saves options.')
-    print ('u = undo, u1-u10 undoes that many moves, undo does 11+, tu tracks undo.')
-    print ('ua = shows current move/undo array.')
-    print ('uc = shows current command list.')
-    print ('ux = shows current command list excluding meta-commands.')
-    print ('qu quits (q could be typed by accident).')
-    print ('? = usage (this).')
-    print ('empty command tries basic reshuffling and prints out the cards again.')
-    print ('? gives hints: /?g ?o ?m games options meta, g is default.')
+    print('========meta========')
+    print('l=loads a game, s=saves, lp=load previous/latest saved')
+    print('lo/so loads/saves options.')
+    print('u = undo, u1-u10 undoes that many moves, undo does 11+, tu tracks undo.')
+    print('ua = shows current move/undo array.')
+    print('uc = shows current command list.')
+    print('ux = shows current command list excluding meta-commands.')
+    print('qu quits (q could be typed by accident).')
+    print('? = usage (this).')
+    print('empty command tries basic reshuffling and prints out the cards again.')
+    print('? gives hints: /?g ?o ?m games options meta, g is default.')
 
 
 def first_empty_spare():
@@ -1364,10 +1357,10 @@ def undo_moves(to_undo):
     if to_undo == 0:
         print('No moves undone.')
         return 0
-    global moveList
+    global move_list
     global total_undo
-    if len(moveList) == 0:
-        print ('Nothing to undo.')
+    if len(move_list) == 0:
+        print('Nothing to undo.')
         return 0
     global elements
     elements = [row[:] for row in backup]
@@ -1376,32 +1369,31 @@ def undo_moves(to_undo):
     global spares
     spares = [0, 0, 0, 0]
     for _ in range(0, to_undo):
-        moveList.pop()
+        move_list.pop()
         if total_undo > -1:
             total_undo += 1
     global in_undo
     in_undo = True
     global undo_idx
-    for undo_idx in range(0, len(moveList)):
-        read_cmd(str(moveList[undo_idx]))
-        if trackUndo == 1:
+    for undo_idx in range(0, len(move_list)):
+        read_cmd(str(move_list[undo_idx]))
+        if track_undo == 1:
             in_undo = False
-            printCards()
+            print_cards()
             in_undo = True
     undo_idx = 0
     in_undo = False
-    checkFound()
-    printCards()
+    check_found()
+    print_cards()
     return 1
 
 
 def load_game(game_name):
-    global time
     global total_undo
     global total_reset
-    global startTime
+    global start_time
     original = open(save_file, "r")
-    startTime = -1
+    start_time = -1
     while True:
         line = original.readline()
         if line.startswith('moves='):
@@ -1411,179 +1403,175 @@ def load_game(game_name):
                 line = original.readline().strip()
                 elements[y] = [int(i) for i in line.split()]
                 backup[y] = [int(i) for i in line.split()]
-            global moveList
+            global move_list
             templine = original.readline()
-            moveList = templine.strip().split() # this is the list of moves
-            global cmdList
-            global cmdNoMeta
-            cmdList = []
-            cmdNoMeta = []
+            move_list = templine.strip().split()  # this is the list of moves
+            global cmd_list
+            global cmd_no_meta
+            cmd_list = []
+            cmd_no_meta = []
             line = original.readline().strip()
-            while (re.search("^#end of", line) == False):
+            while not re.search("^#end of", line):
                 print(line + " read in")
-                if re.search("^#cmdNoMeta", line):
-                    cmdNoMeta = re.sub("^#cmdNoMeta=", "", line).split(',')
-                if re.search("^#cmdList", line):
-                    cmdList = re.sub("^#cmdList=", "", line).split(',')
+                if re.search("^#cmd_no_meta", line):
+                    cmd_no_meta = re.sub("^#cmd_no_meta=", "", line).split(',')
+                if re.search("^#cmd_list", line):
+                    cmd_list = re.sub("^#cmd_list=", "", line).split(',')
                 line = original.readline().strip()
             original.close()
-            if len(moveList) > 0:
-                if len(cmdNoMeta) == 0:
-                    cmdNoMeta = list(moveList)
-                if len(cmdList) == 0:
-                    cmdList = list(moveList)
+            if len(move_list) > 0:
+                if len(cmd_no_meta) == 0:
+                    cmd_no_meta = list(move_list)
+                if len(cmd_list) == 0:
+                    cmd_list = list(move_list)
             global in_undo
             in_undo = True
-            initSide(0)
+            init_side(0)
             global undo_idx
-            for undo_idx in range(0, len(moveList)):
-                read_cmd(str(moveList[undo_idx]))
-                if trackUndo == 1:
+            for undo_idx in range(0, len(move_list)):
+                read_cmd(str(move_list[undo_idx]))
+                if track_undo == 1:
                     in_undo = False
-                    printCards()
+                    print_cards()
                     in_undo = True
             in_undo = False
-            checkFound()
-            printCards()
+            check_found()
+            print_cards()
             global totalFoundThisTime
             global cardlist
             totalFoundThisTime = 0
             cardlist = ''
-            print ("Successfully loaded " + game_name.replace(r'^.=', ''))
+            print("Successfully loaded " + game_name.replace(r'^.=', ''))
             # this was in unreachable code and is probably wrong but I can check to delete it later (?)
             # total_undo = -1
             # total_reset = -1
             return 1
         if not line:
             break
-    print (re.sub(r'^.=', '', game_name) + ' save game not found.')
+    print(re.sub(r'^.=', '', game_name) + ' save game not found.')
     original.close()
     return 0
 
 
-def saveGame(game_name):
+def save_game(game_name):
     savfi = open(save_file, "r")
     linecount = 0
     for line in savfi:
         linecount += 1
         if line.strip() == game_name:
-            print ("Duplicate save game name found at line %d." % linecount)
+            print("Duplicate save game name found at line %d." % linecount)
             return
     savfi.close()
     with open(save_file, "a") as myfile:
         myfile.write(game_name + "\n")
         for y in range(1, 9):
             myfile.write(' '.join(str(x) for x in backup[y]) + "\n")
-        myfile.write(' '.join(moveList) + "\n")
-        if savePosition:
+        myfile.write(' '.join(move_list) + "\n")
+        if save_position:
             for y in range(1, 9):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + game_name + "\n")
-        myfile.write("#cmdNoMeta=" + ', '.join(cmdNoMeta) + '\n')
-        myfile.write("#cmdList=" + ', '.join(cmdList) + '\n')
+        myfile.write("#cmd_no_meta=" + ', '.join(cmd_no_meta) + '\n')
+        myfile.write("#cmd_list=" + ', '.join(cmd_list) + '\n')
     gn2 = game_name.replace(r'^.=', '')
-    print ("Successfully saved game as " + gn2)
+    print("Successfully saved game as " + gn2)
     return 0
 
 
-def reverseCard(myCard):
-    retVal = 0
+def reverse_card(my_card):
+    ret_val = 0
     for i in range(0, 5):
         if i == 4:
             return -2
-        if re.search(suits[i].lower(), myCard):
-            retVal = 13 * i
+        if re.search(suits[i].lower(), my_card):
+            ret_val = 13 * i
             break
     for i in range(0, 13):
-        if re.search(cards[i].lower(), ' ' + myCard):
-            retVal += (i + 1)
-            return retVal
+        if re.search(cards[i].lower(), ' ' + my_card):
+            ret_val += (i + 1)
+            return ret_val
     return -1
 
 
-def cardEval(myCmd):
-    ary = re.split('[ ,]', myCmd)
+def card_eval(my_cmd):
+    ary = re.split('[ ,]', my_cmd)
     for word in ary:
         if word == 'e':
             continue
-        sys.stdout.write(' ' + str(reverseCard(word)))
-    print ("")
+        sys.stdout.write(' ' + str(reverse_card(word)))
+    print("")
     return
 
 
-def goBye():
-    global curGames
-    global maxGames
-    if curGames * 2 < maxGames:
-        print ("Great job, leaving well before you played all you could've.")
-    elif curGames < maxGames:
-        print ("Good job, leaving before you played all you could've.")
+def go_bye():
+    global cur_games
+    global max_games
+    if cur_games * 2 < max_games:
+        print("Great job, leaving well before you played all you could've.")
+    elif cur_games < max_games:
+        print("Good job, leaving before you played all you could've.")
     else:
-        print ("Bye!")
+        print("Bye!")
     if time_matters:
-        writeTimeFile()
-    closeLockFile()
+        write_time_file()
+    close_lock_file()
     exit()
 
 
-def read_cmd(thisCmd):
+def read_cmd(this_cmd):
     global debug
-    global wonThisCmd
+    global won_this_cmd
     global cmd_churn
     global vertical
-    global dblSzCards
-    global autoReshuf
+    global dbl_sz_cards
+    global auto_reshuf
     global elements
     global force
-    global trackUndo
+    global track_undo
     global total_reset
-    global saveOnWin
-    global savePosition
-    global chainShowAll
-    wonThisCmd = False
+    global save_on_win
+    global save_position
+    global chain_show_all
+    won_this_cmd = False
     prefix = ''
     force = 0
-    checkFound()
-    if thisCmd == '':
-        for _ in range(0, deliberateNuisanceRows):
+    check_found()
+    if this_cmd == '':
+        for _ in range(0, deliberate_nuisance_rows):
             print("DELIBERATE NUISANCE")
-        global input
-        try:
-            input = raw_input
-        except NameError:
-            pass
-        name = input("Move:").strip()
+        name = input("Move:")
+        name = name.strip()
         if name == '/':  # special case for slash/backslash
             debug = 1 - debug
-            print ('debug', onOff[debug])
-            cmdList.append(name)
+            print('debug', on_off[debug])
+            cmd_list.append(name)
             return
         if name == '\\':
-            temp = len(moveList)
+            temp = len(move_list)
             totalmoves = 0
             cmd_churn = 1
             while automove():
                 totalmoves = totalmoves + 1
             cmd_churn = 0
-            if temp == len(moveList):
+            if temp == len(move_list):
                 print("No moves done.")
             else:
-                printCards()
-                printFound()
-                print (totalmoves, "total moves.")
-            cmdNoMeta.append(name)
-            cmdList.append(name)
+                print_cards()
+                print_found()
+                print(totalmoves, "total moves.")
+            cmd_no_meta.append(name)
+            cmd_list.append(name)
             return
         name = re.sub('[\\\/]', '', name)
-        cmdNoMeta.append(name)
-        cmdList.append(name)
+        cmd_no_meta.append(name)
+        cmd_list.append(name)
         if name[:2] == 'e ':
-            cardEval(name)
+            card_eval(name)
             return
         if name[:2] != 'l=' and name[:2] != 's=':
             name = name.replace(' ', '')
     else:
-        name = thisCmd
+        name = this_cmd
     if name == '*':
         while reshuf(-1):
             pass
@@ -1592,187 +1580,187 @@ def read_cmd(thisCmd):
     if len(name) % 2 == 0 and len(name) >= 2:
         temp = int(len(name) / 2)
         if name[:] == name[temp:]:
-            print ("Looks like a duplicate command, so I'm cutting it in half.")
+            print("Looks like a duplicate command, so I'm cutting it in half.")
             name = name[temp:]
     if name == 'tu':
-        trackUndo = 1 - trackUndo
+        track_undo = 1 - track_undo
         if not in_undo:
-            print ("trackUndo now " + onOff[trackUndo])
-        cmdNoMeta.pop()
+            print("track_undo now " + on_off[track_undo])
+        cmd_no_meta.pop()
         return
     if len(name) == 0:
-        anyReshuf = False
+        any_reshuf = False
         while reshuf(-1):
-            anyReshuf = True
-        if anyReshuf:
-            moveList.append('*')
+            any_reshuf = True
+        if any_reshuf:
+            move_list.append('*')
         else:
-            cmdNoMeta.pop()
-        printCards()
+            cmd_no_meta.pop()
+        print_cards()
         return
     if name[0] == '>' and name[1:].isdigit:
-        print (name[1:], "becomes", tocard(int(name[1:])))
-        cmdNoMeta.pop()
+        print(name[1:], "becomes", to_card(int(name[1:])))
+        cmd_no_meta.pop()
         return
-    global onlymove
-    onlymove = 0
+    global only_move
+    only_move = 0
     if len(name) > 3:
         if name[2] == '-':
-            onlymove = re.sub(r'.*-', '', name)
-            if not onlymove.isdigit():
-                print ('Format is ##-#.')
+            only_move = re.sub(r'.*-', '', name)
+            if not only_move.isdigit():
+                print('Format is ##-#.')
                 return
-            onlymove = int(onlymove)
+            only_move = int(only_move)
             name = re.sub(r'-.*', '', name)
-    #### saving/loading comes first.
+    # saving/loading comes first.
     if name == 'lp':
         original = open(save_file, "r")
         o1 = re.compile(r'^s=')
-        newSave = ""
+        new_save = ""
         while True:
             line = original.readline()
             if o1.match(line):
-                newSave = line
+                new_save = line
             if not line:
                 break
-        name = newSave.strip()
+        name = new_save.strip()
         name = "l" + name[1:]
-        print ("Loading " + name[2:])
+        print("Loading " + name[2:])
     if name == 'l' or name == 's' or name == 'l=' or name == 's=':
-        print ("load/save needs = and then a name. lp loads the last in the save file.")
-        cmdNoMeta.pop()
+        print("load/save needs = and then a name. lp loads the last in the save file.")
+        cmd_no_meta.pop()
         return
     if len(name) > 1:
         if name[0] == 'l' and name[1] == '=':
-            cmdNoMeta.pop()
+            cmd_no_meta.pop()
             load_game(re.sub(r'^l=', 's=', name))
             return
         if name[0] == 's' and name[1] == '=':
-            cmdNoMeta.pop()
-            saveGame(name.strip())
+            cmd_no_meta.pop()
+            save_game(name.strip())
             return
     if name == "lo":
-        cmdNoMeta.pop()
-        readOpts()
+        cmd_no_meta.pop()
+        read_opts()
         return
     if name == "so":
-        cmdNoMeta.pop()
-        sendOpts()
+        cmd_no_meta.pop()
+        send_opts()
         return
     if name == 'q':
-        cmdNoMeta.pop()
-        print ("QU needed to quit, so you don't type Q accidentally.")
+        cmd_no_meta.pop()
+        print("QU needed to quit, so you don't type Q accidentally.")
         return
     if name == 'qu':
-        cmdNoMeta.pop()
-        goBye()
+        cmd_no_meta.pop()
+        go_bye()
     if name == 'ws' or name == 'sw':
-        cmdNoMeta.pop()
-        saveOnWin = not saveOnWin
-        print ("Save on win is now %s." % ("on" if saveOnWin else "off"))
+        cmd_no_meta.pop()
+        save_on_win = not save_on_win
+        print("Save on win is now %s." % ("on" if save_on_win else "off"))
         return
     if name == 'ps' or name == 'sp':
-        cmdNoMeta.pop()
-        savePosition = not savePosition
-        print ("Save position with moves/start is now %s." % ("on" if savePosition else "off"))
+        cmd_no_meta.pop()
+        save_position = not save_position
+        print("Save position with moves/start is now %s." % ("on" if save_position else "off"))
         return
     if name == 'u':
         undo_moves(1)
         return
     if name == 'h':
-        if not slipUnder():
-            cmdNoMeta.pop()
-            print ("No slip-unders found.")
+        if not slip_under():
+            cmd_no_meta.pop()
+            print("No slip-unders found.")
         return
     if name == 'p':
-        oldMoves = len(moveList)
-        anyDump = 0
-        global breakMacro
+        old_moves = len(move_list)
+        any_dump = 0
+        global break_macro
         while best_dump_row() > 0:
-            anyDump = 1
-            newDump = best_dump_row()
-            print ("Dumping row " + str(newDump))
-            if chains(newDump) == len(elements[newDump]) and not cmd_churn:
+            any_dump = 1
+            new_dump = best_dump_row()
+            print("Dumping row " + str(new_dump))
+            if chains(new_dump) == len(elements[new_dump]) and not cmd_churn:
                 shufwarn()
                 return
-            rip_up(newDump)
-            if len(elements[newDump]) > 0:
-                if in_order(newDump) != 1:  # or elements[newDump][0] % 13 != 0
-                    print ("Row %d didn't unfold all the way." % newDump)
+            rip_up(new_dump)
+            if len(elements[new_dump]) > 0:
+                if in_order(new_dump) != 1:  # or elements[new_dump][0] % 13 != 0
+                    print("Row %d didn't unfold all the way." % new_dump)
                     break
-            if breakMacro == 1:
-                breakMacro = 0
+            if break_macro == 1:
+                break_macro = 0
                 break
-            checkFound()
-            if breakMacro == 1:
-                breakMacro = 0
+            check_found()
+            if break_macro == 1:
+                break_macro = 0
                 break
             if debug:
                 print("Check: " + " ".join(str(x) for x in found) + " <sp found> " + " ".join(str(x) for x in spares))
         cmd_churn = False
         if debug:
-            print ("Won this cmd: " + str(wonThisCmd))
-        if anyDump == 0:
-            print ("No rows found to dump.")
-        elif not wonThisCmd:
-            print (str(len(moveList) - oldMoves) + " moves total.")
-            printCards()
-        elif spares.sum == 52:
-            print ("Not sure why but I need to check for a win here.")
-            checkWin()
-        wonThisCmd = False
+            print("Won this cmd: " + str(won_this_cmd))
+        if any_dump == 0:
+            print("No rows found to dump.")
+        elif not won_this_cmd:
+            print(str(len(move_list) - old_moves) + " moves total.")
+            print_cards()
+        elif sum(spares) == 52:
+            print("Not sure why but I need to check for a win here.")
+            check_win()
+        won_this_cmd = False
         return
     if name[:1] == 'u':
-        bigUndo = False
+        big_undo = False
         if name[:4] == 'undo':
-            bigUndo = True
+            big_undo = True
             name = name[4:]
         else:
             name = name[1:]
         if name == 'a':
-            cmdNoMeta.pop()
+            cmd_no_meta.pop()
             if not in_undo:
-                print ('Move list,', len(moveList), 'moves so far:', (moveList))
+                print('Move list,', len(move_list), 'moves so far:', move_list)
             return
         if name == 'c':
-            cmdNoMeta.pop()
+            cmd_no_meta.pop()
             if not in_undo:
-                print ('Command list,', len(cmdList), 'commands so far:', (cmdList))
+                print('Command list,', len(cmd_list), 'commands so far:', cmd_list)
             return
         if name == 'x':
-            cmdNoMeta.pop()
+            cmd_no_meta.pop()
             if not in_undo:
-                print ('Trimmed command list,', len(cmdNoMeta), 'commands so far:', (cmdNoMeta))
+                print('Trimmed command list,', len(cmd_no_meta), 'commands so far:', cmd_no_meta)
             return
         if name == 's':
-            if len(moveList) == 0:
-                print ("You've made no moves yet.")
+            if len(move_list) == 0:
+                print("You've made no moves yet.")
                 return
-            d1 = moveList[len(moveList) - 1][0]
+            d1 = move_list[len(move_list) - 1][0]
             temp = 0
-            while (temp < len(moveList) - 1) and (d1 == moveList[len(moveList) - temp - 1][0]):
+            while (temp < len(move_list) - 1) and (d1 == move_list[len(move_list) - temp - 1][0]):
                 temp += 1
             undo_moves(temp)
-            print ("Last " + str(temp) + " moves started with " + d1)
+            print("Last " + str(temp) + " moves started with " + d1)
             return
         if not name.isdigit():
-            print ("Need to undo a number, or A for a list, S for same row as most recent move, or nothing." \
+            print("Need to undo a number, or A for a list, S for same row as most recent move, or nothing." +
                   " C=commands X=commands minus meta.")
             return
-        if int(name) > len(moveList):
-            print ("Tried to do %d undo%s, can only undo %d." % (int(name), plur(int(name)), len(moveList)))
+        if int(name) > len(move_list):
+            print("Tried to do %d undo%s, can only undo %d." % (int(name), plur(int(name)), len(move_list)))
             return
         if int(name) > 10:
-            if bigUndo:
-                print (
+            if big_undo:
+                print(
                     "This game doesn't allow undoing more than 10 at a time except with UND,"
                     " because u78 would be kind of bogus if you changed your mind from undoing to moving.")
                 return
-            print ("UNDOing more than 10 moves.")
+            print("UNDOing more than 10 moves.")
         undo_moves(int(name))
         return
     if name[0] == 'h':
-        cmdNoMeta.pop()
+        cmd_no_meta.pop()
         name = re.sub(r'^h', '', name)
         if name.isdigit() == 0:
             if name == 'q':
@@ -1784,84 +1772,84 @@ def read_cmd(thisCmd):
             elif name == 'a':
                 name = 1
             else:
-                print ('Need a number, or AJQK.')
+                print('Need a number, or AJQK.')
                 return
         if int(name) < 1 or int(name) > 13:
-            print ('Need 1-13.')
+            print('Need 1-13.')
             return
         global highlight
         highlight = int(name)
         if highlight == 0:
-            print ('Highlighting off.')
+            print('Highlighting off.')
         else:
-            print ('Now highlighting', cards[highlight - 1])
-        printCards()
+            print('Now highlighting', cards[highlight - 1])
+        print_cards()
         return
     if name[0] == '?':
-        cmdNoMeta.pop()
+        cmd_no_meta.pop()
         if len(name) is 1 or name[1].lower() == 'g':
-            usageGame()
+            usage_game()
         elif name[1].lower() == 'm':
             usage_meta()
         elif name[1].lower() == 'o':
-            usageOptions()
+            usage_options()
         else:
-            print ("Didn't recognize subflag", name[1].lower(), "so doing default of game command usage.")
-            usageGame()
+            print("Didn't recognize subflag", name[1].lower(), "so doing default of game command usage.")
+            usage_game()
         return
     if name == "r" or name == "rr":
-        forceFoundation()
+        force_foundation()
         return
     if name[0] == 'f' or (len(name) > 2 and name[2] == 'f'):
         name = name.replace("f", "")
         force = 1
         prefix = prefix + 'f'
         if len(name) == 0:
-            print ("You need a from/to, or at the very least, a from.")
+            print("You need a from/to, or at the very least, a from.")
             return
     if name == '-' or name == '=':
-        if len(moveList) == 0:
-            print ("Nothing to undo.")
+        if len(move_list) == 0:
+            print("Nothing to undo.")
             return
         elements = [row[:] for row in backup]
-        initSide(1)
-        printCards()
-        checkFound()
+        init_side(1)
+        print_cards()
+        check_found()
         total_reset += 1
         return
     if name == "?":
-        cmdNoMeta.pop()
-        print ('Maximum card length moves: ', maxmove())
+        cmd_no_meta.pop()
+        print('Maximum card length moves: ', maxmove())
         return
     if name == "":
-        printCards()
+        print_cards()
         return
     if name == '+':
-        cmdNoMeta.pop()
-        dblSzCards = not dblSzCards
-        print ("Toggled dblSzCards to %s." % (onOff[dblSzCards]))
-        printCards()
+        cmd_no_meta.pop()
+        dbl_sz_cards = not dbl_sz_cards
+        print("Toggled dbl_sz_cards to %s." % (on_off[dbl_sz_cards]))
+        print_cards()
         return
     if name == 'cs':
-        cmdNoMeta.pop()
-        chainShowAll = not chainShowAll
-        print ("Toggled chainShowAll to %s." % (onOff[chainShowAll]))
-        printCards()
+        cmd_no_meta.pop()
+        chain_show_all = not chain_show_all
+        print("Toggled chain_show_all to %s." % (on_off[chain_show_all]))
+        print_cards()
         return
     if name == 'e':
-        cmdNoMeta.pop()
-        autoReshuf = not autoReshuf
-        print ("Toggled reshuffling to %s." % (onOff[autoReshuf]))
+        cmd_no_meta.pop()
+        auto_reshuf = not auto_reshuf
+        print("Toggled reshuffling to %s." % (on_off[auto_reshuf]))
         reshuf(-1)
-        printCards()
+        print_cards()
         return
     if name == 'v':
-        cmdNoMeta.pop()
+        cmd_no_meta.pop()
         vertical = not vertical
-        print ("Toggled vertical view to %s." % (onOff[vertical]))
-        printCards()
+        print("Toggled vertical view to %s." % (on_off[vertical]))
+        print_cards()
         return
-    #### mostly meta commands above here. Keep them there.
+    # mostly meta commands above here. Keep them there.
     preverified = 0
     if len(name) == 2:
         n1 = ord(name[0])
@@ -1869,98 +1857,98 @@ def read_cmd(thisCmd):
         if (n1 > 96) and (n1 < 101):
             if (n2 > 96) and (n2 < 101):
                 if n1 == n2:
-                    print ("Assuming you meant to do something with " + name[0] + ".")
+                    print("Assuming you meant to do something with " + name[0] + ".")
                     name = name[0]
                 elif spares[n1 - 97] > 0 and spares[n2 - 97] > 0:
-                    cmdNoMeta.pop()
-                    print ("Neither cell is empty, though shuffling does nothing.")
+                    cmd_no_meta.pop()
+                    print("Neither cell is empty, though shuffling does nothing.")
                     return
                 elif spares[n1 - 97] == 0 and spares[n2 - 97] == 0:
-                    cmdNoMeta.pop()
-                    print ("Both cells are empty, so this does nothing.")
+                    cmd_no_meta.pop()
+                    print("Both cells are empty, so this does nothing.")
                     return
                 else:
-                    cmdNoMeta.pop()
-                    print ('Shuffling between empty squares does nothing, so I\'ll just pass here.')
+                    cmd_no_meta.pop()
+                    print('Shuffling between empty squares does nothing, so I\'ll just pass here.')
                     return
     if len(name) == 1:
         if name.isdigit():
             i = int(name)
             if i > 8 or i < 1:
-                print ('Need 1-8.')
+                print('Need 1-8.')
                 return
             if len(elements[i]) is 0:
-                cmdNoMeta.pop()
-                print ('Acting on an empty row.')
+                cmd_no_meta.pop()
+                print('Acting on an empty row.')
                 return
             if any_doable_limit(i):
                 name = name + str(any_doable_limit(i))
-            elif anyDoable(i, 0):
-                name = name + str(anyDoable(i, 0))
+            elif any_doable(i, 0):
+                name = name + str(any_doable(i, 0))
             elif chains(i) > 1 and can_dump(i):
                 if chains(i) == len(elements[i]) and not cmd_churn:
                     shufwarn()
                     return
                 name = name + str(can_dump(i))
                 preverified = 1
-            elif chains(i) == 1 and spareUsed() < 4:
+            elif chains(i) == 1 and spare_used() < 4:
                 name = name + "e"
-            elif firstEmptyRow() and spareUsed() == 4:
-                if doable(i, firstEmptyRow(), 0) == len(elements[i]):
+            elif first_empty_row() and spare_used() == 4:
+                if doable(i, first_empty_row(), 0) == len(elements[i]):
                     shufwarn()
                     return
-                name = name + str(firstEmptyRow())
-            elif anyDoable(i, 1) and chains(i) < len(elements[i]):
-                name = name + str(anyDoable(i, 1))
+                name = name + str(first_empty_row())
+            elif any_doable(i, 1) and chains(i) < len(elements[i]):
+                name = name + str(any_doable(i, 1))
             else:
                 name = name + 'e'
             if should_print():
-                print ("New implied command %s." % name)
+                print("New implied command %s." % name)
         elif 101 > ord(name[0]) > 96:
-            if firstMatchableRow(spares[ord(name[0]) - 97]) > 0:
-                name = name + str(firstMatchableRow(spares[ord(name[0]) - 97]))
-            elif firstEmptyRow() > 0:
-                name = name + str(firstEmptyRow())
+            if first_matchable_row(spares[ord(name[0]) - 97]) > 0:
+                name = name + str(first_matchable_row(spares[ord(name[0]) - 97]))
+            elif first_empty_row() > 0:
+                name = name + str(first_empty_row())
             else:
-                cmdNoMeta.pop()
-                print ('No empty row/column to drop from spares.')
+                cmd_no_meta.pop()
+                print('No empty row/column to drop from spares.')
                 return
         else:
-            cmdNoMeta.pop()
-            print ("Unknown 1-letter command.")
+            cmd_no_meta.pop()
+            print("Unknown 1-letter command.")
             return
-    #### two letter commands below here.
+    # two letter commands below here.
     if len(name) > 2:
-        gotReversed = 0
-        oldMoves = len(moveList)
+        got_reversed = 0
+        old_moves = len(move_list)
         if len(name) == 3 and name.isdigit:  # special case for reversing a move e.g. 64 46 can become 646
             if name[0] == name[2]:
                 read_cmd(name[0] + name[1])
                 read_cmd(name[1] + name[0])
                 return
         if name.isdigit():  # for, say ,6873 to move 73 83 63
-            gotReversed = 1
-            cmd_churn = not chainShowAll
-            oldTurns = len(moveList)
+            got_reversed = 1
+            cmd_churn = not chain_show_all
+            old_turns = len(move_list)
             for jj in reversed(range(0, len(name) - 1)):
-                if not wonThisCmd:
+                if not won_this_cmd:
                     if name[jj] != name[jj + 1]:
                         temp = name[jj] + name[len(name) - 1]
-                        print ("Moving " + temp)
+                        print("Moving " + temp)
                         read_cmd(name[jj] + name[len(name) - 1])
             cmd_churn = False
-            if len(moveList) > oldTurns and not chainShowAll:
-                printCards()
-            if name.isdigit() and wonThisCmd is False:
-                print (
-                    'Chained ' + str(len(moveList) - oldMoves) + ' of ' + str(len(name) - 1) + ' moves successfully.')
-        if gotReversed == 0:
-            print ('Only 2 chars per command.')
-            cmdNoMeta.pop()
+            if len(move_list) > old_turns and not chain_show_all:
+                print_cards()
+            if name.isdigit() and won_this_cmd is False:
+                print(
+                    'Chained ' + str(len(move_list) - old_moves) + ' of ' + str(len(name) - 1) + ' moves successfully.')
+        if got_reversed == 0:
+            print('Only 2 chars per command.')
+            cmd_no_meta.pop()
         return
     if len(name) < 2:
-        print ('Must have 2 chars per command, unless you are willing to use an implied command.')
-        cmdNoMeta.pop()
+        print('Must have 2 chars per command, unless you are willing to use an implied command.')
+        cmd_no_meta.pop()
         return
     if name[0] == 'r' or name[1] == 'r':
         tofound = name.replace("r", "")
@@ -1971,65 +1959,65 @@ def read_cmd(thisCmd):
         elif (ord(tofound) > 96) and (ord(tofound) < 101):
             tempspare = ord(tofound) - 97
         else:
-            print ("1-8 a-d are needed with R, or (nothing) tries to force everything.")
-            cmdNoMeta.pop()
+            print("1-8 a-d are needed with R, or (nothing) tries to force everything.")
+            cmd_no_meta.pop()
             return
         if temprow > -1:
             if temprow > 8 or temprow < 1:
-                print ('Not a valid row.')
-                cmdNoMeta.pop()
+                print('Not a valid row.')
+                cmd_no_meta.pop()
                 return
             if len(elements[temprow]) == 0:
-                print ('Empty row.')
-                cmdNoMeta.pop()
+                print('Empty row.')
+                cmd_no_meta.pop()
                 return
             if foundable(elements[temprow][len(elements[temprow]) - 1]):
                 found[(elements[temprow][len(elements[temprow]) - 1] - 1) // 13] += 1
                 elements[temprow].pop()
                 if not in_undo:
-                    moveList.append(name)
-                slipUnder()
-                checkFound()
+                    move_list.append(name)
+                slip_under()
+                check_found()
                 reshuf(-1)
-                printCards()
+                print_cards()
                 return
-            print ('Sorry, found nothing.')
-            cmdNoMeta.pop()
+            print('Sorry, found nothing.')
+            cmd_no_meta.pop()
             return
         if tempspare > -1:
             if foundable(spares[tempspare]):
                 found[(spares[tempspare] - 1) // 13] += 1
                 spares[tempspare] = 0
-                print ('Moving from spares.')
+                print('Moving from spares.')
                 if not in_undo:
-                    moveList.append(name)
-                checkAgain = True
-                while checkAgain:
-                    checkAgain = False
-                    checkAgain |= checkFound()
+                    move_list.append(name)
+                check_again = True
+                while check_again:
+                    check_again = False
+                    check_again |= check_found()
                     if force == 0:
-                        checkAgain |= reshuf(-1)
+                        check_again |= reshuf(-1)
                     pass
-                checkFound()
+                check_found()
                 reshuf(-1)
-                printCards()
+                print_cards()
             else:
-                print ('Can\'t move from spares.')  # /? 3s onto 2s with nothing else, all filled
-                cmdNoMeta.pop()
+                print('Can\'t move from spares.')  # /? 3s onto 2s with nothing else, all filled
+                cmd_no_meta.pop()
             return
-        print ('Must move 1-8 or a-d.')
-        cmdNoMeta.pop()
+        print('Must move 1-8 or a-d.')
+        cmd_no_meta.pop()
         return
     if len(name) == 2 and (name[0] == 'p' or name[1] == 'p'):
         q2 = (name.replace("p", ""))
         if not q2.isdigit():
-            print ("p command requires a digit.")
-            cmdNoMeta.pop()
+            print("p command requires a digit.")
+            cmd_no_meta.pop()
             return
         if rip_up(int(q2)):
             cmd_churn = False
-            printCards()
-            printFound()
+            print_cards()
+            print_found()
         else:
             cmd_churn = False
         return
@@ -2037,184 +2025,183 @@ def read_cmd(thisCmd):
         t1 = int(name[0])
         t2 = int(name[1])
         if t1 == t2:
-            print ('Moving a row to itself does nothing.')
-            cmdNoMeta.pop()
+            print('Moving a row to itself does nothing.')
+            cmd_no_meta.pop()
             return
         if t1 < 1 or t2 < 1 or t1 > 8 or t2 > 8:
-            print ("Need digits from 1-8.")
-            cmdNoMeta.pop()
+            print("Need digits from 1-8.")
+            cmd_no_meta.pop()
             return  # don't put anything above this
         if len(elements[t1]) == 0 and not in_undo:
-            print ('Nothing to move from.')
-            cmdNoMeta.pop()
+            print('Nothing to move from.')
+            cmd_no_meta.pop()
             return
         if len(elements[t2]) == 0:
-            if chains(t1) == len(elements[t1]) and not cmd_churn and force == 0 and onlymove == 0:
-                cmdNoMeta.pop()
+            if chains(t1) == len(elements[t1]) and not cmd_churn and force == 0 and only_move == 0:
+                cmd_no_meta.pop()
                 shufwarn()
                 return
-        tempdoab = doable(t1, t2, 1 - preverified)
-        if tempdoab == -1:
+        temp_doab = doable(t1, t2, 1 - preverified)
+        if temp_doab == -1:
             if not cmd_churn:
-                print ('Not enough space.')
-                cmdNoMeta.pop()
+                print('Not enough space.')
+                cmd_no_meta.pop()
             return
-        if tempdoab == 0:
+        if temp_doab == 0:
             if in_undo:
-                # print "Move", str(undo_idx), "(", thisCmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
+                # print "Move", str(undo_idx), "(", this_cmd, t1, t2, preverified, ") seems to have gone wrong. Use ua."
                 if undo_idx == 15:
-                    printCards()
+                    print_cards()
                     exit()
             else:
-                print ('Those cards don\'t match up.')
-                cmdNoMeta.pop()
+                print('Those cards don\'t match up.')
+                cmd_no_meta.pop()
             return
         oldchain = chains(t1)
-        shiftcards(t1, t2, tempdoab)
+        shiftcards(t1, t2, temp_doab)
         if not in_undo:
-            if tempdoab < oldchain and len(elements[t2]) == 0:
-                moveList.append(str(t1) + str(t2) + "-" + str(tempdoab))
-            elif onlymove > 0:
-                moveList.append(name + "-" + str(onlymove))
+            if temp_doab < oldchain and len(elements[t2]) == 0:
+                move_list.append(str(t1) + str(t2) + "-" + str(temp_doab))
+            elif only_move > 0:
+                move_list.append(name + "-" + str(only_move))
             else:
-                moveList.append(prefix + name)
-        checkAgain = True
-        while checkAgain:
-            checkAgain = False
-            checkAgain |= checkFound()
+                move_list.append(prefix + name)
+        check_again = True
+        while check_again:
+            check_again = False
+            check_again |= check_found()
             if force == 0:
-                checkAgain |= reshuf(-1)
-            checkAgain |= slipUnder()
+                check_again |= reshuf(-1)
+            check_again |= slip_under()
             pass
-        printCards()
+        print_cards()
         return
     if (ord(name[0]) > 96) and (ord(name[0]) < 101):  # a1 moves
-        mySpare = ord(name[0]) - 97
-        if spares[mySpare] == 0:
-            print ('Nothing in slot %d.' % (mySpare + 1))
-            cmdNoMeta.pop()
+        my_spare = ord(name[0]) - 97
+        if spares[my_spare] == 0:
+            print('Nothing in slot %d.' % (my_spare + 1))
+            cmd_no_meta.pop()
             return
         if not name[1].isdigit():
-            print ('Second letter not recognized.')
-            cmdNoMeta.pop()
+            print('Second letter not recognized.')
+            cmd_no_meta.pop()
             return
-        myRow = int(name[1])
-        if myRow < 1 or myRow > 8:
-            print ('To row must be between 1 and 8.')
-            cmdNoMeta.pop()
+        my_row = int(name[1])
+        if my_row < 1 or my_row > 8:
+            print('To row must be between 1 and 8.')
+            cmd_no_meta.pop()
             return
-        if (len(elements[myRow]) == 0) or (can_put(spares[mySpare], elements[myRow][len(elements[myRow]) - 1])):
-            elements[myRow].append(spares[mySpare])
-            spares[mySpare] = 0
+        if (len(elements[my_row]) == 0) or (can_put(spares[my_spare], elements[my_row][len(elements[my_row]) - 1])):
+            elements[my_row].append(spares[my_spare])
+            spares[my_spare] = 0
             if not in_undo:
-                moveList.append(name)
+                move_list.append(name)
             reshuf(-1)
-            slipUnder()
-            checkFound()
-            printCards()
+            slip_under()
+            check_found()
+            print_cards()
             return
-        print ("Can't put%s on%s." % (tocardX(spares[mySpare]), tocardX(elements[myRow][len(elements[myRow]) - 1])))
-        cmdNoMeta.pop()
+        print(
+             "Can't put%s on%s." % (to_card_x(spares[my_spare]),
+                                    to_card_x(elements[my_row][len(elements[my_row]) - 1])))
+        cmd_no_meta.pop()
         return
     if (ord(name[1]) > 96) and (ord(name[1]) < 102):  # 1a moves, but also 1e can be A Thing
         if not name[0].isdigit():
-            print ('First letter not recognized as a digit.')
+            print('First letter not recognized as a digit.')
             return
-        myToSpare = first_empty_spare()
-        if myToSpare == -1:
+        my_to_spare = first_empty_spare()
+        if my_to_spare == -1:
             if not cmd_churn:
-                print ('Nothing empty to move to. To which to move.')
-                cmdNoMeta.pop()
+                print('Nothing empty to move to. To which to move.')
+                cmd_no_meta.pop()
             return
         if name[1] != 'e':
-            myToSpare = ord(name[1]) - 97
-        myRow = int(name[0])
-        if myRow < 1 or myRow > 8:
-            print ('From row must be between 1 and 8.')
-            cmdNoMeta.pop()
+            my_to_spare = ord(name[1]) - 97
+        my_row = int(name[0])
+        if my_row < 1 or my_row > 8:
+            print('From row must be between 1 and 8.')
+            cmd_no_meta.pop()
             return
-        if len(elements[myRow]) == 0:
-            print ('Empty from-row.')
-            cmdNoMeta.pop()
+        if len(elements[my_row]) == 0:
+            print('Empty from-row.')
+            cmd_no_meta.pop()
             return
-        if spares[myToSpare] > 0:
-            myFirstE = firstEmptyRow()
-            if myFirstE > 0:
-                myRow = int(name[0])
-                rowIdx = len(elements[myRow]) - 1
-                gotOne = can_put(elements[myRow][rowIdx], spares[myToSpare])
-                while rowIdx > 0 and (
-                            can_put(elements[myRow][rowIdx], spares[myToSpare]) or can_put(elements[myRow][rowIdx],
-                                                                                           elements[myRow][
-                                                                                                   rowIdx - 1])):
-                    rowIdx = rowIdx - 1
-                    gotOne = True
-                if gotOne is True:
-                    read_cmd(name[1] + str(myFirstE))
-                    read_cmd(name[0] + str(myFirstE))
+        if spares[my_to_spare] > 0:
+            my_first_empty = first_empty_row()
+            if my_first_empty > 0:
+                my_row = int(name[0])
+                row_idx = len(elements[my_row]) - 1
+                got_one = can_put(elements[my_row][row_idx], spares[my_to_spare])
+                while row_idx > 0 and (
+                                      can_put(elements[my_row][row_idx], spares[my_to_spare]) or
+                                      can_put(elements[my_row][row_idx], elements[my_row][row_idx - 1])):
+                    row_idx = row_idx - 1
+                    got_one = True
+                if got_one is True:
+                    read_cmd(name[1] + str(my_first_empty))
+                    read_cmd(name[0] + str(my_first_empty))
                     return
             for temp in range(0, 4):
-                if spares[(myToSpare + temp) % 4] <= 0:
-                    print ("Spare %d already filled, picking %d instead" % (myToSpare + 1, (myToSpare + temp) % 4 + 1))
-                    myToSpare += temp
-                    myToSpare %= 4
+                if spares[(my_to_spare + temp) % 4] <= 0:
+                    print("Spare %d already filled, picking %d instead"
+                          % (my_to_spare + 1, (my_to_spare + temp) % 4 + 1))
+                    my_to_spare += temp
+                    my_to_spare %= 4
                     break
-            if spares[myToSpare] > 0:
-                print ("Oops, I somehow see all-full and not all full at the same time.")
-                cmdNoMeta.pop()
+            if spares[my_to_spare] > 0:
+                print("Oops, I somehow see all-full and not all full at the same time.")
+                cmd_no_meta.pop()
                 return
-        spares[myToSpare] = elements[myRow].pop()
+        spares[my_to_spare] = elements[my_row].pop()
         if not in_undo:
-            moveList.append(name)
-        tempMoveSize = -1
-        while tempMoveSize < len(moveList):
-            tempMoveSize = len(moveList)
-            tempRowSize = len(elements[myRow])
-            checkFound()
-            slipUnder()
-            if reshuf(myToSpare) or len(elements[myRow]) < tempRowSize:
+            move_list.append(name)
+        temp_move_size = -1
+        while temp_move_size < len(move_list):
+            temp_move_size = len(move_list)
+            temp_row_size = len(elements[my_row])
+            check_found()
+            slip_under()
+            if reshuf(my_to_spare) or len(elements[my_row]) < temp_row_size:
                 reshuf(-1)
-        printCards()
+        print_cards()
         return
-    print (name + ' not recognized, displaying usage.')
-    cmdNoMeta.pop()
-    usageGame()
+    print(name + ' not recognized, displaying usage.')
+    cmd_no_meta.pop()
+    usage_game()
 
 
 # start main program
 
-if disallowWriteSource and os.access(__file__, os.W_OK):
-    print ("Source file should not have write access outside of the game. attrib -R " + __file__ + \
+if disallow_write_source and os.access(__file__, os.W_OK):
+    print("Source file should not have write access outside of the game. attrib -R " + __file__ + 
           " or chmod 333 to get things going.")
     exit()
 
-readOpts()
+read_opts()
 
 # note that the Cmd line overrides what is in the options file
-parseCmdLine()
+parse_cmd_line()
 
 if time_matters and os.path.exists(time_file) and os.stat(time_file).st_size > 0:
-    readTimeFile()
+    read_time_file()
 
-if annoyingNudge:
-    try:
-        input = raw_input
-    except NameError:
-        pass
-    pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n").strip()
+if annoying_nudge:
+    pwd = input("Type TIME WASTING AM I, in reverse word order, in here.\n")
+    pwd = pwd.strip()
     # if pwd != "i am wasting time":
     if pwd != "I aM wAsTiNg TiMe":
         if pwd.lower() == "i am wasting time":
-            print ("Remember to put it in alternate caps case! I did this on purpose, to make it that much harder.")
+            print("Remember to put it in alternate caps case! I did this on purpose, to make it that much harder.")
             exit()
-        print ("Type I am wasting time, or you can't play.")
-        # exit()
+        print("Type I am wasting time, or you can't play.")
+        exit()
 
-openLockFile()
+open_lock_file()
 
-initSide(0)
-initCards()
-printCards()
+init_side(0)
+init_cards()
+print_cards()
 
 while win == 0:
     read_cmd('')
