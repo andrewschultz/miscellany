@@ -35,6 +35,9 @@ my $tabsInc = 0;
 
 my $count = 0;
 
+my $newUnch = 0;
+my $tabsUnch = 0;
+
 #########################option(s)
 my $printNewFiles = 0;
 my $toOutput = 0;
@@ -88,13 +91,7 @@ while ($a = <A>)
 
 }
 
-my $news;
-
-for my $x (sort {$sizes{$a} <=> $sizes{$b}} keys %sizes)
-{
-  $news .= "$x ($sizes{$x})<br />";
-  $count++; if ($count == 5) { last; }
-}
+my $news = smallest();
 
 print "TEST RESULTS:Notepad++ tabs,25,$totalFiles,0,(none yet)\n";
 print "TEST RESULTS:Notepad++ new files,15,$newFiles,0,$news\n";
@@ -107,8 +104,8 @@ if ($toOutput)
   close(A);
 }
 
-@newFiles = sort {numVal($a) <=> numVal($b)} (@newFiles);
-if ($printNewFiles) { print join(", ", @newFiles) . "\n"; }
+my @newFilesSort = sort {numVal($a) <=> numVal($b)} (@newFiles);
+if ($printNewFiles) { print join(", ", @newFilesSort) . "\n"; }
 
 if ($analyze)
 {
@@ -124,6 +121,8 @@ if ($analyze)
 	if ($b[1] > $newMax) { $newOverStreak++; } else { $newOverStreak = 0; }
 	if (($b[0] > $lastTabs) && ($lastTabs >= $tabMin)) { $tabsInc++; } elsif ($b[0] < $lastTabs) { $tabsInc = 0; }
 	if (($b[1] > $lastNew) && ($lastNew >= $newMin)) { $newInc++; } elsif ($b[1] < $lastNew) { $newInc = 0; }
+	$newUnch = ($lastNew == $b[1]);
+	$tabsUnch = ($lastTabs == $b[0]);
 	$lastNew = $b[1];
 	$lastTabs = $b[0];
 	#print "$b[0] $b[1] $tabsOverStreak $newOverStreak $tabsInc $newInc\n";
@@ -134,6 +133,8 @@ if ($analyze)
   if ($newInc > 1) { push (@errs, "NEW TABS grew $newInc times in a row."); }
   if ($tabsOverStreak > 1) { push (@errs, "OVERALL TABS too big $tabsOverStreak times in a row."); }
   if ($tabsInc > 1) { push (@errs, "OVERALL TABS grew $tabsInc times in a row."); }
+  push(@errs, "No new file change since last run") if $newUnch;
+  push(@errs, "No tab file change since last run") if $tabsUnch;
   if ($#errs > -1)
   {
     if ($htmlGen)
@@ -142,7 +143,14 @@ if ($analyze)
 	  print B "<html><title>Streak Error Stuff</title><body bgcolor=red><center><font size=+5>SES.PL RESULTS:</font></center>\n";
 	  for (@errs) { print B "<center><font size=+3>$_</font></center>\n"; }
 	  print B "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
-	  print B join(", ", @newFiles) if ($newFiles);
+	  print B join(", ", @newFiles) . "<br />\n" if ($newFiles);
+	  if (scalar $newFiles > 5)
+	  {
+	  print B "Smallest: " . smallest() . "<br />\n";
+	  print B "Largest: " . largest() . "<br />\n" ;
+	  print B "Leftest: " . join(", ", @newFiles[0..4]) . "<br />\n";
+	  print B "Rightest: " . join(", ", @newFiles[$#newFiles-4..$#newFiles]) . "<br />\n";
+	  }
 	  print B "</body></html>\n";
 	  close(B);
 	  if ($launch)
@@ -172,6 +180,30 @@ sub numVal
   my $temp = $_[0];
   $temp =~ s/.* //;
   return $temp;
+}
+
+sub smallest
+{
+my $count = 0;
+my $temp = "Smallest: ";
+for my $x (sort {$sizes{$a} <=> $sizes{$b}} keys %sizes)
+{
+  $temp .= "$x ($sizes{$x})<br />";
+  $count++; if ($count == 5) { last; }
+}
+return $temp;
+}
+
+sub largest
+{
+my $count = 0;
+my $temp = "Largest: ";
+for my $x (sort {$sizes{$b} <=> $sizes{$a}} keys %sizes)
+{
+  $temp .= "$x ($sizes{$x})<br />";
+  $count++; if ($count == 5) { last; }
+}
+return $temp;
 }
 
 sub usage
