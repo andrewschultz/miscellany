@@ -24,6 +24,8 @@ my $newMin = 5;
 my %sizes;
 
 my @newFiles;
+my @unsavedFiles;
+my @savedFiles;
 my $totalFiles=0;
 my $newFiles=0;
 my $tabsOverStreak = 0;
@@ -83,6 +85,14 @@ while ($a = <A>)
     $totalFiles++;
     if ($a =~ /\"new [0-9]+\"/)
     { $newFiles++; push (@newFiles, $fileName); }
+	elsif ($fileBackup)
+	{
+	  push(@unsavedFiles, $fileName);
+	}
+	else
+	{
+	  push(@savedFiles, $fileName);
+	}
 	if ($fileName =~ /^new [0-9]+$/ && (-f "$fileBackup"))
 	{
 	  $sizes{$fileName} = -s "$fileBackup";
@@ -135,6 +145,10 @@ if ($analyze)
   if ($tabsInc > 1) { push (@errs, "OVERALL TABS grew $tabsInc times in a row."); }
   push(@errs, "No new file change since last run") if $newUnch;
   push(@errs, "No tab file change since last run") if $tabsUnch;
+  if (scalar @unsavedFiles > 1)
+  {
+  print "Unsaved files: " . join(", ", @unsavedFiles) . "<br />\n";
+  }
   if ($#errs > -1)
   {
     if ($htmlGen)
@@ -144,12 +158,16 @@ if ($analyze)
 	  for (@errs) { print B "<center><font size=+3>$_</font></center>\n"; }
 	  print B "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
 	  print B join(", ", @newFiles) . "<br />\n" if ($newFiles);
-	  if (scalar $newFiles > 5)
+	  if (scalar @newFiles > 5)
 	  {
 	  print B "Smallest: " . smallest() . "<br />\n";
 	  print B "Largest: " . largest() . "<br />\n" ;
 	  print B "Leftest: " . join(", ", @newFiles[0..4]) . "<br />\n";
 	  print B "Rightest: " . join(", ", @newFiles[$#newFiles-4..$#newFiles]) . "<br />\n";
+	  }
+	  if (scalar @unsavedFiles > 1)
+	  {
+	  print B "Unsaved: " . join(", ", @unsavedFiles) . "<br />\n";
 	  }
 	  print B "</body></html>\n";
 	  close(B);
