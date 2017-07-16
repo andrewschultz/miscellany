@@ -926,9 +926,13 @@ def check_winning():
     global won_this_cmd
     won_this_cmd = True
     while True:
-        finish = input(
-            "You win in %d commands (%d including extraneous) and %d moves! Play again (Y/N, U to undo)?" %
-            (len(cmd_no_meta), len(cmd_list), len(move_list))).lower()
+        try:
+            finish = input(
+                "You win in %d commands (%d including extraneous) and %d moves! Play again (Y/N, U to undo)?" %
+                (len(cmd_no_meta), len(cmd_list), len(move_list))).lower()
+        except KeyboardInterrupt:
+            print("\nCheaty cheaty. You should just quit instead.")
+            exit()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
@@ -1588,7 +1592,11 @@ def read_cmd(this_cmd):
     if this_cmd == '':
         for _ in range(0, deliberate_nuisance_rows):
             print("DELIBERATE NUISANCE")
-        name = input("Move:")
+        try:
+            name = input("Move:")
+        except KeyboardInterrupt:
+            print("\nCheaty cheaty. You should just quit instead.")
+            exit()
         name = name.strip()
         if name == '/':  # special case for slash/backslash
             debug = 1 - debug
