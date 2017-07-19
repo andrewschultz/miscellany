@@ -36,6 +36,10 @@ suits = ['C', 'd', 'S', 'h']
 
 cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
 
+quit_msg = {'0': 'Wow! No games won! Way to go! You\'re going to get stuff done!', '1': 'Had your game, time to get to work',
+    '2': 'A couple games, time to get back to business.', '3': 'A couple games short.',
+    '4': 'Left with one game to spare.', '5': 'Got all your games. Time to go.' }
+
 top = ['CL', 'di', 'SP', 'he']
 btm = ['UB', 'am', 'AD', 'ar']
 
@@ -64,7 +68,7 @@ start_time = 0
 
 time_matters = 1
 nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
-min_delay = 70000  # if we can cheat one time
+min_delay = 15000  # if we can cheat one time
 high_time = 0
 max_delay = 0
 cur_games = 0
@@ -1559,12 +1563,10 @@ def card_eval(my_cmd):
 def go_bye():
     global cur_games
     global max_games
-    if cur_games * 2 < max_games:
-        print("Great job, leaving well before you played all you could've.")
-    elif cur_games < max_games:
-        print("Good job, leaving before you played all you could've.")
+    if str(cur_games) in quit_msg.keys():
+        print(quit_msg[str(cur_games)])
     else:
-        print("Bye!")
+        print("No specific string. Bye now!")
     if time_matters:
         write_time_file()
     close_lock_file()

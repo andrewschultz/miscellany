@@ -45,6 +45,10 @@ $xtraFiles{"compound"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extension
 $xtraFiles{"shuffling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling random text.i7x"];
 $xtraFiles{"roiling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling random text.i7x"];
 
+############################################
+#cuts the leading article off an object definition
+#
+
 sub cutArt
 {
   my $die = 0;
