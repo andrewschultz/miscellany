@@ -69,6 +69,7 @@ start_time = 0
 time_matters = 1
 nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
 min_delay = 15000  # if we can cheat one time
+stupid_wait = 150 # delay variable
 high_time = 0
 max_delay = 0
 cur_games = 0
@@ -2258,6 +2259,9 @@ if annoying_nudge:
         exit()
 
 open_lock_file()
+
+print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you'll get mad and bored and be productive.')
+time.sleep(stupid_wait)
 
 init_side(0)
 init_cards()
