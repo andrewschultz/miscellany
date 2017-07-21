@@ -129,6 +129,7 @@ btp=buck-the-past
 >$is\farmdup.pl -t
 >$is\abkdup.pl -t
 >$is\specdup.pl -t
+>$is\sco.pl -t
 
 sc=slicker-city
 >gq.pl $$ -x search.string

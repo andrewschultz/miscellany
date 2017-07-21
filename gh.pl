@@ -416,12 +416,13 @@ sub processTerms
 		  }
           my $info    = stat($fileTo);
           my $retMode = $info->mode & 0777;
-		  if ($retMode & 0222 != 0222)
+		  my $retMask = $retMode & 0222;
+		  if ($retMask != 0222)
 		  {
-		    chmod 777, $fileTo;
+		    chmod 0777, $fileTo;
 		  }
 		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short");
-		  if ($retMode & 0222 != 0222)
+		  if ($retMask != 0222)
 		  {
 		    chmod $retMode, $fileTo;
 		  }
