@@ -155,6 +155,7 @@ my @b;
 my $months = 0;
 
 my $ignoreHiddenBookmark = 0;
+my $system = 0;
 
 while ($line = <A>)
 {
@@ -166,6 +167,8 @@ while ($line = <A>)
   if ($line eq "==") { $autoBookmark = 0; $ignoreHiddenBookmark = 0; next; }
   if ($autoBookmark && ($line =~ /^=[^=]/)) { die ("Forgot to close with == before opening another = tab."); }
   if ($line =~ /^#/) { next; }
+  $system = 0;
+  if ($line =~ /^\\/) { $system = 1; $line =~ s/^\\//; }
   if ($semicolonSeen)
   {
     if (($overrideSemicolonEnd) && ($line =~ /^\*/))
@@ -306,7 +309,13 @@ while ($line = <A>)
 	  else
 	  {
 	  print "Running $b[$cmdCount]\n";
+	  if ($system)
+	  {
+	  }
+	  else
+	  {
 	  print `$b[$cmdCount]`;
+	  }
 	  }
 	  }
 	}

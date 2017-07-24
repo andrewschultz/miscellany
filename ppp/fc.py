@@ -2260,7 +2260,7 @@ if annoying_nudge:
 
 open_lock_file()
 
-print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you'll get mad and bored and be productive.')
+print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you\'ll get mad and bored and be productive.')
 time.sleep(stupid_wait)
 
 init_side(0)

@@ -234,6 +234,10 @@ dirk=$id,
 
 #EctoComp files to GitHub
 TOBASE=ectocomp
+ecto=c:\games\inform\crabtree.inform\source\story.ni,crabtree
+ecto=c:\games\inform\crabtree.inform\source\ni2t.py,crabtree
+ecto=c:\games\inform\crabtree.inform\source\paths.py,crabtree
+ecto=c:\games\inform\crabtree.inform\uuid.txt,crabtree
 ecto=c:\games\inform\dash.inform\source\story.ni,2011
 ecto=c:\games\inform\dash.inform\source\walkthrough.txt,2011
 ecto=c:\games\inform\dash.inform\uuid.txt,2011
@@ -619,6 +623,10 @@ rmt=ancient-legends\ancient-legends-castles.png,samples\ancient-legends
 rmt=ancient-legends\ancient-legends-dungeons.png,samples\ancient-legends
 rmt=ancient-legends\ancient-legends-merkania.png,samples\ancient-legends
 rmt=ancient-legends\ancient-legends-towns.png,samples\ancient-legends
+#Deathlord
+#includes item/monster attribute extraction
+rmt=c:\emu\apple\dl-items.py,samples\deathlord
+rmt=c:\emu\apple\dl-monsters.py,samples\deathlord
 #Dragon Wars
 rmt=dw\dw-forlorn.map,samples\dragon-wars
 rmt=dw\dw-isle-of-sun.map,samples\dragon-wars

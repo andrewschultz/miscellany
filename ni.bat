@@ -99,6 +99,11 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "C:\games\inform\roili
 goto end
 )
 
+if "%1" EQU "se" (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "C:\writing\stackex.htm"
+goto end
+)
+
 rem start release file edits
 
 if "%1" EQU "cr" (
@@ -195,6 +200,12 @@ rem start what-project-to-open options
 
 if "%1" EQU "e11" (
 set PROJ=dash
+shift /1
+goto parse
+)
+
+if "%1" EQU "us" (
+set PROJ=crabtree
 shift /1
 goto parse
 )
