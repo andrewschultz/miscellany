@@ -66,6 +66,8 @@ my $thisProj;
 my $minLines = 0;
 my $minFile = "";
 
+my $ignoreBackwardsTime = 0;
+
 my @trizFail;
 
 ########################
@@ -98,6 +100,7 @@ while ($count <= $#ARGV)
 	system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght");
 	exit;
   };
+  /^-?it$/i && do { $ignoreBackwardsTime = 1; $count++; next; };
   /^-?j$/i && do { $justPrint = 1; $count++; next; };
   /^-?f$/i && do { $byFile = 1; $count++; next; };
   /^-?v$/i && do { $verbose = 1; $count++; next; };
@@ -414,9 +417,19 @@ sub processTerms
 		  {
 		    print "BACKCOPY: copy \"$fromFile\" \"$fileTo\"\n";
 		  }
-          my $info    = stat($fileTo);
-          my $retMode = $info->mode & 0777;
+          my $infoTo    = stat($fileTo);
+          my $infoFrom    = stat($fromFile);
+          my $retMode = $infoTo->mode & 0777;
 		  my $retMask = $retMode & 0222;
+
+		  if ($infoTo->mtime > $infoFrom->mtime)
+		  {
+		    if (!$ignoreBackwardsTime)
+			{
+			  print ("$fromFile is before $fileTo, skipping. Use -it to overlook this.\n");
+			  next;
+			}
+		  }
 		  if ($retMask != 0222)
 		  {
 		    chmod 0777, $fileTo;
