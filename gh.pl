@@ -67,6 +67,7 @@ my $minLines = 0;
 my $minFile = "";
 
 my $ignoreBackwardsTime = 0;
+my $timeReverse = 0;
 
 my @trizFail;
 
@@ -422,19 +423,26 @@ sub processTerms
           my $retMode = $infoTo->mode & 0777;
 		  my $retMask = $retMode & 0222;
 
+		  my $reverseCopy = 0;
+
 		  if ($infoTo->mtime > $infoFrom->mtime)
 		  {
-		    if (!$ignoreBackwardsTime)
+		    if (!$ignoreBackwardsTime && !$timeReverse)
 			{
-			  print ("$fromFile is before $fileTo, skipping. Use -it to overlook this.\n");
+			  print ("$fromFile is before $fileTo, skipping. Use -it to overlook this, -tr to reverse copy.\n");
 			  next;
+			}
+			elsif ($timeReverse)
+			{
+			  $reverseCopy = 1;
 			}
 		  }
 		  if ($retMask != 0222)
 		  {
 		    chmod 0777, $fileTo;
 		  }
-		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short");
+		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short") if !$reverseCopy;
+		  copy("$gh\\$toFile\\$short", "$fromFile") || die ("Couldn't copy $gh\\$toFile\\$short to $fromFile") if $reverseCopy;
 		  if ($retMask != 0222)
 		  {
 		    chmod $retMode, $fileTo;
@@ -831,6 +839,7 @@ print<<EOT;
 -f doesn't look for a whole project but rather for a specific file, then runs that project
 -sw/ws = search for need strict/warnings, -t = test, -it = ignore trizbort fails
 Putting = after a command runs tests
+-it ignores timestamps being wrong (to < from) and -tr copies (from) to (to)
 -? = this
 EOT
 exit;
