@@ -29,6 +29,7 @@ $logFile =~ s/.pl$/-log.txt/i;
 
 my $runTest = 0;
 my $undoQuestionComments = 0;
+my $openDif = 0;
 
 ##########################
 #variables
@@ -63,21 +64,24 @@ while ($count <= $#ARGV)
   for ($arg)
   {
     /^-?e$/ && do { `$logFile`; exit(); };
+    /^-?od$/ && do { $openDif = 1; $count++; next; };
     /^-?(c|tc|ct)$/ && do
 	{
 	  if ($arg =~ /t/) { $runTest = 1; }
 	  checkLastRun(defined($ARGV[$count+1]) ? $ARGV[$count+1] : $defaultProj);
 	  exit;
     };
-    /^-?q$/ && do { $undoQuestionComments = 1; $count++; next; }
+    /^-?q$/ && do { $undoQuestionComments = 1; $count++; next; };
+	if ($toSplit)
+	{
+	  die ("Second split-command $arg tried to overwrite $toSplit at $count.");
+	}
+	else
+	{
+	  $toSplit = $arg;
+    }
   }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
-  if ($toSplit) { die ("Second split-command $arg tried to overwrite $toSplit at $count."); }
-  if ($list{$ARGV[$count]}) { $toSplit = $list{$ARGV[$count]}; }
-  else
-  {
-  $logFileEdit = $toSplit = $ARGV[$count];
-  }
   $count++;
 }
 
@@ -125,6 +129,17 @@ if ((-s $infile) != $outDup)
 {
   print "Uh oh, $infile and $outfile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes) didn't match sizes. Bailing.\n";
   print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile, total $outDup.\n";
+  print "" . lines($infile) . " lines for $infile, " . lines($outfile) . " liness for $outfile.\n";
+  if ($openDif)
+  {
+  `sort $infile > c:\\writing\\temp\\smart-b4.otl`;
+  `sort $outfile > c:\\writing\\temp\\smart-af.otl`;
+  `wm c:\\writing\\temp\\smart-b4.otl c:\\writing\\temp\\smart-af.otl`
+  }
+  else
+  {
+    print "Run -od to see differences alphabetized.\n";
+  }
   exit;
 }
 
