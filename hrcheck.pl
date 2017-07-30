@@ -308,13 +308,14 @@ while ($line = <A>)
 	  if ($ignoreHiddenBookmark && !$allBookmarks) { print "Not running $b[$cmdCount]" . ($bookmarkNote ? "" : " (-ab to run this and others)" ) . "\n"; $bookmarkNote = 1; }
 	  else
 	  {
-	  print "Running $b[$cmdCount]\n";
+	  print "Running " . ($system ? "(nonsequentially) " : "") . "$b[$cmdCount]\n";
 	  if ($system)
 	  {
+	    system 1, $b[$cmdCount];
 	  }
 	  else
 	  {
-	  print `$b[$cmdCount]`;
+	    print `$b[$cmdCount]`;
 	  }
 	  }
 	  }
