@@ -10,7 +10,7 @@
 #github=threediopolis
 #bitbucket=fourdiopolis
 
-use POSIX qw(strftime);
+use POSIX qw(strftime getcwd);
 use Win32;
 
 use strict;
@@ -40,14 +40,14 @@ $siteFile =~ s/pl$/txt/i;
 
 while ($count <= $#ARGV)
 {
-  my $arg = $ARGV[0];
+  my $arg = $ARGV[$count];
   for ($arg)
   {
   /^-?d$/ && do { $debug = 1; $count++; next; };
   /^-?p$/ && do { $popup = 1; $count++; next; };
   /^-?u$/ && do { $unchAfter = 1; $count++; next; };
   /^-?s$/ && do { `$siteFile`; exit(); };
-  /^-?\d+$/ && do { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); $count++; next; };
+  /^-?\d+$/ && do { $daysAgo = $ARGV[0]; $daysAgo = abs($daysAgo); print "$daysAgo day(s) ago.\n"; $count++; next; };
   /^-?\?/ && do { usage(); };
   print "Unknown cmd line parameter $arg\n";
   usage();
@@ -89,7 +89,7 @@ for $r (@repos)
 {
   chdir("$ghBase\\$r") or do { warn "fail $ghBase\\$r"; next; };
   $thisLog = `$cmd`;
-  print getcwd() . ": $cmd\n$thisLog" if $debug;
+  print getcwd() . ": $cmd\n" . cutDown($thisLog) if $debug;
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
   $repoSum{$repo{$r}} += $count{$r};
 }
@@ -131,6 +131,22 @@ if ($unchAfter)
 
 #######################################
 #subroutines
+
+sub cutDown
+{
+  my @x = split(/\n/, $_[0]);
+  my $count = 0;
+  my $c = 0;
+  my $retVal = "";
+  while ($#x > $c * 6)
+  {
+    $x[2+$c*6] =~ s/^Date/'Date ' . ($c+1)/e;
+    $retVal .= "$x[2+$c*6]\nChange " . ($c+1) . ":$x[4+$c*6]\n";
+    $c++;
+  }
+
+  return $retVal;
+}
 
 sub usage
 {
