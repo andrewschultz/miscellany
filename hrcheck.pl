@@ -101,10 +101,10 @@ while ($count <= $#ARGV)
   };
   /^-?o$/i && do { $printOnly = 1; $count++; next; };
   /^-?t(x)?$/i && do { searchHR($b, $a =~ /x/i); exit(); };
-  /^-?ex$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $xtraFile"; `$cmd`; exit; };
-  /^-?e$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check"; `$cmd`; exit; };
-  /^-?p$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $check2"; `$cmd`; exit; };
-  /^-?c$/i && do { $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $code"; `$cmd`; exit; };
+  /^-?ex$/i && do { npLaunch("$xtraFile"); };
+  /^-?e$/i && do { npLaunch("$check"); };
+  /^-?p$/i && do { npLaunch("$check2"); };
+  /^-?c$/i && do { npLaunch("$code"); };
   /^-?ab$/i && do { $allBookmarks = 1; next; };
   /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
   /^=/i && do { $bookmarkLook = $a; $bookmarkLook =~ s/^=//; $count ++; next; };
@@ -376,6 +376,13 @@ sub printBkmk
     if ($a =~ /^=[^=]/) { chomp($a); if ($a =~ /^=\//) { print "HIDDEN: "; } $a =~ s/^=\//=/; print "$_[0]: $a\n"; }
   }
   close(A);
+}
+
+sub npLaunch
+{
+  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $_[0]";
+  `$cmd`;
+  exit();
 }
 
 sub usage

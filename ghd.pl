@@ -113,7 +113,7 @@ for my $k (sort keys %repoSum)
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;
 }
 
-if ($overallSum) { $popupText .= "====$overallSum total extra changes\nRun UNCH.PL to see if there are any more to commit/push.\nRun gh.pl alb/all (2nd includes private repos) to copy over straggler files."; }
+if ($overallSum) { $popupText .= "====$overallSum total extra changes\nRun UNCH.PL to see if there are any more to commit/push.\nRun gh.pl alb/all (all but/all, 2nd includes private repos) to copy over straggler files."; }
 
 if ($popup)
 {
@@ -152,7 +152,7 @@ sub usage
 {
 print<<EOT;
 ==========basic usage==========
--d debug
+-d debug (or detail, to see log details)
 -p pop up results
 -s open site file
 -u run unch.pl afterwards
