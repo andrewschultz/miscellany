@@ -102,6 +102,7 @@ while ($count <= $#ARGV)
 	exit;
   };
   /^-?it$/i && do { $ignoreBackwardsTime = 1; $count++; next; };
+  /^-?tr$/i && do { $timeReverse = 1; $count++; next; };
   /^-?j$/i && do { $justPrint = 1; $count++; next; };
   /^-?f$/i && do { $byFile = 1; $count++; next; };
   /^-?v$/i && do { $verbose = 1; $count++; next; };
@@ -229,6 +230,7 @@ sub processTerms
   open(A, $thisFile) || die ("No $thisFile");
   while ($a = <A>)
   {
+    my $reverseCopy = 0;
     chomp($a);
     my $b = $a;
 	$xtraCmd = "";
@@ -349,9 +351,9 @@ sub processTerms
 	  if ($fromFile =~ /\*/)
 	  {
 		my $ctemp = $c;
-		$ctemp =~ s/,[a-z0-9-]*$//;
-		my @fileList = glob "$ctemp";
-		if ($#fileList == -1) { print "No matches for $ctemp.\n"; next; }
+		$ctemp =~ s/,[a-z0-9-\\\/]*$//;
+		my @fileList = glob($ctemp);
+		if (!(scalar @fileList)) { print "No matches for $ctemp.\n"; next; }
 
 		my $wild = $ctemp;
 		$wild =~ s/.*[\\\/]//;
@@ -363,6 +365,8 @@ sub processTerms
 		  my ($vol, $dir, $file) = File::Spec->splitpath($_);
 		  if (! -f "$ctempdir\\$file")
 		  {
+		    if (wcBackcopy($file))
+			{
 		    if ($executeBackCopy)
 			{
 		    copy("$_", "$ctempdir\\$file");
@@ -370,9 +374,10 @@ sub processTerms
 			}
 			else
 			{
-		    print("BACKCOPY: copy \"$_\" \"$ctempdir\\$file\"\n");
+		    print("BACKCOPY (WILDCARD): copy \"$_\" \"$ctempdir\\$file\"\n");
 			}
 			$backcopy++;
+			}
 		  }
 		}
 
@@ -408,7 +413,6 @@ sub processTerms
 		}
 	    if (shouldRun($prefix))
 		{
-		  $fileList .= "$fromFile\n";
 		  if ($cmdYet && !$warnYet) { print "You are running a command before copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
 		  #die "$fromFile to $gh\\$toFile\\$short";
 		  my $fileTo = "$gh\\$toFile\\$short";
@@ -423,7 +427,7 @@ sub processTerms
           my $retMode = $infoTo->mode & 0777;
 		  my $retMask = $retMode & 0222;
 
-		  my $reverseCopy = 0;
+		  $reverseCopy = 0;
 
 		  if ($infoTo->mtime > $infoFrom->mtime)
 		  {
@@ -443,6 +447,8 @@ sub processTerms
 		  }
 		  copy("$fromFile", "$gh\\$toFile\\$short") || die ("Couldn't copy $fromFile to $gh\\$toFile\\$short") if !$reverseCopy;
 		  copy("$gh\\$toFile\\$short", "$fromFile") || die ("Couldn't copy $gh\\$toFile\\$short to $fromFile") if $reverseCopy;
+		  $fileList .= "$fromFile" . ($reverseCopy ? " (reversed)" : "") . "\n";
+
 		  if ($retMask != 0222)
 		  {
 		    chmod $retMode, $fileTo;
@@ -778,7 +784,7 @@ sub rehash
 
 sub shouldCheck
 {
-  if ($_[0] =~ /\.(pl|txt|c|md|ni|cpp|ahs|nmr)$/i) { return 1; }
+  if ($_[0] =~ /\.(pl|py|txt|c|md|ni|cpp|ahs|nmr)$/i) { return 1; }
   return 0;
 }
 
@@ -821,6 +827,15 @@ sub allProjs
   close(A);
   }
   return join(",", keys %projHash);
+}
+
+sub wcBackcopy
+{
+  my $short = $_[0];
+  $short =~ s/.*[\\\/]//;
+  return 1 if ($short =~ /release.*notes/);
+  return 1 if ($short =~ /reg-*.txt/);
+  return 0;
 }
 
 sub usage

@@ -127,6 +127,11 @@ cd  %TEMPDIR%\ectocomp\2016
 goto end
 )
 
+if "%1" EQU "cra" (
+cd  %TEMPDIR%\crabtree
+goto end
+)
+
 if "%1" EQU "tr" (
 cd  %TEMPDIR%\trizbort
 goto end
