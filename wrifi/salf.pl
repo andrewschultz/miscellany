@@ -127,9 +127,9 @@ my $outDup = (-s $outfile) + $dupBytes;
 
 if ((-s $infile) != $outDup)
 {
-  print "Uh oh, $infile and $outfile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes) didn't match sizes. Bailing.\n";
+  print "Uh oh, $infile and $outfile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes extra bytes) didn't match sizes. Bailing.\n";
   print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile, total $outDup.\n";
-  print "" . lines($infile) . " lines for $infile, " . lines($outfile) . " liness for $outfile.\n";
+  print "" . lines($infile) . " lines for $infile, " . lines($outfile) . " lines for $outfile.\n";
   if ($openDif)
   {
   `sort $infile > c:\\writing\\temp\\smart-b4.otl`;
@@ -237,6 +237,18 @@ sub updateLogFile
   if (!$gotOne) { print A "$logFileEdit,7,$t\n"; print "Got a new entry for $logFileEdit, put into $logFile.\n"; }
   print A $writeString;
   close(A);
+}
+
+sub lines
+{
+  my $x;
+  open(X, $_[0]) || die ("No file $_[0]");
+  while ($x = <X>)
+  {
+  }
+  my $retVal = $.;
+  close(X);
+  return $retVal;
 }
 
 sub checkLastRun

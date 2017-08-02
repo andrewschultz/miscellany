@@ -139,6 +139,7 @@ for my $toComp (@compileList)
 {
   if ($proj{$toComp}) { $myProj = $proj{$toComp}; }
   elsif ($proj{"-$toComp"}) { $myProj = $proj{"-$toComp"}; }
+  elsif (-d "c:\\games\\inform\\$toComp.inform") { $myProj = $toComp; }
   else {
   die("No project for $toComp. If you wanted an option, try -?.\n");
   }
