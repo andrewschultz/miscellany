@@ -332,7 +332,17 @@ sub processTerms
 
 	  if ($toFile) { $dirName = $toFile; } elsif (!$dirName) { die("Need dir name to start a block of files to copy."); } else  { print"$fromFile has no associated directory, using $dirName\n"; }
 
-	  if (-d "$gh\\$toFile") { $outName = "$gh\\$toFile\\$short"; } else { $outName = "$gh\\$toFile"; }
+	  if (-d "$gh\\$toFile") { $outName = "$gh\\$toFile\\$short"; } else
+	  {
+	    $outName = "$gh\\$toFile";
+		my $outShort = $outName;
+		$outShort =~ s/.*[\\\/]//;
+		if ($outShort =~ /\./)
+		{
+		  $short = $outShort;
+		  $toFile =~ s/[^\\\/]+$//;
+		}
+      }
 	  if (-f $fromFile && (-s $fromFile == 0))
 	  {
 	    die ("Uh oh. I found a 0 byte file: $fromFile\n\nI am bailing immediately, because this should never happen. It may've been deleted, so you'll need to pull it back up with git revert or something.") if !$zeroOkay && shouldRun($a);
