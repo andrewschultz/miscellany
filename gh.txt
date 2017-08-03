@@ -239,6 +239,8 @@ ecto=c:\games\inform\crabtree.inform\source\ni2t.py,crabtree
 ecto=c:\games\inform\crabtree.inform\source\paths.py,crabtree
 ecto=c:\games\inform\crabtree.inform\uuid.txt,crabtree
 ecto=c:\games\inform\triz\mine\crabtree-usa-map.trizbort,crabtree
+ecto=c:\games\inform\triz\mine\crabtree-usa-map.pdf,crabtree
+ecto=c:\games\inform\triz\mine\crabtree-usa-map.png,crabtree
 ecto=c:\games\inform\dash.inform\source\story.ni,2011
 ecto=c:\games\inform\dash.inform\source\walkthrough.txt,2011
 ecto=c:\games\inform\dash.inform\uuid.txt,2011
@@ -394,6 +396,7 @@ past=$is\bs.bat,utils
 past=$is\ac2gt.py,utils
 past=$is\blaz.py,utils
 past=$is\perm.py,utils
+past=$is\remap.py,utils
 ###############spring thing initial game
 past=c:\games\inform\btp-st.inform\uuid.txt,spring\uuid.txt
 past=c:\games\inform\btp-st.inform\source\story.ni,spring\story.ni

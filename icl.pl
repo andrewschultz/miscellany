@@ -14,6 +14,7 @@
 
 use strict;
 use warnings;
+use Time::HiRes qw(time);
 
 my %zmac;
 my %proj;
@@ -135,6 +136,10 @@ if ($buildSpecified == 0) { print "No builds chosen, going with default list:" .
 
 my $myProj;
 
+my $startTimeGlobal = time();
+
+my $totalBuilds = $release + $debug + $runBeta;
+
 for my $toComp (@compileList)
 {
   if ($proj{$toComp}) { $myProj = $proj{$toComp}; }
@@ -148,7 +153,10 @@ for my $toComp (@compileList)
   $count++;
 }
 
-if (-f "gameinfo.dbg") { print "Deleting .dbg file\n"; unlink<gameinfo.dbg>; }
+if (-f "gameinfo.dbg") { print "Deleting gameinfo.dbg file\n"; unlink<gameinfo.dbg>; }
+
+my $totalTimeGlobal = time() - $startTimeGlobal;
+print "Total time taken: $totalTimeGlobal seconds.\n";
 
 ####################################################
 #subroutines
@@ -229,6 +237,8 @@ if ($debugTables != 0)
 
 sub doOneBuild
 {
+  my $startTime = time();
+
   $ex = "ulx";
   $gz = "gblorb";
   $iflag = "G";
@@ -255,6 +265,7 @@ sub doOneBuild
     if ($delta1 && ($delta1 > $checkRecentChanges))
     {
       print "NOT RUNNING BUILD\nToo long since $tempSource was modified\nToo short since $outFinal was modified\n";
+      printTimeDif($startTime);
       return;
     }
     print "$tempSource:$delta1\n";
@@ -269,6 +280,10 @@ sub doOneBuild
   delIfThere($infOut);
 
   my $compileCheck = `\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
+
+  my $doneTime = time() - $startTime;
+
+
   print "BUILD RESULTS\n=================\n$compileCheck";
   if ($compileCheck =~ /has finished/i)
   {
@@ -278,9 +293,14 @@ sub doOneBuild
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary untested,grey,0,0\n";
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation untested,grey,0,0\n";
 	}
+    printTimeDif($startTime);
 	return;
   }
-  if ($infOnly) { return; }
+  if ($infOnly)
+  {
+    printTimeDif($startTime);
+    return;
+  }
 
   ####probably not necessary
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 succeeded,0,0,0\n";
@@ -292,6 +312,7 @@ sub doOneBuild
   {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary failed,0,1,0\n";
     print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation untested,grey,0,0\n";
+    printTimeDif($startTime);
 	return;
   }
 
@@ -302,15 +323,16 @@ sub doOneBuild
   delIfThere("$outFinal");
   sysprint("\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\"");
 
-  if ((! -f $outFinal) || (-s "$outFinal" < -s "$outFile"))
-  {
-    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation failed,0,1,0\n";
-	return;
-  }
+  print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation " . ( (! -f $outFinal) || (-s "$outFinal" < -s "$outFile") ? "failed,0,1" : "passed,0,0" ) . ",0\n";
 
-    print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation passed,0,0,0\n";
-
+  printTimeDif($startTime);
   return;
+}
+
+sub printTimeDif
+{
+  my $temp = time() - $_[0];
+  print "$temp seconds elapsed.\n";
 }
 
 sub sysprint

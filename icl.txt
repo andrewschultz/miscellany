@@ -32,6 +32,7 @@ allproj=s,r,u,p,d,15,16
 
 ########################
 #which projects require the z-machine?
+z:crabtree
 z:dirk
 z:threediopolis
 z:slicker-city
