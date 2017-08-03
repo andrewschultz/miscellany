@@ -11,7 +11,7 @@ DEFAULT=as
 MAP:3,4,3d,4d=opo
 MAP:ro,roi,sa=sts
 MAP:pc,sc=as
-MAP:ect=ecto
+MAP:sho,sh,short,ect,ecto=short-games
 
 #names
 run=names
@@ -74,7 +74,8 @@ c:\writing\smart.otl	uo
 c:\games\inform\triz\mine\ugly-oafs.trizbort
 
 #ectocomp
-run=ecto
+run=short-games
+c:\games\inform\crabtree.inform\Source
 c:\games\inform\ghost.inform\Source
 c:\games\inform\dash.inform\Source
 c:\games\inform\Candy Rush Saga.inform\Source

@@ -103,32 +103,47 @@ goto end
 )
 
 if "%1" EQU "e11" (
-cd  %TEMPDIR%\ectocomp\2011
+cd  %TEMPDIR%\short-games\2011
 goto end
 )
 
 if "%1" EQU "e13" (
-cd  %TEMPDIR%\ectocomp\2013
+cd  %TEMPDIR%\short-games\2013
 goto end
 )
 
 if "%1" EQU "e14" (
-cd  %TEMPDIR%\ectocomp\2014
+cd  %TEMPDIR%\short-games\2014
 goto end
 )
 
 if "%1" EQU "e15" (
-cd  %TEMPDIR%\ectocomp\2015
+cd  %TEMPDIR%\short-games\2015
 goto end
 )
 
 if "%1" EQU "e16" (
-cd  %TEMPDIR%\ectocomp\2016
+cd  %TEMPDIR%\short-games\2016
 goto end
 )
 
 if "%1" EQU "cra" (
-cd  %TEMPDIR%\crabtree
+cd  %TEMPDIR%\short-games\crabtree
+goto end
+)
+
+if "%1" EQU "short" (
+cd  %TEMPDIR%\short-games
+goto end
+)
+
+if "%1" EQU "sho" (
+cd  %TEMPDIR%\short-games
+goto end
+)
+
+if "%1" EQU "sh" (
+cd  %TEMPDIR%\short-games
 goto end
 )
 

@@ -27,7 +27,7 @@ g,gr~gru
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
 ###ecto
-ec,ect,ectocomp~ecto
+sho,sh,ec,ect,ectocomp~short
 ###misc
 #################typo protection
 isc,mis~misc
@@ -232,37 +232,44 @@ dirk=c:\games\inform\beta materials\Release\beta-Dirk.zblorb,
 dirk=$im\Release\Dirk.zblorb,
 dirk=$id,
 
-#EctoComp files to GitHub
-TOBASE=ectocomp
-ecto=c:\games\inform\crabtree.inform\source\story.ni,crabtree
-ecto=c:\games\inform\crabtree.inform\source\ni2t.py,crabtree
-ecto=c:\games\inform\crabtree.inform\source\paths.py,crabtree
-ecto=c:\games\inform\crabtree.inform\uuid.txt,crabtree
-ecto=c:\games\inform\triz\mine\crabtree-usa-map.trizbort,crabtree
-ecto=c:\games\inform\triz\mine\crabtree-usa-map.pdf,crabtree
-ecto=c:\games\inform\triz\mine\crabtree-usa-map.png,crabtree
-ecto=c:\games\inform\dash.inform\source\story.ni,2011
-ecto=c:\games\inform\dash.inform\source\walkthrough.txt,2011
-ecto=c:\games\inform\dash.inform\uuid.txt,2011
-ecto=c:\games\inform\dash.inform\source\README.md,2011
-ecto=c:\games\inform\ghost.inform\source\story.ni,2013
-ecto=c:\games\inform\ghost.inform\source\walkthrough.txt,2013
-ecto=c:\games\inform\ghost.inform\uuid.txt,2013
-ecto=c:\games\inform\ghost.inform\source\README.md,2013
-ecto=c:\games\inform\Candy Rush Saga.inform\source\story.ni,2014
-ecto=c:\games\inform\Candy Rush Saga.inform\source\walkthrough.txt,2014
-ecto=c:\games\inform\Candy Rush Saga.inform\uuid.txt,2014
-ecto=c:\games\inform\Candy Rush Saga.inform\source\README.md,2014
-ecto=c:\games\inform\heezy-park.inform\source\story.ni,2015
-ecto=c:\games\inform\heezy-park.inform\source\post-mortem.txt,2015
-ecto=c:\games\inform\heezy-park.inform\uuid.txt,2015
-ecto=c:\games\inform\heezy-park.inform\source\README.md,2015
--b:ecto=c:\games\inform\heezy-park Materials\release\Heezy Park.zblorb,2015 sz:316000
-ecto=c:\games\inform\checkered-haunting.inform\source\story.ni,2016
-ecto=c:\games\inform\checkered-haunting.inform\source\walkthrough.txt,2016
-ecto=c:\games\inform\checkered-haunting.inform\uuid.txt,2016
-ecto=c:\games\inform\checkered-haunting.inform\source\ach-postmortem.txt,2016
-ecto=c:\games\inform\checkered-haunting.inform\source\README.md,2016
+#Short game files to GitHub
+TOBASE=short-games
+#################Crabtree
+short=c:\games\inform\crabtree.inform\source\story.ni,crabtree
+short=c:\games\inform\crabtree.inform\source\ni2t.py,crabtree
+short=c:\games\inform\crabtree.inform\source\paths.py,crabtree
+short=c:\games\inform\crabtree.inform\uuid.txt,crabtree
+short=c:\games\inform\triz\mine\crabtree-usa-map.trizbort,crabtree
+short=c:\games\inform\triz\mine\crabtree-usa-map.pdf,crabtree
+short=c:\games\inform\triz\mine\crabtree-usa-map.png,crabtree
+-b:short=c:\games\inform\crabtree Materials\Release\Mrs- Crabtree's Geography Class.zblorb,crabtree\Mrs-Crabtrees-Geography-Class.zblorb
+#################Ectocomp 2011
+short=c:\games\inform\dash.inform\source\story.ni,ecto-2011
+short=c:\games\inform\dash.inform\source\walkthrough.txt,ecto-2011
+short=c:\games\inform\dash.inform\uuid.txt,ecto-2011
+short=c:\games\inform\dash.inform\source\README.md,ecto-2011
+#################Ectocomp 2013
+short=c:\games\inform\ghost.inform\source\story.ni,ecto-2013
+short=c:\games\inform\ghost.inform\source\walkthrough.txt,ecto-2013
+short=c:\games\inform\ghost.inform\uuid.txt,ecto-2013
+short=c:\games\inform\ghost.inform\source\README.md,ecto-2013
+#################Ectocomp 2014
+short=c:\games\inform\Candy Rush Saga.inform\source\story.ni,ecto-2014
+short=c:\games\inform\Candy Rush Saga.inform\source\walkthrough.txt,ecto-2014
+short=c:\games\inform\Candy Rush Saga.inform\uuid.txt,ecto-2014
+short=c:\games\inform\Candy Rush Saga.inform\source\README.md,ecto-2014
+#################Ectocomp 2015
+short=c:\games\inform\heezy-park.inform\source\story.ni,ecto-2015
+short=c:\games\inform\heezy-park.inform\source\post-mortem.txt,ecto-2015
+short=c:\games\inform\heezy-park.inform\uuid.txt,ecto-2015
+short=c:\games\inform\heezy-park.inform\source\README.md,ecto-2015
+-b:short=c:\games\inform\heezy-park Materials\release\Heezy Park.zblorb,ecto-2015 sz:316000
+#################Ectocomp 2016
+short=c:\games\inform\checkered-haunting.inform\source\story.ni,ecto-2016
+short=c:\games\inform\checkered-haunting.inform\source\walkthrough.txt,ecto-2016
+short=c:\games\inform\checkered-haunting.inform\uuid.txt,ecto-2016
+short=c:\games\inform\checkered-haunting.inform\source\ach-postmortem.txt,ecto-2016
+short=c:\games\inform\checkered-haunting.inform\source\README.md,ecto-2016
 
 #Problems files to GitHub
 TOBASE=the-problems-compound
