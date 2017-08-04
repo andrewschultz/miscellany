@@ -50,8 +50,10 @@ my $buildSpecified = 0;
 
 my $betaDir = "c:\\games\\inform\\beta.inform";
 my $baseDir = "c:\\games\\inform";
+my $logFile = "c:\\writing\\scripts\\icl-log.txt";
+my $cfgFile = "c:\\writing\\scripts\\icl.txt";
 
-open(X, "c:/writing/scripts/icl.txt") || die ("Need icl.txt.");
+open(X, $cfgFile) || die ("Need $cfgFile.");
 
 my $x; my $y;
 
@@ -325,8 +327,34 @@ sub doOneBuild
 
   print "TEST RESULTS:$_[4] $_[3] $_[0] blorb creation " . ( (! -f $outFinal) || (-s "$outFinal" < -s "$outFile") ? "failed,0,1" : "passed,0,0" ) . ",0\n";
 
+  if (-f $outFinal) { writeToLog($outFinal, @_); }
   printTimeDif($startTime);
   return;
+}
+
+sub writeToLog
+{
+  open(LOG, "$logFile");
+  my $time = localtime(time());
+  my $logString = "$_[0],$_[4],$time";
+  my $writeString = "";
+  my $line;
+
+  while ($line = <LOG>)
+  {
+  if ($line =~ /^$_[0]/)
+  {
+    $writeString .= $logString;
+  }
+  else
+  {
+    $writeString .= $line;
+  }
+  }
+  close(LOG);
+  open(LOG, ">$logFile");
+  print LOG $writeString;
+  close(LOG);
 }
 
 sub printTimeDif
