@@ -46,6 +46,7 @@ my %gwt;
 my %repls;
 my %repl2;
 my %altHash, my %do, my %poss, my %postproc;
+my %msgForProj;
 
 #################options
 my $executeBackCopy = 0;
@@ -150,6 +151,10 @@ while ($count <= $#ARGV)
 	else
 	{
 	  $procString .= ",$arg";
+	}
+	if ($msgForProj{$arg})
+	{
+	  print "NOTE for $arg: $msgForProj{$arg}\n";
 	}
 	$count++;
 	next;
@@ -565,6 +570,17 @@ sub preProcessHashes
 	  $defaultString = $a;
 	  $defaultString =~ s/^d://gi;
 	}
+	if ($a =~ /^MSG:/)
+	{
+	  $a =~ s/^MSG://;
+	  my @ary = split(/=/, $a);
+      my @ary2 = split(/,/, $ary[0]);
+	  for (@ary2)
+	  {
+	    $msgForProj{$_} = $ary[1];
+	  }
+	  next;
+    }
 	if ($a =~ /~/)
 	{
 	  my @b = split(/~/, $a);

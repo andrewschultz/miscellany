@@ -27,12 +27,15 @@ g,gr~gru
 rmt~rpg-mapping-tools
 rpg~rpg-mapping-tools
 ###ecto
-sho,sh,ec,ect,ectocomp~short
+sho,sh,ec,ect,ecto,ectocomp~short
 ###misc
 #################typo protection
 isc,mis~misc
 ###writing
 wri~writing
+
+######################messages
+MSG:ec,ect,ecto,ectocomp=Ectocomp is now short / short-games
 
 all~wri,misc,ecto,rpg,g,sts,3,4,as
 
