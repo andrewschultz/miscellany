@@ -55,6 +55,7 @@ my $headersToo = 0;
 my $dontWant = 0;
 my $maxFind = 0;
 my $getClipboard = 0;
+my $zapBrackets = 0;
 
 if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
@@ -94,6 +95,7 @@ while ($count <= $#ARGV)
   /^-w/ && do { $dontWant = 1; $count++; next; };
   /^-nd$/ && do { newDefault($ARGV[$count+1]); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
+  /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
   /^-m$/ && do { $maxFind = $thisAry[1]; @thisAry = $thisAry[2..$#thisAry]; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
@@ -295,6 +297,7 @@ sub processOneFile
   open(A, "$_[0]") || die ("No $_[0]");
   while ($a = <A>)
   {
+    if ($zapBrackets) { $a =~ s/\[[^\]]*\]/ /g; }
     if (($a =~ /^[a-z]/) && ($a !~ /\t/)) { $latestRule = "$a"; }
     if ($inImportant) { $idx++; }
     if ($a =~ /^\\/)
