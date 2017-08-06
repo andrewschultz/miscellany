@@ -181,6 +181,7 @@ while ($line = <A>)
   }
   if ($line =~ /^;/) { $semicolonSeen = 1; next; }
   if ($ignore) { next; }
+  if ($line =~ /^http/) { $line = "start $line"; }
   if ($line =~ /^DEF=/)
   {
     $defaultBrowser = $line;

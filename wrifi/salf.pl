@@ -1,12 +1,14 @@
 ##################################
-#salf.pl
-#section alphabetizer
+# salf.pl
+# section alphabetizer
 #
 # currently only for smart.otl but it can be expanded
 #
 # usage salf.pl
 #
 # recommended: salf.pl pc, salf.pl sc, salf.pl btp
+#
+# this does not sort into categories. Use smso.pl for that.
 
 #todo: test case
 #got stuff!!!
@@ -173,7 +175,7 @@ sub alfThis
     }
     push(@lines, $a);
   }
-  my @x = sort { comm($a) <=> comm($b) || "\L$a" cmp "\L$b" } @lines;
+  my @x = sort { comm($a) <=> comm($b) || dones($a) <=> dones($b) || "\L$a" cmp "\L$b" } @lines;
   #@x = @lines;
 
   for my $y (@x)
@@ -210,6 +212,11 @@ sub comm
 {
   if ($_[0] =~ /^#/) { return 1; }
   return 0;
+}
+
+sub dones
+{
+  if ($_[0] =~ /fill-in-here/) { return 1; }
 }
 
 sub updateLogFile
