@@ -41,6 +41,7 @@ my $shortName = "";
 my $totalFind = 0;
 my $lastHeader = "";
 my $othersToo = 0;
+my $foundTotal = 0;
 
 #################options
 my $printTabbed = 1;
@@ -54,6 +55,7 @@ my $showHeaders = 0;
 my $headersToo = 0;
 my $dontWant = 0;
 my $maxFind = 0;
+my $maxFile = 0;
 my $getClipboard = 0;
 my $zapBrackets = 0;
 
@@ -93,10 +95,11 @@ while ($count <= $#ARGV)
   /^-p$/ && do { $headersToo = 1; $count++; next; };
   /^-nt$/ && do { $printTabbed = 0; $count++; next; };
   /^-w/ && do { $dontWant = 1; $count++; next; };
-  /^-nd$/ && do { newDefault($ARGV[$count+1]); $count++; next; };
+  /^-nd$/ && do { newDefault($b); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
-  /^-m$/ && do { $maxFind = $thisAry[1]; @thisAry = $thisAry[2..$#thisAry]; $count+= 2; next; };
+  /^-mo$/ && do { $maxFind = $b; $count+= 2; next; };
+  /^-mf$/ && do { $maxFile = $b; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
@@ -260,6 +263,7 @@ sub processFiles
 
   foreach my $cmd (@x)
   {
+	if ($foundTotal == $maxFind) { print "Skipping $cmd\n"; next; }
 	my @fileAndMarkers = split(/\t/, $cmd);
 	processOneFile(@fileAndMarkers);
   }
@@ -317,6 +321,7 @@ sub processOneFile
 	  if ($dontWant) { push (@errStuff, "$modFile L$idx"); }
 	  if (!$foundOne) { print "Results for $modFile:\n"; }
 	  $foundOne++;
+	  $foundTotal++;
 	  print "$modFile($line";
 	  if ($currentTable) { print ",$currentTable"; }
 	  if ($thisImportant) { print ",$thisImportant,L$idx"; }
@@ -325,6 +330,8 @@ sub processOneFile
 	  if ($crom == 2) { print " **PLURAL**"; }
 	  print "\n";
 	  if ($showRules) { print "RULE=$latestRule"; }
+	  if ($foundOne == $maxFile) { print "Max found per file. Use -mf to increase.\n"; last; }
+	  if ($foundTotal == $maxFind) { print "Max total found. Use -mo to increase.\n"; last; }
 	}
   }
   close(A);
@@ -417,7 +424,7 @@ sub processStory
 		  if ($tmp == 2) { print "****PLURAL****"; }
 		  print "\n";
 		  }
-		if ($maxFind == $totalFind) { print "Hit the limit.\n"; }
+		if ($maxFind == $totalFind) { print "Hit the limit.\n"; last(); }
 		  $foundSomething = 1;
 		}
 	  }
@@ -554,9 +561,11 @@ print<<EOT;
 -x = run others too e.g. anan and myan
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
--m = maximum to find
+-mo = maximum to find overall
+-mf = maximum to find in file
 -hi = open history of specified groups, -ha = open history of all
 -sr = show rules, if text shows up in a rule
+-z = zap bracketed text
 /3d = only look in tables of 3d (for instance{)
 as, opo, sts are the main ones. -a runs all. You can split with 3d,sa if you want.
 EOT
