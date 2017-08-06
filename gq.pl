@@ -175,21 +175,21 @@ sub addSaveFile
 	if ($a =~ /[ \.-]/)
 	{
 	  my @words = split(/[ \.-]/, lc$a);
-	  if ($saveHash{"$words[1]$words[0]"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[1]s$words[0]"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[1]$words[0]s"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[1]s$words[0]s"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[0]$words[1]"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[0]s$words[1]"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[0]$words[1]s"}) { print "$a already in save list.\n"; next; }
-	  if ($saveHash{"$words[0]s$words[1]s"}) { print "$a already in save list.\n"; next; }
+	  if ($saveHash{"$words[1]$words[0]"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[1]s$words[0]"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[1]$words[0]s"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[1]s$words[0]s"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[0]$words[1]"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[0]s$words[1]"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[0]$words[1]s"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
+	  if ($saveHash{"$words[0]s$words[1]s"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
 	}
 	else
 	{
-	  if ($saveHash{$a} || $saveHash{"${a}s"}) { print "$a already in save list.\n"; next; } # trick/reference: how to separate perl variables from interpolated strings
+	  if ($saveHash{$a} || $saveHash{"${a}s"}) { print "$a already in save list.\n"; $dontrewrite = 1; last; } # trick/reference: how to separate perl variables from interpolated strings
 	}
 	$a =~ s/ //g;
-	if ($a eq $q) { $dontrewrite = 1; }
+	if ($a eq $q) { print "$a already in save list.\n"; $dontrewrite = 1; last; }
 	$saveHash{$a} = 1;
 	if ($#saveData == 99) { last; }
 	push(@saveData, $a);
