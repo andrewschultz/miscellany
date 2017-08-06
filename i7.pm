@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %xtraFiles tableFile cutArt openWinOrUnix sourceFile);
+@EXPORT      = qw(%i7x %i7xr @i7gh %xtraFiles tableFile cutArt openWinOrUnix sourceFile);
 #@EXPORT_OK   = qw(i7x);
 
 our %i7x = ( "12" => "shuffling",
@@ -50,6 +50,8 @@ our %i7xr = ( "shuffling" => "sa",
   "btp-st" =>"bs" ,
   "btp" => "buck-the-past"
 );
+
+our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "seeker-status", "curate");
 
 our %xtraFiles;
 

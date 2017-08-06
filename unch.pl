@@ -9,6 +9,9 @@
 #
 #-a may, in the future, list all my github subdirectories
 
+use lib "c:\\writing\\scripts";
+
+use i7;
 use warnings;
 use strict;
 
@@ -18,7 +21,8 @@ my $alphabetical = 0;
 
 my %exp = ( "3d" => "threediopolis",
   "4d" => "fourdiopolis",
-  "ec" => "ectocomp",
+  "ec" => "short-games",
+  "short" => "short-games",
   "sa" => "stale-tales-slate",
   "roi" => "stale-tales-slate",
   "pc" => "the-problems-compound",
@@ -31,7 +35,7 @@ my %exp = ( "3d" => "threediopolis",
 
 my %projs;
 # note that the bottom projects are the most important as they are least likely to go off the page
-my @projAry = ("threediopolis", "ectocomp", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "seeker-status", "curate");
+my @projAry = (@i7gh, "seeker-status", "curate");
 
 #####################variables
 my $count = 0;
