@@ -54,8 +54,8 @@ my $showRules = 0;
 my $showHeaders = 0;
 my $headersToo = 0;
 my $dontWant = 0;
-my $maxFind = 0;
-my $maxFile = 0;
+my $maxOverallFind = 100;
+my $maxFileFind = 25;
 my $getClipboard = 0;
 my $zapBrackets = 0;
 
@@ -98,8 +98,8 @@ while ($count <= $#ARGV)
   /^-nd$/ && do { newDefault($b); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
-  /^-mo$/ && do { $maxFind = $b; $count+= 2; next; };
-  /^-mf$/ && do { $maxFile = $b; $count+= 2; next; };
+  /^-mo$/ && do { $maxOverallFind = $b; $count+= 2; next; };
+  /^-mf$/ && do { $maxFileFind = $b; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
@@ -263,7 +263,7 @@ sub processFiles
 
   foreach my $cmd (@x)
   {
-	if ($foundTotal == $maxFind) { print "Skipping $cmd\n"; next; }
+	if ($foundTotal == $maxOverallFind) { print "Skipping $cmd\n"; next; }
 	my @fileAndMarkers = split(/\t/, $cmd);
 	processOneFile(@fileAndMarkers);
   }
@@ -330,8 +330,8 @@ sub processOneFile
 	  if ($crom == 2) { print " **PLURAL**"; }
 	  print "\n";
 	  if ($showRules) { print "RULE=$latestRule"; }
-	  if ($foundOne == $maxFile) { print "Max found per file. Use -mf to increase.\n"; last; }
-	  if ($foundTotal == $maxFind) { print "Max total found. Use -mo to increase.\n"; last; }
+	  if ($foundOne == $maxFileFind) { print "Max $maxFileFind matches found per file. Use -mf to increase.\n"; last; }
+	  if ($foundTotal == $maxOverallFind) { print "Max $maxOverallFind total matches found. Use -mo to increase.\n"; last; }
 	}
   }
   close(A);
@@ -424,7 +424,7 @@ sub processStory
 		  if ($tmp == 2) { print "****PLURAL****"; }
 		  print "\n";
 		  }
-		if ($maxFind == $totalFind) { print "Hit the limit.\n"; last(); }
+		if ($maxOverallFind == $totalFind) { print "Hit the limit.\n"; last(); }
 		  $foundSomething = 1;
 		}
 	  }
@@ -438,7 +438,7 @@ sub processStory
 
 sub isPrintable
 {
-  if (($maxFind) && ($maxFind <= $totalFind)) { return 0; }
+  if (($maxOverallFind) && ($maxOverallFind <= $totalFind)) { return 0; }
   if (!$onlyTables) { return 1; }
   if (($onlyRand) && ($thisTable) && ($blurby) && tabCheck($a)) { return 1; }
   if (tabCheck($a) && ($thisTable) && (!$onlyRand)) { return 1; }
@@ -561,8 +561,8 @@ print<<EOT;
 -x = run others too e.g. anan and myan
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
--mo = maximum to find overall
--mf = maximum to find in file
+-mo = maximum to find overall (default=100)
+-mf = maximum to find in file (default=25)
 -hi = open history of specified groups, -ha = open history of all
 -sr = show rules, if text shows up in a rule
 -z = zap bracketed text
