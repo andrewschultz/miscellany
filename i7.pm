@@ -16,8 +16,8 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %i7xr @i7gh %xtraFiles tableFile cutArt openWinOrUnix sourceFile);
-#@EXPORT_OK   = qw(i7x);
+@EXPORT      = qw(%i7x %i7xr @i7gh %xtraFiles tableFile cutArt openWinOrUnix sourceFile $np);
+#@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
   "sa" => "shuffling",
@@ -60,6 +60,8 @@ $xtraFiles{"slicker-city"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Exten
 $xtraFiles{"compound"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Compound tables.i7x"];
 $xtraFiles{"shuffling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling random text.i7x"];
 $xtraFiles{"roiling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling random text.i7x"];
+
+our $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 
 ############################################
 #cuts the leading article off an object definition

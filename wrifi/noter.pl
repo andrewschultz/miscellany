@@ -114,7 +114,7 @@ while ($a = <A>)
     #print "\n"; print "Last is $b[$#b]\n";
     if ($namePrint == 1) { $outputString .= "\n"; } next; }
   if (($a =~ /$matchstr/) || (($capsString eq "i") && ($a =~ /$matchstr/i)))
-  { $count++; if (($thisSect == $sectToMatch) || (!$sectToMatch))
+  { $count++; if (($thisSect eq $sectToMatch) || (!$sectToMatch))
     { $outputString .= "$count $a\n"; } };
   if ($count >= $maxFinds) { $count .= "+"; last; };
 }

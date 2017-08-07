@@ -37,7 +37,6 @@ my $ght = "c:\\writing\\scripts\\gh.txt";
 my $ghp = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs = "c:\\writing\\scripts\\gh.pl";
 my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
-my $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 
 ###########################
 #hashes
