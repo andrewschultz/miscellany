@@ -26,6 +26,8 @@
 # -? gives usage
 #
 
+use lib "c:/writing/scripts";
+use i7;
 use warnings;
 use strict;
 
@@ -68,6 +70,7 @@ my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
 
 if (defined($ARGV[0]))
 {
+  if ($ARGV[0] eq "c") { my $thisfile = __FILE__; `$np $thisfile`; exit; }
   if ($ARGV[0] eq "e") { `$rf`; exit; }
   if ($ARGV[0] eq "ep") { `$rf2`; exit; }
 }
@@ -190,12 +193,18 @@ while ($myLine = <A>)
 	$gotAny = 1;
 	$myLine =~ s/VALUE=//g;
 	$gameVal = $myLine;
-	$myFile{$gameVal} = "c:\\games\\inform\\$gameVal.inform\\source\\story.ni";
+	my @tempAry = ("c:\\games\\inform\\$gameVal.inform\\source\\story.ni");
+	$myFile{$gameVal} = \@tempAry;
 	next;
   }
   elsif ($myLine =~ /^VALUE=/i) { $inCurrent = 0; }
   if (!$inCurrent) { next; }
-  if ($myLine =~ /^FILES=/) { $myLine =~ s/FILES=//g; $myFile{$gameVal} = $myLine; print "$gameVal -> $myLine\n"; next; }
+  if ($myLine =~ /^FILES=/)
+  {
+    $myLine =~ s/FILES=//g;
+	my @tempAry = split(/,/, $myLine);
+	$myFile{$gameVal} = \@tempAry;
+	print "$gameVal -> $myLine\n"; next; }
   $myLine = lc($myLine);
   if ($myLine =~ /^table of /) { print "Don't need (table of) at line $lineNum, $myLine\n"; $myLine =~ s/^table of //g; }
   $tempLine = $myLine;
@@ -222,9 +231,17 @@ if (!$gotAny) { die("Found nothing for $_[0], exiting."); }
 sub storyTables
 {
 
-my $fileToRead = $myFile{$_[0]}; if (!$fileToRead) { die ("No file defined for $_[0]."); }
+my @fileArray = @{$myFile{$_[0]}};
+my $fileToRead;
 
+my $tableWarnings = 0;
 my $totalErrors = 0;
+
+for $fileToRead (@fileArray)
+{
+
+if (! -f $fileToRead) { die ("No file defined for $_[0]."); }
+
 $totalSuccesses = 0;
 my @parseAry = ();
 
@@ -236,7 +253,6 @@ print "Table parsing for $fileToRead:\n";
 
 my $inTable = 0;
 
-my $tableWarnings = 0;
 
 my %alreadyWarn;
 
@@ -317,13 +333,14 @@ while ($a = <A>)
 	  }
 	}
 }
+}
 
 #now check to make sure everything in punc.txt is used
 for my $key (sort keys %searches)
 {
   #print "$key/$entry{$key} vs $_[1]/$ignore{$key}/$got{$key}\n";
   if ((!$ignore{$key}) && (!$got{$key}))
-  { print "WARNING punc.txt pointed to table $key but story.ni did not.\n"; }
+  { print "WARNING punc.txt pointed to table $key but I could not find it in the file list.\n"; }
 }
 
 if (!$anyerr) { print "No tables had errors!\n"; }

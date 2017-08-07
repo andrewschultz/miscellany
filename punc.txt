@@ -1,5 +1,5 @@
 DEFAULT=compound
-####need start capital? punctuation (1\0\-1) quotes 1\0\-1
+####column # (0 start), need start capital? punctuation (1\0\-1) quotes 1\0\-1
 # 1 means we need it, -1 means we need NOT to have it, 0 OK either way
 # for caps, 3 = ALL CAPS, 2 = title case
 #
@@ -12,7 +12,7 @@ DEFAULT=compound
 ####PROB COMP
 VALUE=compound
 ####Not necessary but put there for posterity
-FILES=c:\games\inform\compound.inform\source\story.ni
+FILES=c:\games\inform\compound.inform\source\story.ni,c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Compound tables.i7x
 hs - horrendous songs	0,1,-1,-1	1,1,-1,-1
 hb - horrendous books	0,1,-1,-1	1,1,-1,-1
 ###################dialogues all pretty much need caps, punctuation, no quotes
@@ -78,6 +78,12 @@ map coordinates	3,3,-1,-1	4,3,-1,-1
 #####################testing
 monties	0,-1,-1,-1	2,3,-1,-1	5,-1,-1,-1
 tj-moves	0,1,-1,-1
+========================================
+####BUCK THE PAST
+VALUE=buck-the-past
+FILES=c:\games\inform\buck-the-past.inform\source\story.ni,c:\program files (x86)\inform 7\inform7\extensions\andrew schultz\Buck the Past tables.i7x
+life shelf books	0,2,0,-1
+animal silliness	1,1,1,0
 ========================================
 ####ROIL
 VALUE=roiling
