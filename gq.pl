@@ -98,8 +98,9 @@ while ($count <= $#ARGV)
   /^-nd$/ && do { newDefault($b); $count++; next; };
   /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
-  /^-mo$/ && do { $maxOverallFind = $b; $count+= 2; next; };
-  /^-mf$/ && do { $maxFileFind = $b; $count+= 2; next; };
+  /^-mo$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max overall limits.\n"; } $maxOverallFind = abs($b); $count+= 2; next; };
+  /^-mf$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max file limits.\n"; } $maxFileFind = abs($b); $count+= 2; next; };
+  /^-mf$/ && do { $maxFileFind = $maxOverallFind = 0; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
@@ -330,8 +331,8 @@ sub processOneFile
 	  if ($crom == 2) { print " **PLURAL**"; }
 	  print "\n";
 	  if ($showRules) { print "RULE=$latestRule"; }
-	  if ($foundOne == $maxFileFind) { print "Max $maxFileFind matches found per file. Use -mf to increase.\n"; last; }
-	  if ($foundTotal == $maxOverallFind) { print "Max $maxOverallFind total matches found. Use -mo to increase.\n"; last; }
+	  if ($maxFileFind && ($foundOne == $maxFileFind)) { print "----------Max $maxFileFind matches found per file. Use -mf to increase.\n"; last; }
+	  if ($maxOverallFind && ($foundTotal == $maxOverallFind)) { print "----------Max $maxOverallFind total matches found. Use -mo to increase.\n"; last; }
 	}
   }
   close(A);
@@ -561,8 +562,9 @@ print<<EOT;
 -x = run others too e.g. anan and myan
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
--mo = maximum to find overall (default=100)
--mf = maximum to find in file (default=25)
+-mo = maximum to find overall (default=100, 0=no limit)
+-mf = maximum to find in file (default=25, 0=no limit)
+-mu = unset both maximums above
 -hi = open history of specified groups, -ha = open history of all
 -sr = show rules, if text shows up in a rule
 -z = zap bracketed text
