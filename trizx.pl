@@ -11,11 +11,15 @@ use warnings;
 
 my %objArray;
 my %roomHash;
+my %initialRooms;
+my %initialItems;
 my $proj = "buck-the-past";
 my $gh = "c:\\users\\andrew\\documents\\github";
 my $projYet = 0;
 my $verbose = 0;
 my $count = 0;
+my $readInitialRooms = 1;
+my $readInitialItems = 1;
 
 while ($count <= $#ARGV)
 {
@@ -26,18 +30,28 @@ while ($count <= $#ARGV)
   if ($projYet) { die ("Can't have 2 projects"); }
   $projYet = 1;
   $proj = $arg;
-  unless (-d "$gh\\$proj") { die ("No directory $gh\\$proj."); }
   $count++;
   }
 }
 
-my $storyChange = 1;
+my $trizname = "$proj.trizbort";
+
+my $storyChange = 0;
 if ($storyChange)
 {
   my @storyChange = getChangeIDs($proj, "story.ni");
 }
+else
+{
+if ($proj eq "roiling") { $proj = "stale-tales-slate"; $trizname = "Roiling\\maps\\roiling"; }
+elsif ($proj eq "shuffling") { $proj = "stale-tales-slate"; $trizname = "Shuffling\\maps\\shuffling"; }
+elsif ($proj eq "compound") { $proj = "the-problems-compound"; $trizname = "compound"; }
 
-my @changeIDs = getChangeIDs($proj, "$proj.trizbort");
+unless (-d "$gh\\$proj") { die ("No directory $gh\\$proj."); }
+unless (-f "$gh\\$proj\\$trizname.trizbort") { die ("No file $gh\\$proj\\$trizname.trizbort."); }
+
+my @changeIDs = getChangeIDs($proj, "$trizname.trizbort");
+}
 
 #parseOneXml('c:\games\inform\triz\mine\buck-the-past.trizbort');
 
@@ -47,14 +61,14 @@ print "$eq", "OBJECTS", "$eq\n";
 
 for (sort {$objArray{$b} <=> $objArray{$a}} keys %objArray)
 {
-  print "$_ $objArray{$_}\n";
+  print "$_ $objArray{$_}" . ($initialItems{$_} ? " * " : "") . "\n";
 }
 
 print "$eq", "ROOMS", "$eq\n";
 
 for (sort {$roomHash{$a} <=> $roomHash{$b}} keys %roomHash)
 {
-  print "$_ $roomHash{$_}\n";
+  print "$_ $roomHash{$_}" . ($initialRooms{$_} ? " * " : "") . "\n";
 }
 
 ################################
@@ -71,11 +85,15 @@ my @temp;
 for my $obj($xmldoc->findnodes('/trizbort/map/room'))
 {
   $roomHash{$obj->getAttribute("name")}++;
+  if ($readInitialRooms) { $initialRooms{$obj->getAttribute("name")} = 1; }
   for my $name ($obj->findnodes('./*'))
   {
-    if ($name->nodeName() eq "objects") { @temp = split(/\|/, $name->textContent()); for (@temp) { $objArray{$_}++; } }
+    if ($name->nodeName() eq "objects") { @temp = split(/\|/, $name->textContent()); for (@temp) { $objArray{$_}++;  } $initialItems{$_} = 1; }
   }
 }
+
+$readInitialRooms = 0;
+$readInitialItems = 0;
 
 }
 
@@ -120,7 +138,8 @@ sub getChangeIDs
     $count++;
     if ($verbose) { printf("Opening commit $_ $count of %d\n", scalar @list); }
 
-    $xmltext = `git show $_:$_[0].trizbort`;
+	my $cmd = "git show $_:$_[1]";
+    $xmltext = `$cmd`;
 	open(B, ">$tempTriz");
 	print B $xmltext;
 	close(B);
