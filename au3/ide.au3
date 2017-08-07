@@ -6,6 +6,7 @@
 
 #include "ide-h.au3"
 #include <MsgBoxConstants.au3>
+#include <Date.au3>
 
 Local $project = "buck-the-past";
 Local $stuff = 1;
@@ -43,6 +44,18 @@ OpenIDE($project)
 ;
 
 Func OpenIDE($project)
+  if (WinExists($project & ".inform - Inform")) Then
+    Local $fileTimeA = FileGetTime($dirToCheck & "\\source\\story.ni", $FT_MODIFIED, $FT_ARRAY)
+	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
+	Local $nowTime = _NowCalc()
+	Local $dd = _DateDiff('h', $fileTime, $nowTime)
+	if $dd < 23 Then
+      WinActivate($project & ".inform");
+      WinWaitActive($project & ".inform");
+	  return
+    Endif
+	return
+  Endif
   if (WinExists($project & ".inform - Inform")) or (WinExists($project & ".inform* - Inform")) Then
     WinActivate($project & ".inform");
     WinWaitActive($project & ".inform");
