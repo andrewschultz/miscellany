@@ -34,7 +34,7 @@ while ($count <= $#ARGV)
   }
 }
 
-my $trizname = "$proj.trizbort";
+my $trizname = "$proj";
 
 my $storyChange = 0;
 if ($storyChange)
@@ -43,8 +43,8 @@ if ($storyChange)
 }
 else
 {
-if ($proj eq "roiling") { $proj = "stale-tales-slate"; $trizname = "Roiling\\maps\\roiling"; }
-elsif ($proj eq "shuffling") { $proj = "stale-tales-slate"; $trizname = "Shuffling\\maps\\shuffling"; }
+if ($proj eq "roiling") { $proj = "stale-tales-slate"; $trizname = "Roiling/maps/roiling"; }
+elsif ($proj eq "shuffling") { $proj = "stale-tales-slate"; $trizname = "Shuffling/maps/shuffling"; }
 elsif ($proj eq "compound") { $proj = "the-problems-compound"; $trizname = "compound"; }
 
 unless (-d "$gh\\$proj") { die ("No directory $gh\\$proj."); }
@@ -103,6 +103,7 @@ sub getChangeIDs
   chdir("$gh\\$_[0]");
   my $commits = `git rev-list --all --objects -- $_[1]`;
   my @list = split(/\n/, $commits);
+  my $file = $_[1];
   my $tempTriz = "c:\\games\\inform\\temp.trizbort";
   #die(join("\n", @list));
   @list = grep { $_ !~ / [a-z]/ } @list;
@@ -134,12 +135,13 @@ sub getChangeIDs
 
   for (@list)
   {
-    $_ =~ s/ *$//;
+    $_ =~ s/ [^ ]*$//;
     $count++;
     if ($verbose) { printf("Opening commit $_ $count of %d\n", scalar @list); }
 
-	my $cmd = "git show $_:$_[1]";
+	my $cmd = "git show $_:$file";
     $xmltext = `$cmd`;
+	if ($xmltext  !~ /[a-z]/) { print "Skipping $cmd\n"; next; }
 	open(B, ">$tempTriz");
 	print B $xmltext;
 	close(B);
