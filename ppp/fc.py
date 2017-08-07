@@ -68,8 +68,8 @@ start_time = 0
 
 time_matters = 1
 nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
-min_delay = 15000  # if we can cheat one time
-stupid_wait = 150 # delay variable
+min_delay = 30000  # if we can cheat one time
+stupid_wait = 300 # delay variable
 high_time = 0
 max_delay = 0
 cur_games = 0
@@ -674,6 +674,30 @@ def send_opts():
     return
 
 
+def check_total_per_day():
+    per_period = 10
+    timespan = 86400
+    time_list = "fctimelist.txt"
+    if os.access(time_list, os.W_OK):
+        print(time_list, 'should not have write access outside the game.')
+        exit()
+    cur_time = int(time.time())
+    time_array = [str(cur_time)]
+    with open(time_list) as file:
+        for line in file:
+            time_delt = cur_time - int(line)
+            if time_delt < timespan:
+                time_array.append(line.strip())
+    if len(time_array) > per_period:
+        print('Need to wait', timespan - (cur_time - int(time_array[per_period])), 'seconds to recharge games per day.')
+        exit()
+    os.system("attrib -r " + time_list)
+    fout = open(time_list, "w")
+    for x in time_array:
+        fout.write(x + "\n")
+    os.system("attrib +r " + time_list)
+
+
 def init_side(in_game_reset):
     global spares
     spares = [0, 0, 0, 0]
@@ -684,6 +708,7 @@ def init_side(in_game_reset):
     global last_reset
     highlight = 0
     if not in_undo:
+        check_total_per_day();
         last_reset = time.time()
         if in_game_reset != 1:
             start_time = last_reset
