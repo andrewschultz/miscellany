@@ -261,6 +261,11 @@ sub processTerms
 	  {
 	  $b = $a; $b =~ s/.*=//g;
 	  $b = rehash($b);
+	  if ($copies && !$warnYet)
+	  {
+	    print "WARNING: you are copying over before running modifying scripts.\n";
+		$warnYet = 1;
+	  }
 	  if ($verboseTest) { $quickCheck .= "test command>>>>>$a\n"; }
 	  $quickCheck .= `$b`;
 	  $cmdYet = 1;
@@ -408,7 +413,7 @@ sub processTerms
             }
 		  copy("$_", "$gh\\$toFile\\$file") || die ("Copy $_ to $gh\\$toFile\\$file failed");
 		  $fileList .= "$_\n";
-		  if ($cmdYet && !$warnYet) { print "You are running a command before copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
+		  #if ($cmdYet && !$warnYet) { print "You have run a command after copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
 		  $wildcards++;
 		  $copies++;
 		  }
