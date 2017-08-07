@@ -9,6 +9,10 @@ use XML::LibXML;
 use strict;
 use warnings;
 
+###########options
+my $verbose = 0;
+my $hideCurrent = 0;
+
 my %objArray;
 my %roomHash;
 my %initialRooms;
@@ -16,7 +20,6 @@ my %initialItems;
 my $proj = "buck-the-past";
 my $gh = "c:\\users\\andrew\\documents\\github";
 my $projYet = 0;
-my $verbose = 0;
 my $count = 0;
 my $readInitialRooms = 1;
 my $readInitialItems = 1;
@@ -27,6 +30,9 @@ while ($count <= $#ARGV)
   for ($arg)
   {
   /^-?v$/i && do { $verbose = 1; $count++; next; };
+  /^-?h$/i && do { $hideCurrent = 1; $count++; next; };
+  /^-?(hn|nh)$/i && do { $hideCurrent = 0; $count++; next; };
+  /^-?\?$/i && do { usage(); exit(); };
   if ($projYet) { die ("Can't have 2 projects"); }
   $projYet = 1;
   $proj = $arg;
@@ -61,6 +67,7 @@ print "$eq", "OBJECTS", "$eq\n";
 
 for (sort {$objArray{$b} <=> $objArray{$a}} keys %objArray)
 {
+  if ($hideCurrent && $initialItems{$_}) { next; }
   print "$_ $objArray{$_}" . ($initialItems{$_} ? " * " : "") . "\n";
 }
 
@@ -68,6 +75,7 @@ print "$eq", "ROOMS", "$eq\n";
 
 for (sort {$roomHash{$a} <=> $roomHash{$b}} keys %roomHash)
 {
+  if ($hideCurrent && $initialRooms{$_}) { next; }
   print "$_ $roomHash{$_}" . ($initialRooms{$_} ? " * " : "") . "\n";
 }
 
@@ -149,4 +157,15 @@ sub getChangeIDs
 	parseOneXml("$tempTriz");
   }
   exit if $_[1] =~ /story.ni/;
+}
+
+sub usage
+{
+
+print<<EOT;
+-h hides rooms in current repo
+-nh unhides rooms in current repo (usual default)
+-v verbose
+EOT
+exit()
 }
