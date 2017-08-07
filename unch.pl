@@ -14,6 +14,7 @@ use lib "c:\\writing\\scripts";
 use i7;
 use warnings;
 use strict;
+use List::MoreUtils qw(uniq);
 
 use POSIX;
 
@@ -35,7 +36,7 @@ my %exp = ( "3d" => "threediopolis",
 
 my %projs;
 # note that the bottom projects are the most important as they are least likely to go off the page
-my @projAry = (@i7gh, "seeker-status", "curate");
+my @projAry = uniq((@i7gh, "curate", "seeker-status"));
 
 #####################variables
 my $count = 0;

@@ -100,7 +100,7 @@ while ($count <= $#ARGV)
   /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
   /^-mo$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max overall limits.\n"; } $maxOverallFind = abs($b); $count+= 2; next; };
   /^-mf$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max file limits.\n"; } $maxFileFind = abs($b); $count+= 2; next; };
-  /^-mf$/ && do { $maxFileFind = $maxOverallFind = 0; $count+= 2; next; };
+  /^-mu$/ && do { $maxFileFind = $maxOverallFind = 0; $count+= 2; next; };
   /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict

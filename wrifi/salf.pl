@@ -80,7 +80,11 @@ while ($count <= $#ARGV)
 	}
 	else
 	{
+	  if ($list{$arg}) { $toSplit = $list{$arg}; }
+	  else
+	  {
 	  $toSplit = $arg;
+	  }
     }
   }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
@@ -113,7 +117,7 @@ while ($a = <A>)
   {
     for $mysect (@sects)
 	{
-	  if ($a =~ /^\\$mysect[=\|]/) { print "Alphabetizing $a\n"; alfThis(); }
+	  if ($a =~ /^\\$mysect[=\|]/) { chomp($a); print "Alphabetizing $a\n"; alfThis(); }
 	}
   }
 }
