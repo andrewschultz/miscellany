@@ -37,6 +37,7 @@ my $showOK = 0;
 my $printWarnings = 0;
 my $getFirstError = 0;
 my $launch = 0;
+my $blankWarn = 0;
 
 ######################counters
 my $errsYet = 0;
@@ -146,20 +147,25 @@ my $argcount = 0;
 while ($argcount <= $#ARGV)
 {
   my $arg = $ARGV[$argcount];
-  for ($arg)
+  print "$argcount $arg $#ARGV\n";
+  for (lc($arg))
   {
   /^-?c$/ && do { my $thisfile = __FILE__; `$np $thisfile`; exit; };
   /^-?e$/ && do { `$rf`; exit; };
   /^-?ep$/ && do { `$rf2`; exit; };
-  /^-?h/ && do { usage(); };
-  /^-?l/ && do { $launch = 1; $argcount++; next; };
-  /^-?f/ && do { $getFirstError = 1; $argcount++; next; };
-  /^-?i/ && do { $matchQuotes = 0; $argcount++; next; };
-  }
+  /^-?h$/ && do { usage(); };
+  /^-?b$/ && do { $blankWarn = 0; $argcount++; next; };
+  /^-?nb$/ && do { $blankWarn = 1; $argcount++; next; };
+  /^-?l$/ && do { $launch = 1; $argcount++; next; };
+  /^-?f$/ && do { $getFirstError = 1; $argcount++; next; };
+  /^-?i$/ && do { $matchQuotes = 0; $argcount++; next; };
+  print "A $argcount $arg $#ARGV\n";
   my @tempProj = split(/,/, $arg);
   for (@tempProj) { if ($map{$_}) { $_ = $map{$_}; } }
+  print ("Adding @tempProj\n");
   @projs = (@projs, @tempProj);
   $argcount++;
+  }
 }
 
 @projs = uniq(@projs);
@@ -316,6 +322,7 @@ while ($a = <A>)
   }
 	if ($inTable == 1)
 	{
+	  if ($a =~ /\t\t/) { print "Warning: double tabs at line $..\n"; }
 	  if (	($a !~ /\t\"/) && ($a !~ /^\"/))
 	  {
 	    if ($errs)
@@ -400,6 +407,16 @@ sub lookUp
 	  my $temp2;
 	  my $count;
 
+	  if (($temp eq "--") && ($blankWarn))
+	  {
+	    print "WARNING: blank entry at line $..\n";
+		return -1;
+	  }
+
+	  $temp =~ s/e\.g\. /eg /g;
+	  $temp =~ s/etc\.([^\"])/etc $1/g;
+	  $temp =~ s/a\.k\.a\. /aka /g;
+
 	  if ($temp =~ /\ttrue/) { $adNotTitle = 1; }
       $temp =~ s/^\"//gi;
 	  $temp =~ s/\[e[0-9]\]//gi;
@@ -430,9 +447,9 @@ sub lookUp
 	  if ($quoCheck == -1) { if (($temp =~ /'$/) && ($temp =~ /^'/)) { err(); print "$allLines($lineNum): $temp too quotey.\n"; return -1; } }
       my $gotit = ($temp =~ /[\.\!\"\?]['\)]?$/);
       if ($gotit && ($puncCheck == -1)) { err(); print "$allLines($lineNum): $temp unnecc punctuation.\n"; }
-      if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; }
-      if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; }
-      if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; }
+      if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; return -1; }
+      if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; return -1; }
+      if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; return -1; }
 	  $temp2 = $temp; $temp2 =~ s/[a-z\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return -1; }
       if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
 	  { # ?? shuffle to probably-ok in the future
@@ -480,6 +497,7 @@ sub usage
 {
 print<<EOT;
 See punc.txt for the syntax in the file.
+-b/-nb = warn for blank entries (--) or not
 -h help
 -l launch after
 -f launch first error, not last
