@@ -26,6 +26,7 @@
 # -? gives usage
 #
 
+use List::MoreUtils qw(uniq);
 use lib "c:/writing/scripts";
 use i7;
 use warnings;
@@ -70,13 +71,6 @@ my %fileLineOpen;
 
 my $rf = "c:\\writing\\dict\\punc.txt";
 my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
-
-if (defined($ARGV[0]))
-{
-  if ($ARGV[0] eq "c") { my $thisfile = __FILE__; `$np $thisfile`; exit; }
-  if ($ARGV[0] eq "e") { `$rf`; exit; }
-  if ($ARGV[0] eq "ep") { `$rf2`; exit; }
-}
 
 # -cl used to be "fix checklist" where I tacked on periods
 # now it can just be done with s/([^\.])\"/\.\"/
@@ -145,19 +139,35 @@ if ($#ARGV == -1)
   exit();
 }
 
-for my $argnum (0..$#ARGV)
+my @projs = ();
+
+my $argcount = 0;
+
+while ($argcount <= $#ARGV)
 {
-  my $proj;
-  if ($ARGV[$argnum] eq "-h") { usage(); }
-  if ($ARGV[$argnum] eq "-l") { $launch = 1; next; }
-  if ($ARGV[$argnum] eq "-f") { $getFirstError = 1; next; }
-  if ($ARGV[$argnum] eq "-i") { $matchQuotes = 0; next; }
-  if ($map{$ARGV[$argnum]})
-  { $proj = $map{$ARGV[$argnum]}; }
-  else
-  { $proj = $ARGV[$argnum]; }
-  my @projs = split(/,/, $proj);
-  for my $myProj(@projs) { getTableList($myProj); storyTables($myProj); }
+  my $arg = $ARGV[$argcount];
+  for ($arg)
+  {
+  /^-?c$/ && do { my $thisfile = __FILE__; `$np $thisfile`; exit; };
+  /^-?e$/ && do { `$rf`; exit; };
+  /^-?ep$/ && do { `$rf2`; exit; };
+  /^-?h/ && do { usage(); };
+  /^-?l/ && do { $launch = 1; $argcount++; next; };
+  /^-?f/ && do { $getFirstError = 1; $argcount++; next; };
+  /^-?i/ && do { $matchQuotes = 0; $argcount++; next; };
+  }
+  my @tempProj = split(/,/, $arg);
+  for (@tempProj) { if ($map{$_}) { $_ = $map{$_}; } }
+  @projs = (@projs, @tempProj);
+  $argcount++;
+}
+
+@projs = uniq(@projs);
+
+for my $myProj (@projs)
+{
+  getTableList($myProj);
+  storyTables($myProj);
 }
 
 if ($launch)
@@ -346,14 +356,12 @@ while ($a = <A>)
 		    $capCheck = 1;
 			if (lookUp($entryArray[$myIndex]))
 			{
-			  print "$. $fileLineOpen{$fileToRead} $getFirstError\n";
 			}
 			next;
 		  }
 	    }
 		if (lookUp($entryArray[$myIndex]))
 		{
-		  print "$. $fileLineOpen{$fileToRead} $getFirstError\n";
 		  $fileLineOpen{$fileToRead} = $. if (!$fileLineOpen{$fileToRead} || !$getFirstError);
 		}
 	  }
@@ -394,6 +402,7 @@ sub lookUp
 
 	  if ($temp =~ /\ttrue/) { $adNotTitle = 1; }
       $temp =~ s/^\"//gi;
+	  $temp =~ s/\[e[0-9]\]//gi;
       $temp =~ s/\".*//g;
 	  $temp =~ s/[:,]//g;
 	  $temp =~ s/' \/ '/ /g;
@@ -470,12 +479,11 @@ sub titleCase
 sub usage
 {
 print<<EOT;
-start capital/punctuation/quotes
-
-Caps-only
-3 = ALL CAPS 2 = title case
-
-1 = necc 0 = either way -1 = *don't* include
+See punc.txt for the syntax in the file.
+-h help
+-l launch after
+-f launch first error, not last
+-i don't bother to match quotes
 EOT
 exit;
 }
