@@ -34,6 +34,8 @@ use strict;
 ######################options
 my $showOK = 0;
 my $printWarnings = 0;
+my $getFirstError = 0;
+my $launch = 0;
 
 ######################counters
 my $errsYet = 0;
@@ -64,6 +66,7 @@ my %searches;
 my %ignore;
 my %got;
 my %entry;
+my %fileLineOpen;
 
 my $rf = "c:\\writing\\dict\\punc.txt";
 my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
@@ -146,7 +149,9 @@ for my $argnum (0..$#ARGV)
 {
   my $proj;
   if ($ARGV[$argnum] eq "-h") { usage(); }
-  if ($ARGV[$argnum] eq "-i") { $matchQuotes = 0; }
+  if ($ARGV[$argnum] eq "-l") { $launch = 1; next; }
+  if ($ARGV[$argnum] eq "-f") { $getFirstError = 1; next; }
+  if ($ARGV[$argnum] eq "-i") { $matchQuotes = 0; next; }
   if ($map{$ARGV[$argnum]})
   { $proj = $map{$ARGV[$argnum]}; }
   else
@@ -154,6 +159,19 @@ for my $argnum (0..$#ARGV)
   my @projs = split(/,/, $proj);
   for my $myProj(@projs) { getTableList($myProj); storyTables($myProj); }
 }
+
+if ($launch)
+{
+  for (keys %fileLineOpen)
+  {
+    my $cmd = "start \"\" $np \"$_\" -n$fileLineOpen{$_}";
+	print "RUNNING COMMAND: $cmd\n";
+	`$cmd`;
+  }
+}
+
+##################################################
+# subdirectories
 
 #################################
 #this reads in what to do with the various tables from punc.txt, for whatever story.ni file
@@ -326,13 +344,22 @@ while ($a = <A>)
 			  ($entryArray[1] !~ /true/))
 			{ err(); print "$allLines($lineNum): $a needs TRUE after tab.\n"; }
 		    $capCheck = 1;
-			lookUp($entryArray[$myIndex]); next;
+			if (lookUp($entryArray[$myIndex]))
+			{
+			  print "$. $fileLineOpen{$fileToRead} $getFirstError\n";
+			}
+			next;
 		  }
 	    }
-		lookUp($entryArray[$myIndex]);
+		if (lookUp($entryArray[$myIndex]))
+		{
+		  print "$. $fileLineOpen{$fileToRead} $getFirstError\n";
+		  $fileLineOpen{$fileToRead} = $. if (!$fileLineOpen{$fileToRead} || !$getFirstError);
+		}
 	  }
 	}
 }
+close(A);
 }
 
 #now check to make sure everything in punc.txt is used
@@ -380,36 +407,37 @@ sub lookUp
 	  $temp =~ s/\[[^\]]+\]$//g;
 	  if ($head =~ /(random books|biopics)/)
 	  {
-	    if ($_[0] !~ /\[r\]/) { err(); print "$allLines($lineNum): $_[0] needs [r].\n"; return; }
-	    if ($temp !~ / by /) { err(); print "$allLines($lineNum): $temp needs by.\n"; return; }
+	    if ($_[0] !~ /\[r\]/) { err(); print "$allLines($lineNum): $_[0] needs [r].\n"; return -1; }
+	    if ($temp !~ / by /) { err(); print "$allLines($lineNum): $temp needs by.\n"; return -1; }
 	  }
 	  if ($temp =~ /\[\]/) { err(); print "$allLines($lineNum): $temp brackets with nothing in them.\n"; }
-	  if (($temp =~ /[a-zA-Z][\.!\?] +[a-z]/) && ($temp !~ /[!\?] by/)) { if ($temp !~ /(i\.e|e\.g)\./i) { err(); print "$allLines($lineNum): $temp starts sentence with lower-case.\n"; }}
-	  if ($temp =~ /â€œ/) { err(); print "$allLines($lineNum): $temp has smart quotes, which you may not want\n"; }
-	  if (($capCheck == 3) && ($temp =~ /[a-z]/)) { err(); print "$allLines($lineNum): $temp needs to be ALL CAPS.\n"; return; }
-	  if (($capCheck == 2) && ($adNotTitle == 0) && (!titleCase($temp))) { err(); print "$allLines($lineNum): $temp needs to be Title Case, change $wrongString.\n"; return; }
-	  if (($capCheck == 1) && ($temp =~ /^[a-z]/)) { err(); print "$allLines($lineNum): $temp need caps.\n"; return; }
-	  if (($capCheck == -1) && ($temp =~ /^[A-Z]/)) { err(); print "$allLines($lineNum): $temp wrong caps.\n"; return; }
-	  if ($quoCheck == 1) { $count = ($temp =~ tr/'//); if (($count < 2) || (($temp !~ /^'/) && ($temp !~ /'$/))) { err(); print "$allLines($lineNum): $temp not enough quotes.\n"; return; } }
-	  if ($quoCheck == -1) { if (($temp =~ /'$/) && ($temp =~ /^'/)) { err(); print "$allLines($lineNum): $temp too quotey.\n"; return; } }
+	  if (($temp =~ /[a-zA-Z][\.!\?] +[a-z]/) && ($temp !~ /[!\?] by/)) { if ($temp !~ /(i\.e|e\.g)\./i) { err(); print "$allLines($lineNum): $temp starts sentence with lower-case.\n"; } return -1; }
+	  if ($temp =~ /â€œ/) { err(); print "$allLines($lineNum): $temp has smart quotes, which you may not want\n"; return -1; }
+	  if (($capCheck == 3) && ($temp =~ /[a-z]/)) { err(); print "$allLines($lineNum): $temp needs to be ALL CAPS.\n"; return -1; }
+	  if (($capCheck == 2) && ($adNotTitle == 0) && (!titleCase($temp))) { err(); print "$allLines($lineNum): $temp needs to be Title Case, change $wrongString.\n"; return -1; }
+	  if (($capCheck == 1) && ($temp =~ /^[a-z]/)) { err(); print "$allLines($lineNum): $temp need caps.\n"; return -1; }
+	  if (($capCheck == -1) && ($temp =~ /^[A-Z]/)) { err(); print "$allLines($lineNum): $temp wrong caps.\n"; return -1; }
+	  if ($quoCheck == 1) { $count = ($temp =~ tr/'//); if (($count < 2) || (($temp !~ /^'/) && ($temp !~ /'$/))) { err(); print "$allLines($lineNum): $temp not enough quotes.\n"; return -1; } }
+	  if ($quoCheck == -1) { if (($temp =~ /'$/) && ($temp =~ /^'/)) { err(); print "$allLines($lineNum): $temp too quotey.\n"; return -1; } }
       my $gotit = ($temp =~ /[\.\!\"\?]['\)]?$/);
       if ($gotit && ($puncCheck == -1)) { err(); print "$allLines($lineNum): $temp unnecc punctuation.\n"; }
       if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; }
       if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; }
       if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; }
-	  $temp2 = $temp; $temp2 =~ s/[a-z\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return; }
+	  $temp2 = $temp; $temp2 =~ s/[a-z\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return -1; }
       if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
 	  { # ?? shuffle to probably-ok in the future
 	    $temp2 = $temp;
 		$temp2 =~ s/'.+?(\.|\?|!)?'( |$)//gi;
 	    if ($temp2 =~ /( '|' )/i)
-		{ err(); print "$allLines($lineNum):\n$temp\n$temp2\npossible unbracketed apostrophe.\n"; return; }
+		{ err(); print "$allLines($lineNum):\n$temp\n$temp2\npossible unbracketed apostrophe.\n"; return -1; }
       }
-      if (($temp =~ /^'/) ^ ($temp =~ /'$/)) { $count = ($temp =~ tr/'//); if ($count == 1) { err(); print ("$allLines($lineNum): $temp unmatched quotes.\n"); return; } }
+      if (($temp =~ /^'/) ^ ($temp =~ /'$/)) { $count = ($temp =~ tr/'//); if ($count == 1) { err(); print ("$allLines($lineNum): $temp unmatched quotes.\n"); return -1; } }
       if (($temp =~ /^'/) && ($temp =~ /'$/)) { $temp =~ s/'//g; }
       if ($temp =~ /^ /) { err(); print "$allLines($lineNum): $temp leading space.\n"; }
       if ($temp =~ /''/) { err(); print "$allLines($lineNum): $temp two single quotes.\n"; }
 	  $totalSuccesses++;
+	  return 0;
 }
 
 sub err
