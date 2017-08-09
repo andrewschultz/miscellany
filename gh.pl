@@ -28,6 +28,7 @@ my $byFile = 0;
 my $removeTrailingSpace = 0;
 my $ignoreTrizbort = 0;
 my $backcopy = 0;
+my $whiteSpaceRun = 0;
 
 ##########################
 #constants
@@ -112,7 +113,8 @@ while ($count <= $#ARGV)
   /^-?rt$/i && do { $runTrivialTests = 1; $count++; next; };
   /^-?nrt$/i && do { $runTrivialTests = -1; $count++; next; };
   /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
-  /^-?rts$/i && do { $ignoreTrizbort = 0; $count++; next; };
+  /^-?wsr$/i && do { $whiteSpaceRun = 1; $count++; next; };
+  /^-?igt$/i && do { $ignoreTrizbort = 0; $count++; next; };
   /^-?(sw|ws)(t)?/i && do
   {
     readReplace();
@@ -158,7 +160,8 @@ while ($count <= $#ARGV)
 	$count++;
 	next;
   };
-  /^-\?/ && do { usage(); };
+  /^-?\?$/ && do { usage(); };
+  /^-?\?\?$/ && do { usageDetail(); };
   print "$arg not recognized.\n";
   usage();
   }
@@ -355,6 +358,22 @@ sub processTerms
 	  if (-f $fromFile && (-s $fromFile == 0))
 	  {
 	    die ("Uh oh. I found a 0 byte file: $fromFile\n\nI am bailing immediately, because this should never happen. It may've been deleted, so you'll need to pull it back up with git revert or something.") if !$zeroOkay && shouldRun($a);
+	  }
+	  if ($whiteSpaceRun)
+	  {
+	    if ($fromFile =~ /\*/)
+		{
+		  my @fileList = glob($fromFile);
+		  for (@fileList)
+		  {
+		    checkWarnings($_, 1) if -f $_ && shouldCheck($_);
+		  }
+		}
+		else
+		{
+	      checkWarnings($fromFile, 1) if shouldCheck($_);
+		}
+		next;
 	  }
 	  if (compare($fromFile, "$outName"))
 	  {
@@ -783,9 +802,12 @@ sub checkWarnings
 	  }
 	  close($origFile);
 	  close($strippedFile);
+	  if (compare($tempfile, $_[0])) # probably not necessary, but just to check...
+	  {
 	  my $cmd = "copy \"$tempfile\" \"$_[0]\"";
 	  print "$cmd\n";
 	  `$cmd`;
+	  }
 	  delete($gwt{$_[0]});
 	  #die("copy \"$tempfile\" \"$_[0]\"");
 	}
@@ -868,6 +890,19 @@ sub wcBackcopy
   return 0;
 }
 
+sub usageDetail
+{
+print<<EOT;
+========USAGE DETAIL
+-bc = executeBackCopy
+-rt / -nrt = (don't) run trivial tests
+-rts = remove trailing space (now default)
+-wsr = whitespace run (only removes whitespace in the project)
+-igt = ignore Trizbort
+EOT
+exit();
+}
+
 sub usage
 {
 print<<EOT;
@@ -876,7 +911,7 @@ print<<EOT;
 -c edits gh.pl
 -p edits private file
 -v = verbose output
--vt = verbose test
+-vt/nvt = verbose/not verbose test
 -rt/-nrt = flag running trivial tests
 -j = just print commands instead of executing
 -t = print various test results
@@ -886,6 +921,7 @@ print<<EOT;
 Putting = after a command runs tests
 -it ignores timestamps being wrong (to < from) and -tr copies (from) to (to)
 -? = this
+-?? = detailed commands
 EOT
-exit;
+exit();
 }
