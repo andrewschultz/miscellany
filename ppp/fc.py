@@ -678,16 +678,33 @@ def check_total_per_day():
     per_period = 10
     timespan = 86400
     time_list = "fctimelist.txt"
+    cur_time = int(time.time())
+    if not os.path.isfile(time_list):
+        print('Need to create file', time_list)
+        os.system("attrib -r " + lock_file)
+        os.system("erase " + lock_file)
+        ftemp = open(time_list, "w")
+        for x in range (0,10):
+            ftemp.write(str(cur_time) + '\n')
+        exit()
     if os.access(time_list, os.W_OK):
         print(time_list, 'should not have write access outside the game.')
+        os.system("attrib -r " + lock_file)
+        os.system("erase " + lock_file)
         exit()
-    cur_time = int(time.time())
     time_array = [str(cur_time)]
     with open(time_list) as file:
         for line in file:
             time_delt = cur_time - int(line)
             if time_delt < timespan:
                 time_array.append(line.strip())
+    file.close()
+    if len(time_array) is 1:
+        print('Corruption/tampereing suspected. Resetting the file.')
+        fout = open(time_list, "w")
+        for x in range (0,10):
+            fout.write(cur_time + '\n')
+        os.system("attrib +r " + time_list)
     if len(time_array) > per_period:
         print('Need to wait', timespan - (cur_time - int(time_array[per_period])), 'seconds to recharge games per day.')
         exit()
