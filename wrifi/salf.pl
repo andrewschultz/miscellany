@@ -91,12 +91,11 @@ while ($count <= $#ARGV)
 	{
 	  my $a2 = $arg; $a2 =~ s/^-//;
 	  if ($list{$a2}) { $toSplit = $list{$a2}; }
-	  else
 	  {
 	  $toSplit = $a2;
-	  }
 	  $count++;
 	  next;
+	  }
     }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
   print "Invalid flag $arg\n";
@@ -343,5 +342,13 @@ sub checkLastRun
 
 sub usage
 {
+print<<EOT;
+BASIC USAGE
+-e = open log file
+-l / -ll = launch (first/last difference)
+-od = open difference file
+-c|tc|ct = check last run
+-q = undoQuestionComments
+EOT
 exit()
 }
