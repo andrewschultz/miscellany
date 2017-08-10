@@ -53,22 +53,23 @@ my @sects = ();
 my $toSplit = "";
 my $count = 0;
 my $defDir = "";
-my $myd = getcwd();
+my $myd = lc(getcwd());
 
 my %list;
 $list{"pc"} = "pc";
 $list{"sc"} = "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca";
 $list{"btp"} = "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
 
-if ($myd eq "C:\\games\\inform\\compound.inform\\Source") { $toSplit = $list{"pc"}; $defDir = "sc"; }
-if ($myd eq "C:\\games\\inform\\slicker-city.inform\\Source") { $toSplit = $list{"sc"}; $defDir = "sc"; }
-if ($myd eq "C:\\games\\inform\\buck-the-past.inform\\Source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
+if ($myd eq "c:\\games\\inform\\compound.inform\\source") { $toSplit = $list{"pc"}; $defDir = "sc"; }
+if ($myd eq "c:\\games\\inform\\slicker-city.inform\\source") { $toSplit = $list{"sc"}; $defDir = "sc"; }
+if ($myd eq "c:\\games\\inform\\buck-the-past.inform\\source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
 
 my $defaultProj = "btp";
 my $logFileEdit = $defaultProj;
 
 while ($count <= $#ARGV)
 {
+  print "!$toSplit\n";
   my $arg = lc($ARGV[$count]);
   for ($arg)
   {
@@ -158,15 +159,16 @@ if ((-s $inFile) != $outDup)
   exit;
 }
 
-if ($launch)
-{
-  launchSectDif();
-}
-
 #die("$dupes duplicates $dupBytes bytes duplicated.");
+my $launchCmd = $launch ? launchSectDif() : "";
 my $cmd = "copy $outFile $inFile";
 print "$cmd\n";
 `$cmd`;
+
+if ($launchCmd)
+{
+  `$launchCmd`;
+}
 
 #################################################
 #subroutines
@@ -292,7 +294,7 @@ sub launchSectDif
   {
     $lb = <B>;
 	$lastSec = $. if ($la =~ /^\\/);
-	print "$la$lb" if ($la =~ /fill-in/);
+	#print "$la$lb" if ($la =~ /fill-in/);
 	if (!$difYet && ($la ne $lb))
 	{
 	  $difYet = 1;
@@ -302,10 +304,9 @@ sub launchSectDif
 	  {
         close(A);
         close(B);
-	    my $cmd = "$np $inFile -n$firstSecDif";
+	    ;
 		#print($cmd);
-		`$cmd`;
-		return;
+		return "$np $inFile -n$firstSecDif";
 	  }
 	}
   }
@@ -313,10 +314,9 @@ sub launchSectDif
   close(B);
   if ($launch)
   {
-    my $cmd = "$np $inFile -n$firstSecDif";
-	#print($cmd);
-	`$cmd`;
+    return "$np $inFile -n$firstSecDif";
   }
+  return "";
 }
 
 sub checkLastRun
