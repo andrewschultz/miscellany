@@ -283,7 +283,7 @@ sub procCmd
 		if (isEmpty($numArray[1]) && (perfAscending($numArray[0])) && (!$undo)) { print "The stack you wish to twiddle ($numArray[0]) is already in order!\n"; return; } # the computer may automatically shift it but we block the player from doing so because computers are perfect
 		tryMove("$numArray[0]", "$numArray[1]");
 
-  	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; $errorPrintedYet = 1; } }
+	    if (($b4 == $#undoArray) && (!$undo)) { if (!$moveBar) { print "($b4/$letters/$numbers) No moves made. Please check the stacks have the same suit at the bottom.\n"; $errorPrintedYet = 1; } }
 		return;
 	  }
       elsif ($#numArray == 2)
@@ -311,7 +311,7 @@ sub procCmd
 	    tryMove("$numArray[0]", "$numArray[2]");
 	    tryMove("$numArray[1]", "$numArray[2]");
 	    $quickMove = 0;
-  	    if (($b4 == $#undoArray) && (!$undo))
+	    if (($b4 == $#undoArray) && (!$undo))
 		{
 		  if (!$moveBar) { print "No moves made. Please check the stacks you tried to shift.\n"; $errorPrintedYet = 1; }
 		}
@@ -326,7 +326,7 @@ sub procCmd
 	  elsif ($#numArray == 0)
       {
         if ($numArray[0] !~ /[1-6]/) { print "Valid rows are to auto-move are 1-6.\n"; return; }
-  	    my $totalRows = 0;
+	    my $totalRows = 0;
 	    my $anyEmpty = 0;
 		my $forceRow;
 	    my $fromCardTop = $#{$stack[$numArray[0]]};
@@ -344,7 +344,7 @@ sub procCmd
 	      #print "$fromCard - $toCard, " . cromu($fromCard, $toCard) . " $#{$stack[$tryRow]} && $emptyIgnore\n";
 	      if ((cromu($fromCard, $toCard)) || (($#{$stack[$tryRow]} < 0) && !$emptyIgnore))
 	      {
-  	        if (($toCard - $fromCard == 1) && ($fromCard % 13))
+	        if (($toCard - $fromCard == 1) && ($fromCard % 13))
 		    {
 		      tryMove("$numArray[0]", "$tryRow"); # force 4-3 if we have 4S, QS, 3S
 		      return;
@@ -358,7 +358,7 @@ sub procCmd
 	    elsif ($totalRows > 1)
 	    {
 	      if ((emptyRows() > 0) && ($totalRows > 1)) { print "First empty row is " . firstEmptyRow() . ".\n"; tryMove("$numArray[0]" , firstEmptyRow()); return; }
-  	      print "Too many rows ($totalRows) to move $numArray[0] to.\n"; return;
+	      print "Too many rows ($totalRows) to move $numArray[0] to.\n"; return;
 	    }
 	    else { if (isEmpty($numArray[0])) { print("Nothing to move.\n"); return; } print "Forcing $numArray[0] -> $forceRow.\n"; tryMove("$numArray[0]", "$forceRow"); return; }
       }
@@ -461,12 +461,12 @@ sub procCmd
 		my $foundChain = 0;
 	    for my $j (1..3) #this is so we pull the lowest card onto the lowest remaining. Not fully workable eg (other)-7-6-5 3-2-1-j-10-9 k-q-8-4 will lose
 	    #we'd need a check for "lowest" and "safest" and "safest" trumps "lowest" but if there is nothing else, "lowest"
-  	    {
+	    {
 	      for my $k (1..3)
 		  {
 		    if (canChain($numArray[$j], $numArray[$k]))
 		    {
-  		      $foundChain = 1;
+		      $foundChain = 1;
 			  if (($stack[$numArray[$k]][$#{$stack[$numArray[$k]]}] < $curMinToFlip) || ($curMinToFlip == 0)) { $localFrom = $j; $localTo = $k; }
 		    }
 		    else { }
@@ -496,8 +496,8 @@ sub procCmd
 	  print "\nMoves (" . ($#undoArray+1) . "): " . join(",", @undoArray) . "\n";
 	  return;
     };
- 	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
- 	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
+	/^ub$/ && do { cmdNumWarn($numbers, $letters); undo(3); return; };
+	/^ud$/ && do { cmdNumWarn($numbers, $letters); undo(2); return; };
     /^ue$/ && do { cmdNumWarn($numbers, $letters); $undoEach = !$undoEach; print "UndoEach now $toggles[$undoEach].\n"; return; };
     /^ul$/ && do { cmdNumWarn($numbers, $letters); print "Last undo array info=====\nTC=" . join(",", @topCard) . "\nM=" . join(",", @undoLast) . "\n"; return; };
     /^um$/ && do { if (!$numbers) { undo(0); } else { undo(1, $numbers); } return; };
@@ -869,7 +869,7 @@ sub expandOneColumn
 	    printDebug ("Shift $count\n");
 	    $errorPrintedYet = 1; # very hacky but works for now. The point is, any move should work, and the rest will be cleaned up by the ext function
 	    my $from = lowestOf($rows[0], $thisRow, $rows[1]);
-  	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of $rows[0] $rows[1] $thisRow\n");
+	    printDebug ("Lowest row is $from, card " . faceval(botCard($from)) . " of $rows[0] $rows[1] $thisRow\n");
 	    if ($from == $rows[0]) { if (botCard($thisRow) > botCard($rows[1])) { autoShuffleExt($rows[0], $thisRow, $rows[1]); } else { autoShuffleExt($rows[0], $rows[1], $thisRow); } }
 	    elsif ($from == $rows[1]) { if (botCard($thisRow) > botCard($rows[0])) { autoShuffleExt($rows[1], $thisRow, $rows[0]); } else { autoShuffleExt($rows[1], $rows[0], $thisRow); } }
 	    else { if (botCard($rows[0]) < botCard($rows[1])) { autoShuffleExt($thisRow, $rows[0], $rows[1]); } else { autoShuffleExt($thisRow, $rows[1], $rows[0]); } }

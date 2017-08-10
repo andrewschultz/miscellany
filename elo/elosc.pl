@@ -952,7 +952,7 @@ sub printTourney
 	   if ($#temp == 0) { $thisRoundTotals{$temp[0]} = 1; }
 	   else { $thisRoundTotals{$temp[0]} = $temp[1]; }
 	    $t1 =~ s/=.*//;
- 	 }
+	 }
 
 	 for $t1 (@right)
 	 {
@@ -977,7 +977,7 @@ sub printTourney
 	     $nextRoundTotals{$t2}  += $thisRoundTotals{$t2} * $thisRoundTotals{$t1} * (1 - $thisProb);
 	   }
 	 }
- 	 for $tg (keys %nextRoundTotals)
+	 for $tg (keys %nextRoundTotals)
 	 {
 	   $nextRoundTotals{$tg}  = sprintf("%.5f", $nextRoundTotals{$tg});
 	   $teamProbs{$tg} .= sprintf("<td bgcolor=\"%02x%02x00\">%.2f%%</td>", 255.9*(1-$nextRoundTotals{$tg}), 255.9*($nextRoundTotals{$tg}), $nextRoundTotals{$tg} * 100);

@@ -371,7 +371,7 @@ sub processTerms
 		}
 		else
 		{
-	      checkWarnings($fromFile, 1) if shouldCheck($_);
+	      checkWarnings($fromFile, 1) if shouldCheck($fromFile);
 		}
 		next;
 	  }

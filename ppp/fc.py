@@ -50,7 +50,7 @@ force = 0
 move_list = []
 
 delta = 0
- 
+
 win = 0
 
 total_undo = 0
@@ -535,7 +535,7 @@ def read_time_file():
     global max_delay
     last_time = modulus = remainder = 0
     if os.access(time_file, os.W_OK):
-        print("Time file should not have write access outside of the game. attrib +R " + time_file + 
+        print("Time file should not have write access outside of the game. attrib +R " + time_file +
               " or chmod 333 to get things going.")
         exit()
         # zap above to debug
@@ -2276,7 +2276,7 @@ def read_cmd(this_cmd):
 # start main program
 
 if disallow_write_source and os.access(__file__, os.W_OK):
-    print("Source file should not have write access outside of the game. attrib +R " + __file__ + 
+    print("Source file should not have write access outside of the game. attrib +R " + __file__ +
           " or chmod 333 to get things going.")
     exit()
     # zap above to debug
