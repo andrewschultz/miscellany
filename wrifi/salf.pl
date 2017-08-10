@@ -16,6 +16,9 @@
 
 #use Data::Dumper qw(Dumper);
 #use List::MoreUtils qw(uniq);
+
+use lib "c:/writing/scripts";
+use i7;
 use POSIX;
 use File::Compare (compare);
 
@@ -25,6 +28,8 @@ use warnings;
 ########################constants
 my $logFile = __FILE__;
 $logFile =~ s/.pl$/-log.txt/i;
+my $inFile = "c:\\writing\\smart.otl";
+my $outFile = "c:\\writing\\temp\\smart.otl";
 
 ##########################
 #options
@@ -32,6 +37,8 @@ $logFile =~ s/.pl$/-log.txt/i;
 my $runTest = 0;
 my $undoQuestionComments = 0;
 my $openDif = 0;
+my $launch = 0;
+my $launchLatest = 0;
 
 ##########################
 #variables
@@ -66,6 +73,8 @@ while ($count <= $#ARGV)
   for ($arg)
   {
     /^-?e$/ && do { `$logFile`; exit(); };
+	/^-?l$/ && do { $launch = 1; $count++; next; };
+	/^-?ll$/ && do { $launch = 1; $launchLatest = 1; $count++; next; };
     /^-?od$/ && do { $openDif = 1; $count++; next; };
     /^-?(c|tc|ct)$/ && do
 	{
@@ -80,15 +89,19 @@ while ($count <= $#ARGV)
 	}
 	else
 	{
-	  if ($list{$arg}) { $toSplit = $list{$arg}; }
+	  my $a2 = $arg; $a2 =~ s/^-//;
+	  if ($list{$a2}) { $toSplit = $list{$a2}; }
 	  else
 	  {
-	  $toSplit = $arg;
+	  $toSplit = $a2;
 	  }
+	  $count++;
+	  next;
     }
-  }
   if ($arg eq $defDir) { print "No need to specify project when you're in its directory.\n"; $count++; next; }
-  $count++;
+  print "Invalid flag $arg\n";
+  usage();
+  }
 }
 
 if (!$toSplit)
@@ -102,11 +115,8 @@ if ($toSplit =~ /^-/) { $toSplit =~ s/^-//; }
 
 if ($#sects == -1) { print "Need a CSV of sections, or use -pc for ProbComp, -sc or BTP.\n"; exit; }
 
-my $infile = "c:\\writing\\smart.otl";
-my $outfile = "c:\\writing\\temp\\smart.otl";
-
-open(A, "$infile");
-open(B, ">$outfile");
+open(A, "$inFile");
+open(B, ">$outFile");
 
 my $mysect;
 
@@ -125,21 +135,21 @@ while ($a = <A>)
 close(A);
 close(B);
 
-if (!compare($infile, $outfile)) { print "Nothing changed after sorting. No recopying done.\n"; exit(); }
+if (!compare($inFile, $outFile)) { print "Nothing changed after sorting. No recopying done.\n"; exit(); }
 
 if (!$didSomething) { print "Didn't sort anything!\n"; exit; }
 
-my $outDup = (-s $outfile) + $dupBytes;
+my $outDup = (-s $outFile) + $dupBytes;
 
-if ((-s $infile) != $outDup)
+if ((-s $inFile) != $outDup)
 {
-  print "Uh oh, $infile and $outfile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes extra bytes) didn't match sizes. Bailing.\n";
-  print "" . (-s $infile) . " for $infile, " . (-s $outfile) . " for $outfile, total $outDup.\n";
-  print "" . lines($infile) . " lines for $infile, " . lines($outfile) . " lines for $outfile.\n";
+  print "Uh oh, $inFile and $outFile(" . ($dupBytes < 0 ? "+" : "") . "$dupBytes extra bytes) didn't match sizes. Bailing.\n";
+  print "" . (-s $inFile) . " for $inFile, " . (-s $outFile) . " for $outFile, total $outDup.\n";
+  print "" . lines($inFile) . " lines for $inFile, " . lines($outFile) . " lines for $outFile.\n";
   if ($openDif)
   {
-  `sort $infile > c:\\writing\\temp\\smart-b4.otl`;
-  `sort $outfile > c:\\writing\\temp\\smart-af.otl`;
+  `sort $inFile > c:\\writing\\temp\\smart-b4.otl`;
+  `sort $outFile > c:\\writing\\temp\\smart-af.otl`;
   `wm c:\\writing\\temp\\smart-b4.otl c:\\writing\\temp\\smart-af.otl`
   }
   else
@@ -149,8 +159,13 @@ if ((-s $infile) != $outDup)
   exit;
 }
 
+if ($launch)
+{
+  launchSectDif();
+}
+
 #die("$dupes duplicates $dupBytes bytes duplicated.");
-my $cmd = "copy $outfile $infile";
+my $cmd = "copy $outFile $inFile";
 print "$cmd\n";
 `$cmd`;
 
@@ -262,6 +277,49 @@ sub lines
   return $retVal;
 }
 
+sub launchSectDif
+{
+  open(A, $inFile);
+  open(B, $outFile);
+
+  my $difYet = 0;
+  my $firstDif = 0;
+  my $firstSecDif = 0;
+  my $lastSec = 0;
+  my $la;
+  my $lb;
+
+  while ($la = <A>)
+  {
+    $lb = <B>;
+	$lastSec = $. if ($la =~ /^\\/);
+	print "$la$lb" if ($la =~ /fill-in/);
+	if (!$difYet && ($la ne $lb))
+	{
+	  $difYet = 1;
+	  $firstDif = $.;
+	  $firstSecDif = $lastSec + 1;
+	  if (!$launchLatest)
+	  {
+        close(A);
+        close(B);
+	    my $cmd = "$np $inFile -n$firstSecDif";
+		#print($cmd);
+		`$cmd`;
+		return;
+	  }
+	}
+  }
+  close(A);
+  close(B);
+  if ($launch)
+  {
+    my $cmd = "$np $inFile -n$firstSecDif";
+	#print($cmd);
+	`$cmd`;
+  }
+}
+
 sub checkLastRun
 {
   my $line;
@@ -281,4 +339,9 @@ sub checkLastRun
 	}
   }
   close(A);
+}
+
+sub usage
+{
+exit()
 }
