@@ -195,7 +195,7 @@ sub alfThis
     }
     push(@lines, $a);
   }
-  my @x = sort { comm($a) <=> comm($b) || dones($a) <=> dones($b) || "\L$a" cmp "\L$b" } @lines;
+  my @x = sort { comm($a) <=> comm($b) || dones($a) <=> dones($b) || lotitle($a) cmp lotitle($b) } @lines;
   #@x = @lines;
 
   for my $y (@x)
@@ -317,6 +317,14 @@ sub launchSectDif
     return "$np $inFile -n$firstSecDif";
   }
   return "";
+}
+
+sub lotitle
+{
+  my $temp = lc($_[0]);
+  $temp =~ s/^\"//;
+  $temp =~ s/^(a |the |an )//;
+  return $temp;
 }
 
 sub checkLastRun
