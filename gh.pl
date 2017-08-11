@@ -240,6 +240,10 @@ sub processTerms
     my $reverseCopy = 0;
     chomp($a);
     my $b = $a;
+	my $hashProj = $a;
+	$hashProj =~ s/=.*//;
+	$hashProj =~ s/^[^a-z0-9]*//gi;
+
 	$xtraCmd = "";
 	if ($a =~ /&/)
 	{
@@ -254,11 +258,12 @@ sub processTerms
     if ($a =~ /^#/) { next; }
 	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
 	if ($a =~ /^0/) { $a =~ s/^0//; $zeroOkay = 1; } else { $zeroOkay = 0; }
+
 	if ($a =~ /^>/)
 	{
 	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
 	  $b =~ s/^>//g; $b =~ s/=.*//g;
-	  if (!hasHash($b)) { next; }
+	  if (!hasHash($hashProj)) { next; }
 	  if (($runTrivialTests == 1) || ($postproc{$b})) # this is about running commands. Now the loop below should hit the FROMBASE= etc first
 	  {
 	  $b = $a; $b =~ s/.*=//g;
@@ -278,6 +283,8 @@ sub processTerms
 
 	if ($a =~ / *< */)
 	{
+	  if (!hasHash($hashProj)) { next; }
+	  $a =~ s/^[^=]*.//;
 	  my @timeArray = split(/ *< */, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
 	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
@@ -286,9 +293,12 @@ sub processTerms
 	  {
 	    die("$timeArray[0] has timestamp after $timeArray[1], which should not happen" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
 	  }
+	  next;
 	}
 	if ($a =~ / *> */)
 	{
+	  if (!hasHash($hashProj)) { next; }
+	  $a =~ s/^[^=]*.//;
 	  my @timeArray = split(/ *> */, rehash($a));
 	  if ($#timeArray != 1) { print("Bad split in line $.: $a\n"); next; }
 	  if (! -f $timeArray[0]) { die("$timeArray[0] is not a valid file."); }
@@ -297,6 +307,7 @@ sub processTerms
 	  {
 	    die("$timeArray[0] has timestamp before $timeArray[1], which should not happen" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
 	  }
+	  next;
 	}
 	##################note prefix like -a (auxiliary) and -b (build)
 	#this is because auxiliary or binary files could be quite large
