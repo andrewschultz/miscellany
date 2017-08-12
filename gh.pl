@@ -32,6 +32,8 @@ my $backcopy = 0;
 my $whiteSpaceRun = 0;
 my $executeDontBail = 0;
 
+my $execLevel = 1;
+
 ##########################
 #constants
 my $gh = "c:\\users\\andrew\\Documents\\github";
@@ -148,8 +150,11 @@ while ($count <= $#ARGV)
     if ($arg =~ /=/)
 	{
 	  my @xtraRun = split(/=/, $arg);
+	  my $execArgs = defined($xtraRun[1]) ? $xtraRun[1] : "";
 	  if ($altHash{$xtraRun[0]}) { $postproc{$xtraRun[0]} = 1; } else { $postproc{$xtraRun[0]} = 1; }
-	  if ($xtraRun[1] =~ /x/) { $executeDontBail = 1; }
+	  if ($execArgs =~ /x/) { $executeDontBail = 1; }
+	  $execArgs =~ s/x//;
+	  $execLevel = $execArgs;
 	  $arg =~ s/=.*//;
     } # sc= means you do run trivials
     if ($altHash{$arg})
