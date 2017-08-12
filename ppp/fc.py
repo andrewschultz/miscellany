@@ -12,6 +12,7 @@ import re
 import sys
 import os
 from random import shuffle, randint
+from datetime import datetime
 import time
 # import traceback
 import configparser
@@ -686,6 +687,7 @@ def check_total_per_day():
         ftemp = open(time_list, "w")
         for x in range (0,10):
             ftemp.write(str(cur_time) + '\n')
+        os.system("attrib +r " + lock_file)
         exit()
     if os.access(time_list, os.W_OK):
         print(time_list, 'should not have write access outside the game.')
@@ -693,18 +695,23 @@ def check_total_per_day():
         os.system("erase " + lock_file)
         exit()
     time_array = [str(cur_time)]
+    line_count = 0
     with open(time_list) as file:
         for line in file:
             time_delt = cur_time - int(line)
+            line_count = line_count + 1
             if time_delt < timespan:
                 time_array.append(line.strip())
     file.close()
-    if len(time_array) is 1:
-        print('Corruption/tampereing suspected. Resetting the file.')
+    if line_count <= 1:
+        print('Corruption/tampering suspected in',time_list,'so I\'ll try to reset it.')
+        os.system("attrib -r " + time_list)
         fout = open(time_list, "w")
         for x in range (0,10):
-            fout.write(cur_time + '\n')
+            fout.write(str(cur_time) + '\n')
+        fout.close()
         os.system("attrib +r " + time_list)
+        exit()
     if len(time_array) > per_period:
         print('Need to wait', timespan - (cur_time - int(time_array[per_period])), 'seconds to recharge games per day.')
         exit()
@@ -725,7 +732,8 @@ def init_side(in_game_reset):
     global last_reset
     highlight = 0
     if not in_undo:
-        check_total_per_day();
+        if not in_game_reset:
+            check_total_per_day();
         last_reset = time.time()
         if in_game_reset != 1:
             start_time = last_reset
@@ -2303,6 +2311,7 @@ if annoying_nudge:
 open_lock_file()
 
 print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you\'ll get mad and bored and be productive.')
+print('Started at',datetime.now())
 time.sleep(stupid_wait)
 
 init_side(0)
