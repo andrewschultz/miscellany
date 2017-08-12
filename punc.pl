@@ -2,6 +2,7 @@
 #
 # e edits punc.txt
 #
+# can be redone to have a hash of arrays of commands for each table
 # Inform 7 source scanning script
 # with punc.txt, makes sure there are no gross punctuation errors in various table entries
 # originally just for Stale Tales Slate random entries but now expanded to other projects
@@ -147,7 +148,7 @@ my $argcount = 0;
 while ($argcount <= $#ARGV)
 {
   my $arg = $ARGV[$argcount];
-  print "$argcount $arg $#ARGV\n";
+  # print "$argcount $arg $#ARGV\n";
   for (lc($arg))
   {
   /^-?c$/ && do { my $thisfile = __FILE__; `$np $thisfile`; exit; };
@@ -159,7 +160,6 @@ while ($argcount <= $#ARGV)
   /^-?l$/ && do { $launch = 1; $argcount++; next; };
   /^-?f$/ && do { $getFirstError = 1; $argcount++; next; };
   /^-?i$/ && do { $matchQuotes = 0; $argcount++; next; };
-  print "A $argcount $arg $#ARGV\n";
   my @tempProj = split(/,/, $arg);
   for (@tempProj) { if ($map{$_}) { $_ = $map{$_}; } }
   print ("Adding @tempProj\n");
@@ -247,6 +247,7 @@ while ($myLine = <A>)
   my @grp = split(/\t/, $tempLine);
   for my $g (@grp)
   {
+    if ($g =~ /[0-9]=TF/) { next; }
     $count = ($g =~ tr/,//);
 	if ($count != 3) { print "$lineNum: $g wrong # of commas: $count\n"; }
   }
@@ -286,7 +287,6 @@ $allLines = 0;
 print "Table parsing for $fileToRead:\n";
 
 my $inTable = 0;
-
 
 my %alreadyWarn;
 
@@ -338,6 +338,16 @@ while ($a = <A>)
 	  chomp($a);
 	  #print "Trying $a/@parseAry\n";
 	  if ($a =~ /\[p\]/) { $totalSuccesses++; next; }
+	  if ($parseAry[0] =~ /[tf]/)
+	  {
+	    my @entryArray = split(/\t/, $a);
+	    $myIndex = $parseAry[0];
+		$myIndex =~ s/[tf]//g;
+		if ($entryArray[$myIndex] !~ /(true|false)/i)
+		{
+		  print "True/False goof in line $. in $head.\n";
+		}
+	  }
 	  for my $thisParse (@parseAry)
 	  {
 	    my @tempParse = split(/,/, $thisParse);
@@ -450,7 +460,7 @@ sub lookUp
       if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; return -1; }
       if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; return -1; }
       if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; return -1; }
-	  $temp2 = $temp; $temp2 =~ s/[a-z\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return -1; }
+	  $temp2 = $temp; $temp2 =~ s/[a-z0-9\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return -1; }
       if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
 	  { # ?? shuffle to probably-ok in the future
 	    $temp2 = $temp;
