@@ -151,10 +151,10 @@ while ($count <= $#ARGV)
 	{
 	  my @xtraRun = split(/=/, $arg);
 	  my $execArgs = defined($xtraRun[1]) ? $xtraRun[1] : "";
-	  if ($altHash{$xtraRun[0]}) { $postproc{$xtraRun[0]} = 1; } else { $postproc{$xtraRun[0]} = 1; }
+	  if ($altHash{$xtraRun[0]}) { $postproc{$altHash{$xtraRun[0]}} = 1; } else { $postproc{$xtraRun[0]} = 1; }
 	  if ($execArgs =~ /x/) { $executeDontBail = 1; }
 	  $execArgs =~ s/x//;
-	  $execLevel = $execArgs;
+	  $execLevel = $execArgs if $execArgs;
 	  $arg =~ s/=.*//;
     } # sc= means you do run trivials
     if ($altHash{$arg})
@@ -244,6 +244,7 @@ sub processTerms
   my %copto;
 
   my $xtraCmd;
+  my $thisTestPriority = 0;
 
   for my $thisFile (@_)
   {
@@ -272,8 +273,16 @@ sub processTerms
 	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
 	if ($a =~ /^0/) { $a =~ s/^0//; $zeroOkay = 1; } else { $zeroOkay = 0; }
 
-	if ($a =~ /^>/)
+	if ($a =~ /^[0-9]+?>/)
 	{
+	  $thisTestPriority = 1;
+	  if ($a =~ /^[0-9]+/) { $thisTestPriority = $a; $thisTestPriority =~ s/>.*//; }
+	  if ($thisTestPriority > $execLevel)
+	  {
+	    $a =~ s/^.*?=//;
+	    print "SKIPPING TEST COMMAND $a, priority is execLevel is $execLevel and needs to be $thisTestPriority.\n";
+		next;
+	  }
 	  if ($runTrivialTests == -1) { $warnCanRun = 1; next; }
 	  $b =~ s/^>//g; $b =~ s/=.*//g;
 	  if (!hasHash($hashProj)) { next; }
