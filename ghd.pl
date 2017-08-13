@@ -35,6 +35,7 @@ my $overallSum;
 my $sum;
 my $daysAgo = 0;
 
+chdir("c:\\writing\\scripts");
 my $siteFile = __FILE__;
 $siteFile =~ s/pl$/txt/i;
 
@@ -56,7 +57,7 @@ while ($count <= $#ARGV)
 
 $popupText = strftime "Results for %m/%d/%Y\n", localtime(time()-86400);
 
-open(A, "$siteFile") || die("No $siteFile");
+open(A, "$siteFile") || die("Could not find $siteFile, bailing.");
 while ($a = <A>)
 {
   chomp($a);

@@ -181,7 +181,6 @@ while ($line = <A>)
   }
   if ($line =~ /^;/) { $semicolonSeen = 1; next; }
   if ($ignore) { next; }
-  if ($line =~ /^http/) { $line = "start $line"; }
   if ($line =~ /^DEF=/)
   {
     $defaultBrowser = $line;
@@ -275,6 +274,11 @@ while ($line = <A>)
   print "Warning Line $. of $_[0] has no command defined.\n" if !defined($b[$cmdCount]);
 
   #print "$b[1]\n"; exit;
+  if ($b[$cmdCount] =~ /^http/)
+  {
+    $b[$cmdCount] = "start $b[$cmdCount]";
+  }
+
   if ($defaultBrowser && defined($b[$cmdCount]))
   {
   $b[$cmdCount] =~ s/^DEF/$defaultBrowser/;

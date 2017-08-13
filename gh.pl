@@ -273,7 +273,7 @@ sub processTerms
 	if ($a =~ / sz:/) { $maxSize = $a; $maxSize =~ s/.* sz://g; $a =~ s/ sz:.*//g; }
 	if ($a =~ /^0/) { $a =~ s/^0//; $zeroOkay = 1; } else { $zeroOkay = 0; }
 
-	if ($a =~ /^[0-9]+?>/)
+	if ($a =~ /^[0-9]*?>/)
 	{
 	  $thisTestPriority = 1;
 	  if ($a =~ /^[0-9]+/) { $thisTestPriority = $a; $thisTestPriority =~ s/>.*//; }

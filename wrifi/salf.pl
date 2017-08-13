@@ -60,16 +60,17 @@ $list{"pc"} = "pc";
 $list{"sc"} = "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca";
 $list{"btp"} = "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
 
-if ($myd eq "c:\\games\\inform\\compound.inform\\source") { $toSplit = $list{"pc"}; $defDir = "sc"; }
-if ($myd eq "c:\\games\\inform\\slicker-city.inform\\source") { $toSplit = $list{"sc"}; $defDir = "sc"; }
-if ($myd eq "c:\\games\\inform\\buck-the-past.inform\\source") { $toSplit = $list{"btp"}; $defDir = "btp"; }
+my $defSplit = "";
+
+if ($myd eq "c:\\games\\inform\\compound.inform\\source") { $defSplit = $list{"pc"}; $defDir = "sc"; }
+if ($myd eq "c:\\games\\inform\\slicker-city.inform\\source") { $defSplit = $list{"sc"}; $defDir = "sc"; }
+if ($myd eq "c:\\games\\inform\\buck-the-past.inform\\source") { $defSplit = $list{"btp"}; $defDir = "btp"; }
 
 my $defaultProj = "btp";
 my $logFileEdit = $defaultProj;
 
 while ($count <= $#ARGV)
 {
-  print "!$toSplit\n";
   my $arg = lc($ARGV[$count]);
   for ($arg)
   {
@@ -91,7 +92,12 @@ while ($count <= $#ARGV)
 	else
 	{
 	  my $a2 = $arg; $a2 =~ s/^-//;
-	  if ($list{$a2}) { $toSplit = $list{$a2}; }
+	  if ($list{$a2})
+	  {
+	  print "$a2 has a list of sections, so I'm reading that.\n";
+	  $toSplit = $list{$a2};
+	  }
+	  else
 	  {
 	  $toSplit = $a2;
 	  $count++;
@@ -103,6 +109,10 @@ while ($count <= $#ARGV)
   usage();
   }
 }
+
+if ($toSplit && ($defSplit eq $toSplit)) { print("No need to define the project as you're already in the directory.\n"); }
+
+if ($defSplit && !$toSplit) { $toSplit = $defSplit; }
 
 if (!$toSplit)
 {
