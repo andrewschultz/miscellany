@@ -418,10 +418,10 @@ def first_matchable_row(cardval):
 
 def open_lock_file():
     if os.path.exists(lock_file):
-        print('There seems to be another game running. Close it first, or if necessary, delete', lock_file)
+        print('There seems to be another game running, or maybe you broke out of one with ctrl-c. Close it first, or if necessary, delete', lock_file)
         exit()
     f = open(lock_file, 'w')
-    f.write('This is a lock_file')
+    f.write('This is a lock file for fc.py.')
     f.close()
     os.system("attrib +r " + lock_file)
 
@@ -675,6 +675,12 @@ def send_opts():
     return
 
 
+def lock_and_bail():
+    os.system("attrib -r " + lock_file)
+    os.system("erase " + lock_file)
+    exit()
+
+
 def check_total_per_day():
     per_period = 10
     timespan = 86400
@@ -682,18 +688,15 @@ def check_total_per_day():
     cur_time = int(time.time())
     if not os.path.isfile(time_list):
         print('Need to create file', time_list)
-        os.system("attrib -r " + lock_file)
-        os.system("erase " + lock_file)
         ftemp = open(time_list, "w")
         for x in range (0,10):
             ftemp.write(str(cur_time) + '\n')
-        os.system("attrib +r " + lock_file)
-        exit()
+        ftemp.close()
+        os.system("attrib +r " + time_list)
+        lock_and_bail()
     if os.access(time_list, os.W_OK):
         print(time_list, 'should not have write access outside the game.')
-        os.system("attrib -r " + lock_file)
-        os.system("erase " + lock_file)
-        exit()
+        lock_and_bail()
     time_array = [str(cur_time)]
     line_count = 0
     with open(time_list) as file:
@@ -703,7 +706,7 @@ def check_total_per_day():
             if time_delt < timespan:
                 time_array.append(line.strip())
     file.close()
-    if line_count <= 1:
+    if line_count < 1:
         print('Corruption/tampering suspected in',time_list,'so I\'ll try to reset it.')
         os.system("attrib -r " + time_list)
         fout = open(time_list, "w")
@@ -711,10 +714,10 @@ def check_total_per_day():
             fout.write(str(cur_time) + '\n')
         fout.close()
         os.system("attrib +r " + time_list)
-        exit()
+        lock_and_bail()
     if len(time_array) > per_period:
         print('Need to wait', timespan - (cur_time - int(time_array[per_period])), 'seconds to recharge games per day.')
-        exit()
+        lock_and_bail()
     os.system("attrib -r " + time_list)
     fout = open(time_list, "w")
     for x in time_array:
@@ -987,6 +990,9 @@ def check_winning():
                 (len(cmd_no_meta), len(cmd_list), len(move_list))).lower()
         except KeyboardInterrupt:
             print("\nCheaty cheaty. You should just quit instead.")
+            exit()
+        except Exception:
+            print("\nYou probably made a keyboard interrupt, but if it was something else, I caught that, too.")
             exit()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
@@ -1649,6 +1655,9 @@ def read_cmd(this_cmd):
             name = input("Move:")
         except KeyboardInterrupt:
             print("\nCheaty cheaty. You should just quit instead.")
+            exit()
+        except Exception:
+            print("\nYou probably made a keyboard interrupt, but if it was something else, I caught that, too.")
             exit()
         name = name.strip()
         if name == '/':  # special case for slash/backslash
