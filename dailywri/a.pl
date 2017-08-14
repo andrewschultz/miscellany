@@ -25,7 +25,8 @@ my $debug;
 my $numLim = 0;
 my $curIdx = 0;
 my $count;
-my $howFar = 0;
+my $theMax = 0;
+my $theMin = 0;
 my $defFar;
 my $filesToTry = 0;
 my $printToErrorFile = 0;
@@ -64,6 +65,7 @@ processTabs();
 while ($ARGV[$count])
 {
   my $mya = $ARGV[$count];
+  my $myb = defined($ARGV[$count+1]) ? $ARGV[$count+1] : 0;
   for ($mya)
   {
     /^-?2h/ && do
@@ -74,7 +76,7 @@ while ($ARGV[$count])
 	  `$wriout`;
 	  exit();
 	};
-    /^-?[0-9]/ && do { $howFar = $mya; if ($howFar le 0) { $howFar = 0 - $howFar; } $count++; next; };
+    /^-?[0-9]/ && do { $theMax = $mya; if ($theMax le 0) { $theMax = 0 - $theMax; } $count++; next; };
 	/^-a$/ && do { $allBack = 1; $count++; next; };
 	/^-b$/ && do { $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
 	/^-c$/ && do { $justCheck = 1; $count++; next; };
@@ -83,11 +85,13 @@ while ($ARGV[$count])
 	/^-le$/ && do { `$elog`; exit; };
 	/^-ef$/ && do { $printToErrorFile = 1; $count++; next; };
 	/^-ev$/ && do { $printToErrorFile = 1; $viewErrorFile = 1; $count++; next; };
-	/^-eo$/ && do { $justCheck = 1; $verifyHeadings = 0; $howFar = 200; $allBack = 1; $showOK = $showProc = 0; $openFile = 1; $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
-	/^-eh$/ && do { $justCheck = 1; $verifyHeadings = 0; $howFar = 200; $allBack = 1; $showOK = $showProc = 0; $openFile = 1; $inDir="c:/writing/daily"; $count++; next; };
+	/^-eo$/ && do { $justCheck = 1; $verifyHeadings = 0; $theMax = 200; $allBack = 1; $showOK = $showProc = 0; $openFile = 1; $inDir="c:/users/andrew/dropbox/daily"; $count++; next; };
+	/^-eh$/ && do { $justCheck = 1; $verifyHeadings = 0; $theMax = 200; $allBack = 1; $showOK = $showProc = 0; $openFile = 1; $inDir="c:/writing/daily"; $count++; next; };
 	/^-f$/ && do { $justCheck = 0; $count++; next; };
 	/^-h$/ && do { $checkHeaders = 1; $allBack = 1; $headString = $ARGV[$count+1]; if (!$headString) { die ("Need a string to check.\n"); } $count+=2; next; };
 	/^-l$/ && do { $onlyLim = 1; $count++; next; };
+	/^-ma$/ && do { $theMax = $myb; $count += 2; next; };
+	/^-mi$/ && do { $theMin = $myb; $count += 2; next; };
 	/^-n$/ && do { $openFile = 0; $count++; next; };
 	/^-nh$/ && do { $verifyHeadings = 0; $count++; next; };
 	/^-nw$/ && do { $showWarn = 0; $count++; next; };
@@ -95,7 +99,7 @@ while ($ARGV[$count])
 	/^-o$/ && do { $openFile = 1; $count++; next; };
 	/^-ow$/ && do { $openFile = 1; $openOnWarn = 1; $count++; next; };
 	/^-t$/ && do { $testing = 1; $count++; next; };
-	/^-u$/ && do { $allBack = 1; $count++; if ($howFar == $defFar) { $howFar = 90; } next; };
+	/^-u$/ && do { $allBack = 1; $count++; if ($theMax == $defFar) { $theMax = 90; } next; };
 	/^-sp$/ && do { $showProc = 1; $count++; next; };
 	/^-[hn]p$/ && do { $showProc = 0; $count++; next; };
 	/^-w$/ && do { $showOK = 0; $count++; next; };
@@ -118,10 +122,20 @@ if ($verifyHeadings)
   close(A);
 }
 
-  for $thisDay (0..$howFar)
+  if ($theMin > $theMax) { die("min $theMin > max $theMax"); }
+
+  for $thisDay ($theMin..$theMax)
   {
     $thisFile = daysAgo($thisDay);
-	if (-f $thisFile) { my $thatFile = $thisFile; $thatFile =~ s/.*[\\\/]//g; push(@allDailyFiles, $thatFile); $lastDay = $thisDay+1; processDaily($thisFile); if (!$allBack) { exit; } }
+	if (-f $thisFile)
+	{
+	  my $thatFile = $thisFile;
+	  $thatFile =~ s/.*[\\\/]//g;
+	  push(@allDailyFiles, $thatFile);
+	  $lastDay = $thisDay+1;
+	  processDaily($thisFile, $thisDay);
+	  if (!$allBack) { exit; }
+    }
   }
 
 @allDailyFiles = sort(@allDailyFiles);
@@ -218,7 +232,7 @@ sub processDaily
   my $lineToGo = 0;
   my @myAry;
 
- if ($showProc) { print "Processing $_[0]...\n"; }
+ if ($showProc) { print "Processing $_[0], $_[1] days ago...\n"; }
 
  if ($onlyLim) { processLim($_[0]); return; }
 
@@ -233,7 +247,7 @@ my $hasSomething = 0;
   if (($curIdx > 0) && (!defined($myAry[$curIdx])) && ($line !~ /\\/))
   {
     if (($line !~ /[a-z]/) && ($showWarn)) { $warns++; $warning .= "  WARNING extra carriage return at line $. of $shortName.\n"; if ($openOnWarn) { $fileToOpen = $_[0]; $betterDie = 1; $lineToGo = $.; } next; } #this is to make sure that double carriage returns don't bomb out;
-    printErrExt("You don't have a header in $shortName: $line");
+    printErrExt("You don't have a header in $shortName ($.): $line");
     if (($openFile) && (!$fileToOpen)) { $fileToOpen = $_[0]; }
 	$betterDie++;
   }
@@ -271,7 +285,7 @@ if ($limericks)
 	{
 	  $lastLimerick = $count;
 	  $lastEq = $count;
-	  while (($a = <A>)=~ /[a-z=]/)
+	  while (($a = <A>)=~ /[a-z=]/i)
 	  {
 	  $count++;
 	  if ($a =~ /=/) { limPan($curLines, $lastEq, $count, $_[0]);  $curLines = 0; $lastEq = $count; }
@@ -498,7 +512,7 @@ $filesToTry = "";
 $inDir = "c:/writing/daily";
 $checkHeaders = 0;
 $count = 0;
-$howFar = $defFar = 7;
+$theMax = $defFar = 7;
 $justCheck = 1;
 $debug = 0;
 $showWarn = 1;
