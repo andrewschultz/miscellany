@@ -81,37 +81,46 @@ while ($count <= $#ARGV)
   /^\// && do { $thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
   /^-?(o|oa)$/ && do { @runs = ("oafs"); $count++; next; }; # oafs?
-  /,/ && do { @runs = split(/,/, $a); $count++; next; };
+  /,/ && do
+  {
+    @runs = split(/,/, $a);
+	if (@runs[$#runs] eq "") { pop(@runs); }
+	$count++; next;
+  };
   /^-?n$/ && do { @runs = ("names"); $count++; next; }; # names
   /^-?(3d|3|4d|4)$/i && do { @runs = ("opo"); $count++; next; }; # 3dop try
   /^-?(as|sc|pc|ss)$/i && do { @runs = ("as"); $count++; next; }; # Alec Smart?
   /^-?(r|roi|s|sa)$/i && do { @runs = ("sts"); $count++; next; }; # roiling original? (default)
-  /^-sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
-  /^-h$/ && do { $showHeaders = 1; $count++; next; };
+  /^-?sr$/ && do { $showRules = 1; $count++; next; }; # show the rules text is in
+  /^-?h$/ && do { $showHeaders = 1; $count++; next; };
   /^-?ha$/ && do { processListFile(); openHistory(@availRuns); exit(); };
   /^-?hi$/ && do { openHistory(split(/,/, $b)); exit(); };
-  /^-c$/ && do { $getClipboard = 1; $othersToo = 1; $count++; print "WARNING: using clipboard invalidates command line text. Use -x for deluxe anagramming.\n"; next; };
-  /^-x$/ && do { $othersToo = 1; $count++; next; };
-  /^-p$/ && do { $headersToo = 1; $count++; next; };
-  /^-nt$/ && do { $printTabbed = 0; $count++; next; };
-  /^-w/ && do { $dontWant = 1; $count++; next; };
-  /^-nd$/ && do { newDefault($b); $count++; next; };
-  /^-ft$/ && do { $printUntabbed = 0; $count++; next; };
+  /^-?c$/ && do { $getClipboard = 1; $othersToo = 1; $count++; print "WARNING: using clipboard invalidates command line text. Use -x for deluxe anagramming.\n"; next; };
+  /^-?x$/ && do { $othersToo = 1; $count++; next; };
+  /^-?p$/ && do { $headersToo = 1; $count++; next; };
+  /^-?nt$/ && do { $printTabbed = 0; $count++; next; };
+  /^-?w/ && do { $dontWant = 1; $count++; next; };
+  /^-?nd$/ && do { newDefault($b); $count++; next; };
+  /^-?ft$/ && do { $printUntabbed = 0; $count++; next; };
   /^-?zb$/ && do { $zapBrackets = 1; $count++; next; };
-  /^-mo$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max overall limits.\n"; } $maxOverallFind = abs($b); $count+= 2; next; };
-  /^-mf$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max file limits.\n"; } $maxFileFind = abs($b); $count+= 2; next; };
-  /^-mu$/ && do { $maxFileFind = $maxOverallFind = 0; $count+= 2; next; };
-  /^-t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
-  /^-tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
-  /^-tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-  /,/ && do { @runs = split(/,/, $a); $count++; next; };
+  /^-?mo$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max overall limits.\n"; } $maxOverallFind = abs($b); $count+= 2; next; };
+  /^-?mf$/ && do { if ($b < 0) { print "Changing negative to positive. Use 0 to remove max file limits.\n"; } $maxFileFind = abs($b); $count+= 2; next; };
+  /^-?mu$/ && do { $maxFileFind = $maxOverallFind = 0; $count+= 2; next; };
+  /^-?t$/ && do { $onlyTables = 1; $count++; next; }; #not perfect, -h + -t = conflict
+  /^-?tb$/ && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
+  /^-?tb1$/ && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
   /^[\\0-9a-z]/i && do { if ($map{$a}) { print "$a -> $map{$a}, use upper case to avoid\n"; push(@thisAry, $map{$a}); } else { push(@thisAry, $a); } $count++; next; }; # if we want to use AS as a word, it would be in upper case
   print "Argument $a failed.\n"; usage();
   }
 
 }
 
-if ((!$thisAry[0]) && (!$getClipboard)) { die ("Need a process-able word for an argument."); }
+if ((!$thisAry[0]) && (!$getClipboard)) { die ("Need a process-able word for an argument." . $#argv > 0 ? " You had only flags set."); }
+
+if (($#runs == -1) && ($#ARGV > 1))
+{
+  print "NOTE: if a project name overlaps a flag, use the comma to detect it.\n";
+}
 
 processListFile();
 

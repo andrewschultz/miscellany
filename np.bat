@@ -1,5 +1,13 @@
 @echo off
 
+@setlocal enableextensions enabledelayedexpansion
+
+set str1=%cd%
+
+if not x%str1:GitHub=%==x%str1% (
+  cd \writing\scripts\
+)
+
 if "%1" equ "" (
 echo Need an argument
 goto end
