@@ -959,8 +959,9 @@ sub usage
 print<<EOT;
 ========USAGE
 -e edits gh.txt
--c edits gh.pl
--p edits private file
+-(e)c edits gh.pl
+-(e)p edits private file
+-(e)r edits regex file
 -v = verbose output
 -vt/nvt = verbose/not verbose test
 -rt/-nrt = flag running trivial tests
