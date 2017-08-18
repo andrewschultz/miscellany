@@ -103,7 +103,7 @@ while ($count <= $#ARGV)
   $b = $ARGV[$count+1];
   for ($arg)
   {
-    /^?-tt$/ && do { $tableTab = 1; $count++; next; };
+    /^-?tt$/ && do { $tableTab = 1; $count++; next; };
     /^-?t$/ && do { $b = $ARGV[$count+1]; my $important = split(/,/, $b); $count+= 2; next; };
     /^-?c$/ && do { print "Opening source. -e opens the data file, -ec/ce both, -pr private.\n"; system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"); exit; };
     /^-?e$/ && do { print "Opening data file. -c opens the source, -ec/ce both, -pr private.\n"; `$tabfile`; exit; };

@@ -57,7 +57,7 @@ while ($count <= $#ARGV)
     /^-?l$/i && do { for (@projAry) { print "$_\n"; } exit(); };
     /^-?t$/i && do { $test = 1; $count++; next; };
     /^-?h$/i && do { $html = 1; $count++; next; };
-	/^[a-z]{2}/i && do { @projAry = split(/,/, $b); $count += 2; next; };
+	/^[a-z34,]{2,}$/i && do { @projAry = split(/,/, $b); $count += 2; next; };
 	usage();
   }
 }

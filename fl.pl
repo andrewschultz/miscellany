@@ -18,9 +18,9 @@ while ($count <= $#ARGV)
   my $arg = $ARGV[$count];
   for ($arg)
   {
-  /^-b$/ && do { $first = 1; $last = 1; $count++; next; };
-  /^-f$/ && do { $first = 1; $last = 0; $count++; next; };
-  /^-l$/ && do { $first = 0; $last = 1; $count++; next; };
+  /^-?b$/ && do { $first = 1; $last = 1; $count++; next; };
+  /^-?f$/ && do { $first = 1; $last = 0; $count++; next; };
+  /^-?l$/ && do { $first = 0; $last = 1; $count++; next; };
   push(@searchies, $arg); $count++;
   }
 }

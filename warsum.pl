@@ -59,9 +59,9 @@ while ($count <= $#ARGV)
   my $thisarg = $ARGV[$count];
   for ($thisarg)
   {
-    /^-l/ && do { $sortByLine = 1; $count++; next; };
-    /^-nl/ && do { $sortByLine = 0; $count++; next; };
-    /^-aw/ && do { $adjustWarnings = 1; $count++; next; };
+    /^-?l$/ && do { $sortByLine = 1; $count++; next; };
+    /^-?nl$/ && do { $sortByLine = 0; $count++; next; };
+    /^-?aw$/ && do { $adjustWarnings = 1; $count++; next; };
 	/\.pl$/i && do
 	{
 	  if ($fileToSearch)

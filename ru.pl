@@ -22,10 +22,10 @@ $a = $ARGV[$count];
 
 for ($a)
 {
-  /^-c/ && do { $inCode = 1; $count++; next; };
-  /^-nc/ && do { $inCode = 0; $count++; next; };
-  /^-h/ && do { $inHead = 1; $count++; next; };
-  /^-nh/ && do { $inHead = 0; $count++; next; };
+  /^-?c$/ && do { $inCode = 1; $count++; next; };
+  /^-?nc$/ && do { $inCode = 0; $count++; next; };
+  /^-?h$/ && do { $inHead = 1; $count++; next; };
+  /^-?nh$/ && do { $inHead = 0; $count++; next; };
   if ($#match == 1) { print "Only 2 search arguments allowed.\n"; exit; }
   else { push(@match, $a); }
   $count++;

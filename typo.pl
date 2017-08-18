@@ -31,13 +31,13 @@ while ($count < $#ARGV)
   $b = @ARGV[$count+1];
   for ($a)
   {
-  /-di/ && do { $ignorebracket = 0; $count++; next; };
-  /-i/ && do { $ignorebracket = 1; $count++; next; };
-  /-no/ && do { $openAfter = 0; $count++; next; };
-  /-o/ && do { $openAfter = 1; $count++; next; };
-  /-sp/ && do { $bracketText = " "; $count++; next; };
-  /-e/ && do { $bracketText = ""; $count++; next; };
-  /-sl/ && do { $bracketText = "/"; $count++; next; };
+  /^-?di$/ && do { $ignorebracket = 0; $count++; next; };
+  /^-?i$/ && do { $ignorebracket = 1; $count++; next; };
+  /^-?no$/ && do { $openAfter = 0; $count++; next; };
+  /^-?o$/ && do { $openAfter = 1; $count++; next; };
+  /^-?sp$/ && do { $bracketText = " "; $count++; next; };
+  /^-?e$/ && do { $bracketText = ""; $count++; next; };
+  /^-?sl$/ && do { $bracketText = "/"; $count++; next; };
   usage();
   }
   $count++;

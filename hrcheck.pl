@@ -89,7 +89,7 @@ while ($count <= $#ARGV)
 	$gotTime = 1; $count++; next;
   };
   /^(-|\+)?[0-9]+$/ && do { $adjust = $a; print "Adjusting time from current by $adjust minutes. Use : to try an exact time.\n"; $count++; next; };
-  /^-pop/ && do { $popupIfAbort = 1; $count++; next; };
+  /^-?pop$/ && do { $popupIfAbort = 1; $count++; next; };
   /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
   /^-?f$/i && do { @extraFiles = (@extraFiles, split(/,/, $b)); $count+= 2; next; };
   /^-?h$/i && do { @extraFiles = (); $anyExtra = 0; $count++; next; };

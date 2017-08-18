@@ -28,10 +28,10 @@ while ($count <= $#ARGV)
   my $arg = $ARGV[$count];
   for ($arg)
   {
-  /^-a$/ && do { $testMajor = 1; $count++; next; };
-  /^-aa$/ && do { $testAll = 1; $count++; next; };
-  /^-t$/ && do { $test = 1; $count++; next; };
-  /-(nt|tn)/ && do { $test = 0; $count++; next; };
+  /^-?a$/ && do { $testMajor = 1; $count++; next; };
+  /^-?aa$/ && do { $testAll = 1; $count++; next; };
+  /^-?t$/ && do { $test = 1; $count++; next; };
+  /^-?(nt|tn)$/ && do { $test = 0; $count++; next; };
   usage();
   }
 }

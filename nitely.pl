@@ -269,7 +269,7 @@ sub getArgs
 	  /^-?d$/ && do { $debug = 1; $count++; next; };
 	  /^-?e$/ && do { `$nmain`; exit; };
 	  /^-?p$/ && do { `$npriv`; exit; };
-	  /^-f$/ && do { $force = 1; $count++; next; };
+	  /^-?f$/ && do { $force = 1; $count++; next; };
 	  /^-?h$/ && do { `$nitedir/errs.htm`; exit; };
 	  /^-?jr$/ && do { $justRelease = -1; $count++; next; };
 	  /^-?n(b?)$/ && do { $build = -1; $count++; next; };
