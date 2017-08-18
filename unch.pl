@@ -18,6 +18,11 @@ use List::MoreUtils qw(uniq);
 
 use POSIX;
 
+my $wtFile = tx(__FILE__);
+my $sourceFile = __FILE__;
+
+#######################
+# options
 my $alphabetical = 0;
 my $defaultWeight = 1;
 my $weightDiv = 5;
@@ -61,6 +66,8 @@ while ($count <= $#ARGV)
   for ($arg)
   {
     /^-?a$/i && do { $alphabetical = 1; $count++; next; };
+    /^-?e$/i && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $sourceFile"); exit(); };
+    /^-?ep$/i && do { `$wtFile`; exit(); };
     /^-?na$/i && do { $alphabetical = 0; $count++; next; };
     /^-?l$/i && do { for (@projAry) { print "$_\n"; } exit(); };
     /^-?t$/i && do { $test = 1; $count++; next; };
@@ -70,7 +77,7 @@ while ($count <= $#ARGV)
   }
 }
 
-@projAry = sort {$weights{$a} <=> $weights{$b} } @projAry;
+@projAry = sort {$weights{$a} <=> $weights{$b} || $a cmp $b} @projAry;
 
 @projAry = sort(@projAry) if $alphabetical;
 my $gitRoot = "c:\\users\\andrew\\documents\\github";
@@ -125,7 +132,7 @@ sub checkProject
   print "Couldn't find subdir $subdir.\n";
   }
   my $tempString = `git status -s`;
-  print "$curWeight $weightDiv $weights{$_[0]} $weightDiv\n";
+  # print "$curWeight $weightDiv $weights{$_[0]} $weightDiv\n";
   if ($tempString)
   {
     if (($curWeight < $weightDiv) && ($weights{$_[0]} > $weightDiv))
@@ -140,7 +147,6 @@ sub checkProject
 
 sub readWeights
 {
-  my $wtFile = tx(__FILE__);
   my @ary = ();
 
   for (@projAry) { $weights{$_} = 1; }
@@ -158,7 +164,9 @@ sub usage
 {
 print<<EOT;
 CSV tells projects to run or look at
--a alphabetizes instead of listing by priority
+-a alphabetizes instead of listing by priority (-na undoes that)
+-e edits the source
+-ep edits the priority file
 -l lists the default that is run
 -h creates and runs an html file
 -t has unch output test results
