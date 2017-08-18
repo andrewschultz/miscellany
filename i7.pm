@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %i7xr @i7gh %xtraFiles tableFile cutArt openWinOrUnix sourceFile $np);
+@EXPORT      = qw(%i7x %i7xr @i7gh @i7bb %xtraFiles tableFile cutArt openWinOrUnix sourceFile tx $np);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -51,7 +51,8 @@ our %i7xr = ( "shuffling" => "sa",
   "btp" => "buck-the-past"
 );
 
-our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "seeker-status", "curate");
+our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing");
+our @i7bb = ("seeker-status", "buck-the-past",  "curate");
 
 our %xtraFiles;
 
@@ -98,6 +99,13 @@ sub tableFile
   my $temp = $_[0];
   $temp =~ s/-/ /g;
   return "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp tables.i7x";
+}
+
+sub tx
+{
+  my $temp = $_[0];
+  $temp =~ s/\.[^\.]*$/.txt/i;
+  return $temp;
 }
 
 sub sourceFile

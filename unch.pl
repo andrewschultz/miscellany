@@ -19,6 +19,9 @@ use List::MoreUtils qw(uniq);
 use POSIX;
 
 my $alphabetical = 0;
+my $defaultWeight = 1;
+my $weightDiv = 5;
+my $curWeight = 0;
 
 my %exp = ( "3d" => "threediopolis",
   "4d" => "fourdiopolis",
@@ -31,12 +34,14 @@ my %exp = ( "3d" => "threediopolis",
   "ss" => "seeker-status",
   "cu" => "curate",
   "uo" => "ugly-oafs",
-  "tr" => "trizbort"
+  "tr" => "trizbort",
+  "btp" => "buck-the-past"
 );
 
 my %projs;
+my %weights;
 # note that the bottom projects are the most important as they are least likely to go off the page
-my @projAry = uniq((@i7gh, "curate", "seeker-status"));
+my @projAry = uniq((@i7gh, @i7bb));
 
 #####################variables
 my $count = 0;
@@ -48,12 +53,15 @@ my $file = 0;
 my $proj = 0;
 my $test = 0;
 
+readWeights();
+
 while ($count <= $#ARGV)
 {
   my $arg = $ARGV[$count];
   for ($arg)
   {
     /^-?a$/i && do { $alphabetical = 1; $count++; next; };
+    /^-?na$/i && do { $alphabetical = 0; $count++; next; };
     /^-?l$/i && do { for (@projAry) { print "$_\n"; } exit(); };
     /^-?t$/i && do { $test = 1; $count++; next; };
     /^-?h$/i && do { $html = 1; $count++; next; };
@@ -61,6 +69,8 @@ while ($count <= $#ARGV)
 	usage();
   }
 }
+
+@projAry = sort {$weights{$a} <=> $weights{$b} } @projAry;
 
 @projAry = sort(@projAry) if $alphabetical;
 my $gitRoot = "c:\\users\\andrew\\documents\\github";
@@ -115,7 +125,33 @@ sub checkProject
   print "Couldn't find subdir $subdir.\n";
   }
   my $tempString = `git status -s`;
-  if ($tempString) { $bigString .= "$subdir:\n$tempString"; $projs{$subdir} = 1; }
+  print "$curWeight $weightDiv $weights{$_[0]} $weightDiv\n";
+  if ($tempString)
+  {
+    if (($curWeight < $weightDiv) && ($weights{$_[0]} > $weightDiv))
+    {
+      $bigString .= "======================important below\n";
+    }
+    $bigString .= "$subdir:\n$tempString";
+	$projs{$subdir} = 1;
+ }
+  $curWeight = $weights{$_[0]};
+}
+
+sub readWeights
+{
+  my $wtFile = tx(__FILE__);
+  my @ary = ();
+
+  for (@projAry) { $weights{$_} = 1; }
+  open(A, $wtFile) || die ("No $wtFile");
+  while ($a = <A>)
+  {
+    chomp($a);
+    if ($a =~ /==/) { $weightDiv = $a; $weightDiv =~ s/.*=//; next; }
+	if ($a =~ /\t/) { @ary = split(/\t/, $a); $weights{$ary[0]} = $ary[1]; next; }
+  }
+  close(A);
 }
 
 sub usage
