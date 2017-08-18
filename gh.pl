@@ -144,7 +144,7 @@ while ($count <= $#ARGV)
   /^-?b$/i && do { $copyBinary = 1; $count++; next; };
   /^-?(d|ab|ba)$/i && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
   /^-?reverse$/i && do { $reverse = 1; $count++; next; };
-  /^[a-z34]+$/i && do
+  /^[a-z34]+(=.*)?$/i && do
   {
     if ($arg =~ /-$/) { $arg =~ s/-$//g; if ($altHash{$arg}) { $postproc{$altHash{$arg}} = 0; } else { $postproc{$arg} = 0; } } # sc- means you don't run trivials
     if ($arg =~ /=/)

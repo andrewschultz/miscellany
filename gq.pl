@@ -84,7 +84,7 @@ while ($count <= $#ARGV)
   /,/ && do
   {
     @runs = split(/,/, $a);
-	if (@runs[$#runs] eq "") { pop(@runs); }
+	if ($runs[$#runs] eq "") { pop(@runs); }
 	$count++; next;
   };
   /^-?n$/ && do { @runs = ("names"); $count++; next; }; # names
@@ -115,7 +115,7 @@ while ($count <= $#ARGV)
 
 }
 
-if ((!$thisAry[0]) && (!$getClipboard)) { die ("Need a process-able word for an argument." . $#argv > 0 ? " You had only flags set."); }
+if ((!$thisAry[0]) && (!$getClipboard)) { die ("Need a process-able word for an argument."); }
 
 if (($#runs == -1) && ($#ARGV > 1))
 {
