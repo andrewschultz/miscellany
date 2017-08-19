@@ -502,7 +502,6 @@ sub processTerms
 		}
 	    if (shouldRun($prefix))
 		{
-		  if ($cmdYet && !$warnYet) { print "You are running a command before copying files. This may make you have to run gh again.\n"; $warnYet = 1; }
 		  #die "$fromFile to $gh\\$toFile\\$short";
 		  my $fileTo = "$gh\\$toFile\\$short";
 		  if (-f $fileTo)

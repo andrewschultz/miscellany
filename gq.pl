@@ -118,7 +118,7 @@ while ($count <= $#ARGV)
     }
 	else
 	{
-	  print "$a into word array.\n";
+	  # print "$a into word array.\n";
 	  push(@thisAry, $a);
     }
 	  $count++;

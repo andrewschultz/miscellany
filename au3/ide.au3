@@ -21,6 +21,8 @@ Local $build = 1;
 ; plus there are private projects
 ;
 
+Opt("WinTitleMatchMode", -2)
+
 if $CmdLine[0] > 0 Then
   $project = $CmdLine[1]
   if $hash.Exists($project) Then

@@ -8,6 +8,10 @@ if not x%str1:GitHub=%==x%str1% (
   cd \writing\scripts\
 )
 
+if not x%str1:dropbox=%==x%str1% (
+  cd \writing\scripts\
+)
+
 if "%1" equ "" (
 echo Need an argument
 goto end
