@@ -78,7 +78,7 @@ my $rf2 = "c:\\writing\\dict\\punc-priv.txt";
 # now it can just be done with s/([^\.])\"/\.\"/
 #
 
-my @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from");
+my @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");
 addTitles();
 
 if (-f $rf)
@@ -158,8 +158,9 @@ while ($argcount <= $#ARGV)
   /^-?b$/ && do { $blankWarn = 0; $argcount++; next; };
   /^-?nb$/ && do { $blankWarn = 1; $argcount++; next; };
   /^-?l$/ && do { $launch = 1; $argcount++; next; };
-  /^-?f$/ && do { $getFirstError = 1; $argcount++; next; };
+  /^-?f$/ && do { $getFirstError = 1; $launch = 1; $argcount++; next; };
   /^-?i$/ && do { $matchQuotes = 0; $argcount++; next; };
+  /^-?\?$/ && do { usage(); exit(); };
   my @tempProj = split(/,/, $arg);
   for (@tempProj) { if ($map{$_}) { $_ = $map{$_}; } }
   print ("Adding @tempProj\n");
@@ -296,8 +297,19 @@ while ($a = <A>)
   if (($a =~ /^table of /) && ($inTable == 0))
   {
     chomp($a);
-	$a =~ s/ \(continued\)//;
-    $head = lc($a); $head =~ s/^table of //g; $head =~ s/[ \t]*\[.*//g;
+	if ($a =~ /\[force=/)
+	{
+	  $head = $a;
+	  $head =~ s/.*\[force=//;
+	  $head =~ s/\].*//;
+	}
+	else
+	{
+      $a =~ s/ \(continued\)//;
+      $head = lc($a);
+	  $head =~ s/^table of //g;
+	  $head =~ s/[ \t]*\[.*//g;
+	}
 	<A>; $allLines++;
     $errsYet = 0; $errs = 0;
     if (!$searches{$head})
@@ -417,10 +429,14 @@ sub lookUp
 	  my $temp2;
 	  my $count;
 
-	  if (($temp eq "--") && ($blankWarn))
+	  if ($temp =~ /^--/)
 	  {
+	    if ($blankWarn)
+		{
 	    print "WARNING: blank entry at line $..\n";
 		return -1;
+		}
+		return 0;
 	  }
 
 	  $temp =~ s/e\.g\. /eg /g;
@@ -434,12 +450,13 @@ sub lookUp
 	  $temp =~ s/[:,]//g;
 	  $temp =~ s/' \/ '/ /g;
 	  $temp =~ s/\[a-word-u\]/Ass/g;
+	  $temp =~ s/\[(else|or|wfk|paragraph break|line break)\]/ /g;
 	  $temp =~ s/\[d-word-u\]/Damn/g;
 	  $temp =~ s/\[n-t\]/Nate/g;
 	  $temp =~ s/\[['rbi]\]//g;
-	  $temp =~ s/\[[^\]]\]/X/g;
+	  $temp =~ s/\[[^\]]\]/X /g;
 	  #bracket out comments
-	  $temp =~ s/^\[[^\]]+\]/X/;
+	  $temp =~ s/^\[[^\]]+\]/X /;
 	  $temp =~ s/\[[^\]]+\]$//g;
 	  if ($head =~ /(random books|biopics)/)
 	  {
@@ -453,14 +470,20 @@ sub lookUp
 	  if (($capCheck == 2) && ($adNotTitle == 0) && (!titleCase($temp))) { err(); print "$allLines($lineNum): $temp needs to be Title Case, change $wrongString.\n"; return -1; }
 	  if (($capCheck == 1) && ($temp =~ /^[a-z]/)) { err(); print "$allLines($lineNum): $temp need caps.\n"; return -1; }
 	  if (($capCheck == -1) && ($temp =~ /^[A-Z]/)) { err(); print "$allLines($lineNum): $temp wrong caps.\n"; return -1; }
-	  if ($quoCheck == 1) { $count = ($temp =~ tr/'//); if (($count < 2) || (($temp !~ /^'/) && ($temp !~ /'$/))) { err(); print "$allLines($lineNum): $temp not enough quotes.\n"; return -1; } }
+	  $temp2 = $temp; $temp2 =~ s/[a-z0-9\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//);
+	  if ($quoCheck == 1)
+	  {
+	    $count = ($temp2 =~ tr/'//);
+		if ($count < 2) { err(); print "$allLines($lineNum): $temp not enough quotes, $count.\n"; return -1; }
+		if (($temp !~ /^'/) && ($temp !~ /'$/)) { err(); print "$allLines($lineNum): $temp needs quotes at beginning or end, $count.\n"; return -1; }
+      }
 	  if ($quoCheck == -1) { if (($temp =~ /'$/) && ($temp =~ /^'/)) { err(); print "$allLines($lineNum): $temp too quotey.\n"; return -1; } }
       my $gotit = ($temp =~ /[\.\!\"\?]['\)]?$/);
       if ($gotit && ($puncCheck == -1)) { err(); print "$allLines($lineNum): $temp unnecc punctuation.\n"; }
-      if (!$gotit && ($puncCheck==1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; return -1; }
+      if (!$gotit && ($puncCheck == 1) && ($temp !~ /\[(no line break|pre-lb|pre-brk)\]$/)) { err(); print "$allLines($lineNum): ($myIndex) missing punctuation.\n"; return -1; }
       if ($temp =~ /,[a-zA-Z]/) { err(); print "$allLines($lineNum): $temp comma no space.\n"; return -1; }
       if ($temp =~ /^!\./) { err(); print "$allLines($lineNum): $temp clashing punctuation.\n"; return -1; }
-	  $temp2 = $temp; $temp2 =~ s/[a-z0-9\]]\.?'[a-z]//gi; $count = ($temp2 =~ tr/'//); if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\n"; return -1; }
+	  if ($count % 2) { err(); print "$allLines($lineNum): $temp ($count apostrophe(s))\nMODIFIED: $temp2\n"; return -1; }
       if (($temp =~ /[a-z]' /i) || ($temp =~ / '[a-z]/))
 	  { # ?? shuffle to probably-ok in the future
 	    $temp2 = $temp;
@@ -470,7 +493,7 @@ sub lookUp
       }
       if (($temp =~ /^'/) ^ ($temp =~ /'$/)) { $count = ($temp =~ tr/'//); if ($count == 1) { err(); print ("$allLines($lineNum): $temp unmatched quotes.\n"); return -1; } }
       if (($temp =~ /^'/) && ($temp =~ /'$/)) { $temp =~ s/'//g; }
-      if ($temp =~ /^ /) { err(); print "$allLines($lineNum): $temp leading space.\n"; }
+      if (($temp =~ /^ /) && ($head ne "map coordinates")) { err(); print "$allLines($lineNum): $temp leading space.\n"; }
       if ($temp =~ /''/) { err(); print "$allLines($lineNum): $temp two single quotes.\n"; }
 	  $totalSuccesses++;
 	  return 0;

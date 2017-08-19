@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %i7xr @i7gh @i7bb %xtraFiles tableFile cutArt openWinOrUnix sourceFile tx $np);
+@EXPORT      = qw(%i7x %i7xr @i7gh @i7bb %xtraFiles tableFile cutArt openWinOrUnix sourceFile tx np $np $npo);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -63,6 +63,7 @@ $xtraFiles{"shuffling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensio
 $xtraFiles{"roiling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling random text.i7x"];
 
 our $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
+our $npo = "start \"\" $np";
 
 ############################################
 #cuts the leading article off an object definition
@@ -75,6 +76,12 @@ sub cutArt
   if ($temp =~ /^a (thing\t|for )/) { return $_[0]; } #A for effort is a special case
   $temp =~ s/^(a thing called |a |the )//gi;
   return $temp;
+}
+
+sub np
+{
+  my $cmd = "$npo \"$_[0]\"";
+  system($cmd);
 }
 
 sub openWinOrUnix
