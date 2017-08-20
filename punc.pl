@@ -123,23 +123,11 @@ my %map; # map shorthand to loghand
 $map{"s"} = "shuffling";
 $map{"sa"} = "shuffling";
 $map{"roi"} = "roiling";
-$map{"b"} = "shuffling,roiling";
+$map{"sts"} = "shuffling,roiling";
 $map{"pc"} = "compound";
 $map{"sc"} = "slicker-city";
 $map{"btp"} = "buck-the-past";
 $map{"as"} = "compound,slicker-city,buck-the-past";
-
-if ($#ARGV == -1)
-{
-  if ($default)
-  {
-    print "Going with default, $default.\n";
-	getTableList($default);
-    storyTables($default);
-  }
-  else { print "No default. Define with DEFAULT=\n"; }
-  exit();
-}
 
 my @projs = ();
 
@@ -162,14 +150,33 @@ while ($argcount <= $#ARGV)
   /^-?i$/ && do { $matchQuotes = 0; $argcount++; next; };
   /^-?\?$/ && do { usage(); exit(); };
   my @tempProj = split(/,/, $arg);
-  for (@tempProj) { if ($map{$_}) { $_ = $map{$_}; } }
-  print ("Adding @tempProj\n");
-  @projs = (@projs, @tempProj);
+  for (@tempProj)
+  {
+    if ($map{$_})
+	{
+	  @projs = (@projs, split(/,/, defined($map{$_}) ? $map{$_} : $_));
+    }
+  }
+  die(@projs);
   $argcount++;
   }
 }
 
+my $beforeSize = $#projs;
 @projs = uniq(@projs);
+if ($beforeSize != $#projs) { print "Note: duplicate project entries found.\n"; }
+
+if ($#projs == -1)
+{
+  if ($default)
+  {
+    print "Going with default, $default.\n";
+	getTableList($default);
+    storyTables($default);
+  }
+  else { print "No default. Define with DEFAULT=\n"; }
+  exit();
+}
 
 for my $myProj (@projs)
 {
@@ -369,6 +376,15 @@ while ($a = <A>)
         $quoCheck = $tempParse[3];
 		my @entryArray = split(/\t/, $a);
 		if ($myIndex > $#entryArray) { if ($printWarnings) { print "No element $myIndex at line $lineNum of $head, $#entryArray\n"; } next; }
+		my $main = $entryArray[$myIndex];
+		my $side = "";
+		if ($main =~ /\[if player is (fe)?male\]/)
+		{
+		  $side = $main;
+		  $side =~ s/\[if player is (fe)?male\].*?\[else\](.*?)\[end if\]/$2/gi;
+		  $main =~ s/\[if player is (fe)?male\](.*?)\[else\].*?\[end if\]/$2/i;
+		}
+
         if ($entryArray[$myIndex] eq "\"\"" || $entryArray[$myIndex] eq "--")
         {
           if ($printWarnings) { print "Empty entry $myIndex empty.\n"; }
@@ -383,13 +399,13 @@ while ($a = <A>)
 			  ($entryArray[1] !~ /true/))
 			{ err(); print "$allLines($lineNum): $a needs TRUE after tab.\n"; }
 		    $capCheck = 1;
-			if (lookUp($entryArray[$myIndex]))
+			if (lookUp($main))
 			{
 			}
 			next;
 		  }
 	    }
-		if (lookUp($entryArray[$myIndex]))
+		if (lookUp($main) || ($side && lookUp($side)))
 		{
 		  $fileLineOpen{$fileToRead} = $. if (!$fileLineOpen{$fileToRead} || !$getFirstError);
 		}
