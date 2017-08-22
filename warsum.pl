@@ -146,12 +146,14 @@ for $thisline (@warnlines)
   #print "$thisline\n";
 }
 
+my $errCount = 0;
 my $firstkey = "";
 for my $key (sort {
   ($sortByLine && ((substr($a, 0, 1) cmp substr($b, 0, 1)) || ($low{$a} <=> $low{$b}) || ($high{$a} <=> $high{$b}))) # first we test if the $/%/@ match up, then for actual line numbers
   || ($a cmp $b) } # then finally for names
   keys %low)
 {
+  $errCount += $count{$key};
   my $key1 = substr($key,0,1);
   if ($key1 ne $firstkey) { print "=" x 40 . $descr{$key1} . "\n"; $firstkey = $key1; }
   print "$key covers $low{$key} to $high{$key}, $count{$key} times.";
@@ -167,7 +169,7 @@ for my $key (sort keys %scalars)
 
 if (scalar keys %scalars) { print "Rerun with -aw to change \@ to \$.\n"; }
 
-print "" . (scalar keys %low) . " total keys read.\n";
+print "" . (scalar keys %low) . " total keys read, $errCount error count.\n";
 
 if ((scalar keys %low == 0) && (scalar keys %scalars == 0)) { print "The file $fileToSearch seems to pass strict/warnings. Nice job!\n"; }
 

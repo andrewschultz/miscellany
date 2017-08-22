@@ -321,7 +321,7 @@ sub processTerms
 		}
 		else
 		{
-	    die("$timeArray[0] has timestamp after $timeArray[1], which is a fatal build error" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
+	    die("$timeArray[0] has timestamp after $timeArray[1], which is a fatal build error" . ($xtraCmd ? " (try running $xtraCmd or adding =x to skip)" : ""));
 		}
 	  }
 	  next;
@@ -344,7 +344,7 @@ sub processTerms
 		}
 		else
 		{
-	    die("$timeArray[0] has timestamp before $timeArray[1], which is a fatal build error" . ($xtraCmd ? " (try running $xtraCmd)" : ""));
+	    die("$timeArray[0] has timestamp before $timeArray[1], which is a fatal build error" . ($xtraCmd ? " (try running $xtraCmd or adding =x to skip)" : ""));
 		}
 	  }
 	  next;

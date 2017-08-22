@@ -35,7 +35,7 @@ for (@searchies)
   @endAry = ();
   if ($first) { namelook("c:/writing/dict/firsts.txt", "first", "f", $_); }
   if ($last) { namelook("c:/writing/dict/lasts.txt", "last", "l", $_); }
-  $endStr = join(",", sort(@endAry));
+  $endStr = join(",", sort( { length($a) <=> length($b) || ($a cmp $b) } @endAry));
   if ($endStr) { print "Best matches:$endStr\n"; }
 }
 
