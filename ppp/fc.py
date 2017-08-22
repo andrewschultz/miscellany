@@ -5,7 +5,7 @@
 #
 # this deliberately blocks me from playing. If you just want to, replace the variables below as necessary.
 #
-# 1) time_matters = 86400 2) deliberate_nuisance_rows = 3 3) deliberateNuisanceIncrease = 2
+# 1) time_matters = 86400 2) deliberate_nuisance_rows = 3 3) deliberate_nuisance_increase = 2
 # 4) annoying_nudge = False (set to 0 or false)
 
 import re
@@ -30,6 +30,7 @@ save_file = "fcsav.txt"
 win_file = "fcwins.txt"
 time_file = "fctime.txt"
 lock_file = "fclock.txt"
+wait_file = "fcwait.txt"
 
 on_off = ['off', 'on']
 
@@ -68,10 +69,15 @@ start_time = 0
 # time before next play variables
 
 time_matters = 1
+
+# this is an experimental feature to annoy me
+deliberate_nuisance_rows = 3
+deliberate_nuisance_increase = 2
+# this can't be toggled in game but you can beforehand
+annoying_nudge = True
 nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
 min_delay = 30000  # if we can cheat one time
-stupid_wait = 300 # delay variable
-high_time = 0
+stupid_wait = 0 # delay variable
 max_delay = 0
 cur_games = 0
 max_games = 5
@@ -84,11 +90,6 @@ auto_reshuf = True
 save_position = False
 save_on_win = False
 quick_bail = False
-# this is an experimental feature to annoy me
-deliberate_nuisance_rows = 3
-deliberateNuisanceIncrease = 2
-# this can't be toggled in game but you can beforehand
-annoying_nudge = True
 
 # easy mode = A/2 on top. Cheat index tells how many cards of each suit are sorted to the bottom.
 cheat_index = 0
@@ -658,6 +659,64 @@ def read_opts():
         exit()
     return
 
+    
+def read_delay_opts():
+    if not os.path.isfile(wait_file):
+        print("No", wait_file, "so using default options.")
+        return
+    if os.access(wait_file, os.W_OK):
+        print(wait_file, 'needs to be write protected. attrib +r',wait_file)
+        exit()
+    config_opt.read(wait_file)
+    global deliberate_nuisance_increase
+    try:
+        annoying_nudge = config_opt.getint('Section1', 'deliberate_nuisance_increase')
+    except configparser.NoOptionError:
+        print("Wait opts file needs deliberate_nuisance_increase option.")
+        exit()
+    global deliberate_nuisance_rows
+    try:
+        deliberate_nuisance_rows = config_opt.getint('Section1', 'deliberate_nuisance_rows')
+    except configparser.NoOptionError:
+        print("Wait opts file needs deliberate_nuisance_rows option.")
+        exit()
+    global nag_delay
+    try:
+        nag_delay = config_opt.getint('Section1', 'nag_delay')
+    except configparser.NoOptionError:
+        print("Wait opts file needs nag_delay option.")
+        exit()
+    global min_delay
+    try:
+        min_delay = config_opt.getint('Section1', 'min_delay')
+    except configparser.NoOptionError:
+        print("Wait opts file needs min_delay option.")
+        exit()
+    global stupid_wait
+    try:
+        stupid_wait = config_opt.getint('Section1', 'stupid_wait')
+    except configparser.NoOptionError:
+        print("Wait opts file needs stupid_wait option.")
+        exit()
+    global max_delay
+    try:
+        max_delay = config_opt.getint('Section1', 'max_delay')
+    except configparser.NoOptionError:
+        print("Wait opts file needs max_delay option.")
+        exit()
+    global max_games
+    try:
+        max_games = config_opt.getint('Section1', 'max_games')
+    except configparser.NoOptionError:
+        print("Wait opts file needs max_games option.")
+        exit()
+    global per_period
+    try:
+        per_period = config_opt.getint('Section1', 'per_period')
+    except configparser.NoOptionError:
+        print("Wait opts file needs per_period option.")
+        exit()
+    return
 
 def send_opts():
     if not config_opt.has_section('Section1'):
@@ -682,7 +741,7 @@ def lock_and_bail():
 
 
 def check_total_per_day():
-    per_period = 10
+    global per_period
     timespan = 86400
     time_list = "fctimelist.txt"
     cur_time = int(time.time())
@@ -1004,7 +1063,7 @@ def check_winning():
                     go_bye()
                 global deliberate_nuisance_rows
                 if deliberate_nuisance_rows > 0:
-                    deliberate_nuisance_rows += deliberateNuisanceIncrease
+                    deliberate_nuisance_rows += deliberate_nuisance_increase
                 init_cards()
                 init_side(0)
                 total_undo = 0
@@ -2299,6 +2358,7 @@ if disallow_write_source and os.access(__file__, os.W_OK):
     # zap above to debug
 
 read_opts()
+read_delay_opts()
 
 # note that the Cmd line overrides what is in the options file
 parse_cmd_line()
