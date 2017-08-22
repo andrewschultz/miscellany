@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(%i7x %i7xr @i7gh @i7bb %xtraFiles tableFile cutArt openWinOrUnix sourceFile tx np $np $npo);
+@EXPORT      = qw($np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np openWinOrUnix shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -78,11 +78,17 @@ sub cutArt
   return $temp;
 }
 
+############################################
+# creates the string to open a file on the clipboard then runs it
+
 sub np
 {
   my $cmd = "$npo \"$_[0]\"";
   system($cmd);
 }
+
+############################################
+# checks a file's line endings, then opens it
 
 sub openWinOrUnix
 {
@@ -101,6 +107,26 @@ sub openWinOrUnix
   return 1;
 }
 
+############################################
+# gives a project's short handle, if there
+
+sub shortIf
+{
+  return defined($i7xr{$_[0]}) ? $i7xr{$_[0]} : $_[0];
+}
+
+# gives the story file for the project
+
+sub sourceFile
+{
+  my $temp = $_[0];
+  $temp = $i7x{$temp} if defined($i7x{$temp});
+  return "c:\\games\\inform\\$temp.inform\\Source\\story.ni";
+}
+
+############################################
+# opens the table file for a project (removes dashes)
+
 sub tableFile
 {
   my $temp = $_[0];
@@ -108,18 +134,14 @@ sub tableFile
   return "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp tables.i7x";
 }
 
+############################################
+# gives a file with the extension txt
+
 sub tx
 {
   my $temp = $_[0];
   $temp =~ s/\.[^\.]*$/.txt/i;
   return $temp;
-}
-
-sub sourceFile
-{
-  my $temp = $_[0];
-  $temp = $i7x{$temp} if defined($i7x{$temp});
-  return "c:\\games\\inform\\$temp.inform\\Source\\story.ni";
 }
 
 1;

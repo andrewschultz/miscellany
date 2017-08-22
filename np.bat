@@ -8,6 +8,10 @@ if not x%str1:GitHub=%==x%str1% (
   cd \writing\scripts\
 )
 
+if "%cd%" equ "c:'Users\Andrew\Documents" (
+  cd \writing\scripts\
+)
+
 if not x%str1:dropbox=%==x%str1% (
   cd \writing\scripts\
 )
