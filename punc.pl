@@ -10,6 +10,8 @@
 # punc.txt has more annotations on what things mean
 # punc-priv.txt is for private projects I don't want to show the source for yet
 #
+# this can also check when Inform throws a weird error with imbalanced quotes (use the QE flag)
+#
 #example
 #hs - horrendous songs	0,1,-1,-1	1,1,-1,-1
 #row 0 has 1 start capital, -1 punctuation -1 quotes (single)
@@ -39,6 +41,7 @@ my $printWarnings = 0;
 my $getFirstError = 0;
 my $launch = 0;
 my $blankWarn = 0;
+my $checkQuotesEverywhere = 0;
 
 ######################counters
 my $errsYet = 0;
@@ -147,7 +150,7 @@ while ($argcount <= $#ARGV)
   /^-?nb$/ && do { $blankWarn = 1; $argcount++; next; };
   /^-?l$/ && do { $launch = 1; $argcount++; next; };
   /^-?f$/ && do { $getFirstError = 1; $launch = 1; $argcount++; next; };
-  /^-?i$/ && do { $matchQuotes = 0; $argcount++; next; };
+  /^-?q(e)?$/ && do { $matchQuotes = 1; $argcount++; next; };
   /^-?\?$/ && do { usage(); exit(); };
   my @tempProj = split(/,/, $arg);
   for (@tempProj)
@@ -157,7 +160,6 @@ while ($argcount <= $#ARGV)
 	  @projs = (@projs, split(/,/, defined($map{$_}) ? $map{$_} : $_));
     }
   }
-  die(@projs);
   $argcount++;
   }
 }
@@ -298,9 +300,16 @@ my $inTable = 0;
 
 my %alreadyWarn;
 
+my $quo;
+
 while ($a = <A>)
 {
   $allLines++;
+  if ($inTable == 1 || $checkQuotesEverywhere)
+  {
+    $quo = () = $a =~ /\"/g;
+    if ($quo % 2) { print "ODD QUOTE COUNT MAY CAUSE WEIRD INFORM ERRORS ($quo) $fileToRead line $.:\n    $a"; $totalErrors++; next; }
+  }
   if (($a =~ /^table of /) && ($inTable == 0))
   {
     chomp($a);
@@ -550,7 +559,11 @@ See punc.txt for the syntax in the file.
 -h help
 -l launch after
 -f launch first error, not last
--i don't bother to match quotes
+-q/qe match quotes everywhere and not just in tables
+
+SAMPLE USAGE:
+punc.pl sts = punc.pl shuffling,roiling = punc.pl sa,roi
+punc.pl as = punc.pl btp,pc,sc = punc.pl buck-the-past,compound,slicker-city
 EOT
 exit;
 }
