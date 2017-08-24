@@ -259,7 +259,10 @@ while ($myLine = <A>)
   {
     if ($g =~ /[0-9]=TF/) { next; }
     $count = ($g =~ tr/,//);
-	if ($count != 3) { print "$lineNum: $g wrong # of commas: $count\n"; }
+	if ($count != 3)
+	{
+	  print "$lineNum: $g wrong # of commas: $count\n" unless $count == 1 && ($g =~ /^[0-9]+,(b|[tf]+)$/);
+    }
   }
   $searches{$c} = $tempLine;
   if (!$tempLine) { print "Warning: No data for TABLE OF $c.\n"; }
@@ -379,11 +382,27 @@ while ($a = <A>)
 	  for my $thisParse (@parseAry)
 	  {
 	    my @tempParse = split(/,/, $thisParse);
+		my @entryArray = split(/\t/, $a);
+		if ($#tempParse == 1 && $tempParse[1] eq "b")
+		{
+		  if ($entryArray[$tempParse[0]] eq '--')
+		  {
+		    print "Bad blank at column $tempParse[0], line $lineNum/$. of $head.\n";
+		  }
+          next;
+		}
+		if ($#tempParse == 1 && $tempParse[1] =~ /^[tf]+/)
+		{
+		  if ($entryArray[$tempParse[0]] ne 'true' && $entryArray[$tempParse[0]] ne 'false')
+		  {
+		    print "Need true/false at column $tempParse[0], line $lineNum/$. of $head.\n";
+		  }
+          next;
+		}
 		$myIndex = $tempParse[0];
         $capCheck = $tempParse[1];
         $puncCheck = $tempParse[2];
         $quoCheck = $tempParse[3];
-		my @entryArray = split(/\t/, $a);
 		if ($myIndex > $#entryArray) { if ($printWarnings) { print "No element $myIndex at line $lineNum of $head, $#entryArray\n"; } next; }
 		my $main = $entryArray[$myIndex];
 		my $side = "";
