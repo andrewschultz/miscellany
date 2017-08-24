@@ -15,6 +15,8 @@ use POSIX;
 
 use strict;
 use warnings;
+use lib "c:/writing/scripts";
+use i7;
 
 use Win32::Clipboard;
 
@@ -43,6 +45,9 @@ my $lastHeader = "";
 my $othersToo = 0;
 my $foundTotal = 0;
 
+my $fileToOpen = "";
+my $lineToOpen = 0;
+
 #################options
 my $printTabbed = 1;
 my $printUntabbed = 1;
@@ -58,6 +63,7 @@ my $maxOverallFind = 100;
 my $maxFileFind = 25;
 my $getClipboard = 0;
 my $zapBrackets = 0;
+my $launchFirstSource = 0;
 
 if ($pwd =~ /oafs/) { @runs = ("oafs"); }
 elsif ($pwd =~ /(threed|fourd)/) { @runs = ("opo"); }
@@ -77,6 +83,7 @@ while ($count <= $#ARGV)
   for ($a)
   {
   /^0$/ && do { processNameConditionals(); exit; };
+  /^1st$/ && do { $launchFirstSource = 1; $count++; next; };
   /^-?e$/ && do { `$gqfile`; exit; };
   /^\// && do { $thisAry[0] =~ s/^\///g; $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; };
   /^-?a$/ && do { $runAll = 1; $count++; next; }; # run all
@@ -171,6 +178,10 @@ sub tryOneSet
 foreach $myrun (@runs)
 {
   processFiles($myrun);
+  if ($launchFirstSource)
+  {
+    `$np $fileToOpen -n$lineToOpen`;
+  }
   if ($othersToo)
   {
     if ( !grep( /^sts$/, @runs) ) { next; }
@@ -356,6 +367,11 @@ sub processOneFile
 	  if ($showRules) { print "RULE=$latestRule"; }
 	  if ($maxFileFind && ($foundOne == $maxFileFind)) { print "----------Max $maxFileFind matches found per file. Use -mf to increase.\n"; last; }
 	  if ($maxOverallFind && ($foundTotal == $maxOverallFind)) { print "----------Max $maxOverallFind total matches found. Use -mo to increase.\n"; last; }
+      if ($_[0] =~ /story.ni/)
+	  {
+	  $fileToOpen = $_[0];
+	  $lineToOpen = $. if !$lineToOpen;
+	  }
 	}
   }
   close(A);
