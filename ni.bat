@@ -397,7 +397,19 @@ goto parse
 )
 
 if "%1" EQU "17" (
-set PROJ=buck-the-past
+set PROJ=curate
+shift /1
+goto parse
+)
+
+if "%1" EQU "cu" (
+set PROJ=curate
+shift /1
+goto parse
+)
+
+if "%1" EQU "cur" (
+set PROJ=curate
 shift /1
 goto parse
 )
