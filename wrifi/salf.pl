@@ -58,7 +58,7 @@ my $myd = lc(getcwd());
 my %list;
 $list{"pc"} = "pc";
 $list{"sc"} = "sc,sc1,sc2,sc3,sc4,scfarm,sce,scd,scc,scb,sca";
-$list{"btp"} = "btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
+$list{"btp"} = "btp-auth,btp-rej,btp,btp-dis,btp-book,btp1,btp2,btp3,btp4,btp-farm,btp-e,btp-d,btp-c,btp-b,btp-a";
 
 my $defSplit = "";
 
@@ -130,14 +130,16 @@ open(B, ">$outFile");
 
 my $mysect;
 
-while ($a = <A>)
+my $line;
+
+while ($line = <A>)
 {
-  print B $a;
-  if ($a =~ /^\\/)
+  print B $line;
+  if ($line =~ /^\\/)
   {
     for $mysect (@sects)
 	{
-	  if ($a =~ /^\\$mysect[=\|]/) { chomp($a); print "Alphabetizing $a\n"; alfThis(); }
+	  if ($line =~ /^\\$mysect[=\|]/) { chomp($line); print "Alphabetizing $line\n"; alfThis($line); }
 	}
   }
 }
@@ -205,6 +207,7 @@ sub alfThis
     }
     push(@lines, $a);
   }
+  if ($_[0] =~ /aut/) { for my $l (@lines) { print lotitle($l) . "\n"; } }
   my @x = sort { comm($a) <=> comm($b) || dones($a) <=> dones($b) || lotitle($a) cmp lotitle($b) } @lines;
   #@x = @lines;
 

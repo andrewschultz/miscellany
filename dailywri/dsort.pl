@@ -439,6 +439,7 @@ sub preProcessDailyFile
 sub preprocessFileList
 {
 my $thisFile;
+my @descriptors;
 
 for $thisFile (@_)
 {
@@ -448,7 +449,7 @@ for $thisFile (@_)
     chomp($a);
     if ($a =~ /^\\[0-9a-z]/)
     { #print "Trying $a in $thisFile\n";
-      my @b = split(/=/, $a); if (!$b[1]) { die("You need a descriptor for $b[0] in $thisFile\n"); }
+      my @b = split(/=/, $a); if (!$b[1]) { push(@descriptors, "$b[0] ($.) in $thisFile"); }
       $b[0] =~ s/^.//g; #print "Adding $b[0]<->$b[1] $thisFile\n";
 	  my @c = split(/\|/, $b[0]);
 	  for (@c) {
@@ -464,6 +465,9 @@ for $thisFile (@_)
 	  }
     }
   }
+  close(A);
+die("Need descriptors for " . join(", ", @descriptors)) if scalar @descriptors;
+
 } #exit;
 
 }
