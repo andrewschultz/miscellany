@@ -37,6 +37,7 @@ my $tabfilepriv = "c:/writing/scripts/i7tp.txt";
 my %xtraFiles;
 
 ###################hashes for verifying source
+my %optActivate;
 my %notFound;
 my %tableName;
 my %readFileName;
@@ -44,6 +45,7 @@ my %regex;
 my %regexMod;
 my %delta;
 my %dataFiles;
+my %minRows;
 
 ###################duplicate detector hashes
 my %tableDup;
@@ -223,6 +225,7 @@ while ($a = <A>)
 	if ($tableShort =~ /\[x/) { $tableShort =~ s/.*\[x/x/g; $tableShort =~ s/\]//g; }
 	if ($tableShort =~ / \[/) { $tableShort =~ s/ \[.*//g; }
 	$tableShort =~ s/ - .*//g;
+	$tableShort =~ s/ *\(continued\)//;
 	for my $x (@important)
 	{
 	  if ($a =~ /\b$x\b/i) { $majorTable = 1; }
@@ -277,11 +280,11 @@ while ($a = <A>)
 	  {
 	    if (($cols[$_] eq "--") || ($cols[$_] eq "\|\|"))
 		{
-          print "Empty entry at $tableShort $curTable, line $., column $_.\n" if !defined($ignoreBlankCols{"$tableShort:$_"});
+          print "Empty entry at $tableShort, line $., column $_.\n" if !defined($ignoreBlankCols{"$tableShort:$_"});
 		}
         if ($cols[$_] eq "")
         {
-          print "Double tab at $tableShort $curTable, line $., column $_-" . ($_+1) . "\n";
+          print "Double tab at $tableShort, line $., column $_-" . ($_+1) . "\n";
         }
 	  }
 	}
@@ -295,7 +298,7 @@ while ($a = <A>)
 	  my $columnsThisRow = (scalar split(/[\t]+/, $tempLine));
 	  if ($columnsThisRow != $thisTableRow)
 	  {
-	    print "WARNING: Table $curTable line $. has $columnsThisRow rows, should have $thisTableRow.\n";
+	    print "WARNING: $curTable line $. ($tableShort) has $columnsThisRow rows, should have $thisTableRow.\n" unless (defined($minRows{$tableShort})) && ($columnsThisRow >= $minRows{$tableShort});
 	  }
     }
     print B $a; $count++; $tableRow++; if ($a =~ /^\[/) { print "ROW MISMATCH: $curTable has a comment which may throw the counter off.\n"; }
@@ -303,9 +306,9 @@ while ($a = <A>)
 	if ($a =~ /(true\t|\ttrue)/) { $trueRow++; }
 	my $y = $a;
 	my $tempAdd = ($y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g);
-	if (($tempAdd < 1) && $smartIdea && (!defined($ignoreDup{$tableShort})))
+	if (($tempAdd < 1) && $smartIdea && (!defined($ignoreDup{$tableShort})) &&!$optActivate{$tableShort})
 	{
-	  print "Line $. in $sourceFile has no activations/e2/na.\n";
+	  print "Line $. in $sourceFile ($tableShort) has no activations/e2/na.\n";
 	  $noAct++;
 	  $actLog .= " $.";
 	}
@@ -453,10 +456,27 @@ sub processInitData
 	    $ignoreDup{$tabElts[1]} = 1;
 		next;
 	  }
+	  if ($tabElts[1] =~ /^optact:/)
+	  {
+	    $tabElts[1] =~ s/^optact://;
+	    $optActivate{$tabElts[1]} = 1;
+		next;
+	  }
 	  if ($tabElts[1] =~ /^igcol:/)
 	  {
 	    $tabElts[1] =~ s/^igcol://;
+		if ($tabElts[1] =~ /^[0-9]+:/)
+		{
+		  print "$tabElts[1] reversed to put #s second in config file.\n";
+		  $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
+		}
 	    $ignoreBlankCols{$tabElts[1]} = 1;
+		next;
+	  }
+	  if ($tabElts[1] =~ /^minrow(s)?:/)
+	  {
+	    my @xrow = split(/:/, $tabElts[1]);
+		$minRows{$xrow[2]} = $xrow[1];
 		next;
 	  }
 	  if ($tabElts[1] =~ /^xrow:/)
