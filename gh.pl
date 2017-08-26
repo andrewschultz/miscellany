@@ -930,6 +930,7 @@ sub checkWarnings {
         && ( compare( $_[0], "$_[0].tdy" ) ) )
       {
         copy( "$_[0].tdy", "$_[0]" );
+        unlink "$_[0].tdy";
       }
       else {
         print "PERLTIDY failed.";
