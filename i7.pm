@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw($np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np openWinOrUnix shortIf sourceFile tableFile tx);
+@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np openWinOrUnix shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -54,6 +54,8 @@ our %i7xr = ( "shuffling" => "sa",
 our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing");
 our @i7bb = ("seeker-status", "buck-the-past",  "curate");
 
+our @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");
+
 our %xtraFiles;
 
 $xtraFiles{"buck-the-past"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Buck the Past tables.i7x"];
@@ -84,6 +86,7 @@ sub cutArt
 sub np
 {
   my $cmd = "$npo \"$_[0]\"";
+  $cmd .= " -n$_[1]" if defined($_[1]) && $_[1];
   system($cmd);
 }
 

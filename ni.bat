@@ -95,7 +95,7 @@ goto end
 )
 
 if "%1" EQU "an" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "C:\games\inform\roiling.inform\Source\tosort.txt"
+sso.pl -of1
 goto end
 )
 
@@ -182,6 +182,7 @@ goto parse
 )
 
 if "%1" EQU "ta" (
+echo Looking for table
 set TABLE=1
 shift /1
 goto parse
@@ -578,7 +579,7 @@ echo Did not find %PROJ% in tries, tmbg or the default.
 
 :usage
 echo Global tweaks: nu = nudges, ra = random (for Stale Tales Slate), no = notes
-echo m as 1st argument = materials, b as 1st argument = build
+echo m as argument = materials, b as argument = build
 echo ========================
 echo r = roiling, sa = shuffling
 echo Releases have R at end. pr scr sr rr = problems, slicker, shuffling or roiling releases
@@ -587,7 +588,8 @@ echo gr = grubbyville, ua = ugly oafs
 echo current project = sc, pc/t2 = problems compound, btp/bp/17/t3 = Buck the Past
 echo ========================
 echo Non-Inform source: tr = trizbort, rt/st = anagram sorter, an = anagram list
-echo ta = tables
+echo ta = tables, t = source (story.ni), no = notes file (notes.txt)
+echo Stale Tales Slate specific: nu = nudge file (in headers), ra = random
 echo rn = release notes (1 argument)
 
 :end

@@ -4,7 +4,8 @@
 
 set str1=%cd%
 
-if not x%str1:GitHub=%==x%str1% (
+if not "%str1%"=="%str1:GitHub=%" (
+  echo github in dir path
   cd \writing\scripts\
 )
 
@@ -12,40 +13,41 @@ if "%cd%" equ "c:'Users\Andrew\Documents" (
   cd \writing\scripts\
 )
 
-if not x%str1:dropbox=%==x%str1% (
+if not "%str1%"=="%str1:dropbox=%" (
+  echo dropbox in dirpath
   cd \writing\scripts\
 )
 
-if "%1" equ "" (
+if %1 equ "" (
 echo Need an argument
 goto end
 )
 
 rem the stuff below needs to stay there because it's important shortcuts
 
-if "%1" EQU "g" (
+if %1 EQU "g" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\games.otl"
 goto end
 )
 
-if "%1" EQU "sm" (
+if %1 EQU "sm" (
 c:\games\inform\buck-the-past.inform\Source\gotl.pl
 goto end
 )
 
-if "%1" EQU "l" (
+if %1 EQU "l" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
 goto end
 )
 
-if "%1" EQU "li" (
+if %1 EQU "li" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\limericks.otl"
 goto end
 )
 
 rem the stuff above needs to stay there because it's important shortcuts
 
-if "%1" equ "q" (
+if %1 equ "q" (
 echo USAGE============================
 echo u = undefined
 echo f = create empty file named 2nd arg
@@ -59,11 +61,11 @@ echo search for: x.pl, x.pm, x.py, scripts\x.pl, scripts\x.py, writing\scripts\x
 goto end
 )
 
-if "%1" equ "-f" (
+if %1 equ "-f" (
 goto f
 )
 
-if "%1" equ "f" (
+if %1 equ "f" (
 :f
 echo creating empty file/appending nothing to existing, ignore error.
 "abc" >> "%2"
@@ -71,28 +73,28 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%2"
 goto end
 )
 
-if "%1" equ "h" (
+if %1 equ "h" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\starter.htm
 goto end
 )
 
-if "%1" equ "u" (
+if %1 equ "u" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" c:\writing\undef.txt
 goto end
 )
 
-if "%1" equ "b" (
+if %1 equ "b" (
 goto b
 )
 
-if "%1" equ "-b" (
+if %1 equ "-b" (
 :b
 cd %APPDATA\notepad++\backup
 dir /od
 goto end
 )
 
-if "%1" equ "." (
+if %1 equ "." (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" u:\ahschult\.kshrc
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" u:\ahschult\.profile
 goto end
@@ -161,7 +163,7 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1.otl"
 goto end
 )
 
-if "%1" EQU "sr" (
+if %1 EQU "sr" (
 start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\games\inform\Standard Rules.i7x"
 )
 
@@ -198,8 +200,8 @@ start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "c:\writing\dict\%1.pl
 goto end
 )
 
-if EXIST "%1" (
-start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" "%1"
+if EXIST %1 (
+start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" %1
 goto end
 )
 
