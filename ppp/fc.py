@@ -428,6 +428,9 @@ def open_lock_file():
 
 
 def close_lock_file():
+    if not os.path.exists(lock_file):
+        print('Something goofed. I couldn\'t find a lock file. Well, you won\'t be able to play again anyway unless you muck with the time files.')
+        return
     os.system("attrib -r " + lock_file)
     os.remove(lock_file)
     if os.path.exists(lock_file):
