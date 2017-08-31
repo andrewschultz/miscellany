@@ -37,7 +37,12 @@ our %i7x = ( "12" => "shuffling",
   "16" => "slicker-city",
   "bs" => "btp-st",
   "s17" => "btp-st",
-  "btp" => "buck-the-past"
+  "btp" => "buck-the-past",
+  "e11" => "dash",
+  "e13" => "ghost",
+  "e14" => "Candy Rush Saga",
+  "e15" => "heezy-park",
+  "e16" => "checkered-haunting"
 );
 
 our %i7xr = ( "shuffling" => "sa",

@@ -12,9 +12,11 @@
 
 #I can and should expand this to do more than one at once
 
+use lib "c:/writing/scripts";
 use strict;
 use warnings;
 use Time::HiRes qw(time);
+use i7;
 
 my %zmac;
 my %proj;
@@ -60,8 +62,9 @@ my $y;
 
 while ( $x = <X> ) {
   chomp($x);
-  if ( $x =~ /^;/ ) { last; }
-  if ( $x =~ /^#/ ) { next; }
+  if ( $x =~ /^;/ )     { last; }
+  if ( $x =~ /^#/ )     { next; }
+  if ( $x !~ /[a-z]/i ) { next; }
 
   my @cmd = split( /=/, $x );
   if ( defined( $cmd[1] ) ) {
@@ -71,9 +74,9 @@ while ( $x = <X> ) {
     elsif ( lc( $cmd[0] eq lc "allproj" ) ) {
       @allProj = split( /,/, $cmd[1] );
     }
-    else {
+    else {    # deprecated with the i7 module
       my @froms = split( /,/, $cmd[0] );
-      for (@froms) { $proj{$_} = $cmd[1]; }
+      for (@froms) { $i7x{$_} = $cmd[1]; }
     }
   }
   elsif ( $x =~ /^FORCE / ) {
@@ -94,7 +97,14 @@ while ( $x = <X> ) {
     $y =~ s/^z7://g;
     $zmac{ p($y) } = 7;
   }    #z7 is hacky code for z5 in release but z8 in debug/beta
-  elsif ( $x =~ /^6l:/ ) { $y = $x; $y =~ s/^6l://g; $use6l{ p($y) } = 1; }
+  elsif ( $x =~ /^6l:/ ) {
+    $y = $x;
+    $y =~ s/^6l://g;
+    $use6l{ p($y) } = 1;
+  }
+  else {
+    print "WARNING: unparsed line $.: $x\n";
+  }
 }
 
 #sensible abbreviations
@@ -206,8 +216,8 @@ my $startTimeGlobal = time();
 my $totalBuilds = $release + $debug + $runBeta;
 
 for my $toComp (@compileList) {
-  if    ( $proj{$toComp} )    { $myProj = $proj{$toComp}; }
-  elsif ( $proj{"-$toComp"} ) { $myProj = $proj{"-$toComp"}; }
+  if    ( $i7x{$toComp} )    { $myProj = $i7x{$toComp}; }
+  elsif ( $i7x{"-$toComp"} ) { $myProj = $i7x{"-$toComp"}; }
   elsif ( -d "c:\\games\\inform\\$toComp.inform" ) { $myProj = $toComp; }
   else {
     die("No project for $toComp. If you wanted an option, try -?.\n");
@@ -398,7 +408,7 @@ sub doOneBuild {
 }
 
 sub writeToLog {
-  open( LOG, ">$logFile" );
+  open( LOG, "$logFile" );
   my $time        = localtime( time() );
   my $logString   = "$_[0],$_[4],$time";
   my $writeString = "";
@@ -574,7 +584,7 @@ sub z5 {
 }
 
 sub p {
-  if ( $proj{ $_[0] } ) { return $proj{ $_[0] }; }
+  if ( $i7x{ $_[0] } ) { return $i7x{ $_[0] }; }
   return $_[0];
 }
 
