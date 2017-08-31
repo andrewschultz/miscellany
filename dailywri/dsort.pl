@@ -160,8 +160,8 @@ for $dailyDir (@inDirs) {
     my $day   = substr( $fi, 6, 2 );
     my $time  = timelocal( 59, 59, 23, $day, $month, $year ) + 1;
     my $tdelt = ( time() - $time );
-    my $delta = sprintf( "$year $month $day %d", $tdelt / 86400 );
-    print DL "$fi took $delta day(s), $tdelt seconds.\n";
+    my $delta = sprintf( "%d", $tdelt / 86400 );
+    print DL "$fi took $delta day(s) rounded down, $tdelt seconds.\n";
   }
 
   close(DL);
@@ -384,7 +384,10 @@ sub chopDailyFile {
 
         #print "OK, starting $hashval\n";
         print B $a;
-        while ( ( $b = <A> ) =~ /[a-zA-Z0-9=]/ ) { print B $b; }
+        while ( ( $b = <A> ) ) {
+          last if $b =~ /[a-zA-Z0-9=]/;
+          print B $b;
+        }
 
         #print "Adding $hashval\n";
         #print "Adding $hashval--\n$writings{$hashval}";
@@ -622,58 +625,58 @@ sub readCmdLine {
     $a = $ARGV[$count];
     $b = $ARGV[ $count + 1 ];
     for ($a) {
-      /^-fi$/ && do { @fileArray = split( /,/, $b ); next; };
-      /^-q$/  && do { $quiet           = 1; $count++; next; };
-      /^-v$/  && do { $verbose         = 1; $count++; next; };
-      /^-vy$/ && do { $verifyFirstLine = 1; $count++; next; };
-      /^-vn$/ && do { $verifyFirstLine = 0; $count++; next; };
-      /^-vs$/
+      /^-?fi$/ && do { @fileArray = split( /,/, $b ); next; };
+      /^-?q$/  && do { $quiet           = 1; $count++; next; };
+      /^-?v$/  && do { $verbose         = 1; $count++; next; };
+      /^-?vy$/ && do { $verifyFirstLine = 1; $count++; next; };
+      /^-?vn$/ && do { $verifyFirstLine = 0; $count++; next; };
+      /^-?vs$/
         && do { $verifySections = 1; $count++; next; }; #not sure what this does other than make sure sections are valid which seems to be done by default
-      /^-flash$/ && do {
+      /^-?flash$/ && do {
         @inDirs = ( "e:/daily", "f:/daily", "g:/daily" );
         $intoDir = "c:/writing";
         $count++;
         next;
       };
-      /^-dc$/ && do { duplicateCheck(); exit(); };
-      /^-lt$/   && do { $looseTest     = 1;              $count++; next; };
-      /^-nt$/   && do { $lastDayString = todayString(1); $count++; next; };
-      /^-[2t]$/ && do { $lastDayString = todayString(0); $count++; next; };
-      /^-work$/ && do {
+      /^-?dc$/ && do { duplicateCheck(); exit(); };
+      /^-?lt$/   && do { $looseTest     = 1;              $count++; next; };
+      /^-?nt$/   && do { $lastDayString = todayString(1); $count++; next; };
+      /^-?[2t]$/ && do { $lastDayString = todayString(0); $count++; next; };
+      /^-?work$/ && do {
         $intoDir = "c:/coding/perl/daily/bak";
         @inDirs  = ($intoDir);
         $count++;
         next;
       };
-      /^-r$/ && do { $readOnly = 1; $count++; next; };
-      /^-!$/ && do { $debug    = 1; $count++; next; };
-      /^-d$/ && do { $intoDir = $b; $count += 2; next; };
-      /^-i$/ && do { @inDirs = split( /,/, $b ); $count += 2; next; };
-      /^-(w|home)$/ && do {
+      /^-?r$/ && do { $readOnly = 1; $count++; next; };
+      /^-?!$/ && do { $debug    = 1; $count++; next; };
+      /^-?d$/ && do { $intoDir = $b; $count += 2; next; };
+      /^-?i$/ && do { @inDirs = split( /,/, $b ); $count += 2; next; };
+      /^-?(w|home)$/ && do {
         @inDirs = ( "c:/writing/daily", "c:/users/andrew/dropbox/daily" );
         $intoDir = "c:/writing";
         $count++;
         next;
       };
-      /^-(db|bx)$/ && do {
+      /^-?(db|bx)$/ && do {
         @inDirs  = ("c:/users/andrew/dropbox/daily");
         $intoDir = "c:/writing";
         $count++;
         next;
       };
-      /^-[efg]$/ && do {
+      /^-?[efg]$/ && do {
         @inDirs = ("$a:/daily");
         $inDirs[0] =~ s/^-//g;
         $intoDir = "c:/writing";
         $count++;
         next;
       };
-      /^-oo$/ && do { $outputHash = 1; $skipOutput = 1; $count++; next; };
-      /^-o$/  && do { $outputHash = 1; $count++; next; };
-      /^-nm$/ && do { $noMove     = 1; $count++; next; };
-      /^-(bl)$/ && do { $lastDayString  = $b; $count += 2; next; };
-      /^-(af)$/ && do { $firstDayString = $b; $count += 2; next; };
-      /^-[0-9]+$/
+      /^-?oo$/ && do { $outputHash = 1; $skipOutput = 1; $count++; next; };
+      /^-?o$/  && do { $outputHash = 1; $count++; next; };
+      /^-?nm$/ && do { $noMove     = 1; $count++; next; };
+      /^-?(bl)$/ && do { $lastDayString  = $b; $count += 2; next; };
+      /^-?(af)$/ && do { $firstDayString = $b; $count += 2; next; };
+      /^-?[0-9]+$/
         && do { $daysBack = $a; $daysBack =~ s/^-//g; $count += 2; next; };
       /^-?\?$/   && do { usage();      exit; };
       /^-?\?\?$/ && do { usageQuick(); exit; };
