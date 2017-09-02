@@ -355,7 +355,7 @@ for $sourceFile (@sourceFileList) {
       if ( $a =~ /(false\t|\tfalse)/ ) { $falseRow++; }
       if ( $a =~ /(true\t|\ttrue)/ )   { $trueRow++; }
       my $y       = $a;
-      my $tempAdd = ( $y =~ s/\[(activation of|e0|e1|e2|e3|e4|na)//g );
+      my $tempAdd = ( $y =~ s/\[(activation of|e0|e1|e2|e3|e4|na\b)//g );
       if ( ( $tempAdd < 1 )
         && $smartIdea
         && ( !defined( $ignoreDup{$tableShort} ) )
@@ -510,20 +510,34 @@ sub processInitData {
       if ( $tabElts[1] =~ /^igcol:/ ) {
         $tabElts[1] =~ s/^igcol://;
         if ( $tabElts[1] =~ /^[0-9]+:/ ) {
-          print "$tabElts[1] reversed to put #s second in config file.\n";
+          print
+"Line $.: $tabElts[1] reversed to put #s second in config file for IGCOL.\n";
           $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
         }
         $ignoreBlankCols{ $tabElts[1] } = 1;
         next;
       }
       if ( $tabElts[1] =~ /^minrow(s)?:/ ) {
+        $tabElts[1] =~ s/^minrow(s)?://;
+        if ( $tabElts[1] =~ /^[0-9]+:/ ) {
+          print
+"Line $.: $tabElts[1] reversed to put #s second in config file for MINROW.\n";
+          $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
+        }
         my @xrow = split( /:/, $tabElts[1] );
-        $minRows{ $xrow[2] } = $xrow[1];
+        $minRows{ $xrow[0] } = $xrow[1];
+        die("Minrows of $xrow[0] is $xrow[1]");
         next;
       }
-      if ( $tabElts[1] =~ /^xrow:/ ) {
+      if ( $tabElts[1] =~ /^xrow(s)?:/ ) {
+        $tabElts[1] =~ s/^xrow(s)?://;
+        if ( $tabElts[1] =~ /^[0-9]+:/ ) {
+          print
+"Line $.: $tabElts[1] reversed to put #s second in config file for XROW.\n";
+          $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
+        }
         my @xrow = split( /:/, $tabElts[1] );
-        $extraRows{ $xrow[2] } = $xrow[1];
+        $extraRows{ $xrow[0] } = $xrow[1];
         next;
       }
       if ( scalar @tabElts == 2 ) {
