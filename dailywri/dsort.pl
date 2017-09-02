@@ -64,6 +64,8 @@ my $todaysFile;
 initializeGlobals();
 readCmdLine();
 
+my $undef = "$intoDir/undef.txt";
+
 my $lastDayString  = todayString(1);
 my $firstDayString = todayString($daysBack);
 
@@ -165,13 +167,12 @@ for $dailyDir (@inDirs) {
   }
 
   close(DL);
-  die();
 
 }
 
-my $unknownBefore = ( -s "$intoDir/undef.txt" );
+my $unknownBefore = ( -s "$undef" );
 cleanUpUnknown();
-my $unknownAfter = ( -s "$intoDir/undef.txt" );
+my $unknownAfter = ( -s "$undef" );
 my $unknownDelta = $unknownAfter - $unknownBefore;
 
 my $afterTime  = time() - $beforeTime;
@@ -204,7 +205,7 @@ exit;
 ############################
 
 sub cleanUpUnknown {
-  open( C, ">>$intoDir/undef.txt" );
+  open( C, ">>$undef" );
 
   my @stuff = localtime(time);
   printf C sprintf(
@@ -373,12 +374,16 @@ sub chopDailyFile {
 
 #foreach (keys %whatWhereHash) { if ($writings{$_}) { printDebug("put $_ in $whatWhereHash{$_}\n"); } }
 
+  die("Need to create $intoDir/temp") if !-d "$intoDir/temp/";
+
   for (@outFiles) {
 
     #print "Looking at $_\n";
 
+    my $tempOut = "$intoDir/temp/$_";
+
     open( A, "$intoDir/$_" );
-    open( B, ">$intoDir/temp-$_" );
+    open( B, ">$tempOut" );
     while ( $a = <A> ) {
       if ( ( $a =~ /^\\/ ) && ( $hashval = haveWriting($a) ) ) {
 
@@ -418,7 +423,7 @@ sub chopDailyFile {
     close(B);
 
     #if ($_ =~ /notes/) { print "$_ size Before: " . ( -s "$intoDir/$_" ); }
-    move( "$intoDir/temp-$_", "$intoDir/$_" );
+    move( "$tempOut", "$intoDir/$_" ) unless $noMove;
 
     #if ($_ =~ /notes/) { print " After: " . ( -s "$intoDir/$_" ) . "\n"; }
   }
@@ -429,8 +434,8 @@ sub chopDailyFile {
 
   #print C "$whatWhereHash{$_}\n\\$_\n$writings{$_}\n";
 
-  if ($undefinedWritings) {
-    open( C, ">>undef.txt" );
+  if ( $undefinedWritings && !$noMove ) {
+    open( C, ">>$undef" );
     print C "========$_[0]\n$undefinedWritings\n";
     if ($verbose) { print "========$_[0]\n$undefinedWritings\n"; }
     close(C);
@@ -441,7 +446,7 @@ sub chopDailyFile {
   push( @toFileAry, "done" );
   push( @toFileAry, $temp );
   $temp = join( '\\', @toFileAry );
-  if ( !$noMove ) { move( "$_[0]", "$temp" ); }
+  move( "$_[0]", "$temp" ) unless $noMove;
 
   #for $qz (keys %writings) { print "$qz = $writings{$qz}\n"; }
 
@@ -652,7 +657,7 @@ sub readCmdLine {
       /^-?!$/ && do { $debug    = 1; $count++; next; };
       /^-?d$/ && do { $intoDir = $b; $count += 2; next; };
       /^-?i$/ && do { @inDirs = split( /,/, $b ); $count += 2; next; };
-      /^-?(w|home)$/ && do {
+      /^-?(w|home|h)$/ && do {
         @inDirs = ( "c:/writing/daily", "c:/users/andrew/dropbox/daily" );
         $intoDir = "c:/writing";
         $count++;
@@ -747,7 +752,8 @@ sub duplicateCheck {
 
 sub usageQuick {
   print <<EOT;
-dsort.pl -home is the main command to use.
+dsort.pl -h is the main command to use.
+dsort.pl -h -nm tests
 EOT
   exit;
 }
@@ -756,14 +762,14 @@ sub usage {
   print <<EOT;
 Hits every file in the given directory & merges with OTL and TXT files which have lines
 /subject=description
--home|w = home settings from c:/writing/daily and DropBox folder
--flash  = try e/f/g:/writing
--work   = try test at work
--nm     = don't move files
--nt     = don't count today (default)
--t/2    = count today
--bx/db  = just dropbox directory
--dc = duplicate count
+-home|w|h  = home settings from c:/writing/daily and DropBox folder
+-flash     = try e/f/g:/writing (not so valid any more)
+-work      = try test at work (not valid any more)
+-nm|te     = don't move files (eg just see what WOULD be created)
+-nt        = don't count today (default--may still have work today)
+-t/2       = count today
+-bx/db     = just dropbox directory
+-dc        = duplicate count
 
 -b/l = last day string
 -a/f = first day string
@@ -781,6 +787,6 @@ Hits every file in the given directory & merges with OTL and TXT files which hav
 -### = # of days to go back (default = 120)
 -?? = shows quick usage
 EOT
-  exit;
+  exit();
 }
 
