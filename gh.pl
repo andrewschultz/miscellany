@@ -280,14 +280,16 @@ sub processTerms {
   my $uncop        = 0;
   my $badFileList  = "";
   my $outName;
-  my $quickCheck   = "";
-  my $fileList     = "";
-  my $uncopiedList = "";
-  my $dirName      = "";
-  my $fromBase     = "", my $toBase = "";
-  my $fromShort    = "";
-  my $maxSize      = 0;
-  my $wildSwipes   = 0;
+  my $quickCheck    = "";
+  my $fileList      = "";
+  my $newFileList   = "";
+  my $totalNewFiles = 0;
+  my $uncopiedList  = "";
+  my $dirName       = "";
+  my $fromBase      = "", my $toBase = "";
+  my $fromShort     = "";
+  my $maxSize       = 0;
+  my $wildSwipes    = 0;
   my $temp;
   my %copto;
 
@@ -637,6 +639,9 @@ sub processTerms {
                 }
               }
               else {
+                print "New file $gh\\$toFile\\$short\n";
+                $newFileList .= "$gh\\$toFile\\$short\n";
+                $totalNewFiles++;
                 copy( "$fromFile", "$gh\\$toFile\\$short" )
                   || die("Couldn't copy $fromFile to $gh\\$toFile\\$short");
               }
@@ -665,7 +670,7 @@ sub processTerms {
   }
   else {
     print
-"Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $badFileCount bad files, $uncop uncopied files.\n";
+"Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $totalNewFiles new files, $badFileCount bad files, $uncop uncopied files.\n";
     print "Also, "
       . ( $executeBackCopy ? "back-copied" : "use -bc to back-copy" )
       . " $backcopy file(s).\n"
@@ -677,6 +682,7 @@ sub processTerms {
       print
 "TEST RESULTS:$proc2 file-copies,orange,$cbf,0,gh.pl $procString<br>$fileList\n";
     }
+    if ($newFileList)  { print "====NEW FILE LIST:\n$newFileList"; }
     if ($fileList)     { print "====FILE LIST:\n$fileList"; }
     if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
     if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList"; }
