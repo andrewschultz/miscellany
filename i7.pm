@@ -35,6 +35,7 @@ our %i7x = ( "12" => "shuffling",
   "4d" => "fourdiopolis",
   "s16" => "fourdiopolis",
   "16" => "slicker-city",
+  "sc" => "slicker-city",
   "bs" => "btp-st",
   "s17" => "btp-st",
   "btp" => "buck-the-past",
@@ -42,7 +43,10 @@ our %i7x = ( "12" => "shuffling",
   "e13" => "ghost",
   "e14" => "Candy Rush Saga",
   "e15" => "heezy-park",
-  "e16" => "checkered-haunting"
+  "e16" => "checkered-haunting",
+  "ss" => "seeker-status",
+  "rc" => "rube-cube",
+  "ru" => "rube-cube"
 );
 
 our %i7xr = ( "shuffling" => "sa",

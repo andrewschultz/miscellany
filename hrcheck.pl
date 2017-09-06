@@ -135,7 +135,7 @@ my (
   $dayOfMonth, $month,     $yearOffset,
   $dayOfWeek,  $dayOfYear, $daylightSavings
 ) = localtime( time + $adjust * 60 );
-die("$adjust $dayOfWeek");
+
 if ($gotTime) {
   $hour   = $hourTemp;
   $minute = $minuteTemp;

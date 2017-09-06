@@ -179,7 +179,7 @@ while ( $count <= $#ARGV ) {
     /^-(dt|td)$/   && do { $debugTables = 1;  $count++; next; };
     /^-(ndt|ntd)$/ && do { $debugTables = -1; $count++; next; };
     /^-?x$/        && do { $execute     = 1;  $count++; next; };
-    /^-?e$/ && do { `c:\\writing\\scripts\\icl.txt`; exit; };
+    /^-?e(c)?$/ && do { `c:\\writing\\scripts\\icl.txt`; exit; };
     /^-?a$/ && do {
       for my $entry (@allProj) { push( @compileList, $a ); }
       $count++;

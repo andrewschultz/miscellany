@@ -526,7 +526,6 @@ sub processInitData {
         }
         my @xrow = split( /:/, $tabElts[1] );
         $minRows{ $xrow[0] } = $xrow[1];
-        die("Minrows of $xrow[0] is $xrow[1]");
         next;
       }
       if ( $tabElts[1] =~ /^xrow(s)?:/ ) {
