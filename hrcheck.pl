@@ -18,6 +18,8 @@ use strict;
 use warnings;
 use Win32;
 use POSIX qw (floor);
+use lib "c:/writing/scripts";
+use i7;
 
 my $check  = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
@@ -114,11 +116,11 @@ while ( $count <= $#ARGV ) {
     };
     /^-?o$/i && do { $printOnly = 1; $count++; next; };
     /^-?t(x)?$/i && do { searchHR( $b, $a =~ /x/i ); exit(); };
-    /^-?ex$/i    && do { npLaunch("$xtraFile"); };
-    /^-?e$/i     && do { npLaunch("$check"); };
-    /^-?e?p$/i   && do { npLaunch("$check2"); };
-    /^-?ea$/i && do { npLaunch( "$check", "$check2", "$xtraFile" ); };
-    /^-?c$/i && do { npLaunch("$code"); };
+    /^-?ex$/i    && do { np("$xtraFile"); };
+    /^-?e$/i     && do { np("$check"); };
+    /^-?e?p$/i   && do { np("$check2"); };
+    /^-?ea$/i && do { np( "$check", "$check2", "$xtraFile" ); };
+    /^-?c$/i && do { np("$code"); };
     /^-?ab$/i && do { $allBookmarks = 1; next; };
     /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
     /^=/i
@@ -398,22 +400,6 @@ sub printBkmk {
     }
   }
   close(A);
-}
-
-sub npLaunch {
-  for my $fi (@_) {
-    if ( !-f $fi ) {
-      print "$fi not found, not opening.\n";
-      next;
-    }
-    else {
-      print "Opening $fi in notepad++.\n";
-    }
-    my $cmd =
-      "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" \"$fi\"";
-    `$cmd`;
-  }
-  exit();
 }
 
 sub usage {

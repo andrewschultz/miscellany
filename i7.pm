@@ -94,9 +94,14 @@ sub cutArt
 
 sub np
 {
-  my $cmd = "$npo \"$_[0]\"";
-  $cmd .= " -n$_[1]" if defined($_[1]) && $_[1];
-  system($cmd);
+  my $param = scalar @_;
+  for my $x (0..$param-1)
+  {
+    next if $_[$x] =~ /^[0-9]*$/;
+	my $cmd = "$npo \"$_[0]\"";
+    $cmd .= " -n$_[$x+1]" if defined($_[$x+1]) && ($_[$x+1] =~ /^[0-9]+$/);
+    system($cmd);
+  }
 }
 
 ############################################
