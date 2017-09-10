@@ -18,38 +18,41 @@ use List::MoreUtils qw(uniq);
 
 use POSIX;
 
-my $wtFile = tx(__FILE__);
+my $wtFile     = tx(__FILE__);
 my $sourceFile = __FILE__;
 
 #######################
 # options
-my $alphabetical = 0;
+my $alphabetical  = 0;
 my $defaultWeight = 1;
-my $weightDiv = 5;
-my $curWeight = 0;
+my $weightDiv     = 5;
+my $curWeight     = 0;
 
-my %exp = ( "3d" => "threediopolis",
-  "4d" => "fourdiopolis",
-  "ec" => "short-games",
+my %exp = (
+  "3d"    => "threediopolis",
+  "4d"    => "fourdiopolis",
+  "ec"    => "short-games",
   "short" => "short-games",
-  "sa" => "stale-tales-slate",
-  "roi" => "stale-tales-slate",
-  "pc" => "the-problems-compound",
-  "sc" => "slicker-city",
-  "ss" => "seeker-status",
-  "cu" => "curate",
-  "uo" => "ugly-oafs",
-  "tr" => "trizbort",
-  "btp" => "buck-the-past"
+  "sa"    => "stale-tales-slate",
+  "roi"   => "stale-tales-slate",
+  "pc"    => "the-problems-compound",
+  "sc"    => "slicker-city",
+  "ss"    => "seeker-status",
+  "cu"    => "curate",
+  "uo"    => "ugly-oafs",
+  "tr"    => "trizbort",
+  "btp"   => "buck-the-past",
+  "ru"    => "rube-cube"
 );
 
 my %projs;
 my %weights;
+
 # note that the bottom projects are the most important as they are least likely to go off the page
-my @projAry = uniq((@i7gh, @i7bb));
+my @projAry = uniq( ( @i7gh, @i7bb ) );
 
 #####################variables
-my $count = 0;
+my $count     = 0;
 my $bigString = "";
 
 #######################options
@@ -60,109 +63,113 @@ my $test = 0;
 
 readWeights();
 
-while ($count <= $#ARGV)
-{
+while ( $count <= $#ARGV ) {
   my $arg = $ARGV[$count];
-  for ($arg)
-  {
+  for ($arg) {
     /^-?a$/i && do { $alphabetical = 1; $count++; next; };
-    /^-?e$/i && do { system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $sourceFile"); exit(); };
+    /^-?e$/i && do {
+      system(
+"start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $sourceFile"
+      );
+      exit();
+    };
     /^-?ep$/i && do { `$wtFile`; exit(); };
     /^-?na$/i && do { $alphabetical = 0; $count++; next; };
-    /^-?l$/i && do { for (@projAry) { print "$_\n"; } exit(); };
+    /^-?l$/i && do {
+      for (@projAry) { print "$_\n"; }
+      exit();
+    };
     /^-?t$/i && do { $test = 1; $count++; next; };
     /^-?h$/i && do { $html = 1; $count++; next; };
-	/^[a-z34,]{2,}$/i && do { @projAry = split(/,/, $b); $count += 2; next; };
-	usage();
+    /^[a-z34,]{2,}$/i && do { @projAry = split( /,/, $b ); $count += 2; next; };
+    usage();
   }
 }
 
-@projAry = sort {$weights{$a} <=> $weights{$b} || $a cmp $b} @projAry;
+@projAry = sort { $weights{$a} <=> $weights{$b} || $a cmp $b } @projAry;
 
 @projAry = sort(@projAry) if $alphabetical;
 my $gitRoot = "c:\\users\\andrew\\documents\\github";
 
-for my $dir (@projAry)
-{
-checkProject($dir);
+for my $dir (@projAry) {
+  checkProject($dir);
 }
 
-my @errfiles = split(/\n/, $bigString);
+my @errfiles = split( /\n/, $bigString );
 {
-  for (@errfiles) { if ($_ =~ /:$/) { $proj++; } else { $file++; } }
+  for (@errfiles) {
+    if   ( $_ =~ /:$/ ) { $proj++; }
+    else                { $file++; }
+  }
 }
 
-if (!$test)
-{
+if ( !$test ) {
   print $bigString;
 }
-else
-{
+else {
   $bigString =~ s/\n/<br \/>/g;
   print "TEST RESULTS:unchecked in projects (unch.pl),4,$file,0,$bigString\n";
-  my $projLeft = join(" &amp; ", sort keys %projs);
+  my $projLeft = join( " &amp; ", sort keys %projs );
   print "TEST RESULTS:unchecked in files,2,$proj,0,$projLeft\n";
   print "gh.pl -all copies everything over, gh.pl -alb only public stuff.";
 }
 
-if ($html)
-{
+if ($html) {
   my $htmlString = $bigString;
-  my $hfile = 'c:\writing\scripts\unch.htm';
+  my $hfile      = 'c:\writing\scripts\unch.htm';
   $htmlString =~ s/\n/<br \/>\n/g;
-  $htmlString .= "<br />gh.pl -all copies everything over, gh.pl -alb only public stuff.";
-  open(H, ">$hfile");
-  print H "<html>\n<title>Unchanged Files</title>\n<body>$htmlString</body></html> ";
+  $htmlString .=
+    "<br />gh.pl -all copies everything over, gh.pl -alb only public stuff.";
+  open( H, ">$hfile" );
+  print H
+    "<html>\n<title>Unchanged Files</title>\n<body>$htmlString</body></html> ";
   close(H);
   `$hfile`;
 }
 
 ###########################subroutines
 
-sub checkProject
-{
+sub checkProject {
   my $subdir = $_[0];
-  if ($exp{$subdir}) { $subdir = $exp{$subdir}; }
-  if (-d "$gitRoot\\$subdir")
-  {
-  chdir("$gitRoot\\$subdir");
+  if ( $exp{$subdir} ) { $subdir = $exp{$subdir}; }
+  if ( -d "$gitRoot\\$subdir" ) {
+    chdir("$gitRoot\\$subdir");
   }
-  else
-  {
-  print "Couldn't find subdir $subdir.\n";
+  else {
+    print "Couldn't find subdir $subdir.\n";
   }
   my $tempString = `git status -s`;
+
   # print "$curWeight $weightDiv $weights{$_[0]} $weightDiv\n";
-  if ($tempString)
-  {
-    if (($curWeight < $weightDiv) && ($weights{$_[0]} > $weightDiv))
-    {
+  if ($tempString) {
+    if ( ( $curWeight < $weightDiv ) && ( $weights{ $_[0] } > $weightDiv ) ) {
       $bigString .= "======================important below\n";
     }
     $bigString .= "$subdir:\n$tempString";
-	$projs{$subdir} = 1;
- }
-  $curWeight = $weights{$_[0]};
+    $projs{$subdir} = 1;
+  }
+  $curWeight = $weights{ $_[0] };
 }
 
-sub readWeights
-{
+sub readWeights {
   my @ary = ();
 
   for (@projAry) { $weights{$_} = 1; }
-  open(A, $wtFile) || die ("No $wtFile");
-  while ($a = <A>)
-  {
+  open( A, $wtFile ) || die("No $wtFile");
+  while ( $a = <A> ) {
     chomp($a);
-    if ($a =~ /==/) { $weightDiv = $a; $weightDiv =~ s/.*=//; next; }
-	if ($a =~ /\t/) { @ary = split(/\t/, $a); $weights{$ary[0]} = $ary[1]; next; }
+    if ( $a =~ /==/ ) { $weightDiv = $a; $weightDiv =~ s/.*=//; next; }
+    if ( $a =~ /\t/ ) {
+      @ary = split( /\t/, $a );
+      $weights{ $ary[0] } = $ary[1];
+      next;
+    }
   }
   close(A);
 }
 
-sub usage
-{
-print<<EOT;
+sub usage {
+  print <<EOT;
 CSV tells projects to run or look at
 -a alphabetizes instead of listing by priority (-na undoes that)
 -e edits the source
@@ -171,5 +178,5 @@ CSV tells projects to run or look at
 -h creates and runs an html file
 -t has unch output test results
 EOT
-exit;
+  exit;
 }
