@@ -116,8 +116,9 @@ while ( $count <= $#ARGV ) {
     /^-?t(x)?$/i && do { searchHR( $b, $a =~ /x/i ); exit(); };
     /^-?ex$/i    && do { npLaunch("$xtraFile"); };
     /^-?e$/i     && do { npLaunch("$check"); };
-    /^-?p$/i     && do { npLaunch("$check2"); };
-    /^-?c$/i     && do { npLaunch("$code"); };
+    /^-?e?p$/i   && do { npLaunch("$check2"); };
+    /^-?ea$/i && do { npLaunch( "$check", "$check2", "$xtraFile" ); };
+    /^-?c$/i && do { npLaunch("$code"); };
     /^-?ab$/i && do { $allBookmarks = 1; next; };
     /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
     /^=/i
@@ -400,9 +401,18 @@ sub printBkmk {
 }
 
 sub npLaunch {
-  my $cmd =
-    "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" $_[0]";
-  `$cmd`;
+  for my $fi (@_) {
+    if ( !-f $fi ) {
+      print "$fi not found, not opening.\n";
+      next;
+    }
+    else {
+      print "Opening $fi in notepad++.\n";
+    }
+    my $cmd =
+      "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" \"$fi\"";
+    `$cmd`;
+  }
   exit();
 }
 
