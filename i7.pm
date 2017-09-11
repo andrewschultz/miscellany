@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np openWinOrUnix shortIf sourceFile tableFile tx);
+@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np npx openWinOrUnix shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -98,10 +98,17 @@ sub np
   for my $x (0..$param-1)
   {
     next if $_[$x] =~ /^[0-9]*$/;
-	my $cmd = "$npo \"$_[0]\"";
+	my $cmd = "$npo \"$_[$x]\"";
     $cmd .= " -n$_[$x+1]" if defined($_[$x+1]) && ($_[$x+1] =~ /^[0-9]+$/);
+	print "Opening $_[$x]\n";
     system($cmd);
   }
+}
+
+sub npx
+{
+  np(@_);
+  exit()
 }
 
 ############################################

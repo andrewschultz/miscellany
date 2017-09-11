@@ -116,11 +116,11 @@ while ( $count <= $#ARGV ) {
     };
     /^-?o$/i && do { $printOnly = 1; $count++; next; };
     /^-?t(x)?$/i && do { searchHR( $b, $a =~ /x/i ); exit(); };
-    /^-?ex$/i    && do { np("$xtraFile"); };
-    /^-?e$/i     && do { np("$check"); };
-    /^-?e?p$/i   && do { np("$check2"); };
-    /^-?ea$/i && do { np( "$check", "$check2", "$xtraFile" ); };
-    /^-?c$/i && do { np("$code"); };
+    /^-?ex$/i    && do { npx("$xtraFile"); };
+    /^-?e$/i     && do { npx("$check"); };
+    /^-?e?p$/i   && do { npx("$check2"); };
+    /^-?ea$/i && do { npx( "$check", "$check2", "$xtraFile" ); };
+    /^-?c$/i && do { npx("$code"); };
     /^-?ab$/i && do { $allBookmarks = 1; next; };
     /^-?b$/i && do { $bookmarkLook = $b; $count += 2; next; };
     /^=/i
