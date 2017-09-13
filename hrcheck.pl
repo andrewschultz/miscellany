@@ -68,7 +68,10 @@ my @quarters = ( "t", "p", "h", "b" );
 my @tens = ( 0, 0, 0, 0, 0, 0 );
 my $gotTime, my $hourTemp, my $minuteTemp;
 
+my $last = -1;
+
 while ( $count <= $#ARGV ) {
+  die "Oops infinite loop" if ( $last == $count );
   $a = $ARGV[$count];
   if ( defined( $ARGV[ $count + 1 ] ) ) {
     $b = $ARGV[ $count + 1 ];
@@ -131,6 +134,7 @@ while ( $count <= $#ARGV ) {
     };
     usage();
   }
+  $last = $count;
 }
 
 my (
