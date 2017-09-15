@@ -50,7 +50,7 @@ my %gws;
 my %gwt;
 my %repls;
 my %repl2;
-my %altHash, my %do, my %poss, my %postproc;
+my %altHash, my %do, my %poss, my %postproc, my %didpostproc;
 my %msgForProj;
 
 #################options
@@ -338,6 +338,7 @@ sub processTerms {
           next;
         }
         if ( $runTrivialTests == -1 ) { $warnCanRun = 1; next; }
+        $didpostproc{$hashProj} = 1;
         $b =~ s/^>//g;
         $b =~ s/=.*//g;
         if ( !hasHash($hashProj) ) { next; }
@@ -686,6 +687,10 @@ sub processTerms {
     if ($fileList)     { print "====FILE LIST:\n$fileList"; }
     if ($uncopiedList) { print "====UNCOPIED FILES ($uncop):\n$uncopiedList"; }
     if ($badFileCount) { print "====BAD FILES ($badFileCount):\n$badFileList"; }
+    for ( sort keys %postproc ) {
+      print "WARNING $_ slated for postproc but no tests were available.\n"
+        if !defined( $didpostproc{$_} );
+    }
   }
   if ($quickCheck) {
     printf( "\n========quick verifications%s\n$quickCheck",

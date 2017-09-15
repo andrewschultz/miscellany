@@ -90,6 +90,9 @@ $exp{"pc"}  = "compound";
 $exp{"sc"}  = "slicker-city";
 $exp{"btp"} = "buck-the-past";
 $exp{"bs"}  = "btp-st";
+$exp{"r"}   = "roiling";
+$exp{"sa"}  = "shuffling";
+$exp{"sts"} = "stale-tales-slate";
 
 my $countMismatch = 0;
 my $writeDir      = "c:\\writing\\dict";
