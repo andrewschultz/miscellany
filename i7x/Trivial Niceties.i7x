@@ -186,6 +186,34 @@ to decide whether the player dir-consents:
 		decide yes;
 	decide no;
 
+chapter scling
+
+scling is an action out of world.
+
+understand the command "scl" as something new.
+
+understand "scl" as scling.
+
+carry out scling:
+	say "List of scenery:[line break]";
+	repeat with QQ running through visible scenery:
+		say "--[QQ][line break]";
+	the rule succeeds;
+
+chapter bkling
+
+bkling is an action out of world.
+
+understand the command "bkl" as something new.
+
+understand "bkl" as bkling.
+
+carry out bkling:
+	say "List of scenery:[line break]";
+	repeat with QQ running through visible backdrops:
+		say "--[QQ][line break]";
+	the rule succeeds;
+
 chapter auing
 
 auing is an action applying to one number.
