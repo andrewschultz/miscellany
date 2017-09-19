@@ -28,7 +28,7 @@ my $del       = -1;
 my $crossword = 0;
 
 for ( 0 .. $#ARGV ) {
-  if ( $ARGV[$_] =~ /b1\.pl/ ) { $del = $_; }
+  if ( $ARGV[$_] =~ /b1\.pl/i ) { $del = $_; }
 }
 if ( $del > -1 ) {
   print "Oops, it looks like you forgot to delete the command above.\n";
@@ -42,7 +42,7 @@ if ( !defined( $ARGV[0] ) ) {
   );
 }
 
-my $argtrim = $ARGV[0];
+my $argtrim = lc( $ARGV[0] );
 $argtrim =~ s/^-//;
 
 if ( ( lc( $ARGV[0] ) eq "-f" ) || ( lc( $ARGV[0] ) eq "f" ) ) {
@@ -74,7 +74,7 @@ if ( $argtrim =~ /[0-9]+$/ ) {
 }
 
 if ( $ARGV[0] =~ /^[-=\+]/i ) {
-  if ( $ARGV[0] !~ /[a-z]/ ) {
+  if ( $ARGV[0] !~ /[a-z]/i ) {
     print "No spaces between +=- and a letter.\n";
     exit();
   }
@@ -247,7 +247,8 @@ sub oneHangman {
     #for (@right) { if (defined($freq{$_})) { delete($freq{$_}); } }
     foreach my $val (
       sort { $f2{$b} <=> $f2{$a} or $freq{$b} <=> $freq{$a} or $a cmp $b }
-      keys %freq )
+      keys %freq
+      )
     {
       if ( !$crossword ) {
         if ( $f2{$val} == $count ) { print " **$val**"; next; }

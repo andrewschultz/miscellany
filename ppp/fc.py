@@ -323,6 +323,8 @@ def reshuf(xyz):  # this reshuffles the empty cards
                         if can_put(spares[i], elements[j][
                                     len(elements[j]) - 1]):  # doesn't matter if there are 2. We can always switch
                             elements[j].append(spares[i])
+                            if cmd_churn:
+                                move_list.append(chr(i+97) + str(j))
                             spares[i] = 0
                             try_again = 1
                             retval = True
@@ -1587,13 +1589,16 @@ def load_game(game_name):
             cmd_list = []
             cmd_no_meta = []
             line = original.readline().strip()
-            while not re.search("^#end of", line):
-                print(line + " read in")
-                if re.search("^#cmd_no_meta", line):
-                    cmd_no_meta = re.sub("^#cmd_no_meta=", "", line).split(',')
-                if re.search("^#cmd_list", line):
-                    cmd_list = re.sub("^#cmd_list=", "", line).split(',')
-                line = original.readline().strip()
+            if re.search("#+end of", line):
+                print("Missing (blank) line of commands.")
+            else:
+                while not re.search("^#+end of", line):
+                    print(line + " read in")
+                    if re.search("^#cmd_no_meta", line):
+                        cmd_no_meta = re.sub("^#cmd_no_meta=", "", line).split(',')
+                    if re.search("^#cmd_list", line):
+                        cmd_list = re.sub("^#cmd_list=", "", line).split(',')
+                    line = original.readline().strip()
             original.close()
             if len(move_list) > 0:
                 if len(cmd_no_meta) == 0:
@@ -1648,7 +1653,9 @@ def save_game(game_name):
                 myfile.write('# '.join(str(x) for x in elements[y]) + "\n")
         myfile.write("###end of " + game_name + "\n")
         myfile.write("#cmd_no_meta=" + ', '.join(cmd_no_meta) + '\n')
-        myfile.write("#cmd_list=" + ', '.join(cmd_list) + '\n')
+        c2 = list(cmd_list)
+        c2.pop()
+        myfile.write("#cmd_list=" + ', '.join(c2) + '\n') # gets rid of "save" command
     gn2 = game_name.replace(r'^.=', '')
     print("Successfully saved game as " + gn2)
     return 0
