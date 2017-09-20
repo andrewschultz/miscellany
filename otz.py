@@ -8,10 +8,10 @@ def check_old_matches(x):
     with open(x) as source_file:
         for line in source_file:
             for r in regex_dic.keys():
-                if re.search(r, line):
+                if re.search(r, line, re.IGNORECASE):
                     ignore = False
                     for id in ignore_dic.keys():
-                        if re.search(id, line):
+                        if re.search(id, line, re.IGNORECASE):
                             ignore = True
                     if ignore is False:
                         incidents_dic[r] = incidents_dic[r] + 1
@@ -25,6 +25,8 @@ regex_dic = {}
 incidents_dic = {}
 incident_ig = {}
 ignore_dic = {}
+
+ignore_dic["##regignore"] = True
 
 proj_read = "roiling"
 otz = "c:/writing/scripts/otz.txt"
@@ -63,6 +65,6 @@ with open(otz) as file:
 for x in file_dic.keys():
     check_old_matches(x)
 
-print("INCIDENTS:")
+print("INCIDENTS (from need most changing to need least):")
 for x in sorted(incidents_dic.keys(), key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
     print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(x, incidents_dic[x], incident_ig[x]))
