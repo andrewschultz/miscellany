@@ -42,8 +42,9 @@ my $filename = "$default.txt";
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
   for ($a) {
-    /^-\?$/ && do { listAllOutput();  exit; };
-    /^-?a$/ && do { printAllFiles(0); exit; };
+    /^-?\?$/ && do { usage();          exit; };
+    /^-?a$/  && do { printAllFiles(0); exit; };
+    /^-?la$/ && do { listAllOutput();  exit; };
     /^-?d$/ && do { $debug           = 1; $count++; next; };
     /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
     /^-?u$/ && do { $updateOnly      = 1; $count++; next; };
@@ -185,6 +186,8 @@ while ( $a = <A> ) {
   if ( $a =~ /^->/ ) { $a =~ s/^->//g; $theDir = $a; next; }
   if ( $a =~ /^\#/ ) { next; }    #comments
   if ( $a =~ /^;/ )  { last; }
+  $a =~ s/ *##regignore.*//;      # regression ignore, for testing elsewhere
+
   if ( $a !~ /^[\?>]/ ) {
     $levels[$lastLev]++;
     $otl = currentOutline(@levels);
@@ -333,16 +336,17 @@ sub launchIt {
 sub usage {
   print <<EOT;
 ===========================USAGE
--a = show all files
--d = debug
--e = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
+-a  = show all files
+-d  = debug
+-e  = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
 -en = edits a new text file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
--f = force a redo if HTM file's mod date >= the generating file
--l = launch HTM invisiclues after
--r = launch raw (e.g. spoiler file showing everything, launched after -l)
--s = print shortcuts
--u = update only (opposite of -f, currently the default)
--v = verbose output
+-f  = force a redo if HTM file's mod date >= the generating file
+-l  = launch HTM invisiclues after
+-la = list all invisicules with output
+-r  = launch raw (e.g. spoiler file showing everything, launched after -l)
+-s  = print shortcuts
+-u  = update only (opposite of -f, currently the default)
+-v  = verbose output
 EOT
 
   print "Current files in directory:";
