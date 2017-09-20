@@ -195,7 +195,10 @@ while ( $count <= $#ARGV ) {
         my @xtraRun = split( /=/, $arg );
         my $execArgs = defined( $xtraRun[1] ) ? $xtraRun[1] : "";
         if ( $altHash{ $xtraRun[0] } ) {
-          $postproc{ $altHash{ $xtraRun[0] } } = 1;
+          my @hashAry = split( /,/, $altHash{ $xtraRun[0] } );
+          for (@hashAry) {
+            $postproc{$_} = 1;
+          }
         }
         else { $postproc{ $xtraRun[0] } = 1; }
         if ( $execArgs =~ /x/ ) { $executeDontBail = 1; }
