@@ -41,6 +41,8 @@ my $count = 0;
 my $temp;
 my $dropboxLink = "";
 my $needExclam  = 0;
+my $fileMinSize = 0;
+my $fileMaxSize = 0;
 
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
@@ -167,6 +169,7 @@ sub readZupFile {
       if ($needExclam) { die("Need exclamation mark before $a"); }
       $a =~ s/^name=//gi;
       my @b = split( /,/, $a );
+
       for my $idx (@b) {
 
         #print "$idx\n";
@@ -174,6 +177,7 @@ sub readZupFile {
           $needExclam     = 1;
           $triedSomething = 1;
           $zipUp          = 1;
+          $fileMinSize    = $fileMaxSize = 0;
         }
       }
     }
@@ -191,11 +195,16 @@ sub readZupFile {
         if ( !$outFile ) {
           die("OutFile not defined. You need a line with out=X.ZIP in $_[0].");
         }
-        print "Writing to c:/games/inform/zip/$outFile...\n";
+        my $outLong = "c:/games/inform/zip/$outFile";
+        print "Writing to $outLong...\n";
         die 'write error'
           unless $zip->writeToFileNamed("c:/games/inform/zip/$outFile") ==
           AZ_OK;
         print "Writing successful.\n";
+        die("$outLong smaller than required $fileMinSize bytes.\n")
+          if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
+        die("$outLong larger than required $fileMaxSize bytes.\n")
+          if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
         if ($openAfter) {
           print "Opening...\n";
           `c:\\games\\inform\\zip\\$outFile`;
@@ -227,6 +236,16 @@ sub readZupFile {
         print "Running $cmd\n";
         $temp = `$cmd`;
         if ($printExecute) { print $temp; }
+        next;
+      };
+      /^min:/ && do {
+        $fileMinSize = $a;
+        $fileMinSize =~ s/.*://;
+        next;
+      };
+      /^max:/ && do {
+        $fileMaxSize = $a;
+        $fileMaxSize =~ s/.*://;
         next;
       };
       /^x:i/ && do {
