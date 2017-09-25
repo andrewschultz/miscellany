@@ -23,18 +23,19 @@ $zupp =~ s/\.txt$/p\.txt/;
 
 ##################options
 my %here;
-my $zipUp            = 0;
-my $triedSomething   = 0;
-my $version          = 0;
-my $openAfter        = 0;
-my $viewFile         = 0;
-my $outFile          = "";
-my $executeBeforeZip = 0;
-my $printExecute     = 0;
-my $dropBinOpen      = 0;
-my $dropLinkClip     = 0;
-my $noExecute        = 0;
-my $dropCopy         = 0;
+my $zipUp             = 0;
+my $triedSomething    = 0;
+my $version           = 0;
+my $openAfter         = 0;
+my $viewFile          = 0;
+my $outFile           = "";
+my $executeBeforeZip  = 0;
+my $printExecute      = 0;
+my $dropBinOpen       = 0;
+my $dropLinkClip      = 0;
+my $noExecute         = 0;
+my $dropCopy          = 0;
+my $dropboxSimpleCopy = 0;
 
 ##################variables
 my $count = 0;
@@ -75,6 +76,12 @@ while ( $count <= $#ARGV ) {
     /^-?dc$/ && do {
       print "Copying to Dropbox afterwards.\n";
       $dropCopy = 1;
+      $count++;
+      next;
+    };
+    /^-?d[qs]$/ && do {
+      print "Quick/simple copying to Dropbox afterwards.\n";
+      $dropboxSimpleCopy = 1;
       $count++;
       next;
     };
@@ -208,6 +215,12 @@ sub readZupFile {
         if ($openAfter) {
           print "Opening...\n";
           `c:\\games\\inform\\zip\\$outFile`;
+        }
+        if ($dropboxSimpleCopy) {
+          print(
+"Copying $outFile from c:\\games\\inform\\zip to c:\\users\\andrew\\dropbox\\bins\\.\n"
+          );
+`copy "c:\\games\\inform\\zip\\$outFile" "c:\\users\\andrew\\dropbox\\bins\\$outFile"`;
         }
         return;
       };
@@ -360,7 +373,9 @@ USAGE: zupt.pl (project)
 -x execute optional commands
 -nx execute nothing (overrides -x)
 -dl get dropbox link if available (overrides creating a zip)
+-dq/ds does a quick dropbox copy
 -a = -x -db -dc -o
+EXAMPLE: zup.pl -dq -x rube-cube-beta
 EOT
   exit;
 }
