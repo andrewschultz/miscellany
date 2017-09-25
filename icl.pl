@@ -325,6 +325,10 @@ sub doOneBuild {
   my $dflag      = "$_[1]";
   my $infOut     = "$_[0]\\Build\\auto.inf";
 
+  if ( $_[3] eq "beta" ) {
+    copyToBeta($bdir);
+  }
+
   my $blorbFileShort = getFile("$_[0]/Release.blurb");
   if ( $_[3] ne "debug" && !($ignoreDRBPrefix) ) {
     $blorbFileShort = "$_[3]-$blorbFileShort";
@@ -347,14 +351,11 @@ sub doOneBuild {
     }
   }
 
-  if ( $_[3] eq "beta" ) {
-    copyToBeta($bdir);
-  }
-
   delIfThere($infOut);
 
-  my $compileCheck =
-`\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex"`;
+  my $compileCmd =
+"\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex\"";
+  my $compileCheck = `$compileCmd`;
 
   my $doneTime = time() - $startTime;
 
@@ -445,9 +446,10 @@ sub copyToBeta {
   my $mtr = $_[0];
   $mtr =~ s/\.inform/ materials/g;
 
-  system("copy $_[0]\\Release.blurb $betaDir\\Release.blurb");
-  system("copy $_[0]\\story.ni $betaDir\\story.ni");
-  system("copy $_[0]\\uuid.txt $betaDir\\uuid.txt");
+  print "Copying blurb file...\n";
+  system("copy \"$_[0]\\Release.blurb\" \"$betaDir\\Release.blurb\"");
+  print "Copying UUID file...\n";
+  system("copy \"$_[0]\\uuid.txt\" \"$betaDir\\uuid.txt\"");
   system("erase \"$bmat\\Figures\"*");
   system("copy \"$mtr\\Figures\\*\" \"$bmat\\Figures\"");
 
@@ -567,7 +569,7 @@ sub getFile {
 }
 
 sub delIfThere {
-  if ( -f "$_[0]" ) { print "Deleting $_[0]\n"; system("erase \"$_[0]\""); }
+  if ( -f "$_[0]" ) { print "Deeleting $_[0]\n"; system("erase \"$_[0]\""); }
   else              { print "No $_[0]\n"; }
 }
 
