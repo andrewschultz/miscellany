@@ -2,7 +2,10 @@
 
 from collections import defaultdict
 
+import sys
 import re
+
+errs_yet = defaultdict(str)
 
 def check_old_matches(x):
     with open(x) as source_file:
@@ -15,6 +18,9 @@ def check_old_matches(x):
                             ignore = True
                     if ignore is False:
                         incidents_dic[r] = incidents_dic[r] + 1
+                        if not errs_yet[x]:
+                            print("======", x, "======")
+                            errs_yet[x] = 1
                         print("-->" + r + ": " + line.strip())
                     else:
                         incident_ig[r] = incident_ig[r] + 1
@@ -30,6 +36,9 @@ ignore_dic["##regignore"] = True
 
 proj_read = "roiling"
 otz = "c:/writing/scripts/otz.txt"
+
+if len(sys.argv) > 1:
+    proj_read = sys.argv[1]
 
 reading_project = False
 
