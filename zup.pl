@@ -21,6 +21,8 @@ $zupt =~ s/pl$/txt/gi;    # zupt = file to read, zupl = perl
 my $zupp = $zupt;
 $zupp =~ s/\.txt$/p\.txt/;
 
+my $zipdir = "c:\\games\\inform\\zip";
+my $dbbin  = "c:\\users\\andrew\\dropbox\\bins";
 ##################options
 my %here;
 my $zipUp             = 0;
@@ -44,6 +46,7 @@ my $dropboxLink = "";
 my $needExclam  = 0;
 my $fileMinSize = 0;
 my $fileMaxSize = 0;
+my $executedAny = 0;
 
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
@@ -63,7 +66,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?a$/ && do {
       print "Kitchen sink flags for ZUP.\n";
-      $executeBeforeZip = $dropCopy = $dropBinOpen = $openAfter = 1;
+      $executeBeforeZip = $dropboxSimpleCopy = $dropBinOpen = $openAfter = 1;
       $count++;
       next;
     };
@@ -123,7 +126,7 @@ while ( $count <= $#ARGV ) {
   }
 }
 
-my $timestamp = "c:\\games\\inform\\zip\\timestamp.txt";
+my $timestamp = "$zipdir\\timestamp.txt";
 
 open( A, ">$timestamp" );
 
@@ -214,14 +217,14 @@ sub readZupFile {
           if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
         if ($openAfter) {
           print "Opening...\n";
-          `c:\\games\\inform\\zip\\$outFile`;
+          `$zipdir\\$outFile`;
         }
         if ($dropboxSimpleCopy) {
-          print(
-"Copying $outFile from c:\\games\\inform\\zip to c:\\users\\andrew\\dropbox\\bins\\.\n"
-          );
-`copy "c:\\games\\inform\\zip\\$outFile" "c:\\users\\andrew\\dropbox\\bins\\$outFile"`;
+          print("Copying $outFile from $zipdir to $dbbin.\n");
+          `copy "$zipdir\\zip\\$outFile" "$dbbin\\$outFile"`;
         }
+        print "-x specified but nothing to run.\n"
+          if ( $executeBeforeZip && !$executedAny );
         return;
       };
       /^out=/i && do {
@@ -266,7 +269,8 @@ sub readZupFile {
           my $cmd = $a;
           $cmd =~ s/^x://gi;
           print "Running $cmd\n";
-          $temp = `$cmd`;
+          $temp        = `$cmd`;
+          $executedAny = 1;
           if ($printExecute) { print $temp; }
         }
         next;
