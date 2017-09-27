@@ -70,6 +70,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
     /^-?nx$/ && do { print "Executing no commands.\n"; $noExecute = 1; exit; };
     /^-?p$/ && do {
       print "Printing result of executed commands, if there are any.\n";
@@ -221,7 +222,7 @@ sub readZupFile {
         }
         if ($dropboxSimpleCopy) {
           print("Copying $outFile from $zipdir to $dbbin.\n");
-          `copy "$zipdir\\zip\\$outFile" "$dbbin\\$outFile"`;
+          print `copy "$zipdir\\$outFile" "$dbbin\\$outFile"`;
         }
         print "-x specified but nothing to run.\n"
           if ( $executeBeforeZip && !$executedAny );
@@ -364,6 +365,26 @@ sub processCmd {
   `$_[0]`;
 }
 
+sub projOut {
+  my $str;
+  my $str2;
+  my $vers;
+
+  open( A, $_[0] ) || die("$_[0] not available, bailing.");
+  print "=" x 30 . "Reading $_[0]...\n";
+  while ( $a = <A> ) {
+    if ( $a =~ /name=/i ) { $str  = $a; $str =~ s/^name=//i; chomp($str); }
+    if ( $a =~ /v=/i )    { $vers = $a; $vers =~ s/^v=//i;   chomp($vers); }
+    if ( $a =~ /out=/i ) {
+      $str2 = $a;
+      $str2 =~ s/^out=//i;
+      chomp($str2);
+      $str .= " = $str2";
+    }
+    if ( $a =~ /^!/ ) { $str =~ s/\%/$vers/g; print "$str\n"; }
+  }
+}
+
 sub usage {
   print <<EOT;
 USAGE: zupt.pl (project)
@@ -372,6 +393,7 @@ USAGE: zupt.pl (project)
 -db open Dropbox bin after
 -dc copies over to Dropbox after
 -[ol] open after
+-li lists all the project/outfile matches
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands
