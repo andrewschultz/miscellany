@@ -23,6 +23,7 @@ $zupp =~ s/\.txt$/p\.txt/;
 
 my $zipdir = "c:\\games\\inform\\zip";
 my $dbbin  = "c:\\users\\andrew\\dropbox\\bins";
+my $dbweb  = "https://www.dropbox.com/home/bins";
 ##################options
 my %here;
 my $zipUp             = 0;
@@ -149,13 +150,14 @@ readZupFile($zupp);
 if ( !$triedSomething ) { print "Didn't find any projects in (@ARGV).\n"; }
 
 if ($dropCopy) {
-  print "Starting Dropbox copy...\n";
+  print "Starting Big Long Dropbox copy...\n";
   `dropbox.pl -x`;
   print "Dropbox copy done.\n";
 }
 
 if ($dropBinOpen) {
-  `start https://www.dropbox.com/home/bins`;
+  print "Opening $dbweb\n";
+  `start $dbweb`;
 }
 
 #################################
@@ -391,17 +393,17 @@ USAGE: zupt.pl (project)
 -e open commands file zup.txt
 -c/ee open script file zup.pl
 -db open Dropbox bin after
--dc copies over to Dropbox after
+-dc copies EVERYTHING over to Dropbox after
+-dl get dropbox link if available (overrides creating a zip)
+-dq/ds does a quick dropbox copy
 -[ol] open after
 -li lists all the project/outfile matches
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands
 -nx execute nothing (overrides -x)
--dl get dropbox link if available (overrides creating a zip)
--dq/ds does a quick dropbox copy
 -a = -x -db -dc -o
-EXAMPLE: zup.pl -dq -x rube-cube-beta
+EXAMPLE: zup.pl -dq -x 17
 EOT
   exit;
 }
