@@ -90,18 +90,28 @@ for ( sort keys %siteArray ) {
 
 my $r;
 my $thisLog = "";
-my $cmd =
+my $cmdBase = "git log";
+my $since =
   $daysAgo
-  ? sprintf( "git log --since=\"%d days ago\" --until=\"%d days ago\"",
+  ? sprintf( "--since=\"%d days ago\" --until=\"%d days ago\"",
   $daysAgo, $daysAgo - 1 )
-  : "git log --since=\"12 am\""
-  ;    #yes, git log accepts "1 days ago" which is nice
+  : "--since=\"12 am\"";    #yes, git log accepts "1 days ago" which is nice
 
-print "Running on all dirs: $cmd\n";
+print "Running on all dirs: $cmdBase ... $since\n";
+
+my $branch = "";
+my $subdir = "";
 
 for $r (@repos) {
-  chdir("$ghBase\\$r") or do { warn "fail $ghBase\\$r"; next; };
-  print "$ghBase\\$r : $cmd\n" if $debug;
+  $branch = "";
+  $subdir = $r;
+  if ( $r =~ /\// ) {
+    my @ary = split( /\//, $r );
+    $subdir = $ary[0];
+    $branch = "$ary[1] master.. ";
+  }
+  my $cmd = "$cmdBase $branch$since";
+  chdir("$ghBase\\$subdir") or do { warn "fail $ghBase\\$subdir"; next; };
   $thisLog = `$cmd`;
   print getcwd() . ": $cmd\n" . cutDown($thisLog) if $debug;
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;

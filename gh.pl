@@ -184,7 +184,7 @@ while ( $count <= $#ARGV ) {
     /^-?(d|ab|ba)$/i
       && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
     /^-?reverse$/i && do { $reverse = 1; $count++; next; };
-    /^[a-z34]+(=.*)?$/i && do {
+    /^[a-z0-9]+(=.*)?$/i && do {
 
       if ( $arg =~ /-$/ ) {
         $arg =~ s/-$//g;
@@ -768,6 +768,8 @@ sub preProcessHashes {
           $bail = 1;
         }
         $altHash{$_} = $b[1];
+
+        # print "$_ => $b[1]\n";
       }
 
       #print "@b[0] -> @b[1]\n";
