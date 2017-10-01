@@ -21,6 +21,7 @@ my %repo;
 my %repoSum;
 my %count;
 my %siteArray;
+my %doubleCheck;
 
 ################options
 my $debug     = 0;
@@ -33,7 +34,8 @@ my $ghBase = "";
 my $popupText;
 my $overallSum;
 my $sum;
-my $daysAgo = 0;
+my $daysAgo     = 0;
+my $allBranches = 0;
 
 chdir("c:\\writing\\scripts");
 my $siteFile = __FILE__;
@@ -42,6 +44,7 @@ $siteFile =~ s/pl$/txt/i;
 while ( $count <= $#ARGV ) {
   my $arg = $ARGV[$count];
   for ($arg) {
+    /^-?ab$/ && do { $allBranches = 1; $count++; next; };
     /^-?c$/ && do {
       `start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"`;
       exit();
@@ -99,21 +102,27 @@ my $since =
 
 print "Running on all dirs: $cmdBase ... $since\n";
 
-my $branch = "";
+my $branch = "master";
 my $subdir = "";
 
 for $r (@repos) {
-  $branch = "";
+  $branch = $allBranches ? "" : "master";
   $subdir = $r;
   if ( $r =~ /\// ) {
     my @ary = split( /\//, $r );
     $subdir = $ary[0];
-    $branch = "$ary[1] master.. ";
+    $branch = "$ary[1] --not master";
   }
-  my $cmd = "$cmdBase $branch$since";
+  my $cmd = "$cmdBase $branch $since";
   chdir("$ghBase\\$subdir") or do { warn "fail $ghBase\\$subdir"; next; };
+
+  # `git checkout master`;
   $thisLog = `$cmd`;
   print getcwd() . ": $cmd\n" . cutDown($thisLog) if $debug;
+  my ( $rbase = $r ) =~ s/\/.*//;
+  print "$r $rbase\n";
+  $popupText .= "WARNING: $r is doublecounted.\n"
+    if ( $count{$rbase} && $allBranches );
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
   $repoSum{ $repo{$r} } += $count{$r};
 }
@@ -172,6 +181,7 @@ sub cutDown {
 sub usage {
   print <<EOT;
 ==========basic usage==========
+-ab all branches
 -c open this source
 -d debug (or detail, to see log details)
 -p pop up results
