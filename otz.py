@@ -10,6 +10,19 @@ errs_yet = defaultdict(str)
 proj_read = "roiling"
 otz = "c:/writing/scripts/otz.txt"
 
+file_dic = {}
+regex_dic = {}
+incidents_dic = {}
+incident_ig = {}
+ignore_dic = {}
+
+ignore_dic["##regignore"] = True
+
+only_warnings_or_errors = False
+only_errors = True
+
+reading_project = False
+
 def show_projects():
     projs = []
     x = "=" * 10
@@ -46,22 +59,6 @@ def in_csv(a, b):
     my_csv = a.split(",")
     return b in my_csv
 
-file_dic = {}
-regex_dic = {}
-incidents_dic = {}
-incident_ig = {}
-ignore_dic = {}
-
-ignore_dic["##regignore"] = True
-
-if len(sys.argv) > 1:
-    proj_read = sys.argv[1]
-    if proj_read == '?' or proj_read == '-?':
-        show_projects()
-        exit()
-
-reading_project = False
-
 with open(otz) as file:
     for line in file:
         if line.startswith("#"):
@@ -93,9 +90,27 @@ with open(otz) as file:
         incidents_dic[line.strip()] = 0
         incident_ig[line.strip()] = 0
 
+if len(sys.argv) > 1:
+    proj_read = sys.argv[1]
+    if proj_read == '?' or proj_read == '-?':
+        show_projects()
+        exit()
+else:
+    print("Using default", proj_read)
+
 for x in file_dic.keys():
     check_old_matches(x)
 
-print("INCIDENTS (from need most changing to need least):")
-for x in sorted(incidents_dic.keys(), key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
-    print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(x, incidents_dic[x], incident_ig[x]))
+my_list = []
+
+if only_warnings_or_errors:
+    my_list = [i for i in incidents_dic.keys() if incidents_dic[i] + incident_ig[i] > 0]
+elif only_errors:
+    my_list = [i for i in incidents_dic.keys() if incidents_dic[i]]
+
+if len(my_list) == 0:
+    print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
+else:
+    print("INCIDENTS (from need most changing to need least):")
+    for x in sorted(my_list, key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
+        print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(x, incidents_dic[x], incident_ig[x]))
