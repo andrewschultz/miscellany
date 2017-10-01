@@ -22,6 +22,7 @@ my %repoSum;
 my %count;
 my %siteArray;
 my %doubleCheck;
+my %hasBranch;
 
 ################options
 my $debug     = 0;
@@ -34,8 +35,9 @@ my $ghBase = "";
 my $popupText;
 my $overallSum;
 my $sum;
-my $daysAgo     = 0;
-my $allBranches = 0;
+my $daysAgo             = 0;
+my $allBranches         = 0;
+my $masterBranchWarning = 0;
 
 chdir("c:\\writing\\scripts");
 my $siteFile = __FILE__;
@@ -49,9 +51,11 @@ while ( $count <= $#ARGV ) {
       `start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"`;
       exit();
     };
-    /^-?d$/ && do { $debug     = 1; $count++; next; };
-    /^-?p$/ && do { $popup     = 1; $count++; next; };
-    /^-?u$/ && do { $unchAfter = 1; $count++; next; };
+    /^-?d$/  && do { $debug               = 1; $count++; next; };
+    /^-nmw$/ && do { $masterBranchWarning = 0; $count++; next; };
+    /^-mw$/  && do { $masterBranchWarning = 1; $count++; next; };
+    /^-?p$/  && do { $popup               = 1; $count++; next; };
+    /^-?u$/  && do { $unchAfter           = 1; $count++; next; };
     /^-?[es]$/ && do { `$siteFile`; exit(); };
     /^-?\d+$/ && do {
       $daysAgo = $ARGV[0];
@@ -74,6 +78,13 @@ while ( $a = <A> ) {
   if ( $a =~ /^base=/i ) { $a =~ s/^base=//i; $ghBase = $a; next; }
   my @b = split( /:/, $a );
   my @c = split( /,/, $b[1] );
+  for (@c) {
+    if ( $_ =~ /\// ) {
+      my $temp = $_;
+      $temp =~ s/\/.*//;
+      $hasBranch{$temp} = 1;
+    }
+  }
   $siteArray{ $b[0] } = \@c;
   print "Defining siteArray $b[0] = $b[1]\n" if $debug;
   for (@c) { $repo{$_} = $b[0]; }
@@ -118,7 +129,8 @@ for $r (@repos) {
 
   # `git checkout master`;
   $thisLog = `$cmd`;
-  if ( $branch eq "master" ) {
+  if ( ( $hasBranch{$r} ) && ( $branch eq "master" ) ) {
+    print "Checking $r\'s branches:\n" if $debug;
     $cmd = "$cmdBase $since";
     my $res2 = `$cmd`;
     if ( $res2 ne $thisLog ) {
@@ -190,6 +202,7 @@ sub usage {
   print <<EOT;
 ==========basic usage==========
 -ab all branches
+-nw/nmw (no) master warnings
 -c open this source
 -d debug (or detail, to see log details)
 -p pop up results
