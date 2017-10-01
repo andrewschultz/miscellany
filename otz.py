@@ -7,6 +7,23 @@ import re
 
 errs_yet = defaultdict(str)
 
+proj_read = "roiling"
+otz = "c:/writing/scripts/otz.txt"
+
+def show_projects():
+    projs = []
+    x = "=" * 10
+    print(x + "ALL PROJECTS" + x)
+    with open(otz) as source_file:
+        for line in source_file:
+            if line.lower().startswith("project="):
+                temp = re.sub("project=", "", line.lower().strip(), re.IGNORECASE)
+                if re.search(",", temp):
+                    temp = max(temp.split(","), key=len) + " (" + temp + ")"
+                projs.append(temp)
+    print(", ".join(projs))
+    exit()
+
 def check_old_matches(x):
     with open(x) as source_file:
         for line in source_file:
@@ -37,11 +54,11 @@ ignore_dic = {}
 
 ignore_dic["##regignore"] = True
 
-proj_read = "roiling"
-otz = "c:/writing/scripts/otz.txt"
-
 if len(sys.argv) > 1:
     proj_read = sys.argv[1]
+    if proj_read == '?' or proj_read == '-?':
+        show_projects()
+        exit()
 
 reading_project = False
 
