@@ -25,6 +25,9 @@ def check_old_matches(x):
                     else:
                         incident_ig[r] = incident_ig[r] + 1
 
+def in_csv(a, b):
+    my_csv = a.split(",")
+    return b in my_csv
 
 file_dic = {}
 regex_dic = {}
@@ -42,30 +45,32 @@ if len(sys.argv) > 1:
 
 reading_project = False
 
-proj_read = "PROJECT=" + proj_read
-
 with open(otz) as file:
     for line in file:
         if line.startswith("#"):
             continue
         if line.startswith(";"):
             break
-        if re.search(proj_read, line):
-            reading_project = True
+        if line.lower().startswith("project="):
+            reading_project = in_csv(re.sub("^project=", "", line.lower().strip(), re.IGNORECASE), proj_read)
             continue
         if re.search("PROJEND", line):
             reading_project = False
             continue
         if reading_project is False:
             continue
-        if line.startswith("+"):
-            file_dic[re.sub("^.", "", line.strip())] = True
+        if line.lower().startswith("f="):
+            temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
+            check_old_matches(temp)
             continue
-        if line.startswith("-"):
-            file_dic.pop(re.sub("^.", "", line.strip()), None)
+        if line.startswith("--"):
+            file_dic.pop(re.sub("^--", "", line.strip()), None)
             continue
         if line.startswith("i:"):
             ignore_dic[re.sub("i:", "", line.strip())] = True
+            continue
+        if line.startswith("i-:"):
+            file_dic.pop(re.sub("^i-:", "", line.strip()), None)
             continue
         regex_dic[line.strip()] = True
         incidents_dic[line.strip()] = 0
