@@ -118,9 +118,17 @@ for $r (@repos) {
 
   # `git checkout master`;
   $thisLog = `$cmd`;
+  if ( $branch eq "master" ) {
+    $cmd = "$cmdBase $since";
+    my $res2 = `$cmd`;
+    if ( $res2 ne $thisLog ) {
+      print "WARNING: $r repo has non-master change.\n";
+    }
+  }
   print getcwd() . ": $cmd\n" . cutDown($thisLog) if $debug;
-  my ( $rbase = $r ) =~ s/\/.*//;
-  print "$r $rbase\n";
+  ( my $rbase = $r ) =~ s/\/.*//;
+
+  # print "$r $rbase\n";
   $popupText .= "WARNING: $r is doublecounted.\n"
     if ( $count{$rbase} && $allBranches );
   $count{$r} = () = $thisLog =~ /([\n]|^)commit/gi;
