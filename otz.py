@@ -19,7 +19,7 @@ ignore_dic = {}
 ignore_dic["##regignore"] = True
 
 only_warnings_or_errors = False
-only_errors = True
+only_errors = False
 
 reading_project = False
 
@@ -27,6 +27,7 @@ def show_projects():
     projs = []
     x = "=" * 10
     print(x + "ALL PROJECTS" + x)
+    line_count = 0
     with open(otz) as source_file:
         for line in source_file:
             if line.lower().startswith("project="):
@@ -38,8 +39,10 @@ def show_projects():
     exit()
 
 def check_old_matches(x):
+    line_count = 0
     with open(x) as source_file:
         for line in source_file:
+            line_count = line_count + 1
             for r in regex_dic.keys():
                 if re.search(r, line, re.IGNORECASE):
                     ignore = False
@@ -51,13 +54,23 @@ def check_old_matches(x):
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
-                        print("-->" + r + ": " + line.strip())
+                        print("-->", line_count, r + ": " + line.strip())
                     else:
                         incident_ig[r] = incident_ig[r] + 1
 
 def in_csv(a, b):
     my_csv = a.split(",")
     return b in my_csv
+
+# main program
+
+if len(sys.argv) > 1:
+    proj_read = sys.argv[1]
+    if proj_read == '?' or proj_read == '-?':
+        show_projects()
+        exit()
+else:
+    print("Using default", proj_read)
 
 with open(otz) as file:
     for line in file:
@@ -86,17 +99,11 @@ with open(otz) as file:
         if line.startswith("i-:"):
             file_dic.pop(re.sub("^i-:", "", line.strip()), None)
             continue
-        regex_dic[line.strip()] = True
-        incidents_dic[line.strip()] = 0
-        incident_ig[line.strip()] = 0
-
-if len(sys.argv) > 1:
-    proj_read = sys.argv[1]
-    if proj_read == '?' or proj_read == '-?':
-        show_projects()
-        exit()
-else:
-    print("Using default", proj_read)
+        line = line.strip()
+        regex_dic[line] = True
+        print("Added",line)
+        incidents_dic[line] = 0
+        incident_ig[line] = 0
 
 for x in file_dic.keys():
     check_old_matches(x)
