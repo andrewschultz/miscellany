@@ -76,7 +76,8 @@ while ( $count <= $#ARGV ) {
     /^-?p$/ && do {
       print "Printing result of executed commands, if there are any.\n";
       $printExecute = 1;
-      exit;
+      $count++;
+      next;
     };
     /^-?dc$/ && do {
       print "Copying to Dropbox afterwards.\n";
@@ -194,8 +195,9 @@ sub readZupFile {
         }
       }
     }
-    if ( $a =~ /^;/ ) { last; }
-    if ( !$zipUp )    { next; }
+    last if $a =~ /^;/;
+    next if !$zipUp;
+    next if $a =~ /^#/;
 
     for ($a) {
       /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
@@ -267,11 +269,12 @@ sub readZupFile {
         $fileMaxSize =~ s/.*://;
         next;
       };
-      /^x:i/ && do {
-        if ( $executeBeforeZip && !$noExecute ) {
+      /^x(\+)?:/ && do {
+        if ( ( $executeBeforeZip && !$noExecute ) || ( $a =~ /^x\+/i ) ) {
           my $cmd = $a;
-          $cmd =~ s/^x://gi;
-          print "Running $cmd\n";
+          $cmd =~ s/^x\+://gi;
+          print( ( !$executeBeforeZip || $noExecute ) ? "Forcing" : "Running" );
+          print " $cmd\n";
           $temp        = `$cmd`;
           $executedAny = 1;
           if ($printExecute) { print $temp; }
