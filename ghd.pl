@@ -147,8 +147,16 @@ for $r (@repos) {
   $repoSum{ $repo{$r} } += $count{$r};
 }
 
+my $lastRepo = "";
+
 for my $k ( sort { $repo{$a} cmp $repo{$b} || $a cmp $b } keys %count ) {
-  if ( $count{$k} ) { $popupText .= "====$k($repo{$k}): $count{$k}\n"; }
+  if ( $count{$k} ) {
+    if ( $repo{$k} ne $lastRepo ) {
+      $popupText .= "        ========$repo{$k}========\n";
+      $lastRepo = $repo{$k};
+    }
+    $popupText .= "====$k: $count{$k}\n";
+  }
 }
 $popupText .= "Repos above, sites below\n";
 for my $k ( sort keys %repoSum ) {

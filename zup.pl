@@ -270,10 +270,11 @@ sub readZupFile {
         next;
       };
       /^x(\+)?:/ && do {
-        if ( ( $executeBeforeZip && !$noExecute ) || ( $a =~ /^x\+/i ) ) {
+        next if $noExecute;
+        if ( $executeBeforeZip || ( $a =~ /^x\+/i ) ) {
           my $cmd = $a;
           $cmd =~ s/^x\+://gi;
-          print( ( !$executeBeforeZip || $noExecute ) ? "Forcing" : "Running" );
+          print( $executeBeforeZip ? "Running" : "Forcing" );
           print " $cmd\n";
           $temp        = `$cmd`;
           $executedAny = 1;
@@ -403,7 +404,7 @@ USAGE: zupt.pl (project)
 -li lists all the project/outfile matches
 -p print command execution results
 -v view output zip file if already there
--x execute optional commands
+-x execute optional commands (x+ forces things in the file)
 -nx execute nothing (overrides -x)
 -a = -x -db -dc -o
 EXAMPLE: zup.pl -dq -x 17
