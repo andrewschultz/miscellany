@@ -14,12 +14,13 @@ file_dic = {}
 regex_dic = {}
 incidents_dic = {}
 incident_ig = {}
+abbrevs = {}
 ignore_dic = {}
 
 ignore_dic["##regignore"] = True
 
 only_warnings_or_errors = False
-only_errors = False
+only_errors = True
 
 reading_project = False
 
@@ -54,7 +55,7 @@ def check_old_matches(x):
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
-                        print("-->", line_count, r + ": " + line.strip())
+                        print("-->", line_count, (abbrevs[r] if r in abbrevs.keys() else r) + ": " + line.strip())
                     else:
                         incident_ig[r] = incident_ig[r] + 1
 
@@ -100,10 +101,17 @@ with open(otz) as file:
             file_dic.pop(re.sub("^i-:", "", line.strip()), None)
             continue
         line = line.strip()
-        regex_dic[line] = True
+        if re.search("\t", line):
+            tabs = line.strip().split('\t')
+            abbrevs[tabs[0]] = tabs[1]
+            this_regex = tabs[0]
+        else:
+            this_regex = line
+            regex_dic[line] = True
         print("Added",line)
-        incidents_dic[line] = 0
-        incident_ig[line] = 0
+        regex_dic[this_regex] = True
+        incidents_dic[this_regex] = 0
+        incident_ig[this_regex] = 0
 
 for x in file_dic.keys():
     check_old_matches(x)
@@ -114,10 +122,12 @@ if only_warnings_or_errors:
     my_list = [i for i in incidents_dic.keys() if incidents_dic[i] + incident_ig[i] > 0]
 elif only_errors:
     my_list = [i for i in incidents_dic.keys() if incidents_dic[i]]
+else:
+    my_list = [i for i in incidents_dic.keys()]
 
 if len(my_list) == 0:
     print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
 else:
     print("INCIDENTS (from need most changing to need least):")
     for x in sorted(my_list, key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
-        print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(x, incidents_dic[x], incident_ig[x]))
+        print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(abbrevs[x] if x in abbrevs.keys() else x, incidents_dic[x], incident_ig[x]))

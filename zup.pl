@@ -39,6 +39,7 @@ my $dropLinkClip      = 0;
 my $noExecute         = 0;
 my $dropCopy          = 0;
 my $dropboxSimpleCopy = 0;
+my $extractAfter      = 0;
 
 ##################variables
 my $count = 0;
@@ -103,6 +104,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?ea$/ && do { $extractAfter = 1; $count++; next; };
     /^-?e$/ && do { print "Opening commands file $zupt.\n"; `$zupt`; exit; };
     /^-?v$/ && do {
       print "Viewing the output file, if there.\n";
