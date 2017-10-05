@@ -40,6 +40,8 @@ my $noExecute         = 0;
 my $dropCopy          = 0;
 my $dropboxSimpleCopy = 0;
 my $extractAfter      = 0;
+my $launchAfter       = 0;
+my $launchFile        = "";
 
 ##################variables
 my $count = 0;
@@ -105,6 +107,7 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?ea$/ && do { $extractAfter = 1; $count++; next; };
+    /^-?la$/ && do { $extractAfter = $launchAfter = 1; $count++; next; };
     /^-?e$/ && do { print "Opening commands file $zupt.\n"; `$zupt`; exit; };
     /^-?v$/ && do {
       print "Viewing the output file, if there.\n";
@@ -226,6 +229,16 @@ sub readZupFile {
           print "Opening...\n";
           `$zipdir\\$outFile`;
         }
+        if ($extractAfter) {
+          unlink <c:/games/inform/assem/*>;
+          chdir("c:\\games\\inform\\assem");
+          system("7z x -r -y ..\\zip\\$outFile");
+          if ($launchFile) {
+            my $launchCmd = "c:\\games\\inform\\assem\\$launchFile";
+            print "Running $launchCmd...\n";
+            `$launchCmd`;
+          }
+        }
         if ($dropboxSimpleCopy) {
           print("Copying $outFile from $zipdir to $dbbin.\n");
           print `copy "$zipdir\\$outFile" "$dbbin\\$outFile"`;
@@ -326,6 +339,12 @@ sub readZupFile {
         }
         next;
       };
+      /^LF=i/ && do {
+        $launchFile = $a;
+        $launchFile =~ s/^lf=//i;
+        $count++;
+        next;
+      };
       /^F=/i && do {
         if ( $a =~ /\\/ ) {
           warn("WARNING Line $. ($a) has wrong slash direction.\n");
@@ -397,6 +416,7 @@ sub usage {
   print <<EOT;
 USAGE: zupt.pl (project)
 -e open commands file zup.txt
+-ea extracts the zip file contents afterwards to c:\\games\\inform\\assem, -la launches LF= file
 -c/ee open script file zup.pl
 -db open Dropbox bin after
 -dc copies EVERYTHING over to Dropbox after
