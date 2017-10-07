@@ -8,6 +8,7 @@
 use strict;
 use warnings;
 use File::stat;
+use File::Path;
 
 use Win32::Clipboard;
 
@@ -230,12 +231,15 @@ sub readZupFile {
           `$zipdir\\$outFile`;
         }
         if ($extractAfter) {
-          unlink <c:/games/inform/assem/*>;
-          chdir("c:\\games\\inform\\assem");
+          my $assem = "c:\\games\\inform\\assem\\";
+          rmtree( $assem, 1, 1 );
+          mkpath($assem);
+          chdir($assem);
+          print "Moved to $assem...\n";
           system("7z x -r -y ..\\zip\\$outFile");
           if ($launchFile) {
-            my $launchCmd = "c:\\games\\inform\\assem\\$launchFile";
-            print "Running $launchCmd...\n";
+            my $launchCmd = "$assem$launchFile";
+            print "Running ($assem)\\$launchCmd...\n";
             `$launchCmd`;
           }
         }
