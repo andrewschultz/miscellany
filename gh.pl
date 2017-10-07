@@ -149,11 +149,12 @@ while ( $count <= $#ARGV ) {
     /^-?wsr$/i && do { $whiteSpaceRun       = 1; $count++; next; };
     /^-?bkc$/i && do { $compareBackwards    = 1; $count++; next; };
     /^-?igt$/i && do { $ignoreTrizbort      = 0; $count++; next; };
-    /^-?(sw|ws)(t)?/i && do {
+    /^-?(sw|ws)(t)?/i && ( $arg ne 'sw' ) && do {
+
       readReplace();
       strictWarn($ght);
       strictWarn($ghp);
-      if ( $a =~ /t/ ) {
+      if ( $arg =~ /t/ ) {
         printf(
           "TEST RESULTS: strict-warn,%d,0,0,gh.pl -sw(t),%s\n",
           ( scalar keys %gws ),
@@ -221,6 +222,10 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    print
+"WARNING: sw is shorthand for a project. If you didn't mean to type SW, you may wish to use ws, instead.\n"
+      if ( $arg eq 'sw' )
+      ;    # this is a special case for a new project that is best abbreviated
     /^-?\?$/   && do { usage(); };
     /^-?\?\?$/ && do { usageDetail(); };
     print "$arg not recognized.\n";
@@ -1118,7 +1123,8 @@ sub usage {
 -t = print various test results
 -a = copy auxiliary files, -d = copy binary files, -d/ab/ba = -a + -b (eg both)
 -f doesn't look for a whole project but rather for a specific file, then runs that project
--sw/ws = search for need strict/warnings, -t = test, -it = ignore trizbort fails
+-ws = search for need strict/warnings, + -t = test (swt works too)
+-it = ignore trizbort time difference fails
 Putting = after a command runs tests
 -it ignores timestamps being wrong (to < from) and -tr copies (from) to (to)
 -? = this
