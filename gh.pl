@@ -27,6 +27,7 @@ my $testResults         = 0;
 my $runTrivialTests     = 0;
 my $byFile              = 0;
 my $removeTrailingSpace = 0;
+my $compareBackwards    = 0;
 my $ignoreTrizbort      = 0;
 my $backcopy            = 0;
 my $whiteSpaceRun       = 0;
@@ -146,6 +147,7 @@ while ( $count <= $#ARGV ) {
     /^-?(npt|ptn|ntp|tpn)$/i && do { $doPerlTidy = 0; $count++; next; };
     /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
     /^-?wsr$/i && do { $whiteSpaceRun       = 1; $count++; next; };
+    /^-?bkc$/i && do { $compareBackwards    = 1; $count++; next; };
     /^-?igt$/i && do { $ignoreTrizbort      = 0; $count++; next; };
     /^-?(sw|ws)(t)?/i && do {
       readReplace();
@@ -184,7 +186,7 @@ while ( $count <= $#ARGV ) {
     /^-?(d|ab|ba)$/i
       && do { $copyBinary = 1; $copyAuxiliary = 1; $count++; next; };
     /^-?reverse$/i && do { $reverse = 1; $count++; next; };
-    /^[a-z0-9]+(=.*)?$/i && do {
+    /^[a-z0-9][a-z0-9-]+(=.*)?$/i && do {
 
       if ( $arg =~ /-$/ ) {
         $arg =~ s/-$//g;
@@ -617,9 +619,14 @@ sub processTerms {
 
                 if ( $infoTo->mtime > $infoFrom->mtime ) {
                   if ( !$ignoreBackwardsTime && !$timeReverse ) {
-                    print(
-"$fromFile is before $fileTo, skipping. Use -it to overlook this, -tr to reverse copy.\n"
-                    );
+                    if ($compareBackwards) {
+                      `wm \"$fromFile\" \"$fileTo\"`;
+                    }
+                    else {
+                      print(
+"$fromFile is before $fileTo, skipping. Use -it to overlook this, -tr to reverse copy, -bkc to compare.\n"
+                      );
+                    }
                     next;
                   }
                   elsif ($timeReverse) {
@@ -764,8 +771,14 @@ sub preProcessHashes {
       my @c = split( /,/, $b[0] );
       for (@c) {
         if ( $altHash{$_} ) {
-          print "$_ has duplicate hash: was $altHash{$_}, also found $b[1].\n";
-          $bail = 1;
+          if ( $altHash{$_} ne $b[1] ) {
+            print
+"$_ has duplicate hash: was $altHash{$_}, also found $b[1], $_[0] line $..\n";
+            $bail = 1;
+          }
+          else {
+            print "WARNING $_ to $b[1] defined twice, $_[0] line $..\n";
+          }
         }
         $altHash{$_} = $b[1];
 
@@ -1086,6 +1099,7 @@ sub usageDetail {
 -wsr = whitespace run (only removes whitespace in the project)
 -igt = ignore Trizbort
 -pt/tp = forces PerlTidy for *.pl/*.pm, n added unforces it
+-bkc = compare files with backward timestamps
 EOT
   exit();
 }
