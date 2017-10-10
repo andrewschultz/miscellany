@@ -70,7 +70,8 @@ while ( $count <= $#ARGV ) {
   }
 }
 
-$popupText = strftime "Results for %m/%d/%Y\n", localtime( time() - 86400 );
+$popupText = strftime "Results for %m/%d/%Y\n",
+  localtime( time() - 86400 * $daysAgo );
 
 open( A, "$siteFile" ) || die("Could not find $siteFile, bailing.");
 while ( $a = <A> ) {

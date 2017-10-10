@@ -124,10 +124,10 @@ while ( $count <= $#ARGV ) {
     /^-?nt$/ && do { $printTabbed = 0; $count++; next; };
     /^-?w$/  && do { $dontWant    = 1; $count++; next; };
     /^-?nd$/ && do { newDefault($b); $count++; next; };
-    /^-?#$/ && do { $forceNum = 1; $count++; next; }
-      / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
-  /^-? zb $/ && do { $zapBrackets = 1; $count++; next; };
-    /^-?mo$/ && do {
+    /^-?#$/    && do { $forceNum      = 1; $count++; next; };
+    / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
+    /^-? zb $/ && do { $zapBrackets   = 1; $count++; next; };
+    /^-?mo$/   && do {
 
       if ( $b < 0 ) {
         print
