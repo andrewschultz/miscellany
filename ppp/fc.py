@@ -38,10 +38,6 @@ suits = ['C', 'd', 'S', 'h']
 
 cards = [' A', ' 2', ' 3', ' 4', ' 5', ' 6', ' 7', ' 8', ' 9', '10', ' J', ' Q', ' K']
 
-quit_msg = {'0': 'Wow! No games won! Way to go! You\'re going to get stuff done!', '1': 'Had your game, time to get to work',
-    '2': 'A couple games, time to get back to business.', '3': 'A couple games short.',
-    '4': 'Left with one game to spare.', '5': 'Got all your games. Time to go.' }
-
 top = ['CL', 'di', 'SP', 'he']
 btm = ['UB', 'am', 'AD', 'ar']
 
@@ -1519,6 +1515,7 @@ def usage_meta():
     print('uc = shows current command list.')
     print('ux = shows current command list excluding meta-commands.')
     print('qu quits (q could be typed by accident).')
+    print('t shows time taken so far')
     print('? = usage (this).')
     print('empty command tries basic reshuffling and prints out the cards again.')
     print('? gives hints: /?g ?o ?m games options meta, g is default.')
@@ -1689,10 +1686,6 @@ def card_eval(my_cmd):
 def go_bye():
     global cur_games
     global max_games
-    if str(cur_games) in quit_msg.keys():
-        print(quit_msg[str(cur_games)])
-    else:
-        print("No specific string. Bye now!")
     if time_matters:
         write_time_file()
     close_lock_file()
@@ -1729,6 +1722,12 @@ def read_cmd(this_cmd):
             print("\nYou probably made a keyboard interrupt, but if it was something else, I caught that, too.")
             exit()
         name = name.strip()
+        if this_cmd == 't':
+            cur_time = time.time()
+            print(cur_time - start_time, 'total seconds so far.')
+            if last_reset > start_time:
+                print(cur_time - last_reset, 'total seconds last game.')
+            return
         if name == '/':  # special case for slash/backslash
             debug = 1 - debug
             print('debug', on_off[debug])
