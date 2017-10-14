@@ -25,11 +25,6 @@ my @outFiles;
 my @inDirs;
 my %writings;
 my %skipReading;
-my @fileArray = (
-  "$myNotesFile", "hthws.otl", "sbnotes.txt", "limericks.otl",
-  "lists.otl",    "sb.otl",    "names.otl",   "games.otl",
-  "misc.otl",     "f.otl",     "smart.otl"
-);
 
 ########options
 my $daysBack       = 120;
@@ -44,6 +39,7 @@ my $looseTest       = 0;
 my $noMove          = 0;
 my $quiet           = 0;
 my $verbose         = 0;
+my @fileArray       = 0;
 
 ##############variables
 my $unixFiles = "";
@@ -61,6 +57,7 @@ my (
 ) = localtime();
 my $todaysFile;
 
+# initial functions
 initializeGlobals();
 readCmdLine();
 
@@ -507,28 +504,13 @@ sub initializeGlobals {
   if (0) {
     $myNotesFile = "notes9.otl";
 
-    %whatWhereHash = (
-      "lim" => "limericks.otl",
-      "ide" => $myNotesFile,
-      "den" => "hthws.otl",
-      "gil" => "gnj.otl",
-      "smo" => "smoboynotes.txt",
-      "s"   => $myNotesFile,
-      "qui" => $myNotesFile,
-      "w"   => $myNotesFile,
-      "mag" => $myNotesFile,
-      "nam" => "names.otl",
-      "dai" => "booksread.otl",
-      "boo" => "booksread.otl",
-      "mov" => "booksread.otl",
-      "zzz" => "nonexist.otl"
-    );
-
   }
 
   #look for today's file
   $todaysFile =
     sprintf( "%d%02d%02d.txt", $yearOffset + 1900, $month + 1, $dayOfMonth );
+
+  fishForFiles();
 
 }
 
@@ -748,6 +730,22 @@ sub duplicateCheck {
     join( " / ", @dupes )
   );
 
+}
+
+sub fishForFiles {
+  my %fileHash;
+  open( A, "c:\\writing\\ideahash.txt" );
+  my $x;
+  while ( $a = <A> ) {
+    if ( $a =~ /  \[/ ) {
+      $x = $a;
+      $x =~ s/.* \[//;
+      $x =~ s/\].*//;
+      chomp($x);
+      $fileHash{$x} = 1;
+    }
+  }
+  @fileArray = sort keys %fileHash;
 }
 
 sub usageQuick {
