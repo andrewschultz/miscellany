@@ -5,9 +5,12 @@ import glob
 from collections import defaultdict
 
 # ary = ['roiling', 'shuffling']
-ary = ['shuffling']
+# ary = ['shuffling']
+ary = ['roiling']
 
 short = { 'shuffling':'sa', 'roiling':'roi' }
+files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
+  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-demo-dome-nudges.txt'] }
 
 write_file = False
 verbose = False
@@ -55,7 +58,8 @@ def mister(a):
             special_def = ''
     # for p in sorted(need_test.keys(), key=need_test.get):
         # print(p, need_test[p])
-    files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
+    # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
+    files = [ '{:s}reg-{:s}-thru.txt'.format(source_dir, short[a]) ]
     extra_text = defaultdict(str)
     for fi in files:
         short_fi = re.sub(".*[\\\/]", "", fi)
@@ -73,9 +77,17 @@ def mister(a):
                 if line.startswith("#mistake retest"):
                     retest = True
                     continue
+                if line.startswith("#mistake text") or line.startswith("#mistake retext"):
+                    print('Line', count, 'says text not test.')
+                    continue
+                if line.startswith("##mistake"):
+                    print('Line', count, 'says text not test.')
+                    continue
                 retest = False
                 if line.startswith("#mistake "):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
+                    if comment_found[test_note]:
+                        print("Duplicate mistake test at line", count,"(reroute to mistake retest?)")
                     # print("Got", test_note)
                     comment_found[test_note] = True
                 elif line.startswith('>'):
@@ -83,7 +95,8 @@ def mister(a):
                     if ll != test_note:
                         if ll in need_test.keys():
                             err_count = err_count + 1
-                            print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
+                            if found[ll] is False:
+                                print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
                             found[ll] = True
                     if test_note in found.keys():
