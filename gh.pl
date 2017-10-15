@@ -523,10 +523,12 @@ sub processTerms {
             my @fileList = glob($fromFile);
             for (@fileList) {
               checkWarnings( $_, 1 ) if -f $_ && shouldCheck($_);
+              checkDoubleSpace( $_, 1 ) if -f $_ && shouldCheckDoubleSpace($_);
             }
           }
           else {
-            checkWarnings( $fromFile, 1 ) if shouldCheck($fromFile);
+            checkDoubleSpace( $fromFile, 1 )
+              if shouldCheckDoubleSpace($fromFile);
           }
           next;
         }
@@ -928,6 +930,34 @@ sub strictWarn {
   close(A);
 }
 
+sub checkDoubleSpace {
+  my $thisEmpty;
+  my $lastEmpty;
+  my $gotAnEmpty;
+  my $bigString;
+
+  my $line2;
+
+  open( B, $_[0] ) || do { print "No $_[0], returning.\n"; return; };
+
+  while ( $line2 = <B> ) {
+    $thisEmpty = ( $line2 == '\n' ) || ( $line2 == '\r\n' );
+    if ( $thisEmpty && $lastEmpty ) {
+      $gotAnEmpty++;
+      next;
+    }
+    $bigString .= $line2;
+  }
+  close(B);
+  return if !$gotAnEmpty;
+
+  print "Removing $gotAnEmpty extra-duplicate line breaks from $_[0].\n";
+
+  open( B, ">$_[0]" ) || die("Couldn't reopen $_[0] for writing.");
+  print B $gotAnEmpty;
+  close(B);
+}
+
 ###############file name, force remove trailing space
 sub checkWarnings {
   my $gotWarnings   = 0;
@@ -1046,7 +1076,12 @@ sub rehash {
 }
 
 sub shouldCheck {
-  if ( $_[0] =~ /\.(pl|pm|py|txt|c|md|ni|cpp|ahs|nmr)$/i ) { return 1; }
+  if ( $_[0] =~ /\.(pl|pm|py|txt|c|md|ni|cpp|ahs|nmr|i7x)$/i ) { return 1; }
+  return 0;
+}
+
+sub shouldCheckDoubleSpace {
+  if ( $_[0] =~ /\.(ni|i7x)$/i ) { return 1; }
   return 0;
 }
 

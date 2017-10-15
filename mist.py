@@ -87,15 +87,16 @@ def mister(a):
                 if line.startswith("#mistake "):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
                     if comment_found[test_note]:
-                        print("Duplicate mistake test at line", count,"(reroute to mistake retest?)")
+                        print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
+                        err_count = err_count + 1
                     # print("Got", test_note)
                     comment_found[test_note] = True
                 elif line.startswith('>'):
                     ll = re.sub("^>", "", line.strip().lower())
                     if ll != test_note:
                         if ll in need_test.keys():
-                            err_count = err_count + 1
                             if found[ll] is False:
+                                err_count = err_count + 1
                                 print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
                             found[ll] = True
