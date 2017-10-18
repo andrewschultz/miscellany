@@ -24,6 +24,14 @@ Local $build = 1;
 Opt("WinTitleMatchMode", -2)
 
 if $CmdLine[0] > 0 Then
+  if $CmdLine[1] == '0' Then
+    Local $cmdStr = ""
+    For $key In $hash
+	  $cmdStr = $cmdStr & $key & " " & $hash.Item($key) & @CRLF
+    Next
+    MsgBox($MB_OK, "List of projects", $cmdStr)
+    Exit
+  Endif
   $project = $CmdLine[1]
   if $hash.Exists($project) Then
     $project = $hash.Item($project)
@@ -33,7 +41,7 @@ Endif
 Local $dirToCheck = "c:\\games\\inform\\" & $project & ".inform"
 
 if not FileExists($dirToCheck) Then
-  MsgBox($MB_OK, "no such directory", $dirToCheck)
+  MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings.")
   Exit
 EndIf
 
