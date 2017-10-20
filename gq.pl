@@ -45,6 +45,7 @@ my $totalFind      = 0;
 my $lastHeader     = "";
 my $othersToo      = 0;
 my $foundTotal     = 0;
+my $stringAtEnd    = "";
 
 my $fileToOpen = "";
 my $lineToOpen = 0;
@@ -373,6 +374,7 @@ sub processFiles {
     my @fileAndMarkers = split( /\t/, $cmd );
     processOneFile(@fileAndMarkers);
   }
+  print "IMPORTANT END STRING STUFF:\n$stringAtEnd" if $stringAtEnd;
   if ( $#blanks > -1 ) { print "EMPTY FILES: " . join( ", ", @blanks ) . "\n"; }
   if ( $errStuff[0] ) {
     print "TEST RESULTS: $_[0],0,"
@@ -445,18 +447,22 @@ sub processOneFile {
     }
     my $crom = cromu($a);
     if ( $inImportant && $crom ) {
+      my $tempString = "";
+      my $sbl        = shouldBeLast($a);
+      chomp($a);
       if ($dontWant) { push( @errStuff, "$modFile L$idx" ); }
-      if ( !$foundOne ) { print "Results for $modFile:\n"; }
       $foundOne++;
       $foundTotal++;
-      print "$modFile($line";
-      if ($currentTable)  { print ",$currentTable"; }
-      if ($thisImportant) { print ",$thisImportant,L$idx"; }
-      chomp($a);
-      print "): $a";
-      if ( $crom == 2 ) { print " **PLURAL**"; }
-      print "\n";
-      if ($showRules) { print "RULE=$latestRule"; }
+      $tempString = "$modFile($line";
+      $tempString .= ",$currentTable"        if $currentTable;
+      $tempString .= ",$thisImportant,L$idx" if $thisImportant;
+      $tempString .= "): $a";
+      $tempString .= " **PLURAL**"           if $crom == 2;
+      $tempString .= "\n";
+      $tempString .= "RULE=$latestRule"      if $showRules;
+      if ($sbl) { $stringAtEnd .= $tempString; next; }
+      $tempString = "Results for $modFile:\n" . $tempString if $foundOne == 1;
+      print $tempString;
 
       if ( $maxFileFind && ( $foundOne == $maxFileFind ) ) {
         print
@@ -699,6 +705,11 @@ sub openHistory {
     }
     else { print "Oops no file $thisfile\n"; }
   }
+}
+
+sub shouldBeLast {
+  return 1 if ( $_[0] =~ /understand.*howto.*gtxt/i );
+  return 0;
 }
 
 sub usage {
