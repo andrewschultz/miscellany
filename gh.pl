@@ -523,10 +523,13 @@ sub processTerms {
             my @fileList = glob($fromFile);
             for (@fileList) {
               checkWarnings( $_, 1 ) if -f $_ && shouldCheck($_);
+              print("Checking $_ for double space\n");
               checkDoubleSpace( $_, 1 ) if -f $_ && shouldCheckDoubleSpace($_);
             }
           }
           else {
+            checkWarnings( $_, 1 ) if -f $_ && shouldCheck($_);
+            print("Checking $_ for double space\n");
             checkDoubleSpace( $fromFile, 1 )
               if shouldCheckDoubleSpace($fromFile);
           }
@@ -590,6 +593,11 @@ sub processTerms {
                 if ( shouldCheck($_) ) {
                   checkWarnings( $_, 1 );
                 }
+
+                # print "Double space check $_\n";
+                if ( shouldCheckDoubleSpace($_) ) {
+                  checkDoubleSpace( $_, 1 );
+                }
                 copy( "$_", "$gh\\$toFile\\$file" )
                   || die("Copy $_ to $gh\\$toFile\\$file failed");
                 $fileList .= "$_\n";
@@ -605,6 +613,9 @@ sub processTerms {
           else {
             if ( shouldCheck($fromFile) ) {
               checkWarnings( $fromFile, 1 );
+            }
+            if ( shouldCheckDoubleSpace($fromFile) ) {
+              checkDoubleSpace( $fromFile, 1 );
             }
             if ( $fromFile =~ /\.trizbort$/ ) {
               trizCheck( $fromFile, 1, $xtraCmd );
@@ -933,28 +944,33 @@ sub strictWarn {
 sub checkDoubleSpace {
   my $thisEmpty;
   my $lastEmpty;
-  my $gotAnEmpty;
+  my $gotAnEmpty = 0;
   my $bigString;
 
   my $line2;
+  print("Double space checking $_[0]\n");
 
   open( B, $_[0] ) || do { print "No $_[0], returning.\n"; return; };
 
   while ( $line2 = <B> ) {
-    $thisEmpty = ( $line2 == '\n' ) || ( $line2 == '\r\n' );
+    $thisEmpty = ( $line2 =~ /^\s*$/ );
     if ( $thisEmpty && $lastEmpty ) {
       $gotAnEmpty++;
       next;
     }
+    $lastEmpty = $thisEmpty;
     $bigString .= $line2;
   }
   close(B);
+  print("Collapsing $gotAnEmpty extra CRs in $_[0].\n") if $gotAnEmpty;
+
   return if !$gotAnEmpty;
 
   print "Removing $gotAnEmpty extra-duplicate line breaks from $_[0].\n";
 
   open( B, ">$_[0]" ) || die("Couldn't reopen $_[0] for writing.");
-  print B $gotAnEmpty;
+  binmode(B);
+  print B $bigString;
   close(B);
 }
 
