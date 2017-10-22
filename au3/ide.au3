@@ -26,9 +26,20 @@ Opt("WinTitleMatchMode", -2)
 if $CmdLine[0] > 0 Then
   if $CmdLine[1] == '0' Then
     Local $cmdStr = ""
+	Local $count = 0
     For $key In $hash
-	  $cmdStr = $cmdStr & $key & " " & $hash.Item($key) & @CRLF
+	  if Mod($count, 3) > 0 Then
+	    $cmdStr = $cmdStr & " / "
+	  ElseIf $count > 0 Then
+	    $cmdStr = $cmdStr & @CRLF
+	  Endif
+	  $count = $count + 1
+	  $cmdStr = $cmdStr & $key & " " & $hash.Item($key)
     Next
+	if Mod ($count, 2) == 1 Then
+	  $cmdStr = $cmdStr & @CRLF
+    Endif
+	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
     MsgBox($MB_OK, "List of projects", $cmdStr)
     Exit
   Endif
@@ -41,7 +52,7 @@ Endif
 Local $dirToCheck = "c:\\games\\inform\\" & $project & ".inform"
 
 if not FileExists($dirToCheck) Then
-  MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings.")
+  MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
   Exit
 EndIf
 
