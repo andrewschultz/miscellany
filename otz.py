@@ -7,6 +7,8 @@ import re
 
 errs_yet = defaultdict(str)
 
+specifics = defaultdict(dict)
+
 proj_read = "roiling"
 otz = "c:/writing/scripts/otz.txt"
 
@@ -50,6 +52,10 @@ def check_old_matches(x):
                     for id in ignore_dic.keys():
                         if re.search(id, line, re.IGNORECASE):
                             ignore = True
+                    if specifics[r]:
+                        for j in specifics[r].keys():
+                            if re.search(j, line, re.IGNORECASE):
+                                ignore = True
                     if ignore is False:
                         incidents_dic[r] = incidents_dic[r] + 1
                         if not errs_yet[x]:
@@ -96,6 +102,9 @@ with open(otz) as file:
             continue
         if line.startswith("i:"):
             ignore_dic[re.sub("i:", "", line.strip())] = True
+            continue
+        if line.startswith("s:"):
+            specifics[this_regex][re.sub("s:", "", line.strip())] = True
             continue
         if line.startswith("i-:"):
             file_dic.pop(re.sub("^i-:", "", line.strip()), None)
