@@ -12,7 +12,9 @@ else_next_bad = False
 file_name = "story.ni"
 
 copy_over = False
+save_copy = False
 launch_win_diff = False
+crlf = True
 
 this_tabs = 0
 last_tabs = 0
@@ -29,6 +31,8 @@ parser = argparse.ArgumentParser(description='semicolon to comma.', formatter_cl
 parser.add_argument('-m', '--max_change', action='store', dest='max_changes', help='maximum changes', type=int)
 parser.add_argument('-l', '--launchwindiff', action='store_true', dest='launch_win_diff', help='launch win diff')
 parser.add_argument('-c', '--copyover', action='store_true', dest='copy_over', help='copy generated file back over')
+parser.add_argument('-cs', '--copysave', action='store_true', dest='copy_save', help='copy generated file back over and save')
+parser.add_argument('-s', '--save', action='store_true', dest='save_after', help='save generated file')
 parser.add_argument('-f', '--filename', action='store', dest='file_name', help='file name')
 args = parser.parse_args()
 
@@ -43,6 +47,17 @@ if args.launch_win_diff is True:
 
 if args.copy_over is True:
     copy_over = True
+    copy_save = False
+
+if args.copy_save is True:
+    copy_save = True
+    copy_over = True
+
+if args.copy_save and args.copy_over:
+    print("Conflicting options -c and -cs. -cs overrides.")
+
+if args.copy_save and args.save_after:
+    print("Conflicting options -s and -cs. -cs overrides.")
 
 count = 0
 
@@ -59,7 +74,7 @@ with open(file_name) as file:
         else_next_bad = False
         if iffy:
             this_tabs = leading_tabs(line)
-            if (re.search("\t(continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\tif ", line) and (this_tabs - last_tabs == 1):
+            if (re.search("\t(continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\t(if|unless) ", line) and (this_tabs - last_tabs == 1):
                 l2 = re.sub("^\t+", "", line).strip()
                 last_line = re.sub(":+", ", " + l2, last_line)
                 big_string = big_string + last_line
@@ -82,7 +97,8 @@ with open(file_name) as file:
                 went_over = True
         big_string = big_string + line
 
-big_string.replace("\r\n", "\n")
+if not crlf:
+    big_string.replace("\r\n", "\n")
 
 if went_over is True:
     print(cur_changes, "total cur_changes, ended at line", last_num, "of", count)
@@ -103,5 +119,9 @@ if launch_win_diff:
     print("Running diffs.")
 
 if copy_over:
+    print("Copying file over.")
     copyfile(file_name_bak, file_name)
-    print("Copied file over.")
+
+print(["Deleting", "Keeping"][copy_save], "backup file", file_name_bak)
+if not copy_save:
+    os.remove(file_name_bak)
