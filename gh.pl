@@ -954,6 +954,9 @@ sub checkDoubleSpace {
   open( B, $_[0] ) || do { print "No $_[0], returning.\n"; return; };
 
   while ( $line2 = <B> ) {
+    die(
+"Line $. of $_[0] has improper line feed. Check what happened in notepad++ and what apps you recently ran."
+    ) if ( $line2 =~ /\r/ );
     $thisEmpty = ( $line2 =~ /^\s*$/ );
     if ( $thisEmpty && $lastEmpty ) {
       $gotAnEmpty++;
@@ -1099,7 +1102,8 @@ sub shouldCheck {
 
 sub shouldCheckDoubleSpaceAndCRLF {
   if ( $_[0] =~ /\.(ni|i7x)$/i ) {
-    die("Oops line endings for $_[0] got scrambled") if isWindows( $_[0] );
+
+    # die("Oops line endings for $_[0] got scrambled") if isWindows( $_[0] );
     return 1;
   }
   return 0;

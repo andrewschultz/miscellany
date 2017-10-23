@@ -134,7 +134,8 @@ sub openWinOrUnix
 sub isWindows
 {
   my $file = $_[0];
-  open($file, "<", $_[1]);
+  my $origFile = "";
+  open($origFile, "<", $file);
   binmode($file);
   my $line = <$file>;
 

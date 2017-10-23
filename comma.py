@@ -14,7 +14,7 @@ file_name = "story.ni"
 copy_over = False
 save_copy = False
 launch_win_diff = False
-crlf = True
+unix_endings = True
 
 this_tabs = 0
 last_tabs = 0
@@ -24,16 +24,21 @@ last_num = 0
 max_changes = 25
 cur_changes = 0
 
+max_collapse = 0
+func_collapse = 0
+
 def leading_tabs(l):
     return len(l) - len(l.lstrip('\t'))
 
 parser = argparse.ArgumentParser(description='semicolon to comma.', formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-m', '--max_change', action='store', dest='max_changes', help='maximum changes', type=int)
+parser.add_argument('-mc', '--max_collapse', action='store', dest='max_collapse', help='maximum collapses', type=int)
 parser.add_argument('-l', '--launchwindiff', action='store_true', dest='launch_win_diff', help='launch win diff')
 parser.add_argument('-c', '--copyover', action='store_true', dest='copy_over', help='copy generated file back over')
 parser.add_argument('-cs', '--copysave', action='store_true', dest='copy_save', help='copy generated file back over and save')
 parser.add_argument('-s', '--save', action='store_true', dest='save_after', help='save generated file')
 parser.add_argument('-f', '--filename', action='store', dest='file_name', help='file name')
+parser.add_argument('-w', '--windows', action='store', dest='windows_endings', help='windows endings')
 args = parser.parse_args()
 
 if args.max_changes:
@@ -42,8 +47,11 @@ if args.max_changes:
 if args.file_name:
     file_name = args.file_name
 
-if args.launch_win_diff is True:
+if args.launch_win_diff:
     launch_win_diff = True
+
+if args.windows_endings:
+    unix_endings = False
 
 if args.copy_over is True:
     copy_over = True
@@ -104,11 +112,39 @@ with open(file_name) as file:
                 went_over = True
         big_string = big_string + line
 
-if cur_changes == 0:
-    print("Nothing changed, so I'm not doing anything.")
-    exit()
+split_to_one_line = True
 
-if not crlf:
+if split_to_one_line:
+    xxx = big_string.split("\n")
+    xxx2 = []
+    x = 0
+    while x < len(xxx):
+        xxx2.append(xxx[x])
+        if xxx[x] == '' and x < len(xxx) - 2:
+            if re.search("^[a-zA-Z]", xxx[x+1], re.IGNORECASE):
+                if re.search("^\t[a-zA-Z]", xxx[x+2], re.IGNORECASE):
+                    if xxx[x+3] == '' and (max_collapse == 0 or func_collapse < max_collapse):
+                        comments = ''
+                        if re.search("\[.*\]", xxx[x+1]):
+                            print('line', x, 'has a comment:', xxx[x+1])
+                            comments = re.sub(".*\[", " [", xxx[x+1])
+                            xxx[x+1] = re.sub(" \[.*\]", "", xxx[x+1])
+                        new_string = xxx[x+1] + re.sub("^\t", " ", xxx[x+2]) + comments
+                        x = x + 3
+                        xxx2.append(new_string)
+                        func_collapse = func_collapse + 1
+                        continue
+        x = x + 1
+        continue
+    print(func_collapse, "collapsed functions.")
+    big_string = '\n'.join(xxx2)
+
+if cur_changes == 0 and func_collapse == 0:
+    print("Nothing changed, so I'm not doing anything.")
+
+# if unix_endings is false, then we want to get rid of the unix_endings and only have CR. Or is it LF? Whichever, we want to strip the ^M so Inform doesn't read it
+
+if unix_endings:
     big_string.replace("\r\n", "\n")
 
 if went_over is True:
@@ -121,7 +157,7 @@ else:
 
 file_name_bak = file_name + ".cpy"
 
-f = open(file_name_bak, "wb", newline="\n")
+f = open(file_name_bak, "w", newline="\n")
 f.write(big_string)
 f.close()
 
