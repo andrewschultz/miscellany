@@ -59,6 +59,8 @@ in_undo = False
 
 won_this_cmd = False
 
+cheat_delta = 10000
+
 last_reset = 0
 start_time = 0
 
@@ -658,9 +660,15 @@ def read_opts():
     except configparser.NoOptionError:
         print("Opts file needs chain_show_all T/F.")
         exit()
+    global cheat_delta
+    try:
+        cheat_delta = config_opt.getint('Section1', 'cheat_delta')
+    except configparser.NoOptionError:
+        print("Opts file needs cheat_delta number for last time fctimelist was modified.")
+        exit()
     return
 
-    
+
 def read_delay_opts():
     if not os.path.isfile(wait_file):
         print("No", wait_file, "so using default options.")
@@ -2386,9 +2394,17 @@ if annoying_nudge:
         print("Type I am wasting time, or you can't play.")
         exit()
 
+fctimedelt = time.time() - os.path.getmtime("fctimelist.txt")
+if fctimedelt < cheat_delta:
+    print(int(fctimedelt), "is less than the cheat-delta of", cheat_delta)
+    print("I'm going to make you wait.")
+    exit()
+
 open_lock_file()
 
-print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you\'ll get mad and bored and be productive.')
+if stupid_wait > 0:
+    print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you\'ll get mad and bored and be productive.')
+
 print('Started at',datetime.now())
 time.sleep(stupid_wait)
 
