@@ -524,14 +524,15 @@ sub processTerms {
             for (@fileList) {
               checkWarnings( $_, 1 ) if -f $_ && shouldCheck($_);
               print("Checking $_ for double space\n");
-              checkDoubleSpace( $_, 1 ) if -f $_ && shouldCheckDoubleSpace($_);
+              checkDoubleSpace( $_, 1 )
+                if -f $_ && shouldCheckDoubleSpaceAndCRLF($_);
             }
           }
           else {
             checkWarnings( $_, 1 ) if -f $_ && shouldCheck($_);
             print("Checking $_ for double space\n");
             checkDoubleSpace( $fromFile, 1 )
-              if shouldCheckDoubleSpace($fromFile);
+              if shouldCheckDoubleSpaceAndCRLF($fromFile);
           }
           next;
         }
@@ -595,7 +596,7 @@ sub processTerms {
                 }
 
                 # print "Double space check $_\n";
-                if ( shouldCheckDoubleSpace($_) ) {
+                if ( shouldCheckDoubleSpaceAndCRLF($_) ) {
                   checkDoubleSpace( $_, 1 );
                 }
                 copy( "$_", "$gh\\$toFile\\$file" )
@@ -614,7 +615,7 @@ sub processTerms {
             if ( shouldCheck($fromFile) ) {
               checkWarnings( $fromFile, 1 );
             }
-            if ( shouldCheckDoubleSpace($fromFile) ) {
+            if ( shouldCheckDoubleSpaceAndCRLF($fromFile) ) {
               checkDoubleSpace( $fromFile, 1 );
             }
             if ( $fromFile =~ /\.trizbort$/ ) {
@@ -1096,8 +1097,11 @@ sub shouldCheck {
   return 0;
 }
 
-sub shouldCheckDoubleSpace {
-  if ( $_[0] =~ /\.(ni|i7x)$/i ) { return 1; }
+sub shouldCheckDoubleSpaceAndCRLF {
+  if ( $_[0] =~ /\.(ni|i7x)$/i ) {
+    die("Oops line endings for $_[0] got scrambled") if isWindows( $_[0] );
+    return 1;
+  }
   return 0;
 }
 

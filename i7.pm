@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np npx openWinOrUnix shortIf sourceFile tableFile tx);
+@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np npx openWinOrUnix isWindows shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ( "12" => "shuffling",
@@ -129,6 +129,16 @@ sub openWinOrUnix
 	return 0;
   }
   return 1;
+}
+
+sub isWindows
+{
+  my $file = $_[0];
+  open($file, "<", $_[1]);
+  binmode($file);
+  my $line = <$file>;
+
+  return $line =~ /\r/;
 }
 
 ############################################
