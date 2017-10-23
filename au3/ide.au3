@@ -72,8 +72,8 @@ Func OpenIDE($project)
 	Local $dd = _DateDiff('h', $fileTime, $nowTime)
 	if $dd > 23 Then
       ; MsgBox($MB_OK, $dd & " hours since last change, not building", "Blah")
-      WinActivate($project & ".inform");
-      WinWaitActive($project & ".inform");
+      WinActivate($project & ".inform - Inform");
+      WinWaitActive($project & ".inform - Inform");
 	  return
     Endif
   Endif

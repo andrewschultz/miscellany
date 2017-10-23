@@ -70,7 +70,7 @@ with open(file_name) as file:
         if else_next_bad and re.search("else:", line):
             cur_tabs = leading_tabs(line)
             if cur_tabs == this_tabs - 1:
-                print("WARNING line", count, "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
+                print("WARNING line", count, " (would be {:d})".format(count - cur_changes), "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
         else_next_bad = False
         if iffy:
             this_tabs = leading_tabs(line)
@@ -80,6 +80,13 @@ with open(file_name) as file:
                 big_string = big_string + last_line
                 cur_changes = cur_changes + 1
                 else_next_bad = True
+                any_changes_yet = True
+            elif (this_tabs - last_tabs == 1) and re.search("\t(if|unless) ", line):
+                big_string = big_string + last_line
+                last_line = line
+                last_tabs = leading_tabs(line)
+                iffy = True
+                continue
             else:
                 big_string = big_string + last_line + line
             iffy = False
@@ -97,6 +104,10 @@ with open(file_name) as file:
                 went_over = True
         big_string = big_string + line
 
+if cur_changes == 0:
+    print("Nothing changed, so I'm not doing anything.")
+    exit()
+
 if not crlf:
     big_string.replace("\r\n", "\n")
 
@@ -110,7 +121,7 @@ else:
 
 file_name_bak = file_name + ".cpy"
 
-f = open(file_name_bak, "w", newline="\n")
+f = open(file_name_bak, "wb", newline="\n")
 f.write(big_string)
 f.close()
 
@@ -122,6 +133,7 @@ if copy_over:
     print("Copying file over.")
     copyfile(file_name_bak, file_name)
 
-print(["Deleting", "Keeping"][copy_save], "backup file", file_name_bak)
-if not copy_save:
+print(["Deleting", "Keeping"][save_copy], "backup file", file_name_bak)
+
+if not save_copy:
     os.remove(file_name_bak)
