@@ -15,6 +15,8 @@ copy_over = False
 save_copy = False
 launch_win_diff = False
 unix_endings = True
+collapse_to_one_line = True
+trivial_punctuation = False
 
 this_tabs = 0
 last_tabs = 0
@@ -23,6 +25,8 @@ last_num = 0
 
 max_changes = 25
 cur_changes = 0
+
+trivial_punctuation = 0
 
 max_collapse = 0
 func_collapse = 0
@@ -34,7 +38,9 @@ parser = argparse.ArgumentParser(description='semicolon to comma.', formatter_cl
 parser.add_argument('-m', '--max_change', action='store', dest='max_changes', help='maximum changes', type=int)
 parser.add_argument('-mc', '--max_collapse', action='store', dest='max_collapse', help='maximum collapses', type=int)
 parser.add_argument('-l', '--launchwindiff', action='store_true', dest='launch_win_diff', help='launch win diff')
+parser.add_argument('-1', '--oneline', action='store_true', dest='collapse_to_one_line', help='one line functions remove tabs')
 parser.add_argument('-c', '--copyover', action='store_true', dest='copy_over', help='copy generated file back over')
+parser.add_argument('-t', '--trivpunc', action='store_true', dest='trivial_punctuation', help='fix trivial punctuation')
 parser.add_argument('-cs', '--copysave', action='store_true', dest='copy_save', help='copy generated file back over and save')
 parser.add_argument('-s', '--save', action='store_true', dest='save_after', help='save generated file')
 parser.add_argument('-f', '--filename', action='store', dest='file_name', help='file name')
@@ -46,6 +52,12 @@ if args.max_changes:
 
 if args.file_name:
     file_name = args.file_name
+
+if args.trivial_punctuation:
+    trivial_punctuation = args.trivial_punctuation
+
+if args.collapse_to_one_line:
+    collapse_to_one_line = args.collapse_to_one_line
 
 if args.launch_win_diff:
     launch_win_diff = True
@@ -69,9 +81,19 @@ if args.copy_save and args.save_after:
 
 count = 0
 
+in_i6 = False
+
 with open(file_name) as file:
     for line in file:
         count = count + 1
+        if re.search("\(-", line):
+            in_i6 = True
+        if re.search("-\)", line):
+            in_i6 = False
+        if trivial_punctuation and not in_i6 and re.search("^[a-z].*;$", line, re.IGNORECASE):
+            print(count," trivial punctuation change:", line)
+            line = re.sub(";$", ".", line)
+            trivial_punctuation = trivial_punctuation + 1
         if went_over:
             big_string = big_string + line
             continue
@@ -82,7 +104,7 @@ with open(file_name) as file:
         else_next_bad = False
         if iffy:
             this_tabs = leading_tabs(line)
-            if (re.search("\t(continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\t(if|unless) ", line) and (this_tabs - last_tabs == 1):
+            if (re.search("\t(decide |no;|decide |decide |yes;|continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\t(if|unless) ", line) and (this_tabs - last_tabs == 1):
                 l2 = re.sub("^\t+", "", line).strip()
                 last_line = re.sub(":+", ", " + l2, last_line)
                 big_string = big_string + last_line
@@ -102,7 +124,7 @@ with open(file_name) as file:
         iffy = False
         last_line = line
 #        if re.search("if action is iffy", line):
-        if re.search("\t+if ", line) and not re.search("instead;", line):
+        if re.search("^\t+if ", line) and not re.search("(decide on [a-z0-9-]+|decide no|decide yes|instead)[;\.]", line):
             if cur_changes < max_changes:
                 iffy = True
                 last_tabs = leading_tabs(line)
@@ -112,9 +134,7 @@ with open(file_name) as file:
                 went_over = True
         big_string = big_string + line
 
-split_to_one_line = True
-
-if split_to_one_line:
+if collapse_to_one_line:
     xxx = big_string.split("\n")
     xxx2 = []
     x = 0
@@ -129,6 +149,7 @@ if split_to_one_line:
                             print('line', x, 'has a comment:', xxx[x+1])
                             comments = re.sub(".*\[", " [", xxx[x+1])
                             xxx[x+1] = re.sub(" \[.*\]", "", xxx[x+1])
+                        xxx[x+2] = re.sub(";$", ".", xxx[x+2])
                         new_string = xxx[x+1] + re.sub("^\t", " ", xxx[x+2]) + comments
                         x = x + 3
                         xxx2.append(new_string)
@@ -139,7 +160,7 @@ if split_to_one_line:
     print(func_collapse, "collapsed functions.")
     big_string = '\n'.join(xxx2)
 
-if cur_changes == 0 and func_collapse == 0:
+if cur_changes == 0 and func_collapse == 0 and trivial_punctuation == 0:
     print("Nothing changed, so I'm not doing anything.")
 
 # if unix_endings is false, then we want to get rid of the unix_endings and only have CR. Or is it LF? Whichever, we want to strip the ^M so Inform doesn't read it
@@ -154,6 +175,9 @@ if max_changes == cur_changes:
     print("You may wish to run again.")
 else:
     print("Found", cur_changes, "total changes.")
+
+if trivial_punctuation > 0:
+    print(trivial_punctuation, "total trivial punctuation changes.")
 
 file_name_bak = file_name + ".cpy"
 
