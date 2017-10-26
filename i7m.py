@@ -15,11 +15,14 @@ copy_over = False
 save_copy = False
 launch_win_diff = False
 unix_endings = True
-collapse_to_one_line = True
+collapse_to_one_line = False
 trivial_punctuation = False
 
 this_tabs = 0
 last_tabs = 0
+
+max_fix_line = 0
+min_fix_line = 0
 
 last_num = 0
 
@@ -31,11 +34,15 @@ trivial_punctuation = 0
 max_collapse = 0
 func_collapse = 0
 
+func_name = ''
+
 def leading_tabs(l):
     return len(l) - len(l.lstrip('\t'))
 
 parser = argparse.ArgumentParser(description='semicolon to comma.', formatter_class=argparse.RawTextHelpFormatter)
-parser.add_argument('-m', '--max_change', action='store', dest='max_changes', help='maximum changes', type=int)
+parser.add_argument('-m', '--max_change_num', action='store', dest='max_changes', help='maximum changes', type=int)
+parser.add_argument('-maxl', '--max_change_line', action='store', dest='max_fix_line', help='maximum line', type=int)
+parser.add_argument('-minl', '--min_change_line', action='store', dest='min_fix_line', help='minimum line', type=int)
 parser.add_argument('-mc', '--max_collapse', action='store', dest='max_collapse', help='maximum collapses', type=int)
 parser.add_argument('-l', '--launchwindiff', action='store_true', dest='launch_win_diff', help='launch win diff')
 parser.add_argument('-1', '--oneline', action='store_true', dest='collapse_to_one_line', help='one line functions remove tabs')
@@ -44,6 +51,7 @@ parser.add_argument('-t', '--trivpunc', action='store_true', dest='trivial_punct
 parser.add_argument('-cs', '--copysave', action='store_true', dest='copy_save', help='copy generated file back over and save')
 parser.add_argument('-s', '--save', action='store_true', dest='save_after', help='save generated file')
 parser.add_argument('-f', '--filename', action='store', dest='file_name', help='file name')
+parser.add_argument('-fu', '--funcname', action='store', dest='func_name', help='func name', type=str)
 parser.add_argument('-w', '--windows', action='store', dest='windows_endings', help='windows endings')
 args = parser.parse_args()
 
@@ -62,8 +70,17 @@ if args.collapse_to_one_line:
 if args.launch_win_diff:
     launch_win_diff = True
 
+if args.func_name:
+    func_name = args.func_name
+
 if args.windows_endings:
     unix_endings = False
+
+if args.max_fix_line:
+    max_fix_line = args.max_fix_line
+
+if args.min_fix_line:
+    min_fix_line = args.min_fix_line
 
 if args.copy_over is True:
     copy_over = True
@@ -82,10 +99,24 @@ if args.copy_save and args.save_after:
 count = 0
 
 in_i6 = False
+func_begun = False
+func_ended = False
 
 with open(file_name) as file:
     for line in file:
         count = count + 1
+        if func_name:
+            if func_ended or not func_begun:
+                if line.startswith(func_name):
+                    print("Started reading function", func_name, "at", count)
+                    func_begun = True
+                else:
+                    big_string = big_string + line
+                    continue
+            elif func_begun and line.strip() == '':
+                big_string = big_string + line
+                func_ended = True
+                continue
         if re.search("\(-", line):
             in_i6 = True
         if re.search("-\)", line):
@@ -94,6 +125,12 @@ with open(file_name) as file:
             print(count," trivial punctuation change:", line)
             line = re.sub(";$", ".", line)
             trivial_punctuation = trivial_punctuation + 1
+        if count < min_fix_line:
+            big_string = big_string + line
+            continue
+        if max_fix_line > 0 and count > max_fix_line and not iffy:
+            big_string = big_string + line
+            continue
         if went_over:
             big_string = big_string + line
             continue
@@ -133,6 +170,10 @@ with open(file_name) as file:
                 last_num = count
                 went_over = True
         big_string = big_string + line
+
+if func_begun is false and func_name:
+    print("Could not find function", func_begun)
+    exit()
 
 if collapse_to_one_line:
     xxx = big_string.split("\n")
