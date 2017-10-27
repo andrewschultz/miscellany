@@ -27,6 +27,7 @@ my $dbbin  = "c:\\users\\andrew\\dropbox\\bins";
 my $dbweb  = "https://www.dropbox.com/home/bins";
 ##################options
 my %here;
+my $extractOnly       = 0;
 my $zipUp             = 0;
 my $triedSomething    = 0;
 my $version           = 0;
@@ -77,6 +78,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
     /^-?nx$/ && do { print "Executing no commands.\n"; $noExecute = 1; exit; };
+    /^-?eo$/ && do { $extractOnly = 1; $extractAfter = 1; $count++; next; };
     /^-?p$/ && do {
       print "Printing result of executed commands, if there are any.\n";
       $printExecute = 1;
@@ -216,19 +218,21 @@ sub readZupFile {
         if ( !$outFile ) {
           die("OutFile not defined. You need a line with out=X.ZIP in $_[0].");
         }
-        my $outLong = "c:/games/inform/zip/$outFile";
-        print "Writing to $outLong...\n";
-        die 'write error'
-          unless $zip->writeToFileNamed("c:/games/inform/zip/$outFile") ==
-          AZ_OK;
-        print "Writing successful.\n";
-        die("$outLong smaller than required $fileMinSize bytes.\n")
-          if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
-        die("$outLong larger than required $fileMaxSize bytes.\n")
-          if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
-        if ($openAfter) {
-          print "Opening...\n";
-          `$zipdir\\$outFile`;
+        unless ($extractOnly) {
+          my $outLong = "c:/games/inform/zip/$outFile";
+          print "Writing to $outLong...\n";
+          die 'write error'
+            unless $zip->writeToFileNamed("c:/games/inform/zip/$outFile") ==
+            AZ_OK;
+          print "Writing successful.\n";
+          die("$outLong smaller than required $fileMinSize bytes.\n")
+            if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
+          die("$outLong larger than required $fileMaxSize bytes.\n")
+            if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
+          if ($openAfter) {
+            print "Opening...\n";
+            `$zipdir\\$outFile`;
+          }
         }
         if ($extractAfter) {
           my $assem = "c:\\games\\inform\\assem\\";
@@ -427,6 +431,7 @@ USAGE: zupt.pl (project)
 -dl get dropbox link if available (overrides creating a zip)
 -dq/ds does a quick dropbox copy
 -[ol] open after
+-eo extract only
 -li lists all the project/outfile matches
 -p print command execution results
 -v view output zip file if already there
@@ -434,6 +439,7 @@ USAGE: zupt.pl (project)
 -nx execute nothing (overrides -x)
 -a = -x -db -dc -o
 EXAMPLE: zup.pl -dq -x 17
+EXAMPLE: zup.pl -eo 17
 EOT
   exit;
 }
