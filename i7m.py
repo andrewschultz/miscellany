@@ -6,6 +6,7 @@ import argparse
 big_string = ""
 iffy = False
 
+next_break_over = False
 went_over = False
 else_next_bad = False
 
@@ -17,6 +18,7 @@ launch_win_diff = False
 unix_endings = True
 collapse_to_one_line = False
 trivial_punctuation = False
+cut_off_immediately = False
 
 this_tabs = 0
 last_tabs = 0
@@ -105,6 +107,9 @@ func_ended = False
 with open(file_name) as file:
     for line in file:
         count = count + 1
+        if next_break_over and not re.search("[a-z]", line, re.IGNORECASE):
+            went_over = True
+            next_break_over = False
         if func_name:
             if func_ended or not func_begun:
                 if line.startswith(func_name):
@@ -122,7 +127,7 @@ with open(file_name) as file:
         if re.search("-\)", line):
             in_i6 = False
         if trivial_punctuation and not in_i6 and re.search("^[a-z].*;$", line, re.IGNORECASE):
-            print(count," trivial punctuation change:", line)
+            # print(count," trivial punctuation change:", line)
             line = re.sub(";$", ".", line)
             trivial_punctuation = trivial_punctuation + 1
         if count < min_fix_line:
@@ -140,12 +145,16 @@ with open(file_name) as file:
                 print("WARNING line", count, " (would be {:d})".format(count - cur_changes), "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
         else_next_bad = False
         if iffy:
+            print("Iffy check", count, line)
             this_tabs = leading_tabs(line)
             if (re.search("\t(decide |no;|decide |decide |yes;|continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\t(if|unless) ", line) and (this_tabs - last_tabs == 1):
+                print("Iffy pass", count, line)
                 l2 = re.sub("^\t+", "", line).strip()
                 last_line = re.sub(":+", ", " + l2, last_line)
                 big_string = big_string + last_line
                 cur_changes = cur_changes + 1
+                if cur_changes == max_changes and not cut_off_immediately:
+                    next_break_over = True
                 else_next_bad = True
                 any_changes_yet = True
             elif (this_tabs - last_tabs == 1) and re.search("\t(if|unless) ", line):
@@ -162,16 +171,16 @@ with open(file_name) as file:
         last_line = line
 #        if re.search("if action is iffy", line):
         if re.search("^\t+if ", line) and not re.search("(decide on [a-z0-9-]+|decide no|decide yes|instead)[;\.]", line):
-            if cur_changes < max_changes:
+            print(count, line)
+            if cur_changes < max_changes or next_break_over:
                 iffy = True
                 last_tabs = leading_tabs(line)
                 continue
-            elif cur_changes == max_changes:
+            elif cur_changes >= max_changes:
                 last_num = count
-                went_over = True
         big_string = big_string + line
 
-if func_begun is false and func_name:
+if func_begun is False and func_name:
     print("Could not find function", func_begun)
     exit()
 
