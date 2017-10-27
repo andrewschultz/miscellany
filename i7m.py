@@ -69,10 +69,22 @@ parser.add_argument('-a', '--abbrev', action='store', dest='file_abbrev', help='
 args = parser.parse_args()
 
 if args.file_abbrev:
-    file_name = file_hash[args.file_abbrev]
-    if not file_name:
-        print("Invalid file hash name.")
-        exit()
+    if args.file_abbrev in file_hash.keys():
+        file_name = file_hash[args.file_abbrev]
+    else:
+        poss_array = []
+        for x in file_hash.keys():
+            if args.file_abbrev in x:
+                poss_array.append(x)
+        if len(poss_array) == 0:
+            print("Invalid file hash. Available=", ', '.join(sorted(poss_array)))
+            exit()
+        elif len(poss_array) > 1:
+            print("Too many possibilities:", ', '.join(poss_array))
+            exit()
+        else:
+            print("Going with", poss_array[0], "as file hash.")
+            file_name = file_hash[poss_array[0]]
 
 if args.max_changes:
     max_changes = args.max_changes
