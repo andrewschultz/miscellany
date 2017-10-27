@@ -1,3 +1,4 @@
+from collections import defaultdict
 from shutil import copyfile
 import os
 import re
@@ -41,6 +42,15 @@ func_name = ''
 def leading_tabs(l):
     return len(l) - len(l.lstrip('\t'))
 
+file_hash = defaultdict(str)
+
+with open("c:/writing/scripts/i7m.txt") as file:
+    for line in file:
+        assign = line.strip().split("\t")
+        if file_hash[assign[0]]:
+            print(assign[0], 'shortcut already', file_hash[assign[0]], 'reassigned', assign[1])
+        file_hash[assign[0]] = assign[1]
+
 parser = argparse.ArgumentParser(description='semicolon to comma.', formatter_class=argparse.RawTextHelpFormatter)
 parser.add_argument('-m', '--max_change_num', action='store', dest='max_changes', help='maximum changes', type=int)
 parser.add_argument('-maxl', '--max_change_line', action='store', dest='max_fix_line', help='maximum line', type=int)
@@ -55,7 +65,14 @@ parser.add_argument('-s', '--save', action='store_true', dest='save_after', help
 parser.add_argument('-f', '--filename', action='store', dest='file_name', help='file name')
 parser.add_argument('-fu', '--funcname', action='store', dest='func_name', help='func name', type=str)
 parser.add_argument('-w', '--windows', action='store', dest='windows_endings', help='windows endings')
+parser.add_argument('-a', '--abbrev', action='store', dest='file_abbrev', help='file hash abbreviation')
 args = parser.parse_args()
+
+if args.file_abbrev:
+    file_name = file_hash[args.file_abbrev]
+    if not file_name:
+        print("Invalid file hash name.")
+        exit()
 
 if args.max_changes:
     max_changes = args.max_changes
@@ -108,6 +125,7 @@ with open(file_name) as file:
     for line in file:
         count = count + 1
         if next_break_over and not re.search("[a-z]", line, re.IGNORECASE):
+            last_num = count - 1
             went_over = True
             next_break_over = False
         if func_name:
@@ -145,10 +163,8 @@ with open(file_name) as file:
                 print("WARNING line", count, " (would be {:d})".format(count - cur_changes), "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
         else_next_bad = False
         if iffy:
-            print("Iffy check", count, line)
             this_tabs = leading_tabs(line)
             if (re.search("\t(decide |no;|decide |decide |yes;|continue the action|the rule succeeds)", line) or re.search("\t.*instead;( \[.*\])?", line)) and not re.search("\t(if|unless) ", line) and (this_tabs - last_tabs == 1):
-                print("Iffy pass", count, line)
                 l2 = re.sub("^\t+", "", line).strip()
                 last_line = re.sub(":+", ", " + l2, last_line)
                 big_string = big_string + last_line
@@ -171,7 +187,6 @@ with open(file_name) as file:
         last_line = line
 #        if re.search("if action is iffy", line):
         if re.search("^\t+if ", line) and not re.search("(decide on [a-z0-9-]+|decide no|decide yes|instead)[;\.]", line):
-            print(count, line)
             if cur_changes < max_changes or next_break_over:
                 iffy = True
                 last_tabs = leading_tabs(line)
