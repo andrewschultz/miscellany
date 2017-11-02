@@ -52,6 +52,9 @@ while ( $count <= $#ARGV ) {
       $launchAfter = ( $a =~ /l/ );
       $launchRaw   = ( $a =~ /r/ );
       $count++;
+      print
+"NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that."
+        if ( $a =~ /^-?r$/ );
       next;
     };
     /^-?s$/ && do {
@@ -128,10 +131,18 @@ if ( $updateOnly && defined( -M $outname ) ) {
       . ( ( -M $filename ) . " $filename | $outname " . ( -M $outname ) )
       . "\n";
   }
+
+# remember that -M $filename says days since last edit, so it's not a timestamp--then the > would be <
   if ( ( -M $filename > -M $outname ) && ( !$forceRunThrough ) ) {
-    print "$outname is already up to date. Run with -f to force things.\n";
-    launchIt();
-    exit;
+    if ( -M $outname > -M __FILE__ ) {
+      print
+"$outname was modified after $filename, but since the source was updated, we will regenerate it.\n";
+    }
+    else {
+      print "$outname is already up to date. Run with -f to force things.\n";
+      launchIt();
+      exit;
+    }
   }
   else {
     print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n";
@@ -190,6 +201,7 @@ while ( $a = <A> ) {
 
   if ( $a !~ /^[\?>]/ ) {
     $levels[$lastLev]++;
+    $a   = addBoldItalic($a);
     $otl = currentOutline(@levels);
     print B
 "<a href=\"#\" onclick=\"document.getElementById('$otl').style.display = 'block'; this.style.display = 'none'; return false;\">"
@@ -331,6 +343,28 @@ sub listAllOutput {
 sub launchIt {
   if ($launchAfter) { `$outname`; }
   if ($launchRaw)   { `$rawFile`; }
+}
+
+sub addBoldItalic {
+  my $temp = $_[0];
+  return $_[0] unless $temp =~ /[_\@]/;
+  my $ital = () = $temp =~ /_/g;
+  my $bold = () = $temp =~ /\@/g;
+  my $openTag = 0;
+
+  if ( ( $ital % 2 ) or ( $bold % 2 ) ) {
+    warn("Odd bold/italic, not converting line $. $_[0]");
+    return $_[0];
+  }
+  while ( $temp =~ /\@/ ) {
+    $temp =~ s/\@/"<" . ($openTag ? "\/" : "") . "b>"/e;
+    $openTag = !$openTag;
+  }
+  while ( $temp =~ /\_/ ) {
+    $temp =~ s/\_/"<" . ($openTag ? "\/" : "") . "i>"/e;
+    $openTag = !$openTag;
+  }
+  return $temp;
 }
 
 sub usage {
