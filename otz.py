@@ -9,7 +9,8 @@ errs_yet = defaultdict(str)
 
 specifics = defaultdict(dict)
 
-proj_read = "roiling"
+proj_read = ""
+default_project = ""
 otz = "c:/writing/scripts/otz.txt"
 
 file_dic = {}
@@ -76,8 +77,6 @@ if len(sys.argv) > 1:
     if proj_read == '?' or proj_read == '-?':
         show_projects()
         exit()
-else:
-    print("Using default", proj_read)
 
 with open(otz) as file:
     for line in file:
@@ -85,6 +84,13 @@ with open(otz) as file:
             continue
         if line.startswith(";"):
             break
+        if line.lower().startswith("default="):
+            temp = re.sub("default=", "", line.lower().strip(), re.IGNORECASE)
+            default_project = temp
+            if proj_read == '':
+                proj_read = default_project
+                print("Using default project", proj_read)
+            continue
         if line.lower().startswith("project="):
             reading_project = in_csv(re.sub("^project=", "", line.lower().strip(), re.IGNORECASE), proj_read)
             continue
@@ -121,6 +127,9 @@ with open(otz) as file:
         regex_dic[this_regex] = True
         incidents_dic[this_regex] = 0
         incident_ig[this_regex] = 0
+
+if proj_read == '' and default_project == '':
+    print("Need to define DEFAULT= in otz.txt or write in your project on the command line.")
 
 for x in file_dic.keys():
     check_old_matches(x)

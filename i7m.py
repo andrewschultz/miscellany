@@ -68,9 +68,20 @@ parser.add_argument('-w', '--windows', action='store', dest='windows_endings', h
 parser.add_argument('-a', '--abbrev', action='store', dest='file_abbrev', help='file hash abbreviation')
 args = parser.parse_args()
 
+if args.file_name:
+    file_name = args.file_name
+    if not os.path.exists(file_name):
+        print("No such file", file_name, "so searching for hash (use -a instead next time).")
+        if file_name in file_hash.keys():
+            args.file_abbrev = args.file_name
+        else:
+            print("No hash found. Bailing.")
+            exit()
+
 if args.file_abbrev:
     if args.file_abbrev in file_hash.keys():
         file_name = file_hash[args.file_abbrev]
+        print("Pulling hash name of", args.file_abbrev, ':', file_name)
     else:
         poss_array = []
         for x in file_hash.keys():
@@ -88,9 +99,6 @@ if args.file_abbrev:
 
 if args.max_changes:
     max_changes = args.max_changes
-
-if args.file_name:
-    file_name = args.file_name
 
 if args.trivial_punctuation:
     trivial_punctuation = args.trivial_punctuation
