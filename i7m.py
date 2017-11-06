@@ -206,7 +206,7 @@ with open(file_name) as file:
         iffy = False
         last_line = line
 #        if re.search("if action is iffy", line):
-        if re.search("^\t+if ", line) and not re.search("(decide on [a-z0-9-]+|decide no|decide yes|instead)[;\.]", line):
+        if re.search("^\t+if ", line) and not re.search("(decide on [a-z0-9-]+|decide no|decide yes|instead)[;\.]", line) and ", case insensitively" not in line:
             if cur_changes < max_changes or next_break_over:
                 iffy = True
                 last_tabs = leading_tabs(line)
