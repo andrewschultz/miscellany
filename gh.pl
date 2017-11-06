@@ -148,7 +148,7 @@ while ( $count <= $#ARGV ) {
     /^-?rts$/i && do { $removeTrailingSpace = 1; $count++; next; };
     /^-?wsr$/i && do { $whiteSpaceRun       = 1; $count++; next; };
     /^-?bkc$/i && do { $compareBackwards    = 1; $count++; next; };
-    /^-?igt$/i && do { $ignoreTrizbort      = 0; $count++; next; };
+    /^-?igt$/i && do { $ignoreTrizbort      = 1; $count++; next; };
     /^-?(sw|ws)(t)?/i && ( $arg ne 'sw' ) && do {
 
       readReplace();
@@ -1123,7 +1123,7 @@ sub trizCheck {
     );
     if ( $_[2] ) { print "Recommended command: $_[2]\n"; }
     if ( $_[1] && !$ignoreTrizbort ) {
-      die("Bombing out. Set -it to ignore trizbort fails.");
+      die("Bombing out. Set -igt to ignore trizbort fails.");
     }
     push( @trizFail, $_[0] );
   }

@@ -53,7 +53,7 @@ while ( $count <= $#ARGV ) {
       $launchRaw   = ( $a =~ /r/ );
       $count++;
       print
-"NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that."
+"NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that.\n"
         if ( $a =~ /^-?r$/ );
       next;
     };
