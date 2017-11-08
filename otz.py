@@ -22,10 +22,14 @@ ignore_dic = {}
 
 ignore_dic["##regignore"] = True
 
+current_section = ""
+
 only_warnings_or_errors = False
 only_errors = True
 
 reading_project = False
+
+read_random_tables = False
 
 def show_projects():
     projs = []
@@ -47,6 +51,11 @@ def check_old_matches(x):
     with open(x) as source_file:
         for line in source_file:
             line_count = line_count + 1
+            l2 = line.strip()
+            if not read_random_tables and l2.startswith("\"") and ("\t" not in l2 or l2.endswith("false") or l2.endswith("true")):
+                continue # fix for roiling/shuffling where we want to read the table of megachatter
+            if not l2:
+                continue
             for r in regex_dic.keys():
                 if re.search(r, line, re.IGNORECASE):
                     ignore = False
@@ -72,11 +81,21 @@ def in_csv(a, b):
 
 # main program
 
+read_sections = False
+
 if len(sys.argv) > 1:
-    proj_read = sys.argv[1]
-    if proj_read == '?' or proj_read == '-?':
-        show_projects()
-        exit()
+    count = 1
+    while count < len(sys.argv):
+        arg = sys.argv[count]
+        count = count + 1
+        if proj_read == '?' or proj_read == '-?':
+            show_projects()
+            exit()
+        if arg.startswith("s="):
+            sections = re.sub("^s=", "", arg).split(',')
+            read_sections = True
+        else:
+            proj_read = sys.argv[1]
 
 with open(otz) as file:
     for line in file:
@@ -102,6 +121,11 @@ with open(otz) as file:
         if line.lower().startswith("f="):
             temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
             check_old_matches(temp)
+            continue
+        if line.startswith("sec:"):
+            current_section = re.sub("^sec:", "", line.strip().lower())
+            continue
+        if read_sections and current_section not in sections:
             continue
         if line.startswith("--"):
             file_dic.pop(re.sub("^--", "", line.strip()), None)
