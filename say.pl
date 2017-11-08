@@ -4,18 +4,22 @@
 #maybe a template later
 #
 
+# todo: sort by what appears when
+# recursion
+
+use lib "c:/writing/scripts";
+use i7;
 use strict;
 use warnings;
 
+my @sources;
+
 my %init, my %said, my %prefix, my %unused, my %fiLoc;
 my %includeHash;
+my %needCheckHash;
+my $fileCount = 1;    # 1 = main story.ni
 
 my $extDir = "c:/program files (x86)/Inform 7/Inform7/Extensions";
-
-my @defAry = (
-  "shuffling",     "roiling",       "compound", "slicker-city",
-  "buck-the-past", "threediopolis", "ugly-oafs"
-);
 
 if ( $#ARGV == -1 ) {
   if ( !-f "story.ni" ) {
@@ -23,60 +27,46 @@ if ( $#ARGV == -1 ) {
     usage();
     exit;
   }
-  print "Searching for story.ni in current directory.\n";
-  searchOne( "story.ni", 1 );
+  print "Using story.ni in current directory.\n";
+  @sources = ("story.ni");
+}
+else {
+  for (@ARGV) {
+    my $temp = sourceFile($_);
+    die("No $temp") if ( !-f $temp );
+    push( @sources, $temp );
+  }
+}
+
+for my $story (@sources) {
+  $fileCount             = 1;
+  %includeHash           = ();
+  %needCheckHash         = ();
+  $includeHash{$story}   = 1;
+  $needCheckHash{$story} = 1;
+
+  # searchOne( "story.ni", 1 );
 
   my $i;
 
-  for $i ( keys %includeHash ) {
-    searchOne( $i, 1 );
+  my $iterations = 0;
+
+  while ( ( scalar keys %needCheckHash > 0 ) && ( $iterations < 1 ) ) {
+    $iterations++;
+
+# print "Iteration $iterations\n";
+# print(join("\n", sort { $needCheckHash{$a} <=> $needCheckHash{$b} } keys %needCheckHash) . "\n");
+    for $i ( sort { $needCheckHash{$a} <=> $needCheckHash{$b} }
+      keys %needCheckHash )
+    {
+      searchOne( $i, 1 );
+    }
   }
 
   printResults();
 }
 
-while ( $#ARGV > -1 ) {
-  if ( $ARGV[0] =~ /,/ ) {
-    my @ary = split( /,/, $ARGV[0] );
-    for my $dir (@ary) { searchSay($dir); }
-  }
-  elsif ( $ARGV[0] eq "-a" ) {
-    for my $dir (@defAry) { searchSay($dir); }
-  }
-  elsif ( $ARGV[0] eq "?" ) {
-    usage();
-  }
-  else {
-    searchSay( $ARGV[0] );
-  }
-  shift(@ARGV);
-}
-
-#############################################
-#searchSay
-#determines files to look through
-#
-
-sub searchSay {
-  %init   = ();
-  %said   = ();
-  %prefix = ();
-  %unused = ();
-  print "Trying $_[0]\n";
-  if ( ( $_[0] eq "roiling" ) || ( $_[0] eq "sa" ) ) {
-    searchOne( "c:/games/inform/$_[0].inform/Source/story.ni", 1 );
-    searchOne(
-"c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/$_[0] Random Text.i7x",
-      2
-    );
-    searchOne(
-"c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/$_[0] Nudges.i7x",
-      3
-    );
-  }
-  else { searchOne( "c:/games/inform/$_[0].inform/Source/story.ni", "" ); }
-  printResults();
-}
+# functions below
 
 ###############################################
 #searchOne
@@ -95,6 +85,10 @@ sub searchOne {
 
   # print "SearchOne args: $#_ prefix = $prefix\n";
 
+  $needCheckHash{ $_[0] } = 0;
+
+  # print("Removing $_[0] from newCheckHash.\n");
+
   ( my $shortfile = $_[0] ) =~ s/.*[\\\/]//g;
 
   while ( my $a = <A> ) {
@@ -106,8 +100,16 @@ sub searchOne {
       $newFile =~ s/(.*) +by *(.*)/$2\/$1.i7x/;
       $newFile = "$extDir/$newFile";
       die("Can't find $newFile included file") if ( !-f $newFile );
-      warn("Duplicate include of $newFile\n")  if $includeHash{$newFile};
-      $includeHash{$newFile} = 1;
+      if ( $includeHash{$newFile} ) {
+        warn("Duplicate include of $newFile\n");
+      }
+      else {
+        $fileCount++;
+        $includeHash{$newFile} = $fileCount;
+
+        # print("Adding $newFile to newCheckHash.\n");
+        $needCheckHash{$newFile} = $fileCount;
+      }
     }
     if ( $a =~ /^to say/ ) {
       my $b = $a;
@@ -115,6 +117,7 @@ sub searchOne {
       $b =~ s/^to say //g;
       $b =~ s/ of.*//g;
       $b =~ s/:.*//g;
+      $b =~ s/, say.*//g;
       if ( $a =~ /\[unused[^\]]*\]/ ) { $unused{$b} = 1; }
       if ( $init{$b} ) {
         $dup++;
