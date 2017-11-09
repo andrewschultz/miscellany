@@ -19,6 +19,7 @@ incidents_dic = {}
 incident_ig = {}
 abbrevs = {}
 ignore_dic = {}
+match_dic = {}
 
 ignore_dic["##regignore"] = True
 
@@ -51,11 +52,29 @@ def check_old_matches(x):
     with open(x) as source_file:
         for line in source_file:
             line_count = line_count + 1
-            l2 = line.strip()
+            l2 = line.strip().lower()
             if not read_random_tables and l2.startswith("\"") and ("\t" not in l2 or l2.endswith("false") or l2.endswith("true")):
                 continue # fix for roiling/shuffling where we want to read the table of megachatter
             if not l2:
                 continue
+            for m in match_dic.keys():
+                if m in l2:
+                    ignore = False
+                    for id in ignore_dic.keys():
+                        if re.search(id, line, re.IGNORECASE):
+                            ignore = True
+                    if specifics[m]:
+                        for j in specifics[m].keys():
+                            if re.search(j, line, re.IGNORECASE):
+                                ignore = True
+                    if ignore is False:
+                        incidents_dic[m] = incidents_dic[m] + 1
+                        if not errs_yet[x]:
+                            print("======", x, "======")
+                            errs_yet[x] = 1
+                        print("-->", line_count, (abbrevs[m] if r in abbrevs.keys() else m) + ": " + line.strip())
+                    else:
+                        incident_ig[r] = incident_ig[r] + 1
             for r in regex_dic.keys():
                 if re.search(r, line, re.IGNORECASE):
                     ignore = False
@@ -91,8 +110,8 @@ if len(sys.argv) > 1:
         if proj_read == '?' or proj_read == '-?':
             show_projects()
             exit()
-        if arg.startswith("s="):
-            sections = re.sub("^s=", "", arg).split(',')
+        if arg.startswith("s=") or arg.startswith("sec="):
+            sections = re.sub("^s(ec)?=", "", arg).split(',')
             read_sections = True
         else:
             proj_read = sys.argv[1]
@@ -103,6 +122,7 @@ with open(otz) as file:
             continue
         if line.startswith(";"):
             break
+        l2 = line.lower().strip()
         if line.lower().startswith("default="):
             temp = re.sub("default=", "", line.lower().strip(), re.IGNORECASE)
             default_project = temp
@@ -133,6 +153,15 @@ with open(otz) as file:
         if line.startswith("i:"):
             ignore_dic[re.sub("i:", "", line.strip())] = True
             continue
+        if line.startswith("m:"):
+            tr = re.sub("m:", "", line.strip())
+            match_dic[tr] = True
+            incidents_dic[tr] = 0
+            incident_ig[tr] = 0
+            continue
+        if line.startswith("r:"):
+            regex_dic[re.sub("r:", "", line.strip())] = True
+            continue
         if line.startswith("s:"):
             specifics[this_regex][re.sub("s:", "", line.strip())] = True
             continue
@@ -147,7 +176,7 @@ with open(otz) as file:
         else:
             this_regex = line
             regex_dic[line] = True
-        print("Added",line)
+        print("Added", line)
         regex_dic[this_regex] = True
         incidents_dic[this_regex] = 0
         incident_ig[this_regex] = 0
