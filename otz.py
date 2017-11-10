@@ -9,6 +9,8 @@ errs_yet = defaultdict(str)
 
 specifics = defaultdict(dict)
 
+searches = defaultdict(int)
+
 proj_read = ""
 default_project = ""
 otz = "c:/writing/scripts/otz.txt"
@@ -27,6 +29,8 @@ current_section = ""
 
 only_warnings_or_errors = False
 only_errors = True
+
+got_any_section = False
 
 reading_project = False
 
@@ -101,6 +105,7 @@ def in_csv(a, b):
 # main program
 
 read_sections = False
+print_sections = False
 
 if len(sys.argv) > 1:
     count = 1
@@ -110,6 +115,11 @@ if len(sys.argv) > 1:
         if proj_read == '?' or proj_read == '-?':
             show_projects()
             exit()
+        if arg.startswith("as"):
+            sections = [ "" ]
+            read_sections = True
+            print_sections = True
+            continue
         if arg.startswith("s=") or arg.startswith("sec="):
             sections = re.sub("^s(ec)?=", "", arg).split(',')
             read_sections = True
@@ -142,10 +152,14 @@ with open(otz) as file:
             temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
             check_old_matches(temp)
             continue
-        if line.startswith("sec:"):
-            current_section = re.sub("^sec:", "", line.strip().lower())
+        if line.startswith("sec:") or line.startswith("sec="):
+            current_section = re.sub("^sec.", "", line.strip().lower())
+            if current_section in sections:
+                got_any_section = True
             continue
         if read_sections and current_section not in sections:
+            if not line.startswith("--") and not line.startswith("i:"):
+                searches[current_section] = searches[current_section] + 1
             continue
         if line.startswith("--"):
             file_dic.pop(re.sub("^--", "", line.strip()), None)
@@ -181,6 +195,10 @@ with open(otz) as file:
         incidents_dic[this_regex] = 0
         incident_ig[this_regex] = 0
 
+if print_sections:
+    for x in sorted(searches.keys(), key=searches.get):
+        print("Section", x, "has", searches[x], "keys.")
+
 if proj_read == '' and default_project == '':
     print("Need to define DEFAULT= in otz.txt or write in your project on the command line.")
 
@@ -195,6 +213,9 @@ elif only_errors:
     my_list = [i for i in incidents_dic.keys() if incidents_dic[i]]
 else:
     my_list = [i for i in incidents_dic.keys()]
+
+if len(sections) > 0 and not got_any_section:
+    print ('Warning: No text found for', 'section' + ['', 's'][len(sections)> 1], ', '.join(sections))
 
 if len(my_list) == 0:
     print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
