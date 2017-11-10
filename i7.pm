@@ -44,9 +44,12 @@ our %i7x = ( "12" => "shuffling",
   "e14" => "Candy Rush Saga",
   "e15" => "heezy-park",
   "e16" => "checkered-haunting",
+  "e17a" => "uxmulbrufyuz",
+  "e17b" => "vivid-mimic",
   "ss" => "seeker-status",
   "17" => "cube-cavern",
-  "cc" => "cube-cavern"
+  "cc" => "cube-cavern",
+  "mo" => "molesworth"
 );
 
 our %i7xr = ( "shuffling" => "sa",

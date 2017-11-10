@@ -108,7 +108,7 @@ my $thisLog = "";
 my $cmdBase = "git log";
 my $since =
   $daysAgo
-  ? sprintf( "--since=\"%d days ago\" --until=\"%d days ago\"",
+  ? sprintf( "--since=\"%d days ago 00:00\" --until=\"%d days ago 00:00\"",
   $daysAgo, $daysAgo - 1 )
   : "--since=\"12 am\"";    #yes, git log accepts "1 days ago" which is nice
 
