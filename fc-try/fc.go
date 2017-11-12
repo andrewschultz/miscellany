@@ -14,6 +14,9 @@ import "bufio"
 
 func toCard(j int ) string {
 
+  if j == -1 {
+    return "--  "
+  }
   ret := card_str[j % 13]
   if j%13 != 9 {
   ret = " " + ret
@@ -89,8 +92,14 @@ func main() {
 	  }
 	  fmt.Println()
 	}
+	fmt.Print("Foundation:")
 	for i := 0; i < 4; i ++ {
 	  fmt.Print(" ", foundation[i], suit_str[i])
+	}
+	fmt.Println()
+	fmt.Print("Spares:")
+	for i := 0; i < 4; i ++ {
+	  fmt.Print(toCard(spares[i]))
 	}
 	fmt.Println()
 
