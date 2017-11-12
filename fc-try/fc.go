@@ -27,12 +27,21 @@ func shiftCols(i int, j int) {
   if i > 7 || j > 7 { fmt.Println("Must be < 8.")
   return
   }
-  fmt.Println(0, i, len(cards[i]) - 1, j, len(cards[j]) - 1,
-    cards[i][len(cards[i])-1], toCard(cards[i][len(cards[i])-1]),
-	cards[j][len(cards[j])-1], toCard(cards[j][len(cards[j])-1]))
-  if canMove(cards[i][len(cards[i])-1], cards[j][len(cards[j])-1]) { 
-    fmt.Println("Yay! Can move.")
+  index := len(cards[i]) - 1
+  cardsMove := 1
+  keepgoing := true
+  
+  for keepgoing {
+    if canMove(cards[i][len(cards[i])-1], cards[j][len(cards[j])-1]) { 
+	  cards[j] = append(cards[j], (cards[i][len(cards[i])-cardsMove:])...)
+	  cards[i] = cards[i][:len(cards[i])-cardsMove]	
+	  return
+	}
+	index = index - 1
+	cardsMove = cardsMove + 1
+	keepgoing = (index > 0) && (canMove(cards[i][index], cards[i][index-1]))
   }
+  fmt.Println("Those don't match up.")
 }
 
 func canMove (i int, j int) bool {
