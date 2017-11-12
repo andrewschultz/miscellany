@@ -1,16 +1,46 @@
+// go run fc.go
+
 package main
 
 import "fmt"
+import "strings"
 import "math/rand"
 import "os"
 import "bufio"
+import "strconv"
 
     var done bool = false
     var cards = [][]int{}
     var foundation = []int{ 0, 0, 0, 0 }
     var spares = []int{ -1, -1, -1 ,-1 }
-	var suit_str = []string{ "C", "D", "S", "H" }
+	var suit_str = []string{ "C", "d", "S", "h" }
 	var card_str = []string{ "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" }
+
+func shiftCols(i int, j int) {
+  if j == i {
+    fmt.Println("Can't move row onto itself")
+	return
+  }
+  if i < 0 || j < 0 { fmt.Println("Must be > 0.")
+  return
+  }
+  if i > 7 || j > 7 { fmt.Println("Must be < 8.")
+  return
+  }
+  fmt.Println(0, i, len(cards[i]) - 1, j, len(cards[j]) - 1,
+    cards[i][len(cards[i])-1], toCard(cards[i][len(cards[i])-1]),
+	cards[j][len(cards[j])-1], toCard(cards[j][len(cards[j])-1]))
+  if canMove(cards[i][len(cards[i])-1], cards[j][len(cards[j])-1]) { 
+    fmt.Println("Yay! Can move.")
+  }
+}
+
+func canMove (i int, j int) bool {
+  if i % 13 == 12 { return false }
+  if j % 13 - i % 13 != 1 { return false }
+  fmt.Println(j/13, i/13, (j/13+i/13), (j/13+i/13) % 2)
+  return ((j / 13) + (i / 13)) % 2 == 1
+}
 
 func toCard(j int ) string {
 
@@ -72,18 +102,12 @@ func main() {
 	for i:= 0; i < 52; i++ {
 	cards[i%8] = append(cards[i%8], list[i])
 	
-	fmt.Println(toCard(i))
 	}
 
 	for done == false {
 
-	for i:= 0; i < 8; i++ {
-	fmt.Println(cards[i])
-	fmt.Println(len(cards[i]))
-	}
-	
-	  for j := 0; j < 8; j++ {
-	for i := 0; i < maxCol(cards); i++ {
+    for j := 0; j < maxCol(cards); j++ {
+	for i := 0; i < 8; i++ {
 	    if j >= len(cards[i]) {
 		  fmt.Print("    ")
 		} else {
@@ -107,7 +131,15 @@ func main() {
 	
     fmt.Print("Enter text: ")
     text, _ := reader.ReadString('\n')
-    fmt.Print(text)
+	
+	i, err := strconv.Atoi(strings.TrimSpace(text))
+
+    if err == nil && i <= 99 && i >= 10 {
+	  shiftCols(i / 10 - 1, i % 10 - 1)
+	} else {
+	fmt.Println(err)
+	}
+
 	checkAutoFound()
 	}
 
