@@ -31,6 +31,7 @@ win_file = "fcwins.txt"
 time_file = "fctime.txt"
 lock_file = "fclock.txt"
 wait_file = "fcwait.txt"
+timelist_file = "fctimelist.txt"
 
 on_off = ['off', 'on']
 
@@ -752,7 +753,7 @@ def lock_and_bail():
 def check_total_per_day():
     global per_period
     timespan = 86400
-    time_list = "fctimelist.txt"
+    time_list = timelist_file
     cur_time = int(time.time())
     if not os.path.isfile(time_list):
         print('Need to create file', time_list)
@@ -967,6 +968,14 @@ def check_win():
     check_winning()
 
 
+def print_and_bail_on_exc():
+    global start_time
+    cur_time = time.time()
+    time_taken = cur_time - start_time
+    print("{:.2f} seconds taken this game before program break.".format(time_taken))
+    exit()
+
+
 def init_cards():
     global elements
     x = list(range(cheat_index + 1, 14)) + list(range(cheat_index + 14, 27)) + list(
@@ -1058,10 +1067,10 @@ def check_winning():
                 (len(cmd_no_meta), len(cmd_list), len(move_list))).lower()
         except KeyboardInterrupt:
             print("\nCheaty cheaty. You should just quit instead.")
-            exit()
+            print_and_bail_on_exc()
         except Exception:
             print("\nYou probably made a keyboard interrupt, but if it was something else, I caught that, too.")
-            exit()
+            print_and_bail_on_exc()
         finish = re.sub(r'^ *', '', finish)
         if len(finish) > 0:
             if finish[0] == 'n' or finish[0] == 'q':
@@ -1725,10 +1734,10 @@ def read_cmd(this_cmd):
             name = input("Move:")
         except KeyboardInterrupt:
             print("\nCheaty cheaty. You should just quit instead.")
-            exit()
+            print_and_bail_on_exc()
         except Exception:
             print("\nYou probably made a keyboard interrupt, but if it was something else, I caught that, too.")
-            exit()
+            print_and_bail_on_exc()
         name = name.strip()
         if this_cmd == 't':
             cur_time = time.time()
@@ -2394,9 +2403,9 @@ if annoying_nudge:
         print("Type I am wasting time, or you can't play.")
         exit()
 
-fctimedelt = time.time() - os.path.getmtime("fctimelist.txt")
+fctimedelt = time.time() - os.path.getmtime(timelist_file)
 if fctimedelt < cheat_delta:
-    print(int(fctimedelt), "is less than the cheat-delta of", cheat_delta)
+    print(int(fctimedelt), "is less than the cheat-delta of", cheat_delta, "for the time play listing file", timelist_file)
     print("I'm going to make you wait.")
     exit()
 
