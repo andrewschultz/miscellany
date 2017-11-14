@@ -107,12 +107,17 @@ def in_csv(a, b):
 read_sections = False
 print_sections = False
 
+sections = [ ]
+
+section_check = defaultdict(bool)
+full_name = defaultdict(str)
+
 if len(sys.argv) > 1:
     count = 1
     while count < len(sys.argv):
         arg = sys.argv[count]
         count = count + 1
-        if proj_read == '?' or proj_read == '-?':
+        if arg == '?' or arg == '-?':
             show_projects()
             exit()
         if arg.startswith("as"):
@@ -123,8 +128,11 @@ if len(sys.argv) > 1:
         if arg.startswith("s=") or arg.startswith("sec="):
             sections = re.sub("^s(ec)?=", "", arg).split(',')
             read_sections = True
+            for s in sections:
+                section_check[sections[0]] = False
         else:
-            proj_read = sys.argv[1]
+            proj_read = arg
+            print("Going for project", proj_read)
 
 with open(otz) as file:
     for line in file:
@@ -154,8 +162,16 @@ with open(otz) as file:
             continue
         if line.startswith("sec:") or line.startswith("sec="):
             current_section = re.sub("^sec.", "", line.strip().lower())
-            if current_section in sections:
-                got_any_section = True
+            loc_section_names = current_section.split(",")
+            any_section_this_line = ""
+            for a in loc_section_names:
+                if a in sections:
+                    print("Found section", a)
+                    if any_section_this_line:
+                        print("WARNING accessed a section twice", any_section_this_line, "=", a)
+                    section_check.pop(a)
+                    got_any_section = True
+                    any_section_this_line = a
             continue
         if read_sections and current_section not in sections:
             if not line.startswith("--") and not line.startswith("i:"):
@@ -214,11 +230,17 @@ elif only_errors:
 else:
     my_list = [i for i in incidents_dic.keys()]
 
+for s in section_check.keys():
+    print ("WARNING Didn't find section", s)
+
 if len(sections) > 0 and not got_any_section:
     print ('Warning: No text found for', 'section' + ['', 's'][len(sections)> 1], ', '.join(sections))
 
 if len(my_list) == 0:
-    print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
+    if got_any_section == False and read_sections == True:
+        print("No incidents, but I might not have read anything. Check what sections you wrote in.")
+    else:
+        print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
 else:
     print("INCIDENTS (from need most changing to need least):")
     for x in sorted(my_list, key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):

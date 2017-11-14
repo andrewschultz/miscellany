@@ -74,7 +74,7 @@ deliberate_nuisance_rows = 3
 deliberate_nuisance_increase = 2
 # this can't be toggled in game but you can beforehand
 annoying_nudge = True
-nag_delay = 86400  # set this to zero if you don't want to restrict the games you can play
+nag_delay = 7200  # set this to zero if you don't want to restrict the games you can play
 min_delay = 30000  # if we can cheat one time
 stupid_wait = 0 # delay variable
 max_delay = 0
@@ -597,6 +597,9 @@ def read_time_file():
 
 
 def write_time_file():
+    print("OK, if you want, you can hit ctrl-c to keep your streak going in the next 5 seconds.")
+    time.sleep(5)
+    print("Starting time file rewrite.")
     os.system("attrib -r " + time_file)
     if not config_time.has_section('Section1'):
         config_time.add_section("Section1")
@@ -803,9 +806,11 @@ def init_side(in_game_reset):
     global start_time
     global last_reset
     highlight = 0
+    hard_limit_per_day = False
     if not in_undo:
         if not in_game_reset:
-            check_total_per_day();
+            if hard_limit_per_day:
+                check_total_per_day();
         last_reset = time.time()
         if in_game_reset != 1:
             start_time = last_reset
