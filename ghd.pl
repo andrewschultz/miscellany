@@ -168,7 +168,7 @@ for my $k ( sort keys %repoSum ) {
     }
     else {
       print "\n*************************SEE $k today ("
-        . ( join( ", ", @{ $siteArray{"newproj"} } ) ) . ")\n\n";
+        . ( join( ", ", @{ $siteArray{$k} } ) ) . ")\n\n";
     }
   }
   $overallSum += $repoSum{$k} ? $repoSum{$k} - 1 : 0;

@@ -80,6 +80,12 @@ to say i:
 to say b:
 	say "[bold type]";
 
+to say fw:
+	say "[fixed letter spacing]"
+
+to say vw:
+	say "[variable letter spacing]"
+
 to say on-off of (t - a truth state):
 	say "[if t is true]on[else]off[end if]";
 
@@ -129,7 +135,7 @@ carry out screening:
 		now screenread is false;
 	else:
 		now screenread is true;
-	say "Screen reader support is now [on-off of screenread].";		
+	say "Screen reader support is now [on-off of screenread].";
 	the rule succeeds;
 
 chapter banishing
@@ -250,20 +256,20 @@ definition: a direction (called thedir) is planar:
 	decide no;
 
 chapter basic consents
-	
+
 to decide whether the player test-consents:
 	if debug-state is true:
 		say "[line break]> ";
 	if the player consents:
 		decide yes;
 	decide no;
-		
+
 to decide whether the player yes-consents:
 	(- YesOrNoExt(1) -).
 
 to decide whether the player no-consents:
 	(- YesOrNoExt(0) -).
-	
+
 to decide whether the player switch-consents:
 	(- YesOrNoDebugForce( (+ debug-auto-yes +) ) -)
 

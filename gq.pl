@@ -67,6 +67,7 @@ my $getClipboard      = 0;
 my $zapBrackets       = 0;
 my $launchFirstSource = 0;
 my $forceNum          = 1;
+my $ignoreRand        = 0;
 
 if    ( $pwd =~ /oafs/ )           { @runs = ("oafs"); }
 elsif ( $pwd =~ /(threed|fourd)/ ) { @runs = ("opo"); }
@@ -124,6 +125,7 @@ while ( $count <= $#ARGV ) {
     /^-?p$/  && do { $headersToo  = 1; $count++; next; };
     /^-?nt$/ && do { $printTabbed = 0; $count++; next; };
     /^-?w$/  && do { $dontWant    = 1; $count++; next; };
+    /^-?ir$/ && do { $ignoreRand  = 1; $count++; next; };
     /^-?nd$/ && do { newDefault($b); $count++; next; };
     /^-?#$/    && do { $forceNum      = 1; $count++; next; };
     / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
@@ -446,7 +448,7 @@ sub processOneFile {
       if ( !$alwaysImportant ) { $inImportant = 0; $thisImportant = ""; }
     }
     my $crom = cromu($a);
-    if ( $inImportant && $crom ) {
+    if ( $inImportant && $crom && ( !$inTable || !$ignoreRand ) ) {
       my $tempString = "";
       my $sbl        = shouldBeLast($a);
       chomp($a);
@@ -599,7 +601,10 @@ sub processStory {
 sub isPrintable {
   if ( ($maxOverallFind) && ( $maxOverallFind <= $totalFind ) ) { return 0; }
   if ( !$onlyTables ) { return 1; }
-  if ( ($onlyRand) && ($thisTable) && ($blurby) && tabCheck($a) ) { return 1; }
+  if ( ($thisTable) && ($blurby) && tabCheck($a) ) {
+    return 1 if $onlyRand;
+    return 0 if $ignoreRand;
+  }
   if ( tabCheck($a) && ($thisTable) && ( !$onlyRand ) ) { return 1; }
   return 0;
 }
