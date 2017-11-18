@@ -74,8 +74,8 @@ deliberate_nuisance_rows = 3
 deliberate_nuisance_increase = 2
 # this can't be toggled in game but you can beforehand
 annoying_nudge = True
-nag_delay = 7200  # set this to zero if you don't want to restrict the games you can play
-min_delay = 30000  # if we can cheat one time
+nag_delay = 3600  # set this to zero if you don't want to restrict the games you can play
+min_delay = 3600  # if we can cheat one time
 stupid_wait = 0 # delay variable
 max_delay = 0
 cur_games = 0
@@ -539,7 +539,7 @@ def parse_cmd_line():
 def read_time_file():
     global nag_delay
     global max_delay
-    last_time = modulus = remainder = 0
+    last_time_minor = last_time = modulus = remainder = 0
     if os.access(time_file, os.W_OK):
         print("Time file should not have write access outside of the game. attrib +R " + time_file +
               " or chmod 333 to get things going.")
@@ -566,15 +566,25 @@ def read_time_file():
         print("Time file needs max_delay.")
         exit()
     try:
+        last_time_minor = config_time.getint('Section1', 'last_time_minor')
+    except configparser.NoOptionError:
+        print("Time file needs last_time_minor.")
+        exit()
+    try:
         last_time = config_time.getint('Section1', 'last_time')
     except configparser.NoOptionError:
         print("Time file needs last_time.")
         exit()
+    try:
+        max_minor_delay = config_time.getint('Section1', 'max_minor_delay')
+    except configparser.NoOptionError:
+        print("Time file needs max_minor_delay.")
+        exit()
     cur_time = time.time()
     global delta
     delta = int(cur_time - last_time)
-    if delta < nag_delay:
-        print('Only', str(delta), 'seconds elapsed of', str(nag_delay) + '.')
+    if cur_time - last_time_minor < min_delay:
+        print('Only', str(int(cur_time - last_time_minor)), 'seconds elapsed of', str(min_delay) + '.')
         exit()
     if delta > 90000000:
         print("Save file probably edited to start playing a bit early. I'm not going to judge.")
@@ -583,6 +593,9 @@ def read_time_file():
         max_delay = delta
     else:
         print('Delay', delta, 'did not exceed record of', max_delay)
+    delta = int(cur_time - last_time_minor)
+    print(delta, 'Exceeded last minor delay of' if (delta > max_minor_delay) else 'not as much as best of', max_minor_delay)
+    update_time_at_start(max(delta,max_minor_delay), int(cur_time))
     if last_time % modulus != remainder:
         print("Save file is corrupted. If you need to reset it, choose a modulus of 125000 and do things manually.")
         print(last_time, modulus, remainder, last_time % modulus)
@@ -595,6 +608,21 @@ def read_time_file():
         exit()
     return
 
+def update_time_at_start(d, c_t):
+    os.system("attrib -r " + time_file)
+    big_string = ""
+    with open(time_file) as file:
+        for line in file:
+            if line.startswith("max_minor_delay"):
+                big_string = big_string + "max_minor_delay = {:d}\n".format(d)
+            elif line.startswith("last_time_minor"):
+                big_string = big_string + "last_time_minor = {:d}\n".format(c_t)
+            else:
+                big_string = big_string + line
+    f = open(time_file, "w")
+    f.write(big_string)
+    f.close()
+    os.system("attrib +r " + time_file)
 
 def write_time_file():
     print("OK, if you want, you can hit ctrl-c to keep your streak going in the next 5 seconds.")
