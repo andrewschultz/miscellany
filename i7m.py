@@ -271,8 +271,11 @@ f.write(big_string)
 f.close()
 
 if launch_win_diff:
-    os.system("wm \"" + file_name_bak + "\" \"" + file_name + "\"")
-    print("Running diffs.")
+    if cur_changes == 0:
+        print("Not launching diffs because there were no changes.")
+    else:
+        os.system("wm \"" + file_name_bak + "\" \"" + file_name + "\"")
+        print("Running diffs.")
 
 if copy_over:
     print("Copying file over.")

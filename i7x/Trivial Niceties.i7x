@@ -98,13 +98,11 @@ to say 2da: [this is so people with screen readers won't be annoyed by dashes]
 	say "[unless screenread is true]--[end if]";
 
 to say equal-banner of (nu - a number):
-	if screenread is true:
-		continue the action;
+	if screenread is true, continue the action;
 	let nu2 be nu;
 	if nu2 > 80:
 		now nu2 is 80;
-	if nu2 < 0:
-		continue the action;
+	if nu2 < 0, continue the action;
 	repeat with nu3 running from 1 to nu2:
 		say "=";
 
@@ -188,8 +186,7 @@ to decide whether the player dir-consents:
 	if debug-state is true:
 		if yn-auto is 1, decide yes;
 		if yn-auto is -1, decide no;
-	if the player consents:
-		decide yes;
+	if the player consents, decide yes;
 	decide no;
 
 chapter scling
@@ -229,10 +226,8 @@ understand the command "au" as something new.
 understand "au [number]" as auing.
 
 carry out auing:
-	if number understood > 1 or number understood < -1:
-		say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
-	if number understood is yn-auto:
-		say "It's already set to [auto-set]." instead;
+	if number understood > 1 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
+	if number understood is yn-auto, say "It's already set to [auto-set]." instead;
 	say "Y/N responses changed from [auto-set] to ";
 	now yn-auto is number understood;
 	say "[auto-set].";
@@ -260,8 +255,7 @@ chapter basic consents
 to decide whether the player test-consents:
 	if debug-state is true:
 		say "[line break]> ";
-	if the player consents:
-		decide yes;
+	if the player consents, decide yes;
 	decide no;
 
 to decide whether the player yes-consents:
