@@ -2422,6 +2422,10 @@ read_delay_opts()
 # note that the Cmd line overrides what is in the options file
 parse_cmd_line()
 
+if os.path.exists(lock_file):
+    print(lock_file, "exists. Delete it before proceeding.")
+    exit()
+
 if time_matters and os.path.exists(time_file) and os.stat(time_file).st_size > 0:
     read_time_file()
 
@@ -2436,13 +2440,13 @@ if annoying_nudge:
         print("Type I am wasting time, or you can't play.")
         exit()
 
+open_lock_file()
+
 fctimedelt = time.time() - os.path.getmtime(timelist_file)
 if fctimedelt < cheat_delta:
     print(int(fctimedelt), "is less than the cheat-delta of", cheat_delta, "for the time play listing file", timelist_file)
     print("I'm going to make you wait.")
     exit()
-
-open_lock_file()
 
 if stupid_wait > 0:
     print('Delaying', stupid_wait, 'seconds because if you don\'t really want to play, you\'ll get mad and bored and be productive.')

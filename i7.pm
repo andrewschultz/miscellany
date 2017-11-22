@@ -49,7 +49,8 @@ our %i7x = ( "12" => "shuffling",
   "ss" => "seeker-status",
   "17" => "cube-cavern",
   "cc" => "cube-cavern",
-  "mo" => "molesworth"
+  "mo" => "molesworth",
+  "mw" => "molesworth"
 );
 
 our %i7xr = ( "shuffling" => "sa",

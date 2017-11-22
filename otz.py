@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 
+import os
 import sys
 import re
 
@@ -117,6 +118,8 @@ if len(sys.argv) > 1:
     while count < len(sys.argv):
         arg = sys.argv[count]
         count = count + 1
+        if arg == 'e' or arg == '-e':
+            os.system(otz)
         if arg == '?' or arg == '-?':
             show_projects()
             exit()
@@ -134,6 +137,8 @@ if len(sys.argv) > 1:
             proj_read = arg
             print("Going for project", proj_read)
 
+ever_project = False
+
 with open(otz) as file:
     for line in file:
         if line.startswith("#"):
@@ -150,15 +155,7 @@ with open(otz) as file:
             continue
         if line.lower().startswith("project="):
             reading_project = in_csv(re.sub("^project=", "", line.lower().strip(), re.IGNORECASE), proj_read)
-            continue
-        if re.search("PROJEND", line):
-            reading_project = False
-            continue
-        if reading_project is False:
-            continue
-        if line.lower().startswith("f="):
-            temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
-            check_old_matches(temp)
+            ever_project = ever_project or reading_project
             continue
         if line.startswith("sec:") or line.startswith("sec="):
             current_section = re.sub("^sec.", "", line.strip().lower())
@@ -173,6 +170,15 @@ with open(otz) as file:
                     got_any_section = True
                     any_section_this_line = a
             continue
+        if re.search("PROJEND", line):
+            reading_project = False
+            continue
+        if reading_project is False:
+            continue
+        if line.lower().startswith("f="):
+            temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
+            check_old_matches(temp)
+            continue
         if read_sections and current_section not in sections:
             if not line.startswith("--") and not line.startswith("i:"):
                 searches[current_section] = searches[current_section] + 1
@@ -180,22 +186,22 @@ with open(otz) as file:
         if line.startswith("--"):
             file_dic.pop(re.sub("^--", "", line.strip()), None)
             continue
-        if line.startswith("i:"):
+        if line.startswith("i:"): # in the ignore dictionary
             ignore_dic[re.sub("i:", "", line.strip())] = True
             continue
-        if line.startswith("m:"):
+        if line.startswith("m:"): # in the match dictionary
             tr = re.sub("m:", "", line.strip())
             match_dic[tr] = True
             incidents_dic[tr] = 0
             incident_ig[tr] = 0
             continue
-        if line.startswith("r:"):
+        if line.startswith("r:"): # in the regex dictionary
             regex_dic[re.sub("r:", "", line.strip())] = True
             continue
-        if line.startswith("s:"):
+        if line.startswith("s:"): # specific to ignore/see with current regex
             specifics[this_regex][re.sub("s:", "", line.strip())] = True
             continue
-        if line.startswith("i-:"):
+        if line.startswith("i-:"): # remove from ignore dictionary
             file_dic.pop(re.sub("^i-:", "", line.strip()), None)
             continue
         line = line.strip()
@@ -229,6 +235,10 @@ elif only_errors:
     my_list = [i for i in incidents_dic.keys() if incidents_dic[i]]
 else:
     my_list = [i for i in incidents_dic.keys()]
+
+if not ever_project:
+    print("WARNING never found project", proj_read, "in", otz + "--for sections use s=" + proj_read)
+    exit()
 
 for s in section_check.keys():
     print ("WARNING Didn't find section", s)
