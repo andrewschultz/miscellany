@@ -78,8 +78,8 @@ Func OpenIDE($project)
     Endif
   Endif
   if (WinExists($project & ".inform - Inform")) or (WinExists($project & ".inform* - Inform")) Then
-    WinActivate($project & ".inform");
-    WinWaitActive($project & ".inform");
+    WinActivate($project & ".inform - Inform");
+    WinWaitActive($project & ".inform - Inform");
   Else
   run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
   sleep(1);
@@ -97,9 +97,9 @@ Func OpenIDE($project)
 
   if $build == 1 Then
     sleep(1);
-    WinWaitActive($project & ".inform");
+    WinWaitActive($project & ".inform - Inform");
     Send("{F5}");
-    $x = ControlGetHandle(".inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
+    $x = ControlGetHandle(".inform - Inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
   Endif
   Beep (600, 200)
 
