@@ -1003,9 +1003,11 @@ def check_win():
 
 def print_and_bail_on_exc():
     global start_time
+    global last_reset
     cur_time = time.time()
     time_taken = cur_time - start_time
-    print("{:.2f} seconds taken this game before program break.".format(time_taken))
+    reset_time = cur_time - last_reset
+    print("{:.2f} seconds taken this game before program break, {:.2f} before last reset.".format(time_taken, reset_time))
     exit()
 
 

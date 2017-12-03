@@ -13,6 +13,8 @@ use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
 
+use sigtrap 'handler', \&cleanup, 'normal-signals';
+
 my $misses = __FILE__;
 $misses =~ s/pl$/txt/gi;
 my @prevMiss = ();
@@ -27,13 +29,14 @@ my $stdin = 0;
 my $del       = -1;
 my $crossword = 0;
 
+my $firstStuffString = "esirotlan";
+
 for ( 0 .. $#ARGV ) {
   if ( $ARGV[$_] =~ /b1\.pl/i ) { $del = $_; }
 }
 if ( $del > -1 ) {
   print "Oops, it looks like you forgot to delete the command above.\n";
   @ARGV = @ARGV[ $del + 1 .. $#ARGV ];
-  sleep(1);
 }
 
 if ( !defined( $ARGV[0] ) ) {
@@ -72,6 +75,8 @@ if ( $argtrim =~ /[0-9]+$/ ) {
   `$wordfile`;
   exit();
 }
+
+my @firstStuff = split( "", $firstStuffString );
 
 if ( $ARGV[0] =~ /^[-=\+]/i ) {
   if ( $ARGV[0] !~ /[a-z]/i ) {
@@ -132,13 +137,22 @@ my $canAlphabetize = 0;
 if ( !$stdin ) { oneHangman( $ARGV[0], $wrongs ); }
 else {
   my $temp;
-  while ( $temp = <STDIN> ) {
+  while ( $temp = getStdin() ) {
     chomp($temp);
     if ( $temp =~ /^[=\+]/ ) { addToErrs($temp); next; }
-    if ( ( $temp eq "q" ) || ( $temp eq "" ) ) { last; }
+    if ( $temp eq "?" )      { usage();          next; }
+    if ( $temp =~ /b1\.pl/ ) {
+      print "Wiping out everything before b1.pl.\n";
+      $temp =~ s/.*b1\.pl *//i;
+    }
+    if ( ( $temp eq "q" ) || ( $temp eq "" ) ) {
+      print("OK, see you later.\n");
+      last;
+    }
     my @tohang = split( / /, $temp );
     if ( $#tohang == 0 ) { push( @tohang, "" ); }
     if ( $#tohang > 1 ) { print "Need 2 args."; next; }
+    $missFound = 0;
     oneHangman( $tohang[0], $tohang[1] );
   }
 }
@@ -148,6 +162,15 @@ else {
 # subroutines
 #
 #
+
+sub cleanup {
+  print "You hit ctrl-c.\n";
+}
+
+sub getStdin {
+  print "Enter word-part or command:\n";
+  return ( my $temp = <STDIN> );
+}
 
 sub oneHangman {
 
@@ -170,6 +193,7 @@ sub oneHangman {
   my $canAlphabetize = 0;
   my $lastOne;
   my $firstOne;
+  my $gotForced = "";
 
   if ( $_[0] =~ /[^a-z.,]/i ) { print "Bad characters in $_[0].\n"; return; }
 
@@ -251,7 +275,11 @@ sub oneHangman {
       )
     {
       if ( !$crossword ) {
-        if ( $f2{$val} == $count ) { print " **$val**"; next; }
+        if ( $f2{$val} == $count ) {
+          $gotForced .= "$val";
+          print " **$val**";
+          next;
+        }
       }
       print " $val:$f2{$val}/$freq{$val}";
     }
@@ -260,6 +288,17 @@ sub oneHangman {
   elsif ( $count + $missFound == 0 ) { print "Uh oh no matches.\n"; }
   else                               { print "Only one match found.\n"; }
 
+  if ( $count > 1 ) {
+    my $checkPopular = "";
+    for (@firstStuff) {
+      $checkPopular .= " $_" if ( "$_[0]$_[1]" !~ /$_/ );
+    }
+    if ($gotForced) {
+      for ( split( //, $gotForced ) ) { $checkPopular =~ s/ $_//g; }
+      print "FORCED MATCHES: $gotForced\n";
+    }
+    print "CHECK POPULAR:$checkPopular\n" if $checkPopular;
+  }
   close(A);
 }
 

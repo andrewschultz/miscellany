@@ -12,13 +12,14 @@ use strict;
 if ( $#ARGV < 0 ) { die("Need (at the very least) CSVs of ids to flip."); }
 
 ######################options
-my $diagnose  = 0;
-my $copyBack  = 0;
-my $diagAfter = 0;
-my $order     = 0;
-my $launch    = 0;
-my $gotLong   = 0;
-my $showLines = 0;
+my $diagnose      = 0;
+my $copyBack      = 0;
+my $diagAfter     = 0;
+my $order         = 0;
+my $launch        = 0;
+my $gotLong       = 0;
+my $showLines     = 0;
+my $showOrderDifs = 0;
 
 ####################variables
 my $last    = 0;
@@ -78,7 +79,8 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?n$/ && do { $copyBack = 0; $count++; next; };
-    /^-?o$/ && do { $order    = 1; $count++; next; };
+    /^-?o(o)?$/
+      && do { $order = 1; $showOrderDifs = ( $a1 =~ /oo/ ); $count++; next; };
     /^-?r$/ && do { $region = $ARGV[ $count + 1 ]; $count += 2; next; };
     /^-?da$/ && do { $diagAfter = 1; $count++; next; };
     /^-?sl$/ && do { $showLines = 1; $count++; next; };
@@ -181,7 +183,7 @@ checkIDBounds();
 
 if ($order) { orderTriz(); }
 
-if ( scalar keys %matchups == 0 ) {
+if ( ( scalar keys %matchups == 0 ) && ( !$order ) ) {
   print "No matchups found to flip.\n";
   exit;
 }
@@ -343,13 +345,23 @@ sub orderTriz {
   }
   close(A);
   close(B);
-  `copy /Y $trdr\\$outFile $trdr\\$file`;
+  if ($showOrderDifs) {
+    print "Use just -o and not -oo to copy back over.\n";
+    `wm $trdr\\$outFile $trdr\\$file`;
+    exit();
+  }
+  else {
+    print "Copying back over sorted file. There should be no corruptions.\n";
+    `copy /Y $trdr\\$outFile $trdr\\$file`;
+  }
 }
 
 sub idnum {
   my $id = $_[0];
-  $id =~ s/.*id=\"//g;
-  $id =~ s/\".*//g;
+
+  #$id =~ s/.*<(line|room) id=\"//sg;
+  $id =~ s/.*?id=\"//s;
+  $id =~ s/\".*//sg;
   return $id;
 }
 
@@ -390,6 +402,9 @@ sub usage {
 -x breaks arg reading loop, useful for if you typed in a lot before and don't want to delete
 btp pc sc ss = projects
 1,4,7 cycles 1 to 4 to 7, 1/4=1,2,3,4, 1\\4=4,3,2,1
+usage: cycle 21-22-...-186 then diagnose after copying (comma flips 21 and 186)
+trsw.pl roi 21/186 c da
+You may wish to run trsw.pl o after.
 EOT
   exit();
 }

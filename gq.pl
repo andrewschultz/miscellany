@@ -68,10 +68,11 @@ my $zapBrackets       = 0;
 my $launchFirstSource = 0;
 my $forceNum          = 1;
 my $ignoreRand        = 0;
+my $inQuotes          = 0;
 
 if    ( $pwd =~ /oafs/ )           { @runs = ("oafs"); }
 elsif ( $pwd =~ /(threed|fourd)/ ) { @runs = ("opo"); }
-elsif ( $pwd =~ /Compound/i )      { @runs = ("as"); }
+elsif ( $pwd =~ /compound/i )      { @runs = ("as"); }
 elsif ( $pwd =~ /slicker/i )       { @runs = ("as"); }
 elsif ( $pwd =~ /(buck|past)/i )   { @runs = ("as"); }
 
@@ -121,11 +122,13 @@ while ( $count <= $#ARGV ) {
 "WARNING: using clipboard invalidates command line text. Use -x for deluxe anagramming.\n";
       next;
     };
-    /^-?x$/  && do { $othersToo   = 1; $count++; next; };
-    /^-?p$/  && do { $headersToo  = 1; $count++; next; };
-    /^-?nt$/ && do { $printTabbed = 0; $count++; next; };
-    /^-?w$/  && do { $dontWant    = 1; $count++; next; };
-    /^-?ir$/ && do { $ignoreRand  = 1; $count++; next; };
+    /^-?x$/  && do { $othersToo   = 1;  $count++; next; };
+    /^-?p$/  && do { $headersToo  = 1;  $count++; next; };
+    /^-?iq$/ && do { $inQuotes    = 1;  $count++; next; };
+    /^-?oq$/ && do { $inQuotes    = -1; $count++; next; };
+    /^-?nt$/ && do { $printTabbed = 0;  $count++; next; };
+    /^-?w$/  && do { $dontWant    = 1;  $count++; next; };
+    /^-?ir$/ && do { $ignoreRand  = 1;  $count++; next; };
     /^-?nd$/ && do { newDefault($b); $count++; next; };
     /^-?#$/    && do { $forceNum      = 1; $count++; next; };
     / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
@@ -156,7 +159,7 @@ while ( $count <= $#ARGV ) {
       && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^-?tb1$/
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-    /^[\\0-9a-z\.][\\0-9a-z\.-]+$/i && do {
+    /^[\\0-9a-z'\.][\\0-9a-z'\.-]+$/i && do {
       if ( $map{$a} ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
         push( @thisAry, $map{$a} );
@@ -397,6 +400,7 @@ sub processOneFile {
   my $thisImportant = 0;
   my $idx;
   my @importants;
+  my @quoteAry;
 
   if ( $_[1] ) {
     $inImportant     = 0;
@@ -411,6 +415,12 @@ sub processOneFile {
   if ( $modFile =~ /(trizbort|i7x)/ ) { $modFile =~ s/.*[\\\/]//g; }
   open( A, "$_[0]" ) || die("No $_[0]");
   while ( $a = <A> ) {
+    if ( $inQuotes && ( $a =~ /\"/ ) ) {
+      @quoteAry = split( "\"", $a );
+      $a = join( " ",
+        @quoteAry[ grep { 2 * ( $_ % 2 ) == ( $inQuotes + 1 ) }
+          0 .. $#quoteAry ] );
+    }
     if ($zapBrackets) { $a =~ s/\[[^\]]*\]/ /g; }
     if ( ( $a =~ /^[a-z]/ ) && ( $a !~ /\t/ ) ) { $latestRule = "$a"; }
     if ($inImportant) { $idx++; }
@@ -434,7 +444,7 @@ sub processOneFile {
       }
     }
     $line++;
-    if ( ( $a =~ /^table/ ) && ( $currentTable !~ /megachatter/ ) ) {
+    if ( ( $a =~ /^table of / ) && ( $currentTable !~ /megachatter/ ) ) {
       $idx          = -1;
       $currentTable = $a;
       $currentTable =~ s/ *\[.*//g;
@@ -548,7 +558,7 @@ sub processStory {
   $count          = 0;
   while ( $a = <A> ) {
     chomp($a);
-    if ( ( $a =~ /^[a-z].*: *$/i ) || ( $a =~ /^table/ ) ) {
+    if ( ( $a =~ /^[a-z].*: *$/i ) || ( $a =~ /^table of / ) ) {
       $myHeader = $a;
       $tabrow   = 0;
       $blurby   = 0;
@@ -724,6 +734,7 @@ sub usage {
 -h = show headers
 -ha = history of all, -hi = specific history
 -p = headers too
+-iq/-oq = inside/outside quotes
 -n = look through names
 -nt = print tabbed
 -nd = change default if we don't specify -opo etc
