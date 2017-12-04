@@ -139,6 +139,7 @@ else {
   my $temp;
   while ( $temp = getStdin() ) {
     chomp($temp);
+    $temp =~ s/^[ \t]*//;
     if ( $temp =~ /^[=\+]/ ) { addToErrs($temp); next; }
     if ( $temp eq "?" )      { usage();          next; }
     if ( $temp =~ /b1\.pl/ ) {

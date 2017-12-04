@@ -508,12 +508,17 @@ sub modifyBeta {
   open( A, "$_[0]" )  || die("Can't open source $_[0]");
   open( B, ">$_[1]" ) || die("Can't open target $_[1]");
 
-  my $foundBetaLine = 0;
+  my $foundBetaLine            = 0;
+  my $foundDebugGlobalsSection = 0;
 
   while ( $a = <A> ) {
     if ( $a =~ /^volume beta testing/i ) {
       print B "volume beta testing\n";
       $foundBetaLine = 1;
+    }
+    elsif ( $a =~ /^section debug compiler globals/i ) {
+      print B "section debug compiler globals\n";
+      $foundDebugGlobalsSection = 1;
     }
     elsif ( $a =~ /\t\[showtime\]/ ) {
       my (
@@ -527,11 +532,18 @@ sub modifyBeta {
         $month + 1, $dayOfMonth, $hour, $minute, $second
       );
     }
-    else { print B $a; }
+    else {
+      print "WARNING we have an odd nonrelease section: $a"
+        if ( $a =~ /^section .*- not for release/i );
+      print B $a;
+    }
   }
   close(A);
   close(B);
-  if ( !$foundBetaLine ) { print "Warning: didn't find Beta line!"; }
+  print "Warning: didn't find VOLUME BETA TESTING - NOT FOR RELEASE line!"
+    if ( !$foundBetaLine );
+  print "Warning: didn't find SECTION DEBUG COMPILER GLOBALS line!"
+    if ( !$foundDebugGlobalSection );
 }
 
 sub i6exe {
