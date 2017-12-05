@@ -142,6 +142,12 @@ else {
     $temp =~ s/^[ \t]*//;
     if ( $temp =~ /^[=\+]/ ) { addToErrs($temp); next; }
     if ( $temp eq "?" )      { usage();          next; }
+    if ( $temp =~ /^\?/ ) {
+      $temp =~ s/^.//;
+      print "Looking up definition of $temp...\n";
+      `start http://www.thefreedictionary.com/$temp`;
+      next;
+    }
     if ( $temp =~ /b1\.pl/ ) {
       print "Wiping out everything before b1.pl.\n";
       $temp =~ s/.*b1\.pl *//i;

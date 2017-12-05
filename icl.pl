@@ -543,7 +543,7 @@ sub modifyBeta {
   print "Warning: didn't find VOLUME BETA TESTING - NOT FOR RELEASE line!"
     if ( !$foundBetaLine );
   print "Warning: didn't find SECTION DEBUG COMPILER GLOBALS line!"
-    if ( !$foundDebugGlobalSection );
+    if ( !$foundDebugGlobalsSection );
 }
 
 sub i6exe {

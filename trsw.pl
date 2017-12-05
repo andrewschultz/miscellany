@@ -6,20 +6,22 @@
 #       trsw.pl d ss
 #       trsw.pl ca sc 2,3
 
+use File::Compare;
 use warnings;
 use strict;
 
 if ( $#ARGV < 0 ) { die("Need (at the very least) CSVs of ids to flip."); }
 
 ######################options
-my $diagnose      = 0;
-my $copyBack      = 0;
-my $diagAfter     = 0;
-my $order         = 0;
-my $launch        = 0;
-my $gotLong       = 0;
-my $showLines     = 0;
-my $showOrderDifs = 0;
+my $diagnose         = 0;
+my $copyBack         = 0;
+my $diagAfter        = 0;
+my $order            = 0;
+my $launch           = 0;
+my $gotLong          = 0;
+my $showLines        = 0;
+my $showOrderDifs    = 0;
+my $checkContRegions = 1;
 
 ####################variables
 my $last    = 0;
@@ -82,9 +84,11 @@ while ( $count <= $#ARGV ) {
     /^-?o(o)?$/
       && do { $order = 1; $showOrderDifs = ( $a1 =~ /oo/ ); $count++; next; };
     /^-?r$/ && do { $region = $ARGV[ $count + 1 ]; $count += 2; next; };
-    /^-?da$/ && do { $diagAfter = 1; $count++; next; };
-    /^-?sl$/ && do { $showLines = 1; $count++; next; };
-    /^-?l$/  && do { $launch    = 1; $count++; next; };
+    /^-?(cr|rc)$/           && do { $checkContRegions = 1; $count++; next; };
+    /^-?(ncr|nrc|crn|rcn)$/ && do { $checkContRegions = 0; $count++; next; };
+    /^-?da$/                && do { $diagAfter        = 1; $count++; next; };
+    /^-?sl$/                && do { $showLines        = 1; $count++; next; };
+    /^-?l$/                 && do { $launch           = 1; $count++; next; };
     /^-?ul$/ && do { $upperLimit = $ARGV[ $count + 1 ]; $count += 2; next; };
 
     if ( $long{$a1} ) {
@@ -222,11 +226,7 @@ if ( ($lineDif) || ($idDif) ) {
 }
 
 if ($copyBack) {
-  print "Copying back $file.\n";
-  `copy /Y $trdr\\$outFile $trdr\\$file`;
-  `erase $trdr\\$outFile`;
-
-  if ($diagAfter) { diagnose(); exit(); }
+  conditionalCopy( "$trdr\\$outFile", "$trdr\\$file" );
 }
 else {
   print "-c to copy back $file.\n";
@@ -238,6 +238,20 @@ else {
 # subroutines below here
 #
 ####################################################################
+
+sub conditionalCopy {
+  if ( !compare( $_[0], $_[1] ) ) {
+    print "No changes in generated file. I am not copying back.\n";
+    print "Also not diagnosing.\n" if $diagAfter;
+  }
+  else {
+    print "Copying back $file.\n";
+    `copy /Y $trdr\\$outFile $trdr\\$file`;
+    `erase $trdr\\$outFile`;
+
+    if ($diagAfter) { diagnose(); exit(); }
+  }
+}
 
 sub newNum {
 
@@ -255,13 +269,16 @@ sub diagnose {
   my $thisID;
   my $lastID;
   my @mylines;
+  my @myrooms;
+  my %regions;
 
   open( A, "$trdr\\$file" );
   while ( $line = <A> ) {
     if ( $line =~ /room id=\"/ ) {
       my @q = split( /\"/, $line );
       if ( ( !$region ) || ( $q[15] =~ /$region/i ) ) {
-        $printy{ $q[1] } = "$q[3] ($q[15])";
+        $printy{ $q[1] }  = "$q[3] ($q[15])";
+        $regions{ $q[1] } = $q[15];
       }
       $lastID = $q[1];
     }
@@ -291,6 +308,21 @@ sub diagnose {
     sort { $a <=> $b } keys %printy )
     . "\n";
   @mylines = sort { $a <=> $b } (@mylines);
+
+  if ($checkContRegions) {
+    my %lastRegLine;
+    my @myrooms = sort { $a <=> $b } ( keys %regions );
+    for (@myrooms) {
+      if ( $lastRegLine{ $regions{$_} }
+        && $_ - $lastRegLine{ $regions{$_} } > 1 )
+      {
+        print
+"$regions{$_} out of order at $_, last seen at $lastRegLine{$regions{$_}}.\n";
+      }
+      $lastRegLine{ $regions{$_} } = $_;
+    }
+  }
+
   if ($showLines) {
     print "Lines: " . join( ", ", @mylines ) . "\n";
   }
@@ -351,8 +383,10 @@ sub orderTriz {
     exit();
   }
   else {
-    print "Copying back over sorted file. There should be no corruptions.\n";
-    `copy /Y $trdr\\$outFile $trdr\\$file`;
+    print
+"Attempting to copy back over sorted file. There should be no corruptions.\n";
+    conditionalCopy( "$trdr\\$outFile", "$trdr\\$file" );
+    exit();
   }
 }
 
@@ -395,6 +429,7 @@ sub usage {
 -n = don't copy back
 -o = order
 -r = specify region
+-cr/-rc = check continuous regions, -n for reverse
 -ul = upper limit for IDs to display
 -l = launch after
 -sl = show all lines, not just max
