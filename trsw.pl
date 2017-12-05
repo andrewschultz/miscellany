@@ -123,6 +123,12 @@ while ( $count <= $#ARGV ) {
           $a1 =~ s/:.*//;
         }
         @j = split( /\//, $a1 );
+        print "Moving up $incr from $j[0] to "
+          . ( $j[1] - $incr )
+          . ", then down by "
+          . ( $j[1] - $j[0] - $incr + 1 )
+          . ( $incr != 1 ? " from " . ( $j[1] - $incr + 1 ) . " to" : " at" )
+          . " $j[1]\n";
         for ( $j[0] .. $j[1] ) {
           $matchups{$_} = $_ + $incr;
           if ( $matchups{$_} > $j[1] ) {
@@ -144,6 +150,12 @@ while ( $count <= $#ARGV ) {
           $a1 =~ s/:.*//;
         }
         @j = split( /\\/, $a1 );
+        print "Moving down $incr from $j[1] to "
+          . ( $j[0] + $incr )
+          . ", then up by "
+          . ( $j[1] - $j[0] - $incr + 1 )
+          . ( $incr != 1 ? " from " . ( $j[0] + $incr - 1 ) . " to" : " at" )
+          . " $j[0]\n";
         for ( $j[0] .. $j[1] ) {
           $matchups{$_} = $_ - $incr;
           if ( $matchups{$_} < $j[0] ) {
