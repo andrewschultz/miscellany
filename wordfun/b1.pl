@@ -59,8 +59,7 @@ if ( defined( $ARGV[2] ) ) {
 }
 
 if ( $argtrim =~ /^[\*#]/ ) { $argtrim =~ s/.//; $crossword = 1; }
-if ( $argtrim eq "i" ) { $stdin = 1; }
-if ( $argtrim eq "e" ) { `$misses`; exit(); }
+if ( $argtrim eq "e" )      { `$misses`;         exit(); }
 if ( $argtrim eq "c" ) {
   my $cmd = 'start "" "notepad++.exe" ' . (__FILE__);
   `$cmd`;
@@ -68,7 +67,8 @@ if ( $argtrim eq "c" ) {
 }
 if ( $argtrim eq "s" ) { showMisses(); exit(); }
 if ( $argtrim eq "?" ) { usage();      exit(); }
-if ( $argtrim =~ /[0-9]+$/ ) {
+if ( ( $argtrim eq "i" ) || ( $argtrim eq "1" ) ) { $stdin = 1; }
+elsif ( $argtrim =~ /[0-9]+$/ ) {
   my $wordfile = "c:\\writing\\dict\\words-$argtrim.txt";
   if ( $argtrim == 0 ) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
   if ( !$wordfile ) { die("No word file $wordfile.") }
@@ -140,8 +140,8 @@ else {
   while ( $temp = getStdin() ) {
     chomp($temp);
     $temp =~ s/^[ \t]*//;
-    if ( $temp =~ /^[=\+]/ ) { addToErrs($temp); next; }
-    if ( $temp eq "?" )      { usage();          next; }
+    if ( $temp =~ /^[-=\+]/ ) { addToErrs($temp); next; }
+    if ( $temp eq "?" )       { usage();          next; }
     if ( $temp =~ /^\?/ ) {
       $temp =~ s/^.//;
       print "Looking up definition of $temp...\n";
@@ -156,7 +156,7 @@ else {
       print("OK, see you later.\n");
       last;
     }
-    my @tohang = split( / /, $temp );
+    my @tohang = split( / +/, $temp );
     if ( $#tohang == 0 ) { push( @tohang, "" ); }
     if ( $#tohang > 1 ) { print "Need 2 args."; next; }
     $missFound = 0;
@@ -258,6 +258,11 @@ sub oneHangman {
         last;
       }
       for my $x ( 0 .. $#wrong ) {
+        if ( $wrong[$x] eq "+" ) {
+          print "+ should be at the start.\n";
+          $wordBad = 1;
+          last;
+        }
         if ( $line =~ $wrong[$x] ) { $wordBad = 1; last; }
       }
     }

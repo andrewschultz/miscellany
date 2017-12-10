@@ -49,6 +49,9 @@ our %i7x = ( "12" => "shuffling",
   "ss" => "seeker-status",
   "17" => "cube-cavern",
   "cc" => "cube-cavern",
+  "pu" => "put-it-up",
+  "up" => "put-it-up",
+  "sw" => "spell-woken",
   "mo" => "molesworth",
   "mw" => "molesworth"
 );
@@ -64,7 +67,7 @@ our %i7xr = ( "shuffling" => "sa",
   "btp" => "buck-the-past"
 );
 
-our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing");
+our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "put-it-up", "spell-woken");
 our @i7bb = ("seeker-status", "buck-the-past",  "curate");
 
 our @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");

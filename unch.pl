@@ -42,7 +42,9 @@ my %exp = (
   "uo"    => "ugly-oafs",
   "tr"    => "trizbort",
   "btp"   => "buck-the-past",
-  "ru"    => "rube-cube"
+  "ru"    => "rube-cube",
+  "sw"    => "spell-woken",
+  "up"    => "put-it-up"
 );
 
 my %projs;
@@ -133,6 +135,8 @@ sub checkProject {
   my $subdir = $_[0];
   if ( $exp{$subdir} ) { $subdir = $exp{$subdir}; }
   if ( -d "$gitRoot\\$subdir" ) {
+
+    # print "Going to $gitRoot\\$subdir\n";
     chdir("$gitRoot\\$subdir");
   }
   else {

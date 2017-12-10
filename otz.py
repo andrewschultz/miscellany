@@ -1,4 +1,9 @@
-# old title zap
+# otz.py: old text zap
+#
+# reads otz.txt to work through sections where specific text needs to be deleted
+# can also read in exceptions
+#
+# todo: read in difference between regex searches and text searches
 
 from collections import defaultdict
 
@@ -212,7 +217,7 @@ with open(otz) as file:
         else:
             this_regex = line
             regex_dic[line] = True
-        print("Added", line)
+        # print("Added", line)
         regex_dic[this_regex] = True
         incidents_dic[this_regex] = 0
         incident_ig[this_regex] = 0
