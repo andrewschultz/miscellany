@@ -22,6 +22,7 @@ my $gotLong          = 0;
 my $showLines        = 0;
 my $showOrderDifs    = 0;
 my $checkContRegions = 1;
+my $useOrderFile     = 0;
 
 ####################variables
 my $last    = 0;
@@ -30,42 +31,25 @@ my $idDif   = 0;
 my $count   = 0;
 my %matchups;
 my %long;
+my %sortHash;
+my %alphabetize;
 my $line;
 my $upperLimit = 99999;
 my $region     = "";
 my @bump;
+my $verbose = 0;    # not implented yet
 
 my $mapfile = __FILE__;
 $mapfile =~ s/pl$/txt/;
+my $ordfile = __FILE__;
+$ordfile =~ s/\.pl$/-ord.txt/;
 
 my $triz = "c:\\games\\inform\\triz\\mine";
 
 my $trdr = ".";
 my $file = "";
 
-open( A, $mapfile ) || die("Can't open $mapfile.");
-while ( $line = <A> ) {
-  if ( $line =~ /^#/ ) {
-    next;
-  }
-  chomp($line);
-  if ( $line =~ /=/ ) {
-    my @eq = split( /=/, $line );
-    $long{ $eq[0] } = $eq[1];
-    $long{"-$eq[0]"} = $eq[1];
-  }
-  if ( $line =~ /^DEFAULT:/ ) {
-    $file = $line;
-    $file =~ s/^DEFAULT://;
-  }
-  if ( $line =~ /^MAPDIR:/ ) {
-    $trdr = $line;
-    $trdr =~ s/^MAPDIR://;
-  }
-}
-close(A);
-
-if ( !$file ) { print "Warning, no default file in $mapfile.\n"; }
+readMapFile();
 
 while ( $count <= $#ARGV ) {
   my $a1 = $ARGV[$count];
@@ -80,7 +64,8 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
-    /^-?n$/ && do { $copyBack = 0; $count++; next; };
+    /^-?n$/  && do { $copyBack     = 0; $count++; next; };
+    /^-?of$/ && do { $useOrderFile = 1; $count++; next; };
     /^-?o(o)?$/
       && do { $order = 1; $showOrderDifs = ( $a1 =~ /oo/ ); $count++; next; };
     /^-?r$/ && do { $region = $ARGV[ $count + 1 ]; $count += 2; next; };
@@ -110,7 +95,8 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     }
-    /^[0-9,\\\/:]+$/ && do {
+    /^[0-9,\\\/:]+$/
+      && do {    # this decides what ID number goes to what other ID number
       if ( $a1 =~ /\// ) {
         my $incr = 1;
         if ( $a1 =~ /:/ ) {
@@ -180,7 +166,7 @@ while ( $count <= $#ARGV ) {
       }
       $count++;
       next;
-    };
+      };
 
     print "$a1 is an invalid parameter.\n\n";
     usage();
@@ -191,6 +177,48 @@ if ( !$file ) {
   die(
 "Without a default file to read, you need to specify one on the command line."
   );
+}
+
+if ($useOrderFile) {
+  my %region;
+  my %origID;
+  my @origIDs = ();
+  readAlphFile();
+  die("No custom sort instructions for $file.") unless $sortHash{$file}{0};
+  open( A, $file ) || die("Can't open $file");
+  while ( $line = <A> ) {
+    if ( $line =~ /room id=\"/ ) {    # 1 = id #, 3 = name, 15 = region
+      my @q = split( /\"/, $line );
+      $region{ $q[3] } = lc( $q[15] );
+      $origID{ $q[3] } = $q[1];
+      push( @origIDs, $q[1] );
+    }
+  }
+  close(A);
+
+#my @finalArray = sort { $region{$a} <=> $region{$b} || $sortHash{$file}{$origID{$a}} <=> $sortHash{$file}{$origID{$b}} } keys %region;
+  my @finalArray = sort {
+         ( $sortHash{$file}{ $region{$a} } <=> $sortHash{$file}{ $region{$b} } )
+      || ( $alphabetize{$file}{ $region{$a} } && ( $a cmp $b ) )
+      || ( $origID{$a} <=> $origID{$b} )
+  } keys %region;
+
+  print "??\n";
+  for my $x ( sort keys { %alphabetize{$file} } ) { print "$x\n"; }
+
+  # die("!!" . $alphabetize{$file}{"back set"} . "!!");
+  for ( 0 .. $#finalArray ) {
+    if ($verbose) {
+      if ( $origID{ $finalArray[$_] } != $origIDs[$_] ) {
+        print
+"$finalArray[$_] was $origID{$finalArray[$_]} is $origIDs[$_] ... $file $region{$finalArray[$_]}\n";
+      }
+      else {
+        print "No change for $finalArray[$_] ... $origIDs[$_]\n";
+      }
+    }
+    $matchups{ $origID{ $finalArray[$_] } } = $origIDs[$_];
+  }
 }
 
 if ($diagnose) { diagnose(); }
@@ -433,12 +461,66 @@ sub checkIDBounds {
   close(A);
 }
 
+sub readMapFile {
+  open( A, $mapfile ) || die("Can't open $mapfile.");
+  while ( $line = <A> ) {
+    if ( $line =~ /^#/ ) {
+      next;
+    }
+    chomp($line);
+    if ( $line =~ /=/ ) {
+      my @eq = split( /=/, $line );
+      $long{ $eq[0] } = $eq[1];
+      $long{"-$eq[0]"} = $eq[1];
+    }
+    if ( $line =~ /^DEFAULT:/ ) {
+      $file = $line;
+      $file =~ s/^DEFAULT://;
+    }
+    if ( $line =~ /^MAPDIR:/ ) {
+      $trdr = $line;
+      $trdr =~ s/^MAPDIR://;
+    }
+  }
+  close(A);
+
+  if ( !$file ) { print "Warning, no default file in $mapfile.\n"; }
+}
+
+sub readAlphFile {
+  open( A, $ordfile ) || die("No $ordfile");
+  while ( $line = <A> ) {
+    chomp($line);
+    next if $line =~ /^#/;
+    last if $line =~ /^;/;
+    my @x       = split( /:/, $line );
+    my $proj    = $x[0];
+    my @regions = split( /,/, $x[1] );
+    my $count   = 1;
+    for (@regions) {
+
+      if ( $_ =~ /\*$/ ) {
+        $_ =~ s/\*$//;
+        $alphabetize{$proj}{$_} = 1;
+
+        # print "$proj will have $_ alphabetized.\n";
+        # print "alphabetize($proj)($_) = 1\n";
+      }
+    }
+    $sortHash{$proj}{ $regions[$_] } = $_ + 1 for ( 0 .. $#regions );
+
+# for my $k (sort keys %{$sortHash{$proj}}) { print "$k $sortHash{$proj}{$k}\n"; }
+    $sortHash{$proj}{0} = 1;
+  }
+}
+
 sub usage {
   print <<EOT;
 -c = copy
 -d = diagnose (show all rooms)
 -da = diagnose after copying
 -n = don't copy back
+-of = use order file to order
 -o = order
 -r = specify region
 -cr/-rc = check continuous regions, -n for reverse
