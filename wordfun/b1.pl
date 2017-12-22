@@ -12,9 +12,11 @@
 use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
+use File::Stat;
 
 use sigtrap 'handler', \&cleanup, 'normal-signals';
 
+my $b1time = "c:/writing/dict/p1.txt";
 my $misses = __FILE__;
 $misses =~ s/pl$/txt/gi;
 my @prevMiss = ();
@@ -67,7 +69,47 @@ if ( $argtrim eq "c" ) {
 }
 if ( $argtrim eq "s" ) { showMisses(); exit(); }
 if ( $argtrim eq "?" ) { usage();      exit(); }
-if ( ( $argtrim eq "i" ) || ( $argtrim eq "1" ) ) { $stdin = 1; }
+
+my $justShow = 0;
+
+if ( ( $argtrim =~ /^(-)?a[0-9]/i ) ) {
+  my $delta = $argtrim;
+  my @newfi;
+
+  $delta =~ s/^(-)?a//i;
+
+  open( A, $b1time );
+  while ( $a = <A> ) {
+    push( @newfi, $a );
+  }
+  $newfi[0] += $delta;
+  $newfi[3] += $delta;
+  $newfi[0] .= "\n";
+  $newfi[3] .= "\n";
+  close(A);
+  open( A, ">$b1time" );
+  print A $_ for (@newfi);
+  close(A);
+  print "Added $delta to start/end.\n";
+}
+
+if ( ( $argtrim =~ /^(-)?p[0-9]/i ) ) {
+  my $newStart = $argtrim;
+  $newStart =~ s/^(-)?p//;
+  if ( !$newStart ) { $justShow = 1; }
+  else {
+    my $ns2 = $newStart + 750;
+    open( A, ">c:/writing/dict/p1.txt" );
+    print A "$newStart\n"
+      . ( scalar localtime( time() ) ) . "\n"
+      . ( scalar localtime( time() + 43200 ) )
+      . "\n$ns2\n";
+    close(A);
+    $stdin = 1;
+  }
+}
+
+elsif ( ( $argtrim eq "i" ) || ( $argtrim eq "1" ) ) { $stdin = 1; }
 elsif ( $argtrim =~ /[0-9]+$/ ) {
   my $wordfile = "c:\\writing\\dict\\words-$argtrim.txt";
   if ( $argtrim == 0 ) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
@@ -77,6 +119,8 @@ elsif ( $argtrim =~ /[0-9]+$/ ) {
 }
 
 my @firstStuff = split( "", $firstStuffString );
+
+printTimeFile();
 
 if ( $ARGV[0] =~ /^[-=\+]/i ) {
   if ( $ARGV[0] !~ /[a-z]/i ) {
@@ -140,6 +184,10 @@ else {
   while ( $temp = getStdin() ) {
     chomp($temp);
     $temp =~ s/^[ \t]*//;
+    if ( lc($temp) eq "t" ) {
+      printTimeFile();
+      next;
+    }
     if ( $temp =~ /^[-=\+]/ ) { addToErrs($temp); next; }
     if ( $temp eq "?" )       { usage();          next; }
     if ( $temp =~ /^\?/ ) {
@@ -158,7 +206,7 @@ else {
     }
     my @tohang = split( / +/, $temp );
     if ( $#tohang == 0 ) { push( @tohang, "" ); }
-    if ( $#tohang > 1 ) { print "Need 2 args."; next; }
+    if ( $#tohang > 1 ) { print "Need 2 args.\n"; next; }
     $missFound = 0;
     oneHangman( $tohang[0], $tohang[1] );
   }
@@ -175,7 +223,7 @@ sub cleanup {
 }
 
 sub getStdin {
-  print "Enter word-part or command:\n";
+  print "Enter word-part or command (t to show time/score stuff) :\n";
   return ( my $temp = <STDIN> );
 }
 
@@ -446,6 +494,28 @@ sub addToDict {
   close(B);
   print "Added $_[0] to $wordfile.\n";
   `copy $wordTo $wordfile`;
+}
+
+sub printTimeFile {
+  my $lmt = ( stat($misses) )[9];
+  my $lmm = scalar localtime($lmt);
+  my $lmd = $lmt - time() + 43200;
+
+  open( A, $b1time );
+  my $cur   = <A>;
+  my $date  = <A>;
+  my $date2 = <A>;
+  my $can   = <A>;
+  die("Maximum = $can") if $justShow;
+
+  print "Start=$cur";
+  print "LastDate=$date";
+  print "NextDate=$date2";
+  print "End=$can";
+  print "LastModifiedMissed=$lmm\n";
+  print( $lmd > 0
+    ? "Won't get bonus yet (I think), $lmd seconds to go.\n"
+    : "OK, hangman away.\n" );
 }
 
 sub usage {
