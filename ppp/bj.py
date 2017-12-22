@@ -22,7 +22,7 @@ def timesplit(x):
             retval = retval * 60;
             retval = retval + int(temp[1])
     except:
-        print "We need a number for time left, or a:b. Seconds are assumed without a colon."
+        print("We need a number for time left, or a:b. Seconds are assumed without a colon.")
         exit()
     return retval
 
@@ -36,7 +36,7 @@ def parselead(x):
             diff = 0 - diff
         return diff
     except:
-        print "You need a score like 80-60 or a difference e.g. 20."
+        print("You need a score like 80-60 or a difference e.g. 20.")
         exit()
         return 0
 
@@ -60,16 +60,16 @@ lead = parselead(args.lead)
 
 timeint = timesplit(args.time)
 
-if args.lead < 4:
-    print "Lead is too small to matter. It should be at least 4."
+if lead < 4:
+    print("Lead is too small to matter. It should be at least 4.")
 else:
-    print '=' * 40
+    print('=' * 40)
     print("%.2f %% safe with ball" % leadPct(lead, timeint, 1))
     if leadPct(lead, timeint, 1) < 100:
         temp = floatTime(lead+1)
         print("%d:%02d cutoff time for with the ball" % (temp / 60, temp % 60))
         print ("%d:%02d til safe" % ( (timeint-temp+1)/60, (timeint-temp+1) % 60))
-    print '=' * 40
+    print('=' * 40)
     print("%.2f %% safe without ball" % leadPct(lead, timeint, 0))
     if leadPct(lead, timeint, 0) < 100:
         temp = floatTime(lead)
