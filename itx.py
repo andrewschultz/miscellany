@@ -4,8 +4,9 @@
 from i7 import i7x
 import os
 import sys
+from collections import defaultdict
 
-print(i7x)
+open_it = defaultdict(bool)
 
 ext_dir = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz"
 
@@ -14,41 +15,44 @@ proj = ""
 open_debug_tables = False
 open_runtime_tables = True
 
+ext_list = { 'dt': 'debug tables',
+  'ta': 'tables',
+  'nu': 'nudges',
+  'mi': 'mistakes',
+  'ra': 'random text'
+}
+
 for i in range(1, len(sys.argv)):
-    if sys.argv[i] == 'dt' or sys.argv[i] == '-dt':
-        open_debug_tables = True
-        open_runtime_tables = False
-    if sys.argv[i] == 'ta' or sys.argv[i] == '-ta':
-        open_runtime_tables = True
-        open_debug_tables = False
-    if sys.argv[i] == 't2' or sys.argv[i] == '-t2':
-        open_runtime_tables = True
-        open_debug_tables = True
+    if sys.argv[i] in ext_list.keys():
+        open_it[sys.argv[i]] = True
+        continue
     if proj:
-        print("Project defined twice, bailing")
+        print("Project defined twice, bailing:", proj, "!!", sys.argv[i])
         exit()
     proj = sys.argv[i]
+
+opens = open_it.keys()
+
+if len(opens) == 0:
+    opens = [ 'tables' ]
 
 if proj in i7x.keys():
     proj = i7x[proj]
 
 pnh = proj.replace("-", " ")
 
-if open_debug_tables:
-    file = "{:s}/{:s} debug tables.i7x".format(ext_dir, pnh)
-    if not os.ispath(file):
-        print(file, "tables don't exist. Bailing.")
-        exit()
-    os.system("\"" + file + "\"")
-    ran_any = True
+ran_any = 0
 
-if open_runtime_tables:
-    file = "{:s}/{:s} tables.i7x".format(ext_dir, pnh)
+for x in opens:
+    file = "{:s}/{:s} {:s}.i7x".format(ext_dir, pnh, ext_list[x])
     if not os.path.exists(file):
         print(file, "tables don't exist. Bailing.")
         exit()
+    print("Opening", file)
     os.system("\"" + file + "\"")
-    ran_any = True
+    ran_any = ran_any + 1
 
-if not ran_any:
+if ran_any == 0:
     print("You managed to run no tests.")
+elif ran_any > 1:
+    print("If a file is already open, you won't see it kicked to the right hand tab. But you can alt-tab back.")
