@@ -8,7 +8,7 @@
 #
 #now you can launch writing with -w
 
-use POSIX (getcwd);
+use POSIX qw/getcwd/;
 use Win32;
 
 use strict;
@@ -281,6 +281,7 @@ for $sourceFile (@sourceFileList) {
       else {
         $a = <A>;
         $thisTableRow = ( scalar split( /\t/, $a ) );
+        print("WARNING 2 tabs in a row in line $.: $a") if ( $a =~ /\t\t/ );
       }
       next;
     }
@@ -400,7 +401,13 @@ for ( 1 .. $testCount ) {
   my $tn = $tableName{$_};
 
   $regexMod{$_} = $regex{$_};
-  $regexMod{$_} =~ s/\$./[0-9]+/;
+  $regexMod{$_} =~ s/\$\$/[0-9]+/;
+
+# this is a hack for Buddy Best's case basket in Problems Compound. We could fob this off to the final but it's too much programming for too little payoff
+  if ( $tn eq "xxfln" ) {
+    my $q = 3 * int( $rows{$tn} ) / 6;
+    $regex{$_} = tableNumberDelta( $tn, $regex{$_}, $delta{$_} );
+  }
 
   $regex{$_} =~ s/\$\$/$rows{$tn}+$delta{$_}/ge;
   $regex{$_} =~ s/\$c/$smartIdeas{$tn}+$delta{$_}/ge;
@@ -484,6 +491,42 @@ exit();
 ####################################################
 #subroutines below
 #
+
+sub tableNumberDelta    # 0=table name 1=regex 2=smart-string 3=formula
+{
+  my $newNum = 0;
+  my $froms  = "";
+
+  if ( $_[1] =~ /\$\$/ ) {
+    $froms  = "\$\$";
+    $newNum = $rows{ $_[0] };
+  }
+  elsif ( $_[1] =~ /\$c/ ) {
+    $froms  = $_[1];
+    $newNum = $smartIdeas{ $_[0] };
+  }
+  elsif ( $_[1] =~ /\$f/ ) {
+    $froms  = $_[1];
+    $newNum = $falseRows{ $_[0] };
+  }
+  elsif ( $_[1] =~ /\$t/ ) {
+    $froms  = $_[1];
+    $newNum = $trueRows{ $_[0] };
+  }
+  return $_[1] if !$froms;
+
+  # for my $x (keys %rows) { print "$x $rows{$x}\n"; }
+
+  # the default is just to add stuff
+  return $newNum + $_[2] if ( $_[2] =~ /^[0-9]+$/ );
+  my $func = $_[2];
+  $func =~ s/!/$newNum/;
+  my $evf    = eval($func);
+  my $retval = $_[1];
+  my $f2     = quotemeta($froms);
+  $retval =~ s/$f2/$evf/g;
+  return $retval;
+}
 
 ####################################################
 #this processes the i7t.txt / i7tp.txt files
