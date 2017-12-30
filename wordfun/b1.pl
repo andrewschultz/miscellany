@@ -6,9 +6,11 @@
 #
 #then prints out results, with the most likely letters left
 #
+# lo..u. ?carnitine = odd error
 
 # bug can't add word that isn't in the dictionary in first place (omeprazole)
 
+use WWW::Mechanize;
 use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
@@ -26,7 +28,8 @@ my $endString = "";
 my $missFound = 0;
 my %freq;
 my %f2;
-my $stdin = 0;
+my $stdin   = 0;
+my $lastCan = 0;
 
 my $del       = -1;
 my $crossword = 0;
@@ -184,6 +187,21 @@ else {
   while ( $temp = getStdin() ) {
     chomp($temp);
     $temp =~ s/^[ \t]*//;
+
+    if ( $temp =~ /^'/ ) {
+      $temp =~ s/^'//;
+      print "Running command $temp\n";
+      `$temp`;
+      next;
+    }
+    if ( lc($temp) eq "s" ) {
+      getPoints();
+      next;
+    }
+    if ( lc($temp) eq "se" ) {
+      system("start http://secure.thefreedictionary.com");
+      next;
+    }
     if ( lc($temp) eq "t" ) {
       printTimeFile();
       next;
@@ -318,7 +336,7 @@ sub oneHangman {
   }
   if ( $#prevMiss > -1 ) {
     print "MISSED BEFORE:\n";
-    for (@prevMiss) {
+    for ( sort { $miss{$a} <=> $miss{$b} || $a cmp $b } @prevMiss ) {
       $count++;
       $missFound++;
       print "**** $count ($missFound) $_ $miss{$_}x\n";
@@ -496,6 +514,32 @@ sub addToDict {
   `copy $wordTo $wordfile`;
 }
 
+sub getPoints {
+  my $mech = WWW::Mechanize->new();
+
+  my $link = "http://secure.thefreedictionary.com/user/Andrew_Schultz";
+  print "Reading $link...\n";
+
+  $mech->get("$link");
+  my $c = $mech->content;
+  my @d = split( "\n", $c );
+
+  for (@d) {
+    if ( $_ =~ /meta name="Description"/i ) {
+      my $points = $_;
+      $points =~ s/ points.*//i;
+      $points =~ s/.* //;
+      print "$points\n";
+      my $left = $lastCan - $points;
+      print "$points points. Can get $lastCan. Left=$left\n";
+      return;
+    }
+  }
+
+  print("Got nothing. Check to see if you need to enter a CAPTCHA.\n");
+
+}
+
 sub printTimeFile {
   my $lmt = ( stat($misses) )[9];
   my $lmm = scalar localtime($lmt);
@@ -507,6 +551,8 @@ sub printTimeFile {
   my $date2 = <A>;
   my $can   = <A>;
   die("Maximum = $can") if $justShow;
+  $lastCan = $can;
+  chomp($lastCan);
 
   print "Start=$cur";
   print "LastDate=$date";
@@ -515,7 +561,8 @@ sub printTimeFile {
   print "LastModifiedMissed=$lmm\n";
   print( $lmd > 0
     ? "Won't get bonus yet (I think), $lmd seconds to go.\n"
-    : "OK, hangman away.\n" );
+    : "OK, hangman away.\n"
+  );
 }
 
 sub usage {
