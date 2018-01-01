@@ -1,18 +1,27 @@
+# o.py
+#
+# launches or edits various files based on keywords etc
+#
+# todo: convert the booleans to a dictionary
+# have a shortcut of dictionary stuff to look at
+# have format strings for each dictionary element if possible
+
 import sys
 import os
 import re
+import i7
 
 def try_to_open(a):
     if os.path.exists(a):
         os.system(a)
+        print("File found:", a)
+        os.system(a)
     else:
         print("File not found:", a)
-    print("File found:", a)
-    os.system(a)
     return
 
 x = os.getcwd()
-print(x)
+# print(x)
 proj = ""
 
 notepad = "C:\\Program Files (x86)\\Notepad++\\notepad++.exe"
@@ -23,6 +32,7 @@ open_notes = False
 open_source = False
 open_tables = False
 open_walkthrough = False
+open_raw_invisiclues = False
 
 open_cantgo = False
 launch_cantgo = False
@@ -52,16 +62,20 @@ while (count < len(sys.argv)):
         open_notes = True
     if ca == 'rn':
         release_notes = True
+    if ca == 'i':
+        open_raw_invisiclues = True
     count = count + 1
 
-sums = open_trizbort + open_notes + open_source + open_tables
+sums = release_notes + open_trizbort + open_notes + open_source + open_tables + open_walkthrough + open_raw_invisiclues
 
 proj_space = re.sub("-", " ", proj)
 proj_und = re.sub("-", "_", proj)
 
-i7 = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\"
-
 source = "c:\\games\\inform\\{:s}.inform\\Source\\".format(proj)
+
+if open_raw_invisiclues:
+    print("Opening raw invisiclues for", rev)
+    try_to_open("c:\\writing\\scripts\\invis\\{:s}.txt".format(rev))
 
 if open_notes:
     print("Opening notes file for", proj)
@@ -90,15 +104,23 @@ if open_source:
 
 if open_tables:
     print("Opening tables file for", proj)
-    try_to_open("{:s}{:s} tables.i7x".format(i7, proj_space))
+    try_to_open("{:s}{:s} tables.i7x".format(i7.i7x, proj_space))
 
 if open_trizbort:
     print("Opening trizbort file for", proj)
-    os.system("c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(proj))
+    try_to_open("c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(proj))
 
 if release_notes:
-    print("Opening release notes for", proj)
-    os.system("c:\\users\\andrew\\dropbox\\notes\\{:s}.txt".format(proj))
+    if proj in i7.i7rn.keys():
+        if i7.i7rn[proj].isnumeric():
+            rel_file = "{:s}_release_{:s}_notes.txt".format(proj, i7.i7rn[proj])
+        else:
+            rel_file = i7.i7rn[proj] + "_notes.txt"
+    else:
+        print("No release notes in i7rn keys. Trying default.")
+        rel_file = proj + "_release_1_notes.txt"
+    rel_file = re.sub("-", "_", rel_file)
+    try_to_open("c:\\users\\andrew\\dropbox\\notes\\{:s}".format(rel_file))
 
 if sums == 0:
     print("Nothing to do.")
