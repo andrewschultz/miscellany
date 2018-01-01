@@ -11,9 +11,43 @@ import os
 import re
 import i7
 
+from collections import defaultdict
+
+exp_cmd = defaultdict(str)
+opt_dict = defaultdict(bool)
+
+exp_cmd = { "tr": "open_trizbort",
+    "cg": "open_cantgo",
+    "cgl": "launch_cantgo",
+    "wa": "open_walkthrough",
+    "w": "open_walkthrough",
+    "t": "open_source",
+    "ta": "open_tables",
+    "no": "open_notes",
+    "rn": "release_notes",
+    "i": "open_raw_invisiclues"
+}
+
+conflict = False
+
+for x in exp_cmd.keys():
+    if x in i7.i7x.keys():
+        conflict = True
+        print("Conflict: exp cmd and i7x keys both feature", x, "mapping to", i7.i7x[x], "and", exp_cmd[x])
+
+if conflict:
+    print("Fix conflicts before rerunning.")
+    exit()
+
+def usage():
+    trim = "=" * 30
+    print(trim, "usage", trim)
+    for x in exp_cmd.keys():
+        print(x,"=>", exp_cmd[x])
+    exit()
+
 def try_to_open(a):
     if os.path.exists(a):
-        os.system(a)
         print("File found:", a)
         os.system(a)
     else:
@@ -64,6 +98,9 @@ while (count < len(sys.argv)):
         release_notes = True
     if ca == 'i':
         open_raw_invisiclues = True
+    if ca == '?' or ca == '-?':
+        usage()
+        exit()
     count = count + 1
 
 sums = release_notes + open_trizbort + open_notes + open_source + open_tables + open_walkthrough + open_raw_invisiclues
