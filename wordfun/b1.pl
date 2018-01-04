@@ -30,6 +30,8 @@ my %freq;
 my %f2;
 my $stdin   = 0;
 my $lastCan = 0;
+my $lastWord;
+my $lastCheckPoints = 0;
 
 my $del       = -1;
 my $crossword = 0;
@@ -198,6 +200,16 @@ else {
       getPoints();
       next;
     }
+    if ( $temp eq "?" ) {
+      if ($lastWord) {
+        print("Looking up last word $lastWord.\n");
+        system("start http://www.thefreedictionary.com/$lastWord");
+      }
+      else {
+        print("No determined last word.\n");
+      }
+      next;
+    }
     if ( lc($temp) eq "se" ) {
       system("start http://secure.thefreedictionary.com");
       next;
@@ -334,7 +346,7 @@ sub oneHangman {
     }
     if ( !$wordBad ) { checkForRepeats( $_[0], $line ); }
   }
-  if ( $#prevMiss > -1 ) {
+  if ( scalar(@prevMiss) ) {
     print "MISSED BEFORE:\n";
     for ( sort { $miss{$a} <=> $miss{$b} || $a cmp $b } @prevMiss ) {
       $count++;
@@ -365,6 +377,9 @@ sub oneHangman {
   }
   elsif ( $count + $missFound == 0 ) { print "Uh oh no matches.\n"; }
   else                               { print "Only one match found.\n"; }
+
+  if    ( $#prevMiss == 0 )          { $lastWord = $prevMiss[0]; }
+  elsif ( $count + $missFound != 1 ) { $lastWord = ""; }
 
   if ( $count > 1 ) {
     my $checkPopular = "";
@@ -414,6 +429,7 @@ sub checkForRepeats {
     if ($_) { $f2{$_}++; }
   }
 
+  $lastWord = $line;
   if ( $miss{$line} ) {
     push( @prevMiss, $line );
   }
@@ -531,6 +547,7 @@ sub getPoints {
       $points =~ s/.* //;
       print "$points\n";
       my $left = $lastCan - $points;
+      $lastCheckPoints = $points;
       print "$points points. Can get $lastCan. Left=$left\n";
       return;
     }
@@ -558,6 +575,7 @@ sub printTimeFile {
   print "LastDate=$date";
   print "NextDate=$date2";
   print "End=$can";
+  print "LastCheckPoints=$lastCheckPoints" if $lastCheckPoints;
   print "LastModifiedMissed=$lmm\n";
   print( $lmd > 0
     ? "Won't get bonus yet (I think), $lmd seconds to go.\n"

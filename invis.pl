@@ -29,10 +29,11 @@ my $verbose         = 0;
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
-$exp{"0"} = "sc";
-$exp{"1"} = "sa";
-$exp{"2"} = "roi";
-$exp{"3"} = "3d";
+$exp{"0"}  = "sc";
+$exp{"1"}  = "sa";
+$exp{"2"}  = "roi";
+$exp{"3"}  = "3d";
+$exp{"up"} = "pu";
 
 ###trickier variables
 my $cmd      = "";
@@ -68,8 +69,11 @@ while ( $count <= $#ARGV ) {
       && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
     /^-/ && do { usage(); exit; };
     do {
-      if   ( $exp{$a} ) { $filename = "$exp{$a}.txt"; }
-      else              { $filename = "$a.txt"; }
+      if ( defined( $exp{$a} ) ) {
+        $filename = "$exp{$a}.txt";
+        print "$a mapped to $exp{$a}...\n";
+      }
+      else { $filename = "$a.txt"; }
       $count++;
     };
   }

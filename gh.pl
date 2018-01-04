@@ -389,11 +389,11 @@ sub processTerms {
           }
           else {
             die(
-"FATAL BUILD ERROR:\n$timeArray[0] has timestamp after $timeArray[1], which is a fatal build error\n"
+"FATAL BUILD ERROR:\n    $timeArray[0] has timestamp after $timeArray[1]\n"
                 . (
                 $xtraCmd
-                ? " (try running $xtraCmd or adding =x to skip)"
-                : "(no extra command)"
+                ? "    (try running $xtraCmd or adding =x to skip)"
+                : "    (no extra recommended command)"
                 )
                 . "\n"
             );

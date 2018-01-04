@@ -180,12 +180,15 @@ if ( !$file ) {
 }
 
 if ($useOrderFile) {
+  print "??$alphabetize{$file}\n";
+  die();
   my %region;
   my %origID;
   my @origIDs = ();
   readAlphFile();
   die("No custom sort instructions for $file.") unless $sortHash{$file}{0};
   open( A, $file ) || die("Can't open $file");
+
   while ( $line = <A> ) {
     if ( $line =~ /room id=\"/ ) {    # 1 = id #, 3 = name, 15 = region
       my @q = split( /\"/, $line );
@@ -203,8 +206,9 @@ if ($useOrderFile) {
       || ( $origID{$a} <=> $origID{$b} )
   } keys %region;
 
-  print "??\n";
-  for my $x ( sort keys { %alphabetize{$file} } ) { print "$x\n"; }
+  if ( $verbose && { $alphabetize{$file} } ) {
+    for my $x ( sort keys { %alphabetize{$file} } ) { print "$x\n"; }
+  }
 
   # die("!!" . $alphabetize{$file}{"back set"} . "!!");
   for ( 0 .. $#finalArray ) {
@@ -285,10 +289,11 @@ sub conditionalCopy {
     print "Also not diagnosing.\n" if $diagAfter;
   }
   else {
-    print "Copying back $file.\n";
-    `copy /Y $trdr\\$outFile $trdr\\$file`;
-    `erase $trdr\\$outFile`;
-
+    die("No output file, bailing.") if !$_[1];
+    print "Copying back $_[0] to $_[1].\n";
+    print `copy /Y $_[0] $_[1]`;
+    print "Erasing $_[1].\n";
+    print `erase $_[1]`;
     if ($diagAfter) { diagnose(); exit(); }
   }
 }
