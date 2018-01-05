@@ -13,10 +13,10 @@ import i7
 
 from collections import defaultdict
 
-exp_cmd = defaultdict(str)
+cmd_abbrev = defaultdict(str)
 opt_dict = defaultdict(bool)
 
-exp_cmd = { "tr": "open_trizbort",
+cmd_abbrev = { "tr": "open_trizbort",
     "cg": "open_cantgo",
     "cgl": "launch_cantgo",
     "wa": "open_walkthrough",
@@ -30,10 +30,10 @@ exp_cmd = { "tr": "open_trizbort",
 
 conflict = False
 
-for x in exp_cmd.keys():
+for x in cmd_abbrev.keys():
     if x in i7.i7x.keys():
         conflict = True
-        print("Conflict: exp cmd and i7x keys both feature", x, "mapping to", i7.i7x[x], "and", exp_cmd[x])
+        print("Conflict: exp cmd and i7x keys both feature", x, "mapping to", i7.i7x[x], "and", cmd_abbrev[x])
 
 if conflict:
     print("Fix conflicts before rerunning.")
@@ -42,14 +42,14 @@ if conflict:
 def usage():
     trim = "=" * 30
     print(trim, "usage", trim)
-    for x in exp_cmd.keys():
-        print(x,"=>", exp_cmd[x])
+    for x in cmd_abbrev.keys():
+        print(x,"=>", cmd_abbrev[x])
     exit()
 
 def try_to_open(a):
     if os.path.exists(a):
         print("File found:", a)
-        os.system(a)
+        os.system("\"" + a + "\"")
     else:
         print("File not found:", a)
     return
@@ -141,7 +141,7 @@ if open_source:
 
 if open_tables:
     print("Opening tables file for", proj)
-    try_to_open("{:s}{:s} tables.i7x".format(i7.i7x, proj_space))
+    try_to_open("{:s}{:s} tables.i7x".format(i7.i7xd, proj_space))
 
 if open_trizbort:
     print("Opening trizbort file for", proj)
