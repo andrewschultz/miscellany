@@ -19,7 +19,6 @@ use File::stat;
 
 ##########################
 #options
-my $warnCanRun = 0;
 my $alph       = 1;
 my $procString = "";
 my $defaultString;
@@ -44,6 +43,7 @@ my $ght   = "c:\\writing\\scripts\\gh.txt";
 my $ghp   = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs   = "c:\\writing\\scripts\\gh.pl";
 my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
+my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 
 ###########################
 #hashes
@@ -53,6 +53,7 @@ my %repls;
 my %repl2;
 my %altHash, my %do, my %poss, my %postproc, my %didpostproc;
 my %msgForProj;
+my %warnCanRun;
 
 #################options
 my $executeBackCopy = 0;
@@ -347,11 +348,13 @@ sub processTerms {
 "SKIPPING TEST COMMAND $a, priority is execLevel is $execLevel and needs to be $thisTestPriority.\n";
           next;
         }
-        if ( $runTrivialTests == -1 ) { $warnCanRun = 1; next; }
+        if ( $runTrivialTests == -1 ) { $warnCanRun{$hashProj} = 1; next; }
         $didpostproc{$hashProj} = 1;
         $b =~ s/^>//g;
         $b =~ s/=.*//g;
         if ( !hasHash($hashProj) ) { next; }
+
+        # die($runTrivialTests, $b, $postproc{$b});
         if ( ( $runTrivialTests == 1 )
           || ( $postproc{$b} )
           ) # this is about running commands. Now the loop below should hit the FROMBASE= etc first
@@ -368,7 +371,7 @@ sub processTerms {
           $quickCheck .= `$b`;
           $cmdYet = 1;
         }
-        else { $warnCanRun = 1; next; }
+        else { $warnCanRun{$hashProj} = 1; next; }
         next;
       }
 
@@ -731,8 +734,10 @@ sub processTerms {
     printf( "\n========quick verifications%s\n$quickCheck",
       $verboseTest ? "" : " (-vt to show verbose)" );
   }
-  if ($warnCanRun) {
-    print "\nYou could have run code checking by tacking on an =.";
+  if ( scalar keys %warnCanRun ) {
+    print
+"\nYou could have run code checking for the following project(s) by tacking on an =, or putting them in a POSTPROC= commmand line:\n        ";
+    print join( ", ", sort keys %warnCanRun ) . "\n";
   }
   return $didOne;
 }

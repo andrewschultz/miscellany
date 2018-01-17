@@ -109,6 +109,8 @@ while ( $count <= $#ARGV ) {
       && do { @runs = ("as"); $count++; next; };    # Alec Smart?
     /^-?(r|roi|s|sa)$/i
       && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
+    /^-?(odd)$/i
+      && do { @runs = ("odd"); $count++; next; };  # roiling original? (default)
     /^-?sr$/
       && do { $showRules = 1; $count++; next; };    # show the rules text is in
     /^-?h$/ && do { $showHeaders = 1; $count++; next; };
@@ -380,7 +382,9 @@ sub processFiles {
     processOneFile(@fileAndMarkers);
   }
   print "IMPORTANT END STRING STUFF:\n$stringAtEnd" if $stringAtEnd;
-  if ( $#blanks > -1 ) { print "EMPTY FILES: " . join( ", ", @blanks ) . "\n"; }
+  if ( $#blanks > -1 ) {
+    print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
+  }
   if ( $errStuff[0] ) {
     print "TEST RESULTS: $_[0],0,"
       . $#errStuff + 1 . ",0,"
