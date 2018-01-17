@@ -3,13 +3,23 @@
 #
 # debug hacker python file
 #
+# this takes a X.i7x file and converts it to X debug.i7x
+#
+# dbh.txt has the data on how to cut tables down
+# this is useful for testing debug statements a bit more easily
+# for instance, to make sure there are exactly 5 elements in a loop
+#
 
 import i7
 import re
+import filecmp
+from shutil import copyfile
 
 # i7.i7x
 
 dbh = "c:/writing/scripts/dbh.txt"
+
+temp_write = i7.i7xd + "dbh-temp.i7x"
 
 my_project = "pu"
 
@@ -17,7 +27,7 @@ reading_operators = False
 firsts = {}
 lasts = {}
 
-def process_operators(infile, outfile):
+def process_operators(infile, tempfile, outfile):
     in_mod = infile
     out_mod = outfile
     in_noxt = re.sub("\.[^\.]*$", "", in_mod)
@@ -29,7 +39,7 @@ def process_operators(infile, outfile):
     in_table = False
     line_count = 0
     fk = list(firsts.keys())
-    fout=open(out_mod, "w")
+    fout=open(tempfile, "w")
     with open(in_mod) as file:
         for line in file:
             line_count = line_count + 1
@@ -54,6 +64,11 @@ def process_operators(infile, outfile):
                 to_go = to_go - 1
             fout.write(line)
     fout.close()
+    if filecmp.cmp(tempfile, out_mod): # note this is the reverse of PERL
+        print(tempfile, "is identical to", outfile,"so I won't copy back over.")
+    else:
+        print(tempfile, "is different from", outfile, "so I will write over.")
+        copyfile(tempfile, out_mod)
     return
 
 with open(dbh) as file:
@@ -61,7 +76,7 @@ with open(dbh) as file:
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False
-                process_operators(read_file, write_file)
+                process_operators(read_file, temp_write, write_file)
                 continue
             t = line.strip().split("\t")
             if line.startswith("first"):

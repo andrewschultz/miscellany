@@ -2,7 +2,7 @@ Version 1/171230 of Trivial Niceties by Andrew Schultz begins here.
 
 "This adds indexed text stubs to a glulx project. We avoid it for Z8 because indexed text can take a LOT of memory/space in the compiler."
 
-include Trivial Niceties by Andrew Schultz.
+include Trivial Niceties Z-Only by Andrew Schultz.
 
 volume debug printing
 
