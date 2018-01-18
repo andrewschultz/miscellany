@@ -43,13 +43,31 @@ my $filename = "$default.txt";
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
   for ($a) {
+    do {
+      if ( defined( $exp{$a} ) ) {
+        if ( -f "$invDir\\$filename" ) {
+          $filename = "$exp{$a}.txt";
+          print "$a mapped to $exp{$a}...\n";
+          $count++;
+          next;
+        }
+      }
+      elsif ( -f "$invDir\\$a.txt" ) {
+        print "Getting filename $a.txt.\n";
+        $filename = "$a.txt";
+        $count++;
+        next;
+      }
+    };
     /^-?\?$/ && do { usage();          exit; };
     /^-?a$/  && do { printAllFiles(0); exit; };
     /^-?la$/ && do { listAllOutput();  exit; };
     /^-?d$/ && do { $debug           = 1; $count++; next; };
     /^-?f$/ && do { $forceRunThrough = 1; $count++; next; };
     /^-?u$/ && do { $updateOnly      = 1; $count++; next; };
-    /^-?[lr]+$/ && do {
+    /^-?[lr]+$/
+      && do
+    { # this must be after the filename check since RL = roiling logic. Unfortunately, things clashed.
       $launchAfter = ( $a =~ /l/ );
       $launchRaw   = ( $a =~ /r/ );
       $count++;
@@ -67,20 +85,13 @@ while ( $count <= $#ARGV ) {
     /^-?e$/ && do { $launchTextFile = 1; $count++; next; };
     /^-?en$/
       && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
-    /^-/ && do { usage(); exit; };
-    do {
-      if ( defined( $exp{$a} ) ) {
-        $filename = "$exp{$a}.txt";
-        print "$a mapped to $exp{$a}...\n";
-      }
-      else { $filename = "$a.txt"; }
-      $count++;
-    };
+    usage();
+    exit();
   }
 }
 
 if ( ( !-f "$invDir/$filename" ) && ( !$createTextFile ) ) {
-  print "No filename, going to usage.\n";
+  print "No valid filename, going to usage.\n";
   usage();
 }
 
@@ -351,7 +362,7 @@ sub launchIt {
 
 sub addBoldItalic {
   my $temp = $_[0];
-  return $_[0] unless $temp =~ /[_\@]/;
+  return $_[0] unless $temp =~ /[_\@]/ || $temp =~ /\\n/;
   my $ital = () = $temp =~ /_/g;
   my $bold = () = $temp =~ /\@/g;
   my $openTag = 0;
@@ -368,6 +379,9 @@ sub addBoldItalic {
     $temp =~ s/\_/"<" . ($openTag ? "\/" : "") . "i>"/e;
     $openTag = !$openTag;
   }
+  print "$temp\n";
+  $temp =~ s/\\n/\n/g;    # backslash-n mapped to CR
+  print "$temp\n";
   return $temp;
 }
 
