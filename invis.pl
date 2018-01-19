@@ -138,6 +138,13 @@ $rawFile =~ s/.*[\\\/]//g;
 $rawFile = "c:/writing/scripts/invis/invraw-$rawFile";
 $rawFile =~ s/\.txt/\.htm/g;
 
+if ( $a =~ /^raw=/i ) {
+  $a =~ s/^raw=//i;
+  chomp($a);
+  $rawFile = "$invDir\\$a";
+  $a       = <A>;
+}
+
 if ( $updateOnly && defined( -M $outname ) ) {
 
 #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
@@ -379,9 +386,7 @@ sub addBoldItalic {
     $temp =~ s/\_/"<" . ($openTag ? "\/" : "") . "i>"/e;
     $openTag = !$openTag;
   }
-  print "$temp\n";
   $temp =~ s/\\n/\n/g;    # backslash-n mapped to CR
-  print "$temp\n";
   return $temp;
 }
 
