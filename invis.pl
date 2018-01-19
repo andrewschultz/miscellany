@@ -26,6 +26,7 @@ my $debug           = 0;
 my $launchTextFile  = 0;
 my $createTextFile  = 0;
 my $verbose         = 0;
+my $questionLast    = 0;
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
@@ -222,6 +223,10 @@ while ( $a = <A> ) {
   $a =~ s/ *##regignore.*//;      # regression ignore, for testing elsewhere
 
   if ( $a !~ /^[\?>]/ ) {
+    if ( !$questionLast ) {
+      print "WARNING line $. has no question before it: $a\n";
+      $questionLast = 1;          # don't repeat the error printout
+    }
     $levels[$lastLev]++;
     $a   = addBoldItalic($a);
     $otl = currentOutline(@levels);
@@ -236,6 +241,7 @@ while ( $a = <A> ) {
   if ($lastWasInvisiclue) { print B "</div>\n"; }
   $lastWasInvisiclue = 0;
   if ( $a =~ /^\?/ ) {
+    $questionLast = 1;
     my $ll = $lastLev + 1;
     $a =~ s/^.//g;
     $levels[$lastLev]++;
@@ -243,6 +249,7 @@ while ( $a = <A> ) {
     print B "<h$ll>$a</h$ll>\n<div>\n";
     next;
   }
+  $questionLast = 0;
   if ($debug) { print "Outlining $a.\n"; }
   $temp = $a;
   my $times = $temp =~ tr/>//;
