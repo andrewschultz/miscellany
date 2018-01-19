@@ -125,25 +125,45 @@ if ( !-f $filename ) { $filename = "$invDir\\$filename"; }
 
 open( A, "$filename" ) || die( "Can't open input file " . $filename );
 
-$a = <A>;
-
-if ( $a =~ /^out=/i ) {
-  $a =~ s/^out=//i;
-  chomp($a);
-  $outname = "$invDir\\$a";
-  $a       = <A>;
-}
-
 my $rawFile = $filename;
 $rawFile =~ s/.*[\\\/]//g;
 $rawFile = "c:/writing/scripts/invis/invraw-$rawFile";
 $rawFile =~ s/\.txt/\.htm/g;
 
-if ( $a =~ /^raw=/i ) {
-  $a =~ s/^raw=//i;
-  chomp($a);
-  $rawFile = "$invDir\\$a";
-  $a       = <A>;
+my $theDir = "";
+my $title  = "NO TITLE DEFINED, USE !";
+
+while ( $a = <A> ) {
+  last if $a =~ /end header/i;
+  if ( $a =~ /^->/ ) { chomp($a); $a =~ s/^->//g; $theDir = $a; next; }
+  if ( $a =~ /^>/ ) {
+    print(
+"WARNING: no end header line in $filename.\nNot a critical error, but it's good form to add such a line.\n"
+    );
+    seek( A, -length($a) - 1, 1 )
+      ;    # ?? not sure what to do here if something is in UNIX mode
+    last;
+  }
+  if ( $a =~ /^!/ ) {
+    $title = $a;
+    $title =~ s/^!//;
+    next;
+  }
+
+  if ( $a =~ /^out=/i ) {
+    $a =~ s/^out=//i;
+    chomp($a);
+    $outname = "$invDir\\$a";
+    next;
+  }
+
+  if ( $a =~ /^raw=/i ) {
+    $a =~ s/^raw=//i;
+    chomp($a);
+    $rawFile = "$invDir\\$a";
+    $a       = <A>;
+    next;
+  }
 }
 
 if ( $updateOnly && defined( -M $outname ) ) {
@@ -171,17 +191,6 @@ if ( $updateOnly && defined( -M $outname ) ) {
     print "TEST RESULTS:$fileShort invisiclues,0,1,0,(TEST ALREADY RUN)\n";
   }
 }
-
-if ( $a !~ /^!/ ) {
-  print(
-"The first line (other than out=) must begin with a (!). That's a bit rough, but it's how it is."
-  );
-  exit;
-}
-
-$a =~ s/^!//g;
-
-chomp($a);
 
 my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -212,12 +221,10 @@ my $lastLev           = 0;
 my $temp              = 0;
 my $otl               = 0;
 my $lastWasInvisiclue = 0;
-my $theDir            = "";
 
 while ( $a = <A> ) {
   print $a if $verbose;
   chomp($a);
-  if ( $a =~ /^->/ ) { $a =~ s/^->//g; $theDir = $a; next; }
   if ( $a =~ /^\#/ ) { next; }    #comments
   if ( $a =~ /^;/ )  { last; }
   $a =~ s/ *##regignore.*//;      # regression ignore, for testing elsewhere
