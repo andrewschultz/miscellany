@@ -6,7 +6,9 @@
 #
 #then prints out results, with the most likely letters left
 #
-# lo..u. ?carnitine = odd error
+# +markup +markup = not there (command 2x in a row doesn't show it if you have say m.rkup)
+
+# b1 if other already open - reject? Or say, delete file x?
 
 # bug can't add word that isn't in the dictionary in first place (omeprazole)
 
@@ -33,142 +35,124 @@ my $lastCan = 0;
 my $lastWord;
 my $lastCheckPoints = 0;
 
-my $del       = -1;
+# unimplemented option, must be set in file
+my $justShow = 0;
+
+my $del       = 0;
 my $crossword = 0;
 
 my $firstStuffString = "esirotlan";
-
-for ( 0 .. $#ARGV ) {
-  if ( $ARGV[$_] =~ /b1\.pl/i ) { $del = $_; }
-}
-if ( $del > -1 ) {
-  print "Oops, it looks like you forgot to delete the command above.\n";
-  @ARGV = @ARGV[ $del + 1 .. $#ARGV ];
-}
-
-if ( !defined( $ARGV[0] ) ) {
-  die(
-"Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"
-  );
-}
-
-my $argtrim = lc( $ARGV[0] );
-$argtrim =~ s/^-//;
-
-if ( ( lc( $ARGV[0] ) eq "-f" ) || ( lc( $ARGV[0] ) eq "f" ) ) {
-  if ( !defined( $ARGV[1] ) ) { die("Need a word to force into the list."); }
-  addToDict( $ARGV[1], 1 );
-  exit();
-}
-
-if ( defined( $ARGV[2] ) ) {
-  die("Only 2 arguments max: word and missed letters.\n");
-}
-
-if ( $argtrim =~ /^[\*#]/ ) { $argtrim =~ s/.//; $crossword = 1; }
-if ( $argtrim eq "e" )      { `$misses`;         exit(); }
-if ( $argtrim eq "c" ) {
-  my $cmd = 'start "" "notepad++.exe" ' . (__FILE__);
-  `$cmd`;
-  exit();
-}
-if ( $argtrim eq "s" ) { showMisses(); exit(); }
-if ( $argtrim eq "?" ) { usage();      exit(); }
-
-my $justShow = 0;
-
-if ( ( $argtrim =~ /^(-)?a[0-9]/i ) ) {
-  my $delta = $argtrim;
-  my @newfi;
-
-  $delta =~ s/^(-)?a//i;
-
-  open( A, $b1time );
-  while ( $a = <A> ) {
-    push( @newfi, $a );
-  }
-  $newfi[0] += $delta;
-  $newfi[3] += $delta;
-  $newfi[0] .= "\n";
-  $newfi[3] .= "\n";
-  close(A);
-  open( A, ">$b1time" );
-  print A $_ for (@newfi);
-  close(A);
-  print "Added $delta to start/end.\n";
-}
-
-if ( ( $argtrim =~ /^(-)?p[0-9]/i ) ) {
-  my $newStart = $argtrim;
-  $newStart =~ s/^(-)?p//;
-  if ( !$newStart ) { $justShow = 1; }
-  else {
-    my $ns2 = $newStart + 750;
-    open( A, ">c:/writing/dict/p1.txt" );
-    print A "$newStart\n"
-      . ( scalar localtime( time() ) ) . "\n"
-      . ( scalar localtime( time() + 43200 ) )
-      . "\n$ns2\n";
-    close(A);
-    $stdin = 1;
-  }
-}
-
-elsif ( ( $argtrim eq "i" ) || ( $argtrim eq "1" ) ) { $stdin = 1; }
-elsif ( $argtrim =~ /[0-9]+$/ ) {
-  my $wordfile = "c:\\writing\\dict\\words-$argtrim.txt";
-  if ( $argtrim == 0 ) { $wordfile = "c:\\writing\\dict\\brit-1word.txt"; }
-  if ( !$wordfile ) { die("No word file $wordfile.") }
-  `$wordfile`;
-  exit();
-}
-
 my @firstStuff = split( "", $firstStuffString );
 
-printTimeFile();
+my @postproc = ();
 
-if ( $ARGV[0] =~ /^[-=\+]/i ) {
-  if ( $ARGV[0] !~ /[a-z]/i ) {
-    print "No spaces between +=- and a letter.\n";
+my $argcount = 0;
+
+my $firstWrongGuess = "";
+my $guessResult;
+
+die(
+"Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"
+) if !defined( $ARGV[0] );
+
+while ( $argcount <= $#ARGV ) {
+  my $arg = lc( $ARGV[$argcount] );
+  my $arg2 = $argcount < $#ARGV ? $ARGV[ $argcount + 1 ] : "";
+
+  for ($arg) {
+    /b1\.pl/i && do {
+      print "Oops, forgot to delete b1.\n" if $del == 0;
+      $del = 1;
+      $argcount++;
+      next;
+    };
+    /^-?f/ && do {
+      die("Need a word to force into the list.") if !$arg2;
+      addToDict( $arg2, 1 );
+      exit();
+    };
+    /^-?e$/i && do { `$misses`; exit(); };
+    /^-?c$/i
+      && do { my $cmd = 'start "" "notepad++.exe" ' . (__FILE__); exit(); };
+    /^-?i$/i && do { $stdin = 1; $argcount++; next; };
+    /^-?s$/i  && do { showMisses(); exit(); };
+    /^-?\?^/i && do { usage();      exit(); };
+    /^[a-z]$/i && do {
+      die("Only one firstWrongGuess allowed.") if $firstWrongGuess;
+      $firstWrongGuess = $arg;
+      $argcount++;
+      next;
+    };
+    /^[a-z\.]+$/i && do {
+      die("Only one guessResult allowed.") if $guessResult;
+      $guessResult = $arg;
+      $argcount++;
+      next;
+    };
+    /^[\*#][a-z\.]$/i && do {
+      die("Only one guessResult allowed.") if $guessResult;
+      $crossword   = 1;
+      $guessResult = $arg;
+      $argcount++;
+      next;
+    };
+    /^[aip][0-9]+$/i
+      && do { updateP1File($arg); $stdin = 1; $argcount++; next; };
+    /^[0-9]{1,2}+$/i && do {
+      my $wordfile =
+        $arg
+        ? "c:\\writing\\dict\\words-$arg.txt"
+        : "c:\\writing\\dict\\brit-1word.txt";
+      `$wordfile`;
+      $argcount++;
+    };
+    print "Uh oh, coundn't find anything to do with the argument $arg.\n";
+    usage();
     exit();
   }
-  my $toAdd = $ARGV[0];
-  $toAdd =~ s/^[-=+]+//;
-  my $l      = length($toAdd);
-  my $inDict = 0;
-  open( A, "c:\\writing\\dict\\words-$l.txt" )
-    || do { print "No file for words of length $l.\n"; exit(); };
-  while ( $a = <A> ) {
-    chomp($a);
-    if ( lc($a) eq lc($toAdd) ) { $inDict = 1; }
-  }
-  close(A);
-  if ( $inDict == 0 ) {
-    if ( $ARGV[0] !~ /^[=+]{2}/ ) {
-      die("Need extra =/+ for word not in dictionary.");
+}
+
+if ( !$stdin ) {
+  if ( $ARGV[0] =~ /^[-=\+]/i ) {
+    if ( $ARGV[0] !~ /[a-z]/i ) {
+      print "No spaces between +=- and a letter.\n";
+      exit();
     }
+    my $toAdd = $ARGV[0];
+    $toAdd =~ s/^[-=+]+//;
+    my $l      = length($toAdd);
+    my $inDict = 0;
+    open( A, "c:\\writing\\dict\\words-$l.txt" )
+      || do { print "No file for words of length $l.\n"; exit(); };
+    while ( $a = <A> ) {
+      chomp($a);
+      if ( lc($a) eq lc($toAdd) ) { $inDict = 1; }
+    }
+    close(A);
+    if ( $inDict == 0 ) {
+      if ( $ARGV[0] !~ /^[=+]{2}/ ) {
+        die("Need extra =/+ for word not in dictionary.");
+      }
+    }
+    if ( $toAdd =~ /[^a-z]/i ) {
+      die("Bailing, $toAdd contains non-alphabetical characters.");
+    }
+    addToDict( $toAdd, 0 );
+    addToErrs( $ARGV[0] );
+    exit();
   }
-  if ( $toAdd =~ /[^a-z]/i ) {
-    die("Bailing, $toAdd contains non-alphabetical characters.");
-  }
-  addToDict( $toAdd, 0 );
-  addToErrs( $ARGV[0] );
-  exit();
 }
 
 my $count = 0;
 
 my $lastOne  = "";
 my $firstOne = "";
-my $whichf   = length( $ARGV[0] );
 
 my $wordBad = 0;
 my $wrongs  = "";
 
-if ( defined( $ARGV[1] ) ) { $wrongs = $ARGV[1]; }
-
+# read in the misses
 my $line;
-
 open( A, "$misses" ) || die("No misses file.");
 while ( $line = <A> ) {
   chomp($line);
@@ -185,10 +169,30 @@ my $canAlphabetize = 0;
 
 if ( !$stdin ) { oneHangman( $ARGV[0], $wrongs ); }
 else {
+  printTimeFile();
+
+  my $prevText = "";
+  if ($guessResult) {
+    $prevText = $guessResult;
+    $prevText .= " $firstWrongGuess" if $firstWrongGuess;
+  }
+  elsif ($firstWrongGuess) {
+    die("You had a wrong-guess without having the hangman results.");
+  }
   my $temp;
-  while ( $temp = getStdin() ) {
+  while ( $prevText || ( $temp = getStdin() ) ) {
+    if ($prevText) {
+      $temp     = $prevText;
+      $prevText = "";
+    }
     chomp($temp);
     $temp =~ s/^[ \t]*//;
+
+    # get rid of errant b1 first
+    if ( $temp =~ /b1\.pl/ ) {
+      print "Wiping out everything before b1.pl.\n";
+      $temp =~ s/.*b1\.pl *//i;
+    }
 
     if ( $temp =~ /^'/ ) {
       $temp =~ s/^'//;
@@ -220,15 +224,13 @@ else {
     }
     if ( $temp =~ /^[-=\+]/ ) { addToErrs($temp); next; }
     if ( $temp eq "?" )       { usage();          next; }
-    if ( $temp =~ /^\?/ ) {
+    if ( ( $temp =~ /^\?/ ) || ( $temp =~ / \?/ ) ) {
+      print "Cutting off text before question mark...\n" if ( $temp =~ / \?/ );
       $temp =~ s/^.//;
+      $temp =~ s/.* \?//;
       print "Looking up definition of $temp...\n";
       `start http://www.thefreedictionary.com/$temp`;
       next;
-    }
-    if ( $temp =~ /b1\.pl/ ) {
-      print "Wiping out everything before b1.pl.\n";
-      $temp =~ s/.*b1\.pl *//i;
     }
     if ( ( $temp eq "q" ) || ( $temp eq "" ) ) {
       print("OK, see you later.\n");
@@ -250,6 +252,7 @@ else {
 
 sub cleanup {
   print "You hit ctrl-c.\n";
+  exit();
 }
 
 sub getStdin {
@@ -478,7 +481,7 @@ sub addToErrs {
     $val{$toAdd} += $addit;
   }
   open( B, ">$misses" );
-  for my $z ( sort keys %val ) { print B "$z:$val{$z}\n"; }
+  for my $z ( sort keys %val ) { print B "$z:$val{$z}\n" if $val{$z}; }
   close(B);
 }
 
@@ -581,6 +584,44 @@ sub printTimeFile {
     ? "Won't get bonus yet (I think), $lmd seconds to go.\n"
     : "OK, hangman away.\n"
   );
+}
+
+sub updateP1File {
+  my $delta = $_[0];
+  $delta =~ s/^.//;
+  my $ns2 = $delta + 750;
+
+  if ( $_[0] =~ /^[ip]/ )    # change the delta
+  {
+    open( A, ">$b1time" );
+    print A "$delta\n"
+      . ( scalar localtime( time() ) ) . "\n"
+      . ( scalar localtime( time() + 43200 ) )
+      . "\n$ns2\n";
+    close(A);
+  }
+  elsif ( $_[0] =~ /^a/ )    # adjust
+  {
+    my @newfi;
+    open( A, $b1time );
+    while ( $a = <A> ) {
+      push( @newfi, $a );
+    }
+    close(A);
+    $newfi[0] += $delta;
+    $newfi[3] += $delta;
+    $newfi[0] .= "\n";
+    $newfi[3] .= "\n";
+    open( A, ">$b1time" );
+    print A $_ for (@newfi);
+    close(A);
+    print "Added $delta to start/end.\n";
+  }
+  else {
+    die(
+"Need an a/i/p at the start of a number to modify in $b1time. (a=adjust, i/p=fixed)"
+    );
+  }
 }
 
 sub usage {
