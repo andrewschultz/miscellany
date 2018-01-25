@@ -20,44 +20,50 @@ def my_proj(x):
     exit()
 
 def file_hunt(x):
-    inst = 0
     # print("HUNTING TODOS in", x)
+    bad_lines = []
     with open(x) as file:
         line_num = 0
-        inst = 0
-        first_find = 0
         for line in file:
             line_num = line_num + 1
             ll = line.lower()
             if re.search("\[.*(\?\?|todo)", ll):
-                inst = inst + 1
-                if first_find == 0: first_find = line_num
+                bad_lines.append(line_num)
                 if verbose: print("Line", line_num, "instance", inst, "--", line.strip())
-    if inst == 0:
+    if len(bad_lines) == 0:
         print("Nothing found for", x)
         print()
         return
-    if not verbose: print("      ", inst, "total instances found for", x)
+    if not verbose: print("      ", len(bad_lines), "total instances found for", x, ":", ', '.join(str(x) for x in bad_lines))
     if launch_first_find:
-        cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(i7.np, x, first_find)
+        cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(i7.np, x, bad_lines[0])
         os.system(cmd)
     print()
+    return len(bad_lines) > 0 # If we got a ??, return true
 
 def todo_hunt(x):
     x2 = "c:\\games\\inform\\{:s}.inform\\source\\story.ni".format(x)
+    if x not in i7.i7f.keys():
+        print("WARNING i7.py doesn't define a file list for", x, "so I'm just going with story.ni.")
+        return file_hunt(x2) and bail_on_first
     x3 = re.sub(r'\\', "/", x2)
     if x2 not in i7.i7f[x] and x3 not in i7.i7f[x]:
-        print("WARNING you should maybe have the story.ni file in the i7.py list.")
-        file_hunt(x2)
+        print("WARNING you should maybe have the story.ni file in the i7.py list. I am adding it to what to check.")
+        if file_hunt(x2) and bail_on_first: return True
     else:
         print("TRIVIAL CHECK PASSED: story.ni file is in i7.py list...")
-    if x in i7.i7f.keys():
-        for y in i7.i7f[x]:
-            file_hunt(y)
+    for y in i7.i7f[x]:
+        if file_hunt(y) and bail_on_first: return True
+    return False
 
+# options
+bail_on_first = True
 launch_first_find = True
 search_all_qs = False
 verbose = False
+
+# variables
+searchables = []
 
 if len(sys.argv) > 1:
     count = 1
@@ -69,10 +75,21 @@ if len(sys.argv) > 1:
             verbose = False
         elif ll == 'v':
             verbose = True
+        elif ll == 'b':
+            bail_on_first = True
+        elif ll in i7.i7x.keys():
+            searchables.append(i7x[ll])
+        elif ll in i7.i7x.values():
+            searchables.append(ll)
+        else:
+            print("WARNING!", ll, "is not in i7x.keys.")
+        count = count + 1
 
 if search_all_qs:
     for x in i7.i7xr:
         todo_hunt(x)
-else:
+elif len(searchables) == 0:
     if os.path.exists("story.ni"):
         todo_hunt(my_proj(os.getcwd()))
+else:
+    print(searchables)
