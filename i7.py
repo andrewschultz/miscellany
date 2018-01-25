@@ -2,7 +2,20 @@
 #
 # basic dictionaries for various projects
 
+import os
+
 np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\""
+
+def src(x):
+    return "c:\\games\\inform\\{:s}.inform\\source\\story.ni".format(x)
+
+def sdir(x):
+    return "c:\\games\\inform\\{:s}.inform\\source".format(x)
+
+def npo(my_file, my_line, print_cmd = False):
+    cmd = "start \"\" {:s} {:s} -n{:d}".format(np, my_file, my_line)
+    if print_cmd: print("Launching", my_file, "at line", my_line, "in notepad++.")
+    os.system(cmd)
 
 i7xd = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\"
 
