@@ -34,9 +34,10 @@ def file_hunt(x):
         print("Nothing found for", x)
         print()
         return
+    local_bail = len(bad_lines) - 1 if last_line_open else min(bail_num, len(bad_lines)-1)
     if not verbose: print("      ", len(bad_lines), "total instances found for", x, ":", ', '.join(str(x) for x in bad_lines))
     if launch_first_find:
-        cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(i7.np, x, bad_lines[0])
+        cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(i7.np, x, bad_lines[local_bail])
         os.system(cmd)
     print()
     return len(bad_lines) > 0 # If we got a ??, return true
@@ -57,10 +58,12 @@ def todo_hunt(x):
     return False
 
 # options
+last_line_open = False
 bail_on_first = True
 launch_first_find = True
 search_all_qs = False
 verbose = False
+bail_num = 0
 
 # variables
 searchables = []
@@ -77,6 +80,13 @@ if len(sys.argv) > 1:
             verbose = True
         elif ll == 'b':
             bail_on_first = True
+        elif ll == 'l':
+            last_line_open = True
+        elif ll.startswith('o'):
+            try:
+                bail_num = int(ll[1:])
+            except:
+                print("The o option requires a number right after: no spaces.")
         elif ll in i7.i7x.keys():
             searchables.append(i7x[ll])
         elif ll in i7.i7x.values():
