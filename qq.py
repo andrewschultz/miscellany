@@ -27,7 +27,7 @@ def file_hunt(x):
         for line in file:
             line_num = line_num + 1
             ll = line.lower()
-            if re.search("\[.*(\?\?|todo)", ll):
+            if line_num > min_line and re.search("\[.*(\?\?|todo)", ll):
                 bad_lines.append(line_num)
                 if verbose: print("Line", line_num, "instance", inst, "--", line.strip())
     if len(bad_lines) == 0:
@@ -64,6 +64,7 @@ launch_first_find = True
 search_all_qs = False
 verbose = False
 bail_num = 0
+min_line = 0
 
 # variables
 searchables = []
@@ -72,6 +73,9 @@ if len(sys.argv) > 1:
     count = 1
     while count < len(sys.argv):
         ll = sys.argv[count].lower()
+        if ll.startswith("-"):
+            print("WARNING:", ll, "does not need dash, eliminating.")
+            ll = ll[1:]
         if ll == 'a':
             search_all_qs = True
             launch_first_find = False
@@ -82,11 +86,16 @@ if len(sys.argv) > 1:
             bail_on_first = True
         elif ll == 'l':
             last_line_open = True
+        elif ll.startswith('m'):
+            try:
+                min_line = int(ll[1:])
+            except:
+                print("The m (minimum line) option requires a number right after: no spaces.")
         elif ll.startswith('o'):
             try:
                 bail_num = int(ll[1:])
             except:
-                print("The o option requires a number right after: no spaces.")
+                print("The o (bail over #) option requires a number right after: no spaces.")
         elif ll in i7.i7x.keys():
             searchables.append(i7x[ll])
         elif ll in i7.i7x.values():
