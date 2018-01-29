@@ -134,12 +134,11 @@ my $theDir = "";
 my $title  = "NO TITLE DEFINED, USE !";
 
 while ( $a = <A> ) {
-  last if $a =~ /end header/i;
+  last if $a =~ /end ?header/i;
   if ( $a =~ /^->/ ) { chomp($a); $a =~ s/^->//g; $theDir = $a; next; }
   if ( $a =~ /^>/ ) {
-    print(
-"WARNING: no end header line in $filename.\nNot a critical error, but it's good form to add such a line.\n"
-    );
+    print
+"WARNING: no line with 'end header' text in $filename.\nNot a critical error, but it's good form to add such a line. With or without a space between end and header.\n";
     seek( A, -length($a) - 1, 1 )
       ;    # ?? not sure what to do here if something is in UNIX mode
     last;

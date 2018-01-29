@@ -7,6 +7,9 @@
 #
 # gh.pl c opens code, e opens gh.txt, p opens private file
 
+# todo:
+# gh.pl: if something is unsaved in notepad, kill it
+
 use strict;
 use warnings;
 use lib "c:/writing/scripts";
@@ -1018,17 +1021,22 @@ sub checkWarnings {
   }
   if ( $_[0] =~ /\.pl$/i ) {
     if ($doPerlTidy) {
-      print "Tidying $_[0]\n";
+      print "Tidying $_[0]... to $_[0].tdy\n";
       system("perltidy -i=2 $_[0]");
       if ( ( -f "$_[0].tdy" )
-        && ( -s "$_[0].tdy" > 0 )
-        && ( compare( $_[0], "$_[0].tdy" ) ) )
+        && ( -s "$_[0].tdy" > 0 ) )
       {
-        copy( "$_[0].tdy", "$_[0]" );
-        unlink "$_[0].tdy";
+        if ( compare( $_[0], "$_[0].tdy" ) ) {
+          copy( "$_[0].tdy", "$_[0]" );
+          unlink "$_[0].tdy";
+        }
+        else {
+          print "No changes necessary. Yay me being neat.\n";
+        }
       }
       else {
-        print "PERLTIDY failed.";
+        print "PERLTIDY failed. Bailing.\n";
+        die();
       }
     }
     if ( !$gotStrict && $gotWarnings ) {

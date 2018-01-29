@@ -10,6 +10,8 @@
 #gq.pl -m 10 yes (matches 1st 10 yes's)
 #
 #
+# todo: quick check for if in quotes
+#
 
 use POSIX;
 
@@ -75,6 +77,7 @@ elsif ( $pwd =~ /(threed|fourd)/ ) { @runs = ("opo"); }
 elsif ( $pwd =~ /compound/i )      { @runs = ("as"); }
 elsif ( $pwd =~ /slicker/i )       { @runs = ("as"); }
 elsif ( $pwd =~ /(buck|past)/i )   { @runs = ("as"); }
+elsif ( $pwd =~ /put-it-up/i )     { @runs = ("up"); }
 
 while ( $count <= $#ARGV ) {
   $a = $ARGV[$count];
@@ -110,9 +113,11 @@ while ( $count <= $#ARGV ) {
     /^-?(r|roi|s|sa)$/i
       && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
     /^-?(odd)$/i
-      && do { @runs = ("odd"); $count++; next; };  # roiling original? (default)
+      && do { @runs = ("odd"); $count++; next; };    # odd games
+    /^-?(pu)$/i
+      && do { @runs = ("up"); $count++; next; };     # Put It Up
     /^-?sr$/
-      && do { $showRules = 1; $count++; next; };    # show the rules text is in
+      && do { $showRules = 1; $count++; next; };     # show the rules text is in
     /^-?h$/ && do { $showHeaders = 1; $count++; next; };
     /^-?ha$/ && do { processListFile(); openHistory(@availRuns); exit(); };
     /^-?hi$/ && do { openHistory( split( /,/, $b ) ); exit(); };

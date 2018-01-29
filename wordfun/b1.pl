@@ -49,7 +49,8 @@ my @postproc = ();
 my $argcount = 0;
 
 my $firstWrongGuess = "";
-my $guessResult;
+my $guessResult     = "";
+my $addMiss         = "";
 
 die(
 "Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"
@@ -80,6 +81,12 @@ while ( $argcount <= $#ARGV ) {
     /^[a-z]$/i && do {
       die("Only one firstWrongGuess allowed.") if $firstWrongGuess;
       $firstWrongGuess = $arg;
+      $argcount++;
+      next;
+    };
+    /^\+[a-z\.]+$/i && do {
+      die("Only one addMiss allowed.") if $addMiss;
+      $addMiss = $arg;
       $argcount++;
       next;
     };
@@ -172,6 +179,7 @@ else {
   printTimeFile();
 
   my $prevText = "";
+  if ($addMiss) { addToErrs($addMiss); }
   if ($guessResult) {
     $prevText = $guessResult;
     $prevText .= " $firstWrongGuess" if $firstWrongGuess;
