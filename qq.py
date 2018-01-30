@@ -27,9 +27,11 @@ def file_hunt(x):
         for line in file:
             line_num = line_num + 1
             ll = line.lower()
-            if line_num > min_line and re.search("\[.*(\?\?|todo)", ll):
-                bad_lines.append(line_num)
-                if verbose: print("Line", line_num, "instance", inst, "--", line.strip())
+            if re.search("\[[^\]]*(\?\?|\btodo)", ll):
+                if line_num > min_line:
+                    bad_lines.append(line_num)
+                    if verbose: print("Line", line_num, "instance", len(bad_lines), "--", line.strip())
+                elif verbose: print("Ignoring match below line", min_line, "at line", line_num, ":", line.strip())
     if len(bad_lines) == 0:
         print("Nothing found for", x)
         print()

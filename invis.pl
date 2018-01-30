@@ -27,6 +27,8 @@ my $launchTextFile  = 0;
 my $createTextFile  = 0;
 my $verbose         = 0;
 my $questionLast    = 0;
+my $ghAfter         = 0;
+my $launchPost      = "";
 
 #$exp{"pc"} = "compound";
 my $default = "btp";
@@ -50,6 +52,7 @@ while ( $count <= $#ARGV ) {
           $filename = "$exp{$a}.txt";
           print "$a mapped to $exp{$a}...\n";
           $count++;
+          $launchPost = $a;
           next;
         }
       }
@@ -60,7 +63,8 @@ while ( $count <= $#ARGV ) {
         next;
       }
     };
-    /^-?\?$/ && do { usage();          exit; };
+    /^-?\?$/ && do { usage(); exit; };
+    /^-?gh$/ && do { $ghAfter = 1; $count++; next; };
     /^-?a$/  && do { printAllFiles(0); exit; };
     /^-?la$/ && do { listAllOutput();  exit; };
     /^-?d$/ && do { $debug           = 1; $count++; next; };
@@ -319,6 +323,11 @@ if ($theDir) {
   $cmd =~ s/\//\\/g;
   print "$cmd\n";
   `$cmd`;
+  if ($ghAfter) {
+    print "Running gh.pl $launchPost...\n";
+    my $q = `gh.pl $launchPost`;
+    print $q;
+  }
 }
 
 sub currentOutline {
@@ -411,6 +420,7 @@ sub usage {
 -e  = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
 -en = edits a new text file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
 -f  = force a redo if HTM file's mod date >= the generating file
+-gh = runs GH post-invis processing
 -l  = launch HTM invisiclues after
 -la = list all invisicules with output
 -r  = launch raw (e.g. spoiler file showing everything, launched after -l)

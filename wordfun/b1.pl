@@ -240,6 +240,11 @@ else {
       `start http://www.thefreedictionary.com/$temp`;
       next;
     }
+    if ( $temp eq "0" ) {
+      open( A, ">>$misses" );
+      close(A);
+      print "Tweaked $misses.\n";
+    }
     if ( ( $temp eq "q" ) || ( $temp eq "" ) ) {
       print("OK, see you later.\n");
       last;
@@ -475,7 +480,8 @@ sub addToErrs {
       if ( defined( $val{$line} ) ) {
         $val{$toAdd} += $addit;
         print "$line already in. Its weight is now $val{$line}.\n";
-        $gotIt = 1;
+        $gotIt    = 1;
+        $lastWord = $line;
       }
     }
   }
