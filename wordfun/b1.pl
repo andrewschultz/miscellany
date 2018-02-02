@@ -103,7 +103,7 @@ while ( $argcount <= $#ARGV ) {
       $argcount++;
       next;
     };
-    /^[aip][0-9]+$/i
+    /^[ainp][0-9]+$/i
       && do { updateP1File($arg); $stdin = 1; $argcount++; next; };
     /^[0-9]{1,2}+$/i && do {
       my $wordfile =
@@ -208,6 +208,12 @@ else {
       `$temp`;
       next;
     }
+    if ( lc($temp) =~ /^[ainp][0-9]+$/i ) {
+      updateP1File($temp);
+      $stdin = 1;
+      $argcount++;
+      next;
+    }
     if ( lc($temp) eq "s" ) {
       getPoints();
       next;
@@ -244,6 +250,7 @@ else {
       open( A, ">>$misses" );
       close(A);
       print "Tweaked $misses.\n";
+      next;
     }
     if ( ( $temp eq "q" ) || ( $temp eq "" ) ) {
       print("OK, see you later.\n");
@@ -493,6 +500,7 @@ sub addToErrs {
     }
     print "Added $toAdd to misses file with value $addit.\n";
     $val{$toAdd} += $addit;
+    $lastWord = $toAdd;
   }
   open( B, ">$misses" );
   for my $z ( sort keys %val ) { print B "$z:$val{$z}\n" if $val{$z}; }
@@ -592,7 +600,7 @@ sub printTimeFile {
   print "LastDate=$date";
   print "NextDate=$date2";
   print "End=$can";
-  print "LastCheckPoints=$lastCheckPoints" if $lastCheckPoints;
+  print "LastCheckPoints=$lastCheckPoints\n" if $lastCheckPoints;
   print "LastModifiedMissed=$lmm\n";
   print( $lmd > 0
     ? "Won't get bonus yet (I think), $lmd seconds to go.\n"
@@ -614,9 +622,10 @@ sub updateP1File {
       . "\n$ns2\n";
     close(A);
   }
-  elsif ( $_[0] =~ /^a/ )    # adjust
+  elsif ( $_[0] =~ /^[an]/ )    # adjust
   {
     my @newfi;
+    $delta -= 750 if $_[0] =~ /^n/;
     open( A, $b1time );
     while ( $a = <A> ) {
       push( @newfi, $a );

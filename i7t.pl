@@ -280,7 +280,7 @@ for $sourceFile (@sourceFileList) {
       }
       else {
         $a = <A>;
-        $thisTableRow = ( scalar split( /\t/, $a ) );
+        $thisTableRow = ( scalar split( /\t+/, $a ) );
         print("WARNING 2 tabs in a row in line $.: $a") if ( $a =~ /\t\t/ );
       }
       next;
@@ -401,7 +401,7 @@ for ( 1 .. $testCount ) {
   my $tn = $tableName{$_};
 
   $regexMod{$_} = $regex{$_};
-  $regexMod{$_} =~ s/\$\$/[0-9]+/;
+  $regexMod{$_} =~ s/\$[\$cft]/[0-9]+/;
 
 # this is a hack for Buddy Best's case basket in Problems Compound. We could fob this off to the final but it's too much programming for too little payoff
   if ( $tn eq "xxfln" ) {
@@ -409,10 +409,13 @@ for ( 1 .. $testCount ) {
     $regex{$_} = tableNumberDelta( $tn, $regex{$_}, $delta{$_} );
   }
 
+  # print "Tweaking $_ / $regex{$_}\n";
   $regex{$_} =~ s/\$\$/$rows{$tn}+$delta{$_}/ge;
   $regex{$_} =~ s/\$c/$smartIdeas{$tn}+$delta{$_}/ge;
   $regex{$_} =~ s/\$f/$falseRows{$tn}+$delta{$_}/ge;
   $regex{$_} =~ s/\$t/$trueRows{$tn}+$delta{$_}/ge;
+
+  # print "Tweaked $_ / $regex{$_} / $regexMod{$_}\n";
 
   #print "$_ $tableName{$_}=$regex{$_} / $regexMod{$_}\n";
 
@@ -423,7 +426,9 @@ for my $dataFile ( keys %dataFiles ) {
 }
 
 if ( scalar keys %notFound ) {
-  print "" . ( scalar keys %notFound ) . " text tests not found.\n";
+  print ""
+    . ( scalar keys %notFound )
+    . " text tests not found, listed below.\n========================================\n";
   for ( keys %notFound ) {
     print "FAILED: No close match found for string $regex{$_}\n";
   }
