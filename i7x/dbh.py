@@ -40,9 +40,12 @@ def process_operators(infile, tempfile, outfile):
     line_count = 0
     fk = list(firsts.keys())
     fout=open(tempfile, "w")
+    got_dbh = False
     with open(in_mod) as file:
         for line in file:
             line_count = line_count + 1
+            if 'dbh.py' in line:
+                got_dbh = True
             if line_count == 1:
                 new_line = re.sub(in_noxt, out_noxt, line, 0, re.IGNORECASE)
                 fout.write(new_line)
@@ -64,6 +67,8 @@ def process_operators(infile, tempfile, outfile):
                 to_go = to_go - 1
             fout.write(line)
     fout.close()
+    if not got_dbh:
+        print("You may wish to put a reference/comment to dbh.py somewhere in", in_mod)
     if filecmp.cmp(tempfile, out_mod): # note this is the reverse of PERL
         print(tempfile, "is identical to", outfile,"so I won't copy back over.")
     else:

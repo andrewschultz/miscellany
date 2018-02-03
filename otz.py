@@ -59,6 +59,9 @@ def show_projects():
 
 def check_old_matches(x):
     line_count = 0
+    if len(match_dic.keys()) == 0 and len(regex_dic.keys()) == 0:
+        print("WARNING: No match/regex dictionary keys for file", x)
+        return
     with open(x) as source_file:
         for line in source_file:
             line_count = line_count + 1
@@ -82,7 +85,7 @@ def check_old_matches(x):
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
-                        print("-->", line_count, (abbrevs[m] if r in abbrevs.keys() else m) + ": " + line.strip())
+                        print("-->", line_count, (abbrevs[m] if m in abbrevs.keys() else m) + ": " + line.strip())
                     else:
                         incident_ig[r] = incident_ig[r] + 1
             for r in regex_dic.keys():
