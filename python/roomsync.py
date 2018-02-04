@@ -1,17 +1,16 @@
 #############################
-# m2so.py
+# roomsync.py
 #
-# compares map text (m) from trizbort to source text from an Inform story.ni file (so)
+# compares map text from trizbort to source text from an Inform story.ni file
+# also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
 # todo: rooms that get ignored in specific projects (conceptville/lalaland everywhere)
 # also rooms that map *from* a map *to* a 
 
+import i7
 import sys
 import re
 import xml.etree.ElementTree as ET
-e = ET.parse("c:\\games\\inform\\triz\\mine\\buck-the-past.trizbort")
-root = e.getroot()
-
 source = {}
 triz = {}
 
@@ -19,11 +18,24 @@ ignore = {}
 
 ignore["conceptville"] = 1
 ignore["lalaland"] = 1
+ignore["tempmet"] = 1
+ignore["zerorez"] = 1
 
 project = "buck-the-past"
 
 if len(sys.argv) > 1 and sys.argv[1]:
     project = sys.argv[1]
+    if project in i7.i7x.keys(): project = i7.i7x[project]
+
+trizfile = "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(project)
+
+try:
+    e = ET.parse(trizfile)
+except:
+    print("Couldn't find", trizfile)
+    exit()
+
+root = e.getroot()
 
 for elem in e.iter('room'):
     if elem.get('name'):
