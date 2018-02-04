@@ -81,6 +81,8 @@ my $minFile  = "";
 my $ignoreBackwardsTime = 0;
 my $timeReverse         = 0;
 
+my $overrideIgnoreFatal = 0;
+
 my @trizFail;
 
 ########################
@@ -91,7 +93,8 @@ my $zeroOkay = 0;
 
 my $reverse = 0;
 
-my $count = 0;
+my $count        = 0;
+my $skippedFatal = 0;
 
 preProcessHashes($ght);
 preProcessHashes($ghp);
@@ -145,6 +148,7 @@ while ( $count <= $#ARGV ) {
     /^-?v$/i       && do { $verbose             = 1;  $count++; next; };
     /^-?vt$/i      && do { $verboseTest         = 1;  $count++; next; };
     /^-?nvt$/i     && do { $verboseTest         = 0;  $count++; next; };
+    /^-?ff$/i      && do { $overrideIgnoreFatal = 1;  $count++; next; };
     /^-?bc$/i      && do { $executeBackCopy     = 1;  $count++; next; };
     /^-?rt$/i      && do { $runTrivialTests     = 1;  $count++; next; };
     /^-?nrt$/i     && do { $runTrivialTests     = -1; $count++; next; };
@@ -279,6 +283,14 @@ if ( !processTerms( $ght, $ghp ) ) {
   }
 }
 
+for my $x (@procAry) {
+  if ($skippedFatal) {
+    print
+"*************************\nYou blew by an error in $x. You may wish to revisit this later with -fb.\n*************************\n";
+    last;
+  }
+}
+
 open( A, ">$ghl" );
 print A $procAry[$#procAry];
 
@@ -350,6 +362,7 @@ sub processTerms {
           $a =~ s/^.*?=//;
           print
 "SKIPPING TEST COMMAND $a, priority is execLevel is $execLevel and needs to be $thisTestPriority.\n";
+          $skippedFatal = 1;
           next;
         }
         if ( $runTrivialTests == -1 ) { $warnCanRun{$hashProj} = 1; next; }
@@ -630,9 +643,6 @@ sub processTerms {
             }
             if ( shouldCheckDoubleSpaceAndCRLF($fromFile) ) {
               checkDoubleSpace( $fromFile, 1 );
-            }
-            if ( $fromFile =~ /\.trizbort$/ ) {
-              trizCheck( $fromFile, 1, $xtraCmd );
             }
             if ( shouldRun($prefix) ) {
 
@@ -1213,6 +1223,7 @@ sub usage {
 -it = ignore trizbort time difference fails
 Putting = after a command runs tests
 -it ignores timestamps being wrong (to < from) and -tr copies (from) to (to)
+-ff = override ignore-fatal (seen in ignore: in gh*.txt)
 -? = this
 -?? = detailed commands
 EOT
