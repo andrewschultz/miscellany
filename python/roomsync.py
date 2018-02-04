@@ -13,6 +13,7 @@ import sys
 import re
 import __main__ as main
 import xml.etree.ElementTree as ET
+from collections import defaultdict
 
 def read_ignore_file():
     with open(ignore_file) as file:
@@ -34,14 +35,7 @@ def match_source_invisiclues():
     b = [x for x in list(set(source.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
     count = 0
     print_barrier = True
-    for a in b:
-        if a not in source.keys():
-            if print_barrier:
-                print("=" * 40)
-                print_barrier = False
-            count = count + 1
-            print(count, a, "in invisiclues but not source.")
-    print_barrier = (count > 0)
+    inviserr = defaultdict(bool)
     for a in b:
         if a not in invis_rooms.keys():
             if print_barrier:
@@ -49,17 +43,32 @@ def match_source_invisiclues():
                 print_barrier = False
             count = count + 1
             print(count, a, "in source but not invisiclues.")
+            inviserr['>' + a] = True
+    print_barrier = (count > 0)
+    for a in b:
+        if a not in source.keys():
+            if print_barrier:
+                print("=" * 40)
+                print_barrier = False
+            count = count + 1
+            print(count, a, "in invisiclues but not source.")
+            inviserr['<' + a] = True
+    print ("TEST RESULTS:triz2invis-" + project + ",0,0," + ", ".join(sorted(inviserr.keys())))
 
 # default dictionaries and such
-source = {}
-triz = {}
-invis_rooms = {}
-ignore = {}
+source = defaultdict(bool)
+triz = defaultdict(bool)
+invis_rooms = defaultdict(bool)
+ignore = defaultdict(bool)
 project = "buck-the-past"
 
 invisiclues_search = True
 
 ignore_file = re.sub("py$", "txt", main.__file__)
+
+if i7.dir2proj():
+    if len(sys.argv) == 1: print("Using story.ni in current directory...")
+    project = i7.dir2proj()
 
 # cmd line looks for project name
 if len(sys.argv) > 1 and sys.argv[1]:
