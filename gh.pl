@@ -57,6 +57,7 @@ my %repl2;
 my %altHash, my %do, my %poss, my %postproc, my %didpostproc;
 my %msgForProj;
 my %warnCanRun;
+my %ignoreFatal;
 
 #################options
 my $executeBackCopy = 0;
@@ -394,15 +395,15 @@ sub processTerms {
             `$xtraCmd`;
           }
           else {
-            die(
-"FATAL BUILD ERROR:\n    $timeArray[0] has timestamp after $timeArray[1]\n"
-                . (
-                $xtraCmd
-                ? "    (try running $xtraCmd or adding =x to skip)"
-                : "    (no extra recommended command)"
-                )
-                . "\n"
-            );
+            my $errString =
+"FATAL ERROR:\n    $timeArray[0] has timestamp after $timeArray[1]\n"
+              . (
+              $xtraCmd
+              ? "    (try running $xtraCmd or adding =x to skip)"
+              : "    (no extra recommended command)"
+              ) . "\n";
+            die("$errString") if !defined( $ignoreFatal{$hashProj} );
+            print "SKIPPING $errString";
           }
         }
         next;
@@ -798,6 +799,13 @@ sub preProcessHashes {
         $msgForProj{$_} = $ary[1];
       }
       next;
+    }
+    if ( $a =~ /^ignore:/i ) {
+      $a =~ s/^ignore://i;
+      my @ary = split( /,/, $a );
+      for (@ary) {
+        $ignoreFatal{$_} = 1;
+      }
     }
     if ( $a =~ /~/ ) {
       my @b = split( /~/, $a );

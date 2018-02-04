@@ -11,13 +11,17 @@ import __main__ as main
 
 np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\""
 
+def open_source():
+    npo(main.__file__)
+    exit()
+
 def src(x):
     return "c:\\games\\inform\\{:s}.inform\\source\\story.ni".format(x)
 
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(x)
 
-def npo(my_file, my_line, print_cmd = False):
+def npo(my_file, my_line = 0, print_cmd = False):
     cmd = "start \"\" {:s} {:s} -n{:d}".format(np, my_file, my_line)
     if print_cmd: print("Launching", my_file, "at line", my_line, "in notepad++.")
     os.system(cmd)
@@ -65,7 +69,7 @@ i7rn = { "shuffling": "shuffling_around_release_5",
   "buck-the-past": "1"
 }
 
-# these are arranged rougly in order of completion/creation
+# these are arranged roughly in order of completion/creation
 i7x = { "12": "shuffling",
   "sa": "shuffling",
   "roi": "roiling",
@@ -124,7 +128,8 @@ i7f = {
     "slicker-city": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\slicker city tables.i7x", "c:\\games\\inform\\slicker-city.inform\\source\\story.ni"],
     "spell-woken": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\spell woken tables.i7x",
     "c:\\games\\inform\\spell-woken.inform\\source\\story.ni"],
-    "put-it-up": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\put it up tables.i7x",
+    "put-it-up": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Put it Up Tables.i7x",
+    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Put it Up Mistakes.i7x",
     "c:\\games\\inform\\put-it-up.inform\\source\\story.ni"]
   }
 
