@@ -5,35 +5,81 @@
 # also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
 # todo: rooms that get ignored in specific projects (conceptville/lalaland everywhere)
-# also rooms that map *from* a map *to* a 
+# also rooms that map *from* a map *to* a
 
+import os
 import i7
 import sys
 import re
+import __main__ as main
 import xml.etree.ElementTree as ET
+
+def read_ignore_file():
+    with open(ignore_file) as file:
+        for line in file:
+            if line.startswith(';'): break
+            if line.startswith('#'): continue
+            if line.startswith('ignore:'):
+                ll = re.sub("^ignore:", "", line.strip().lower())
+                ignore[ll] = 1
+
+def match_source_invisiclues():
+    invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
+    print("Checking invisiclues file", invisfile, "...")
+    with open(invisfile) as file:
+        for line in file:
+            if line.startswith(">>"):
+                ll = re.sub(">>", "", line.strip().lower())
+                invis_rooms[ll] = 1
+    b = [x for x in list(set(source.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
+    count = 0
+    print_barrier = True
+    for a in b:
+        if a not in source.keys():
+            if print_barrier:
+                print("=" * 40)
+                print_barrier = False
+            count = count + 1
+            print(count, a, "in invisiclues but not source.")
+    print_barrier = (count > 0)
+    for a in b:
+        if a not in invis_rooms.keys():
+            if print_barrier:
+                print("=" * 40)
+                print_barrier = False
+            count = count + 1
+            print(count, a, "in source but not invisiclues.")
+
+# default dictionaries and such
 source = {}
 triz = {}
-
+invis_rooms = {}
 ignore = {}
-
-ignore["conceptville"] = 1
-ignore["lalaland"] = 1
-ignore["tempmet"] = 1
-ignore["zerorez"] = 1
-
 project = "buck-the-past"
 
+invisiclues_search = True
+
+ignore_file = re.sub("py$", "txt", main.__file__)
+
+# cmd line looks for project name
 if len(sys.argv) > 1 and sys.argv[1]:
     project = sys.argv[1]
     if project in i7.i7x.keys(): project = i7.i7x[project]
 
-trizfile = "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(project)
+trizfile = i7.triz(project)
+source_file = i7.src(project)
+
+if not os.path.exists(source_file):
+    print(source_file, "does not exist, and there is no expansion for it. Bailing.")
+    exit()
 
 try:
     e = ET.parse(trizfile)
 except:
     print("Couldn't find", trizfile)
     exit()
+
+read_ignore_file()
 
 root = e.getroot()
 
@@ -45,7 +91,7 @@ for elem in e.iter('room'):
     # print (x,triz[x])
     # triz[atype.get('name')] = 1;
 
-with open("c:\\games\\inform\\" + project + ".inform\\source\\story.ni") as f:
+with open(source_file) as f:
     for line in f:
         if re.search("^there is a (passroom|pushroom|room) called ", line, re.IGNORECASE):
             line = line.rstrip().lower()
@@ -86,15 +132,7 @@ sourceerr = []
 
 count = 0
 
-full = {}
-
-for a in source:
-    full[a] = 1
-
-for a in triz:
-    full[a] = 1
-
-for a in sorted(full):
+for a in list(set(triz.keys()) | set(source.keys())):
     # if a in triz.keys():
         # print (a,"is in triz and source keys.")
     if a not in triz.keys() and a not in ignore.keys():
@@ -116,5 +154,7 @@ for a in sorted(full):
 print ("TEST RESULTS:triz2source-" + project + ",0,0," + " / ".join(sourceerr))
 print ("TEST RESULTS:triz2map-" + project + ",0,0," + "/ ".join(maperr))
 
+if invisiclues_search:
+    match_source_invisiclues()
 
 # random note: use 2to3.py
