@@ -286,7 +286,7 @@ if ( !processTerms( $ght, $ghp ) ) {
 for my $x (@procAry) {
   if ($skippedFatal) {
     print
-"*************************\nYou blew by an error in $x. You may wish to revisit this later with -fb.\n*************************\n";
+"*************************\nYou blew by $skippedFatal error(s) in $x. You may wish to revisit this later with -fb.\n*************************\n";
     last;
   }
 }
@@ -362,7 +362,6 @@ sub processTerms {
           $a =~ s/^.*?=//;
           print
 "SKIPPING TEST COMMAND $a, priority is execLevel is $execLevel and needs to be $thisTestPriority.\n";
-          $skippedFatal = 1;
           next;
         }
         if ( $runTrivialTests == -1 ) { $warnCanRun{$hashProj} = 1; next; }
@@ -417,6 +416,7 @@ sub processTerms {
               ) . "\n";
             die("$errString") if !defined( $ignoreFatal{$hashProj} );
             print "SKIPPING $errString";
+            $skippedFatal++;
           }
         }
         next;
