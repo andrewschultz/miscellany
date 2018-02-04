@@ -18,6 +18,13 @@ def open_source():
 def src(x):
     return "c:\\games\\inform\\{:s}.inform\\source\\story.ni".format(x)
 
+def triz(x):
+    return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x)
+
+def hfile(x, y):
+    x2 = re.sub("-", " ", x)
+    return "C:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x".format(x2, y)
+
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(x)
 
@@ -46,6 +53,16 @@ def see_uniq_and_vers():
         if y not in i7rn.keys():
             print(y, "needs a release number or file name")
 
+def revproj(a):
+    return_val = ""
+    if a in i7xr.keys(): return i7xr[a]
+    for b in i7x.keys():
+        if i7x[b] == a:
+            if return_val:
+                print("\n\n****FIX IMMEDIATELY IN I7.PY (I7X/I7XR):", return_val, "and", b, "both map to", a)
+                exit()
+            return_val = b
+    return return_val
 
 i7xd = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\"
 
