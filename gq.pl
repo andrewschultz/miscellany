@@ -23,10 +23,8 @@ use i7;
 use Win32::Clipboard;
 
 ################constants
-my $gqfile = __FILE__;
-$gqfile =~ s/pl$/txt/i;
-my $gqdir = $gqfile;
-$gqdir =~ s/\\[^\\]+$//g;
+( my $gqfile = __FILE__ ) =~ s/pl$/txt/i;
+( my $gqdir  = $gqfile ) =~ s/\\[^\\]+$//g;
 
 #################vars
 my @availRuns = ();
@@ -72,12 +70,11 @@ my $forceNum          = 1;
 my $ignoreRand        = 0;
 my $inQuotes          = 0;
 
-if    ( $pwd =~ /oafs/ )           { @runs = ("oafs"); }
-elsif ( $pwd =~ /(threed|fourd)/ ) { @runs = ("opo"); }
-elsif ( $pwd =~ /compound/i )      { @runs = ("as"); }
-elsif ( $pwd =~ /slicker/i )       { @runs = ("as"); }
-elsif ( $pwd =~ /(buck|past)/i )   { @runs = ("as"); }
-elsif ( $pwd =~ /put-it-up/i )     { @runs = ("up"); }
+if    ( $pwd =~ /oafs/o )                         { @runs = ("oafs"); }
+elsif ( $pwd =~ /(threed|fourd)/o )               { @runs = ("opo"); }
+elsif ( $pwd =~ /(compound|slicker|buck|past)/i ) { @runs = ("as"); }
+elsif ( $pwd =~ /put-it-up/i )                    { @runs = ("up"); }
+elsif ( $pwd =~ /(roiling|shuffling)/i )          { @runs = ("sts"); }
 
 while ( $count <= $#ARGV ) {
   $a = $ARGV[$count];
@@ -106,11 +103,12 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
-    /^-?n$/            && do { @runs = ("names"); $count++; next; };  # names
-    /^-?(3d|3|4d|4)$/i && do { @runs = ("opo");   $count++; next; };  # 3dop try
-    /^-?(as|sc|pc|ss)$/i
-      && do { @runs = ("as"); $count++; next; };    # Alec Smart?
-    /^-?(r|roi|s|sa)$/i
+    /^-?n$/ && do { @runs = ("names"); $count++; next; };          # names
+    /^-?(3d|3|4d|4|opo)$/i
+      && do { @runs = ("opo"); $count++; next; };                  # 3dop try
+    /^(-?(btp|sc|pc|ss)|-as)$/i
+      && do { @runs = ("as"); $count++; next; };                   # Alec Smart?
+    /^-?(r|roi|s|sa|sts)$/i
       && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
     /^-?(odd)$/i
       && do { @runs = ("odd"); $count++; next; };    # odd games
@@ -191,6 +189,8 @@ while ( $count <= $#ARGV ) {
 
 }
 
+readLastRun() if ( !( scalar @runs ) );
+
 if ( ( !$thisAry[0] ) && ( !$getClipboard ) ) {
   die("Need a process-able word for an argument.");
 }
@@ -225,6 +225,8 @@ if ($getClipboard) {
 else {
   tryOneSet();
 }
+
+writeLastRun();
 
 #################################################subroutines
 
@@ -734,6 +736,26 @@ sub openHistory {
 sub shouldBeLast {
   return 1 if ( $_[0] =~ /understand.*howto.*gtxt/i );
   return 0;
+}
+
+sub readLastRun {
+  ( my $gqlast = $gqfile ) =~ s/.txt$/-last.txt/i;
+  open( A, $gqlast ) || do {
+    print "You need a last file $gqlast.\n";
+    return;
+  };
+
+  while ( $a = <A> ) {
+    chomp($a);
+    @runs = split( /,/, $a );
+    print "Pulling from $gqlast: $a\n";
+  }
+}
+
+sub writeLastRun {
+  ( my $gqlast = $gqfile ) =~ s/.txt$/-last.txt/i;
+  open( A, ">$gqlast" );
+  print A join( ',', @runs );
 }
 
 sub usage {
