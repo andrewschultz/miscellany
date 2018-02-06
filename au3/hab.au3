@@ -14,7 +14,7 @@ Local $clicks = 0
 Local $delay = 10000
 
 if $CmdLine[0] > 0 Then
-  if $CmdLine[1] == 'm' Then
+  if $CmdLine[1] == 't' Then ; cast Tools of the Trade X times
 
     ; number of times to cast Tools
     if $cmdLine[0] > 1 Then
@@ -37,15 +37,15 @@ if $CmdLine[0] > 0 Then
       MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
     Endif
 
-    for $i = 1 to $clicks
-      MouseClick ( "left", 900, 980, 1 )
-      if $i < $clicks Then
-        MouseMove ( 900, 950 )
-        sleep($delay)
-      Endif
-    Next
+	clickSkill($clicks, 920, 980)
 
-    MouseMove ( 100, 100 )
+  ElseIf $CmdLine[1] == 'm' Then
+    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+	  clickSkill($clicks, 730, 980)
+    Endif
+    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+	  clickSkill($clicks, 920, 980)
+    Endif
   ElseIf $CmdLine[1] == 'i' Then
 
     ; intelligence
@@ -123,4 +123,15 @@ Func PickAttr($y)
     sleep(1000)
     MouseClick ( "left", 1430, 360 + $y * 30, 1)
     sleep(2000)
+EndFunc
+
+Func clickSkill($clicks, $x, $y)
+  for $i = 1 to $clicks
+    MouseClick ( "left", $x, $y, 1 )
+    if $i < $clicks Then
+      MouseMove ( $x, $y - 100 )
+      sleep($delay)
+    Endif
+  Next
+  MouseMove ( 100, 100 )
 EndFunc
