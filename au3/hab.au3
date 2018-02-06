@@ -5,6 +5,8 @@
 ;
 ; i = intelligence, p = perception, m 12 = 12 Tools clicks
 ;
+; o = only click
+;
 
 #include <MsgBoxConstants.au3>
 
@@ -24,21 +26,21 @@ if $CmdLine[0] > 0 Then
       $delay = $CmdLine[3] * 1000
     Endif
 
-	; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
+    ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
 
     ToHab()
-	MouseClick ( "left", 195, 93, 1 )
-	; need to wait to make sure the page loads after clicking "tasks"
-	sleep(2000)
-	
-	if $clicks < 1 Then
-	  MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
-	Endif
+    MouseClick ( "left", 195, 93, 1 )
+    ; need to wait to make sure the page loads after clicking "tasks"
+    sleep(2000)
+
+    if $clicks < 1 Then
+      MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
+    Endif
 
     for $i = 1 to $clicks
       MouseClick ( "left", 900, 980, 1 )
       if $i < $clicks Then
-	    MouseMove ( 900, 950 )
+        MouseMove ( 900, 950 )
         sleep($delay)
       Endif
     Next
@@ -47,8 +49,8 @@ if $CmdLine[0] > 0 Then
   ElseIf $CmdLine[1] == 'i' Then
 
     ; intelligence
-    ToHab()  
-	GoEquip()
+    ToHab()
+    GoEquip()
 
     PickAttr(4)
 
@@ -62,9 +64,9 @@ if $CmdLine[0] > 0 Then
 
     ; perception
     ToHab()
-	GoEquip()
+    GoEquip()
 
-	PickAttr(2)
+    PickAttr(2)
 
     PickItem(0, 0)
     PickItem(0, 1)
@@ -72,6 +74,13 @@ if $CmdLine[0] > 0 Then
     PickItem(0, 3)
 
     MouseMove ( 100, 100 )
+  ElseIf $CmdLine[1] == 'o' Then
+    ToHab()
+    for $i = 1 to $clicks
+      MouseClick("left")
+      sleep($delay)
+    Next
+
   Else
     Usage()
   Endif

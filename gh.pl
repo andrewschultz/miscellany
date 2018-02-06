@@ -1133,7 +1133,7 @@ sub rehash {
 }
 
 sub shouldCheck {
-  if ( $_[0] =~ /\.(pl|pm|py|txt|c|md|ni|cpp|ahs|nmr|i7x)$/i ) { return 1; }
+  if ( $_[0] =~ /\.(pl|pm|py|txt|c|md|ni|cpp|ahs|nmr|i7x|au3)$/i ) { return 1; }
   return 0;
 }
 

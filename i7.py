@@ -33,8 +33,9 @@ def dir2proj(x = os.getcwd()):
     if os.path.exists(x + "\\story.ni"):
         x2 = re.sub("\.inform.*", "", x)
         x2 = re.sub(".*[\\\/]", "", x2)
-    if "\\" in x2 or "/" in x2: return ""
-    return x2
+        if "\\" in x2 or "/" in x2: return ""
+        return x2
+    return ""
 
 def npo(my_file, my_line = 0, print_cmd = False):
     cmd = "start \"\" {:s} {:s} -n{:d}".format(np, my_file, my_line)
