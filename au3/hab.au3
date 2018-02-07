@@ -22,7 +22,7 @@ if $CmdLine[0] > 0 Then
     Endif
 
     ; adjust delay
-    if $cmdLine[0] > 2 Then
+    if $cmdLine[0] > 2 and Not $CmdLine[1] == 't' Then
       $delay = $CmdLine[3] * 1000
     Endif
 
@@ -37,14 +37,14 @@ if $CmdLine[0] > 0 Then
       MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
     Endif
 
-	clickSkill($clicks, 920, 980)
+    clickSkill($clicks, 2)
 
   ElseIf $CmdLine[1] == 'm' Then
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-	  clickSkill($clicks, 730, 980)
+      clickSkill($clicks, 1)
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
-	  clickSkill($clicks, 920, 980)
+      clickSkill($clicks, 2)
     Endif
   ElseIf $CmdLine[1] == 'i' Then
 
@@ -59,7 +59,7 @@ if $CmdLine[0] > 0 Then
     PickItem(0, 2)
     PickItem(0, 3)
 
-    MouseMove ( 100, 100 )
+    ToTasks()
   ElseIf $CmdLine[1] == 'p' Then
 
     ; perception
@@ -73,14 +73,25 @@ if $CmdLine[0] > 0 Then
     PickItem(0, 2)
     PickItem(0, 3)
 
-    MouseMove ( 100, 100 )
-  ElseIf $CmdLine[1] == 'o' Then
+  ElseIf $CmdLine[1] == 'r' Then
     ToHab()
+    CheckIfOnTask()
     for $i = 1 to $clicks
       MouseClick("left")
       sleep($delay)
     Next
 
+  ElseIf $CmdLine[1] == 'b' Then
+    ToHab()
+    $MousePos = MouseGetPos()
+    CheckIfOnTask()
+    for $i = 1 to $clicks
+      clickSkill(1, 540, 980)
+      sleep($delay/2)
+      MouseMove($MousePos[0], $MousePos[1])
+      MouseClick("left")
+      sleep($delay/2)
+    Next
   Else
     Usage()
   Endif
@@ -92,7 +103,7 @@ Endif
 ; function(s) below
 
 Func Usage()
-  MsgBox($MB_OK, "Bad/missing parameter(s)", "-m, -i or -p are the options." & @CRLF & "-m needs a number after for clicks, a second for delays.")
+  MsgBox($MB_OK, "Bad/missing parameter(s)", "-b, -r, -t, -i or -p are the options." & @CRLF & "-i = intelligence gear, -p = perception gear" & @CRLF & "-t (tools of the trade) needs a number after for clicks, a second for delays." & @CRLF & "-b does fiery blast if cursor is positioned, and -r is a repeated activity.")
 EndFunc
 
 Func PickItem($x, $y)
@@ -125,13 +136,28 @@ Func PickAttr($y)
     sleep(2000)
 EndFunc
 
-Func clickSkill($clicks, $x, $y)
+Func clickSkill($clicks, $x)
+   $xi = 540
+   $yi = 980
+   $xd = 190
   for $i = 1 to $clicks
-    MouseClick ( "left", $x, $y, 1 )
+    MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks Then
-      MouseMove ( $x, $y - 100 )
+      MouseMove ( $xi + $xd * $x, $yi - 60 )
       sleep($delay)
     Endif
   Next
-  MouseMove ( 100, 100 )
+  ToTasks()
+EndFunc
+
+Func ToTasks()
+  MouseMove ( 200, 100 )
+EndFunc
+
+Func CheckIfOnTask()
+  $MousePos = MouseGetPos()
+  If $MousePos[0] > 60 Then
+    MsgBox($MB_OK, "Bad mouse position", "You need to position the mouse over a (+) for repeat- or breath-of-fire-cast to work.")
+    exit
+  EndIf
 EndFunc
