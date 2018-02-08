@@ -3,12 +3,20 @@
 ; clicks the mouse for Habitica for Tools of the Trade
 ; or switches outfits
 ;
-; i = intelligence, p = perception, m 12 = 12 Tools clicks
+; a = opens armoire (needs #)
+; b = fiery blast (needs position and number)
+; i = intelligence outfit
+; m/w = magic/wizard skills
+; o = only click to tasks
+; p = perception outfit
+; r = repeatedly access habit (needs #)
+; t = Tools of the Trade clicks (needs #, optional delay)
 ;
-; o = only click
+; todo = allow for dashes or not in command line
 ;
 
 #include <MsgBoxConstants.au3>
+#include <Array.au3>
 
 Local $clicks = 0
 Local $delay = 10000
@@ -29,7 +37,8 @@ if $CmdLine[0] > 0 Then
     ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
 
     ToHab()
-    MouseClick ( "left", 195, 93, 1 )
+	ToTasks()
+    MouseClick ( "left", 200, 100, 1 )
     ; need to wait to make sure the page loads after clicking "tasks"
     sleep(2000)
 
@@ -39,9 +48,24 @@ if $CmdLine[0] > 0 Then
 
     clickSkill($clicks, 2)
 
-  ElseIf $CmdLine[1] == 'm' Then
+  ElseIf $CmdLine[1] == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-      clickSkill($clicks, 1)
+      clickSkill($cmdLine[2], 1)
+    Endif
+    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+      clickSkill($cmdLine[3], 2)
+    Endif
+  ElseIf $CmdLine[1] == 'a' Then
+
+    ToHab()
+    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+		for $i = 1 to $cmdLine[2]
+		  MouseClick ( "left", 1325, 450, 1 )
+          MouseMove(1275, 400)
+		  if $i < $cmdLine[2] Then
+		    sleep(2000)
+		  Endif
+		Next
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
       clickSkill($clicks, 2)
@@ -92,18 +116,35 @@ if $CmdLine[0] > 0 Then
       MouseClick("left")
       sleep($delay/2)
     Next
+  ElseIf $CmdLine[1] == 'r' Then
+    ToHab()
+  ElseIf $CmdLine[1] == '?' Then
+    Usage(1)
   Else
-    Usage()
+    Usage(0)
   Endif
 Else
-  Usage()
+  Usage(0)
 Endif
 
 ; end main
 ; function(s) below
 
-Func Usage()
-  MsgBox($MB_OK, "Bad/missing parameter(s)", "-b, -r, -t, -i or -p are the options." & @CRLF & "-i = intelligence gear, -p = perception gear" & @CRLF & "-t (tools of the trade) needs a number after for clicks, a second for delays." & @CRLF & "-b does fiery blast if cursor is positioned, and -r is a repeated activity.")
+Func Usage($questionmark)
+  Local $usgAry[9] = [ "-a, -b, -i, -m/-w, -o, -p, -r, or -t are the options.", _
+  "-a opens the armoire # times", _
+  "-b does fiery blast, needs # and positioning", _
+  "-i = intelligence gear,", _
+  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake", _
+  "-o = only click tasks: test option", _
+  "-p = perception gear", _
+  "-r = repeated habit on the left column, needs # and positioning", _
+  "-t (tools of the trade) needs a number after for clicks, with an optional second for delays." ]
+  Local $header = "Bad/missing parameter(s)"
+  if $questionmark Then
+    $header = "Usage popup box"
+  EndIf
+  MsgBox($MB_OK, $header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
 EndFunc
 
 Func PickItem($x, $y)
