@@ -22,7 +22,12 @@ Local $clicks = 0
 Local $delay = 10000
 
 if $CmdLine[0] > 0 Then
-  if $CmdLine[1] == 't' Then ; cast Tools of the Trade X times
+  $myCmd = $CmdLine[1]
+  ; MsgBox($MB_OK, StringLeft($myCmd, 1), StringMid($myCmd, 2))
+  if StringLeft($myCmd, 1) = '-' Then
+    $myCmd = StringMid($myCmd, 2)
+  EndIf
+  if $myCmd == 't' Then ; cast Tools of the Trade X times
 
     ; number of times to cast Tools
     if $cmdLine[0] > 1 Then
@@ -30,7 +35,7 @@ if $CmdLine[0] > 0 Then
     Endif
 
     ; adjust delay
-    if $cmdLine[0] > 2 and Not $CmdLine[1] == 't' Then
+    if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
       $delay = $CmdLine[3] * 1000
     Endif
 
@@ -48,14 +53,14 @@ if $CmdLine[0] > 0 Then
 
     clickSkill($clicks, 2)
 
-  ElseIf $CmdLine[1] == 'm' Then ; todo: error checking for if anything case
+  ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
       clickSkill($cmdLine[2], 1)
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
       clickSkill($cmdLine[3], 2)
     Endif
-  ElseIf $CmdLine[1] == 'a' Then
+  ElseIf $myCmd == 'a' Then
 
     ToHab()
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
@@ -70,7 +75,7 @@ if $CmdLine[0] > 0 Then
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
       clickSkill($clicks, 2)
     Endif
-  ElseIf $CmdLine[1] == 'i' Then
+  ElseIf $myCmd == 'i' Then
 
     ; intelligence
     ToHab()
@@ -84,7 +89,7 @@ if $CmdLine[0] > 0 Then
     PickItem(0, 3)
 
     ToTasks()
-  ElseIf $CmdLine[1] == 'p' Then
+  ElseIf $myCmd == 'p' Then
 
     ; perception
     ToHab()
@@ -97,7 +102,7 @@ if $CmdLine[0] > 0 Then
     PickItem(0, 2)
     PickItem(0, 3)
 
-  ElseIf $CmdLine[1] == 'r' Then
+  ElseIf $myCmd == 'r' Then
     ToHab()
     CheckIfOnTask()
     for $i = 1 to $clicks
@@ -105,7 +110,7 @@ if $CmdLine[0] > 0 Then
       sleep($delay)
     Next
 
-  ElseIf $CmdLine[1] == 'b' Then
+  ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
     CheckIfOnTask()
@@ -116,9 +121,10 @@ if $CmdLine[0] > 0 Then
       MouseClick("left")
       sleep($delay/2)
     Next
-  ElseIf $CmdLine[1] == 'r' Then
+  ElseIf $myCmd == 'o' Then
     ToHab()
-  ElseIf $CmdLine[1] == '?' Then
+    MouseClick ( "left", 200, 100, 1 )
+  ElseIf $myCmd == '?' Then
     Usage(1)
   Else
     Usage(0)
