@@ -5,26 +5,32 @@
 ;
 ; a = opens armoire (needs #)
 ; b = fiery blast (needs position and number)
-; i = intelligence outfit
+; i = intelligence outfit (default for adventuring)
 ; m/w = magic/wizard skills
 ; o = only click to tasks
 ; p = perception outfit
 ; r = repeatedly access habit (needs #)
 ; t = Tools of the Trade clicks (needs #, optional delay)
 ;
-; todo = allow for dashes or not in command line
-;
 
 #include <MsgBoxConstants.au3>
 #include <Array.au3>
 
-Local $clicks = 0
-Local $delay = 10000
+; constants for main attributes (pull down menu/outfits)
+Const $CON = 1, $PER = 2, $STR = 3, $INT = 4
+
+; constants for mage skill names
+Const $BURST_OF_FLAME = 0, $ETHEREAL_SURGE = 1, $EARTHQUAKE = 2, $CHILLING_FROST = 3
+
+; constants for where to click on a skill
+Local $xi = 540, $yi = 980, $xd = 190
+
+; constants for click frequency
+Local $clicks = 0, $delay = 10000
 
 if $CmdLine[0] > 0 Then
   $myCmd = $CmdLine[1]
-  ; MsgBox($MB_OK, StringLeft($myCmd, 1), StringMid($myCmd, 2))
-  if StringLeft($myCmd, 1) = '-' Then
+  if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if $myCmd == 't' Then ; cast Tools of the Trade X times
@@ -55,10 +61,10 @@ if $CmdLine[0] > 0 Then
 
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-      clickSkill($cmdLine[2], 1)
+      clickSkill($cmdLine[2], $ETHEREAL_SURGE)
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
-      clickSkill($cmdLine[3], 2)
+      clickSkill($cmdLine[3], $EARTHQUAKE)
     Endif
   ElseIf $myCmd == 'a' Then
 
@@ -115,7 +121,7 @@ if $CmdLine[0] > 0 Then
     $MousePos = MouseGetPos()
     CheckIfOnTask()
     for $i = 1 to $clicks
-      clickSkill(1, 540, 980)
+      clickSkill($BREATH_OF_FIRE, 1)
       sleep($delay/2)
       MouseMove($MousePos[0], $MousePos[1])
       MouseClick("left")
@@ -184,9 +190,6 @@ Func PickAttr($y)
 EndFunc
 
 Func clickSkill($clicks, $x)
-   $xi = 540
-   $yi = 980
-   $xd = 190
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks Then
