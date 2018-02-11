@@ -33,7 +33,77 @@ if $CmdLine[0] > 0 Then
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
-  if $myCmd == 't' Then ; cast Tools of the Trade X times
+  If $myCmd == 'a' Then
+
+    ToHab()
+    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+		for $i = 1 to $cmdLine[2]
+		  MouseClick ( "left", 1325, 450, 1 )
+          MouseMove(1275, 400)
+		  if $i < $cmdLine[2] Then
+		    sleep(2000)
+		  Endif
+		Next
+    Endif
+    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+      clickSkill($clicks, 2)
+    Endif
+  ElseIf $myCmd == 'b' Then
+    ToHab()
+    $MousePos = MouseGetPos()
+    CheckIfOnTask()
+    for $i = 1 to $clicks
+      clickSkill($BREATH_OF_FIRE, 1)
+      sleep($delay/2)
+      MouseMove($MousePos[0], $MousePos[1])
+      MouseClick("left")
+      sleep($delay/2)
+    Next
+  ElseIf $myCmd == 'i' Then
+
+    ; intelligence
+    ToHab()
+    GoEquip()
+
+    PickAttr(4)
+
+    PickItem(6, 0) ; the first one-handed wand, so we can get more benefits from the off-hand
+    PickItem(0, 1)
+    PickItem(0, 2)
+    PickItem(0, 3)
+
+    ToTasks()
+  ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
+    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+      clickSkill($cmdLine[2], $ETHEREAL_SURGE)
+    Endif
+    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+      clickSkill($cmdLine[3], $EARTHQUAKE)
+    Endif
+  ElseIf $myCmd == 'o' Then
+    ToHab()
+    MouseClick ( "left", 200, 100, 1 )
+  ElseIf $myCmd == 'p' Then
+
+    ; perception
+    ToHab()
+    GoEquip()
+
+    PickAttr(2)
+
+    PickItem(0, 0)
+    PickItem(0, 1)
+    PickItem(0, 2)
+    PickItem(0, 3)
+
+  ElseIf $myCmd == 'r' Then
+    ToHab()
+    CheckIfOnTask()
+    for $i = 1 to $clicks
+      MouseClick("left")
+      sleep($delay)
+    Next
+  Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
 
     ; number of times to cast Tools
     if $cmdLine[0] > 1 Then
@@ -58,78 +128,6 @@ if $CmdLine[0] > 0 Then
     Endif
 
     clickSkill($clicks, 2)
-
-  ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
-    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-      clickSkill($cmdLine[2], $ETHEREAL_SURGE)
-    Endif
-    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
-      clickSkill($cmdLine[3], $EARTHQUAKE)
-    Endif
-  ElseIf $myCmd == 'a' Then
-
-    ToHab()
-    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-		for $i = 1 to $cmdLine[2]
-		  MouseClick ( "left", 1325, 450, 1 )
-          MouseMove(1275, 400)
-		  if $i < $cmdLine[2] Then
-		    sleep(2000)
-		  Endif
-		Next
-    Endif
-    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
-      clickSkill($clicks, 2)
-    Endif
-  ElseIf $myCmd == 'i' Then
-
-    ; intelligence
-    ToHab()
-    GoEquip()
-
-    PickAttr(4)
-
-    PickItem(6, 0) ; the first one-handed wand, so we can get more benefits from the off-hand
-    PickItem(0, 1)
-    PickItem(0, 2)
-    PickItem(0, 3)
-
-    ToTasks()
-  ElseIf $myCmd == 'p' Then
-
-    ; perception
-    ToHab()
-    GoEquip()
-
-    PickAttr(2)
-
-    PickItem(0, 0)
-    PickItem(0, 1)
-    PickItem(0, 2)
-    PickItem(0, 3)
-
-  ElseIf $myCmd == 'r' Then
-    ToHab()
-    CheckIfOnTask()
-    for $i = 1 to $clicks
-      MouseClick("left")
-      sleep($delay)
-    Next
-
-  ElseIf $myCmd == 'b' Then
-    ToHab()
-    $MousePos = MouseGetPos()
-    CheckIfOnTask()
-    for $i = 1 to $clicks
-      clickSkill($BREATH_OF_FIRE, 1)
-      sleep($delay/2)
-      MouseMove($MousePos[0], $MousePos[1])
-      MouseClick("left")
-      sleep($delay/2)
-    Next
-  ElseIf $myCmd == 'o' Then
-    ToHab()
-    MouseClick ( "left", 200, 100, 1 )
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
