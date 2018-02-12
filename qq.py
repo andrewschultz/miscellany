@@ -10,6 +10,15 @@ import os
 import sys
 import i7
 
+def usage():
+    print("-a = search all files.")
+    print("-v = verbose")
+    print("-b = bail on first")
+    print("-l = open last line")
+    print("-m = minimum line to open (no space)")
+    print("-o = bail once over # lines (no space)")
+    exit()
+
 def my_proj(x):
     y = re.split("[\\\/]", x)
     for z in y:
@@ -27,7 +36,7 @@ def file_hunt(x):
         for line in file:
             line_num = line_num + 1
             ll = line.lower()
-            if re.search("\[[^\]]*(\?\?|\btodo)", ll):
+            if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll):
                 if line_num > min_line:
                     bad_lines.append(line_num)
                     if verbose: print("Line", line_num, "instance", len(bad_lines), "--", line.strip())
@@ -88,6 +97,9 @@ if len(sys.argv) > 1:
             bail_on_first = True
         elif ll == 'l':
             last_line_open = True
+        elif ll == '?':
+            usage()
+            exit()
         elif ll.startswith('m'):
             try:
                 min_line = int(ll[1:])
