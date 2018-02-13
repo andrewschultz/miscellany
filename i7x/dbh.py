@@ -14,6 +14,7 @@ import i7
 import re
 import filecmp
 from shutil import copyfile
+from collections import defaultdict
 
 # i7.i7x
 
@@ -26,6 +27,9 @@ my_project = "pu"
 reading_operators = False
 firsts = {}
 lasts = {}
+
+default_val = 0
+ignore_dict = defaultdict(bool)
 
 def process_operators(infile, tempfile, outfile):
     in_mod = infile
@@ -61,6 +65,11 @@ def process_operators(infile, tempfile, outfile):
                     if line.startswith(x):
                         to_go = firsts[x] + 1
                         in_table = True
+                if in_table == False:
+                    if default_val and line.strip() not in ignore.keys():
+                        print("Going with", default, "for", line.strip())
+                        to_go = default_val + 1
+                        in_table = True
             if in_table:
                 if to_go < 0:
                     continue
@@ -77,16 +86,29 @@ def process_operators(infile, tempfile, outfile):
     return
 
 with open(dbh) as file:
+    line_count = 0
     for line in file:
+        line_count = line_count + 1
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False
                 process_operators(read_file, temp_write, write_file)
                 continue
             t = line.strip().split("\t")
+            if line.startswith("default"):
+                default_val = int(t[1])
+                continue
+            if line.startswith("ignore"):
+                ignore_dict[t[1]] = True
+                continue
             if line.startswith("first"):
-                firsts[t[2]] = int(t[1])
-                print("Take first", t[1], "of", t[2])
+                try:
+                    firsts[t[2]] = int(t[1])
+                    print("Take first", t[1], "of", t[2])
+                except:
+                    print("At line", line_count, "you need an integer in the second column.")
+                    exit()
+                continue
         if line.startswith(my_project) and "->" in line:
             firsts = {}
             lasts = {}
