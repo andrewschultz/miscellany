@@ -199,7 +199,9 @@ Func clickSkill($clicks, $x)
 EndFunc
 
 Func ToTasks()
+  sleep(1000)
   MouseMove ( 200, 100 )
+  sleep(1000)
 EndFunc
 
 Func CheckIfOnTask()

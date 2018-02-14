@@ -1,4 +1,5 @@
 Opt("WinTitleMatchMode", -2)
+Opt("SendKeyDelay", 150)
 
 HotKeySet("{F7}", "Bail")
 

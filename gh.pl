@@ -58,6 +58,7 @@ my %altHash, my %do, my %poss, my %postproc, my %didpostproc;
 my %msgForProj;
 my %warnCanRun;
 my %ignoreFatal;
+my %bitBucket;
 
 #################options
 my $executeBackCopy = 0;
@@ -101,6 +102,7 @@ preProcessHashes($ghp);
 
 while ( $count <= $#ARGV ) {
   my $arg = lc( $ARGV[$count] );
+  my $a2 = ( $count < $#ARGV ) ? lc( $ARGV[ $count + 1 ] ) : "";
   for ($arg) {
     /^gh\.pl/ && do {
       print "############################OOPS! You added the app name.\n";
@@ -141,7 +143,8 @@ while ( $count <= $#ARGV ) {
       );
       exit;
     };
-    /^-?it$/i      && do { $ignoreBackwardsTime = 1;  $count++; next; };
+    /^-?it$/i && do { $ignoreBackwardsTime = 1; $count++; next; };
+    /^-?l$/i && do { launchRepo($a2); exit(); };
     /^-?tr$/i      && do { $timeReverse         = 1;  $count++; next; };
     /^-?j$/i       && do { $justPrint           = 1;  $count++; next; };
     /^-?f$/i       && do { $byFile              = 1;  $count++; next; };
@@ -810,6 +813,14 @@ sub preProcessHashes {
       }
       next;
     }
+    if ( $a =~ /^bb:/i ) {
+      $a =~ s/^bb://i;
+      my @ary = split( /,/, $a );
+      for (@ary) {
+        $bitBucket{$a} = 1;
+      }
+      next;
+    }
     if ( $a =~ /^ignore:/i ) {
       $a =~ s/^ignore://i;
       my @ary = split( /,/, $a );
@@ -1181,6 +1192,19 @@ sub allProjs {
     close(A);
   }
   return join( ",", keys %projHash );
+}
+
+sub launchRepo {
+  my $toLaunch = $_[0];
+
+  $toLaunch = $altHash{$toLaunch} if ( defined( $altHash{$toLaunch} ) );
+
+  my $myUrl = "https://github.com/andrewschultz/" . $toLaunch;
+  $myUrl = "https://bitbucket.org/andrewschultz/" . $toLaunch
+    if ( defined( $bitBucket{$toLaunch} ) );
+  print "Opening $myUrl...\n";
+  `start $myUrl`;
+  exit();
 }
 
 sub wcBackcopy {
