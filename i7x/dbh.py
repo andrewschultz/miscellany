@@ -25,8 +25,8 @@ temp_write = i7.i7xd + "dbh-temp.i7x"
 my_project = "pu"
 
 reading_operators = False
-firsts = {}
-lasts = {}
+firsts = defaultdict(int)
+lasts = defaultdict(int)
 
 default_val = 0
 ignore_dict = defaultdict(bool)
@@ -40,9 +40,12 @@ def process_operators(infile, tempfile, outfile):
         in_mod = i7.i7xd + in_mod
         out_mod = i7.i7xd + out_mod
     to_go = 0
+    at_end = 0
     in_table = False
     line_count = 0
     fk = list(firsts.keys())
+    lk = list(lasts.keys())
+    end_add = []
     fout=open(tempfile, "w")
     got_dbh = False
     with open(in_mod) as file:
@@ -59,21 +62,35 @@ def process_operators(infile, tempfile, outfile):
                 fout.write(new_line)
                 continue
             if not line.strip():
+                if at_end:
+                    for x in range (len(end_add)-at_end, len(end_add)):
+                        fout.write(end_add[x])
                 in_table = False
             if line.startswith("table"):
                 for x in fk:
                     if line.startswith(x):
                         to_go = firsts[x] + 1
                         in_table = True
+                for x in lk:
+                    if line.startswith(x):
+                        at_end = lasts[x]
+                        in_table = True
+                        end_add = []
                 if in_table == False:
                     if default_val and line.strip() not in ignore.keys():
                         print("Going with", default, "for", line.strip())
-                        to_go = default_val + 1
+                        if default_val > 0:
+                            to_go = default_val + 1
+                        else:
+                            at_end = 0 - default_val
                         in_table = True
             if in_table:
-                if to_go < 0:
+                if to_go < 0 or at_end:
                     continue
                 to_go = to_go - 1
+            if in_table and at_end:
+                end_add.append(line)
+                continue
             fout.write(line)
     fout.close()
     if not got_dbh:
@@ -109,9 +126,17 @@ with open(dbh) as file:
                     print("At line", line_count, "you need an integer in the second column.")
                     exit()
                 continue
+            if line.startswith("last"):
+                try:
+                    lasts[t[2]] = int(t[1])
+                    print("Take last", t[1], "of", t[2])
+                except:
+                    print("At line", line_count, "you need an integer in the second column.")
+                    exit()
+                continue
         if line.startswith(my_project) and "->" in line:
-            firsts = {}
-            lasts = {}
+            firsts.clear()
+            lasts.clear()
             y = re.sub("^[^:]*:", "", line.strip())
             x = y.split("->")
             read_file = x[0]

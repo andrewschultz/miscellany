@@ -4,7 +4,8 @@
 # compares map text from trizbort to source text from an Inform story.ni file
 # also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
-# todo: rooms that get ignored in specific projects (conceptville/lalaland everywhere)
+# verified so far on UP, BTP
+#
 # also rooms that map *from* a map *to* a
 
 import os
@@ -31,6 +32,7 @@ def match_source_invisiclues():
         for line in file:
             if line.startswith(">>"):
                 ll = re.sub(">>", "", line.strip().lower())
+                ll = re.sub(", ?", " ", ll)
                 invis_rooms[ll] = 1
     b = [x for x in list(set(source.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
     count = 0
@@ -53,7 +55,7 @@ def match_source_invisiclues():
             count = count + 1
             print(count, a, "in invisiclues but not source.")
             inviserr['<' + a] = True
-    print ("TEST RESULTS:triz2invis-" + project + ",0,0," + ", ".join(sorted(inviserr.keys())))
+    print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
 # default dictionaries and such
 source = defaultdict(bool)
@@ -96,6 +98,7 @@ for elem in e.iter('room'):
     if elem.get('name'):
         x = str(elem.get('name')).lower()
         x = re.sub(" ?[\/\(].*", "", x, flags=re.IGNORECASE)
+        x = re.sub(", ?", " ", x)
         triz[x] = str(elem.get('region')).lower()
     # print (x,triz[x])
     # triz[atype.get('name')] = 1;
@@ -143,15 +146,15 @@ count = 0
 
 for a in list(set(triz.keys()) | set(source.keys())):
     # if a in triz.keys():
-        # print (a,"is in triz and source keys.")
+        # print (a, "is in triz and source keys.")
     if a not in triz.keys() and a not in ignore.keys():
         count = count + 1
-        print (count, a,"is not in the Trizbort map.")
+        print (count, a, "is in the source but not in the Trizbort map.")
         maperr.append(a)
         continue
     if a not in source.keys() and a not in ignore.keys():
         count = count + 1
-        print(count, a,"is not in the Story.ni source.")
+        print(count, a, "is in the Trizbort map but not in the source.")
         sourceerr.append(a)
         continue
     if a in ignore.keys():
