@@ -28,8 +28,10 @@ Local $xi = 540, $yi = 980, $xd = 190
 ; constants for click frequency
 Local $clicks = 0, $delay = 10000
 
+Init()
+
 if $CmdLine[0] > 0 Then
-  $myCmd = $CmdLine[1]
+  $myCmd = StringLower($CmdLine[1])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
@@ -210,4 +212,12 @@ Func CheckIfOnTask()
     MsgBox($MB_OK, "Bad mouse position", "You need to position the mouse over a (+) for repeat- or breath-of-fire-cast to work.")
     exit
   EndIf
+EndFunc
+
+Func Bail()
+  exit
+EndFunc
+
+Func Init()
+  HotKeySet("{F10}", "Bail")
 EndFunc
