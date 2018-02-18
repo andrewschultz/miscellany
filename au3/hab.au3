@@ -27,27 +27,36 @@ Local $xi = 540, $yi = 980, $xd = 190
 
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0, $delay = 10000
+Local $cmdCount = 1
+
+Local $testDontClick = False, $didAnything = False
 
 Init()
 
-if $CmdLine[0] > 0 Then
-  $myCmd = StringLower($CmdLine[1])
+While $cmdCount <= $CmdLine[0]
+  $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
+  If $myCmd == 'te' Then
+    $testDontClick = True
+	$cmdCount = $cmdCount + 1
+	ContinueLoop
+  EndIf
+  $didAnything = True
   If $myCmd == 'a' Then
 
     ToHab()
-    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-        for $i = 1 to $cmdLine[2]
+    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
+        for $i = 1 to $cmdLine[$cmdCount+1]
           MouseClick ( "left", 1325, 450, 1 )
           MouseMove(1275, 400)
-          if $i < $cmdLine[2] Then
+          if $i < $cmdLine[$cmdCount+1] Then
             sleep(2000)
           Endif
         Next
     Endif
-    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+    if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
       clickSkill($clicks, 2)
     Endif
   ElseIf $myCmd == 'b' Then
@@ -64,10 +73,10 @@ if $CmdLine[0] > 0 Then
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
-    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
 	  $clicks = $cmdLine[2]
     Endif
-    if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
+    if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
 	  $clicks2 = $cmdLine[3]
     Endif
     CheckClicks()
@@ -88,8 +97,8 @@ if $CmdLine[0] > 0 Then
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
     ToolsTrade(False)
   ElseIf $myCmd == 'x' or $myCmd == 'xq' Then
-    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-	  $clicks = $cmdLine[2]
+    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
+	  $clicks = $cmdLine[$cmdCount+1]
     Endif
     CheckClicks()
     if $myCmd == 'x' Then
@@ -102,16 +111,21 @@ if $CmdLine[0] > 0 Then
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
-    Usage(0)
+    Usage(0, $cmdLine[$cmdCount])
   Endif
-Else
-  Usage(0)
-Endif
+  $cmdCount = $cmdCount+1
+WEnd
+
+if $cmdLine[0] == 0 Then
+  Usage(0, "(empty command line)")
+Elseif $didAnything == False Then
+  Usage(0, "(no useful commands)")
+EndIf
 
 ; end main
 ; function(s) below
 
-Func Usage($questionmark)
+Func Usage($questionmark, $badCmd = "")
   Local $usgAry[10] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
   "-a opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
@@ -124,10 +138,17 @@ Func Usage($questionmark)
   "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. -xq ignores the nag." _
   ]
   Local $header = "Bad/missing parameter(s)"
+
   if $questionmark Then
     $header = "Usage popup box"
   EndIf
+
+  if $badCmd Then
+    $header = $header & " " & $badCmd
+  EndIf
+
   MsgBox($MB_OK, $header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
+  Exit
 EndFunc
 
 Func PickItem($x, $y)
@@ -161,6 +182,10 @@ Func PickAttr($y)
 EndFunc
 
 Func clickSkill($clicks, $x)
+  if $testDontClick == True Then
+    MsgBox($MB_OK, "Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
+	exit
+  EndIf
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks Then
