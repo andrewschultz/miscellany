@@ -26,7 +26,7 @@ Const $BURST_OF_FLAME = 0, $ETHEREAL_SURGE = 1, $EARTHQUAKE = 2, $CHILLING_FROST
 Local $xi = 540, $yi = 980, $xd = 190
 
 ; constants for click frequency
-Local $clicks = 0, $delay = 10000
+Local $clicks = 0, $clicks2 = 0, $delay = 10000
 
 Init()
 
@@ -65,11 +65,14 @@ if $CmdLine[0] > 0 Then
     DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-      clickSkill($cmdLine[2], $ETHEREAL_SURGE)
+	  $clicks = $cmdLine[2]
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
-      clickSkill($cmdLine[3], $EARTHQUAKE)
+	  $clicks2 = $cmdLine[3]
     Endif
+    CheckClicks()
+    clickSkill($clicks, $ETHEREAL_SURGE)
+    clickSkill($clicks2, $EARTHQUAKE)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -83,8 +86,11 @@ if $CmdLine[0] > 0 Then
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-    ToolsTrade()
+    ToolsTrade(False)
   ElseIf $myCmd == 'x' or $myCmd == 'xq' Then
+    if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
+	  $clicks = $cmdLine[2]
+    Endif
     CheckClicks()
     if $myCmd == 'x' Then
       $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
@@ -92,9 +98,7 @@ if $CmdLine[0] > 0 Then
         exit
 	  EndIf
     EndIf
-    DoInt()
-    ToolsTrade()
-    DoPer()
+    ToolsTrade(True)
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -195,11 +199,12 @@ Func DoPer()
   PickItem(0, 3)
 EndFunc
 
-Func ToolsTrade()
+Func ToolsTrade($outfitChange)
   ; number of times to cast Tools
   if $cmdLine[0] > 1 Then
     $clicks = $CmdLine[2]
   Endif
+  CheckClicks()
 
   ; adjust delay
   if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
@@ -208,6 +213,10 @@ Func ToolsTrade()
 
   ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
 
+  if $outfitChange == True Then
+    DoPer()
+  EndIf
+
   ToHab()
   ToTasks()
   MouseClick ( "left", 200, 100, 1 )
@@ -215,11 +224,16 @@ Func ToolsTrade()
   sleep(2000)
 
   clickSkill($clicks, 2)
+
+  if $outfitChange == True Then
+    DoInt()
+  EndIf
+
 EndFunc
 
-Func CheckClicks()
-  if $clicks < 1 Then
-    MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
+Func CheckClicks() ; this is not perfect but it does the job for now
+  if $clicks < 1 and $clicks2 < 1 Then
+    MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
 	exit
   Endif
 EndFunc
