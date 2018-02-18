@@ -39,13 +39,13 @@ if $CmdLine[0] > 0 Then
 
     ToHab()
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
-		for $i = 1 to $cmdLine[2]
-		  MouseClick ( "left", 1325, 450, 1 )
+        for $i = 1 to $cmdLine[2]
+          MouseClick ( "left", 1325, 450, 1 )
           MouseMove(1275, 400)
-		  if $i < $cmdLine[2] Then
-		    sleep(2000)
-		  Endif
-		Next
+          if $i < $cmdLine[2] Then
+            sleep(2000)
+          Endif
+        Next
     Endif
     if $cmdLine[0] > 2 and $cmdLine[3] > 0 Then
       clickSkill($clicks, 2)
@@ -62,19 +62,7 @@ if $CmdLine[0] > 0 Then
       sleep($delay/2)
     Next
   ElseIf $myCmd == 'i' Then
-
-    ; intelligence
-    ToHab()
-    GoEquip()
-
-    PickAttr(4)
-
-    PickItem(6, 0) ; the first one-handed wand, so we can get more benefits from the off-hand
-    PickItem(0, 1)
-    PickItem(0, 2)
-    PickItem(0, 3)
-
-    ToTasks()
+    DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] > 1 and $cmdLine[2] > 0 Then
       clickSkill($cmdLine[2], $ETHEREAL_SURGE)
@@ -86,18 +74,7 @@ if $CmdLine[0] > 0 Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
   ElseIf $myCmd == 'p' Then
-
-    ; perception
-    ToHab()
-    GoEquip()
-
-    PickAttr(2)
-
-    PickItem(0, 0)
-    PickItem(0, 1)
-    PickItem(0, 2)
-    PickItem(0, 3)
-
+    DoPer()
   ElseIf $myCmd == 'r' Then
     ToHab()
     CheckIfOnTask()
@@ -106,30 +83,18 @@ if $CmdLine[0] > 0 Then
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-
-    ; number of times to cast Tools
-    if $cmdLine[0] > 1 Then
-      $clicks = $CmdLine[2]
-    Endif
-
-    ; adjust delay
-    if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
-      $delay = $CmdLine[3] * 1000
-    Endif
-
-    ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
-
-    ToHab()
-	ToTasks()
-    MouseClick ( "left", 200, 100, 1 )
-    ; need to wait to make sure the page loads after clicking "tasks"
-    sleep(2000)
-
-    if $clicks < 1 Then
-      MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
-    Endif
-
-    clickSkill($clicks, 2)
+    ToolsTrade()
+  ElseIf $myCmd == 'x' or $myCmd == 'xq' Then
+    CheckClicks()
+    if $myCmd == 'x' Then
+      $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
+	  if $res == $ID_CANCEL Then
+        exit
+	  EndIf
+    EndIf
+    DoInt()
+    ToolsTrade()
+    DoPer()
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -143,7 +108,7 @@ Endif
 ; function(s) below
 
 Func Usage($questionmark)
-  Local $usgAry[9] = [ "-a, -b, -i, -m/-w, -o, -p, -r, or -t are the options.", _
+  Local $usgAry[10] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
   "-a opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
   "-i = intelligence gear,", _
@@ -151,7 +116,9 @@ Func Usage($questionmark)
   "-o = only click tasks: test option", _
   "-p = perception gear", _
   "-r = repeated habit on the left column, needs # and positioning", _
-  "-t (tools of the trade) needs a number after for clicks, with an optional second for delays." ]
+  "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
+  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. -xq ignores the nag." _
+  ]
   Local $header = "Bad/missing parameter(s)"
   if $questionmark Then
     $header = "Usage popup box"
@@ -198,6 +165,63 @@ Func clickSkill($clicks, $x)
     Endif
   Next
   ToTasks()
+EndFunc
+
+Func DoInt()
+  ; intelligence
+  ToHab()
+  GoEquip()
+
+  PickAttr(4)
+
+  PickItem(6, 0) ; the first one-handed wand, so we can get more benefits from the off-hand
+  PickItem(0, 1)
+  PickItem(0, 2)
+  PickItem(0, 3)
+
+  ToTasks()
+EndFunc
+
+Func DoPer()
+  ; perception
+  ToHab()
+  GoEquip()
+
+  PickAttr(2)
+
+  PickItem(0, 0)
+  PickItem(0, 1)
+  PickItem(0, 2)
+  PickItem(0, 3)
+EndFunc
+
+Func ToolsTrade()
+  ; number of times to cast Tools
+  if $cmdLine[0] > 1 Then
+    $clicks = $CmdLine[2]
+  Endif
+
+  ; adjust delay
+  if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
+    $delay = $CmdLine[3] * 1000
+  Endif
+
+  ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
+
+  ToHab()
+  ToTasks()
+  MouseClick ( "left", 200, 100, 1 )
+    ; need to wait to make sure the page loads after clicking "tasks"
+  sleep(2000)
+
+  clickSkill($clicks, 2)
+EndFunc
+
+Func CheckClicks()
+  if $clicks < 1 Then
+    MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after -m.")
+	exit
+  Endif
 EndFunc
 
 Func ToTasks()
