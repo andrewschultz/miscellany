@@ -16,14 +16,28 @@ import __main__ as main
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
+def if_rename(x):
+    if x in renamer.keys():
+        return renamer[x]
+    return x
+
 def read_ignore_file():
+    line_count = 0
     with open(ignore_file) as file:
         for line in file:
+            line_count = line_count + 1
             if line.startswith(';'): break
             if line.startswith('#'): continue
             if line.startswith('ignore:'):
                 ll = re.sub("^ignore:", "", line.strip().lower())
                 ignore[ll] = 1
+            elif line.startswith("rename:"):
+                ll = re.sub("^rename:", "", line.strip().lower())
+                ary = ll.split("/")
+                if len(ary) != 2:
+                    print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
+                if verbose: print("Renaming", ary[0], ary[1])
+                renamer[ary[0]] = ary[1]
 
 def match_source_invisiclues():
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
@@ -62,9 +76,11 @@ source = defaultdict(bool)
 triz = defaultdict(bool)
 invis_rooms = defaultdict(bool)
 ignore = defaultdict(bool)
+renamer = defaultdict(str)
 project = "buck-the-past"
 
 invisiclues_search = True
+verbose = False
 
 ignore_file = re.sub("py$", "txt", main.__file__)
 
@@ -111,7 +127,7 @@ with open(source_file) as f:
             l1 = re.sub("\..*", "", l1, re.IGNORECASE)
             l2 = re.sub(".*is in ", "", line, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
-            source[l1] = l2
+            source[if_rename(l1)] = l2
         if re.search("^(a|the) (passroom|pushroom|room) called ", line, re.IGNORECASE):
             line = line.rstrip().lower()
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", line, re.IGNORECASE)
@@ -120,7 +136,8 @@ with open(source_file) as f:
             l2 = re.sub(".*is a room in ", "", l2, re.IGNORECASE)
             l2 = re.sub(".*is in ", "", l2, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
-            source[l1] = l2
+            source[if_rename(l1)] = l2
+            print(ll, l2)
         if re.search("^[^\t].*is a (privately-named )?(passroom|pushroom|room) in ", line, re.IGNORECASE):
             line = line.rstrip().lower()
             l1 = re.sub(" is a (privately-named )?(passroom|pushroom|room) in .*", "", line, flags=re.IGNORECASE)
@@ -128,14 +145,14 @@ with open(source_file) as f:
             l2 = re.sub("\".*", "", line, flags=re.IGNORECASE)
             l2 = re.sub(".*is (a (privately-named )?(passroom|pushroom|room) )?in ", "", l2, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
-            source[l1] = l2
+            source[if_rename(l1)] = l2
         if re.search("^[^\t].*is (above|below|((north|south|east|west|up|down|inside|outside) of)).*it is in", line, re.IGNORECASE):
             line = line.rstrip().lower()
             l1 = re.sub(' is .*', '', line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
             l2 = re.sub(".*it is in ", "", line, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
-            source[l1] = l2
+            source[if_rename(l1)] = l2
 
 missmap = 0
 
@@ -160,8 +177,8 @@ for a in list(set(triz.keys()) | set(source.keys())):
     if a in ignore.keys():
         continue
     if triz[a] != source[a]:
-        print(a, "has different regions for trizbort:", triz[a], " and ", source[a])
-        print(a, triz[a], source[a])
+        print(a, "has different regions: source =", source[a], "and trizbort =", triz[a])
+        # print(a, triz[a], source[a])
 
 print ("TEST RESULTS:triz2source-" + project + ",0,0," + " / ".join(sourceerr))
 print ("TEST RESULTS:triz2map-" + project + ",0,0," + "/ ".join(maperr))
