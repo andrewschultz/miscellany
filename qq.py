@@ -12,6 +12,7 @@ import i7
 
 def usage():
     print("-a = search all files.")
+    print("-h = export to HTML.")
     print("-v = verbose")
     print("-b = bail on first")
     print("-l = open last line")
@@ -39,7 +40,10 @@ def file_hunt(x):
             if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll):
                 if line_num > min_line:
                     bad_lines.append(line_num)
-                    if verbose: print("Line", line_num, "instance", len(bad_lines), "--", line.strip())
+                    verbose_detail = "Line {:d}, instance {:d}, -- {:d}".format(line_num, len(bad_lines), line.strip()
+                    if verbose: print(verbose_detail)
+                    if html_exp:
+                        fhtml.write(verbose_detail + "<br />\n")
                 elif verbose: print("Ignoring match below line", min_line, "at line", line_num, ":", line.strip())
     if len(bad_lines) == 0:
         print("Nothing found for", x)
@@ -95,6 +99,8 @@ if len(sys.argv) > 1:
             verbose = True
         elif ll == 'b':
             bail_on_first = True
+        elif ll == 'h':
+            html_exp = True
         elif ll == 'l':
             last_line_open = True
         elif ll == '?':
@@ -118,6 +124,11 @@ if len(sys.argv) > 1:
             print("WARNING!", ll, "is not in i7x.keys.")
         count = count + 1
 
+html_file = "c:/games/inform/qq.htm"
+
+if html_exp:
+    fhtml = fopen(html_file, "w")
+
 if search_all_qs:
     for x in i7.i7xr:
         todo_hunt(x)
@@ -126,3 +137,6 @@ elif len(searchables) == 0:
         todo_hunt(my_proj(os.getcwd()))
 else:
     print(searchables)
+
+if html_exp:
+    fhtml.close()

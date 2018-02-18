@@ -77,8 +77,8 @@ def process_operators(infile, tempfile, outfile):
                         in_table = True
                         end_add = []
                 if in_table == False:
-                    if default_val and line.strip() not in ignore.keys():
-                        print("Going with", default, "for", line.strip())
+                    if default_val and line.strip() not in ignore_dict.keys():
+                        print("Going with", default_val, "for", line.strip())
                         if default_val > 0:
                             to_go = default_val + 1
                         else:
