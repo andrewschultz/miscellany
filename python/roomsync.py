@@ -16,6 +16,11 @@ import __main__ as main
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
+def usage():
+    print("Use a project directory or its abbreviation.")
+    print("-v = verbose output")
+    exit()
+
 def if_rename(x):
     if x in renamer.keys():
         return renamer[x]
@@ -36,7 +41,7 @@ def read_ignore_file():
                 ary = ll.split("/")
                 if len(ary) != 2:
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
-                if verbose: print("Renaming", ary[0], ary[1])
+                if verbose: print("Renaming", ary[0], "to", ary[1])
                 renamer[ary[0]] = ary[1]
 
 def match_source_invisiclues():
@@ -84,14 +89,26 @@ verbose = False
 
 ignore_file = re.sub("py$", "txt", main.__file__)
 
-if i7.dir2proj():
-    if len(sys.argv) == 1: print("Using story.ni in current directory...")
-    project = i7.dir2proj()
+current_as_default = False
 
-# cmd line looks for project name
-if len(sys.argv) > 1 and sys.argv[1]:
-    project = sys.argv[1]
-    if project in i7.i7x.keys(): project = i7.i7x[project]
+if i7.dir2proj():
+    project = i7.dir2proj()
+    current_as_default = True
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    j = re.sub("^-", "", sys.argv[cmd_count].lower())
+    if j in i7.i7x.keys():
+        project = i7.i7x[j]
+        current_as_default = False
+    elif os.path.isdir("c:/games/inform/" + j + ".inform"):
+        project = j
+        current_as_default = False
+    elif j == 'v':
+        verbose = True
+    else:
+        usage()
+    cmd_count = cmd_count + 1
 
 trizfile = i7.triz(project)
 source_file = i7.src(project)
