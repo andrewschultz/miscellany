@@ -95,19 +95,11 @@ While $cmdCount <= $CmdLine[0]
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
-      $clicks = $cmdLine[$cmdCount+1]
-    Else
-      ToolsWarn()
-    EndIf
+    $clicks = NumClicksOrBail($cmdCount+1)
     ToolsTrade($clicks, False, False)
 	$cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
   ElseIf $myCmd == 'x' or $myCmd == 'xq' or $myCmd == 'xr' Then
-    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
-	  $clicks = $cmdLine[$cmdCount+1]
-    Else
-	  ToolsWarn()
-    EndIf
+    $clicks = NumClicksOrBail($cmdCount+1)
     if $myCmd <> 'xq' Then
       $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
 	  if $res == $IDCANCEL Then
@@ -283,9 +275,17 @@ Func CheckIfOnTask()
   EndIf
 EndFunc
 
-Func ToolsWarn()
-  MsgBox(MB_OK, "Need # of clicks", "You need to specify a number of clicks for Tools of the Trade.")
-  exit()
+Func NumClicksOrBail($cmdIdx)
+    if $cmdLine[0] < $cmdIdx Then
+      MsgBox($MB_OK, "Need # of clicks", "You need to specify a number of clicks for skill casting.")
+      exit
+	EndIf
+	if $cmdLine[$cmdIdx] <= 0 Then
+	  MsgBox($MB_OK, "Need positive clicks", "You need to specify a positive number of clicks for skill casting.")
+	  exit
+    EndIf
+	exit
+	return $cmdLine[$cmdIdx]
 EndFunc
 
 Func Bail()
