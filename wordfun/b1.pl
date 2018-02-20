@@ -17,6 +17,7 @@ use strict;
 use warnings;
 use List::MoreUtils qw(uniq);
 use File::Stat;
+use Date::Parse;
 
 use sigtrap 'handler', \&cleanup, 'normal-signals';
 
@@ -78,7 +79,7 @@ while ( $argcount <= $#ARGV ) {
     /^-?i$/i && do { $stdin = 1; $argcount++; next; };
     /^-?s$/i  && do { showMisses(); exit(); };
     /^-?\?^/i && do { usage();      exit(); };
-    /^[a-z]$/i && do {
+    /^[a-z]+$/i && do {
       die("Only one firstWrongGuess allowed.") if $firstWrongGuess;
       $firstWrongGuess = $arg;
       $argcount++;
@@ -156,7 +157,6 @@ my $lastOne  = "";
 my $firstOne = "";
 
 my $wordBad = 0;
-my $wrongs  = "";
 
 # read in the misses
 my $line;
@@ -174,7 +174,7 @@ my $canAlphabetize = 0;
 #if ($r =~ /$ARGV[1]/i) { die; }
 #else { die ("$r !~ $ARGV[1]"); }
 
-if ( !$stdin ) { oneHangman( $ARGV[0], $wrongs ); }
+if ( !$stdin ) { oneHangman( $guessResult, $firstWrongGuess ); }
 else {
   printTimeFile();
 
@@ -558,6 +558,18 @@ sub addToDict {
 sub getPoints {
   my $mech = WWW::Mechanize->new();
 
+  open( A, $b1time );
+  my $cur   = <A>;
+  my $date  = <A>;
+  my $date2 = <A>;
+  my $can   = <A>;
+  die("Maximum = $can") if $justShow;
+  $lastCan = $can;
+  chomp($lastCan);
+  close(A);
+  my $epochDate = str2time($date);
+  my $timeDelta = time() - $epochDate;
+
   my $link = "http://secure.thefreedictionary.com/user/Andrew_Schultz";
   print "Reading $link...\n";
 
@@ -573,7 +585,21 @@ sub getPoints {
       print "$points\n";
       my $left = $lastCan - $points;
       $lastCheckPoints = $points;
+      my $pointDelta = $points - $cur;
+      if ( $pointDelta <= 0 ) {
+        print("Can't estimate end.\n");
+        return;
+      }
+      elsif ( $pointDelta > 700 ) {
+        print("Went past end\n");
+        return;
+      }
       print "$points points. Can get $lastCan. Left=$left\n";
+      $pointDelta = ( $pointDelta > 50 ? $pointDelta - 50 : $pointDelta / 2 );
+      my $finalTime = $timeDelta * 700 / $pointDelta + $epochDate;
+      print( scalar 700 - $pointDelta )
+        . "to go, ETA: "
+        . ( scalar $finalTime ) . "\n";
       return;
     }
   }
