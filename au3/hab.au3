@@ -95,19 +95,27 @@ While $cmdCount <= $CmdLine[0]
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-    ToolsTrade(False)
-  ElseIf $myCmd == 'x' or $myCmd == 'xq' Then
+    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
+      $clicks = $cmdLine[$cmdCount+1]
+    Else
+      ToolsWarn()
+    EndIf
+    ToolsTrade($clicks, False, False)
+	$cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
+  ElseIf $myCmd == 'x' or $myCmd == 'xq' or $myCmd == 'xr' Then
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
 	  $clicks = $cmdLine[$cmdCount+1]
-    Endif
-    CheckClicks()
-    if $myCmd == 'x' Then
+    Else
+	  ToolsWarn()
+    EndIf
+    if $myCmd <> 'xq' Then
       $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
-	  if $res == $ID_CANCEL Then
+	  if $res == $IDCANCEL Then
         exit
 	  EndIf
     EndIf
-    ToolsTrade(True)
+    ToolsTrade($clicks, $myCmd == 'xq', $myCmd <> 'x')
+	$cmdCount = $cmdCount + 1
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -224,21 +232,19 @@ Func DoPer()
   PickItem(0, 3)
 EndFunc
 
-Func ToolsTrade($outfitChange)
+Func ToolsTrade($times, $equipPer, $unequipPer)
   ; number of times to cast Tools
-  if $cmdLine[0] > 1 Then
-    $clicks = $CmdLine[2]
-  Endif
+
   CheckClicks()
 
-  ; adjust delay
-  if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
-    $delay = $CmdLine[3] * 1000
-  Endif
+  ; adjust delay: need to rewrite code elsewhere
+  ; if $cmdLine[0] > 2 and $CmdLine[3] > 0 Then
+  ;   $delay = $CmdLine[3] * 1000
+  ; Endif
 
   ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
 
-  if $outfitChange == True Then
+  if $equipPer == True Then
     DoPer()
   EndIf
 
@@ -248,9 +254,9 @@ Func ToolsTrade($outfitChange)
     ; need to wait to make sure the page loads after clicking "tasks"
   sleep(2000)
 
-  clickSkill($clicks, 2)
+  clickSkill($times, 2)
 
-  if $outfitChange == True Then
+  if $unequipPer == True Then
     DoInt()
   EndIf
 
@@ -277,10 +283,17 @@ Func CheckIfOnTask()
   EndIf
 EndFunc
 
+Func ToolsWarn()
+  MsgBox(MB_OK, "Need # of clicks", "You need to specify a number of clicks for Tools of the Trade.")
+  exit()
+EndFunc
+
 Func Bail()
   exit
 EndFunc
 
 Func Init()
+  HotKeySet("{F7}", "Bail")
   HotKeySet("{F10}", "Bail")
+  HotKeySet("{F11}", "Bail")
 EndFunc

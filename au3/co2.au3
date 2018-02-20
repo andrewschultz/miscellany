@@ -1,8 +1,9 @@
 Opt("WinTitleMatchMode", -2)
-Opt("SendKeyDelay", 125)
-
+Opt("SendKeyDelay", 50)
 
 HotKeySet("{F7}", "Bail")
+HotKeySet("{F10}", "Bail")
+HotKeySet("{F11}", "Bail")
 
 Local $start = 0
 
