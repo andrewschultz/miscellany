@@ -12,11 +12,12 @@ import i7
 
 def usage():
     print("-a = search all files.")
-    print("-h = export to HTML.")
+    print("-h = export to HTML, -ha = search all.")
     print("-v = verbose")
     print("-b = bail on first")
     print("-l = open last line")
     print("-m = minimum line to open (no space)")
+    print("-nl = no launch")
     print("-o = bail once over # lines (no space)")
     exit()
 
@@ -32,6 +33,7 @@ def my_proj(x):
 def file_hunt(x):
     # print("HUNTING TODOS in", x)
     bad_lines = []
+    any_yet = False
     with open(x) as file:
         line_num = 0
         for line in file:
@@ -39,12 +41,16 @@ def file_hunt(x):
             ll = line.lower()
             if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll):
                 if line_num > min_line:
+                    if html_exp and not any_yet:
+                        fhtml.write("<font size=+3 color=red>TODO RESULTS IN {:s}</font><br />\n".format(x))
+                        any_yet = True
                     bad_lines.append(line_num)
-                    verbose_detail = "Line {:d}, instance {:d}, -- {:d}".format(line_num, len(bad_lines), line.strip()
+                    verbose_detail = "Line {:d}, instance {:d}, -- {:s}".format(line_num, len(bad_lines), line.strip())
                     if verbose: print(verbose_detail)
                     if html_exp:
                         fhtml.write(verbose_detail + "<br />\n")
                 elif verbose: print("Ignoring match below line", min_line, "at line", line_num, ":", line.strip())
+    if any_yet == False and html_exp: fhtml.write("<font size=+3 color=green>NOTHING FOUND {:s}</font><br />\n".format(x))
     if len(bad_lines) == 0:
         print("Nothing found for", x)
         print()
@@ -80,6 +86,7 @@ search_all_qs = False
 verbose = False
 bail_num = 0
 min_line = 0
+html_exp = False
 
 # variables
 searchables = []
@@ -97,10 +104,19 @@ if len(sys.argv) > 1:
             verbose = False
         elif ll == 'v':
             verbose = True
+        elif ll == 'nl':
+            launch_first_find = False
         elif ll == 'b':
             bail_on_first = True
         elif ll == 'h':
             html_exp = True
+            launch_first_find = False
+            bail_on_first = False
+        elif ll == 'ha':
+            html_exp = True
+            launch_first_find = False
+            search_all_qs = True
+            bail_on_first = False
         elif ll == 'l':
             last_line_open = True
         elif ll == '?':
@@ -117,7 +133,7 @@ if len(sys.argv) > 1:
             except:
                 print("The o (bail over #) option requires a number right after: no spaces.")
         elif ll in i7.i7x.keys():
-            searchables.append(i7x[ll])
+            searchables.append(i7.i7x[ll])
         elif ll in i7.i7x.values():
             searchables.append(ll)
         else:
@@ -127,16 +143,21 @@ if len(sys.argv) > 1:
 html_file = "c:/games/inform/qq.htm"
 
 if html_exp:
-    fhtml = fopen(html_file, "w")
+    fhtml = open(html_file, "w")
+    fhtml.write("<html>\n<title>\nQQ.PY all-project results</title>\n<body>\n")
 
 if search_all_qs:
-    for x in i7.i7xr:
+    for x in sorted(i7.i7xr):
         todo_hunt(x)
 elif len(searchables) == 0:
     if os.path.exists("story.ni"):
         todo_hunt(my_proj(os.getcwd()))
 else:
-    print(searchables)
+    for x in sorted(searchables):
+        todo_hunt(x)
 
 if html_exp:
+    fhtml.write("</body>\n</html>\n")
     fhtml.close()
+    print("Launching", html_file)
+    os.system(html_file)
