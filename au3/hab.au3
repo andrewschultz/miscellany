@@ -5,12 +5,14 @@
 ;
 ; a = opens armoire (needs #)
 ; b = fiery blast (needs position and number)
+; d = adjust delay
 ; i = intelligence outfit (default for adventuring)
 ; m/w = magic/wizard skills
 ; o = only click to tasks
 ; p = perception outfit
 ; r = repeatedly access habit (needs #)
 ; t = Tools of the Trade clicks (needs #, optional delay)
+; te = test
 ;
 
 #include <MsgBoxConstants.au3>
@@ -40,8 +42,8 @@ While $cmdCount <= $CmdLine[0]
   EndIf
   If $myCmd == 'te' Then
     $testDontClick = True
-	$cmdCount = $cmdCount + 1
-	ContinueLoop
+    $cmdCount = $cmdCount + 1
+    ContinueLoop
   EndIf
   $didAnything = True
   If $myCmd == 'a' Then
@@ -56,9 +58,7 @@ While $cmdCount <= $CmdLine[0]
           Endif
         Next
     Endif
-    if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
-      clickSkill($clicks, 2)
-    Endif
+    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
   ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
@@ -70,14 +70,17 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
+  ElseIf $myCmd == 'd' Then
+    $delay = 1000 * GetNumArgOrBail($cmdCount+1)
+    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
-	  $clicks = $cmdLine[2]
+      $clicks = $cmdLine[2]
     Endif
     if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
-	  $clicks2 = $cmdLine[3]
+      $clicks2 = $cmdLine[3]
     Endif
     CheckClicks()
     clickSkill($clicks, $ETHEREAL_SURGE)
@@ -95,19 +98,30 @@ While $cmdCount <= $CmdLine[0]
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-    $clicks = NumClicksOrBail($cmdCount+1)
+    $clicks = GetNumArgOrBail($cmdCount+1)
     ToolsTrade($clicks, False, False)
-	$cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
-  ElseIf $myCmd == 'x' or $myCmd == 'xq' or $myCmd == 'xr' Then
-    $clicks = NumClicksOrBail($cmdCount+1)
-    if $myCmd <> 'xq' Then
+    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
+  ElseIf StringLeft($myCmd, 1) == 'x' Then
+    $additional = StringMid($myCmd, 2)
+    $clicks = GetNumArgOrBail($cmdCount+1)
+    if not StringInStr($additional, 'q') Then
       $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
-	  if $res == $IDCANCEL Then
+      if $res == $IDCANCEL Then
         exit
-	  EndIf
+      EndIf
     EndIf
-    ToolsTrade($clicks, $myCmd == 'xq', $myCmd <> 'x')
-	$cmdCount = $cmdCount + 1
+    if StringInStr($additional, 'r') Then
+      ToolsTrade($clicks, False, True)
+      if StringInStr($additional, 'e') Then
+        MsgBox($MB_OK, "Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both.")
+        exit
+      EndIf
+    ElseIf StringInStr($additional, 'e') Then
+      ToolsTrade($clicks, True, False)
+    Else
+      ToolsTrade($clicks, True, True)
+    EndIf
+    $cmdCount = $cmdCount + 1
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -126,9 +140,10 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[10] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
+  Local $usgAry[11] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
   "-a opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
+  "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake", _
   "-o = only click tasks: test option", _
@@ -140,7 +155,7 @@ Func Usage($questionmark, $badCmd = "")
   Local $header = "Bad/missing parameter(s)"
 
   if $questionmark Then
-    $header = "Usage popup box"
+    $header = "HAB.AU3 command line argument usage popup box"
   EndIf
 
   if $badCmd Then
@@ -175,16 +190,16 @@ Func ToHab()
 EndFunc
 
 Func PickAttr($y)
-    MouseClick ( "left", 1430, 330, 1)
+    MouseClick ( "left", 1450, 330, 1)
     sleep(1000)
-    MouseClick ( "left", 1430, 360 + $y * 30, 1)
+    MouseClick ( "left", 1450, 360 + $y * 30, 1)
     sleep(2000)
 EndFunc
 
 Func clickSkill($clicks, $x)
   if $testDontClick == True Then
     MsgBox($MB_OK, "Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
-	exit
+    exit
   EndIf
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
@@ -257,7 +272,7 @@ EndFunc
 Func CheckClicks() ; this is not perfect but it does the job for now
   if $clicks < 1 and $clicks2 < 1 Then
     MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
-	exit
+    exit
   Endif
 EndFunc
 
@@ -275,17 +290,16 @@ Func CheckIfOnTask()
   EndIf
 EndFunc
 
-Func NumClicksOrBail($cmdIdx)
+Func GetNumArgOrBail($cmdIdx)
     if $cmdLine[0] < $cmdIdx Then
-      MsgBox($MB_OK, "Need # of clicks", "You need to specify a number of clicks for skill casting.")
+      MsgBox($MB_OK, "Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
       exit
-	EndIf
-	if $cmdLine[$cmdIdx] <= 0 Then
-	  MsgBox($MB_OK, "Need positive clicks", "You need to specify a positive number of clicks for skill casting.")
-	  exit
     EndIf
-	exit
-	return $cmdLine[$cmdIdx]
+    if $cmdLine[$cmdIdx] <= 0 Then
+      MsgBox($MB_OK, "Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
+      exit
+    EndIf
+    return $cmdLine[$cmdIdx]
 EndFunc
 
 Func Bail()
