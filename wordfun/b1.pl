@@ -215,7 +215,11 @@ else {
       next;
     }
     if ( lc($temp) eq "s" ) {
-      getPoints();
+      getPoints(0);
+      next;
+    }
+    if ( lc($temp) eq "se" ) {
+      getPoints(1);
       next;
     }
     if ( $temp eq "?" ) {
@@ -568,7 +572,8 @@ sub getPoints {
   chomp($lastCan);
   close(A);
   my $epochDate = str2time($date);
-  my $timeDelta = time() - $epochDate;
+  my $ct        = time();
+  my $timeDelta = $ct - $epochDate;
 
   my $link = "http://secure.thefreedictionary.com/user/Andrew_Schultz";
   print "Reading $link...\n";
@@ -590,16 +595,25 @@ sub getPoints {
         print("Can't estimate end.\n");
         return;
       }
-      elsif ( $pointDelta > 700 ) {
+      elsif ( $pointDelta > 750 ) {
         print("Went past end\n");
         return;
       }
       print "$points points. Can get $lastCan. Left=$left\n";
       $pointDelta = ( $pointDelta > 50 ? $pointDelta - 50 : $pointDelta / 2 );
-      my $finalTime = $timeDelta * 700 / $pointDelta + $epochDate;
-      print( scalar 700 - $pointDelta )
-        . "to go, ETA: "
-        . ( scalar $finalTime ) . "\n";
+      my $pointSlope = 60 * $pointDelta / $timeDelta;
+      my $finalTime  = $timeDelta * 700 / $pointDelta + $epochDate;
+      @projectArray = $_[0]
+        ? ( ( 5 .. 15 ) : ( 5, 6, 7.5, 10, 12, 15 ) );
+      for my $x (@projectArray) {
+        my $projTimeLeft = ( 700 - $pointDelta ) * 60 / $x;
+        my $projTime     = localtime( $projTimeLeft + $ct );
+        print "$x per minute means you end at $projTime.\n";
+      }
+      print ""
+        . ( scalar 700 - $pointDelta )
+        . " to go, $pointSlope per minute, ETA: "
+        . ( localtime($finalTime) ) . "\n";
       return;
     }
   }
