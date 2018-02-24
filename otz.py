@@ -85,9 +85,10 @@ def check_old_matches(x):
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
-                        print("-->", line_count, (abbrevs[m] if m in abbrevs.keys() else m) + ": " + line.strip())
                     else:
-                        incident_ig[r] = incident_ig[r] + 1
+                        incident_ig[m] = incident_ig[m] + 1
+                    if ignore is False or show_whats_ignored:
+                        print("-->" if not ignore else "(IGNORED)", line_count, (abbrevs[m] if m in abbrevs.keys() else m) + ": " + line.strip())
             for r in regex_dic.keys():
                 if re.search(r, line, re.IGNORECASE):
                     ignore = False
@@ -115,6 +116,8 @@ def in_csv(a, b):
 
 read_sections = False
 print_sections = False
+force_default = False
+show_whats_ignored = False
 
 sections = [ ]
 
@@ -126,17 +129,21 @@ if len(sys.argv) > 1:
     while count < len(sys.argv):
         arg = sys.argv[count]
         count = count + 1
-        if arg == 'e' or arg == '-e':
+        if arg == 'd' or arg == '-d':
+            force_default = True
+        elif arg == 'e' or arg == '-e':
             os.system(otz)
-        if arg == '?' or arg == '-?':
+        elif arg == 'si' or arg == '-si':
+            show_whats_ignored = True
+        elif arg == '?' or arg == '-?':
             show_projects()
             exit()
-        if arg.startswith("as"):
+        elif arg.startswith("as"):
             sections = [ "" ]
             read_sections = True
             print_sections = True
             continue
-        if arg.startswith("s=") or arg.startswith("sec="):
+        elif arg.startswith("s=") or arg.startswith("sec="):
             sections = re.sub("^s(ec)?=", "", arg).split(',')
             read_sections = True
             for s in sections:
@@ -158,8 +165,13 @@ with open(otz) as file:
             temp = re.sub("default=", "", line.lower().strip(), re.IGNORECASE)
             default_project = temp
             if proj_read == '':
-                proj_read = default_project
-                print("Using default project", proj_read)
+                if os.path.exists("story.ni") and not force_default:
+                    proj_read = re.sub("\.inform.*", "", os.getcwd())
+                    proj_read = re.sub(".*[\\\/]", "", proj_read)
+                    print("Using project", proj_read, "since we found story.ni in the local directory.")
+                else:
+                    proj_read = default_project
+                    print("No story.ni found, using default project", proj_read)
             continue
         if line.lower().startswith("project="):
             reading_project = in_csv(re.sub("^project=", "", line.lower().strip(), re.IGNORECASE), proj_read)
@@ -259,6 +271,10 @@ if len(my_list) == 0:
         print("No incidents, but I might not have read anything. Check what sections you wrote in.")
     else:
         print("NO INCIDENTS FOR", proj_read.upper(), "YAY")
+        if show_whats_ignored:
+            for x in sorted(incident_ig, key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
+                if incident_ig[x]:
+                    print("{:<23}: {:<2d} need changing, {:<2d} ignored in otz.py".format(abbrevs[x] if x in abbrevs.keys() else x, incidents_dic[x], incident_ig[x]))
 else:
     print("INCIDENTS (from need most changing to need least):")
     for x in sorted(my_list, key=lambda x:(incidents_dic[x], incident_ig[x], x), reverse=True):
