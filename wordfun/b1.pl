@@ -46,6 +46,7 @@ my $firstStuffString = "esirotlan";
 my @firstStuff = split( "", $firstStuffString );
 
 my @postproc = ();
+my @argvmod  = ();
 
 my $argcount = 0;
 
@@ -53,13 +54,9 @@ my $firstWrongGuess = "";
 my $guessResult     = "";
 my $addMiss         = "";
 
-die(
-"Usage: found letters (.=blank), wrong letters. Use +(word) to add it to $misses. i = stdin.\n"
-) if !defined( $ARGV[0] );
-
 while ( $argcount <= $#ARGV ) {
   my $arg = lc( $ARGV[$argcount] );
-  my $arg2 = $argcount < $#ARGV ? $ARGV[ $argcount + 1 ] : "";
+  my $arg2 = $argcount < $#ARGV ? lc( $ARGV[ $argcount + 1 ] ) : "";
 
   for ($arg) {
     /b1\.pl/i && do {
@@ -79,76 +76,15 @@ while ( $argcount <= $#ARGV ) {
     /^-?i$/i && do { $stdin = 1; $argcount++; next; };
     /^-?s$/i  && do { showMisses(); exit(); };
     /^-?\?^/i && do { usage();      exit(); };
-    /^[a-z]+$/i && do {
-      die("Only one firstWrongGuess allowed.") if $firstWrongGuess;
-      $firstWrongGuess = $arg;
-      $argcount++;
-      next;
-    };
-    /^\+[a-z\.]+$/i && do {
-      die("Only one addMiss allowed.") if $addMiss;
-      $addMiss = $arg;
-      $argcount++;
-      next;
-    };
-    /^[a-z\.]+$/i && do {
-      die("Only one guessResult allowed.") if $guessResult;
-      $guessResult = $arg;
-      $argcount++;
-      next;
-    };
-    /^[\*#][a-z\.]$/i && do {
-      die("Only one guessResult allowed.") if $guessResult;
-      $crossword   = 1;
-      $guessResult = $arg;
-      $argcount++;
-      next;
-    };
-    /^[ainp][0-9]+$/i
-      && do { updateP1File($arg); $stdin = 1; $argcount++; next; };
-    /^[0-9]{1,2}+$/i && do {
-      my $wordfile =
-        $arg
-        ? "c:\\writing\\dict\\words-$arg.txt"
-        : "c:\\writing\\dict\\brit-1word.txt";
-      `$wordfile`;
-      $argcount++;
-    };
-    print "Uh oh, coundn't find anything to do with the argument $arg.\n";
-    usage();
-    exit();
+    push( @argvmod, $arg );
+    $argcount++;
   }
+
 }
 
-if ( !$stdin ) {
-  if ( $ARGV[0] =~ /^[-=\+]/i ) {
-    if ( $ARGV[0] !~ /[a-z]/i ) {
-      print "No spaces between +=- and a letter.\n";
-      exit();
-    }
-    my $toAdd = $ARGV[0];
-    $toAdd =~ s/^[-=+]+//;
-    my $l      = length($toAdd);
-    my $inDict = 0;
-    open( A, "c:\\writing\\dict\\words-$l.txt" )
-      || do { print "No file for words of length $l.\n"; exit(); };
-    while ( $a = <A> ) {
-      chomp($a);
-      if ( lc($a) eq lc($toAdd) ) { $inDict = 1; }
-    }
-    close(A);
-    if ( $inDict == 0 ) {
-      if ( $ARGV[0] !~ /^[=+]{2}/ ) {
-        die("Need extra =/+ for word not in dictionary.");
-      }
-    }
-    if ( $toAdd =~ /[^a-z]/i ) {
-      die("Bailing, $toAdd contains non-alphabetical characters.");
-    }
-    addToDict( $toAdd, 0 );
-    addToErrs( $ARGV[0] );
-    exit();
-  }
+if ( ( scalar @argvmod ) == 0 ) {
+  print "No arguments. Going with standard in.\n";
+  $stdin = 1;
 }
 
 my $count = 0;
@@ -169,103 +105,50 @@ while ( $line = <A> ) {
 }
 close(A);
 
+#for my $j (sort keys %miss) { print "$j $miss{$j}\n"; }; exit();
+
 my $canAlphabetize = 0;
 
 #if ($r =~ /$ARGV[1]/i) { die; }
 #else { die ("$r !~ $ARGV[1]"); }
 
-if ( !$stdin ) { oneHangman( $guessResult, $firstWrongGuess ); }
-else {
-  printTimeFile();
+readOneLine(@argvmod) if ( ( scalar @argvmod ) > 0 );
 
-  my $prevText = "";
-  if ($addMiss) { addToErrs($addMiss); }
-  if ($guessResult) {
-    $prevText = $guessResult;
-    $prevText .= " $firstWrongGuess" if $firstWrongGuess;
-  }
-  elsif ($firstWrongGuess) {
-    die("You had a wrong-guess without having the hangman results.");
-  }
-  my $temp;
-  while ( $prevText || ( $temp = getStdin() ) ) {
-    if ($prevText) {
-      $temp     = $prevText;
-      $prevText = "";
-    }
-    chomp($temp);
-    $temp =~ s/^[ \t]*//;
+exit() if ( !$stdin );
 
-    # get rid of errant b1 first
-    if ( $temp =~ /b1\.pl/ ) {
-      print "Wiping out everything before b1.pl.\n";
-      $temp =~ s/.*b1\.pl *//i;
-    }
+my $temp;
 
-    if ( $temp =~ /^'/ ) {
-      $temp =~ s/^'//;
-      print "Running command $temp\n";
-      `$temp`;
-      next;
-    }
-    if ( lc($temp) =~ /^[ainp][0-9]+$/i ) {
-      updateP1File($temp);
-      $stdin = 1;
-      $argcount++;
-      next;
-    }
-    if ( lc($temp) eq "s" ) {
-      getPoints(0);
-      next;
-    }
-    if ( lc($temp) eq "se" ) {
-      getPoints(1);
-      next;
-    }
-    if ( $temp eq "?" ) {
-      if ($lastWord) {
-        print("Looking up last word $lastWord.\n");
-        system("start http://www.thefreedictionary.com/$lastWord");
-      }
-      else {
-        print("No determined last word.\n");
-      }
-      next;
-    }
-    if ( lc($temp) eq "se" ) {
-      system("start http://secure.thefreedictionary.com");
-      next;
-    }
-    if ( lc($temp) eq "t" ) {
-      printTimeFile();
-      next;
-    }
-    if ( $temp =~ /^[-=\+]/ ) { addToErrs($temp); next; }
-    if ( $temp eq "?" )       { usage();          next; }
-    if ( ( $temp =~ /^\?/ ) || ( $temp =~ / \?/ ) ) {
-      print "Cutting off text before question mark...\n" if ( $temp =~ / \?/ );
-      $temp =~ s/^.//;
-      $temp =~ s/.* \?//;
-      print "Looking up definition of $temp...\n";
-      `start http://www.thefreedictionary.com/$temp`;
-      next;
-    }
-    if ( $temp eq "0" ) {
-      open( A, ">>$misses" );
-      close(A);
-      print "Tweaked $misses.\n";
-      next;
-    }
-    if ( ( $temp eq "q" ) || ( $temp eq "" ) ) {
-      print("OK, see you later.\n");
-      last;
-    }
-    my @tohang = split( / +/, $temp );
-    if ( $#tohang == 0 ) { push( @tohang, "" ); }
-    if ( $#tohang > 1 ) { print "Need 2 args.\n"; next; }
-    $missFound = 0;
-    oneHangman( $tohang[0], $tohang[1] );
+while ( $temp = getStdin() ) {
+  $temp = lc($temp);
+  chomp($temp);
+
+  if ( $temp eq "" ) {
+    print "See you later!\n";
+    exit();
   }
+
+  # get rid of errant b1 / text before question mark first
+  if ( $temp =~ /b1\.pl/ ) {
+    print "Wiping out everything before b1.pl.\n";
+    $temp =~ s/.*b1\.pl *//i;
+  }
+
+  if ( $temp =~ /^.+\?/ ) {
+    print "Cutting off text before question mark...\n";
+    $temp =~ s/.*\?/\?/;
+  }
+
+  # run commands and ignore hangman processing, if applicable
+
+  if ( $temp =~ /^'/ ) {
+    $temp =~ s/^'//;
+    print "Running command $temp\n";
+    `$temp`;
+    next;
+  }
+  my @cmdAry = split( " ", $temp );
+
+  readOneLine(@cmdAry);
 }
 
 ###########################################
@@ -273,6 +156,86 @@ else {
 # subroutines
 #
 #
+
+sub readOneLine {
+  my $argc   = 0;
+  my $soFar  = "";
+  my $wrongs = "";
+  my $amax   = ( scalar @_ );
+
+  if ( ( $amax == 0 ) && $stdin ) {
+    print "Nothing in line. See you later!\n";
+    exit();
+  }
+
+  my $arg;
+  while ( $argc < $amax ) {
+    $arg = $_[$argc];
+
+    if ( lc($arg) =~ /^[ainp][0-9]+$/i ) {
+      updateP1File($arg);
+      $stdin = 1;
+      $argc++;
+    }
+    elsif ( $arg eq "0" ) {
+      open( A, ">>$misses" );
+      close(A);
+      print "Tweaked timestamp for $misses.\n";
+      next;
+    }
+    if ( ( $arg eq "q" ) || ( $arg eq "" ) ) {
+      print "This has no special meaning without stdin.\n" if !$stdin;
+      print("OK, see you later.\n");
+      exit();
+    }
+    elsif ( lc($arg) eq "s" ) {
+      getPoints(0);
+      return;
+    }
+    elsif ( lc($arg) eq "se" ) {
+      getPoints(1);
+      return;
+    }
+    elsif ( lc($arg) eq "sl" ) {
+      system("start http://secure.thefreedictionary.com");
+      return;
+    }
+    elsif ( lc($arg) eq "t" ) {
+      printTimeFile();
+      return;
+    }
+    elsif ( $arg =~ /^[-=\+]/ ) { addToErrs($arg); return; }
+    elsif ( $arg eq "?" ) {
+      usage() if !$stdin;
+      if ($lastWord) {
+        print("Looking up last word $lastWord.\n");
+        system("start http://www.thefreedictionary.com/$lastWord");
+      }
+      else {
+        print("No determined last word.\n");
+      }
+    }
+    elsif ( $arg eq "??" ) {
+      usage();
+    }
+    elsif ( $arg =~ /^[a-z]+$/ ) {
+      if ($wrongs) {
+        print "Two wrongs: $wrongs and $arg.\n";
+        return;
+      }
+      $wrongs = $arg;
+    }
+    elsif ( ( $arg =~ /^[a-z\.]+$/ ) && ( $arg =~ /\./ ) ) {
+      if ($soFar) {
+        print "Two guess-words: $soFar and $arg.";
+        return;
+      }
+      $soFar = $arg;
+    }
+    $argc++;
+  }
+  oneHangman( $soFar, $wrongs );
+}
 
 sub cleanup {
   print "You hit ctrl-c.\n";
@@ -472,8 +435,9 @@ sub addToErrs {
   my $addit = 0;
   if ( $_[0] =~ /^\+/ ) { $addit = 1; }
   if ( $_[0] =~ /^\-/ ) { $addit = -1; }
-  my $gotIt = 0;
-  my $toAdd = lc( $_[0] );
+  my $gotIt   = 0;
+  my $toAdd   = lc( $_[0] );
+  my $forceIt = ( $toAdd =~ /\+\+/ );
   $toAdd =~ s/^[-=\+]+//g;
   if ( !$toAdd ) { print("Added nothing."); die; }
   if ( $toAdd =~ /[^a-z]/i ) { die("Bad characters in what to add."); }
@@ -489,7 +453,8 @@ sub addToErrs {
     else { $val{$line} = 1; }    # eg if a line is not word:#, make it word:1
     if ( $toAdd eq $line ) {
       if ( defined( $val{$line} ) ) {
-        $val{$toAdd} += $addit;
+        $val{$toAdd}  += $addit;
+        $miss{$toAdd} += $addit;
         print "$line already in. Its weight is now $val{$line}.\n";
         $gotIt    = 1;
         $lastWord = $line;
@@ -500,6 +465,11 @@ sub addToErrs {
   if ( !$gotIt ) {
     if ( $addit == -1 ) {
       print "Did not find $toAdd, so I won't subtract an occurrence.\n";
+      return;
+    }
+    if ( !$forceIt ) {
+      print
+"$toAdd not in the laundry list so I'm not adding it. Use ++ to force things.\n";
       return;
     }
     print "Added $toAdd to misses file with value $addit.\n";
@@ -563,8 +533,9 @@ sub getPoints {
   my $mech = WWW::Mechanize->new();
 
   open( A, $b1time );
-  my $cur   = <A>;
-  my $date  = <A>;
+  my $cur  = <A>;
+  my $date = <A>;
+  chomp($date);
   my $date2 = <A>;
   my $can   = <A>;
   die("Maximum = $can") if $justShow;
@@ -601,10 +572,10 @@ sub getPoints {
       }
       print "$points points. Can get $lastCan. Left=$left\n";
       $pointDelta = ( $pointDelta > 50 ? $pointDelta - 50 : $pointDelta / 2 );
-      my $pointSlope = 60 * $pointDelta / $timeDelta;
-      my $finalTime  = $timeDelta * 700 / $pointDelta + $epochDate;
-      @projectArray = $_[0]
-        ? ( ( 5 .. 15 ) : ( 5, 6, 7.5, 10, 12, 15 ) );
+      my $pointSlope   = 60 * $pointDelta / $timeDelta;
+      my $finalTime    = $timeDelta * 700 / $pointDelta + $epochDate;
+      my @projectArray = ( 5 .. 15 );
+      @projectArray = ( 5, 6, 7.5, 10, 12, 15 ) if !$_[0];
       for my $x (@projectArray) {
         my $projTimeLeft = ( 700 - $pointDelta ) * 60 / $x;
         my $projTime     = localtime( $projTimeLeft + $ct );
@@ -612,7 +583,7 @@ sub getPoints {
       }
       print ""
         . ( scalar 700 - $pointDelta )
-        . " to go, $pointSlope per minute, ETA: "
+        . " to go, $pointSlope per minute, start $date ETA: "
         . ( localtime($finalTime) ) . "\n";
       return;
     }
