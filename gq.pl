@@ -165,7 +165,8 @@ while ( $count <= $#ARGV ) {
     /^-?tb1$/
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^[\\0-9a-z'\.][\\0-9a-z'\.-]+$/i && do {
-      if ( $map{$a} ) {
+      $a =~ s/-$//;    # another way to avoid, say, as instead of AS
+      if ( $i7x{$a} ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
         push( @thisAry, $map{$a} );
       }
@@ -476,10 +477,11 @@ sub processOneFile {
       if ($dontWant) { push( @errStuff, "$modFile L$idx" ); }
       $foundOne++;
       $foundTotal++;
+      ( my $a2 = $a ) =~ s/^\t+/\|\| /g;
       $tempString = "$modFile($line";
       $tempString .= ",$currentTable"        if $currentTable;
       $tempString .= ",$thisImportant,L$idx" if $thisImportant;
-      $tempString .= "): $a";
+      $tempString .= "): $a2";
       $tempString .= " **PLURAL**"           if $crom == 2;
       $tempString .= "\n";
       $tempString .= "RULE=$latestRule"      if $showRules;
@@ -748,7 +750,7 @@ sub readLastRun {
   while ( $a = <A> ) {
     chomp($a);
     @runs = split( /,/, $a );
-    print "Pulling from $gqlast: $a\n";
+    print "For reference: last run was $gqlast: $a\n";
   }
 }
 

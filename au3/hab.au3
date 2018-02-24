@@ -13,6 +13,7 @@
 ; r = repeatedly access habit (needs #)
 ; t = Tools of the Trade clicks (needs #, optional delay)
 ; te = test
+; x = express (e = equip only, r = reequip only, q = no nag)
 ;
 
 #include <MsgBoxConstants.au3>
@@ -150,7 +151,7 @@ Func Usage($questionmark, $badCmd = "")
   "-p = perception gear", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
-  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. -xq ignores the nag." _
+  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
   ]
   Local $header = "Bad/missing parameter(s)"
 
@@ -173,7 +174,7 @@ Func PickItem($x, $y)
   MouseClick ( "left", $x2, $y2, 1)
   sleep(2000)
   ; verify you want to equip the item
-  MouseClick ( "left", 814, 480, 1)
+  MouseClick ( "left", 814, 510, 1)
   sleep(2000)
 EndFunc
 
