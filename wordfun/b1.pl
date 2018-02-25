@@ -54,6 +54,8 @@ my $firstWrongGuess = "";
 my $guessResult     = "";
 my $addMiss         = "";
 
+my %allWords;
+
 while ( $argcount <= $#ARGV ) {
   my $arg = lc( $ARGV[$argcount] );
   my $arg2 = $argcount < $#ARGV ? lc( $ARGV[ $argcount + 1 ] ) : "";
@@ -82,7 +84,7 @@ while ( $argcount <= $#ARGV ) {
 
 }
 
-if ( ( scalar @argvmod ) == 0 ) {
+if ( !$stdin && ( ( scalar @argvmod ) == 0 ) ) {
   print "No arguments. Going with standard in.\n";
   $stdin = 1;
 }
@@ -249,8 +251,9 @@ sub getStdin {
 
 sub oneHangman {
 
-  @prevMiss = ();
-  $count    = 0;
+  @prevMiss  = ();
+  $count     = 0;
+  $missFound = 0;
 
 #this is a step to save time. If we know the first letter, we don't look through the file and compare it, because anything with the 25 other letters to start it is wrong.
   my %val;
@@ -338,6 +341,7 @@ sub oneHangman {
   }
   if ( scalar(@prevMiss) ) {
     print "MISSED BEFORE:\n";
+    $missFound = 0;
     for ( sort { $miss{$a} <=> $miss{$b} || $a cmp $b } @prevMiss ) {
       $count++;
       $missFound++;
@@ -366,7 +370,7 @@ sub oneHangman {
     print "\n";
   }
   elsif ( $count + $missFound == 0 ) { print "Uh oh no matches.\n"; }
-  else                               { print "Only one match found.\n"; }
+  else { print "$count $missFound Only one match found.\n"; }
 
   if    ( $#prevMiss == 0 )          { $lastWord = $prevMiss[0]; }
   elsif ( $count + $missFound != 1 ) { $lastWord = ""; }
@@ -441,6 +445,16 @@ sub addToErrs {
   $toAdd =~ s/^[-=\+]+//g;
   if ( !$toAdd ) { print("Added nothing."); die; }
   if ( $toAdd =~ /[^a-z]/i ) { die("Bad characters in what to add."); }
+
+  if ( !( scalar keys %allWords ) ) {
+    print "Reading in word file for the first time...\n";
+    open( A, "c:/writing/dict/brit-1word.txt" );
+    while ( $line = <A> ) {
+      chomp($line);
+      $allWords{ lc($line) } = 1;
+    }
+    close(A);
+  }
   open( A, "$misses" );
 
   while ( my $line = <A> ) {
@@ -467,9 +481,9 @@ sub addToErrs {
       print "Did not find $toAdd, so I won't subtract an occurrence.\n";
       return;
     }
-    if ( !$forceIt ) {
+    if ( !$forceIt && !defined( $allWords{$toAdd} ) ) {
       print
-"$toAdd not in the laundry list so I'm not adding it. Use ++ to force things.\n";
+"$toAdd not in the laundry list of words so I'm not adding it. Use ++ to force things.\n";
       return;
     }
     print "Added $toAdd to misses file with value $addit.\n";
@@ -572,19 +586,21 @@ sub getPoints {
       }
       print "$points points. Can get $lastCan. Left=$left\n";
       $pointDelta = ( $pointDelta > 50 ? $pointDelta - 50 : $pointDelta / 2 );
-      my $pointSlope   = 60 * $pointDelta / $timeDelta;
+      my $pointSlope   = sprintf( "%.3f", 60 * $pointDelta / $timeDelta );
+      my $timeGap      = $timeDelta * 700 / $pointDelta;
       my $finalTime    = $timeDelta * 700 / $pointDelta + $epochDate;
       my @projectArray = ( 5 .. 15 );
       @projectArray = ( 5, 6, 7.5, 10, 12, 15 ) if !$_[0];
+
       for my $x (@projectArray) {
         my $projTimeLeft = ( 700 - $pointDelta ) * 60 / $x;
         my $projTime     = localtime( $projTimeLeft + $ct );
         print "$x per minute means you end at $projTime.\n";
       }
-      print ""
-        . ( scalar 700 - $pointDelta )
-        . " to go, $pointSlope per minute, start $date ETA: "
-        . ( localtime($finalTime) ) . "\n";
+      printf( "%d to go, $pointSlope per minute\nstart $date ETA "
+          . localtime($finalTime)
+          . ", total time=%d sec\n",
+        ( scalar 700 - $pointDelta ), $timeDelta );
       return;
     }
   }
