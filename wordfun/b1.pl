@@ -54,6 +54,9 @@ my $firstWrongGuess = "";
 my $guessResult     = "";
 my $addMiss         = "";
 
+my $gplasttime  = 0;
+my $gplastscore = 0;
+
 my %allWords;
 
 while ( $argcount <= $#ARGV ) {
@@ -370,7 +373,7 @@ sub oneHangman {
     print "\n";
   }
   elsif ( $count + $missFound == 0 ) { print "Uh oh no matches.\n"; }
-  else { print "$count $missFound Only one match found.\n"; }
+  else                               { print "Only one match found.\n"; }
 
   if    ( $#prevMiss == 0 )          { $lastWord = $prevMiss[0]; }
   elsif ( $count + $missFound != 1 ) { $lastWord = ""; }
@@ -446,15 +449,6 @@ sub addToErrs {
   if ( !$toAdd ) { print("Added nothing."); die; }
   if ( $toAdd =~ /[^a-z]/i ) { die("Bad characters in what to add."); }
 
-  if ( !( scalar keys %allWords ) ) {
-    print "Reading in word file for the first time...\n";
-    open( A, "c:/writing/dict/brit-1word.txt" );
-    while ( $line = <A> ) {
-      chomp($line);
-      $allWords{ lc($line) } = 1;
-    }
-    close(A);
-  }
   open( A, "$misses" );
 
   while ( my $line = <A> ) {
@@ -476,6 +470,18 @@ sub addToErrs {
     }
   }
   close(A);
+
+  # don't waste a second reading in until we need to check this 1st-missed word
+  if ( !( scalar keys %allWords ) && !defined( $allWords{$toAdd} ) ) {
+    print "Reading in word file for the first time...\n";
+    open( A, "c:/writing/dict/brit-1word.txt" );
+    while ( $line = <A> ) {
+      chomp($line);
+      $allWords{ lc($line) } = 1;
+    }
+    close(A);
+  }
+
   if ( !$gotIt ) {
     if ( $addit == -1 ) {
       print "Did not find $toAdd, so I won't subtract an occurrence.\n";
@@ -601,6 +607,19 @@ sub getPoints {
           . localtime($finalTime)
           . ", total time=%d sec\n",
         ( scalar 700 - $pointDelta ), $timeDelta );
+      if ( $gplasttime && ( $points - $gplastscore ) && ( $ct - $gplasttime ) )
+      {
+        my $pd             = $points - $gplastscore;
+        my $td             = $ct - $gplasttime;
+        my $slope          = $pd / $td;                      # points per second
+        my $timeLeftRecent = ( 700 - $pointDelta ) / $slope;
+        my $lastProjTime = localtime( $timeLeftRecent + $ct );
+        $slope = sprintf( "%.3f", 60 * $slope );
+        print
+"Per-minute slope since last check: $slope($pd/$td), ETA = $lastProjTime\n";
+      }
+      $gplasttime  = $ct;
+      $gplastscore = $points;
       return;
     }
   }
