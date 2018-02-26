@@ -54,8 +54,10 @@ my $firstWrongGuess = "";
 my $guessResult     = "";
 my $addMiss         = "";
 
-my $gplasttime  = 0;
-my $gplastscore = 0;
+my $gplasttime   = 0;
+my $gplastscore  = 0;
+my $gpfirsttime  = 0;
+my $gpfirstscore = 0;
 
 my %allWords;
 
@@ -163,10 +165,11 @@ while ( $temp = getStdin() ) {
 #
 
 sub readOneLine {
-  my $argc   = 0;
-  my $soFar  = "";
-  my $wrongs = "";
-  my $amax   = ( scalar @_ );
+  my $argc     = 0;
+  my $soFar    = "";
+  my $wrongs   = "";
+  my $amax     = ( scalar @_ );
+  my $doneMeta = 0;
 
   if ( ( $amax == 0 ) && $stdin ) {
     print "Nothing in line. See you later!\n";
@@ -178,14 +181,18 @@ sub readOneLine {
     $arg = $_[$argc];
 
     if ( lc($arg) =~ /^[ainp][0-9]+$/i ) {
+      return if $stdin;
       updateP1File($arg);
       $stdin = 1;
       $argc++;
+      $doneMeta = 1;
+      next;
     }
     elsif ( $arg eq "0" ) {
       open( A, ">>$misses" );
       close(A);
       print "Tweaked timestamp for $misses.\n";
+      $doneMeta = 1;
       next;
     }
     if ( ( $arg eq "q" ) || ( $arg eq "" ) ) {
@@ -209,7 +216,7 @@ sub readOneLine {
       printTimeFile();
       return;
     }
-    elsif ( $arg =~ /^[-=\+]/ ) { addToErrs($arg); return; }
+    elsif ( $arg =~ /^[0-=\+]/ ) { addToErrs($arg); return; }
     elsif ( $arg eq "?" ) {
       usage() if !$stdin;
       if ($lastWord) {
@@ -219,13 +226,20 @@ sub readOneLine {
       else {
         print("No determined last word.\n");
       }
+      $doneMeta = 1;
+    }
+    elsif ( $arg =~ /^\?/ ) {
+      ( my $arg2 = $arg ) =~ s/^\?//;
+      print "Looking up $arg2.\n";
+      system("start http://www.thefreedictionary.com/$arg2");
+      return;
     }
     elsif ( $arg eq "??" ) {
       usage();
     }
     elsif ( $arg =~ /^[a-z]+$/ ) {
       if ($wrongs) {
-        print "Two wrongs: $wrongs and $arg.\n";
+        print "Two lists of wrong guesses: $wrongs and $arg.\n";
         return;
       }
       $wrongs = $arg;
@@ -239,6 +253,7 @@ sub readOneLine {
     }
     $argc++;
   }
+  return if ( !$soFar && $doneMeta );
   oneHangman( $soFar, $wrongs );
 }
 
@@ -442,10 +457,11 @@ sub addToErrs {
   my $addit = 0;
   if ( $_[0] =~ /^\+/ ) { $addit = 1; }
   if ( $_[0] =~ /^\-/ ) { $addit = -1; }
+  if ( $_[0] =~ /^\0/ ) { $addit = -2; }
   my $gotIt   = 0;
   my $toAdd   = lc( $_[0] );
   my $forceIt = ( $toAdd =~ /\+\+/ );
-  $toAdd =~ s/^[-=\+]+//g;
+  $toAdd =~ s/^[-=\+0]+//g;
   if ( !$toAdd ) { print("Added nothing."); die; }
   if ( $toAdd =~ /[^a-z]/i ) { die("Bad characters in what to add."); }
 
@@ -461,9 +477,15 @@ sub addToErrs {
     else { $val{$line} = 1; }    # eg if a line is not word:#, make it word:1
     if ( $toAdd eq $line ) {
       if ( defined( $val{$line} ) ) {
-        $val{$toAdd}  += $addit;
-        $miss{$toAdd} += $addit;
-        print "$line already in. Its weight is now $val{$line}.\n";
+        if ( $addit == -2 ) {
+          $val{$toAdd}  = 0;
+          $miss{$toAdd} = 0;
+        }
+        else {
+          $val{$toAdd}  += $addit;
+          $miss{$toAdd} += $addit;
+          print "$line already in. Its weight is now $val{$line}.\n";
+        }
         $gotIt    = 1;
         $lastWord = $line;
       }
@@ -472,7 +494,7 @@ sub addToErrs {
   close(A);
 
   # don't waste a second reading in until we need to check this 1st-missed word
-  if ( !( scalar keys %allWords ) && !defined( $allWords{$toAdd} ) ) {
+  if ( !( scalar keys %allWords ) && !defined( $val{$toAdd} ) ) {
     print "Reading in word file for the first time...\n";
     open( A, "c:/writing/dict/brit-1word.txt" );
     while ( $line = <A> ) {
@@ -618,8 +640,10 @@ sub getPoints {
         print
 "Per-minute slope since last check: $slope($pd/$td), ETA = $lastProjTime\n";
       }
-      $gplasttime  = $ct;
-      $gplastscore = $points;
+      $gpfirsttime  = $ct     if !$gpfirsttime;
+      $gpfirstscore = $points if !$gpfirstscore;
+      $gplasttime   = $ct;
+      $gplastscore  = $points;
       return;
     }
   }
@@ -685,6 +709,10 @@ sub updateP1File {
     print A $_ for (@newfi);
     close(A);
     print "Added $delta to start/end.\n";
+    $gplasttime   += $delta if $gplasttime;
+    $gplastscore  += $delta if $gplastscore;
+    $gpfirsttime  += $delta if $gpfirsttime;
+    $gpfirstscore += $delta if $gpfirstscore;
   }
   else {
     die(
