@@ -2,10 +2,21 @@ from collections import defaultdict
 from shutil import copy
 import os
 import sys
+import i7
 
 ignore_sort = defaultdict(lambda:defaultdict(str))
 table_sort = defaultdict(lambda:defaultdict(str))
 default_sort = defaultdict(str)
+
+onoff = ['off', 'on']
+
+copy_over = False
+launch_dif = True
+def usage():
+    print("-l/-nl decides whether or not to launch, default is", onoff[copy_over])
+    print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
+    print("You can use a list of projects or an individual project abbreviation.")
+    exit()
 
 def process_table_array(orig_file, sort_orders, table_rows, file_stream):
 	table_rows = sorted(table_rows)
@@ -64,8 +75,41 @@ def table_alf_one_file(f, launch=False, copy_over=False):
 	if copy_over:
 		copy(f2, f)
 
+count = 1
+projects = []
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg in i7.i7c.keys():
+        projects = projects + i7.i7c[arg]
+        count = count + 1
+        continue
+    elif arg in i7.i7x.keys():
+        projects.append(i7.i7x[arg])
+        count = count + 1
+        continue
+    if arg.startswith('-'): arg = arg[1:]
+    if arg == 'l':
+        launch_dif = True
+    elif arg == 'nl':
+        launch_dif = False
+    elif arg == 'c':
+        copy_over = True
+    elif arg == 'nc':
+        copy_over = False
+    elif arg == '?':
+        usage()
+    else:
+        print(arg, "is an invalid parameter.")
+        usage()
+    count = count + 1
+
+projset = set(projects)
+diff = len(projects) - len(projset)
+
+if diff > 0:
+    print(diff, "duplicate project" + ("s" if diff > 1 else ""), "weeded out")
+    projects = list(projset)
+
 default_sort["c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Put It Up Tables.i7x"] = "0"
 
-copy_over = False
-launch_dif = True
 table_alf_one_file("c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/Put It Up Tables.i7x", launch_dif, copy_over)
