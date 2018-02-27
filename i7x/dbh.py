@@ -45,9 +45,11 @@ def process_operators(infile, tempfile, outfile):
     line_count = 0
     fk = list(firsts.keys())
     lk = list(lasts.keys())
+    ik = list(ignore_dict.keys())
     end_add = []
     fout=open(tempfile, "w")
     got_dbh = False
+    ignore_defaults = False
     with open(in_mod) as file:
         for line in file:
             line_count = line_count + 1
@@ -66,7 +68,7 @@ def process_operators(infile, tempfile, outfile):
                     for x in range (len(end_add)-at_end, len(end_add)):
                         fout.write(end_add[x])
                 in_table = False
-            if line.startswith("table"):
+            if line.startswith("table") and not in_table:
                 for x in fk:
                     if line.startswith(x):
                         to_go = firsts[x] + 1
@@ -77,14 +79,19 @@ def process_operators(infile, tempfile, outfile):
                         in_table = True
                         end_add = []
                 if in_table == False:
-                    if default_val and line.strip() not in ignore_dict.keys():
+                    ignore_defaults = False
+                    if line.strip() in ignore_dict.keys():
+                        ignore_defaults = True
+                        to_go = 0
+                        print("Ignoring defaults for", line.strip())
+                    elif default_val:
                         print("Going with", default_val, "for", line.strip())
                         if default_val > 0:
                             to_go = default_val + 1
                         else:
                             at_end = 0 - default_val
-                        in_table = True
-            if in_table:
+                    in_table = True
+            if in_table and not ignore_defaults:
                 if to_go < 0 or at_end:
                     continue
                 to_go = to_go - 1

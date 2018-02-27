@@ -9,6 +9,7 @@
 
 # todo:
 # gh.pl: if something is unsaved in notepad, kill it
+# also, priority of stuff to ignore or run
 
 use strict;
 use warnings;
