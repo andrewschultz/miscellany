@@ -24,7 +24,7 @@ def triz(x):
 
 def hfile(x, y):
     x2 = re.sub("-", " ", x)
-    return "C:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x".format(x2, y)
+    return "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\{:s} {:s}.i7x".format(x2, y)
 
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(x)
@@ -138,24 +138,24 @@ i7xr = { "shuffling": "sa",
 
 i7f = {
   "shuffling": [
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling Nudges.i7x",
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling Random Text.i7x",
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling Mistakes.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling nudges.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling random text.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling mistakes.i7x",
     "c:\\games\\inform\\shuffling.inform\\source\\story.ni"
     ],
   "roiling": [
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling Nudges.i7x",
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling Random Text.i7x",
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling Mistakes.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling nudges.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling random text.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling mistakes.i7x",
     "c:\\games\\inform\\roiling.inform\\source\\story.ni"
     ],
-    "buck-the-past": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\buck the past tables.i7x", "c:\\games\\inform\\buck-the-past.inform\\source\\story.ni"],
-    "compound": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Compound tables.i7x", "c:\\games\\inform\\compound.inform\\source\\story.ni"],
-    "slicker-city": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\slicker city tables.i7x", "c:\\games\\inform\\slicker-city.inform\\source\\story.ni"],
-    "spell-woken": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\spell woken tables.i7x",
+    "buck-the-past": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\buck the past tables.i7x", "c:\\games\\inform\\buck-the-past.inform\\source\\story.ni"],
+    "compound": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\compound tables.i7x", "c:\\games\\inform\\compound.inform\\source\\story.ni"],
+    "slicker-city": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\slicker city tables.i7x", "c:\\games\\inform\\slicker-city.inform\\source\\story.ni"],
+    "spell-woken": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\spell woken tables.i7x",
     "c:\\games\\inform\\spell-woken.inform\\source\\story.ni"],
-    "put-it-up": ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Put it Up Tables.i7x",
-    "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Put it Up Mistakes.i7x",
+    "put-it-up": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\put it up tables.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\put it up mistakes.i7x",
     "c:\\games\\inform\\put-it-up.inform\\source\\story.ni"]
   }
 
