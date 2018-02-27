@@ -31,35 +31,49 @@ Local $xi = 540, $yi = 980, $xd = 190
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0, $delay = 10000
 Local $cmdCount = 1
+Local $nextCmd = 2
 
 Local $testDontClick = False, $didAnything = False
 
 Init()
 
 While $cmdCount <= $CmdLine[0]
+  if $cmdCount == $nextCmd Then
+    MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " vs " & $nextCmd & " in full array " & _ArrayToString($CmdLine, "/", "1:"))
+	exit
+  EndIf
   $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
+  $nextCmd = $myCmd + 1
+  $nextNum = -1
+  if StringIsDigit(StringMid($myCmd, 2)) Then
+    $nextNum = StringMid($myCmd, 2)
+	$myCmd = StringLeft($myCmd, 1)
+  ElseIf $cmdCount < $CmdLine[0] and IsNumber($CmdLine[$cmdCount+1]) Then
+    $nextNum = $CmdLine[$cmdCount+1]
+	$nextCmd = $myCmd + 2
+  EndIf
   If $myCmd == 'te' Then
     $testDontClick = True
-    $cmdCount = $cmdCount + 1
     ContinueLoop
   EndIf
   $didAnything = True
   If $myCmd == 'a' Then
 
     ToHab()
-    if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
-        for $i = 1 to $cmdLine[$cmdCount+1]
+	    if $nextNum < 1 Then
+		  needPositive()
+	    EndIf
+        for $i = 1 to $nextNum
           MouseClick ( "left", 1325, 450, 1 )
           MouseMove(1275, 400)
-          if $i < $cmdLine[$cmdCount+1] Then
+          if $i < $nextNum Then
             sleep(2000)
           Endif
         Next
-    Endif
-    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
+
   ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
@@ -73,7 +87,6 @@ While $cmdCount <= $CmdLine[0]
     Next
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * GetNumArgOrBail($cmdCount+1)
-    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
@@ -101,7 +114,6 @@ While $cmdCount <= $CmdLine[0]
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
     $clicks = GetNumArgOrBail($cmdCount+1)
     ToolsTrade($clicks, False, False)
-    $cmdCount = $cmdCount + 1 ; extra shift for the # of times cast
   ElseIf StringLeft($myCmd, 1) == 'x' Then
     $additional = StringMid($myCmd, 2)
     $clicks = GetNumArgOrBail($cmdCount+1)
@@ -122,13 +134,12 @@ While $cmdCount <= $CmdLine[0]
     Else
       ToolsTrade($clicks, True, True)
     EndIf
-    $cmdCount = $cmdCount + 1
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
     Usage(0, $cmdLine[$cmdCount])
   Endif
-  $cmdCount = $cmdCount+1
+  $myCmd = $nextCmd
 WEnd
 
 if $cmdLine[0] == 0 Then
@@ -304,6 +315,11 @@ Func GetNumArgOrBail($cmdIdx)
 EndFunc
 
 Func Bail()
+  exit
+EndFunc
+
+Func NeedPositive()
+  MsgBox($MB_OK, "Need positive #", "Need positive # after arg ")
   exit
 EndFunc
 
