@@ -28,9 +28,49 @@ def usage():
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
-def process_table_array(orig_file, sort_orders, table_rows, file_stream):
-    table_rows = sorted(table_rows)
+def tab(a, b, c): # b = boolean i = integer q = quote l = lower case
+    if 'l' in c: a = a.lower()
+    ary = re.split("\t+", a)
+    if 'b' in c:
+        return ary[b].lower() == 'true'
+    if 'i' in c:
+        try:
+            return int(ary[b])
+        except:
+            return 0
+    if 'q' in c:
+        r = re.sub("^\"", "", lc(ary[b]), 0, re.IGNORECASE)
+        r = re.sub("^[the|a|\(] ", "", r, 0, re.IGNORECASE)
+        r = re.sub("\".*", "", r, 0, re.IGNORECASE)
+        return r
+    return ary[b]
+
+def process_table_array(sort_orders, table_rows, file_stream):
+    print(type(sort_orders), sort_orders)
+    print(type(table_rows), table_rows)
+    for q in sort_orders:
+        print("q/sort orders", q, sort_orders)
+        ary = q.split('/')
+        my_type = ''
+        my_col = 0
+        try:
+            my_col = int(ary[0])
+        except:
+            print("Need integer in first value of", q)
+        if len(ary) > 1:
+            my_type = ary[1]
+        reverse_order = len(ary) > 2 and ary[2] == 'r'
+        count = 0
+        for y in table_rows:
+            count = count + 1
+        # print("Before:")
+        # print('\n'.join(table_rows) + '\n')
+        # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
+        table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type), reverse=reverse_order)
+        # print("After:")
+        # print('\n'.join(table_rows) + '\n')
     file_stream.write('\n'.join(table_rows) + '\n')
+    exit()
 
 def read_table_and_default_file():
     cur_file = ""
@@ -44,21 +84,30 @@ def read_table_and_default_file():
             if line.startswith(';'): break
             if '=' in line:
                 right_side = re.sub(".*=", "", line.strip())
-            if line.lower().startswith("f="):
-                cur_file = right_side
-                continue
-            if line.lower().startswith("file="):
-                cur_file = right_side
-                continue
-            if line.lower().startswith("default="):
-                if not cur_file:
-                    print("WARNING defined default with no cur_file at line", line_count)
+                if line.lower().startswith("f="):
+                    cur_file = right_side
                     continue
-                if cur_file in default_sort.keys():
-                    print("WARNING: ignoring redefined default sort for", cur_file," at line", line_count, "previous line", prev_def[cur_line])
+                if line.lower().startswith("file="):
+                    cur_file = right_side
                     continue
-                default_sort[cur_file] = right_side
-                prev_def[cur_file] = line_count
+                if line.lower().startswith("default="):
+                    if not cur_file:
+                        print("WARNING defined default with no cur_file at line", line_count)
+                        continue
+                    if cur_file in default_sort.keys():
+                        print("WARNING: ignoring redefined default sort for", cur_file," at line", line_count, "previous line", prev_def[cur_line])
+                        continue
+                    default_sort[cur_file] = right_side
+                    prev_def[cur_file] = line_count
+                    continue
+                print("Unknown = at line", line_count, ll)
+                exit()
+            if ':' in line:
+                ary = ll.split(':')
+                table_sort[cur_file][ary[0]] = ary[1]
+                print(ary[0], "goes to", ary[1])
+            else:
+                print("Line", line_count, "needs :")
 
 def table_alf_one_file(f, launch=False, copy_over=False):
     print(default_sort)
@@ -82,7 +131,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 continue
             if in_table:
                 if line.startswith("\[") or not line.strip():
-                    process_table_array(f, table_sort[f][cur_table], row_array, temp_out)
+                    process_table_array(table_sort[f][cur_table].split(','), row_array, temp_out)
                     in_table = False
                     temp_out.write(line)
                 else:
@@ -94,7 +143,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                         if x in line:
                             temp_out.write(line)
                             continue
-                    cur_table = line
+                    cur_table = line.strip()
                     temp_out.write(line)
                     in_table = True
                     row_array = []
@@ -103,7 +152,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             temp_out.write(line)
     if in_table:
         if line.startswith("\[") or not line.strip():
-            process_table_array(f, table_sort[f][cur_table], row_array, temp_out)
+            process_table_array(table_sort[f][cur_table], row_array, temp_out)
             in_table = False
             temp_out.write(line)
     temp_out.close()
