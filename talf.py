@@ -36,11 +36,65 @@ def usage():
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
-def tab(a, b, c): # b = boolean i = integer q = quote l = lower case
-    if 'l' in c: a = a.lower()
+force_lower = True
+
+def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BTP a=activation of
+    if force_lower:
+        a = a.lower()
+    if 'k' in c:
+        pass
+    elif 'l' in c:
+        a = a.lower()
     ary = re.split("\t+", a)
+    orig = ary[b]
+    ret = ary[b]
     if 'b' in c:
         return ary[b].lower() == 'true'
+    if 'a' in c:
+        if "[activation of" not in ary[b]:
+            if "[na]" in ary[b]:
+                return("zzzz" + re.sub("\"", "", ary[b]))
+            if "[na " not in ary[b]:
+                print("Bad activation/na:", orig)
+                exit()
+            return("zz" + re.sub(".*\[na ", "", ary[b]))
+        arb = re.sub("^.*?activation of ", "", ary[b])
+        new_ary = re.split("activation of ", arb)
+        newer_ary = sorted([re.sub("\].*", "", x) for x in new_ary])
+        # if len(newer_ary) > 1: print(newer_ary)
+        return newer_ary[0]
+    if 'e' in c:
+        if not re.search("\[e[1-9]\]", ary[b]):
+            if not re.search("\[na\]", ary[b]):
+                print("BAD LINE", orig)
+                exit()
+            ret = re.sub("\"", "", ary[b])
+            return ret
+        else:
+            final_ary = []
+            to_go = re.sub("[\?\.\!,]", "", ret)
+            to_go = re.sub("^\"", "", to_go)
+            to_go = re.sub("'?\".*", "", to_go) # make sure comments outside quotes don't get snagged
+            while "[e" in to_go:
+                r = re.sub("^.*?\[e", "", to_go)
+                r = re.sub("\].*", "", r)
+                r2 = int(r)
+                to_go_prev = to_go
+                to_go = re.sub("^.*?\[e[0-9]\]", "", to_go)
+                if to_go_prev == to_go:
+                    print(ret, "blew things up, with", to_go)
+                    exit()
+                temp = re.sub("\[e.*", "", to_go)
+                new_ary = re.split("[ -]", temp)
+                if r2 > len(new_ary):
+                    print("Too-small e-value for ", new_ary, "out of", temp, "in", orig, r2, ">", len(new_ary))
+                    exit()
+                final_ary.append(temp)
+            if len(final_ary) == 0:
+                print(ret, "gave no final array. Bailing.")
+                exit()
+            final_ary = sorted(final_ary)
+            return final_ary[0]
     if 'i' in c:
         try:
             return int(ary[b])
@@ -71,7 +125,7 @@ def process_table_array(sort_orders, table_rows, file_stream):
         for y in table_rows:
             count = count + 1
         # print("Before:")
-        # print('\n'.join(table_rows) + '\n')
+        #print(q, sort_orders, my_col, my_type)
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
         table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type), reverse=reverse_order)
         # print("After:")
