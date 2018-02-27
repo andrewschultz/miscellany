@@ -10,7 +10,7 @@ import re
 import os
 import __main__ as main
 
-np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\""
+np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 
 def open_source():
     npo(main.__file__)
@@ -24,7 +24,7 @@ def triz(x):
 
 def hfile(x, y):
     x2 = re.sub("-", " ", x)
-    return "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\{:s} {:s}.i7x".format(x2, y)
+    return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(x)

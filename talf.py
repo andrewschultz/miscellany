@@ -88,11 +88,11 @@ def read_table_and_default_file():
             if line.startswith('#'): continue
             if line.startswith(';'): break
             if '=' in line:
-                if line != line.lower(): print("WARNING", table_default_line, "line", line_count, "has upper case letters but shouldn't.")
-                if '/' in line: print("WARNING", table_default_line, "line", line_count, "has forward slashes but needs backward slashes.")
+                if line != line.lower(): print("WARNING", table_default_file, "line", line_count, "has upper case letters but shouldn't.")
+                if '/' in line: print("WARNING", table_default_file, "line", line_count, "has forward slashes but needs backward slashes.")
                 right_side = re.sub(".*=", "", ll)
-                right_side = re.sub("\/", "\\", right_side)
-                right_side =
+                right_side = re.sub("/", "\\\\", right_side)
+                right_side = right_side.lower()
                 if ll.startswith("f="):
                     cur_file = right_side
                     continue
@@ -170,11 +170,13 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     if ignorable(cur_table, f, line):
                         print("Ignoring default for table", cur_table, ("/ " + line if x != line else ""))
                         temp_out.write(line)
+                        # print("Zapping", x, "from", f)
                         need_to_catch[f].pop(x)
                         continue
                     what_to_split = default_sort[f]
                     if cur_table in table_sort[f].keys():
                         need_to_catch[f].pop(cur_table)
+                        # print("Zapping", cur_table, "from", f)
                         what_to_split = table_sort[f][cur_table]
                     what_to_sort = what_to_split.split(',')
                     temp_out.write(line)
@@ -183,7 +185,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     row_array = []
                     need_head = True
                     continue
-            if line.startswith("table"): print(">>", line.strip())
+            # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
     if in_table:
         if line.startswith("["):
