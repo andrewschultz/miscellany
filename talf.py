@@ -21,10 +21,15 @@ table_default_file = "c:/writing/scripts/talf.txt"
 
 copy_over = False
 launch_dif = True
+override_source_size_differences = False
+override_omissions = False
 
 def usage():
     print("-l/-nl decides whether or not to launch, default is", onoff[copy_over])
     print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
+    print("-os overrides size differences")
+    print("-oo overrides tables omitted from the data file")
+    print("-e edits the data file. -ec edits the code file.")
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
@@ -176,6 +181,14 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     if launch:
         os.system("wm \"{:s}\" \"{:s}\"".format(f, f2))
     if copy_over:
+        if os.stat.getsize(f) != os.stat.getsize(f2):
+            if override_source_size_differences:
+                print("Different sizes, but copying anyway.")
+            else:
+                print(f, '=', os.stat.getsize(f), "bytes")
+                print(f2, '=', os.stat.getsize(f2), "bytes")
+                print('Use -os to ignore this size differences, but do verify no information was lost, first.')
+                exit()
         copy(f2, f)
 
 count = 1
@@ -197,6 +210,14 @@ while count < len(sys.argv):
         launch_dif = False
     elif arg == 'c':
         copy_over = True
+    elif arg == 'ec':
+        open_source()
+    elif arg == 'e':
+        os.system(table_default_file)
+    elif arg == 'os':
+        override_source_size_differences = True
+    elif arg == 'oo':
+        override_omissions = True
     elif arg == 'nc':
         copy_over = False
     elif arg == '?':
