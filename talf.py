@@ -15,6 +15,7 @@ import re
 ignore_sort = defaultdict(lambda:defaultdict(str))
 table_sort = defaultdict(lambda:defaultdict(str))
 default_sort = defaultdict(str)
+files_read = defaultdict(str)
 need_to_catch = defaultdict(lambda:defaultdict(str))
 
 onoff = ['off', 'on']
@@ -129,13 +130,14 @@ def read_table_and_default_file():
             else:
                 print("Line", line_count, "needs :")
 
-def ignorable(a, b, c):
-    for a in ignore_sort[b].keys():
-        if a in c:
-            return True
-    return False
+def got_match(full_table_line, target_dict):
+    for elt in target_dict.keys():
+        if elt in full_table_line:
+            return elt
+    return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
+    files_read[f] = True
     cur_table = ''
     if f not in table_sort.keys() and f not in default_sort.keys():
         print(f, "has no table sort keys or default sorts. Returning.")
@@ -167,17 +169,19 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             if not in_table and line.startswith('table'):
                 cur_table = line.strip()
                 if has_default:
-                    if ignorable(cur_table, f, line):
-                        print("Ignoring default for table", cur_table, ("/ " + line if x != line else ""))
+                    cur_table = got_match(line, ignore_sort[f])
+                    if cur_table:
+                        print("Ignoring default for table", cur_table, ("/ " + line if cur_table != line else ""))
                         temp_out.write(line)
                         # print("Zapping", x, "from", f)
-                        need_to_catch[f].pop(x)
+                        need_to_catch[f].pop(cur_table)
                         continue
                     what_to_split = default_sort[f]
-                    if cur_table in table_sort[f].keys():
-                        need_to_catch[f].pop(cur_table)
-                        # print("Zapping", cur_table, "from", f)
-                        what_to_split = table_sort[f][cur_table]
+                cur_table = got_match(line, table_sort[f])
+                if cur_table:
+                    need_to_catch[f].pop(cur_table)
+                    # print("Zapping", cur_table, "from", f)
+                    what_to_split = table_sort[f][cur_table]
                     what_to_sort = what_to_split.split(',')
                     temp_out.write(line)
                     # if line.startswith("table"): print(">>", line.strip())
@@ -203,7 +207,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("LAUNCHING DIFFERENCE:")
             os.system("wm \"{:s}\" \"{:s}\"".format(f, f2))
     forgot_to_catch = False
-    for x in need_to_catch.keys():
+    for x in files_read.keys():
         if len(need_to_catch[x]) > 0:
             print(x, "had leftover table-sort key" + ('s' if len(need_to_catch[x]) > 1 else '') + ":", ','.join(sorted(need_to_catch[x].keys())))
             forgot_to_catch = True
