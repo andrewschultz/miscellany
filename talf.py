@@ -26,6 +26,9 @@ copy_over = False
 launch_dif = True
 override_source_size_differences = False
 override_omissions = False
+show_ignored = False
+
+ignored_tables = ""
 
 def usage():
     print("-l/-nl decides whether or not to launch, default is", onoff[copy_over])
@@ -33,6 +36,7 @@ def usage():
     print("-os overrides size differences")
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
+    print("-si shows all ignored tables.")
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
@@ -101,7 +105,7 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
         except:
             return 0
     if 'q' in c:
-        r = re.sub("^\"", "", lc(ary[b]), 0, re.IGNORECASE)
+        r = re.sub("^\"", "", ary[b].lower(), 0, re.IGNORECASE)
         r = re.sub("^[the|a|\(] ", "", r, 0, re.IGNORECASE)
         r = re.sub("\".*", "", r, 0, re.IGNORECASE)
         return r
@@ -191,6 +195,8 @@ def got_match(full_table_line, target_dict):
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
+    global ignored_tables
+    fs = re.sub(".*[\\\/]", "", f)
     files_read[f] = True
     cur_table = ''
     if f not in table_sort.keys() and f not in default_sort.keys():
@@ -205,8 +211,10 @@ def table_alf_one_file(f, launch=False, copy_over=False):
 
     temp_out = open(f2, "w", newline="\n")
     has_default = f in default_sort.keys()
+    line_count = 0
     with open(f) as file:
         for line in file:
+            line_count = line_count + 1
             if need_head:
                 temp_out.write(line)
                 need_head = False
@@ -224,6 +232,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 cur_table = line.strip()
                 if has_default:
                     cur_table = got_match(line, ignore_sort[f])
+                    ignored_tables = ignored_tables + "{:s} {:d} (DIRECTED): {:s}".format(fs, line_count, line)
                     if cur_table:
                         print("Ignoring default for table", cur_table, ("/ " + line if cur_table != line else ""))
                         temp_out.write(line)
@@ -243,6 +252,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     row_array = []
                     need_head = True
                     continue
+                else:
+                    ignored_tables = ignored_tables + "{:s} {:d} (PASSTHRU): {:s}".format(fs, line_count, line)
             # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
     if in_table:
@@ -313,6 +324,8 @@ while count < len(sys.argv):
         override_source_size_differences = True
     elif arg == 'oo':
         override_omissions = True
+    elif arg == 'si':
+        show_ignored = True
     elif arg == 'nc':
         copy_over = False
     elif arg == '?':
@@ -338,3 +351,6 @@ read_table_and_default_file()
 for x in projects:
     for y in i7.i7f[x]:
         table_alf_one_file(y.lower(), launch_dif, copy_over)
+
+if show_ignored:
+    print(ignored_tables)
