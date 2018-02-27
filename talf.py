@@ -46,10 +46,9 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case
     return ary[b]
 
 def process_table_array(sort_orders, table_rows, file_stream):
-    print(type(sort_orders), sort_orders)
-    print(type(table_rows), table_rows)
+    # print(type(sort_orders), sort_orders)
+    # print(type(table_rows), table_rows)
     for q in sort_orders:
-        print("q/sort orders", q, sort_orders)
         ary = q.split('/')
         my_type = ''
         my_col = 0
@@ -70,7 +69,6 @@ def process_table_array(sort_orders, table_rows, file_stream):
         # print("After:")
         # print('\n'.join(table_rows) + '\n')
     file_stream.write('\n'.join(table_rows) + '\n')
-    exit()
 
 def read_table_and_default_file():
     cur_file = ""
@@ -84,11 +82,14 @@ def read_table_and_default_file():
             if line.startswith(';'): break
             if '=' in line:
                 right_side = re.sub(".*=", "", line.strip())
-                if line.lower().startswith("f="):
+                if ll.startswith("f="):
                     cur_file = right_side
                     continue
-                if line.lower().startswith("file="):
+                if ll.startswith("file="):
                     cur_file = right_side
+                    continue
+                if ll.startswith("ignore="):
+                    ignore_sort[cur_file][right_side] = True
                     continue
                 if line.lower().startswith("default="):
                     if not cur_file:
@@ -108,6 +109,12 @@ def read_table_and_default_file():
                 print(ary[0], "goes to", ary[1])
             else:
                 print("Line", line_count, "needs :")
+
+def ignorable(a, b, c):
+    for a in ignore_sort[b].keys():
+        if a in c:
+            return True
+    return False
 
 def table_alf_one_file(f, launch=False, copy_over=False):
     print(default_sort)
@@ -130,8 +137,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 need_head = False
                 continue
             if in_table:
-                if line.startswith("\[") or not line.strip():
-                    process_table_array(table_sort[f][cur_table].split(','), row_array, temp_out)
+                if line.startswith("[") or not line.strip():
+                    process_table_array(what_to_sort, row_array, temp_out)
+                    # print("Wrote", cur_table)
                     in_table = False
                     temp_out.write(line)
                 else:
@@ -139,18 +147,26 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 continue
             if not in_table and line.startswith('table'):
                 if has_default:
-                    for x in ignore_sort[f].keys():
-                        if x in line:
-                            temp_out.write(line)
-                            continue
+                    if ignorable(x, f, line):
+                        print("Ignoring default for table", x, "/", line)
+                        temp_out.write(line)
+                        continue
                     cur_table = line.strip()
+                    what_to_split = default_sort[f]
+                    if cur_table in table_sort[f].keys():
+                        what_to_split = table_sort[f][cur_table]
+                    what_to_sort = what_to_split.split(',')
                     temp_out.write(line)
+                    # if line.startswith("table"): print(">>", line.strip())
                     in_table = True
                     row_array = []
                     need_head = True
                     continue
+            if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
     if in_table:
+        if line.startswith("["):
+            print(line)
         if line.startswith("\[") or not line.strip():
             process_table_array(table_sort[f][cur_table], row_array, temp_out)
             in_table = False
