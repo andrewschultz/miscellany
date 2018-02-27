@@ -145,6 +145,7 @@ def read_table_and_default_file():
         for line in file:
             line_count = line_count + 1
             ll = line.lower().strip()
+            if not ll: continue
             if line.startswith('#'): continue
             if line.startswith(';'): break
             if '=' in line:
@@ -204,15 +205,22 @@ def got_match(full_table_line, target_dict):
 
 def table_alf_one_file(f, launch=False, copy_over=False):
     global ignored_tables
-    fs = re.sub(".*[\\\/]", "", f)
+    fs = os.path.basename(f)
     files_read[f] = True
     cur_table = ''
+    if f not in default_sort.keys() and len(ignore_sort[f].keys()) > 0:
+        print("WARNING you have ignored tables but no default value. Wiping out ignored tables.")
+        for x in ignore_sort[f].keys():
+            need_to_catch[f].pop(x)
+        ignore_sort[f].clear()
+
     if f not in table_sort.keys() and f not in default_sort.keys():
         print(f, "has no table sort keys or default sorts. Returning.")
         return
     f2 = f + "2"
     row_array = []
     need_head = False
+    in_sortable_table = False
     in_table = False
 
     print("Writing", f)
@@ -227,27 +235,24 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 temp_out.write(line)
                 need_head = False
                 continue
-            if in_table:
+            if in_sortable_table:
                 if line.startswith("[") or not line.strip():
                     process_table_array(what_to_sort, row_array, temp_out)
                     # print("Wrote", cur_table)
+                    in_sortable_table = False
                     in_table = False
+                    row_array = []
                     temp_out.write(line)
                 else:
                     row_array.append(line.strip())
                 continue
+            if in_table:
+                if line.startswith("[") or not line.strip():
+                    temp_out.write(line)
+                    in_table = False
+                    continue
             if not in_table and line.startswith('table'):
-                cur_table = line.strip()
-                if has_default:
-                    cur_table = got_match(line, ignore_sort[f])
-                    ignored_tables = ignored_tables + "{:s} {:d} (DIRECTED): {:s}".format(fs, line_count, line)
-                    if cur_table:
-                        print("Ignoring default for table", cur_table, ("/ " + line if cur_table != line else ""))
-                        temp_out.write(line)
-                        # print("Zapping", x, "from", f)
-                        need_to_catch[f].pop(cur_table)
-                        continue
-                    what_to_split = default_sort[f]
+                in_table = True
                 cur_table = got_match(line, table_sort[f])
                 if cur_table:
                     need_to_catch[f].pop(cur_table)
@@ -256,25 +261,40 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     what_to_sort = what_to_split.split(',')
                     temp_out.write(line)
                     # if line.startswith("table"): print(">>", line.strip())
-                    in_table = True
+                    in_sortable_table = True
                     row_array = []
                     need_head = True
                     continue
-                else:
-                    if got_match(line, okay[f]):
-                        need_to_catch[f].pop(got_match(line, okay[f]))
-                    ignored_tables = ignored_tables + "{:s} {:d} ({:s}): {:s}".format(fs, line_count, "OKAY DIF" if got_match(line, okay[f]) else "PASSTHRU", line)
+                if has_default:
+                    temp_out.write(line)
+                    cur_table = got_match(line, ignore_sort[f])
+                    if cur_table:
+                        ignored_tables = ignored_tables + "{:s} Line {:d} (DIRECTED): {:s}".format(fs, line_count, line)
+                        print("Ignoring default for table", cur_table, ("/ " + line if cur_table != line else ""))
+                        # print("Zapping", x, "from", os.path.basename(f))
+                        need_to_catch[f].pop(cur_table)
+                        continue
+                    what_to_split = default_sort[f]
+                    what_to_sort = what_to_split.split(',')
+                    in_sortable_table = True
+                    need_head = True
+                    continue
+                if got_match(line, okay[f]):
+                    need_to_catch[f].pop(got_match(line, okay[f]))
+                    continue
+                ignored_tables = ignored_tables + "{:s} Line {:d} ({:s}): {:s}".format(fs, line_count,
+                  "OKAY DIF" if got_match(line, okay[f]) else ("DEFAULT " if has_default else "PASSTHRU"), line)
             # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
-    if in_table:
+    if in_sortable_table:
         if line.startswith("["):
             print(line)
         if line.startswith("\[") or not line.strip():
             process_table_array(table_sort[f][cur_table], row_array, temp_out)
-            in_table = False
+            in_sortable_table = False
             temp_out.write(line)
     temp_out.close()
-    print("Done writing to", f2)
+    print("Done writing to", os.path.basename(f2))
     if launch:
         if cmp(f, f2):
             print("NO DIFFERENCE, NOT LAUNCHING DIFFERENCE")
@@ -284,10 +304,10 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     forgot_to_catch = False
     for x in files_read.keys():
         if len(need_to_catch[x]) > 0:
-            print(x, "had leftover table-sort key" + ('s' if len(need_to_catch[x]) > 1 else '') + ":", ','.join(sorted(need_to_catch[x].keys())))
+            print(os.path.basename(x), "had leftover table-sort key" + ('s' if len(need_to_catch[x]) > 1 else '') + ":", ','.join(sorted(need_to_catch[x].keys())))
             forgot_to_catch = True
         else:
-            print(x, "is okay")
+            print(os.path.basename(x), "is okay")
     if forgot_to_catch:
         if override_omissions:
             print("Ignoring unaccessed tables.")
@@ -363,4 +383,8 @@ for x in projects:
         table_alf_one_file(y.lower(), launch_dif, copy_over)
 
 if show_ignored:
-    print(ignored_tables.strip())
+    if ignored_tables:
+        print("=====================IGNORED TABLES")
+        print(ignored_tables.strip())
+    else:
+        print("=====================NO IGNORED TABLES")
