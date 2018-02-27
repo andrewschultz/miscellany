@@ -17,6 +17,7 @@ table_sort = defaultdict(lambda:defaultdict(str))
 default_sort = defaultdict(str)
 files_read = defaultdict(str)
 need_to_catch = defaultdict(lambda:defaultdict(str))
+okay = defaultdict(lambda:defaultdict(str))
 
 onoff = ['off', 'on']
 
@@ -158,6 +159,13 @@ def read_table_and_default_file():
                 if ll.startswith("file="):
                     cur_file = right_side
                     continue
+                if ll.startswith("okay="):
+                    if right_side in okay[cur_file].keys():
+                        print("BAILING double assignment of okay for", right_side, "in", cur_file, "at line", line_count)
+                        exit()
+                    okay[cur_file][right_side] = True
+                    need_to_catch[cur_file][right_side] = True
+                    continue
                 if ll.startswith("ignore="):
                     if right_side in ignore_sort[cur_file].keys():
                         print("BAILING double assignment of ignore for", right_side, "in", cur_file, "at line", line_count)
@@ -253,7 +261,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     need_head = True
                     continue
                 else:
-                    ignored_tables = ignored_tables + "{:s} {:d} (PASSTHRU): {:s}".format(fs, line_count, line)
+                    if got_match(line, okay[f]):
+                        need_to_catch[f].pop(got_match(line, okay[f]))
+                    ignored_tables = ignored_tables + "{:s} {:d} ({:s}): {:s}".format(fs, line_count, "OKAY DIF" if got_match(line, okay[f]) else "PASSTHRU", line)
             # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
     if in_table:
@@ -353,4 +363,4 @@ for x in projects:
         table_alf_one_file(y.lower(), launch_dif, copy_over)
 
 if show_ignored:
-    print(ignored_tables)
+    print(ignored_tables.strip())
