@@ -427,7 +427,9 @@ sub processOneFile {
   if ( $modFile =~ /(trizbort|i7x)/ ) { $modFile =~ s/.*[\\\/]//g; }
   open( A, "$_[0]" ) || die("No $_[0]");
   while ( $a = <A> ) {
+    my $temp = $a;
     if ( $inQuotes && ( $a =~ /\"/ ) ) {
+      my $temp = $a;
       @quoteAry = split( "\"", $a );
       $a = join( " ",
         @quoteAry[ grep { 2 * ( $_ % 2 ) == ( $inQuotes + 1 ) }
@@ -469,7 +471,7 @@ sub processOneFile {
       $inTable      = 0;
       if ( !$alwaysImportant ) { $inImportant = 0; $thisImportant = ""; }
     }
-    my $crom = cromu($a);
+    my $crom = cromu( $a, $_[0] );
     if ( $inImportant && $crom && ( !$inTable || !$ignoreRand ) ) {
       my $tempString = "";
       my $sbl        = shouldBeLast($a);
@@ -519,7 +521,9 @@ sub cromu {
   $a =~ s/\[one of\]/\[\]/g;
   $a =~ s/\[end if\]/\[\]/g;
 
-  if ( $_[0] =~ /^(test|volume|chapter|book|part|section)/ ) { return 0; }
+  return 0 if $_[0] =~ /^(volume|chapter|book|part|section)/i;
+
+  return 0 if ( $_[0] =~ /^test/i ) && ( $_[1] !~ /test/i );
 
   #lumped together
   if ($#thisAry) {
@@ -585,7 +589,7 @@ sub processStory {
       $thisTable = "($a) ";
     }
     elsif ( $a !~ /[a-z]/i ) { $thisTable = ""; }
-    my $tmp = cromu($a);
+    my $tmp = cromu( $a, $fileName );
     if ($tmp) {
       if ( $a =~ /list of text variable/i ) { processList($a); }
       else {
@@ -647,7 +651,8 @@ sub processList {
     $a =~ s/\" *\}.*//g;
     my @b = split( /\", \"/, $a );
     for (@b) {
-      my $temp = cromu($_);
+      my $temp = cromu( $_, "" )
+        ;    # lists will never occur in a test file, so we can skip this
       if ($temp) {
         $yep            = 1;
         $foundSomething = 1;

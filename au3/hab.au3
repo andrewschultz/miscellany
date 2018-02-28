@@ -46,14 +46,14 @@ While $cmdCount <= $CmdLine[0]
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
-  $nextCmd = $myCmd + 1
+  $nextCmd = $cmdCount + 1
   $nextNum = -1
   if StringIsDigit(StringMid($myCmd, 2)) Then
     $nextNum = StringMid($myCmd, 2)
 	$myCmd = StringLeft($myCmd, 1)
-  ElseIf $cmdCount < $CmdLine[0] and IsNumber($CmdLine[$cmdCount+1]) Then
+  ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
-	$nextCmd = $myCmd + 2
+	$nextCmd = $cmdCount + 2
   EndIf
   If $myCmd == 'te' Then
     $testDontClick = True
@@ -91,7 +91,7 @@ While $cmdCount <= $CmdLine[0]
     DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
-      $clicks = $cmdLine[2]
+      $clicks = $nextNum
     Endif
     if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
       $clicks2 = $cmdLine[3]
@@ -107,16 +107,16 @@ While $cmdCount <= $CmdLine[0]
   ElseIf $myCmd == 'r' Then
     ToHab()
     CheckIfOnTask()
-    for $i = 1 to $clicks
+    for $i = 1 to $nextNum
       MouseClick("left")
       sleep($delay)
     Next
   Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
-    $clicks = GetNumArgOrBail($cmdCount+1)
+    $clicks = $nextNum
     ToolsTrade($clicks, False, False)
   ElseIf StringLeft($myCmd, 1) == 'x' Then
     $additional = StringMid($myCmd, 2)
-    $clicks = GetNumArgOrBail($cmdCount+1)
+    $clicks = $nextNum
     if not StringInStr($additional, 'q') Then
       $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
       if $res == $IDCANCEL Then
@@ -139,7 +139,7 @@ While $cmdCount <= $CmdLine[0]
   Else
     Usage(0, $cmdLine[$cmdCount])
   Endif
-  $myCmd = $nextCmd
+  $cmdCount = $nextCmd
 WEnd
 
 if $cmdLine[0] == 0 Then
@@ -199,6 +199,7 @@ EndFunc
 Func ToHab()
   WinActivate("Habitica - Gamify Your Life - Mozilla Firefox")
   WinWaitActive("Habitica - Gamify Your Life - Mozilla Firefox")
+  ToHome()
 EndFunc
 
 Func PickAttr($y)
@@ -321,6 +322,10 @@ EndFunc
 Func NeedPositive()
   MsgBox($MB_OK, "Need positive #", "Need positive # after arg ")
   exit
+EndFunc
+
+Func ToHome()
+  Send("{CTRLDOWN}{HOME}{CTRLUP}")
 EndFunc
 
 Func Init()

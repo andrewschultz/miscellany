@@ -86,10 +86,13 @@ if $start <= 9 Then
 hitNext()
 EndIf
 
-; send("{ALTDOWN}D{ALTUP}")
-MouseClick("left", 500, 55, 1)
 Opt("SendKeyDelay", 0)
+Send("{ALTDOWN}d{ALTUP}")
 send("https://www.codecademy.com/learn{ENTER}")
+
+; MouseClick("left", 500, 55, 1)
+; Opt("SendKeyDelay", 0)
+; send("https://www.codecademy.com/learn{ENTER}")
 
 ; MouseClick("left", 1654, 96, 1)
 ; MouseClick("left", 1654, 216, 1)
