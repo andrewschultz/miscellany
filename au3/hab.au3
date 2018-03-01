@@ -37,6 +37,22 @@ Local $testDontClick = False, $didAnything = False
 
 Init()
 
+; put this along with 'a' into its own function.
+If $cmdLine[0] == 1 and StringIsDigit($cmdLine[1]) Then
+    ToHab()
+	    if $cmdLine[1] < 1 Then
+		  needPositive()
+	    EndIf
+        for $i = 1 to $cmdLine[1]
+          MouseClick ( "left", 1325, 450, 1 )
+          MouseMove(1275, 400)
+          if $i < $cmdLine[1] Then
+            sleep(2000)
+          Endif
+        Next
+  exit
+EndIf
+
 While $cmdCount <= $CmdLine[0]
   if $cmdCount == $nextCmd Then
     MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " vs " & $nextCmd & " in full array " & _ArrayToString($CmdLine, "/", "1:"))
@@ -153,7 +169,7 @@ EndIf
 
 Func Usage($questionmark, $badCmd = "")
   Local $usgAry[11] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
-  "-a opens the armoire # times", _
+  "-a (or only a number in the arguments) opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
