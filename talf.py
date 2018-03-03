@@ -326,7 +326,11 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 print(f2, '=', os.path.getsize(f2), "bytes")
                 print('Use -os to ignore this size differences, but do verify no information was lost, first.')
                 exit()
-        copy(f2, f)
+        if cmp(f, f2):
+            print("NO DIFFERENCES FOUND. Not copying over.")
+        else:
+            print("DIFFERENCES FOUND. Copying over.")
+            copy(f2, f)
     elif not cmp(f, f2):
         print("DIFFERENCES FOUND. Run with -c to copy back over.")
 

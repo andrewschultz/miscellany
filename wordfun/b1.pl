@@ -612,7 +612,7 @@ sub getPoints {
         return;
       }
       print "$points points. Can get $lastCan. Left=$left\n";
-      $pointDelta = ( $pointDelta > 50 ? $pointDelta - 50 : $pointDelta / 2 );
+      $pointDelta = winsDelta($pointDelta);
       my $pointSlope   = sprintf( "%.3f", 60 * $pointDelta / $timeDelta );
       my $timeGap      = $timeDelta * 700 / $pointDelta;
       my $finalTime    = $timeDelta * 700 / $pointDelta + $epochDate;
@@ -624,14 +624,17 @@ sub getPoints {
         my $projTime     = localtime( $projTimeLeft + $ct );
         print "$x per minute means you end at $projTime.\n";
       }
-      printf( "%d to go, $pointSlope per minute\nstart $date ETA "
+      printf(
+        "%d to go, $pointSlope per minute\nstart $date ETA "
           . localtime($finalTime)
-          . ", total time=%d sec\n",
-        ( scalar 700 - $pointDelta ), $timeDelta );
+          . ", total time so far=%d sec, projected = %d sec\n",
+        ( scalar 700 - $pointDelta ),
+        $timeDelta, $finalTime - $epochDate
+      ) . ( $pointDelta < 50 ? " ... still in twofer range" : "" );
       if ( $gplasttime && ( $points - $gplastscore ) && ( $ct - $gplasttime ) )
       {
-        my $pd             = $points - $gplastscore;
-        my $td             = $ct - $gplasttime;
+        my $pd = $pointDelta - winsDelta( $gplastscore - $cur );
+        my $td = $ct - $gplasttime;
         my $slope          = $pd / $td;                      # points per second
         my $timeLeftRecent = ( 700 - $pointDelta ) / $slope;
         my $lastProjTime = localtime( $timeLeftRecent + $ct );
@@ -649,6 +652,10 @@ sub getPoints {
 
   print("Got nothing. Check to see if you need to enter a CAPTCHA.\n");
 
+}
+
+sub winsDelta {
+  return ( $_[0] > 50 ? $_[0] - 50 : $_[0] / 2 );
 }
 
 sub printTimeFile {
