@@ -3,6 +3,9 @@
 #
 # table alphabetizer/sorter in python
 #
+# -c = copy back over
+# -l = launch
+# -si = verbose what happened
 
 from collections import defaultdict
 from shutil import copy

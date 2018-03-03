@@ -181,7 +181,6 @@ sub readOneLine {
     $arg = $_[$argc];
 
     if ( lc($arg) =~ /^[ainp][0-9]+$/i ) {
-      return if $stdin;
       updateP1File($arg);
       $stdin = 1;
       $argc++;

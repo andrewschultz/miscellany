@@ -10,7 +10,7 @@ book screen effects [I always do something silly with the status line, or try a 
 
 include basic screen effects by Emily Short.
 
-book thanks to Zarf
+book thanks to Zarf and Climbingstars
 
 section track memory used
 
@@ -42,6 +42,13 @@ return (gg_scriptstr ~= 0);
 -).
 
 To decide whether currently transcripting: (- CheckTranscriptStatus() -)
+
+book I figured this out! Yay!
+
+[this is useful if we have a problem that occurs before we make a single move]
+
+to force-all-rules:
+	(- debug_Rules = 2; -)
 
 book waiting stubs
 
