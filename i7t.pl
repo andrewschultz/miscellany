@@ -399,7 +399,9 @@ my $lastOpen   = "";
 
 for ( 1 .. $testCount ) {
   my $tn = $tableName{$_};
+  my @tary = split( /\+/, $tn );
 
+  my $origRegex = $regex{$_};
   $regexMod{$_} = $regex{$_};
   $regexMod{$_} =~ s/\$[\$cft]/[0-9]+/;
 
@@ -410,12 +412,12 @@ for ( 1 .. $testCount ) {
   }
 
   # print "Tweaking $_ / $regex{$_}\n";
-  $regex{$_} =~ s/\$\$/$rows{$tn}+$delta{$_}/ge;
-  $regex{$_} =~ s/\$c/$smartIdeas{$tn}+$delta{$_}/ge;
-  $regex{$_} =~ s/\$f/$falseRows{$tn}+$delta{$_}/ge;
-  $regex{$_} =~ s/\$t/$trueRows{$tn}+$delta{$_}/ge;
+  $regex{$_} =~ s/\$\$/multTableSums(\%rows, \@tary)+$delta{$_}/ge;
+  $regex{$_} =~ s/\$c/multTableSums(\%smartIdeas, \@tary)+$delta{$_}/ge;
+  $regex{$_} =~ s/\$f/multTableSums(\%falseRows, \@tary)+$delta{$_}/ge;
+  $regex{$_} =~ s/\$t/multTableSums(\%trueRows, \@tary)+$delta{$_}/ge;
 
-  # print "Tweaked $_ / $regex{$_} / $regexMod{$_}\n";
+  print "Tweaked $_ / $regex{$_} / $regexMod{$_} from $origRegex\n";
 
   #print "$_ $tableName{$_}=$regex{$_} / $regexMod{$_}\n";
 
@@ -497,6 +499,19 @@ exit();
 #subroutines below
 #
 
+sub multTableSums {
+  my %hash = %{ $_[0] };
+  my @ary  = @{ $_[1] };
+  my $x;
+  my $retVal = 0;
+
+  # foreach my $key (keys %hash) { print "$key $hash{$key}\n"; }
+  for $x (@ary) {
+    $retVal += $hash{$x};
+  }
+  return $retVal;
+}
+
 sub tableNumberDelta    # 0=table name 1=regex 2=smart-string 3=formula
 {
   my $newNum = 0;
@@ -562,7 +577,7 @@ sub processInitData {
         $tabElts[1] =~ s/^igcol://;
         if ( $tabElts[1] =~ /^[0-9]+:/ ) {
           print
-"Line $.: $tabElts[1] reversed to put #s second in config file for IGCOL.\n";
+"i7t.txt Line $.: $tabElts[1] reversed to put #s second in config file for IGCOL.\n";
           $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
         }
         $ignoreBlankCols{ $tabElts[1] } = 1;
@@ -572,7 +587,7 @@ sub processInitData {
         $tabElts[1] =~ s/^minrow(s)?://;
         if ( $tabElts[1] =~ /^[0-9]+:/ ) {
           print
-"Line $.: $tabElts[1] reversed to put #s second in config file for MINROW.\n";
+"i7t.txt Line $.: $tabElts[1] reversed to put #s second in config file for MINROW.\n";
           $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
         }
         my @xrow = split( /:/, $tabElts[1] );
@@ -583,7 +598,7 @@ sub processInitData {
         $tabElts[1] =~ s/^xrow(s)?://;
         if ( $tabElts[1] =~ /^[0-9]+:/ ) {
           print
-"Line $.: $tabElts[1] reversed to put #s second in config file for XROW.\n";
+"i7t.txt Line $.: $tabElts[1] reversed to put #s second in config file for XROW.\n";
           $tabElts[1] =~ s/^([0-9]+):(.*)/$2:$1/;
         }
         my @xrow = split( /:/, $tabElts[1] );
@@ -667,7 +682,7 @@ OUTER:
         $anyTest = 1;
         print "Line $.: ALMOST MATCHED (FAILED"
           . ( $writeRight ? "/WILL BE UPDATED" : "" )
-          . ") regex ($regex{$_}) with $line";
+          . ") SHOULD BE regex ($regex{$_}) IS $line";
         $filesToOpen{ $_[0] } = $.;
         delete( $notFound{$_} );
         $meaningfulChanges = 1;
