@@ -218,17 +218,13 @@ sub readZupFile {
         if ( !$outFile ) {
           die("OutFile not defined. You need a line with out=X.ZIP in $_[0].");
         }
+        my $outLong = "c:/games/inform/zip/$outFile";
         unless ($extractOnly) {
-          my $outLong = "c:/games/inform/zip/$outFile";
           print "Writing to $outLong...\n";
           die 'write error'
             unless $zip->writeToFileNamed("c:/games/inform/zip/$outFile") ==
             AZ_OK;
           print "Writing successful.\n";
-          die("$outLong smaller than required $fileMinSize bytes.\n")
-            if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
-          die("$outLong larger than required $fileMaxSize bytes.\n")
-            if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
           if ($openAfter) {
             print "Opening...\n";
             `$zipdir\\$outFile`;
@@ -253,6 +249,14 @@ sub readZupFile {
         }
         print "-x specified but nothing to run.\n"
           if ( $executeBeforeZip && !$executedAny );
+        print "Try -x to run executable commands"
+          if ( !$executeBeforeZip && $executedAny );
+        unless ($extractOnly) {
+          die("$outLong smaller than required $fileMinSize bytes.\n")
+            if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
+          die("$outLong larger than required $fileMaxSize bytes.\n")
+            if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
+        }
         return;
       };
       /^out=/i && do {
@@ -285,22 +289,26 @@ sub readZupFile {
       /^min:/ && do {
         $fileMinSize = $a;
         $fileMinSize =~ s/.*://;
+        die("File max size $fileMaxSize < file min size $fileMinSize")
+          if ( $fileMaxSize > 0 ) && ( $fileMaxSize < $fileMinSize );
         next;
       };
       /^max:/ && do {
         $fileMaxSize = $a;
         $fileMaxSize =~ s/.*://;
+        die("File max size $fileMaxSize < file min size $fileMinSize")
+          if ( $fileMaxSize > 0 ) && ( $fileMaxSize < $fileMinSize );
         next;
       };
       /^x(\+)?:/ && do {
+        $executedAny = 1;
         next if $noExecute;
         if ( $executeBeforeZip || ( $a =~ /^x\+/i ) ) {
           my $cmd = $a;
           $cmd =~ s/^x\+://gi;
           print( $executeBeforeZip ? "Running" : "Forcing" );
           print " $cmd\n";
-          $temp        = `$cmd`;
-          $executedAny = 1;
+          $temp = `$cmd`;
           if ($printExecute) { print $temp; }
         }
         next;

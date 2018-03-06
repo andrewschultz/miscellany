@@ -581,7 +581,7 @@ sub getFile {
 }
 
 sub delIfThere {
-  if ( -f "$_[0]" ) { print "Deeleting $_[0]\n"; system("erase \"$_[0]\""); }
+  if ( -f "$_[0]" ) { print "Deleting $_[0]\n"; system("erase \"$_[0]\""); }
   else              { print "No $_[0]\n"; }
 }
 
