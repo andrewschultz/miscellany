@@ -284,6 +284,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     continue
                 if got_match(line, okay[f]):
                     need_to_catch[f].pop(got_match(line, okay[f]))
+                    temp_out.write(line)
                     continue
                 ignored_tables = ignored_tables + "{:s} Line {:d} ({:s}): {:s}".format(fs, line_count,
                   "OKAY DIF" if got_match(line, okay[f]) else ("DEFAULT " if has_default else "PASSTHRU"), line)

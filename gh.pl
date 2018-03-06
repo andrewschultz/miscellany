@@ -1052,7 +1052,7 @@ sub checkWarnings {
   if ( $_[0] =~ /\.pl$/i ) {
     if ($doPerlTidy) {
       print "Tidying $_[0]... to $_[0].tdy\n";
-      system("perltidy -i=2 $_[0]");
+      system("perltidy.bat -i=2 $_[0]");
       if ( ( -f "$_[0].tdy" )
         && ( -s "$_[0].tdy" > 0 ) )
       {
