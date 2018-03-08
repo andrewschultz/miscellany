@@ -70,11 +70,7 @@ my $forceNum          = 1;
 my $ignoreRand        = 0;
 my $inQuotes          = 0;
 
-if    ( $pwd =~ /oafs/o )                         { @runs = ("oafs"); }
-elsif ( $pwd =~ /(threed|fourd)/o )               { @runs = ("opo"); }
-elsif ( $pwd =~ /(compound|slicker|buck|past)/i ) { @runs = ("as"); }
-elsif ( $pwd =~ /put-it-up/i )                    { @runs = ("up"); }
-elsif ( $pwd =~ /(roiling|shuffling)/i )          { @runs = ("sts"); }
+@runs = ( toProj($pwd) ) if toProj($pwd);
 
 while ( $count <= $#ARGV ) {
   $a = $ARGV[$count];
@@ -103,6 +99,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?f$/ && do { readFile(); $count++; next; };
     /^-?n$/ && do { @runs = ("names"); $count++; next; };          # names
     /^-?(3d|3|4d|4|opo)$/i
       && do { @runs = ("opo"); $count++; next; };                  # 3dop try
@@ -215,12 +212,7 @@ if ($getClipboard) {
   my @sets    = split( /[\n\r]+/, $cliptxt );
   for my $clipLine (@sets) {
     @thisAry = split( / /, $clipLine );
-    if ( $#thisAry > 1 ) {
-      print "Warning: $clipLine has too many spaces.\n";
-      next;
-    }
-    print "Proc'ing $clipLine from clipboard.\n";
-    tryOneSet();
+    tryOneAry();
   }
 }
 else {
@@ -763,6 +755,33 @@ sub writeLastRun {
   ( my $gqlast = $gqfile ) =~ s/.txt$/-last.txt/i;
   open( A, ">$gqlast" );
   print A join( ',', @runs );
+}
+
+sub readFile {
+  open( A, $readFile );
+  while ( $a = <A> ) {
+    if toProj($pwd) {
+      @runs = ( toProj($pwd) );
+      continue;
+    } @thisAry = split( / /, $clipLine );
+    tryAry();
+  }
+}
+
+sub tryAry {
+  if ( $#thisAry > 1 ) {
+    print "Too many arguments in @thisAry.\n";
+    return;
+  }
+  tryOneSet();
+}
+
+sub toProj {
+  if    ( $_[0] =~ /oafs/i )                         { return "oafs"; }
+  elsif ( $_[0] =~ /(threed|fourd)/i )               { return "opo"; }
+  elsif ( $_[0] =~ /(compound|slicker|buck|past)/i ) { return "as"; }
+  elsif ( $_[0] =~ /put-it-up/i )                    { return "up"; }
+  elsif ( $_[0] =~ /(roiling|shuffling)/i )          { return "sts"; }
 }
 
 sub usage {

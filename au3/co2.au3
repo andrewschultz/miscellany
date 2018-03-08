@@ -90,6 +90,8 @@ Opt("SendKeyDelay", 0)
 Send("{ALTDOWN}d{ALTUP}")
 send("https://www.codecademy.com/learn{ENTER}")
 
+; this was a workaround for a 32 bit btowser but with 64 bit AutoIt/Browser it's not necessary
+
 ; MouseClick("left", 500, 55, 1)
 ; Opt("SendKeyDelay", 0)
 ; send("https://www.codecademy.com/learn{ENTER}")
@@ -110,6 +112,7 @@ Func hitNext()
 EndFunc
 
 Func ResetAndResume()
+  MouseClick("left", 1292, 337, 1)
   MouseClick("left", 1292, 367, 1)
   sleep(1500)
   MouseClick("left", 872, 632, 1)
