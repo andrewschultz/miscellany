@@ -44,6 +44,7 @@ my $dropboxSimpleCopy = 0;
 my $extractAfter      = 0;
 my $launchAfter       = 0;
 my $launchFile        = "";
+my $dropLinkClipOnly  = 0;
 
 ##################variables
 my $count = 0;
@@ -72,7 +73,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?a$/ && do {
       print "Kitchen sink flags for ZUP.\n";
-      $executeBeforeZip = $dropboxSimpleCopy = $dropBinOpen = $openAfter = 1;
+      $executeBeforeZip = $dropboxSimpleCopy = $dropBinOpen = $dropLinkClip = 1;
       $count++;
       next;
     };
@@ -105,7 +106,8 @@ while ( $count <= $#ARGV ) {
     };
     /^-?dl(c)?$/ && do {
       print "Dropbox link to clipboard.\n";
-      $dropLinkClip = 1;
+      $dropLinkClip     = 1;
+      $dropLinkClipOnly = 1;
       $count++;
       next;
     };
@@ -156,7 +158,14 @@ close(A);
 readZupFile($zupt);
 readZupFile($zupp);
 
-if ( !$triedSomething ) { print "Didn't find any projects in (@ARGV).\n"; }
+if ( !$triedSomething ) {
+  if ( $#ARGV == -1 ) {
+    print "Empty project array. -? for help.\n";
+  }
+  else {
+    print "Didn't find any projects in (@ARGV). -? for help.\n";
+  }
+}
 
 if ($dropCopy) {
   print "Starting Big Long Dropbox copy...\n";
@@ -277,10 +286,10 @@ sub readZupFile {
           ;    #print "Added tree: $b[0] to $b[1].\n";
         next;
       };
-      /^>>/ && do {
+      /^(x:|>>)/i && do {
         if ($noExecute) { next; }
         my $cmd = $a;
-        $cmd =~ s/^>>//g;
+        $cmd =~ s/^(x:|>>)//gi;
         print "Running $cmd\n";
         $temp = `$cmd`;
         if ($printExecute) { print $temp; }
@@ -320,7 +329,7 @@ sub readZupFile {
           my $clip = Win32::Clipboard::new();
           $clip->Set("$dropboxLink");
           print "$dropboxLink\n";
-          exit();
+          exit() if $dropLinkClipOnly;
         }
         next;
       };
@@ -395,6 +404,7 @@ sub readZupFile {
           if ( $a =~ /</ ) && ( $t0 > $t1 );
         die("$files[0] should not be behind $files[1], bailing.")
           if ( $a =~ />/ ) && ( $t0 < $t1 );
+        next;
       };
       /^c:/i && do {
         my $cmd .= " \"$a\"";
@@ -456,7 +466,7 @@ USAGE: zupt.pl (project)
 -v view output zip file if already there
 -x execute optional commands (x+ forces things in the file)
 -nx execute nothing (overrides -x)
--a = -x -db -dc -o
+-a = -x -db -dc -dl(without bailing). -o used to be part of this but no longer is.
 EXAMPLE: zup.pl -dq -x 17
 EXAMPLE: zup.pl -eo 17
 EOT
