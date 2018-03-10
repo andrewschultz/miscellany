@@ -23,8 +23,9 @@ use i7;
 use Win32::Clipboard;
 
 ################constants
-( my $gqfile = __FILE__ ) =~ s/pl$/txt/i;
-( my $gqdir  = $gqfile ) =~ s/\\[^\\]+$//g;
+( my $gqfile   = __FILE__ ) =~ s/pl$/txt/i;
+( my $gqdir    = $gqfile ) =~ s/\\[^\\]+$//g;
+( my $readFile = __FILE__ ) =~ s/.pl$/-r.txt/i;
 
 #################vars
 my @availRuns = ();
@@ -760,10 +761,12 @@ sub writeLastRun {
 sub readFile {
   open( A, $readFile );
   while ( $a = <A> ) {
-    if toProj($pwd) {
+    if ( toProj($pwd) ) {
       @runs = ( toProj($pwd) );
       continue;
-    } @thisAry = split( / /, $clipLine );
+    }
+    chomp($a);
+    @thisAry = split( / /, $a );
     tryAry();
   }
 }
@@ -800,6 +803,7 @@ sub usage {
 -x = run others too e.g. anan and myan
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
+-f = use outside file gq-r.txt for input
 -mo = maximum to find overall (default=100, 0=no limit)
 -mf = maximum to find in file (default=25, 0=no limit)
 -mu = unset both maximums above

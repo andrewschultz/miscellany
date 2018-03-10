@@ -180,7 +180,7 @@ sub readOneLine {
   while ( $argc < $amax ) {
     $arg = $_[$argc];
 
-    if ( lc($arg) =~ /^[ainp][0-9]+$/i ) {
+    if ( lc($arg) =~ /^[ainp](-)?[0-9]+$/i ) {
       updateP1File($arg);
       $stdin = 1;
       $argc++;
@@ -283,7 +283,11 @@ sub oneHangman {
   my $readFile = sprintf( "c:\\writing\\dict\\words-%d.txt", length( $_[0] ) );
 
   #print "Trying $readFile.\n";
-  if ( length( $_[0] ) < 3 ) { print "$_[0] too short.\n"; return; }
+  if ( length( $_[0] ) < 3 ) {
+    print "$_[0]"
+      . ( length( $_[0] ) > 0 ? " too short" : "Blank command" ) . ".\n";
+    return;
+  }
   open( A, "$readFile" ) || die("No $readFile");
   my $canAlphabetize = 0;
   my $lastOne;
@@ -607,6 +611,10 @@ sub getPoints {
         print("Can't estimate end.\n");
         return;
       }
+      elsif ( $pointDelta == 750 ) {
+        print "Hit end exactly.\n";
+        return;
+      }
       elsif ( $pointDelta > 750 ) {
         print("Went past end\n");
         return;
@@ -624,13 +632,13 @@ sub getPoints {
         my $projTime     = localtime( $projTimeLeft + $ct );
         print "$x per minute means you end at $projTime.\n";
       }
+      printf( "%d to go, %.3f per minute\n",
+        ( scalar 700 - $pointDelta ), $pointSlope );
+      my $q = localtime($finalTime);
       printf(
-        "%d to go, $pointSlope per minute\nstart $date ETA "
-          . localtime($finalTime)
-          . ", total time so far=%d sec, projected = %d sec\n",
-        ( scalar 700 - $pointDelta ),
-        $timeDelta, $finalTime - $epochDate
-      ) . ( $pointDelta < 50 ? " ... still in twofer range" : "" );
+        "start %s ETA $q, total time so far=%d sec, projected = %d sec %s\n",
+        $date, $timeDelta, $finalTime - $epochDate )
+        ; #, $finalTime - $epochDate, ( $pointDelta < 50 ? " ... still in twofer range" : "" ));
       if ( $gplasttime && ( $points - $gplastscore ) && ( $ct - $gplasttime ) )
       {
         my $pd = $pointDelta - winsDelta( $gplastscore - $cur );
