@@ -45,6 +45,7 @@ my $extractAfter      = 0;
 my $launchAfter       = 0;
 my $launchFile        = "";
 my $dropLinkClipOnly  = 0;
+my $ignoreTimeFlips   = 0;
 
 ##################variables
 my $count = 0;
@@ -58,7 +59,8 @@ my $executedAny = 0;
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
   for ($a) {
-    /\?/ && do { usage(); exit(); };
+    /^-?\?$/  && do { usage();          exit(); };
+    /^-?\?f$/ && do { usage_cfg_file(); exit(); };
     /^-[ol]$/ && do {
       $openAfter = 1;
       $count++;
@@ -77,6 +79,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?it$/ && do { $ignoreTimeFlips = 1; $count++; next; };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
     /^-?nx$/ && do { print "Executing no commands.\n"; $noExecute = 1; exit; };
     /^-?eo$/ && do { $extractOnly = 1; $extractAfter = 1; $count++; next; };
@@ -355,10 +358,12 @@ sub readZupFile {
           for (@comp2) {
             if ( !-f "$_" ) { die "No file $_."; }
             if ( ( stat($a)->mtime < stat($_)->mtime ) && ($gtlt) ) {
-              die("$a dated before $_, should be other way around.");
+              conditional_die( !$ignoreTimeFlips,
+                "$a dated before $_, should be other way around." );
             }
             if ( ( stat($a)->mtime > stat($_)->mtime ) && ( !$gtlt ) ) {
-              die("$a dated after $_, should be other way around.");
+              conditional_die( !$ignoreTimeFlips,
+                "$a dated after $_, should be other way around." );
             }
           }
         }
@@ -392,18 +397,6 @@ sub readZupFile {
         $zip->addFile( "$a", "$b" );
 
         #print "Writing $a to $b.\n";
-        next;
-      };
-      /[<>]/ && do {
-        my @files = split( /[<>]/, $a );
-        die("$a needs only one >/< for file time comparisons.")
-          if ( $#files != 1 );
-        my $t0 = stat( $files[0] )->mtime;
-        my $t1 = stat( $files[1] )->mtime;
-        die("$files[0] should not be ahead of $files[1], bailing.")
-          if ( $a =~ /</ ) && ( $t0 > $t1 );
-        die("$files[0] should not be behind $files[1], bailing.")
-          if ( $a =~ />/ ) && ( $t0 < $t1 );
         next;
       };
       /^c:/i && do {
@@ -449,6 +442,11 @@ sub projOut {
   }
 }
 
+sub conditional_die {
+  die( $_[1] ) if ( $_[0] );
+  print "WARNING: $_[1]\n";
+}
+
 sub usage {
   print <<EOT;
 USAGE: zupt.pl (project)
@@ -467,8 +465,28 @@ USAGE: zupt.pl (project)
 -x execute optional commands (x+ forces things in the file)
 -nx execute nothing (overrides -x)
 -a = -x -db -dc -dl(without bailing). -o used to be part of this but no longer is.
+-?f = show example of formats
 EXAMPLE: zup.pl -dq -x 17
 EXAMPLE: zup.pl -eo 17
 EOT
   exit;
+}
+
+sub usage_cfg_file {
+  print <<EOT;
+# = commenting
+; = end
+name=(comma separated values)
+v=(version)
+dl=(dropbox link)
+x: or >>(executable command)
+out=out file name (% = release number)
+min:=minimum acceptable size
+max:=maximum acceptable size (to make sure debug builds don't get through)
+?:file1<file2 = make sure files are in order
+F=file to add
+! ends the list
+EOT
+  exit;
+
 }
