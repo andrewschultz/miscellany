@@ -385,6 +385,17 @@ sub readZupFile {
         #print "Writing $a to $b.\n";
         next;
       };
+      /[<>]/ && do {
+        my @files = split( /[<>]/, $a );
+        die("$a needs only one >/< for file time comparisons.")
+          if ( $#files != 1 );
+        my $t0 = stat( $files[0] )->mtime;
+        my $t1 = stat( $files[1] )->mtime;
+        die("$files[0] should not be ahead of $files[1], bailing.")
+          if ( $a =~ /</ ) && ( $t0 > $t1 );
+        die("$files[0] should not be behind $files[1], bailing.")
+          if ( $a =~ />/ ) && ( $t0 < $t1 );
+      };
       /^c:/i && do {
         my $cmd .= " \"$a\"";
         if ( ( !-f "$a" ) && ( !-d "$a" ) ) {
