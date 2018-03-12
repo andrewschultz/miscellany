@@ -35,7 +35,6 @@ my @runs      = ();
 my $count     = 0;
 my %map;
 my %cmds;
-my @blanks;
 my @errStuff;
 my $blurby         = "";
 my $myHeader       = "";
@@ -70,6 +69,8 @@ my $launchFirstSource = 0;
 my $forceNum          = 1;
 my $ignoreRand        = 0;
 my $inQuotes          = 0;
+
+my %foundCount;
 
 @runs = ( toProj($pwd) ) if toProj($pwd);
 
@@ -383,8 +384,21 @@ sub processFiles {
     processOneFile(@fileAndMarkers);
   }
   print "IMPORTANT END STRING STUFF:\n$stringAtEnd" if $stringAtEnd;
+  my @blanks = ();
+  my @gots   = ();
+  for my $x ( sort keys %foundCount ) {
+    if ( $foundCount{$x} == 0 ) {
+      push( @blanks, $x );
+    }
+    else {
+      push( @gots, $x );
+    }
+  }
   if ( $#blanks > -1 ) {
     print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
+  }
+  if ( $#gots > -1 ) {
+    print join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
   }
   if ( $errStuff[0] ) {
     print "TEST RESULTS: $_[0],0,"
@@ -413,11 +427,14 @@ sub processOneFile {
     @importants      = split( /,/, $_[1] );
   }
   my $modFile = $_[0];
-  if ( $modFile =~ /story.ni/ ) {
-    $modFile =~ s/\.inform.*/ MAIN/;
+  if ( $modFile =~ /inform[\\\/]source/i ) {
+    $modFile =~ s/.*[^\\\/]*.inform.source[\\\/]/MAIN /i;
     $modFile =~ s/.*[\\\/]//;
   }
-  if ( $modFile =~ /(trizbort|i7x)/ ) { $modFile =~ s/.*[\\\/]//g; }
+  if ( $modFile =~ /\.trizbort/ ) { $modFile =~ s/.*[\\\/]/TRIZ /g; }
+  if ( $modFile =~ /\.i7x/ )      { $modFile =~ s/.*[\\\/]/EXT /g; }
+
+  # print "$_[0] => $modFile\n"; return;
   open( A, "$_[0]" ) || die("No $_[0]");
   while ( $a = <A> ) {
     my $temp = $a;
@@ -501,7 +518,7 @@ sub processOneFile {
     }
   }
   close(A);
-  if ( !$foundOne ) { push( @blanks, $modFile ); }
+  $foundCount{$modFile} = $foundOne;
 }
 
 sub cromu {
