@@ -116,6 +116,7 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
     return ary[b]
 
 def process_table_array(sort_orders, table_rows, file_stream):
+    print(sort_orders)
     # print(type(sort_orders), sort_orders)
     # print(type(table_rows), table_rows)
     for q in sort_orders:
@@ -157,6 +158,7 @@ def read_table_and_default_file():
                 right_side = re.sub(".*=", "", ll)
                 right_side = re.sub("/", "\\\\", right_side)
                 right_side = right_side.lower()
+                right_side_fwd = re.sub(r"\\", r"\/", right_side)
                 if ll.startswith("f="):
                     cur_file = right_side
                     continue
@@ -184,7 +186,7 @@ def read_table_and_default_file():
                     if cur_file in default_sort.keys():
                         print("WARNING: ignoring redefined default sort for", cur_file," at line", line_count, "previous line", prev_def[cur_line])
                         continue
-                    default_sort[cur_file] = right_side
+                    default_sort[cur_file] = right_side_fwd
                     prev_def[cur_file] = line_count
                     continue
                 print("Unknown = at line", line_count, ll)

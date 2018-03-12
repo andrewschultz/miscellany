@@ -20,7 +20,7 @@ def usage():
 
 def mootify(a):
     ll = re.sub(r"move (.*) to " + discard_room, r"moot \1", a, 0, re.IGNORECASE)
-    ll = re.sub(r"now (.*) is in lalaland" + discard_room, r"moot \1", ll, 0, re.IGNORECASE)
+    ll = re.sub(r"now (.*) (are|is) in lalaland" + discard_room, r"moot \1", ll, 0, re.IGNORECASE)
     ll = re.sub("not in " + discard_room, "not moot", ll, 0, re.IGNORECASE)
     ll = re.sub("in " + discard_room, "moot", ll, 0, re.IGNORECASE)
     return ll
@@ -42,8 +42,10 @@ def u_trans(a):
 def unit_tests(bail = True):
     print("Running unit tests...")
     u_trans("now stuff is in lalaland;")
+    u_trans("now stuffs are in lalaland;")
     u_trans("move stuff to lalaland;")
     u_trans("if th is in lalaland, yes; [ic]")
+    u_trans("if th are in lalaland, yes; [ic]")
     if bail: exit()
     return
 
