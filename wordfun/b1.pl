@@ -637,8 +637,10 @@ sub getPoints {
       my $q = localtime($finalTime);
       printf(
         "start %s ETA $q, total time so far=%d sec, projected = %d sec %s\n",
-        $date, $timeDelta, $finalTime - $epochDate )
-        ; #, $finalTime - $epochDate, ( $pointDelta < 50 ? " ... still in twofer range" : "" ));
+        $date, $timeDelta,
+        $finalTime - $epochDate,
+        ( $pointDelta < 50 ? " ... still in twofer range" : "" )
+      );    #, $finalTime - $epochDate);
       if ( $gplasttime && ( $points - $gplastscore ) && ( $ct - $gplasttime ) )
       {
         my $pd = $pointDelta - winsDelta( $gplastscore - $cur );

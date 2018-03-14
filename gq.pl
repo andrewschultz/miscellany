@@ -398,7 +398,8 @@ sub processFiles {
     print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
   }
   if ( $#gots > -1 ) {
-    print join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
+    print "FILES WITH MATCHES: "
+      . join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
   }
   if ( $errStuff[0] ) {
     print "TEST RESULTS: $_[0],0,"
@@ -428,7 +429,7 @@ sub processOneFile {
   }
   my $modFile = $_[0];
   if ( $modFile =~ /inform[\\\/]source/i ) {
-    $modFile =~ s/.*[^\\\/]*.inform.source[\\\/]/MAIN /i;
+    $modFile =~ s/.*[^\\\/][\\\/]([a-z0-9-]*).inform.source[\\\/]/$1:/i;
     $modFile =~ s/.*[\\\/]//;
   }
   if ( $modFile =~ /\.trizbort/ ) { $modFile =~ s/.*[\\\/]/TRIZ /g; }

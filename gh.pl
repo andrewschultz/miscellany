@@ -63,6 +63,7 @@ my %bitBucket;
 
 #################options
 my $executeBackCopy = 0;
+my $linkTest        = 0;
 
 my $justPrint   = 0;
 my $verbose     = 0;
@@ -155,6 +156,7 @@ while ( $count <= $#ARGV ) {
     /^-?ff$/i      && do { $overrideIgnoreFatal = 1;  $count++; next; };
     /^-?bc$/i      && do { $executeBackCopy     = 1;  $count++; next; };
     /^-?rt$/i      && do { $runTrivialTests     = 1;  $count++; next; };
+    /^-?(lt|tl)/i  && do { $linkTest            = 1;  $count++; next; };
     /^-?nrt$/i     && do { $runTrivialTests     = -1; $count++; next; };
     /^-?(tp|pt)$/i && do { $doPerlTidy          = 1;  $count++; next; };
     /^-?(npt|ptn|ntp|tpn)$/i && do { $doPerlTidy = 0; $count++; next; };
@@ -542,6 +544,19 @@ sub processTerms {
             $short = $outShort;
             $toFile =~ s/[^\\\/]+$//;
           }
+        }
+        if ($linkTest) {
+          my $s1 = stat($fromFile);
+          my $s2 = stat($outName);
+          if ( ( $s1->size == 0 ) && ( $s2->size != 0 ) ) {
+            print "$fromFile is linked to $outName.\n" if $verbose;
+          }
+          else {
+            print "$fromFile is not linked to $outName.\n";
+            print "erase $fromFile\n";
+            print "mklink $fromFile $outName\n";
+          }
+          next;
         }
         if ( -f $fromFile && ( -s $fromFile == 0 ) ) {
           die(
