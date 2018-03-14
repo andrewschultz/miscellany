@@ -29,6 +29,10 @@ def hfile(x, y):
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(x)
 
+def go_proj(x):
+    os.chdir(sdir(x))
+    return
+
 def dir2proj(x = os.getcwd()):
     if os.path.exists(x + "\\story.ni"):
         x2 = re.sub("\.inform.*", "", x)

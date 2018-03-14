@@ -116,7 +116,7 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
     return ary[b]
 
 def process_table_array(sort_orders, table_rows, file_stream):
-    print(sort_orders)
+    # print(sort_orders)
     # print(type(sort_orders), sort_orders)
     # print(type(table_rows), table_rows)
     for q in sort_orders:
@@ -158,7 +158,7 @@ def read_table_and_default_file():
                 right_side = re.sub(".*=", "", ll)
                 right_side = re.sub("/", "\\\\", right_side)
                 right_side = right_side.lower()
-                right_side_fwd = re.sub(r"\\", r"\/", right_side)
+                right_side_fwd = re.sub(r"\\", r"/", right_side)
                 if ll.startswith("f="):
                     cur_file = right_side
                     continue
@@ -293,8 +293,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
     if in_sortable_table:
-        if line.startswith("["):
-            print(line)
+        # if line.startswith("["): print(line)
         if line.startswith("\[") or not line.strip():
             process_table_array(table_sort[f][cur_table], row_array, temp_out)
             in_sortable_table = False
