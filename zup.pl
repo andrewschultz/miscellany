@@ -347,23 +347,33 @@ sub readZupFile {
         $a =~ s/^..//;
         if ( $a =~ /[><]/ ) {
           my $compare;
+          my $suggCmd = "";
 
           if ( ( $a =~ />/ ) && ( $a =~ /</ ) ) { die("<> found in $a\n"); }
+          if ( $a =~ /\t/ ) {
+            my @q = split( "\t", $a );
+            $suggCmd = $q[1];
+            $a       = $q[0];
+          }
+          $suggCmd = "(NONE, SORRY)" if ( !$suggCmd );
           my $gtlt = ( $a =~ />/ );
           $compare = $a;
           $a =~ s/[<>].*//;
           $compare =~ s/.*[<>]//;
           my @comp2 = split( /,/, $compare );
           if ( !-f "$a" ) { die "No file $a."; }
+
           for (@comp2) {
             if ( !-f "$_" ) { die "No file $_."; }
             if ( ( stat($a)->mtime < stat($_)->mtime ) && ($gtlt) ) {
               conditional_die( !$ignoreTimeFlips,
-                "$a dated before $_, should be other way around." );
+"$a dated before $_, should be other way around, command suggestion: $suggCmd."
+              );
             }
             if ( ( stat($a)->mtime > stat($_)->mtime ) && ( !$gtlt ) ) {
               conditional_die( !$ignoreTimeFlips,
-                "$a dated after $_, should be other way around." );
+"$a dated after $_, should be other way around, command suggestion: $suggCmd."
+              );
             }
           }
         }
@@ -402,7 +412,12 @@ sub readZupFile {
       /^c:/i && do {
         my $cmd .= " \"$a\"";
         if ( ( !-f "$a" ) && ( !-d "$a" ) ) {
-          print "WARNING: $a doesn't exist.\n";
+          if ( $a =~ /[<>]/ ) {
+            print "WARNING: May need ? before $a\n";
+          }
+          else {
+            print "WARNING: $a doesn't exist.\n";
+          }
         }
         $zip->addFile("$a");
         next;

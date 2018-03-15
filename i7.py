@@ -27,7 +27,7 @@ def hfile(x, y):
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
 def sdir(x):
-    return "c:\\games\\inform\\{:s}.inform\\source".format(x)
+    return "c:\\games\\inform\\{:s}.inform\\source".format(i7x[x] if x in i7x.keys() else x)
 
 def go_proj(x):
     os.chdir(sdir(x))

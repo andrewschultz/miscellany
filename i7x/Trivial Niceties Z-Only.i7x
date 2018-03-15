@@ -6,6 +6,8 @@ volume stuff I've used multiple games
 
 debug-state is a truth state that varies.
 
+to say fill-in-here: say "!!!!" [This is something that should never be in a game's release. At times I want to be able to compile the game but still reliably note when something needs to be implemented. I track this with a script elsewhere.]
+
 book screen effects [I always do something silly with the status line, or try a creative wait for any key, because that's fun]
 
 include basic screen effects by Emily Short.
