@@ -20,7 +20,7 @@ def usage():
 
 def mootify(a):
     ll = re.sub(r"move (.*) to " + discard_room, r"moot \1", a, 0, re.IGNORECASE)
-    ll = re.sub(r"now (.*) (are|is) in lalaland" + discard_room, r"moot \1", ll, 0, re.IGNORECASE)
+    ll = re.sub(r"now (.*) (are|is) in " + discard_room, r"moot \1", ll, 0, re.IGNORECASE)
     ll = re.sub("not in " + discard_room, "not moot", ll, 0, re.IGNORECASE)
     ll = re.sub("in " + discard_room, "moot", ll, 0, re.IGNORECASE)
     return ll
@@ -33,7 +33,7 @@ def read_moot_rooms():
             if line.startswith("#"): continue
             if line.startswith(";"): break
             a = line.strip().split(":")
-            discard_rooms[a[0]] = a[1]
+            discard_rooms[a[0]] = a[1].lower()
     return
 
 def u_trans(a):
@@ -80,6 +80,10 @@ while count < len(sys.argv):
         usage()
     count = count + 1
 
+if not os.path.isfile(f1):
+    print("No file", f1, "-- bailing.")
+    exit()
+
 fout = open(f2, "w", newline='\n')
 
 read_moot_rooms()
@@ -95,9 +99,11 @@ if do_unit_tests: unit_tests(bail)
 with open(f1) as file:
     for line in file:
         line_count = line_count + 1
-        if discard_room not in line.lower() or '[ic]' in line:
+        if discard_room not in line.lower() or '[ic]' in line or ignore_next:
+            ignore_next = False
             fout.write(line)
             continue
+        if 'definition: a thing is moot:' in line or line.startswith('to moot'): ignore_next = True
         ll = mootify(line)
         if ll != line:
             difs = difs + 1
