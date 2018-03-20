@@ -101,12 +101,20 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
-    /^-?f$/ && do { readFile(); $count++; next; };
-    /^-?n$/ && do { @runs = ("names"); $count++; next; };          # names
+    /^-?fd$/
+      && do { print "Reading default...\n"; readFile($readFile); $count++; next; };
+    /^-?f$/ && do {
+      my $rf2 = $readFile;
+      $rf2 =~ s/-.\./$b/ if $b != "";
+      readFile($rf2);
+      $count++;
+      next;
+    };
+    /^-?n$/ && do { @runs = ("names"); $count++; next; };    # names
     /^-?(3d|3|4d|4|opo)$/i
-      && do { @runs = ("opo"); $count++; next; };                  # 3dop try
+      && do { @runs = ("opo"); $count++; next; };            # 3dop try
     /^(-?(btp|sc|pc|ss)|-as)$/i
-      && do { @runs = ("as"); $count++; next; };                   # Alec Smart?
+      && do { @runs = ("as"); $count++; next; };             # Alec Smart?
     /^-?(r|roi|s|sa|sts)$/i
       && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
     /^-?(odd)$/i
@@ -777,13 +785,21 @@ sub writeLastRun {
 }
 
 sub readFile {
-  open( A, $readFile );
+  my %dupes;
+  open( A, $_[0] ) || die("Can't read $_[0]");
+  print "Opened $_[0]...\n";
   while ( $a = <A> ) {
-    if ( toProj($pwd) ) {
-      @runs = ( toProj($pwd) );
+    if ( toProj($a) ) {
+      @runs = ( toProj($a) );
       continue;
     }
     chomp($a);
+    ( my $a2 = $a ) =~ s/[^a-z]//g;
+    if ( defined( $dupes{$a2} ) ) {
+      print "Line $. of $_[0]: Duplicate $a\n";
+      continue;
+    }
+    $dupes{$a2} = 1;
     @thisAry = split( / /, $a );
     tryAry();
   }
@@ -821,7 +837,7 @@ sub usage {
 -x = run others too e.g. anan and myan
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
--f = use outside file gq-r.txt for input
+-f = use outside file gq-r.txt for input, -f (letter) = use gq-arg.txt
 -mo = maximum to find overall (default=100, 0=no limit)
 -mf = maximum to find in file (default=25, 0=no limit)
 -mu = unset both maximums above
