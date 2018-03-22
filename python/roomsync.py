@@ -19,6 +19,12 @@ from collections import defaultdict
 def usage():
     print("Use a project directory or its abbreviation.")
     print("-v = verbose output")
+    print("-f = format help for roomsync.txt file")
+    exit()
+
+def format_help():
+    print("ignore: = ignore rooms labeled X")
+    print("rename: = rename (source name) to (trizbort name)")
     exit()
 
 def if_rename(x):
@@ -106,6 +112,8 @@ while cmd_count < len(sys.argv):
         current_as_default = False
     elif j == 'v':
         verbose = True
+    elif j == 'f':
+        format_help()
     else:
         usage()
     cmd_count = cmd_count + 1

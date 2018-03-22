@@ -9,13 +9,16 @@ import re
 
 discard_rooms = defaultdict(str)
 
+on_off = [ 'off', 'on' ]
+
 f1 = 'story.ni'
 f2 = 'story.ni2'
 
 def usage():
-    print("-u = unit tests")
-    print("-r = new default room")
-    print("-b = next arg is banish room, b= current")
+    print("-c/-nc = toggle copy, default is", on_off[copy_over])
+    print("-d/-nd = run difference file with copy on, default is", on_off[run_dif_on_copy])
+    print("-u = unit tests, -unb = unit tests and no bail")
+    print("-r = new default banish room, or r= in one argument")
     exit()
 
 def mootify(a):
@@ -57,6 +60,7 @@ line_count = 0
 do_unit_tests = False
 bail = False
 copy_over = False
+run_dif_on_copy = True
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -64,19 +68,22 @@ while count < len(sys.argv):
         arg = arg[1:]
     if arg == 'u':
         do_unit_tests = True
-    elif arg == 'ub':
+    elif arg == 'un' or arg == 'unb':
         do_unit_tests = True
         bail = False
-    elif arg == 'b':
-        banish_room = sys.argv[count+1].lower()
     elif arg == 'c':
         copy_over = True
-    elif arg.startswith('b='):
-        banish_room = sys.argv[count][2:]
+    elif arg == 'd':
+        run_dif_on_copy = True
+    elif arg == 'dn' or arg == 'nd':
+        run_dif_on_copy = False
+    elif arg.startswith('r='):
+        discard_room = sys.argv[count][2:]
     elif arg == 'r':
         discard_room = sys.argv[count+1].lower()
         count = count + 1
     else:
+        print("Bad argument", arg)
         usage()
     count = count + 1
 
@@ -117,7 +124,7 @@ if cmp(f1, f2):
     os.remove(f2)
 else:
     print(difs, "total differences.")
-    os.system("wm {:s} {:s}".format(f1, f2))
+    if run_dif_on_copy: os.system("wm {:s} {:s}".format(f1, f2))
     if copy_over:
         copy(f2, f1)
     else:
