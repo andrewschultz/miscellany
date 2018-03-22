@@ -1,3 +1,5 @@
+#include <MsgBoxConstants.au3>
+
 Opt("WinTitleMatchMode", -2)
 Opt("SendKeyDelay", 50)
 
@@ -6,15 +8,31 @@ HotKeySet("{F10}", "Bail")
 HotKeySet("{F11}", "Bail")
 
 Local $start = 0
+Local $verticalInit = 367
+
+Local $substring = "learn"
 
 WinActivate("Codecademy - Mozilla Firefox")
 WinWaitActive("Codecademy - Mozilla Firefox")
 
-if $cmdLine[0] > 0 Then
-  if $CmdLine[1] > 0 Then
+Local $count = 1
+
+while $count <= $cmdLine[0]
+  $arg = StringLower($CmdLine[$count])
+  if $arg == 's' or $arg == '-s' Then
+    $substring = "AndrewSchultzChicago"
+  Elseif $arg == 'l' or $arg == '-l' Then
+    $substring = "learn"
+  ElseIf $CmdLine[1] > 0 Then
     $start = $CmdLine[1]
+  ElseIf $CmdLine[1] == -1 Then
+    $verticalInit = 337
+  Else
+    MsgBox($MB_OK, "need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
+    Exit
   EndIf
-EndIf
+  $count = $count + 1
+Wend
 
 if $start <= 0 Then
   ResetAndResume()
@@ -88,7 +106,7 @@ EndIf
 
 Opt("SendKeyDelay", 0)
 Send("{ALTDOWN}d{ALTUP}")
-send("https://www.codecademy.com/learn{ENTER}")
+send("https://www.codecademy.com/" & $substring & "{ENTER}")
 
 ; this was a workaround for a 32 bit btowser but with 64 bit AutoIt/Browser it's not necessary
 
@@ -112,8 +130,7 @@ Func hitNext()
 EndFunc
 
 Func ResetAndResume()
-  MouseClick("left", 1292, 337, 1)
-  MouseClick("left", 1292, 367, 1)
+  MouseClick("left", 1292, $verticalInit, 1)
   sleep(1500)
   MouseClick("left", 872, 632, 1)
   sleep(5000)
