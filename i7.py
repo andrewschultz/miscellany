@@ -122,8 +122,9 @@ i7x = { "12": "shuffling",
   "btp": "buck-the-past",
   "mo": "molesworth",
   "mw": "molesworth",
-  "pu": "put-it-up",
-  "up": "put-it-up",
+  "ai": "ailihphilia",
+  "pu": "ailihphilia",
+  "up": "ailihphilia",
   "sw": "spell-woken"
 };
 
@@ -136,7 +137,7 @@ i7xr = { "shuffling": "sa",
   "slicker-city":"sc" ,
   "btp-st":"bs" ,
   "buck-the-past": "btp",
-  "put-it-up": "pu",
+  "ailihphilia": "ai",
   "molesworth": "mo"
 };
 
@@ -158,9 +159,10 @@ i7f = {
     "slicker-city": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\slicker city tables.i7x", "c:\\games\\inform\\slicker-city.inform\\source\\story.ni"],
     "spell-woken": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\spell woken tables.i7x",
     "c:\\games\\inform\\spell-woken.inform\\source\\story.ni"],
-    "put-it-up": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\put it up tables.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\put it up mistakes.i7x",
-    "c:\\games\\inform\\put-it-up.inform\\source\\story.ni"]
+    "ailihphilia": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia tables.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia tests.i7x",
+    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia mistakes.i7x",
+    "c:\\games\\inform\\ailihphilia.inform\\source\\story.ni"]
   }
 
 if "i7.py" in main.__file__:

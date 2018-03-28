@@ -22,7 +22,7 @@ dbh = "c:/writing/scripts/dbh.txt"
 
 temp_write = i7.i7xd + "dbh-temp.i7x"
 
-my_project = "pu"
+my_project = "ai"
 
 reading_operators = False
 firsts = defaultdict(int)

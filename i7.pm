@@ -49,8 +49,9 @@ our %i7x = ( "12" => "shuffling",
   "ss" => "seeker-status",
   "17" => "cube-cavern",
   "cc" => "cube-cavern",
-  "pu" => "put-it-up",
-  "up" => "put-it-up",
+  "ai" => "ailihphilia",
+  "pu" => "ailihphilia",
+  "up" => "ailihphilia",
   "sw" => "spell-woken",
   "mo" => "molesworth",
   "mw" => "molesworth"
@@ -64,10 +65,11 @@ our %i7xr = ( "shuffling" => "sa",
   "compound" => "pc",
   "slicker-city" =>"sc" ,
   "btp-st" =>"bs" ,
-  "btp" => "buck-the-past"
+  "btp" => "buck-the-past",
+  "ailihphilia" => "ai"
 );
 
-our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "put-it-up", "spell-woken");
+our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "ailihphilia", "spell-woken");
 our @i7bb = ("seeker-status", "buck-the-past",  "curate");
 
 our @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");
@@ -79,6 +81,7 @@ $xtraFiles{"slicker-city"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Exten
 $xtraFiles{"compound"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Compound tables.i7x"];
 $xtraFiles{"shuffling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling random text.i7x"];
 $xtraFiles{"roiling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling random text.i7x"];
+$xtraFiles{"ailihphilia"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Tables.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Tests.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Mistakes.i7x", ];
 
 our $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 our $npo = "start \"\" $np";
