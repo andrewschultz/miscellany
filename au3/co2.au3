@@ -7,13 +7,13 @@ HotKeySet("{F7}", "Bail")
 HotKeySet("{F10}", "Bail")
 HotKeySet("{F11}", "Bail")
 
+Local $wait = 0
+Local $launch = 0
 Local $start = 0
-Local $verticalInit = 367
+Local $verticalInit = 720
+Local $horizInit = 1380
 
 Local $substring = "learn"
-
-WinActivate("Codecademy - Mozilla Firefox")
-WinWaitActive("Codecademy - Mozilla Firefox")
 
 Local $count = 1
 
@@ -23,16 +23,28 @@ while $count <= $cmdLine[0]
     $substring = "AndrewSchultzChicago"
   Elseif $arg == 'l' or $arg == '-l' Then
     $substring = "learn"
-  ElseIf $CmdLine[1] > 0 Then
-    $start = $CmdLine[1]
-  ElseIf $CmdLine[1] == -1 Then
+  Elseif $arg == 'x' Then
+    $launch = 1
+  Elseif StringLeft($arg, 1) == 'w' Then
+    $wait = StringMid($CmdLine[$count], 2)
+  ElseIf $CmdLine[$count] > 0 Then
+    $start = $CmdLine[$count]
+  ElseIf $CmdLine[$count] == -1 Then
     $verticalInit = 337
   Else
     MsgBox($MB_OK, "need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
     Exit
   EndIf
   $count = $count + 1
+  ; ContinueLoop
 Wend
+
+if $wait > 0 Then
+  sleep($wait * 1000)
+Endif
+
+WinActivate("Codecademy - Mozilla Firefox")
+WinWaitActive("Codecademy - Mozilla Firefox")
 
 if $start <= 0 Then
   ResetAndResume()
@@ -130,7 +142,7 @@ Func hitNext()
 EndFunc
 
 Func ResetAndResume()
-  MouseClick("left", 1292, $verticalInit, 1)
+  MouseClick("left", $horizInit, $verticalInit, 1)
   sleep(1500)
   MouseClick("left", 872, 632, 1)
   sleep(5000)

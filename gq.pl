@@ -119,8 +119,8 @@ while ( $count <= $#ARGV ) {
       && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
     /^-?(odd)$/i
       && do { @runs = ("odd"); $count++; next; };    # odd games
-    /^-?(pu)$/i
-      && do { @runs = ("up"); $count++; next; };     # Put It Up
+    /^-?(pu|up|ai)$/i
+      && do { @runs = ("ai"); $count++; next; };     # Put It Up
     /^-?sr$/
       && do { $showRules = 1; $count++; next; };     # show the rules text is in
     /^-?h$/ && do { $showHeaders = 1; $count++; next; };
@@ -817,7 +817,7 @@ sub toProj {
   if    ( $_[0] =~ /oafs/i )                         { return "oafs"; }
   elsif ( $_[0] =~ /(threed|fourd)/i )               { return "opo"; }
   elsif ( $_[0] =~ /(compound|slicker|buck|past)/i ) { return "as"; }
-  elsif ( $_[0] =~ /put-it-up/i )                    { return "up"; }
+  elsif ( $_[0] =~ /ailihphilia/i )                  { return "ai"; }
   elsif ( $_[0] =~ /(roiling|shuffling)/i )          { return "sts"; }
 }
 
