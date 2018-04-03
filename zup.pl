@@ -81,7 +81,8 @@ while ( $count <= $#ARGV ) {
     };
     /^-?it$/ && do { $ignoreTimeFlips = 1; $count++; next; };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
-    /^-?nx$/ && do { print "Executing no commands.\n"; $noExecute = 1; exit; };
+    /^-?nx$/
+      && do { print "Executing no commands.\n"; $noExecute = 1; $count++; next; };
     /^-?eo$/ && do { $extractOnly = 1; $extractAfter = 1; $count++; next; };
     /^-?p$/ && do {
       print "Printing result of executed commands, if there are any.\n";

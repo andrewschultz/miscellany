@@ -33,6 +33,8 @@ Local $clicks = 0, $clicks2 = 0, $delay = 10000
 Local $cmdCount = 1
 Local $nextCmd = 2
 
+Local $preDelay = 0
+
 Local $testDontClick = False, $didAnything = False
 
 Init()
@@ -105,6 +107,14 @@ While $cmdCount <= $CmdLine[0]
     $delay = 1000 * GetNumArgOrBail($cmdCount+1)
   ElseIf $myCmd == 'i' Then
     DoInt()
+  ElseIf StringLeft($myCmd, 2) == 'iw' Then
+    if $myCmd == 'iw' Then
+	  $preDelay = $nextNum
+    Else
+	  $preDelay = StringMid($myCmd, 3)
+    EndIf
+	sleep($preDelay * 1000)
+    DoInt()
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
@@ -168,11 +178,12 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[11] = [ "-a, -b, -i, -m/-w, -o, -p, -r, -t or -x are the options.", _
+  Local $usgAry[12] = [ "-a, -b, -i, -iw, -m/-w, -o, -p, -r, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
+  "-iw = initial wait,", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
