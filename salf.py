@@ -1,11 +1,20 @@
+# salf.py
+#
+# section alphabetizer (for inform files)
+#
+# separate from salf.pl which is the Alec Smart section alphabetizer
+# confusing I know but it needs to be sorted
+#
+
 from collections import defaultdict
 from shutil import copy
 import os
 from filecmp import cmp
 
 copy_over = True
-show_dif = True
+show_dif = False
 force_copy = False
+verbose = False
 
 f1 = 'story.ni'
 f2 = 'story.ni2'
@@ -44,7 +53,7 @@ with open(f1) as file:
                     print("BAILING: line", line_num, "has", x, "but already in sort area", x)
                 in_sort = True
                 sort_name = x
-                print("Starting", x, "line", line_num)
+                if verbose: print("Starting", x, "line", line_num)
                 fout.write(line)
                 sort_string = ''
                 do_more = False
@@ -58,7 +67,7 @@ with open(f1) as file:
                 in_sort = False
                 fout.write(line)
                 do_more = False
-                print("stopped writing", line_num)
+                if verbose: print("stopped writing", line_num)
                 continue
         if do_more:
             if in_sort:
@@ -69,16 +78,19 @@ with open(f1) as file:
 fout.close()
 
 if show_dif:
-    os.system("wm story.ni story.ni2")
+    if cmp(f1, f2):
+        print(f1, "and", f2, "are identical. Not showing.")
+    else:
+        os.system("wm {:s} {:s}".format(f1, f2))
 else:
     print("Not showing differences.")
 
-s1 = os.stat('story.ni').st_size
-s2 = os.stat('story.ni2').st_size
+s1 = os.stat(f1).st_size
+s2 = os.stat(f2).st_size
 
 if copy_over:
     if cmp(f1, f2):
-        print(f1, "and", f2, "are identical. Not copying.")
+        print("Sorting the rules changed nothing. Not copying.")
         os.remove(f2)
         exit()
     elif s1 != s2 and not force_copy:
@@ -86,7 +98,7 @@ if copy_over:
         print(f1, s1)
         print(f2, s2)
         exit()
-    print("Copying back.")
+    print("Changes found, copying back.")
     copy(f2, f1)
 else:
     print("Use -c to copy over.")
