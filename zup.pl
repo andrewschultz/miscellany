@@ -46,6 +46,7 @@ my $launchAfter       = 0;
 my $launchFile        = "";
 my $dropLinkClipOnly  = 0;
 my $ignoreTimeFlips   = 0;
+my $bailOnFileSize    = 1;
 
 ##################variables
 my $count = 0;
@@ -81,6 +82,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?it$/ && do { $ignoreTimeFlips = 1; $count++; next; };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
+    /^-?[fi|if]$/ && do { $bailOnFileSize = 0; $count++; };
     /^-?nx$/
       && do { print "Executing no commands.\n"; $noExecute = 1; $count++; next; };
     /^-?eo$/ && do { $extractOnly = 1; $extractAfter = 1; $count++; next; };
@@ -99,6 +101,7 @@ while ( $count <= $#ARGV ) {
     /^-?d[qs]$/ && do {
       print "Quick/simple copying to Dropbox afterwards.\n";
       $dropboxSimpleCopy = 1;
+      $noExecute         = 1;
       $count++;
       next;
     };
@@ -223,6 +226,11 @@ sub readZupFile {
     for ($a) {
       /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
       /^!/ && do {
+        if ($dropboxSimpleCopy) {
+          print("Copying $outFile from $zipdir to $dbbin.\n");
+          print `copy "$zipdir\\$outFile" "$dbbin\\$outFile"`;
+          exit();
+        }
         $needExclam = 0;
         if ($dropLinkClip) {
           print "There is no dropbox link clip for this project.\n";
@@ -256,18 +264,18 @@ sub readZupFile {
             `$launchCmd`;
           }
         }
-        if ($dropboxSimpleCopy) {
-          print("Copying $outFile from $zipdir to $dbbin.\n");
-          print `copy "$zipdir\\$outFile" "$dbbin\\$outFile"`;
-        }
         print "-x specified but nothing to run.\n"
           if ( $executeBeforeZip && !$executedAny );
         print "Try -x to run executable commands"
           if ( !$executeBeforeZip && $executedAny );
         unless ($extractOnly) {
-          die("$outLong smaller than required $fileMinSize bytes.\n")
+          conditional_die(
+            "$outLong smaller than required $fileMinSize bytes.\n",
+            $bailOnFileSize )
             if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
-          die("$outLong larger than required $fileMaxSize bytes.\n")
+          conditional_die(
+            "$outLong larger than required $fileMaxSize bytes.\n",
+            $bailOnFileSize )
             if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
         }
         return;
@@ -475,12 +483,13 @@ USAGE: zupt.pl (project)
 -dq/ds does a quick dropbox copy
 -[ol] open after
 -eo extract only
+-fi/if = ignore bail on bad file size
 -li lists all the project/outfile matches
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands (x+ forces things in the file)
 -nx execute nothing (overrides -x)
--a = -x -db -dc -dl(without bailing). -o used to be part of this but no longer is.
+-a = -x -db -dc -dl(without bailing). -[ol] open after used to be part of this but no longer is.
 -?f = show example of formats
 EXAMPLE: zup.pl -dq -x 17
 EXAMPLE: zup.pl -eo 17
