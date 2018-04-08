@@ -54,7 +54,8 @@ our %i7x = ( "12" => "shuffling",
   "up" => "ailihphilia",
   "sw" => "spell-woken",
   "mo" => "molesworth",
-  "mw" => "molesworth"
+  "mw" => "molesworth",
+  "69" => "69105more"
 );
 
 our %i7xr = ( "shuffling" => "sa",

@@ -45,6 +45,12 @@ return (gg_scriptstr ~= 0);
 
 To decide whether currently transcripting: (- CheckTranscriptStatus() -)
 
+section avoid line breaks in consider/follow
+
+[thanks to climbingstars https://www.intfiction.org/forum/viewtopic.php?p=41700]
+
+To process (RL - a rule): (- ProcessRulebook({RL}, 0, true); -)
+
 book I figured this out! Yay!
 
 [this is useful if we have a problem that occurs before we make a single move]

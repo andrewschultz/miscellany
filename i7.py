@@ -125,7 +125,8 @@ i7x = { "12": "shuffling",
   "ai": "ailihphilia",
   "pu": "ailihphilia",
   "up": "ailihphilia",
-  "sw": "spell-woken"
+  "sw": "spell-woken",
+  "69": "69105more"
 };
 
 i7xr = { "shuffling": "sa",
