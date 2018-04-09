@@ -41,6 +41,7 @@ my $dropLinkClip      = 0;
 my $noExecute         = 0;
 my $dropCopy          = 0;
 my $dropboxSimpleCopy = 0;
+my $dropboxThisCopy   = 0;
 my $extractAfter      = 0;
 my $launchAfter       = 0;
 my $launchFile        = "";
@@ -77,10 +78,11 @@ while ( $count <= $#ARGV ) {
     };
     /^-?a$/ && do {
       print "Kitchen sink flags for ZUP.\n";
-      $executeBeforeZip = $dropboxSimpleCopy = $dropBinOpen = $dropLinkClip = 1;
+      $executeBeforeZip = $dropboxThisCopy = $dropBinOpen = $dropLinkClip = 1;
       $count++;
       next;
     };
+    /^-?dt$/ && do { $dropboxThisCopy = 1; $count++; next; };
     /^-?it$/ && do { $ignoreTimeFlips = 1; $count++; next; };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
     /^-?[fi|if]$/ && do { $bailOnFileSize = 0; $count++; };
@@ -103,6 +105,7 @@ while ( $count <= $#ARGV ) {
       print "Quick/simple copying to Dropbox afterwards.\n";
       $dropboxSimpleCopy = 1;
       $noExecute         = 1;
+      $deleteBefore      = 0;
       $count++;
       next;
     };
@@ -229,16 +232,19 @@ sub readZupFile {
     next if !$zipUp;
     next if $a =~ /^#/;
 
+    # print "$a\n";
+
     for ($a) {
       /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
       /^!/ && do {
         if ($dropboxSimpleCopy) {
           print("Copying $outFile from $zipdir to $dbbin.\n");
-          print `copy "$zipdir\\$outFile" "$dbbin\\$outFile"`;
+          my $cmd = "copy \"$zipdir\\$outFile\" \"$dbbin\\$outFile\"";
+          print `$cmd`;
           exit();
         }
         $needExclam = 0;
-        if ($dropLinkClip) {
+        if ( $dropLinkClip && !$dropboxLink ) {
           print "There is no dropbox link clip for this project.\n";
           exit;
         }
@@ -284,8 +290,14 @@ sub readZupFile {
             $bailOnFileSize )
             if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
         }
+        if ($dropboxThisCopy) {
+          print("Copying $outFile from $zipdir to $dbbin.\n");
+          my $cmd = "copy \"$zipdir\\$outFile\" \"$dbbin\\$outFile\"";
+          print `$cmd`;
+        }
         return;
       };
+      next if $dropboxSimpleCopy;
       /^out=/i && do {
         $a =~ s/^out=//gi;
         $outFile = $a;
@@ -295,8 +307,10 @@ sub readZupFile {
           exit();
         }
         elsif ($deleteBefore) {
-          print("Deleting $outFile\n");
-          unlink <$outFile>;
+          if ( -f $outFile ) {
+            print("Deleting c:/games/inform/zip/$outFile, suppress with -nd\n");
+            unlink <"c:/games/inform/zip/$outFile">;
+          }
         }
         else {
           print("Not deleting $outFile\n");
@@ -309,15 +323,6 @@ sub readZupFile {
         my @b = split( /,/, $a );
         $zip->addTree( "$b[0]", "$b[1]" )
           ;    #print "Added tree: $b[0] to $b[1].\n";
-        next;
-      };
-      /^(x:|>>)/i && do {
-        if ($noExecute) { next; }
-        my $cmd = $a;
-        $cmd =~ s/^(x:|>>)//gi;
-        print "Running $cmd\n";
-        $temp = `$cmd`;
-        if ($printExecute) { print $temp; }
         next;
       };
       /^min:/ && do {
@@ -334,12 +339,12 @@ sub readZupFile {
           if ( $fileMaxSize > 0 ) && ( $fileMaxSize < $fileMinSize );
         next;
       };
-      /^x(\+)?:/ && do {
+      /^(x:|>>)/i && do {
         $executedAny = 1;
         next if $noExecute;
         if ( $executeBeforeZip || ( $a =~ /^x\+/i ) ) {
           my $cmd = $a;
-          $cmd =~ s/^x\+://gi;
+          $cmd =~ s/^(x:|>>)//gi;
           print( $executeBeforeZip ? "Running" : "Forcing" );
           print " $cmd\n";
           $temp = `$cmd`;
@@ -428,7 +433,7 @@ sub readZupFile {
         }
         $zip->addFile( "$a", "$b" );
 
-        #print "Writing $a to $b.\n";
+        # print "Writing $a to $b.\n";
         next;
       };
       /^c:/i && do {
