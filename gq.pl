@@ -402,10 +402,14 @@ sub processFiles {
       push( @gots, $x );
     }
   }
-  if ( $#blanks > -1 ) {
-    print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
+  if ( $#gots == -1 ) {
+    print
+"No matches anywhere! This is good, if you're redacting, or bad, if you hoped to find something.\n";
   }
-  if ( $#gots > -1 ) {
+  else {
+    if ( $#blanks > -1 ) {
+      print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
+    }
     print "FILES WITH MATCHES: "
       . join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
   }

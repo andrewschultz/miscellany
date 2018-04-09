@@ -47,6 +47,7 @@ my $launchFile        = "";
 my $dropLinkClipOnly  = 0;
 my $ignoreTimeFlips   = 0;
 my $bailOnFileSize    = 1;
+my $deleteBefore      = 1;
 
 ##################variables
 my $count = 0;
@@ -102,6 +103,11 @@ while ( $count <= $#ARGV ) {
       print "Quick/simple copying to Dropbox afterwards.\n";
       $dropboxSimpleCopy = 1;
       $noExecute         = 1;
+      $count++;
+      next;
+    };
+    /^-?nd$/ && do {
+      $deleteBefore = 0;
       $count++;
       next;
     };
@@ -287,6 +293,13 @@ sub readZupFile {
           if   ( -f "$outFile" ) { `$outFile`; }
           else                   { print "No file $outFile.\n"; }
           exit();
+        }
+        elsif ($deleteBefore) {
+          print("Deleting $outFile\n");
+          unlink <$outFile>;
+        }
+        else {
+          print("Not deleting $outFile\n");
         }
         $zip = Archive::Zip->new();
         next;
@@ -485,6 +498,7 @@ USAGE: zupt.pl (project)
 -eo extract only
 -fi/if = ignore bail on bad file size
 -li lists all the project/outfile matches
+-nd = don't delete before (default is to delete output file)
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands (x+ forces things in the file)
