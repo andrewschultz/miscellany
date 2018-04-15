@@ -29,9 +29,10 @@ Const $BURST_OF_FLAME = 0, $ETHEREAL_SURGE = 1, $EARTHQUAKE = 2, $CHILLING_FROST
 Local $xi = 540, $yi = 980, $xd = 190
 
 ; constants for click frequency
-Local $clicks = 0, $clicks2 = 0, $delay = 10000
+Local $clicks = 0, $clicks2 = 0, $delay = 6000
 Local $cmdCount = 1
 Local $nextCmd = 2
+Local $lastCmd = 0
 
 Local $preDelay = 0
 
@@ -56,10 +57,11 @@ If $cmdLine[0] == 1 and StringIsDigit($cmdLine[1]) Then
 EndIf
 
 While $cmdCount <= $CmdLine[0]
-  if $cmdCount == $nextCmd Then
+  if $cmdCount == $lastCmd Then
     MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " vs " & $nextCmd & " in full array " & _ArrayToString($CmdLine, "/", "1:"))
 	exit
   EndIf
+  $lastCmd = $cmdCount
   $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
@@ -69,6 +71,9 @@ While $cmdCount <= $CmdLine[0]
   if StringIsDigit(StringMid($myCmd, 2)) Then
     $nextNum = StringMid($myCmd, 2)
 	$myCmd = StringLeft($myCmd, 1)
+  ElseIf StringIsDigit(StringMid($myCmd, 3)) Then ; this is not great code. Ideally we'd define a regex
+    $nextNum = StringMid($myCmd, 3)
+	$myCmd = StringLeft($myCmd, 2)
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
 	$nextCmd = $cmdCount + 2
@@ -105,13 +110,16 @@ While $cmdCount <= $CmdLine[0]
     Next
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * GetNumArgOrBail($cmdCount+1)
+	$nextCmd = $cmdCount + 2
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
     if $myCmd == 'iw' Then
 	  $preDelay = $nextNum
+	  $nextCmd = $cmdCount + 2
     Else
 	  $preDelay = StringMid($myCmd, 3)
+	  $nextCmd = $cmdCount + 1
     EndIf
 	sleep($preDelay * 1000)
     DoInt()

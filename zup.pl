@@ -252,6 +252,10 @@ sub readZupFile {
           die("OutFile not defined. You need a line with out=X.ZIP in $_[0].");
         }
         my $outLong = "c:/games/inform/zip/$outFile";
+        if ($deleteBefore) {
+          print "Deleting $outLong, suppress with -db\n";
+          unlink <"c:/games/inform/zip/$outFile">;
+        }
         unless ($extractOnly) {
           print "Writing to $outLong...\n";
           die 'write error'
@@ -281,13 +285,11 @@ sub readZupFile {
         print "Try -x to run executable commands"
           if ( !$executeBeforeZip && $executedAny );
         unless ($extractOnly) {
-          conditional_die(
-            "$outLong smaller than required $fileMinSize bytes.\n",
-            $bailOnFileSize )
+          conditional_die( $bailOnFileSize,
+            "$outLong smaller than minimum bound $fileMinSize bytes.\n" )
             if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
-          conditional_die(
-            "$outLong larger than required $fileMaxSize bytes.\n",
-            $bailOnFileSize )
+          conditional_die( $bailOnFileSize,
+            "$outLong larger than maximum bound $fileMaxSize bytes.\n" )
             if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
         }
         if ($dropboxThisCopy) {
