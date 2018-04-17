@@ -65,7 +65,8 @@ OpenIDE($project)
 ;
 
 Func OpenIDE($project)
-  if (WinExists($project & ".inform - Inform")) Then
+  $toCheck = "[REGEXPTITLE:$project" & ".inform\*? - Inform]"
+  if (WinExists($toCheck)) Then
     Local $fileTimeA = FileGetTime($dirToCheck & "\\source\\story.ni", $FT_MODIFIED, $FT_ARRAY)
 	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
 	Local $nowTime = _NowCalc()
@@ -73,8 +74,8 @@ Func OpenIDE($project)
 	if $dd >= 23 Then
       ; MsgBox($MB_OK, $dd & " hours since last change, not building", "Blah")
 	  ; only activate this
-      WinActivate($project & ".inform - Inform");
-      WinWaitActive($project & ".inform - Inform");
+      WinActivate($toCheck);
+      WinWaitActive($toCheck);
 	  return
     Endif
   Endif
