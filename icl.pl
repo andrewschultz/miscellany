@@ -30,6 +30,7 @@ my $infOnly            = 0;
 my $checkRecentChanges = 0;
 my $ignoreDRBPrefix    = 0;
 my $debugTables        = 0;
+my $forceBuild         = 0;
 
 my $infDir;
 
@@ -137,6 +138,11 @@ while ( $count <= $#ARGV ) {
       $buildSpecified = 1;
       $debug          = 1;
       $runBeta        = $release = 0;
+      $count++;
+      next;
+    };
+    /^-?fb$/ && do {
+      $forceBuild = 1;
       $count++;
       next;
     };
@@ -335,9 +341,14 @@ sub doOneBuild {
   }
   my $outFinal = "$_[2]\\Release\\$blorbFileShort";
 
+  my $lastmod = ( stat($tempSource) )[9];
+  my $infmod = -f "$outFinal" ? ( stat($outFinal) )[9] : 0;
+  if ( !$forceBuild ) {
+    die(
+"$tempSource has timestamp before $outFinal.\nBailing. Use -fb to go anyway"
+    ) if ( $lastmod < $infmod );
+  }
   if ($checkRecentChanges) {
-    my $lastmod = ( stat($tempSource) )[9];
-    my $infmod = -f "$outFinal" ? ( stat($outFinal) )[9] : 0;
 
     if ( defined($lastmod) && ( $lastmod < $infmod ) ) {
       my $delta1 = time() - $lastmod;
@@ -612,6 +623,7 @@ USAGE
 -e edits the icl.txt file
 -np = no prefix in export file
 -td/dt = debug tables on, -ndt/ntd off
+-fb = force build even if source file timestamp < binary timestamp
 EOT
   exit;
 }
