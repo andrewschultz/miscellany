@@ -26,6 +26,7 @@ my %hasBranch;
 
 ################options
 my $debug     = 0;
+my $showLog   = 1;
 my $popup     = 0;
 my $unchAfter = 0;
 
@@ -51,11 +52,13 @@ while ( $count <= $#ARGV ) {
       `start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"`;
       exit();
     };
-    /^-?d$/  && do { $debug               = 1; $count++; next; };
-    /^-nmw$/ && do { $masterBranchWarning = 0; $count++; next; };
-    /^-mw$/  && do { $masterBranchWarning = 1; $count++; next; };
-    /^-?p$/  && do { $popup               = 1; $count++; next; };
-    /^-?u$/  && do { $unchAfter           = 1; $count++; next; };
+    /^-?d$/    && do { $debug               = 1; $count++; next; };
+    /^-?sl$/   && do { $showLog             = 1; $count++; next; };
+    /^-?nsl?$/ && do { $showLog             = 0; $count++; next; };
+    /^-nmw$/   && do { $masterBranchWarning = 0; $count++; next; };
+    /^-mw$/    && do { $masterBranchWarning = 1; $count++; next; };
+    /^-?p$/    && do { $popup               = 1; $count++; next; };
+    /^-?u$/    && do { $unchAfter           = 1; $count++; next; };
     /^-?[es]$/ && do { `$siteFile`; exit(); };
     /^-?\d+$/ && do {
       $daysAgo = $ARGV[0];
@@ -138,7 +141,8 @@ for $r (@repos) {
       print "WARNING: $r repo has non-master change.\n";
     }
   }
-  print getcwd() . ": $cmd\n" . cutDown($thisLog) if $debug;
+  print getcwd() . ": $cmd\n" if $debug;
+  print cutDown( $thisLog, "$r/$branch" ) if $debug || $showLog;
   ( my $rbase = $r ) =~ s/\/.*//;
 
   # print "$r $rbase\n";
@@ -200,7 +204,8 @@ sub cutDown {
   my $retVal = "";
   while ( $#x > $c * 6 ) {
     $x[ 2 + $c * 6 ] =~ s/^Date/'Date ' . ($c+1)/e;
-    $retVal .= "$x[2+$c*6]\nChange " . ( $c + 1 ) . ":$x[4+$c*6]\n";
+    $retVal .= ( $debug ? "$x[2+$c*6]\nC" : "$_[1] c" );
+    $retVal .= "hange " . ( $c + 1 ) . ":$x[4+$c*6]\n";
     $c++;
   }
 
@@ -214,6 +219,7 @@ sub usage {
 -nw/nmw (no) master warnings
 -c open this source
 -d debug (or detail, to see log details)
+-sl show only log details default=$showLog, -ns/-nsl = don't show
 -p pop up results
 -[es] open site file
 -u run unch.pl afterwards
