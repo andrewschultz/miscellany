@@ -145,7 +145,7 @@ while ( $count <= $#ARGV ) {
     /^-?#$/    && do { $forceNum      = 1; $count++; next; };
     / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
     /^-? zb $/ && do { $zapBrackets   = 1; $count++; next; };
-    /^-?mo$/   && do {
+    /^-mo$/    && do {
 
       if ( $b < 0 ) {
         print
@@ -173,7 +173,7 @@ while ( $count <= $#ARGV ) {
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^[\\0-9a-z'\.][\\0-9a-z'\.-]+$/i && do {
       $a =~ s/-$//;    # another way to avoid, say, as instead of AS
-      if ( $i7x{$a} ) {
+      if ( defined( $map{$a} ) ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
         push( @thisAry, $map{$a} );
       }

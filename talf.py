@@ -14,6 +14,7 @@ import os
 import sys
 import i7
 import re
+import ctypes
 
 ignore_sort = defaultdict(lambda:defaultdict(str))
 table_sort = defaultdict(lambda:defaultdict(str))
@@ -21,11 +22,13 @@ default_sort = defaultdict(str)
 files_read = defaultdict(str)
 need_to_catch = defaultdict(lambda:defaultdict(str))
 okay = defaultdict(lambda:defaultdict(str))
+err_line = defaultdict(int)
 
 onoff = ['off', 'on']
 
 table_default_file = "c:/writing/scripts/talf.txt"
 
+popup_err = False
 copy_over = False
 launch_dif = True
 override_source_size_differences = False
@@ -41,6 +44,7 @@ def usage():
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
     print("-si shows all ignored tables.")
+    print("-p = popup on error.")
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
@@ -64,6 +68,9 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
                 return("zzzz" + re.sub("\"", "", ary[b]))
             if "[na " not in ary[b]:
                 print("Bad activation/na:", orig)
+                if popup_err:
+                    messageBox = ctypes.windll.user32.MessageBoxW
+                    messageBox(None, 'Did not sort\n{:s}\n{:d}'.format(a, err_line[a]), 'Problems sorting stuff', 0x0)
                 exit()
             return("zz" + re.sub(".*\[na ", "", ary[b]))
         arb = re.sub("^.*?activation of ", "", ary[b])
@@ -233,6 +240,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     temp_out = open(f2, "w", newline="\n")
     has_default = f in default_sort.keys()
     line_count = 0
+    err_line.clear()
     with open(f) as file:
         for line in file:
             line_count = line_count + 1
@@ -249,7 +257,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     row_array = []
                     temp_out.write(line)
                 else:
-                    row_array.append(line.strip())
+                    row_array.append(line.strip().lower())
+                    err_line[line.strip().lower()] = line_count
                 continue
             if in_table:
                 if line.startswith("[") or not line.strip():
@@ -353,6 +362,10 @@ while count < len(sys.argv):
         launch_dif = True
     elif arg == 'nl':
         launch_dif = False
+    elif arg == 'p':
+        popup_err = True
+    elif arg == 'np':
+        popup_err = False
     elif arg == 'c':
         copy_over = True
     elif arg == 'ec':

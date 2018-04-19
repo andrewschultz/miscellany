@@ -116,6 +116,7 @@ my $since =
   : "--since=\"12 am\"";    #yes, git log accepts "1 days ago" which is nice
 
 print "Running on all dirs: $cmdBase ... $since\n";
+print "-ns to remove logs\n" if $showLog && !$debug;
 
 my $branch = "master";
 my $subdir = "";
