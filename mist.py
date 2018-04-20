@@ -6,18 +6,18 @@ from collections import defaultdict
 
 # ary = ['roiling', 'shuffling']
 # ary = ['shuffling']
-ary = ['roiling']
+ary = ['ailihphilia']
 
-short = { 'shuffling':'sa', 'roiling':'roi' }
-files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
-  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-demo-dome-nudges.txt'] }
+srev = defaultdict(str)
 
-write_file = False
-verbose = False
+short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'w':
-        write_file = True
+for x in short:
+    srev[short[x]] = x
+
+def to_full(a):
+    if a in srev.keys(): return srev[a]
+    return a
 
 def mister(a):
     need_test = defaultdict(int)
@@ -108,17 +108,20 @@ def mister(a):
                     ll = ""
                     test_note = ""
         if write_file:
-            out_file = source_dir + "pro" + fi
+            out_file = source_dir + "pro-" + short_fi
             fout = open(out_file, "w")
             print("Writing", out_file)
-            with open(source_dir + fi) as file:
+            mistakes_added = 0
+            with open(fi) as file:
                 count = 0
                 for line in file:
                     count = count + 1
                     if count in extra_text.keys():
-                        fout.write("##mistake test for" + extra_text[count] + "\n")
+                        fout.write("##mistake test for " + extra_text[count] + "\n")
+                        mistakes_added = mistakes_added + 1
                     fout.write(line)
             fout.close()
+            print(mistakes_added, "total mistakes added.")
     find_count = 0
     for f in sorted(found.keys(), key=need_test.get):
         if found[f] == False:
@@ -132,6 +135,26 @@ def mister(a):
                 print('>' + re.sub("\[text\]", "zozimus", ct))
                 print(mistake_text[f])
             print()
+
+files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
+  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-demo-dome-nudges.txt'],
+  'ailihphilia': ['c:/games/inform/roiling.inform/source/reg-ail-thru.txt' ]
+}
+
+write_file = False
+verbose = False
+
+if len(sys.argv) > 1:
+    count = 1
+    while count < len(sys.argv):
+        if sys.argv[count] == 'w':
+            write_file = True
+        elif sys.argv[count] == 'nw':
+            write_file = False
+        else:
+            atemp = sys.argv[count].split(',')
+            ary = [to_full(x) for x in atemp]
+        count = count + 1
 
 for e in ary:
     mister(e)
