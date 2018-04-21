@@ -28,6 +28,17 @@ def do_one_sort(sort_string, out_file):
     fout.write("\n" + ow + "\n\n")
     return
 
+# start main
+
+if len(sys.argv) > 1:
+    go_proj(sys.argv[1]))
+else:
+    print("Using current directory.")
+
+if not os.path.exists('story.ni'):
+    print("No story.ni in path. Please check and try again.")
+    exit()
+
 fout = open(f2, "w", newline="\n")
 
 with open("salf.txt") as file:

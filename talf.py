@@ -70,7 +70,7 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
                 print("Bad activation/na:", orig)
                 if popup_err:
                     messageBox = ctypes.windll.user32.MessageBoxW
-                    messageBox(None, 'Did not sort\n{:s}\n{:d}'.format(a, err_line[a]), 'Problems sorting stuff', 0x0)
+                    messageBox(None, 'Did not sort\n{:s}\n{:d}'.format(a, err_line[a.lower()]), 'Problems sorting stuff', 0x0)
                 exit()
             return("zz" + re.sub(".*\[na ", "", ary[b]))
         arb = re.sub("^.*?activation of ", "", ary[b])
@@ -257,7 +257,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     row_array = []
                     temp_out.write(line)
                 else:
-                    row_array.append(line.strip().lower())
+                    row_array.append(line.strip())
                     err_line[line.strip().lower()] = line_count
                 continue
             if in_table:
