@@ -25,6 +25,7 @@ my $check  = "c:\\writing\\scripts\\hrcheck.txt";
 my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code   = "c:\\writing\\scripts\\hrcheck.pl";
 
+my $bailFile   = "c:\\writing\\scripts\\hrcheck-bailfile.txt";
 my $xtraFile   = "c:\\writing\\scripts\\hrcheckx.txt";
 my $anyExtra   = 0;
 my @extraFiles = ();
@@ -70,6 +71,20 @@ my $gotTime, my $hourTemp, my $minuteTemp;
 
 my $last = -1;
 
+open( A, $bailFile ) || die("No $bailFile");
+while ( $a = <A> ) {
+  if ( $a =~ /bail/ ) {
+    my $rem = time() % 86400;
+    if ( $rem > 18000 && $rem < 19800 ) {
+      Win32::MsgBox("You may wish to edit $bailFile.");
+    }
+    else {
+      print("BAIL in $bailFile. Delete for full run.\n");
+    }
+    exit();
+  }
+}
+
 while ( $count <= $#ARGV ) {
   die "Oops infinite loop" if ( $last == $count );
   $a = $ARGV[$count];
@@ -106,7 +121,11 @@ while ( $count <= $#ARGV ) {
     /^-?pop$/ && do { $popupIfAbort         = 1; $count++; next; };
     /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
     /^-?f$/i
-      && do { @extraFiles = ( @extraFiles, split( /,/, $b ) ); $count += 2; next; };
+      && do {
+      @extraFiles = ( @extraFiles, split( /,/, $b ) );
+      $count += 2;
+      next;
+      };
     /^-?h$/i && do { @extraFiles = (); $anyExtra = 0; $count++; next; };
     /^-?x$/i && do {
       if ( $extraFiles[0] eq $xtraFile ) {
@@ -168,7 +187,8 @@ if ( !$anyExtra ) {
 }
 else {
   print(
-    "If tests you don't want to run are popping up, you may wish to run -h.\n");
+    "If tests you don't want to run are popping up, you may wish to run -h.\n"
+  );
 }
 
 sub hrcheck {
@@ -198,7 +218,11 @@ sub hrcheck {
     }
     if ( $line =~ /^--/ )   { $ignore = 1; next; }
     if ( $line =~ /^\+\+/ ) { $ignore = 0; next; }
-    if ( $line eq "==" ) { $autoBookmark = 0; $ignoreHiddenBookmark = 0; next; }
+    if ( $line eq "==" ) {
+      $autoBookmark         = 0;
+      $ignoreHiddenBookmark = 0;
+      next;
+    }
     if ( $autoBookmark && ( $line =~ /^=[^=]/ ) ) {
       die("Forgot to close with == before opening another = tab.");
     }
