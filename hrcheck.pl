@@ -118,7 +118,20 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
-    /^-?pop$/ && do { $popupIfAbort         = 1; $count++; next; };
+    /^-?pop$/ && do { $popupIfAbort = 1; $count++; next; };
+    /^-?nb$/ && do {
+      open( B, ">$bailFile" );
+      close(B);
+      $count++;
+      next;
+    };
+    /^-?ba$/ && do {
+      open( B, ">$bailFile" );
+      print B "bail\n";
+      close(B);
+      $count++;
+      next;
+    };
     /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
     /^-?f$/i
       && do {
