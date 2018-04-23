@@ -364,7 +364,9 @@ Func ToHome()
 EndFunc
 
 Func Init()
+  HotKeySet("{F6}", "Bail")
   HotKeySet("{F7}", "Bail")
+  HotKeySet("{F9}", "Bail")
   HotKeySet("{F10}", "Bail")
   HotKeySet("{F11}", "Bail")
 EndFunc

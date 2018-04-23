@@ -4,8 +4,11 @@ import os
 file_list = []
 file_array = []
 
+line_count = 0
+
 with open("rbr-ail-thru.txt") as file:
     for line in file:
+        line_count = line_count + 1
         if len(file_array) == 0:
             file_array = line.lower().strip().split(',')
             actives = [False] * len(file_array)
@@ -14,6 +17,16 @@ with open("rbr-ail-thru.txt") as file:
                 file_list.append(f)
             continue
         if len(actives) == 0: continue
+        if line.startswith("==+"):
+            ll = line.lower().strip()[3:]
+            for x in ll.split(','):
+                if x.isdigit():
+                    actives[int(x)] = True
+        if line.startswith("==-"):
+            ll = line.lower().strip()[3:]
+            for x in ll.split(','):
+                if x.isdigit():
+                    actives[int(x)] = False
         if line.startswith("==="):
             ll = re.sub("^=+", "", line.lower().strip())
             la = ll.split(',')
