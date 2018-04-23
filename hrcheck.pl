@@ -71,20 +71,6 @@ my $gotTime, my $hourTemp, my $minuteTemp;
 
 my $last = -1;
 
-open( A, $bailFile ) || die("No $bailFile");
-while ( $a = <A> ) {
-  if ( $a =~ /bail/ ) {
-    my $rem = time() % 86400;
-    if ( $rem > 18000 && $rem < 19800 ) {
-      Win32::MsgBox("You may wish to edit $bailFile.");
-    }
-    else {
-      print("BAIL in $bailFile. Delete for full run.\n");
-    }
-    exit();
-  }
-}
-
 while ( $count <= $#ARGV ) {
   die "Oops infinite loop" if ( $last == $count );
   $a = $ARGV[$count];
@@ -119,17 +105,22 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?pop$/ && do { $popupIfAbort = 1; $count++; next; };
-    /^-?nb$/ && do {
+    /^-?nb([fa])?$/ && do {
       open( B, ">$bailFile" );
       close(B);
+      print "Setting auto-bail OFF.\n";
+      die("Run again without -ba to execute dailies.\n") unless ( $a =~ /f/ );
       $count++;
+      exit();
       next;
     };
     /^-?ba$/ && do {
       open( B, ">$bailFile" );
       print B "bail\n";
       close(B);
+      print "Setting auto-bail ON. Run again without -ba to execute dailies.\n";
       $count++;
+      exit();
       next;
     };
     /^-?is$/i && do { $overrideSemicolonEnd = 1; $count++; next; };
@@ -167,6 +158,20 @@ while ( $count <= $#ARGV ) {
     usage();
   }
   $last = $count;
+}
+
+open( A, $bailFile ) || die("No $bailFile");
+while ( $a = <A> ) {
+  if ( $a =~ /bail/ ) {
+    my $rem = time() % 86400;
+    if ( $rem > 18000 && $rem < 19800 ) {
+      Win32::MsgBox("You may wish to edit $bailFile.");
+    }
+    else {
+      print("BAIL in $bailFile. Delete for full run.\n");
+    }
+    exit();
+  }
 }
 
 my (
