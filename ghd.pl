@@ -199,15 +199,28 @@ if ($unchAfter) {
 #subroutines
 
 sub cutDown {
-  my @x      = split( /\n/, $_[0] );
+  my @x      = reverse( split( /\n/, $_[0] ) );
   my $count  = 0;
   my $c      = 0;
   my $retVal = "";
-  while ( $#x > $c * 6 ) {
-    $x[ 2 + $c * 6 ] =~ s/^Date/'Date ' . ($c+1)/e;
-    $retVal .= ( $debug ? "$x[2+$c*6]\nC" : "$_[1] c" );
-    $retVal .= "hange " . ( $c + 1 ) . ":$x[4+$c*6]\n";
-    $c++;
+  my $temp;
+  while ( $count <= $#x ) {
+    if ( $x[$count] =~ /^Date/ ) {
+      ( $temp = $x[$count] ) =~ s/^Date/'Date ' . ($c+1)/e;
+
+# note if we want to include the date we may need serious shuffling. This code is doing nothing at the moment.
+# the 'reverse' put the date after the commit message which makes things tricky
+
+      #$retVal .= "$temp\n";
+    }
+    elsif ( $x[$count] =~ /^    / ) {
+      $c++;
+      ( $temp = $x[$count] ) =~ s/^ +/'Change ' . $c . ': '/e;
+      $retVal .= "$_[1] $temp\n";
+    }
+    $count++;
+
+    # $retVal .= ( $debug ? "$x[2+$c*6]\nC" : "$_[1] c" );
   }
 
   return $retVal;
