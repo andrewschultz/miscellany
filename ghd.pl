@@ -202,7 +202,7 @@ sub cutDown {
   my @x      = reverse( split( /\n/, $_[0] ) );
   my $count  = 0;
   my $c      = 0;
-  my $retVal = "";
+  my $retVal = ( $debug || $_[0] ? "======$_[1] summary\n" : "" );
   my $temp;
   while ( $count <= $#x ) {
     if ( $x[$count] =~ /^Date/ ) {
