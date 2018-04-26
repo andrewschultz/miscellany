@@ -17,7 +17,9 @@ for x in short:
 
 def to_full(a):
     if a in srev.keys(): return srev[a]
-    return a
+    if a in short.keys(): return a
+    print(a, "not a project with a recognized mistake file.")
+    exit()
 
 def mister(a):
     need_test = defaultdict(int)
@@ -97,7 +99,7 @@ def mister(a):
                         if ll in need_test.keys():
                             if found[ll] is False:
                                 err_count = err_count + 1
-                                print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
+                                if print_output: print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
                             found[ll] = True
                     if test_note in found.keys():
@@ -126,15 +128,16 @@ def mister(a):
     for f in sorted(found.keys(), key=need_test.get):
         if found[f] == False:
             find_count = find_count + 1
-            if verbose:
-                print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
-            else:
-                print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
-                print('#mistake test for', f)
-            for ct in cmd_text[f].split('/'):
-                print('>' + re.sub("\[text\]", "zozimus", ct))
-                print(mistake_text[f])
-            print()
+            if print_output:
+                if verbose:
+                    print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
+                else:
+                    print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
+                    print('#mistake test for', f)
+                for ct in cmd_text[f].split('/'):
+                    print('>' + re.sub("\[text\]", "zozimus", ct))
+                    print(mistake_text[f])
+                print()
 
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
   'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-demo-dome-nudges.txt'],
@@ -142,19 +145,36 @@ files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt
 }
 
 write_file = False
+print_output = True
 verbose = False
 
 if len(sys.argv) > 1:
     count = 1
     while count < len(sys.argv):
-        if sys.argv[count] == 'w':
+        arg = sys.argv[count]
+        if arg[0] == '-': arg = arg[1:]
+        if arg == 'w':
             write_file = True
-        elif sys.argv[count] == 'nw':
+        elif arg == 'nw':
+            write_file = False
+        elif arg == 'wo':
+            write_file = True
+            print_output = False
+        elif arg == 'np':
+            print_output = False
+        elif arg == 'p':
+            print_output = True
+        elif arg == 'po':
+            print_output = True
             write_file = False
         else:
-            atemp = sys.argv[count].split(',')
+            atemp = arg.split(',')
             ary = [to_full(x) for x in atemp]
         count = count + 1
+
+if not write_file and not print_output:
+    print("You need to write a file or print output.")
+    exit()
 
 for e in ary:
     mister(e)
