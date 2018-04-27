@@ -9,8 +9,17 @@ from collections import defaultdict
 ary = ['ailihphilia']
 
 srev = defaultdict(str)
+condition = defaultdict(str)
 
 short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
+
+def usage():
+    print("-w/-nw = write or don't")
+    print("-c/-nc = write conditions or don't")
+    print("-p/-np = print or don't")
+    print("-po/-wo = print or write only")
+    print("Other arguments are the project name, short or long")
+    exit()
 
 for x in short:
     srev[short[x]] = x
@@ -101,6 +110,8 @@ def mister(a):
                                 err_count = err_count + 1
                                 if print_output: print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
+                            ll2 = re.sub(".*when", "", line.strip().lower())
+                            condition[count] = ll2
                             found[ll] = True
                     if test_note in found.keys():
                         found[test_note] = True
@@ -120,6 +131,8 @@ def mister(a):
                     count = count + 1
                     if count in extra_text.keys():
                         fout.write("##mistake test for " + extra_text[count] + "\n")
+                        if print_condition:
+                            fout.write("##conditions " + condition[count])
                         mistakes_added = mistakes_added + 1
                     fout.write(line)
             fout.close()
@@ -134,6 +147,8 @@ def mister(a):
                 else:
                     print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
                     print('#mistake test for', f)
+                if print_condition:
+                    print("##conditions", condition[f])
                 for ct in cmd_text[f].split('/'):
                     print('>' + re.sub("\[text\]", "zozimus", ct))
                     print(mistake_text[f])
@@ -147,6 +162,7 @@ files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt
 write_file = False
 print_output = True
 verbose = False
+print_condition = True
 
 if len(sys.argv) > 1:
     count = 1
@@ -157,6 +173,10 @@ if len(sys.argv) > 1:
             write_file = True
         elif arg == 'nw':
             write_file = False
+        elif arg == 'c':
+            print_condition = True
+        elif arg == 'nc':
+            print_condition = False
         elif arg == 'wo':
             write_file = True
             print_output = False
@@ -168,6 +188,7 @@ if len(sys.argv) > 1:
             print_output = True
             write_file = False
         else:
+            print(count, arg)
             atemp = arg.split(',')
             ary = [to_full(x) for x in atemp]
         count = count + 1
