@@ -26,6 +26,11 @@ def hfile(x, y):
     x2 = re.sub("-", " ", x)
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
+def lpro(x):
+    if x in i7xr.keys(): return x
+    if x in i7x.keys(): return i7x[x]
+    return ''
+
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(i7x[x] if x in i7x.keys() else x)
 

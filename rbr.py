@@ -52,14 +52,18 @@ def get_file(x):
 with open('c:/writing/scripts/rbr.txt') as file:
     for line in file:
         if line.startswith(';'): break
+        if line.lower().startswith('default'):
+            j = re.sub(r'^default([:=])?', "", line.strip().lower())
+            def_proj = j
+            continue
         j = line.strip().lower().split("\t")
         if len(j) < 2:
             print("Need tab in", line.strip())
-        if j[0] in i7.i7x.keys():
-            hk = i7.i7x[j[0]]
+        hk = i7.lpro(j[0])
+        if hk:
+            def_file[hk] = j[1]
         else:
-            hk = j[0]
-        def_file[hk] = j[1]
+            print(j[0], hk, "not recognized as project or shortcut")
 
 count = 1
 
@@ -72,5 +76,15 @@ while count < len(sys.argv):
     elif os.path.exists(arg):
         in_file = arg
     count = count + 1
+
+if not in_file:
+    myd = os.getcwd()
+    if i7.dir2proj(myd):
+        in_file = myd + "/" + def_file[i7.dir2proj(myd)]
+    if not in_file:
+        in_file = sdir(def_proj) + "/" + def_file(def_proj)
+        print("Going with default", def_proj, "to", in_file)
+    else:
+        print("Getting file from current directory", in_file)
 
 get_file(in_file)
