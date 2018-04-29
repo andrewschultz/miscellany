@@ -28,6 +28,7 @@ default_room_level = 'chapter'
 levs = { }
 
 def usage():
+    print("-f# = max # of missing mistake tests to find")
     print("-a/-na = check stuff afte or don't")
     print("-w/-nw = write or don't")
     print("-c/-nc = write conditions or don't")
@@ -68,7 +69,7 @@ def mister(a):
                 special_def = re.sub("^\[def=", "", l)
                 special_def = re.sub("\].*", "", special_def)
                 continue
-            if re.search("understand.*as a mistake", l, re.IGNORECASE):
+            if re.search("understand.*as a mistake", l, re.IGNORECASE) and not l.startswith('['):
                 cmd = re.sub("understand +\"", "", l)
                 cmd = re.sub("\" as a mistake.*", "", cmd)
                 cmd = re.sub("\"", "", cmd)
@@ -78,6 +79,7 @@ def mister(a):
                 else:
                     x = cmd
                 # print("OK,", x)
+                x = x.lower()
                 cmd_text[x] = cmd
                 mistake_text[x] = re.sub(".*\(\"", "", l)
                 mistake_text[x] = re.sub("\"\).*", "", mistake_text[x])
@@ -117,9 +119,11 @@ def mister(a):
                     print('Line', count, 'says text not test.')
                     continue
                 if line.startswith("##mistake"):
-                    print('Line', count, 'says text not test.')
+                    print('Line', count, 'has one two many pound signs.')
                     continue
-                if line.startswith("##condition(s)") or line.startswith("##location(s)"):
+                if line.startswith('#') and 'to find' in line:
+                    print('Line', count, 'comment mentions search info:', line.strip().lower())
+                if line.startswith("##condition(s)") or line.startswith("##location"):
                     print('Line', count, 'has helper text to remove:', line.strip().lower())
                 retest = False
                 if line.startswith("#mistake "):
@@ -175,19 +179,20 @@ def mister(a):
             for ct in cmd_text[f].split('/'):
                 check_after[ct] = True
             if print_output:
-                if verbose:
-                    print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
-                else:
-                    print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
-                    print('#mistake test for', f)
-                if print_location:
-                    print("##location =", location[f])
-                if print_condition:
-                    print("##condition(s)", condition[f])
-                for ct in cmd_text[f].split('/'):
-                    print('>' + re.sub("\[text\]", "zozimus", ct))
-                    print(mistake_text[f])
-                print()
+                if (find_max == 0 or find_count <= find_max) and find_count > find_min:
+                    if verbose:
+                        print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
+                    else:
+                        print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
+                        print('#mistake test for', f)
+                    if print_location:
+                        print("##location =", location[f])
+                    if print_condition:
+                        print("##condition(s)", condition[f])
+                    for ct in cmd_text[f].split('/'):
+                        print('>' + re.sub("\[text\]", "zozimus", ct))
+                        print(mistake_text[f])
+                    print()
     if check_stuff_after:
         regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
         check_ary = ['>' + x for x in sorted(check_after.keys())]
@@ -216,16 +221,22 @@ verbose = False
 print_condition = True
 print_location = True
 check_stuff_after = True
+find_max = 0
+find_min = 0
 
 if len(sys.argv) > 1:
     count = 1
     while count < len(sys.argv):
-        arg = sys.argv[count]
+        arg = sys.argv[count].lower()
         if arg[0] == '-': arg = arg[1:]
         if arg == 'w':
             write_file = True
         elif arg == 'nw':
             write_file = False
+        elif arg[:2] == 'fm':
+            find_min = int(arg[2:])
+        elif arg[0] == 'f':
+            find_max = int(arg[1:])
         elif arg == 'a':
             check_stuff_after = True
         elif arg == 'na':
