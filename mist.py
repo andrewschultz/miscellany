@@ -19,12 +19,19 @@ projs = []
 added = defaultdict(bool)
 srev = defaultdict(str)
 condition = defaultdict(str)
+location = defaultdict(str)
 
 short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 
+#unusued, but if something is not the default_room_level, it goes here.
+default_room_level = 'chapter'
+levs = { }
+
 def usage():
+    print("-a/-na = check stuff afte or don't")
     print("-w/-nw = write or don't")
     print("-c/-nc = write conditions or don't")
+    print("-l/-nl = write locations or don't")
     print("-p/-np = print or don't")
     print("-po/-wo = print or write only")
     print("Other arguments are the project name, short or long")
@@ -49,10 +56,14 @@ def mister(a):
     in_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/%s mistakes.i7x" % a
     count = 0
     special_def = ''
+    room_sect_var = default_room_level if a not in levs.keys() else levs[a]
+    last_loc = '(none)'
     with open(in_file) as file:
         for line in file:
             count = count + 1
             l = line.strip()
+            if line.startswith(room_sect_var):
+                last_loc = re.sub(r'^[a-z]+ +', '', line.strip().lower())
             if l.startswith("[def="):
                 special_def = re.sub("^\[def=", "", l)
                 special_def = re.sub("\].*", "", special_def)
@@ -70,18 +81,23 @@ def mister(a):
                 cmd_text[x] = cmd
                 mistake_text[x] = re.sub(".*\(\"", "", l)
                 mistake_text[x] = re.sub("\"\).*", "", mistake_text[x])
+                mistake_text[x] = re.sub("\[mis of [0-9]+\]", "", mistake_text[x])
                 if x in need_test.keys():
                     print('Uh oh,', x, 'duplicates line', need_test[x], 'at line', count)
                 need_test[x] = count
                 found[x] = False
                 comment_found[x] = False
+                if 'when' in l.lower():
+                    condition[x] = re.sub(".*when *", "", l.lower())
+                else:
+                    condition[x] = 'ALWAYS (unless there\'s a bug here)'
+                location[x] = last_loc
             special_def = ''
     # for p in sorted(need_test.keys(), key=need_test.get):
         # print(p, need_test[p])
     # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
-    files = [ '{:s}reg-{:s}-thru.txt'.format(source_dir, short[a]) ]
     extra_text = defaultdict(str)
-    for fi in files:
+    for fi in files[a]:
         short_fi = re.sub(".*[\\\/]", "", fi)
         retest = False
         with open(fi) as file:
@@ -103,14 +119,19 @@ def mister(a):
                 if line.startswith("##mistake"):
                     print('Line', count, 'says text not test.')
                     continue
+                if line.startswith("##condition(s)") or line.startswith("##location(s)"):
+                    print('Line', count, 'has helper text to remove:', line.strip().lower())
                 retest = False
                 if line.startswith("#mistake "):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
-                    if comment_found[test_note]:
-                        print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
+                    if test_note not in comment_found.keys():
+                        print('Superfluous(?) mistake test', test_note, 'at line', count, 'of', short_fi)
+                    else:
+                        if comment_found[test_note]:
+                            print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
                         err_count = err_count + 1
-                    # print("Got", test_note)
-                    comment_found[test_note] = True
+                        # print("Got", test_note)
+                        comment_found[test_note] = True
                 elif line.startswith('>'):
                     ll = re.sub("^>", "", line.strip().lower())
                     if ll != test_note:
@@ -119,8 +140,6 @@ def mister(a):
                                 err_count = err_count + 1
                                 if print_output: print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
-                            ll2 = re.sub(".*when", "", line.strip().lower())
-                            condition[count] = ll2
                             found[ll] = True
                     if test_note in found.keys():
                         found[test_note] = True
@@ -140,38 +159,63 @@ def mister(a):
                     count = count + 1
                     if count in extra_text.keys():
                         fout.write("##mistake test for " + extra_text[count] + "\n")
+                        if print_location:
+                            fout.write("##location = " + location[count])
                         if print_condition:
-                            fout.write("##conditions " + condition[count])
+                            fout.write("##condition(s) " + condition[count])
                         mistakes_added = mistakes_added + 1
                     fout.write(line)
             fout.close()
             print(mistakes_added, "total mistakes added.")
     find_count = 0
+    check_after = defaultdict(bool)
     for f in sorted(found.keys(), key=need_test.get):
         if found[f] == False:
             find_count = find_count + 1
+            for ct in cmd_text[f].split('/'):
+                check_after[ct] = True
             if print_output:
                 if verbose:
                     print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
                 else:
                     print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
                     print('#mistake test for', f)
+                if print_location:
+                    print("##location =", location[f])
                 if print_condition:
-                    print("##conditions", condition[f])
+                    print("##condition(s)", condition[f])
                 for ct in cmd_text[f].split('/'):
                     print('>' + re.sub("\[text\]", "zozimus", ct))
                     print(mistake_text[f])
                 print()
+    if check_stuff_after:
+        regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
+        check_ary = ['>' + x for x in sorted(check_after.keys())]
+        check_dic = defaultdict(bool)
+        for f2 in files[a]:
+            check_dic[f2] = True
+        for f1 in regs:
+            line_count = 0
+            with open(f1) as file:
+                for line in file:
+                    line_count = line_count + 1
+                    if not line.startswith('>'): continue
+                    for c in check_ary:
+                        if line.startswith(c):
+                            print(f1, line_count, c, ("may be false flagged" if f1 in check_dic.keys() else "could be transferred to main files."))
 
+# note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
-  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-demo-dome-nudges.txt'],
-  'ailihphilia': ['c:/games/inform/roiling.inform/source/reg-ail-thru.txt' ]
+  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
+  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ail-thru.txt' ]
 }
 
 write_file = False
 print_output = True
 verbose = False
 print_condition = True
+print_location = True
+check_stuff_after = True
 
 if len(sys.argv) > 1:
     count = 1
@@ -182,10 +226,18 @@ if len(sys.argv) > 1:
             write_file = True
         elif arg == 'nw':
             write_file = False
+        elif arg == 'a':
+            check_stuff_after = True
+        elif arg == 'na':
+            check_stuff_after = False
         elif arg == 'c':
             print_condition = True
         elif arg == 'nc':
             print_condition = False
+        elif arg == 'c':
+            print_location = True
+        elif arg == 'nc':
+            print_location = False
         elif arg == 'wo':
             write_file = True
             print_output = False
