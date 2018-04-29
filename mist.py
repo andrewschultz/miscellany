@@ -28,8 +28,10 @@ default_room_level = 'chapter'
 levs = { }
 
 def usage():
+    print("All commands can be with or without hyphen")
     print("-f# = max # of missing mistake tests to find")
     print("-a/-na = check stuff afte or don't")
+    print("-b = minimum brackets to flag (number right after b), -nb disables this")
     print("-w/-nw = write or don't")
     print("-c/-nc = write conditions or don't")
     print("-l/-nl = write locations or don't")
@@ -125,6 +127,9 @@ def mister(a):
                     print('Line', count, 'comment mentions search info:', line.strip().lower())
                 if line.startswith("##condition(s)") or line.startswith("##location"):
                     print('Line', count, 'has helper text to remove:', line.strip().lower())
+                brax = line.count('[')
+                if brax > bracket_minimum and not line.startswith('#'):
+                    print(brax, 'possible loose code-brackets in line', count, 'of', short_fi, ':', line.strip().lower())
                 retest = False
                 if line.startswith("#mistake "):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
@@ -223,6 +228,8 @@ print_location = True
 check_stuff_after = True
 find_max = 0
 find_min = 0
+bracket_minimum = 1
+bracket_check = True
 
 if len(sys.argv) > 1:
     count = 1
@@ -241,6 +248,13 @@ if len(sys.argv) > 1:
             check_stuff_after = True
         elif arg == 'na':
             check_stuff_after = False
+        elif arg == 'b':
+            bracket_minimum = int(arg[1:])
+            if bracket_minimum < 1:
+                print("Must have bracket minimum over 1. Ignoring brackets")
+                bracket_check = False
+        elif arg == 'nb':
+            bracket_check = False
         elif arg == 'c':
             print_condition = True
         elif arg == 'nc':
