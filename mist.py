@@ -1,3 +1,10 @@
+# mist.py
+#
+# mistake file/script tracker/aligner
+#
+
+import i7
+import os
 import re
 import sys
 import glob
@@ -6,8 +13,10 @@ from collections import defaultdict
 
 # ary = ['roiling', 'shuffling']
 # ary = ['shuffling']
-ary = ['ailihphilia']
+ary = []
+projs = []
 
+added = defaultdict(bool)
 srev = defaultdict(str)
 condition = defaultdict(str)
 
@@ -188,14 +197,30 @@ if len(sys.argv) > 1:
             print_output = True
             write_file = False
         else:
-            print(count, arg)
-            atemp = arg.split(',')
-            ary = [to_full(x) for x in atemp]
+            for q in arg.split(','):
+                if q in added.keys():
+                    print(q, "already in.")
+                elif q in short.keys():
+                    print("Adding", q)
+                    added[q] = True
+                elif i7.i7x[q] in short.keys():
+                    print("Adding", i7.i7x[q])
+                    added[i7.i7x[q]] = True
+                else:
+                    print(q, "not recognized as a project with a mistake file and/or regex test files.")
         count = count + 1
 
 if not write_file and not print_output:
     print("You need to write a file or print output.")
     exit()
 
-for e in ary:
+if len(added.keys()) == 0:
+    x = i7.dir2proj(os.getcwd())
+    if x in short.keys():
+        print("Going with default", x)
+        added[x] = True
+    else:
+        print("No mistake file in default directory.")
+
+for e in sorted(added.keys()):
     mister(e)
