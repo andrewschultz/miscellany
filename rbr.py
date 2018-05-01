@@ -12,6 +12,13 @@ edit_main_branch = False
 in_file = ""
 in_dir = os.getcwd()
 
+def usage():
+    print("-er = edit branch file (default = for directory you are in)")
+    print("-e = edit rbr.txt")
+    print("-c = edit rbr.py")
+    print("shorthand or longterm project names accepted")
+    exit()
+
 def get_file(fname):
     dupe_val = 1
     last_cmd = ""
@@ -106,16 +113,23 @@ while count < len(sys.argv):
     if arg == 'c':
         i7.open_source()
         exit()
-    if arg == 'e':
+    elif arg == 'e':
         os.system("rbr.txt")
         exit()
-    if arg == 'er':
+    elif arg == 'er':
         edit_main_branch = True
-    if arg in i7.i7x.keys():
+    elif arg in i7.i7x.keys():
         in_proj = i7.i7x[arg]
         in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
     elif os.path.exists(arg):
         in_file = arg
+    elif arg == '?':
+        usage()
+    else:
+        print("Bad argument", count, arg)
+        print("Possible projects: ", ', '.join(sorted(def_file.keys())))
+        usage()
+        exit()
     count = count + 1
 
 if not in_file:
