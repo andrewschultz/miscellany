@@ -7,6 +7,8 @@ from collections import defaultdict
 def_file = defaultdict(str)
 times = defaultdict(int)
 
+edit_main_branch = False
+
 in_file = ""
 in_dir = os.getcwd()
 
@@ -107,9 +109,11 @@ while count < len(sys.argv):
     if arg == 'e':
         os.system("rbr.txt")
         exit()
+    if arg == 'er':
+        edit_main_branch = True
     if arg in i7.i7x.keys():
         in_proj = i7.i7x[arg]
-        in_file = i7.sdir(arg) + "/" + def_file[in_proj]
+        in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
     elif os.path.exists(arg):
         in_file = arg
     count = count + 1
@@ -117,11 +121,15 @@ while count < len(sys.argv):
 if not in_file:
     myd = os.getcwd()
     if i7.dir2proj(myd):
-        in_file = myd + "/" + def_file[i7.dir2proj(myd)]
+        in_file = os.path.join(myd, def_file[i7.dir2proj(myd)])
     if not in_file:
-        in_file = sdir(def_proj) + "/" + def_file(def_proj)
+        in_file = os.path.join(sdir(def_proj), def_file(def_proj))
         print("Going with default", def_proj, "to", in_file)
     else:
         print("Getting file from current directory", in_file)
 
-get_file(in_file)
+if edit_main_branch:
+    print("Opening branch file", in_file)
+    os.system(in_file)
+else:
+    get_file(in_file)
