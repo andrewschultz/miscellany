@@ -1,0 +1,8 @@
+PROB15
+4r,4r,2d,1d,6d,1d
+1r,5d,ff,1d,4d,1l
+1u,1d,1l,2r,1d,1l
+3u,3u,3u,1l,1r,2l
+1d,2r,2d,3l,1r,3l
+3u,1u,1r,1d,2l,4l
+3u,1l,5u,2r,2u,1u
