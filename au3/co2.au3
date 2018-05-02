@@ -54,7 +54,7 @@ EndIf
 
 if $start <= 1 Then
 clickCmd()
-send("ls{ENTER}")
+send("ls{ENTER}{ENTER}")
 hitNext()
 EndIf
 
@@ -68,7 +68,7 @@ EndIf
 
 if $start <= 3 Then
 clickCmd()
-send("pwd{ENTER}")
+send("pwd{ENTER}{ENTER}")
 hitNext()
 EndIf
 
@@ -76,7 +76,7 @@ EndIf
 
 if $start <= 4 Then
 clickCmd()
-send("pwd{ENTER}ls{ENTER}cd 2015{ENTER}")
+send("pwd{ENTER}{ENTER}ls{ENTER}{ENTER}cd 2015{ENTER}{ENTER}")
 hitNext()
 EndIf
 
