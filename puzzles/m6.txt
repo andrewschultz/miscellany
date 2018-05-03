@@ -1,0 +1,6 @@
+puz6
+abcc=48
+caaa=46
+bbbc=70
+acab=54
+col=2
