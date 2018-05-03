@@ -56,6 +56,14 @@ def get_file(fname):
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
+            if line.strip == "==!":
+                actives = [not x for x in actives]
+                continue
+            if line.startswith("==!"):
+                actives = [True] * len(actives)
+                for x in line.lower().strip()[3:].split(','):
+                    actives[int(x)] = False
+                continue
             if line.startswith("==+"):
                 ll = line.lower().strip()[3:]
                 for x in ll.split(','):
