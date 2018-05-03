@@ -26,6 +26,7 @@ def get_file(fname):
     file_array = []
     line_count = 0
     dupe_file_name = ""
+    temp_diverge = False
     try:
         dupe_file = open("hello.txt", "r")
         dupe_file.close()
@@ -35,6 +36,9 @@ def get_file(fname):
     with open(fname) as file:
         for line in file:
             line_count = line_count + 1
+            if temp_diverge and not line.strip():
+                temp_diverge = False
+                actives = old_actives
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w")
@@ -62,11 +66,18 @@ def get_file(fname):
                 for x in ll.split(','):
                     if x.isdigit():
                         actives[int(x)] = False
-            if line.startswith("==="):
-                ll = re.sub("^=+", "", line.lower().strip())
-                la = ll.split(',')
+            if re.search("^=+t", line):
+                old_actives = list(actives)
+                temp_diverge = True
+                ll = re.sub("^=+t", "", line.lower().strip()).split(',')
                 actives = [False] * len(file_array)
-                for x in la:
+                for x in ll:
+                    if x.isdigit(): actives[int(x)] = True
+                continue
+            if line.startswith("==="):
+                ll = re.sub("^=+", "", line.lower().strip()).split(',')
+                actives = [False] * len(file_array)
+                for x in ll:
                     if x.isdigit(): actives[int(x)] = True
                 continue
             for ct in range(0, len(file_list)):
