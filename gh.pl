@@ -399,30 +399,32 @@ sub processTerms {
 
       if ( $a =~ / *< */ ) {
         if ( !hasHash($hashProj) ) { next; }
-        $a =~ s/^[^=]*.//;
+        $a =~ s/^[^=]*=//;
         my @timeArray = split( / *< */, rehash($a) );
         if ( $#timeArray != 1 ) { print("Bad split in line $.: $a\n"); next; }
         if ( !-f $timeArray[0] ) { die("$timeArray[0] is not a valid file."); }
-        if ( !-f $timeArray[1] ) { die("$timeArray[1] is not a valid file."); }
-        if ( stat( $timeArray[0] )->mtime > stat( $timeArray[1] )->mtime ) {
-          if ( $executeDontBail && $xtraCmd ) {
-            print
-              "$timeArray[0]/$timeArray[1] are in the wrong order in time.\n";
-            print
-              "Running extra command $xtraCmd to set timestamps straight.\n";
-            `$xtraCmd`;
-          }
-          else {
-            my $errString =
-"FATAL ERROR:\n    $timeArray[0] has timestamp after $timeArray[1]\n"
-              . (
-              $xtraCmd
-              ? "    (try running $xtraCmd or adding =x to skip)"
-              : "    (no extra recommended command)"
-              ) . "\n";
-            die("$errString") if !defined( $ignoreFatal{$hashProj} );
-            print "SKIPPING $errString";
-            $skippedFatal++;
+        my @timeCompArray = split( ",", $timeArray[1] );
+        for my $tc (@timeCompArray) {
+          if ( !-f $tc ) { die("$tc is not a valid file."); }
+          if ( stat( $timeArray[0] )->mtime > stat($tc)->mtime ) {
+            if ( $executeDontBail && $xtraCmd ) {
+              print "$timeArray[0]/$tc are in the wrong order in time.\n";
+              print
+                "Running extra command $xtraCmd to set timestamps straight.\n";
+              `$xtraCmd`;
+            }
+            else {
+              my $errString =
+                "FATAL ERROR:\n    $timeArray[0] has timestamp after $tc\n"
+                . (
+                $xtraCmd
+                ? "    (try running $xtraCmd or adding =x to skip)"
+                : "    (no extra recommended command)"
+                ) . "\n";
+              die("$errString") if !defined( $ignoreFatal{$hashProj} );
+              print "SKIPPING $errString";
+              $skippedFatal++;
+            }
           }
         }
         next;
@@ -432,26 +434,30 @@ sub processTerms {
         $a =~ s/^[^=]*.//;
         my @timeArray = split( / *> */, rehash($a) );
         if ( $#timeArray != 1 ) { print("Bad split in line $.: $a\n"); next; }
-        if ( !-f $timeArray[0] ) { die("$timeArray[0] is not a valid file."); }
-        if ( !-f $timeArray[1] ) { die("$timeArray[1] is not a valid file."); }
-        if ( stat( $timeArray[0] )->mtime < stat( $timeArray[1] )->mtime ) {
-          if ( $executeDontBail && $xtraCmd ) {
-            print
-              "$timeArray[0]/$timeArray[1] are in the wrong order in time.\n";
-            print
-              "Running extra command $xtraCmd to set timestamps straight.\n";
-            `$xtraCmd`;
+        my @timeCompArray = split( ",", $timeArray[0] );
+        for my $tc (@timeCompArray) {
+          if ( !-f $tc ) { die("$tc is not a valid file."); }
+          if ( !-f $timeArray[1] ) {
+            die("$timeArray[1] is not a valid file.");
           }
-          else {
-            die(
-"FATAL BUILD ERROR:\n$timeArray[0] has timestamp after $timeArray[1], which is a fatal build error\n"
-                . (
-                $xtraCmd
-                ? " (try running $xtraCmd or adding =x to skip)"
-                : "(no extra command)"
-                )
-                . "\n"
-            );
+          if ( stat($tc)->mtime < stat( $timeArray[1] )->mtime ) {
+            if ( $executeDontBail && $xtraCmd ) {
+              print "$tc/$timeArray[1] are in the wrong order in time.\n";
+              print
+                "Running extra command $xtraCmd to set timestamps straight.\n";
+              `$xtraCmd`;
+            }
+            else {
+              die(
+"FATAL BUILD ERROR:\n$tc has timestamp after $timeArray[1], which is a fatal build error\n"
+                  . (
+                  $xtraCmd
+                  ? " (try running $xtraCmd or adding =x to skip)"
+                  : "(no extra command)"
+                  )
+                  . "\n"
+              );
+            }
           }
         }
         next;
