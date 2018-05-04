@@ -33,6 +33,7 @@ def get_file(fname):
     except:
         pass
     print("Poking at", fname)
+    actives = []
     with open(fname) as file:
         for line in file:
             line_count = line_count + 1
@@ -45,7 +46,7 @@ def get_file(fname):
                 continue
             if line.startswith("files="):
                 file_array = re.sub(".*=", "", line.lower().strip()).split(',')
-                actives = [False] * len(file_array)
+                actives = [True] * len(file_array)
                 for x in file_array:
                     f = open(x, 'w')
                     file_list.append(f)
@@ -90,7 +91,10 @@ def get_file(fname):
                 continue
             for ct in range(0, len(file_list)):
                 if actives[ct]:
-                    file_list[ct].write(line)
+                    if line.lower().startswith("*file"):
+                        file_list[ct].write("** " + file_list[ct].name + "\n")
+                    else:
+                        file_list[ct].write(line)
             if actives[dupe_val]:
                 dupe_file.write(line)
                 if 'by one point' in line:
