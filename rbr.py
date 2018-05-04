@@ -7,6 +7,7 @@ from collections import defaultdict
 def_file = defaultdict(str)
 times = defaultdict(int)
 
+always_be_writing = False
 edit_main_branch = False
 debug = False
 
@@ -20,6 +21,11 @@ def usage():
     print("-d = debug on")
     print("shorthand or longterm project names accepted")
     exit()
+
+def all_false(a):
+    for x in a:
+        if x: return False
+    return True
 
 def act(a):
     trues = []
@@ -65,24 +71,22 @@ def get_file(fname):
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
-            if line.strip == "==!":
+            if line.strip() == "==!":
                 actives = [not x for x in actives]
                 continue
-            if line.startswith("==!"):
+            if line.startswith("==!") or line.startswith("==-"):
                 actives = [True] * len(actives)
-                for x in line.lower().strip()[3:].split(','):
-                    actives[int(x)] = False
+                try:
+                    for x in line.lower().strip()[3:].split(','):
+                        actives[int(x)] = False
+                except:
+                    sys.exit("Failed at line " + line_count + ": " + line.strip())
                 continue
             if line.startswith("==+"):
                 ll = line.lower().strip()[3:]
                 for x in ll.split(','):
                     if x.isdigit():
                         actives[int(x)] = True
-            if line.startswith("==-"):
-                ll = line.lower().strip()[3:]
-                for x in ll.split(','):
-                    if x.isdigit():
-                        actives[int(x)] = False
             if re.search("^=+t", line):
                 old_actives = list(actives)
                 temp_diverge = True
@@ -98,6 +102,9 @@ def get_file(fname):
                     if x.isdigit(): actives[int(x)] = True
                 continue
             if debug and line.startswith(">"): print(act(actives), line.strip())
+            if all_false(actives):
+                if always_be_writing:
+                    sys.exit("No files written to at line " + line_count + ": " + line.strip())
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", file_list[ct].name, line)
@@ -170,7 +177,7 @@ if not in_file:
     if i7.dir2proj(myd):
         in_file = os.path.join(myd, def_file[i7.dir2proj(myd)])
     if not in_file:
-        in_file = os.path.join(sdir(def_proj), def_file(def_proj))
+        in_file = os.path.join(dir(def_proj), def_file(def_proj))
         print("Going with default", def_proj, "to", in_file)
     else:
         print("Getting file from current directory", in_file)
