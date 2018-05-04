@@ -8,6 +8,7 @@ def_file = defaultdict(str)
 times = defaultdict(int)
 
 edit_main_branch = False
+debug = False
 
 in_file = ""
 in_dir = os.getcwd()
@@ -16,8 +17,15 @@ def usage():
     print("-er = edit branch file (default = for directory you are in)")
     print("-e = edit rbr.txt")
     print("-c = edit rbr.py")
+    print("-d = debug on")
     print("shorthand or longterm project names accepted")
     exit()
+
+def act(a):
+    trues = []
+    for x in range(len(a)):
+        if a[x]: trues.append(str(x))
+    return '/'.join(trues)
 
 def get_file(fname):
     dupe_val = 1
@@ -89,12 +97,11 @@ def get_file(fname):
                 for x in ll:
                     if x.isdigit(): actives[int(x)] = True
                 continue
+            if debug and line.startswith(">"): print(act(actives), line.strip())
             for ct in range(0, len(file_list)):
                 if actives[ct]:
-                    if line.lower().startswith("*file"):
-                        file_list[ct].write("** " + file_list[ct].name + "\n")
-                    else:
-                        file_list[ct].write(line)
+                    line_write = re.sub("\*file", file_list[ct].name, line)
+                    file_list[ct].write(line)
             if actives[dupe_val]:
                 dupe_file.write(line)
                 if 'by one point' in line:
@@ -133,6 +140,7 @@ count = 1
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
     if arg == 'c':
         i7.open_source()
         exit()
@@ -141,6 +149,8 @@ while count < len(sys.argv):
         exit()
     elif arg == 'er':
         edit_main_branch = True
+    elif arg == 'd':
+        debug = True
     elif arg in i7.i7x.keys():
         in_proj = i7.i7x[arg]
         in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
