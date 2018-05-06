@@ -17,7 +17,28 @@ def open_source():
     exit()
 
 def src(x):
-    return sdir(x) + "." + "story.ni"
+    return sdir(x) + "/" + "story.ni"
+
+def mistake_file(x):
+    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x)).title()
+
+def hdr(x, y):
+    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x), y).title()
+
+def mistake_file(x):
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x)).title()
+
+mifi = mistake_file
+
+def table_file(x):
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x)).title()
+
+tafi = table_file
+
+def test_file(x):
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x)).title()
+
+tefi = test_file
 
 def triz(x):
     return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x)
@@ -150,31 +171,17 @@ i7xr = { "shuffling": "sa",
 };
 
 i7f = {
-  "shuffling": [
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling nudges.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling random text.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\shuffling mistakes.i7x",
-    "c:\\games\\inform\\shuffling.inform\\source\\story.ni"
-    ],
-  "roiling": [
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling nudges.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling random text.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\roiling mistakes.i7x",
-    "c:\\games\\inform\\roiling.inform\\source\\story.ni"
-    ],
-    "buck-the-past": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\buck the past tables.i7x", "c:\\games\\inform\\buck-the-past.inform\\source\\story.ni"],
-    "compound": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\compound tables.i7x", "c:\\games\\inform\\compound.inform\\source\\story.ni"],
-    "slicker-city": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\slicker city tables.i7x", "c:\\games\\inform\\slicker-city.inform\\source\\story.ni"],
-    "spell-woken": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\spell woken tables.i7x",
-    "c:\\games\\inform\\spell-woken.inform\\source\\story.ni"],
-    "ailihphilia": ["c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia tables.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia tests.i7x",
-    "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\Ailihphilia mistakes.i7x",
-    "c:\\games\\inform\\ailihphilia.inform\\source\\story.ni"]
+    "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa') ],
+    "roiling": [ hdr('roi', 'Nudges'), hdr('roi', 'Random Text'), mistake_file('roi'), src('roi') ],
+    "buck-the-past": [ tafi('btp'), src('btp') ],
+    "compound": [ tafi('pc'), src('pc') ],
+    "slicker-city": [ tafi('sc'), src('sc') ],
+    "spell-woken": [ tafi('sw'), src('sw') ],
+    "ailihphilia": [ tafi('ai'), tefi('ai'), mifi('ai'), src('ai') ]
   }
 
 if "i7.py" in main.__file__:
     print("i7.py is a header file. It should not be run on its own.")
-    print("Try running something else, instead.")
+    print("Try running something else with the line import i7, instead.")
     # see_uniq_and_vers()
     exit()
