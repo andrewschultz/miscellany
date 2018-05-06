@@ -19,24 +19,6 @@ def open_source():
 def src(x):
     return sdir(x) + "." + "story.ni"
 
-def mistake_file(x):
-    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Ailihphilia Mistakes.i7x'
-
-def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x))
-
-mifi = mistake_file
-
-def table_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x))
-
-tafi = mistake_file
-
-def test_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x))
-
-tefi = mistake_file
-
 def triz(x):
     return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x)
 
@@ -44,9 +26,11 @@ def hfile(x, y):
     x2 = re.sub("-", " ", x)
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
-def lpro(x):
-    if x in i7xr.keys(): return x
-    if x in i7x.keys(): return i7x[x]
+def lpro(x, spaces=False):
+    retval = ''
+    if x in i7xr.keys(): retval = x
+    elif x in i7x.keys(): retval = i7x[x]
+    if spaces: retval = re.sub("-", " ", retval)
     return ''
 
 def sdir(x):
