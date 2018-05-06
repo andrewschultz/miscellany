@@ -58,6 +58,19 @@ def get_file(fname):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w")
                 continue
+            if re.search("^TSV(I)?[=:]", line): #tab separated values
+                ignore_too_short = line.lower().startswith("tsvi")
+                l2 = re.sub("TSV(I)?.", "", line.lower()).strip().split("\t")
+                if len(l2) > len(actives):
+                    print("WARNING line", line_count, "has too many TSV values, ignoring")
+                    print("TEXT:", line.strip())
+                    continue
+                elif ignore_too_short and len(l2) < len(actives):
+                    print("WARNING line", line_count, "doesn't cover all files. Change TSV to TSVI to ignore this.")
+                    print("TEXT:", line.strip())
+                for x in range(len(l2)):
+                    file_list[x].write(l2[x] + "\n")
+                continue
             if line.startswith("files="):
                 file_array = re.sub(".*=", "", line.lower().strip()).split(',')
                 actives = [True] * len(file_array)
@@ -65,7 +78,9 @@ def get_file(fname):
                     f = open(x, 'w')
                     file_list.append(f)
                 continue
-            if len(actives) == 0: continue
+            if all_false(actives):
+                if always_be_writing and len(actives):
+                    sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
                 last_cmd = line.lower().strip()
             if line.startswith("===a"):
@@ -102,9 +117,6 @@ def get_file(fname):
                     if x.isdigit(): actives[int(x)] = True
                 continue
             if debug and line.startswith(">"): print(act(actives), line.strip())
-            if all_false(actives):
-                if always_be_writing:
-                    sys.exit("No files written to at line " + line_count + ": " + line.strip())
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", file_list[ct].name, line)
@@ -138,7 +150,9 @@ with open('c:/writing/scripts/rbr.txt') as file:
         if len(j) < 2:
             print("Need tab in", line.strip())
         hk = i7.lpro(j[0])
+        def_file[j[0]] = j[1]
         if hk:
+            print(hk, j[1])
             def_file[hk] = j[1]
         else:
             print(j[0], hk, "not recognized as project or shortcut")
@@ -177,10 +191,12 @@ if not in_file:
     if i7.dir2proj(myd):
         in_file = os.path.join(myd, def_file[i7.dir2proj(myd)])
     if not in_file:
-        in_file = os.path.join(dir(def_proj), def_file(def_proj))
+        in_file = os.path.join(i7.sdir(def_proj), def_file[def_proj])
         print("Going with default", def_proj, "to", in_file)
     else:
         print("Getting file from current directory", in_file)
+
+os.chdir(os.path.dirname(in_file))
 
 if edit_main_branch:
     print("Opening branch file", in_file)
