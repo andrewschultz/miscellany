@@ -139,7 +139,7 @@ def process_table_array(sort_orders, table_rows, file_stream):
         reverse_order = len(ary) > 2 and ary[2] == 'r'
         count = 0
         for y in table_rows:
-            count = count + 1
+            count += 1
         # print("Before:")
         #print(q, sort_orders, my_col, my_type)
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
@@ -154,7 +154,7 @@ def read_table_and_default_file():
     prev_def = defaultdict(int)
     with open(table_default_file) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
             ll = line.lower().strip()
             if not ll: continue
             if line.startswith('#'): continue
@@ -243,7 +243,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     err_line.clear()
     with open(f) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
             if need_head:
                 temp_out.write(line)
                 need_head = False
@@ -351,11 +351,11 @@ while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg in i7.i7c.keys():
         projects = projects + i7.i7c[arg]
-        count = count + 1
+        count += 1
         continue
     elif arg in i7.i7x.keys():
         projects.append(i7.i7x[arg])
-        count = count + 1
+        count += 1
         continue
     if arg.startswith('-'): arg = arg[1:]
     if arg == 'l':
@@ -385,7 +385,7 @@ while count < len(sys.argv):
     else:
         print(arg, "is an invalid parameter.")
         usage()
-    count = count + 1
+    count += 1
 
 projset = set(projects)
 diff = len(projects) - len(projset)

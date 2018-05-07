@@ -64,7 +64,7 @@ def check_old_matches(x):
         return
     with open(x) as source_file:
         for line in source_file:
-            line_count = line_count + 1
+            line_count += 1
             l2 = line.strip().lower()
             if not read_random_tables and l2.startswith("\"") and ("\t" not in l2 or l2.endswith("false") or l2.endswith("true")):
                 continue # fix for roiling/shuffling where we want to read the table of megachatter
@@ -81,12 +81,12 @@ def check_old_matches(x):
                             if re.search(j, line, re.IGNORECASE):
                                 ignore = True
                     if ignore is False:
-                        incidents_dic[m] = incidents_dic[m] + 1
+                        incidents_dic[m] += 1
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
                     else:
-                        incident_ig[m] = incident_ig[m] + 1
+                        incident_ig[m] += 1
                     if ignore is False or show_whats_ignored:
                         print("-->" if not ignore else "(IGNORED)", line_count, (abbrevs[m] if m in abbrevs.keys() else m) + ": " + line.strip())
             for r in regex_dic.keys():
@@ -100,13 +100,13 @@ def check_old_matches(x):
                             if re.search(j, line, re.IGNORECASE):
                                 ignore = True
                     if ignore is False:
-                        incidents_dic[r] = incidents_dic[r] + 1
+                        incidents_dic[r] += 1
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
                         print("-->", line_count, (abbrevs[r] if r in abbrevs.keys() else r) + ": " + line.strip())
                     else:
-                        incident_ig[r] = incident_ig[r] + 1
+                        incident_ig[r] += 1
 
 def in_csv(a, b):
     my_csv = a.split(",")
@@ -128,7 +128,7 @@ if len(sys.argv) > 1:
     count = 1
     while count < len(sys.argv):
         arg = sys.argv[count]
-        count = count + 1
+        count += 1
         if arg == 'd' or arg == '-d':
             force_default = True
         elif arg == 'e' or arg == '-e':
@@ -201,7 +201,7 @@ with open(otz) as file:
             continue
         if read_sections and current_section not in sections:
             if not line.startswith("--") and not line.startswith("i:"):
-                searches[current_section] = searches[current_section] + 1
+                searches[current_section] += 1
             continue
         if line.startswith("--"):
             file_dic.pop(re.sub("^--", "", line.strip()), None)

@@ -52,7 +52,7 @@ def process_operators(infile, tempfile, outfile):
     ignore_defaults = False
     with open(in_mod) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
             if 'dbh.py' in line:
                 got_dbh = True
             if line_count == 1:
@@ -94,7 +94,7 @@ def process_operators(infile, tempfile, outfile):
             if in_table and not ignore_defaults:
                 if to_go < 0 or at_end:
                     continue
-                to_go = to_go - 1
+                to_go -= 1
             if in_table and at_end:
                 end_add.append(line)
                 continue
@@ -112,7 +112,7 @@ def process_operators(infile, tempfile, outfile):
 with open(dbh) as file:
     line_count = 0
     for line in file:
-        line_count = line_count + 1
+        line_count += 1
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False

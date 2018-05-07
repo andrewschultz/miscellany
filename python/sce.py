@@ -17,7 +17,7 @@ with open("story.ni") as file:
             line = re.sub(" is scenery.*", "", line.strip().lower(), re.IGNORECASE)
             if nuthin in sce.keys():
                 sce[nuthin] = sce[nuthin] + ", " + line
-                tot[nuthin] = tot[nuthin] + 1
+                tot[nuthin] += 1
             else:
                 sce[nuthin] = line
                 tot[nuthin] = 1
@@ -33,7 +33,7 @@ with open("story.ni") as file:
         line3 = re.sub(".*scenery in ", "", line3, re.IGNORECASE)
         if line3 in sce.keys():
             sce[line3] = sce[line3] + ", " + line2
-            tot[line3] = tot[line3] + 1
+            tot[line3] += 1
         else:
             sce[line3] = line2
             tot[line3] = 1

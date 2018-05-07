@@ -36,7 +36,7 @@ def read_ignore_file():
     line_count = 0
     with open(ignore_file) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
             if line.startswith(';'): break
             if line.startswith('#'): continue
             if line.startswith('ignore:'):
@@ -68,7 +68,7 @@ def match_source_invisiclues():
             if print_barrier:
                 print("=" * 40)
                 print_barrier = False
-            count = count + 1
+            count += 1
             print(count, a, "in source but not invisiclues.")
             inviserr['>' + a] = True
     print_barrier = (count > 0)
@@ -77,7 +77,7 @@ def match_source_invisiclues():
             if print_barrier:
                 print("=" * 40)
                 print_barrier = False
-            count = count + 1
+            count += 1
             print(count, a, "in invisiclues but not source.")
             inviserr['<' + a] = True
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
@@ -116,7 +116,7 @@ while cmd_count < len(sys.argv):
         format_help()
     else:
         usage()
-    cmd_count = cmd_count + 1
+    cmd_count += 1
 
 trizfile = i7.triz(project)
 source_file = i7.src(project)
@@ -190,12 +190,12 @@ for a in list(set(triz.keys()) | set(source.keys())):
     # if a in triz.keys():
         # print (a, "is in triz and source keys.")
     if a not in triz.keys() and a not in ignore.keys():
-        count = count + 1
+        count += 1
         print (count, a, "is in the source but not in the Trizbort map.")
         maperr.append(a)
         continue
     if a not in source.keys() and a not in ignore.keys():
-        count = count + 1
+        count += 1
         print(count, a, "is in the Trizbort map but not in the source.")
         sourceerr.append(a)
         continue

@@ -101,7 +101,7 @@ while (count < len(sys.argv)):
     if ca == '?' or ca == '-?':
         usage()
         exit()
-    count = count + 1
+    count += 1
 
 sums = release_notes + open_trizbort + open_notes + open_source + open_tables + open_walkthrough + open_raw_invisiclues
 

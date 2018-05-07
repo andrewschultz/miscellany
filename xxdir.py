@@ -13,7 +13,7 @@ line_count = 0
 
 with open("story.ni") as file:
     for line in file:
-        line_count = line_count + 1
+        line_count += 1
         ll1 = line.lower()
         if ll1.startswith("xx start") or ll1.startswith("start xx"):
             ever_xx = True

@@ -63,7 +63,7 @@ def mister(a):
     last_loc = '(none)'
     with open(in_file) as file:
         for line in file:
-            count = count + 1
+            count += 1
             l = line.strip()
             if line.startswith(room_sect_var):
                 last_loc = re.sub(r'^[a-z]+ +', '', line.strip().lower())
@@ -109,7 +109,7 @@ def mister(a):
             err_count = 0
             test_note = ""
             for line in file:
-                count = count + 1
+                count += 1
                 if retest == True:
                     retest = False
                     # print("Skipping", line.strip())
@@ -138,7 +138,7 @@ def mister(a):
                     else:
                         if comment_found[test_note]:
                             print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
-                        err_count = err_count + 1
+                        err_count += 1
                         # print("Got", test_note)
                         comment_found[test_note] = True
                 elif line.startswith('>'):
@@ -146,7 +146,7 @@ def mister(a):
                     if ll != test_note:
                         if ll in need_test.keys():
                             if found[ll] is False:
-                                err_count = err_count + 1
+                                err_count += 1
                                 if print_output: print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
                             extra_text[count] = ll
                             found[ll] = True
@@ -165,14 +165,14 @@ def mister(a):
             with open(fi) as file:
                 count = 0
                 for line in file:
-                    count = count + 1
+                    count += 1
                     if count in extra_text.keys():
                         fout.write("##mistake test for " + extra_text[count] + "\n")
                         if print_location:
                             fout.write("##location = " + location[count])
                         if print_condition:
                             fout.write("##condition(s) " + condition[count])
-                        mistakes_added = mistakes_added + 1
+                        mistakes_added += 1
                     fout.write(line)
             fout.close()
             print(mistakes_added, "total mistakes added.")
@@ -180,7 +180,7 @@ def mister(a):
     check_after = defaultdict(bool)
     for f in sorted(found.keys(), key=need_test.get):
         if found[f] == False:
-            find_count = find_count + 1
+            find_count += 1
             for ct in cmd_text[f].split('/'):
                 check_after[ct] = True
             if print_output:
@@ -208,7 +208,7 @@ def mister(a):
             line_count = 0
             with open(f1) as file:
                 for line in file:
-                    line_count = line_count + 1
+                    line_count += 1
                     if not line.startswith('>'): continue
                     for c in check_ary:
                         if line.startswith(c):
@@ -285,7 +285,7 @@ if len(sys.argv) > 1:
                     added[i7.i7x[q]] = True
                 else:
                     print(q, "not recognized as a project with a mistake file and/or regex test files.")
-        count = count + 1
+        count += 1
 
 if not write_file and not print_output:
     print("You need to write a file or print output.")

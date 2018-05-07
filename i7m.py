@@ -143,7 +143,7 @@ func_ended = False
 
 with open(file_name) as file:
     for line in file:
-        count = count + 1
+        count += 1
         if next_break_over and not re.search("[a-z]", line, re.IGNORECASE):
             last_num = count - 1
             went_over = True
@@ -167,7 +167,7 @@ with open(file_name) as file:
         if trivial_punctuation and not in_i6 and re.search("^[a-z].*;$", line, re.IGNORECASE):
             # print(count," trivial punctuation change:", line)
             line = re.sub(";$", ".", line)
-            trivial_punctuation = trivial_punctuation + 1
+            trivial_punctuation += 1
         if count < min_fix_line:
             big_string = big_string + line
             continue
@@ -188,7 +188,7 @@ with open(file_name) as file:
                 l2 = re.sub("^\t+", "", line).strip()
                 last_line = re.sub(":+", ", " + l2, last_line)
                 big_string = big_string + last_line
-                cur_changes = cur_changes + 1
+                cur_changes += 1
                 if cur_changes == max_changes and not cut_off_immediately:
                     next_break_over = True
                 else_next_bad = True
@@ -238,9 +238,9 @@ if collapse_to_one_line:
                         new_string = xxx[x+1] + re.sub("^\t", " ", xxx[x+2]) + comments
                         x = x + 3
                         xxx2.append(new_string)
-                        func_collapse = func_collapse + 1
+                        func_collapse += 1
                         continue
-        x = x + 1
+        x += 1
         continue
     print(func_collapse, "collapsed functions.")
     big_string = '\n'.join(xxx2)

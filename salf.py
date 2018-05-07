@@ -57,7 +57,7 @@ sort_string = ''
 
 with open(f1) as file:
     for line in file:
-        line_num = line_num + 1
+        line_num += 1
         do_more = True
         for x in sort_start.keys():
             if x in line:

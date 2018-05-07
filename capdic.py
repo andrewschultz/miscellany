@@ -23,7 +23,7 @@ line_count = 0
 
 with open("zr.txt") as file:
     for line in file:
-        line_count = line_count + 1
+        line_count += 1
         if line.startswith('#'): continue
         if line.startswith(';'): break
         ll = line.strip().lower()
@@ -38,7 +38,7 @@ with open("story.ni") as file:
             if x in ll:
                 m = re.findall(x, line, re.IGNORECASE)
                 for q in m:
-                    cap_sets[x][q] = cap_sets[x][q] + 1
+                    cap_sets[x][q] += 1
 
 for j in sorted(capfinds.keys()):
     if j not in cap_sets.keys():

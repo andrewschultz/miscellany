@@ -72,7 +72,7 @@ while count < len(sys.argv):
     else:
         print("Bad argument", sys.argv[count])
         usage()
-    count = count + 1
+    count += 1
 
 if not os.path.exists("zr.txt"):
     print("You need a zr.txt in ", os.getcwd(), "or you need to change the project.")
@@ -113,16 +113,16 @@ def check_source(a):
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
     with open(a) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
             ll = line
             if 'use1 entry on' in ll.lower():
                 print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
                 ll = re.sub("use1 entry on", "use1 entry with", ll)
-                difs = difs + 1
+                difs += 1
             if 'useoning noun on' in ll.lower():
                 print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
                 ll = re.sub("useoning noun on", "useoning noun with", ll)
-                difs = difs + 1
+                difs += 1
             if ll.startswith('understand') and 'when' not in ll:
                 fout.write(ll)
                 continue
@@ -132,7 +132,7 @@ def check_source(a):
                         print("WARNING replacing", t, "with", text_change[t], "at line", line_count)
                         ll = re.sub(t, text_change[t], ll, 0, re.IGNORECASE)
                         print("Replacing", t, "with", text_change[t], "at line", line_count)
-                        difs = difs + 1
+                        difs += 1
                 for x in cs:
                     if x.lower() in line.lower():
                         ll_old = ll
@@ -142,7 +142,7 @@ def check_source(a):
                         # ll = re.sub(r'\b{:s}\b'.format(regex_detail[x] if x in regex_detail.keys() else x),
                           lambda match: title_unless_caps(match.group(0), x), ll, 0, re.IGNORECASE)
                         if ll != ll_old:
-                            difs = difs + 1
+                            difs += 1
                             print("Line", line_count, "of", short, "miscapitalized", x)
             fout.write(ll)
     fout.close()

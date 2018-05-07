@@ -37,11 +37,17 @@ def tidy_file(fn):
             if re.search(r'([\]\[a-z0-9_]+) = \1 \+ 1', line):
                 l2 = re.sub(r'([\[\]a-z0-9_]+) = \1 \+ 1', r'\1 += 1', line)
                 if l2 == line:
-                    print("Oops tagged but not changed line", line.strip())
+                    print("Oops tagged plus but not changed line", line.strip())
                 else:
                     got += 1
-            elif '+ 1' in line:
-                print(line.strip())
+            elif re.search(r'([\]\[a-z0-9_]+) = \1 - 1', line):
+                l2 = re.sub(r'([\[\]a-z0-9_]+) = \1 - 1', r'\1 -= 1', line)
+                if l2 == line:
+                    print("Oops tagged minus but not changed line", line.strip())
+                else:
+                    got += 1
+            elif '+ 1' in line and '=' in line:
+                print("MAYBE:", line.strip())
             f.write(l2)
     f.close()
     if got:

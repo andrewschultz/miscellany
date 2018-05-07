@@ -46,11 +46,11 @@ while count < len(sys.argv):
     else:
         print("Bad argument", arg)
         usage()
-    count = count + 1
+    count += 1
 
 with open(table_file) as file:
     for line in file:
-        line_num = line_num + 1
+        line_num += 1
         if line.startswith('table'):
             in_table = True
             cur_table = line.lower().strip()
@@ -67,13 +67,13 @@ with open(table_file) as file:
             l1 = re.sub("[^a-z]", "", l0)
             if l0 in dup_yet.keys():
                 print("Uh oh, line", line_num, "/", cur_table, "has", l0, "which duplicates line", dup_yet[l0], "/", t2d[l0])
-                dupes = dupes + 1
+                dupes += 1
             elif l0 in dup_reverse.keys():
                 print("Reversed duplicate", l0, "vs", wordrev(l0), "at line", line_num, "originally at", dup_reverse[l0])
             elif check_spaceless and l1 in dup_no_space.keys():
                 if not ignore_ok:
                     print("Dup-without-spaces line", line_num, l1, l0, "from line", dup_no_space[l1])
-                    dupe_without_spaces = dupe_without_spaces + 1
+                    dupe_without_spaces += 1
             dup_no_space[l1] = "{:d}/{:s}".format(line_num, l0)
             dup_yet[l0] = line_num
             if l0.count(' ') == 1:

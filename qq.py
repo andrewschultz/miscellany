@@ -37,7 +37,7 @@ def file_hunt(x):
     with open(x) as file:
         line_num = 0
         for line in file:
-            line_num = line_num + 1
+            line_num += 1
             ll = line.lower()
             if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll):
                 if line_num > min_line:
@@ -138,7 +138,7 @@ if len(sys.argv) > 1:
             searchables.append(ll)
         else:
             print("WARNING!", ll, "is not in i7x.keys.")
-        count = count + 1
+        count += 1
 
 html_file = "c:/games/inform/qq.htm"
 

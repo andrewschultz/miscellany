@@ -81,11 +81,11 @@ while count < len(sys.argv):
         discard_room = sys.argv[count][2:]
     elif arg == 'r':
         discard_room = sys.argv[count+1].lower()
-        count = count + 1
+        count += 1
     else:
         print("Bad argument", arg)
         usage()
-    count = count + 1
+    count += 1
 
 if not os.path.isfile(f1):
     print("No file", f1, "-- bailing.")
@@ -105,7 +105,7 @@ if do_unit_tests: unit_tests(bail)
 
 with open(f1) as file:
     for line in file:
-        line_count = line_count + 1
+        line_count += 1
         if discard_room not in line.lower() or '[ic]' in line or ignore_next:
             ignore_next = False
             fout.write(line)
@@ -113,7 +113,7 @@ with open(f1) as file:
         if 'definition: a thing is moot:' in line or line.startswith('to moot'): ignore_next = True
         ll = mootify(line)
         if ll != line:
-            difs = difs + 1
+            difs += 1
             print("Dif", difs, "at", line_count)
         fout.write(ll)
 
