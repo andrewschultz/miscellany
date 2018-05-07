@@ -14,11 +14,21 @@ debug = False
 in_file = ""
 in_dir = os.getcwd()
 
+def examples():
+    print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
+    print("==t5 means only use file 5 until next empty line. Then it switches back to what was there before. A second ==t wipes out the first saved array.")
+    print("==- inverts the active file list")
+    print("== ! - ^ 1,2,4 = all but numbers 1, 2, 4")
+    print("*FILE is replaced by the file name.")
+    print("#-- is a comment only for the branch file.")
+    exit()
+
 def usage():
     print("-er = edit branch file (default = for directory you are in)")
     print("-e = edit rbr.txt")
     print("-c = edit rbr.py")
     print("-d = debug on")
+    print("-x = list examples")
     print("shorthand or longterm project names accepted")
     exit()
 
@@ -50,7 +60,8 @@ def get_file(fname):
     actives = []
     with open(fname) as file:
         for line in file:
-            line_count = line_count + 1
+            line_count += 1
+            if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
                 actives = old_actives
@@ -89,7 +100,7 @@ def get_file(fname):
             if line.strip() == "==!":
                 actives = [not x for x in actives]
                 continue
-            if line.startswith("==!") or line.startswith("==-"):
+            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^"):
                 actives = [True] * len(actives)
                 try:
                     for x in line.lower().strip()[3:].split(','):
@@ -177,6 +188,8 @@ while count < len(sys.argv):
         in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
     elif os.path.exists(arg):
         in_file = arg
+    elif arg == 'x':
+        examples()
     elif arg == '?':
         usage()
     else:
@@ -184,7 +197,7 @@ while count < len(sys.argv):
         print("Possible projects: ", ', '.join(sorted(def_file.keys())))
         usage()
         exit()
-    count = count + 1
+    count += 1
 
 if not in_file:
     myd = os.getcwd()
