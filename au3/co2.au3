@@ -7,6 +7,7 @@ HotKeySet("{F7}", "Bail")
 HotKeySet("{F10}", "Bail")
 HotKeySet("{F11}", "Bail")
 
+Local $lesson_delay = 2
 Local $wait = 0
 Local $launch = 0
 Local $start = 0
@@ -27,6 +28,8 @@ while $count <= $cmdLine[0]
     $launch = 1
   Elseif StringLeft($arg, 1) == 'w' Then
     $wait = StringMid($CmdLine[$count], 2)
+  Elseif StringLeft($arg, 1) == 'd' Then
+    $lesson_delay = StringMid($CmdLine[$count], 2)
   ElseIf $CmdLine[$count] > 0 Then
     $start = $CmdLine[$count]
   ElseIf $CmdLine[$count] == -1 Then
@@ -69,6 +72,8 @@ EndIf
 if $start <= 3 Then
 clickCmd()
 send("pwd{ENTER}{ENTER}")
+sleep(500)
+send("{ENTER}{ENTER}")
 hitNext()
 EndIf
 
@@ -76,7 +81,13 @@ EndIf
 
 if $start <= 4 Then
 clickCmd()
-send("pwd{ENTER}{ENTER}ls{ENTER}{ENTER}cd 2015{ENTER}{ENTER}")
+send("pwd{ENTER}")
+sleep(500)
+send("ls{ENTER}")
+sleep(500)
+send("cd 2015{ENTER}")
+sleep(500)
+send("{ENTER}{ENTER}cd .{ENTER}")
 hitNext()
 EndIf
 
@@ -85,6 +96,9 @@ EndIf
 if $start <= 5 Then
 clickCmd()
 send("cd jan/memory{ENTER}cd ..{ENTER}")
+sleep($lesson_delay * 1000)
+send("{ENTER}{ENTER}cd .{ENTER}")
+hitNext()
 hitNext()
 EndIf
 
@@ -93,6 +107,9 @@ EndIf
 if $start <= 6 Then
 clickCmd()
 send("cd ../feb{ENTER}mkdir media{ENTER}")
+sleep($lesson_delay * 1000)
+send("{ENTER}{ENTER}cd .{ENTER}")
+hitNext()
 hitNext()
 EndIf
 
@@ -100,13 +117,17 @@ EndIf
 
 if $start <= 7 Then
 clickCmd()
-send("cd ../../2014/dec{ENTER}touch keyboard.txt{ENTER}")
+send("cd ../../2014/dec{ENTER}")
+send("touch keyboard.txt{ENTER}")
+sleep($lesson_delay * 1000)
+send("{ENTER}{ENTER}cd .{ENTER}")
 hitNext()
 EndIf
 
 ; eighth
 
 if $start <= 8 Then
+send("{ENTER}{ENTER}cd .{ENTER}")
 hitNext()
 EndIf
 
