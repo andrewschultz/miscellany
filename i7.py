@@ -20,23 +20,23 @@ def src(x):
     return sdir(x) + "/" + "story.ni"
 
 def mistake_file(x):
-    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x)).title()
+    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
 
 def hdr(x, y):
-    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x), y).title()
+    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x).title(), y.title())
 
 def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x)).title()
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
 
 mifi = mistake_file
 
 def table_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x)).title()
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x).title())
 
 tafi = table_file
 
 def test_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x)).title()
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x).title())
 
 tefi = test_file
 
@@ -48,11 +48,10 @@ def hfile(x, y):
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
 def lpro(x, spaces=False):
-    retval = ''
     if x in i7xr.keys(): retval = x
     elif x in i7x.keys(): retval = i7x[x]
     if spaces: retval = re.sub("-", " ", retval)
-    return ''
+    return retval
 
 def sdir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(i7x[x] if x in i7x.keys() else x)

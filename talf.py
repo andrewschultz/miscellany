@@ -335,6 +335,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             else:
                 print(f, '=', os.path.getsize(f), "bytes")
                 print(f2, '=', os.path.getsize(f2), "bytes")
+                print(f2, 'not deleted.')
                 print('Use -os to ignore this size differences, but do verify no information was lost, first.')
                 exit()
         if cmp(f, f2):
@@ -342,8 +343,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         else:
             print("DIFFERENCES FOUND. Copying over.")
             copy(f2, f)
+        os.remove(f2)
     elif not cmp(f, f2):
-        print("DIFFERENCES FOUND. Run with -c to copy back over.")
+        print("DIFFERENCES FOUND. Temp file not deleted. Run with -c to copy back over or -l to launch differences.")
 
 count = 1
 projects = []
