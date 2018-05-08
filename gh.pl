@@ -397,66 +397,55 @@ sub processTerms {
         next;
       }
 
-      if ( $a =~ / *< */ ) {
+      if ( $a =~ / *[><] */ ) {
         if ( !hasHash($hashProj) ) { next; }
-        $a =~ s/^[^=]*=//;
-        my @timeArray = split( / *< */, rehash($a) );
-        if ( $#timeArray != 1 ) { print("Bad split in line $.: $a\n"); next; }
-        if ( !-f $timeArray[0] ) { die("$timeArray[0] is not a valid file."); }
-        my @timeCompArray = split( ",", $timeArray[1] );
-        for my $tc (@timeCompArray) {
-          if ( !-f $tc ) { die("$tc is not a valid file."); }
-          if ( stat( $timeArray[0] )->mtime > stat($tc)->mtime ) {
-            if ( $executeDontBail && $xtraCmd ) {
-              print "$timeArray[0]/$tc are in the wrong order in time.\n";
-              print
-                "Running extra command $xtraCmd to set timestamps straight.\n";
-              `$xtraCmd`;
-            }
-            else {
-              my $errString =
-                "FATAL ERROR:\n    $timeArray[0] has timestamp after $tc\n"
-                . (
-                $xtraCmd
-                ? "    (try running $xtraCmd or adding =x to skip)"
-                : "    (no extra recommended command)"
-                ) . "\n";
-              die("$errString") if !defined( $ignoreFatal{$hashProj} );
-              print "SKIPPING $errString";
-              $skippedFatal++;
-            }
-          }
+        if ( ( $a =~ /[<>]/gi ) > 1 ) {
+          print("There can be only one < or >.\n");
+          next;
         }
-        next;
-      }
-      if ( $a =~ / *> */ ) {
-        if ( !hasHash($hashProj) ) { next; }
         $a =~ s/^[^=]*.//;
-        my @timeArray = split( / *> */, rehash($a) );
-        if ( $#timeArray != 1 ) { print("Bad split in line $.: $a\n"); next; }
-        my @timeCompArray = split( ",", $timeArray[0] );
-        for my $tc (@timeCompArray) {
-          if ( !-f $tc ) { die("$tc is not a valid file."); }
-          if ( !-f $timeArray[1] ) {
-            die("$timeArray[1] is not a valid file.");
-          }
-          if ( stat($tc)->mtime < stat( $timeArray[1] )->mtime ) {
-            if ( $executeDontBail && $xtraCmd ) {
-              print "$tc/$timeArray[1] are in the wrong order in time.\n";
-              print
-                "Running extra command $xtraCmd to set timestamps straight.\n";
-              `$xtraCmd`;
+        my @timeArray = split( / *[><] */, rehash($a) );
+        @timeArray = reverse(@timeArray) if $a =~ />/;
+        my @timeLesser  = split( ",", $timeArray[0] );
+        my @timeGreater = split( ",", $timeArray[1] );
+        for my $tl (@timeLesser) {
+          if ( !-f $tl ) { die("$tl (in lesser array) is not a valid file."); }
+          for my $tg (@timeGreater) {
+            print "TIMESTAMP DEATH MATCH: $tl <? $tg\n" if $verbose;
+            if ( !-f $tg ) {
+              die("$tg (in greater array) is not a valid file.");
             }
-            else {
-              die(
-"FATAL BUILD ERROR:\n$tc has timestamp after $timeArray[1], which is a fatal build error\n"
-                  . (
-                  $xtraCmd
-                  ? " (try running $xtraCmd or adding =x to skip)"
-                  : "(no extra command)"
-                  )
-                  . "\n"
-              );
+            if ( stat($tl)->mtime > stat($tg)->mtime ) {
+              if ( defined( $ignoreFatal{$hashProj} ) ) {
+                print "SKIPPING $tl vs $tg timestamp error.\n";
+                $skippedFatal++;
+                next;
+              }
+              if ($executeDontBail) {
+                print
+"SAVE ORDER WARNING: $tl has timestamp after $tg. /$timeArray[1] are in the wrong order in time.\n";
+                if ($xtraCmd) {
+                  print
+"Running extra command $xtraCmd to set timestamps straight.\n";
+                  `$xtraCmd`;
+                  $skippedFatal++;
+                }
+                else {
+                  print
+"There is currently no suggested command to run to fix this.\n";
+                }
+              }
+              else {
+                die(
+"FATAL BUILD ERROR:\n$tl has timestamp after $tg, which indicates I need to run or do something.\n"
+                    . (
+                    $xtraCmd
+                    ? " (try running $xtraCmd or adding =x to skip)"
+                    : "(no extra command)"
+                    )
+                    . "\n"
+                );
+              }
             }
           }
         }
