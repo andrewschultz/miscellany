@@ -25,7 +25,7 @@ default_proj = 'ai'
 # these -could- be changed via command line but it's low priority
 detail_debug = False
 copy_not_show = False
-track_global_mistakes = True
+track_global_duplicates = True
 
 projs = []
 
@@ -83,8 +83,8 @@ def is_off_heading(a):
     return False
 
 def sort_mistake(pr):
-    global_mistakes = defaultdict(int)
-    local_mistakes = defaultdict(int)
+    global_duplicates = defaultdict(int)
+    local_duplicates = defaultdict(int)
     mf = i7.mifi(pr)
     if not os.path.exists(mf):
         print("No mistake file", mf)
@@ -93,17 +93,22 @@ def sort_mistake(pr):
     current_lines = ""
     sect_to_sort = []
     need_alpha = False
+    loc_dupes = 0
+    glo_dupes = 0
     f = open(temp_file, "w", newline="\n")
     with open(mf) as file:
         for (linecount, line) in enumerate(file):
-            if line.lower().startswith('understand'):
-                for x in all_mistakes(line.lower().strip()):
-                    if x in local_mistakes.keys():
-                        print(x, "at line", linecount, "locally duplicated from", local_mistakes[x])
-                    elif track_global_mistakes and x in global_mistakes.keys():
-                        print(x, "at line", linecount, "globally duplicated from", global_mistakes[x])
-                    local_mistakes[x] = linecount
-                    global_mistakes[x] = linecount
+            ll = line.lower().strip()
+            if ll.startswith('understand'):
+                for x in all_mistakes(ll):
+                    if x in local_duplicates.keys():
+                        print(x, "at line", linecount, "locally duplicated from", local_duplicates[x])
+                        loc_dupes += 1
+                    elif track_global_duplicates and x in global_duplicates.keys():
+                        glo_dupes += 1
+                        print(x, "at line", linecount, "globally duplicated from", global_duplicates[x])
+                    local_duplicates[x] = linecount
+                    global_duplicates[x] = linecount
             if is_on_heading(line) or is_off_heading(line) or line.strip().endswith('ends here.'):
                 if current_lines:
                     print("Need carriage return before line", linecount, ":", line.strip())
@@ -116,7 +121,7 @@ def sort_mistake(pr):
                 need_alpha = is_on_heading(line)
                 f.write(line)
                 sect_to_sort = []
-                local_mistakes.clear()
+                local_duplicates.clear()
                 continue
             if not need_alpha:
                 f.write(line)
@@ -152,11 +157,15 @@ def sort_mistake(pr):
                 os.remove(temp_detail_1)
                 os.remove(temp_detail_2)
     os.remove(temp_file)
+    dupe_summary = "{:d} local duplicates".format(loc_dupes)
+    if track_global_duplicates: dupe_summary += ", {:d} global duplicates.".format(glo_dupes)
+    print(dupe_summary)
 
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg == 'c': copy_not_show = True
     elif arg == 'd': detail_debug = True
+    elif arg == 'g': track_global_duplicates = True
     else: projs.append(i7.lpro(arg))
     count = count + 1
 
