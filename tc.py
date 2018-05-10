@@ -11,12 +11,13 @@ import os
 import sys
 import re
 
+launch_after = False
 write_edit_files = False
 write_over = False
 
 def out_name(x):
     if x.endswith('.txt'):
-        return re.sub("\.txt$", "-comments.txt", file_name)
+        return re.sub("\.txt$", "-comments.txt", x)
     else:
         return "comments-" + x
 
@@ -24,39 +25,40 @@ def edit_name(x):
     if x.startswith("edit"): return ''
     return os.path.dirname(x) + "edit-" + os.path.basename(x)
 
-def to_output(fn):
-    f2 = open(fn, "w")
+def to_output(f_i, f_o):
+    f2 = open(f_o, "w")
     count = 0
     comments = 0
     lines_in_out_file = 0
     lines = []
     so_far = ""
-    with open(fn) as file:
-        for f in file:
-            count = count + 1
-            if f.startswith('>'):
-                if re.search("^> *[\*;]", f):
-                    f2.write("=" * 50 + "Line " + str(count) + "\n")
-                    f2.write(so_far + f)
+    with open(f_i) as file:
+        for (lc,line) in enumerate(file):
+            if line.startswith('>'):
+                if re.search("^> *[\*;]", line):
+                    f2.write("=" * 50 + "Line " + str(lc) + "\n")
+                    f2.write(so_far + line)
                     lines_in_out_file = lines_in_out_file + so_far.count('\n') + 2
                     lines.append(lines_in_out_file)
-                    so_far = f
+                    so_far = ""
                     comments = comments + 1
                 else:
-                    so_far = f
+                    so_far = "(prev) " + line
+                    if line != line.lower():
+                        print(f_i, lc, line.strip(), "may be a comment.")
                 continue
-            so_far = so_far + f
+            so_far = so_far + line
     if so_far != "":
         f2.write("ENDING TEXT")
         f2.write(so_far)
     if comments:
-        f2.write("\n{:d} total comments found ({:s}).\n".format(comments, ', '.join(map(str, lines))))
+        comwri = "{:d} total comments found ({:s}).".format(comments, ', '.join(map(str, lines)))
+        print(comwri)
+        f2.write("\n" + comwri + "\n")
     f2.close()
 
 so_far = ""
 
-file_name = "abca.txt"
-out_file_name = "comments.txt"
 the_glob = ""
 
 count = 1
@@ -81,6 +83,8 @@ if not len(my_files):
     sys.exit("No files specified. Use * to add them all, or specify them in the arguments.")
 
 for mf in my_files:
+    if 'comments' in mf:
+        print("COMMENTS is probably a file output by tc. Change", os.path.basename(mf))
     if not os.path.exists(mf):
         print(mf, "does not exist, skipping.")
         if the_glob: print("Not sure what happened, since this was from a glob.")
@@ -95,4 +99,11 @@ for mf in my_files:
                 copy(mf, ef)
                 os.system("attrib -r " + ef)
         else:
-            to_output(mf)
+            ona = out_name(mf)
+            print(os.path.basename(mf), "to", os.path.basename(ona))
+            to_output(mf, ona)
+        if launch_after and len(my_files) == 1:
+            os.system(ona)
+
+if launch_after and len(my_files) > 1:
+    print("Too many files to launch.")
