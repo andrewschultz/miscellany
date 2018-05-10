@@ -5,16 +5,24 @@
 # tc.py (optional file name) (output file name)
 #
 
+from shutil import copy
 import glob
 import os
 import sys
 import re
+
+write_edit_files = False
+write_over = False
 
 def out_name(x):
     if x.endswith('.txt'):
         return re.sub("\.txt$", "-comments.txt", file_name)
     else:
         return "comments-" + x
+
+def edit_name(x):
+    if x.startswith("edit"): return ''
+    return os.path.dirname(x) + "edit-" + os.path.basename(x)
 
 def to_output(fn):
     f2 = open(fn, "w")
@@ -53,17 +61,38 @@ the_glob = ""
 
 count = 1
 
+my_files = []
+
 while count < len(sys.argv):
-    arg = sys.argv[count]
-    if '*' in sys.argv[count]:
+    arg = sys.argv[count].lower()
+    if arg.startswith('-'): arg = arg[1:]
+    if '*' in arg:
         the_glob = arg
-    my_files.append[arg]
+    elif arg == 'w': write_edit_files = True
+    elif arg == 'wo': write_over = write_edit_files = True
+    else:
+        my_files.append(arg)
+    count = count + 1
 
 if the_glob:
     my_files = my_files + glob.glob(the_glob)
 
+if not len(my_files):
+    sys.exit("No files specified. Use * to add them all, or specify them in the arguments.")
+
 for mf in my_files:
     if not os.path.exists(mf):
-        print(mf, "does not exist, skipping")
+        print(mf, "does not exist, skipping.")
+        if the_glob: print("Not sure what happened, since this was from a glob.")
     else:
-        to_output(mf)
+        if write_edit_files:
+            ef = edit_name(mf)
+            if ef:
+                if os.path.exists(ef) and not write_over:
+                    print(ef, "exists. Use (-)wo to write over.")
+                    continue
+                print(mf, 'to', ef)
+                copy(mf, ef)
+                os.system("attrib -r " + ef)
+        else:
+            to_output(mf)
