@@ -14,6 +14,11 @@ import re
 launch_after = False
 write_edit_files = False
 write_over = False
+warn_too_many = False
+make_html = False
+max_files = 1
+cur_launched = 0
+tran_fi = "transcripts.htm"
 
 def out_name(x):
     if x.endswith('.txt'):
@@ -70,7 +75,16 @@ while count < len(sys.argv):
     if arg.startswith('-'): arg = arg[1:]
     if '*' in arg:
         the_glob = arg
+    elif arg == 'l': launch_after = True
+    elif arg.startswith('l'):
+        launch_after = True
+        try:
+            max_files = int(arg[1])
+        except:
+            print("Need integer argument l#### for number of files to launch.")
     elif arg == 'w': write_edit_files = True
+    elif arg == 'h': make_html = True
+    elif arg == 'hl': launch_html = make_html = True
     elif arg == 'wo': write_over = write_edit_files = True
     else:
         my_files.append(arg)
@@ -79,7 +93,7 @@ while count < len(sys.argv):
 if the_glob:
     my_files = my_files + glob.glob(the_glob)
 
-if not len(my_files):
+if not len(my_files) and not launch_html and not make_html:
     sys.exit("No files specified. Use * to add them all, or specify them in the arguments.")
 
 for mf in my_files:
@@ -102,8 +116,24 @@ for mf in my_files:
             ona = out_name(mf)
             print(os.path.basename(mf), "to", os.path.basename(ona))
             to_output(mf, ona)
-        if launch_after and len(my_files) == 1:
-            os.system(ona)
+        if launch_after:
+            if len(my_files) > cur_launched:
+                print("Launching", ona)
+                os.system(ona)
+                cur_launched += 1
+            else:
+                warn_too_many = True
 
-if launch_after and len(my_files) > 1:
+if make_html:
+    h_ary = glob.glob("comments*") + glob.glob("*comments") + glob.glob("*comments.txt")
+    hout = open(tran_fi, "w")
+    hout.write("<html>\n<title>\nHTML list of transcripts</title>\n<body>\n")
+    for h in h_ary:
+        hout.write("<a href = {:s}>{:s}</a><br />\n".format(h, h))
+    hout.write("</body>\n</html>\n")
+    hout.close()
+
+if launch_html: os.system(tran_fi)
+
+if warn_too_many:
     print("Too many files to launch.")
