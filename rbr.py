@@ -45,6 +45,7 @@ def act(a):
 
 def get_file(fname):
     dupe_val = 1
+    warns = 0
     last_cmd = ""
     file_list = []
     file_array = []
@@ -71,7 +72,7 @@ def get_file(fname):
                 continue
             if re.search("^TSV(I)?[=:]", line): #tab separated values
                 ignore_too_short = line.lower().startswith("tsvi")
-                l2 = re.sub("TSV(I)?.", "", line.lower()).strip().split("\t")
+                l2 = re.sub("TSV(I)?.", "", line.lower(), 0, re.IGNORECASE).strip().split("\t")
                 if len(l2) > len(actives):
                     print("WARNING line", line_count, "has too many TSV values, ignoring")
                     print("TEXT:", line.strip())
@@ -113,7 +114,11 @@ def get_file(fname):
                 for x in ll.split(','):
                     if x.isdigit():
                         actives[int(x)] = True
+                continue
             if re.search("^=+t", line):
+                if temp_diverge:
+                    print("Oops, bailing due to second temporary divergence ==t at line", line_count, ":", line.strip())
+                    exit()
                 old_actives = list(actives)
                 temp_diverge = True
                 ll = re.sub("^=+t", "", line.lower().strip()).split(',')
@@ -127,11 +132,14 @@ def get_file(fname):
                 for x in ll:
                     if x.isdigit(): actives[int(x)] = True
                 continue
+            if line.startswith("=="):
+                print("Uh oh line", line_count, "may be a bad command.")
+                warns += 1
             if debug and line.startswith(">"): print(act(actives), line.strip())
             for ct in range(0, len(file_list)):
                 if actives[ct]:
-                    line_write = re.sub("\*file", file_list[ct].name, line)
-                    file_list[ct].write(line)
+                    line_write = re.sub("\*file", file_list[ct].name, line, 0, re.IGNORECASE)
+                    file_list[ct].write(line_write)
             if actives[dupe_val]:
                 dupe_file.write(line)
                 if 'by one point' in line:
@@ -139,10 +147,11 @@ def get_file(fname):
                     if times[last_cmd[1:]] > 1: reps = times[last_cmd[1:]]
                     for x in range(0, reps):
                         dupe_file.write("\n" + last_cmd + "\n")
-                        dupe_file.write("/by one point\n")
+                        dupe_file.write("!by one point\n")
     for ct in range(0, len(file_array)):
         file_list[ct].close()
     dupe_file.close()
+    if warns > 0: print(warns, "potential bad commands.")
     print("Wrote files:", ', '.join(file_array), 'from', fname)
 
 with open('c:/writing/scripts/rbr.txt') as file:
