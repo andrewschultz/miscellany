@@ -16,9 +16,17 @@ write_edit_files = False
 write_over = False
 warn_too_many = False
 make_html = False
+launch_html = False
 max_files = 1
 cur_launched = 0
 tran_fi = "transcripts.htm"
+
+def usage():
+    print("l = launch HTML file, l# = maximum files to launch (1=default)")
+    print("w = write edit-* files, wo = write over edit files")
+    print("h = make HTML, hl = launch HTML--can be run without any files input")
+    print("* gives a wildcard for files. Otherwise, tc.py just processes files.")
+    exit()
 
 def out_name(x):
     if x.endswith('.txt'):
@@ -73,8 +81,7 @@ my_files = []
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg.startswith('-'): arg = arg[1:]
-    if '*' in arg:
-        the_glob = arg
+    if '*' in arg: the_glob = arg
     elif arg == 'l': launch_after = True
     elif arg.startswith('l'):
         launch_after = True
@@ -86,6 +93,7 @@ while count < len(sys.argv):
     elif arg == 'h': make_html = True
     elif arg == 'hl': launch_html = make_html = True
     elif arg == 'wo': write_over = write_edit_files = True
+    elif arg == '?': usage()
     else:
         my_files.append(arg)
     count = count + 1
@@ -94,7 +102,7 @@ if the_glob:
     my_files = my_files + glob.glob(the_glob)
 
 if not len(my_files) and not launch_html and not make_html:
-    sys.exit("No files specified. Use * to add them all, or specify them in the arguments.")
+    print("No files/html commands specified. Use * to add them all, or specify them in the arguments. -? for usage.")
 
 for mf in my_files:
     if 'comments' in mf:
