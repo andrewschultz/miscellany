@@ -1,8 +1,19 @@
+# rbr.py: regression brancher
+#
+# takes an rbr*.txt file and separates it into many reg-*
+#
+# usage rbr.py (project name) e.g. rbr.py ai
+#
+# or you can run it from a project source directory
+
 import sys
 import re
 import os
 import i7
+import glob
+import subprocess
 from collections import defaultdict
+from shutil import copy
 
 def_file = defaultdict(str)
 times = defaultdict(int)
@@ -10,6 +21,8 @@ times = defaultdict(int)
 always_be_writing = False
 edit_main_branch = False
 debug = False
+
+copy_over_post = True
 
 in_file = ""
 in_dir = os.getcwd()
@@ -28,6 +41,7 @@ def usage():
     print("-e = edit rbr.txt")
     print("-c = edit rbr.py")
     print("-d = debug on")
+    print("-np = no copy over post, -p = copy over post (default)")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
     exit()
@@ -199,6 +213,10 @@ while count < len(sys.argv):
         edit_main_branch = True
     elif arg == 'd':
         debug = True
+    elif arg == 'np':
+        copy_over_post = False
+    elif arg == 'p':
+        copy_over_post = True
     elif arg in i7.i7x.keys():
         in_proj = i7.i7x[arg]
         in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
@@ -232,3 +250,7 @@ if edit_main_branch:
     os.system(in_file)
 else:
     get_file(in_file)
+
+if copy_over_post:
+    print("Running prt.pl after -- try -np to disable this")
+    subprocess.run(["perl", "c:\\writing\\scripts\\prt.pl"], stdout=subprocess.PIPE)
