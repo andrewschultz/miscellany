@@ -65,7 +65,14 @@ def get_file(fname):
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
-                actives = old_actives
+                for x in actives: file_list[x].write("\n") # only actives get a CR
+                actives = list(old_actives)
+                continue
+            if line.strip() == "\\\\": line = "\n"
+            if line.startswith("'") or line.strip().endswith("'"): print("Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
+            if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR artifact in line", line_count, ":", line.strip())
+            if '##location' in line or '##condition' in line: print("Excess generated text from mist.py in line", line_count, ":", line.strip())
+            if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip())
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w")
