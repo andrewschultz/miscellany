@@ -17,6 +17,7 @@ use strict;
 use warnings;
 use Time::HiRes qw(time);
 use i7;
+use File::Copy;
 
 my %zmac;
 my %proj;
@@ -127,37 +128,18 @@ while ( $count <= $#ARGV ) {
     #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
     /^(b|beta)$/
       && do { $buildSpecified = 1; $runBeta = 1 - $runBeta; $count++; next; };
-    /^-?jb$/ && do {
-      $buildSpecified = 1;
-      $runBeta        = 1;
-      $debug          = $release = 0;
-      $count++;
-      next;
-    };
-    /^-?jd$/ && do {
-      $buildSpecified = 1;
-      $debug          = 1;
-      $runBeta        = $release = 0;
-      $count++;
-      next;
-    };
-    /^-?fb$/ && do {
-      $forceBuild = 1;
-      $count++;
-      next;
-    };
-    /^-?jr$/ && do {
-      $buildSpecified = 1;
-      $release        = 1;
-      $debug          = $runBeta = 0;
-      $count++;
-      next;
-    };
-    /^-?jrn$/ && do {
+    /^-?j([in])?[bdr]([in])?$/ && do {
       $buildSpecified  = 1;
-      $ignoreDRBPrefix = 1;
-      $release         = 1;
-      $debug           = $runBeta = 0;
+      $debug           = ( $a =~ /d/ );
+      $runBeta         = ( $a =~ /b/ );
+      $release         = ( $a =~ /r/ );
+      $ignoreDRBPrefix = ( $a =~ /[in]/ );
+      die("Can only have one of DBR.") if ( $debug + $runBeta + $release > 1 );
+      $count++;
+      next;
+    };
+    /^-?it$/ && do {
+      $forceBuild = 1;
       $count++;
       next;
     };
@@ -327,7 +309,7 @@ sub doOneBuild {
   }
 
   my $tempSource = "$bdir\\source\\story.ni";
-  my $outFile    = "$_[0]\\Build\\output.$ex";
+  my $outFile    = "$_[0]\\Build\\icl-output.$ex";
   my $dflag      = "$_[1]";
   my $infOut     = "$_[0]\\Build\\auto.inf";
 
@@ -336,7 +318,7 @@ sub doOneBuild {
   }
 
   my $blorbFileShort = getFile("$_[0]/Release.blurb");
-  if ( $_[3] ne "debug" && !($ignoreDRBPrefix) ) {
+  if ( $_[3] ne "debug" || ( !$ignoreDRBPrefix ) ) {
     $blorbFileShort = "$_[3]-$blorbFileShort";
   }
   my $outFinal = "$_[2]\\Release\\$blorbFileShort";
@@ -345,7 +327,7 @@ sub doOneBuild {
   my $infmod = -f "$outFinal" ? ( stat($outFinal) )[9] : 0;
   if ( !$forceBuild ) {
     die(
-"$tempSource has timestamp before $outFinal.\nBailing. Use -fb to go anyway"
+"$tempSource has timestamp before $outFinal.\nBailing. Use -it (ignore timestamps) to go anyway"
     ) if ( $lastmod < $infmod );
   }
   if ($checkRecentChanges) {
@@ -364,8 +346,10 @@ sub doOneBuild {
 
   delIfThere($infOut);
 
-  my $compileCmd =
-"\"$infDir\\Compilers\\ni\" -release -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=$ex\"";
+  my $compileCmd = sprintf(
+"\"$infDir\\Compilers\\ni\" %s -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=\"$ex\"",
+    ( $_[3] eq "R" ) ? "-release" : "" );
+  print "$compileCmd\n";
   my $compileCheck = `$compileCmd`;
 
   my $doneTime = time() - $startTime;
@@ -414,7 +398,14 @@ sub doOneBuild {
       || ( -s "$outFinal" < -s "$outFile" ) ? "failed,0,1" : "passed,0,0" )
     . ",0\n";
 
-  if ( -f $outFinal ) { writeToLog( $outFinal, @_ ); }
+  if ( -f $outFinal ) {
+    writeToLog( $outFinal, @_ );
+    if ( $_[3] eq "debug" ) {
+      my ( $baseName = $outFinal ) =~ s/.*[\\\/]//g;
+      print("Copying $baseName over...");
+      copy( $outFinal, "c:/games/inform/prt/$baseName" );
+    }
+  }
   printTimeDif($startTime);
   return;
 }
@@ -588,7 +579,7 @@ sub getFile {
       return $a;
     }
   }
-  return "output.$ex";
+  return "icl-output.$ex";
 }
 
 sub delIfThere {
