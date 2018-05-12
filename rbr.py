@@ -14,9 +14,12 @@ import glob
 import subprocess
 from collections import defaultdict
 from shutil import copy
+from filecmp import cmp
 
 def_file = defaultdict(str)
 times = defaultdict(int)
+
+temp_dir = "c:/games/inform/prt/temp"
 
 always_be_writing = False
 edit_main_branch = False
@@ -66,11 +69,6 @@ def get_file(fname):
     line_count = 0
     dupe_file_name = ""
     temp_diverge = False
-    try:
-        dupe_file = open("hello.txt", "r")
-        dupe_file.close()
-    except:
-        pass
     print("Poking at", fname)
     actives = []
     with open(fname) as file:
@@ -86,7 +84,7 @@ def get_file(fname):
             if line.startswith("'") or line.strip().endswith("'"): print("Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
             if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR artifact in line", line_count, ":", line.strip())
             if '##location' in line or '##condition' in line: print("Excess generated text from mist.py in line", line_count, ":", line.strip())
-            if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip())
+            if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w")
@@ -105,7 +103,8 @@ def get_file(fname):
                     file_list[x].write(l2[x] + "\n")
                 continue
             if line.startswith("files="):
-                file_array = re.sub(".*=", "", line.lower().strip()).split(',')
+                file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
+                file_array = [os.path.join(temp_dir, f) for f in file_array_base]
                 actives = [True] * len(file_array)
                 for x in file_array:
                     f = open(x, 'w')
@@ -173,7 +172,26 @@ def get_file(fname):
         file_list[ct].close()
     dupe_file.close()
     if warns > 0: print(warns, "potential bad commands.")
-    print("Wrote files:", ', '.join(file_array), 'from', fname)
+    new_files = defaultdict(bool)
+    changed_files = defaultdict(bool)
+    unchanged_files = defaultdict(bool)
+    for x in file_array:
+        xb = os.path.basename(x)
+        if not os.path.exists(xb):
+            new_files[xb] = True
+            copy(x, xb)
+        elif cmp(x, xb):
+            unchanged_files[xb] = True
+        else:
+            changed_files[xb] = True
+            copy(x, xb)
+        os.remove(x)
+    if len(new_files.keys()) + len(changed_files.keys()) == 0:
+        print("Nothing changed.")
+        return
+    if len(new_files.keys()) > 0: print("New files:", ', '.join(sorted(new_files.keys())), 'from', fname)
+    if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
+    if len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
 
 with open('c:/writing/scripts/rbr.txt') as file:
     for line in file:
