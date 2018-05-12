@@ -34,6 +34,13 @@ count = 1
 alpha_on = [ 'chapter', 'section' ]
 alpha_off = [ 'volume', 'book', 'part' ]
 
+def usage():
+    print("c = copy don't show")
+    print("d = detail debug")
+    print("g = track global and not just local duplicates")
+    print("You can specify multiple projects or abbreviations.")
+    exit()
+
 def breakdowns(e):
     any_slashes = False
     return_array = []
@@ -163,9 +170,14 @@ def sort_mistake(pr):
 
 while count < len(sys.argv):
     arg = sys.argv[count]
+    if arg[0] == '-': arg = arg[1:]
     if arg == 'c': copy_not_show = True
     elif arg == 'd': detail_debug = True
     elif arg == 'g': track_global_duplicates = True
+    elif arg == '?': usage()
+    elif not i7.lpro(arg):
+        print(arg, "does not map to any project. Showing usage.")
+        usage()
     else: projs.append(i7.lpro(arg))
     count = count + 1
 

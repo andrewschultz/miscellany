@@ -20,10 +20,10 @@ def src(x):
     return sdir(x) + "/" + "story.ni"
 
 def mistake_file(x):
-    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
 
 def hdr(x, y):
-    'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x).title(), y.title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x).title(), y.title())
 
 def mistake_file(x):
     return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
@@ -48,6 +48,7 @@ def hfile(x, y):
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
 def lpro(x, spaces=False):
+    retval = ''
     if x in i7xr.keys(): retval = x
     elif x in i7x.keys(): retval = i7x[x]
     if spaces: retval = re.sub("-", " ", retval)

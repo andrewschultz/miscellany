@@ -178,6 +178,7 @@ def check_source(a):
 
 proj = "ailihphilia"
 for x in i7.i7f[proj]:
+    if 'tests' in x.lower(): continue
     if source_only and 'story.ni' not in x.lower(): continue
     check_source(x)
 
