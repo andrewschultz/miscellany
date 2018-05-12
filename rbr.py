@@ -73,7 +73,7 @@ def write_monty_file(fname, testnum):
     from_file = os.path.join(temp_dir, fname)
     to_file = os.path.join(temp_dir, new_file_name)
     cmd_yet = False
-    f = open(new_file_name, "w")
+    f = open(new_file_name, "w", newline="\n")
     with open(fname) as file:
         for line in file:
             if line.startswith('>') and not cmd_yet:
@@ -103,13 +103,17 @@ def get_file(fname):
     temp_diverge = False
     print("Poking at", fname)
     actives = []
+    old_actives = []
     with open(fname) as file:
         for line in file:
             line_count += 1
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
-                for x in actives: file_list[x].write("\n") # only actives get a CR
+                for x in range(len(actives)):
+                    if not last_cr[x]:
+                        file_list[x].write("\n") # only actives get a CR
+                        last_cr[x] = True
                 actives = list(old_actives)
                 continue
             if line.strip() == "\\\\": line = "\n"
@@ -119,7 +123,7 @@ def get_file(fname):
             if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
-                dupe_file = open(dupe_file_name, "w")
+                dupe_file = open(dupe_file_name, "w", newline="\n")
                 continue
             if re.search("^TSV(I)?[=:]", line): #tab separated values
                 ignore_too_short = line.lower().startswith("tsvi")
@@ -138,8 +142,9 @@ def get_file(fname):
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
                 file_array = [os.path.join(temp_dir, f) for f in file_array_base]
                 actives = [True] * len(file_array)
+                last_cr = [False] * len(file_array)
                 for x in file_array:
-                    f = open(x, 'w')
+                    f = open(x, "w", newline="\n")
                     file_list.append(f)
                 continue
             if all_false(actives):
@@ -190,8 +195,13 @@ def get_file(fname):
             if debug and line.startswith(">"): print(act(actives), line.strip())
             for ct in range(0, len(file_list)):
                 if actives[ct]:
-                    line_write = re.sub("\*file", file_list[ct].name, line, 0, re.IGNORECASE)
-                    file_list[ct].write(line_write)
+                    line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
+                    if last_cr[ct] and (len(line_write.strip()) == 0):
+                        pass
+                    else:
+                        file_list[ct].write(line_write)
+                    last_cr[ct] = len(line_write.strip()) == 0
+                # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if actives[dupe_val]:
                 dupe_file.write(line)
                 if 'by one point' in line:
