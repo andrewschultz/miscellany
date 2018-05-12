@@ -16,6 +16,7 @@ from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
 
+monty_detail = defaultdict(str)
 def_file = defaultdict(str)
 times = defaultdict(int)
 
@@ -24,6 +25,7 @@ temp_dir = "c:/games/inform/prt/temp"
 always_be_writing = False
 edit_main_branch = False
 debug = False
+monty_process = False
 
 copy_over_post = True
 
@@ -44,6 +46,7 @@ def usage():
     print("-e = edit rbr.txt")
     print("-c = edit rbr.py")
     print("-d = debug on")
+    print("-m = Monty process")
     print("-np = no copy over post, -p = copy over post (default)")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
@@ -59,6 +62,35 @@ def act(a):
     for x in range(len(a)):
         if a[x]: trues.append(str(x))
     return '/'.join(trues)
+
+def wipe_first_word(a):
+    return re.sub(r'^[a-z]+([=:])?', "", ll, 0, re.IGNORECASE)
+
+def write_monty_file(fname, testnum):
+    mytest = monty_detail[testnum]
+    new_file_name = re.sub("^reg", "rmo", fname)
+    new_file_name = re.sub("\.", "-{:s}-{:s}.".format(testnum, mytest), new_file_name)
+    from_file = os.path.join(temp_dir, fname)
+    to_file = os.path.join(temp_dir, new_file_name)
+    cmd_yet = False
+    f = open(new_file_name, "w")
+    with open(fname) as file:
+        for line in file:
+            if line.startswith('>') and not cmd_yet:
+                cmd_yet = True
+                f.write("#Test kickoff command for {:s} each turn\b>{:s}\n\n".format(mytest, mytest))
+            f.write(line)
+    f.close()
+    if not os.path.exists(to_file):
+        print('New file', new_file_name)
+        copy(from_file, to_file)
+    elif cmp(from_file, to_file):
+        print('Unchanged file', new_file_name)
+        return
+    else:
+        print('Modified file', new_file_name)
+        copy(from_file, to_file)
+    return
 
 def get_file(fname):
     dupe_val = 1
@@ -175,6 +207,13 @@ def get_file(fname):
     new_files = defaultdict(bool)
     changed_files = defaultdict(bool)
     unchanged_files = defaultdict(bool)
+    if monty_process:
+        print(file_array)
+        for x in file_array:
+            x2 = os.path.basename(x)
+            if x2 in mwrites.keys():
+                for y in mwrites[x2].keys():
+                    write_monty_file(x2, y)
     for x in file_array:
         xb = os.path.basename(x)
         if not os.path.exists(xb):
@@ -193,19 +232,51 @@ def get_file(fname):
     if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
     if len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
 
+cur_proj = ""
+mwrites = defaultdict(lambda: defaultdict(bool))
+
 with open('c:/writing/scripts/rbr.txt') as file:
-    for line in file:
-        if line.startswith(';'): break
-        if line.lower().startswith('dupe'):
-            j = re.sub(r'^dupe([:=])?', "", line.strip().lower())
-            ja = j.split("\t")
+    for (lc, line) in enumerate(file):
+        ll = line.lower().strip()
+        if ll.startswith(';'): break
+        if ll.startswith('#'): continue
+        vars = wipe_first_word(ll)
+        if ll.startswith('dupe'):
+            ja = vars.split("\t")
             times[ja[0]] = int(ja[1])
             continue
-        if line.lower().startswith('default'):
-            j = re.sub(r'^default([:=])?', "", line.strip().lower())
-            def_proj = j
+        if ll.startswith('default'):
+            def_proj = vars
             continue
-        j = line.strip().lower().split("\t")
+        if ll.startswith('project') or ll.startswith('projname'):
+            cur_proj = vars
+            continue
+        if ll.startswith('branchfile'):
+            def_file[cur_proj] = vars
+            if cur_proj in i7.i7xr.keys(): def_file[i7.i7xr[cur_proj]] = vars
+            if cur_proj in i7.i7x.keys(): def_file[i7.i7x[cur_proj]] = vars
+            continue
+        if ll.startswith('montyfiles'):
+            mfi = vars.split("\t")
+            for x in mfi:
+                y = x.split("=")
+                if '=' not in x:
+                    print(x, 'in line', line_count, ll, 'needs an =')
+                    continue
+                z = y[1].split(',')
+                for z0 in z:
+                    mwrites[y[0]][z0] = True
+            continue
+        if ll.startswith('monty'):
+            monties = vars.split(',')
+            for x in monties:
+                if '=' not in x:
+                    print(x, 'in line', line_count, ll, 'needs an =')
+                    continue
+                y = x.split("=")
+                monty_detail[y[0]] = y[1]
+            continue
+        j = ll.split("\t")
         if len(j) < 2:
             print("Need tab in", line.strip())
         hk = i7.lpro(j[0])
@@ -231,6 +302,8 @@ while count < len(sys.argv):
         edit_main_branch = True
     elif arg == 'd':
         debug = True
+    elif arg == 'm':
+        monty_process = True
     elif arg == 'np':
         copy_over_post = False
     elif arg == 'p':
@@ -254,6 +327,7 @@ while count < len(sys.argv):
 if not in_file:
     myd = os.getcwd()
     if i7.dir2proj(myd):
+        print(i7.dir2proj(myd))
         in_file = os.path.join(myd, def_file[i7.dir2proj(myd)])
     if not in_file:
         in_file = os.path.join(i7.sdir(def_proj), def_file[def_proj])
@@ -262,6 +336,7 @@ if not in_file:
         print("Getting file from current directory", in_file)
 
 os.chdir(os.path.dirname(in_file))
+mydir = os.getcwd()
 
 if edit_main_branch:
     print("Opening branch file", in_file)
