@@ -109,7 +109,9 @@ while ( $count <= $#ARGV ) {
       open( B, ">$bailFile" );
       close(B);
       print "Setting auto-bail OFF.\n";
-      die("Run again without -ba to execute dailies.\n") unless ( $a =~ /f/ );
+      die(
+"Run again without -ba to execute dailies.... or -nbf to run right away next time.\n"
+      ) unless ( $a =~ /f/ );
       $count++;
       exit();
       next;
@@ -118,7 +120,8 @@ while ( $count <= $#ARGV ) {
       open( B, ">$bailFile" );
       print B "bail\n";
       close(B);
-      print "Setting auto-bail ON. Run again without -ba to execute dailies.\n";
+      print
+"Setting auto-bail ON. -nb to shut off, then Run again without -ba to execute dailies.\n";
       $count++;
       exit();
       next;
