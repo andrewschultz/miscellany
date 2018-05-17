@@ -17,7 +17,7 @@ from shutil import copy
 from filecmp import cmp
 
 monty_detail = defaultdict(str)
-def_file = defaultdict(str)
+branch_list = defaultdict(list)
 times = defaultdict(int)
 
 temp_dir = "c:/games/inform/prt/temp"
@@ -31,6 +31,7 @@ copy_over_post = True
 
 in_file = ""
 in_dir = os.getcwd()
+proj = ""
 
 def examples():
     print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
@@ -78,7 +79,7 @@ def write_monty_file(fname, testnum):
         for line in file:
             if line.startswith('>') and not cmd_yet:
                 cmd_yet = True
-                f.write("#Test kickoff command for {:s} each turn\b>{:s}\n\n".format(mytest, mytest))
+                f.write("#Test kickoff command for {:s} each turn\n>monty {:s}\n\n".format(mytest, testnum))
             f.write(line)
     f.close()
     if not os.path.exists(to_file):
@@ -161,25 +162,33 @@ def get_file(fname):
             if line.startswith("==!") or line.startswith("==-") or line.startswith("==^"):
                 actives = [True] * len(actives)
                 try:
-                    for x in line.lower().strip()[3:].split(','):
-                        actives[int(x)] = False
+                    chgs = line.lower().strip()[3:].split(',')
+                    if len(chgs):
+                        for x in chgs:
+                            actives[int(x)] = False
+                    else:
+                        print("No elements in ==!/-/^ array, line", line_count)
                 except:
                     sys.exit("Failed at line " + line_count + ": " + line.strip())
                 continue
             if line.startswith("==+"):
                 ll = line.lower().strip()[3:]
+                if len(ll) == 0:
+                    print("WARNING nothing added", line_count, line.lower().strip())
+                    continue
                 for x in ll.split(','):
                     if x.isdigit():
                         actives[int(x)] = True
                 continue
-            if re.search("^=+t", line):
+            if line.startswith("==t"):
                 if temp_diverge:
                     print("Oops, bailing due to second temporary divergence ==t at line", line_count, ":", line.strip())
                     exit()
                 old_actives = list(actives)
                 temp_diverge = True
-                ll = re.sub("^=+t", "", line.lower().strip()).split(',')
-                actives = [False] * len(file_array)
+                ll = re.sub("^==t(!)?", "", line.lower().strip()).split(',')
+                towhich = line.startswith("==t!")
+                actives = [towhich] * len(file_array)
                 for x in ll:
                     if x.isdigit(): actives[int(x)] = True
                 continue
@@ -203,16 +212,17 @@ def get_file(fname):
                     last_cr[ct] = len(line_write.strip()) == 0
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if actives[dupe_val]:
-                dupe_file.write(line)
-                if 'by one point' in line:
-                    reps = 1
-                    if times[last_cmd[1:]] > 1: reps = times[last_cmd[1:]]
-                    for x in range(0, reps):
-                        dupe_file.write("\n" + last_cmd + "\n")
-                        dupe_file.write("!by one point\n")
+                if dupe_file_name:
+                    dupe_file.write(line)
+                    if 'by one point' in line:
+                        reps = 1
+                        if times[last_cmd[1:]] > 1: reps = times[last_cmd[1:]]
+                        for x in range(0, reps):
+                            dupe_file.write("\n" + last_cmd + "\n")
+                            dupe_file.write("!by one point\n")
     for ct in range(0, len(file_array)):
         file_list[ct].close()
-    dupe_file.close()
+    if dupe_file_name: dupe_file.close()
     if warns > 0: print(warns, "potential bad commands.")
     new_files = defaultdict(bool)
     changed_files = defaultdict(bool)
@@ -261,10 +271,10 @@ with open('c:/writing/scripts/rbr.txt') as file:
         if ll.startswith('project') or ll.startswith('projname'):
             cur_proj = vars
             continue
-        if ll.startswith('branchfile'):
-            def_file[cur_proj] = vars
-            if cur_proj in i7.i7xr.keys(): def_file[i7.i7xr[cur_proj]] = vars
-            if cur_proj in i7.i7x.keys(): def_file[i7.i7x[cur_proj]] = vars
+        if ll.startswith('branchfiles'):
+            branch_list[cur_proj] = vars.split(",")
+            if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = vars.split(",")
+            if cur_proj in i7.i7x.keys(): branch_list[i7.i7x[cur_proj]] = vars.split(",")
             continue
         if ll.startswith('montyfiles'):
             mfi = vars.split("\t")
@@ -289,15 +299,18 @@ with open('c:/writing/scripts/rbr.txt') as file:
         j = ll.split("\t")
         if len(j) < 2:
             print("Need tab in", line.strip())
+        print(j)
         hk = i7.lpro(j[0])
-        def_file[j[0]] = j[1]
+        branch_list[j[0]] = j[1]
         if hk:
             print(hk, j[1])
-            def_file[hk] = j[1]
+            branch_list[hk] = j[1]
         else:
             print(j[0], hk, "not recognized as project or shortcut")
 
 count = 1
+
+projs = []
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -319,8 +332,8 @@ while count < len(sys.argv):
     elif arg == 'p':
         copy_over_post = True
     elif arg in i7.i7x.keys():
-        in_proj = i7.i7x[arg]
-        in_file = i7.sdir(arg) + "\\" + def_file[in_proj]
+        if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
+        proj = i7.i7x[arg]
     elif os.path.exists(arg):
         in_file = arg
     elif arg == 'x':
@@ -329,30 +342,33 @@ while count < len(sys.argv):
         usage()
     else:
         print("Bad argument", count, arg)
-        print("Possible projects: ", ', '.join(sorted(def_file.keys())))
+        print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
         usage()
         exit()
     count += 1
 
-if not in_file:
+if in_file:
+    os.chdir(os.path.dirname(in_file))
+    mydir = os.getcwd()
+    if edit_main_branch:
+        print("Opening branch file", in_file)
+        os.system(in_file)
+    else:
+        get_file(in_file)
+    exit()
+
+if not proj:
     myd = os.getcwd()
     if i7.dir2proj(myd):
-        print(i7.dir2proj(myd))
-        in_file = os.path.join(myd, def_file[i7.dir2proj(myd)])
-    if not in_file:
-        in_file = os.path.join(i7.sdir(def_proj), def_file[def_proj])
-        print("Going with default", def_proj, "to", in_file)
+        proj = i7.dir2proj(myd)
+        print("Going with project from current directory", proj)
     else:
-        print("Getting file from current directory", in_file)
+        print("Going with default", def_proj)
+        proj = def_proj
 
-os.chdir(os.path.dirname(in_file))
-mydir = os.getcwd()
-
-if edit_main_branch:
-    print("Opening branch file", in_file)
-    os.system(in_file)
-else:
-    get_file(in_file)
+i7.go_proj(proj)
+for x in branch_list[proj]:
+    get_file(x)
 
 if copy_over_post:
     print("Running prt.pl after -- try -np to disable this")
