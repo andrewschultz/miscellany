@@ -50,6 +50,8 @@ def to_full(a):
     exit()
 
 def mister(a):
+    mistakes = 0
+    flags = 0
     need_test = defaultdict(int)
     mistake_text = defaultdict(str)
     cmd_text = defaultdict(str)
@@ -61,6 +63,8 @@ def mister(a):
     special_def = ''
     room_sect_var = default_room_level if a not in levs.keys() else levs[a]
     last_loc = '(none)'
+    slashes = []
+    mults = []
     with open(in_file) as file:
         for line in file:
             count += 1
@@ -101,6 +105,7 @@ def mister(a):
         # print(p, need_test[p])
     # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
     extra_text = defaultdict(str)
+    ignore_next = False
     for fi in files[a]:
         short_fi = re.sub(".*[\\\/]", "", fi)
         retest = False
@@ -108,11 +113,17 @@ def mister(a):
             count = 0
             err_count = 0
             test_note = ""
-            for line in file:
-                count += 1
+            for (count, line) in enumerate(file, 1):
+                if ignore_next == True:
+                    ignore_next = False
+                    # print ("Purposely ignored command -- probably a point scorer before you need to ignore it, count, line.strip())
+                    continue
                 if retest == True:
                     retest = False
                     # print("Skipping", line.strip())
+                    continue
+                if line.startswith("#not a mistake"):
+                    ignore_next = True
                     continue
                 if line.startswith("#mistake retest"):
                     retest = True
@@ -135,6 +146,8 @@ def mister(a):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
                     if test_note not in comment_found.keys():
                         print('Superfluous(?) mistake test', test_note, 'at line', count, 'of', short_fi)
+                        if '/' in test_note:
+                            slashes.append(test_note)
                     else:
                         if comment_found[test_note]:
                             print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
@@ -177,12 +190,14 @@ def mister(a):
             fout.close()
             print(mistakes_added, "total mistakes added.")
     find_count = 0
-    check_after = defaultdict(bool)
+    check_after = defaultdict(int)
     for f in sorted(found.keys(), key=need_test.get):
         if found[f] == False:
             find_count += 1
-            for ct in cmd_text[f].split('/'):
-                check_after[ct] = True
+            ctf = cmd_text[f].split('/')
+            for ct in ctf:
+                check_after[ct] = len(ctf)
+                print(ct, len(ctf))
             if print_output:
                 if (find_max == 0 or find_count <= find_max) and find_count > find_min:
                     if verbose:
@@ -197,13 +212,14 @@ def mister(a):
                     for ct in cmd_text[f].split('/'):
                         print('>' + re.sub("\[text\]", "zozimus", ct))
                         print(mistake_text[f])
+                    mistakes += 1
                     print()
     if check_stuff_after:
         regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
         check_ary = ['>' + x for x in sorted(check_after.keys())]
-        check_dic = defaultdict(bool)
+        files_to_check = defaultdict(bool)
         for f2 in files[a]:
-            check_dic[f2] = True
+            files_to_check[f2] = True
         for f1 in regs:
             line_count = 0
             with open(f1) as file:
@@ -212,12 +228,26 @@ def mister(a):
                     if not line.startswith('>'): continue
                     for c in check_ary:
                         if line.startswith(c):
-                            print(f1, line_count, c, ("may be false flagged" if f1 in check_dic.keys() else "could be transferred to main files."))
+                            c1 = c[1:] if c.startswith('>') else c
+                            if check_after[c1] > 1:
+                                mults.append(c1)
+                            print(f1, line_count, c, ("may be false flagged" if f1 in files_to_check.keys() else "could be transferred to main files or may be part of a mistyped combo of mistake commands."))
+                            flags += 1
+        if len(slashes):
+            print("Combo-mistakes that don't work:")
+            print("\n".join(slashes))
+        if len(mults):
+            print("Combo-mults possibly false flagged:")
+            print("/".join(mults))
+    if not (mistakes + flags):
+        print("No errors found for {:s}!".format(a))
+    else:
+        print(a, mistakes, "mistakes,", flags, "flags")
 
 # note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
   'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
-  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ail-thru.txt' ]
+  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt' ]
 }
 
 write_file = False
