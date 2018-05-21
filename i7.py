@@ -11,6 +11,9 @@ import os
 import __main__ as main
 
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+f_dic = "c:/writing/dict/brit-1word.txt"
+f_f = "c:/writing/dict/firsts.txt"
+f_l = "c:/writing/dict/lasts.txt"
 
 def open_source():
     npo(main.__file__)
@@ -54,11 +57,13 @@ def lpro(x, spaces=False):
     if spaces: retval = re.sub("-", " ", retval)
     return retval
 
-def sdir(x):
+def proj2dir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(i7x[x] if x in i7x.keys() else x)
 
+sdir = p2d = proj2dir
+
 def go_proj(x):
-    os.chdir(sdir(x))
+    os.chdir(proj2dir(x))
     return
 
 def dir2proj(x = os.getcwd()):
@@ -68,6 +73,8 @@ def dir2proj(x = os.getcwd()):
         if "\\" in x2 or "/" in x2: return ""
         return x2
     return ""
+
+sproj = d2p = dir2proj
 
 def npo(my_file, my_line = 0, print_cmd = False):
     cmd = "start \"\" {:s} {:s} -n{:d}".format(np, my_file, my_line)
