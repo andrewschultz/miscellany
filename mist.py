@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import glob
+import pyperclip
 
 from collections import defaultdict
 
@@ -27,8 +28,8 @@ short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 default_room_level = 'chapter'
 levs = { }
 
-edit_source = False
-run_check = False
+for x in short:
+    srev[short[x]] = x
 
 def usage():
     print("All commands can be with or without hyphen")
@@ -38,14 +39,19 @@ def usage():
     print("-w/-nw = write or don't")
     print("-c/-nc = write conditions or don't")
     print("-l/-nl = write locations or don't")
+    print("-2 = to clipboard")
     print("-p/-np = print or don't")
     print("-po/-wo = print or write only")
     print("-e = edit the branch file")
     print("Other arguments are the project name, short or long")
     exit()
 
-for x in short:
-    srev[short[x]] = x
+def clip_out(x):
+    if print_output: print(x)
+    if to_clipboard:
+        global clipboard_str
+        clipboard_str += x + "\n"
+    return
 
 def to_full(a):
     if a in srev.keys(): return srev[a]
@@ -54,6 +60,7 @@ def to_full(a):
     exit()
 
 def mister(a):
+    global clipboard_str
     mistakes = 0
     flags = 0
     need_test = defaultdict(int)
@@ -207,14 +214,16 @@ def mister(a):
                         print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
                     else:
                         print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
-                        print('#mistake test for', f)
+                        clip_out('#mistake test for {:s}'.format(f))
                     if print_location:
                         print("##location =", location[f])
                     if print_condition:
                         print("##condition(s)", condition[f])
                     for ct in cmd_text[f].split('/'):
-                        print('>' + re.sub("\[text\]", "zozimus", ct))
-                        print(mistake_text[f])
+                        clip_out("#mistake test for {:s}".format(f))
+                        clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
+                        clip_out(mistake_text[f])
+                        if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
                     print()
     if check_stuff_after:
@@ -253,6 +262,9 @@ files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt
   'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt' ]
 }
 
+edit_source = False
+run_check = False
+to_clipboard = False
 write_file = False
 print_output = True
 verbose = False
@@ -263,6 +275,7 @@ find_max = 0
 find_min = 0
 bracket_minimum = 1
 bracket_check = True
+clipboard_str = ''
 
 if len(sys.argv) > 1:
     count = 1
@@ -273,6 +286,11 @@ if len(sys.argv) > 1:
             write_file = True
         elif arg == 'nw':
             write_file = False
+        elif arg == '2':
+            to_clipboard = True
+        elif arg == '2o':
+            to_clipboard = True
+            print_output = False
         elif arg[:2] == 'fm':
             find_min = int(arg[2:])
         elif arg[0] == 'f':
@@ -345,3 +363,10 @@ if edit_source:
 
 for e in sorted(added.keys()):
     mister(e)
+
+if clipboard_str:
+    pyperclip.copy(clipboard_str)
+    pyperclip.paste()
+    lines = len(clipboard_str.split("\n"))
+    print("Rough testing text sent to clipboard,", lines, "lines.")
+
