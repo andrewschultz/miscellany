@@ -47,7 +47,7 @@ def usage():
     exit()
 
 def clip_out(x):
-    if print_output: print(x)
+    global to_clipboard
     if to_clipboard:
         global clipboard_str
         clipboard_str += x + "\n"
@@ -151,7 +151,7 @@ def mister(a):
                     print('Line', count, 'has helper text to remove:', line.strip().lower())
                 brax = line.count('[')
                 if brax > bracket_minimum and not line.startswith('#'):
-                    print(brax, 'possible loose code-brackets in line', count, 'of', short_fi, ':', line.strip().lower())
+                    print(brax, 'floating ' + ('if' if '[if' in line else 'code') + '-brackets in line', count, 'of', short_fi, ':', line.strip().lower())
                 retest = False
                 if line.startswith("#mistake "):
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
@@ -192,10 +192,8 @@ def mister(a):
                     count += 1
                     if count in extra_text.keys():
                         fout.write("##mistake test for " + extra_text[count] + "\n")
-                        if print_location:
-                            fout.write("##location = " + location[count])
-                        if print_condition:
-                            fout.write("##condition(s) " + condition[count])
+                        if print_location: fout.write("##location = " + location[count])
+                        if print_condition: fout.write("##condition(s) " + condition[count])
                         mistakes_added += 1
                     fout.write(line)
             fout.close()
@@ -208,24 +206,22 @@ def mister(a):
             ctf = cmd_text[f].split('/')
             for ct in ctf:
                 check_after[ct] = len(ctf)
-            if print_output:
+            if print_output or to_clipboard:
                 if (find_max == 0 or find_count <= find_max) and find_count > find_min:
-                    if verbose:
-                        print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
-                    else:
-                        print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
-                        clip_out('#mistake test for {:s}'.format(f))
-                    if print_location:
-                        print("##location =", location[f])
-                    if print_condition:
-                        print("##condition(s)", condition[f])
+                    if print_output:
+                        if verbose:
+                            print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
+                        else:
+                            print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
+                    if print_location and print_output: print("##location =", location[f])
+                    if print_condition and print_output: print("##condition(s)", condition[f])
                     for ct in cmd_text[f].split('/'):
                         clip_out("#mistake test for {:s}".format(f))
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
                         clip_out(mistake_text[f])
                         if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
-                    print()
+                    if print_output: print()
     if check_stuff_after:
         regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
         check_ary = ['>' + x for x in sorted(check_after.keys())]
@@ -282,53 +278,39 @@ if len(sys.argv) > 1:
     while count < len(sys.argv):
         arg = sys.argv[count].lower()
         if arg[0] == '-': arg = arg[1:]
-        if arg == 'w':
-            write_file = True
-        elif arg == 'nw':
-            write_file = False
-        elif arg == '2':
-            to_clipboard = True
-        elif arg == '2o':
+        if arg == 'w': write_file = True
+        elif arg == 'nw': write_file = False
+        elif arg == '2': to_clipboard = True
+        elif arg == '2o' or arg == '20':
             to_clipboard = True
             print_output = False
-        elif arg[:2] == 'fm':
-            find_min = int(arg[2:])
-        elif arg[0] == 'f':
-            find_max = int(arg[1:])
-        elif arg == 'e':
-            edit_source = True
+        elif arg[:2] == 'fm': find_min = int(arg[2:])
+        elif arg[0] == 'f': find_max = int(arg[1:])
+        elif arg == 'e': edit_source = True
         elif arg == 'eo':
             edit_source = True
             run_check = False
-        elif arg == 'a':
-            check_stuff_after = True
-        elif arg == 'na':
-            check_stuff_after = False
+        elif arg == 'a': check_stuff_after = True
+        elif arg == 'na': check_stuff_after = False
         elif arg == 'b':
             bracket_minimum = int(arg[1:])
             if bracket_minimum < 1:
                 print("Must have bracket minimum over 1. Ignoring brackets")
                 bracket_check = False
-        elif arg == 'nb':
-            bracket_check = False
-        elif arg == 'c':
-            print_condition = True
-        elif arg == 'nc':
-            print_condition = False
-        elif arg == 'c':
-            print_location = True
-        elif arg == 'nc':
-            print_location = False
+        elif arg == 'nb': bracket_check = False
+        elif arg == 'c': print_condition = True
+        elif arg == 'nc': print_condition = False
+        elif arg == 'c': print_location = True
+        elif arg == 'nc': print_location = False
         elif arg == 'wo':
             write_file = True
             print_output = False
-        elif arg == 'np':
-            print_output = False
-        elif arg == 'p':
-            print_output = True
+        elif arg == 'np': print_output = False
+        elif arg == 'p': print_output = True
         elif arg == 'po':
             print_output = True
             write_file = False
+        elif arg == '?': usage()
         else:
             for q in arg.split(','):
                 if q in added.keys():
@@ -336,15 +318,17 @@ if len(sys.argv) > 1:
                 elif q in short.keys():
                     print("Adding", q)
                     added[q] = True
-                elif i7.i7x[q] in short.keys():
+                elif q in i7.i7x.keys() and i7.i7x[q] in short.keys():
                     print("Adding", i7.i7x[q])
                     added[i7.i7x[q]] = True
                 else:
                     print(q, "not recognized as a project with a mistake file and/or regex test files.")
+                    print('=' * 50)
+                    usage()
         count += 1
 
-if not write_file and not print_output:
-    print("You need to write a file or print output.")
+if not write_file and not print_output and not to_clipboard:
+    print("You need to write a file or the clipboard or print the output.")
     exit()
 
 if len(added.keys()) == 0:
