@@ -27,6 +27,9 @@ short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 default_room_level = 'chapter'
 levs = { }
 
+edit_source = False
+run_check = False
+
 def usage():
     print("All commands can be with or without hyphen")
     print("-f# = max # of missing mistake tests to find")
@@ -37,6 +40,7 @@ def usage():
     print("-l/-nl = write locations or don't")
     print("-p/-np = print or don't")
     print("-po/-wo = print or write only")
+    print("-e = edit the branch file")
     print("Other arguments are the project name, short or long")
     exit()
 
@@ -197,7 +201,6 @@ def mister(a):
             ctf = cmd_text[f].split('/')
             for ct in ctf:
                 check_after[ct] = len(ctf)
-                print(ct, len(ctf))
             if print_output:
                 if (find_max == 0 or find_count <= find_max) and find_count > find_min:
                     if verbose:
@@ -274,6 +277,11 @@ if len(sys.argv) > 1:
             find_min = int(arg[2:])
         elif arg[0] == 'f':
             find_max = int(arg[1:])
+        elif arg == 'e':
+            edit_source = True
+        elif arg == 'eo':
+            edit_source = True
+            run_check = False
         elif arg == 'a':
             check_stuff_after = True
         elif arg == 'na':
@@ -328,6 +336,12 @@ if len(added.keys()) == 0:
         added[x] = True
     else:
         print("No mistake file in default directory.")
+
+if edit_source:
+    for a in added.keys():
+        for b in files[a]:
+            i7.npo(b, 1, True)
+    if not run_check: exit()
 
 for e in sorted(added.keys()):
     mister(e)
