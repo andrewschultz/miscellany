@@ -33,6 +33,13 @@ count = 1
 alpha_level = 2
 all_alpha = [ 'section', 'chapter', 'part', 'book', 'volume' ]
 
+def get_alf_level(x):
+    x2 = re.sub("a", "", x)
+    if len(x2) == 0: return len(all_alpha)
+    a1d = int(x2)
+    if a1d >= 0 and a1d <= len(all_alpha): return a1d
+    else: sys.exit("-a must be between 0 and {:d} inclusive--no arg means them all.".format(len(all_alpha)))
+
 def mistake_compare(x):
     xl = x.lower()
     if xl.startswith('['): return '\n'.join(xl.split("\n")[1:])
@@ -42,6 +49,7 @@ def usage():
     print("c = copy don't show")
     print("d = detail debug")
     print("g = track global and not just local duplicates")
+    print("(a)# = outline level to sort. 1 for first, no # for all:", '/'.join(all_alpha))
     print("You can specify multiple projects or abbreviations.")
     exit()
 
@@ -176,10 +184,7 @@ while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c': copy_not_show = True
-    elif arg[0] == 'a' and arg[1:].isdigit:
-        alpha_level = int(arg[1:])
-        if alpha_level < 1 or alpha_level >= len(all_alpha):
-            sys.exit("-a must be between 1 and {:d} inclusive.".format(len(all_alpha)-1))
+    elif (arg[0] == 'a' and arg[1:].isdigit()) or arg.isdigit() or (arg[-1:] =='a' and arg[:-1].isdigit()): alpha_level = get_alf_level(arg)
     elif arg == 'd': detail_debug = True
     elif arg == 'g': track_global_duplicates = True
     elif arg == '?': usage()
@@ -191,7 +196,10 @@ while count < len(sys.argv):
 
 alpha_on = all_alpha[:alpha_level]
 alpha_off = all_alpha[alpha_level:]
-sys.exit(alpha_on)
+
+if detail_debug:
+    print('ON:', ', '.join(alpha_on), '({:d})'.format(len(alpha_on)))
+    print('OFF:', ', '.join(alpha_off), '({:d})'.format(len(alpha_off)))
 
 if len(projs) == 0:
     print("Using default", default_proj)
