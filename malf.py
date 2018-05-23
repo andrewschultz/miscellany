@@ -1,4 +1,4 @@
-#
+ #
 # malf.py
 #
 # this alphabetizes a mistake file by the possible mistakes inside the chapters/sections.
@@ -22,7 +22,6 @@ temp_detail_2 = "c:\\games\\inform\\mist2.i7x"
 
 default_proj = 'ai'
 
-# these -could- be changed via command line but it's low priority
 detail_debug = False
 copy_not_show = False
 track_global_duplicates = True
@@ -31,8 +30,13 @@ projs = []
 
 count = 1
 
-alpha_on = [ 'chapter', 'section' ]
-alpha_off = [ 'volume', 'book', 'part' ]
+alpha_level = 2
+all_alpha = [ 'section', 'chapter', 'part', 'book', 'volume' ]
+
+def mistake_compare(x):
+    xl = x.lower()
+    if xl.startswith('['): return '\n'.join(xl.split("\n")[1:])
+    return xl
 
 def usage():
     print("c = copy don't show")
@@ -121,7 +125,7 @@ def sort_mistake(pr):
                     print("Need carriage return before line", linecount, ":", line.strip())
                     exit()
                 if len(sect_to_sort) > 0:
-                    s2 = sorted(sect_to_sort, key=str.lower)
+                    s2 = sorted(sect_to_sort, key=mistake_compare)
                     f.write("\n" + "\n".join(s2) + "\n")
                 elif need_alpha:
                     f.write("\n")
@@ -172,6 +176,10 @@ while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c': copy_not_show = True
+    elif arg[0] == 'a' and arg[1:].isdigit:
+        alpha_level = int(arg[1:])
+        if alpha_level < 1 or alpha_level >= len(all_alpha):
+            sys.exit("-a must be between 1 and {:d} inclusive.".format(len(all_alpha)-1))
     elif arg == 'd': detail_debug = True
     elif arg == 'g': track_global_duplicates = True
     elif arg == '?': usage()
@@ -180,6 +188,10 @@ while count < len(sys.argv):
         usage()
     else: projs.append(i7.lpro(arg))
     count = count + 1
+
+alpha_on = all_alpha[:alpha_level]
+alpha_off = all_alpha[alpha_level:]
+sys.exit(alpha_on)
 
 if len(projs) == 0:
     print("Using default", default_proj)
