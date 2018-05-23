@@ -47,10 +47,8 @@ def usage():
     exit()
 
 def clip_out(x):
-    global to_clipboard
-    if to_clipboard:
-        global clipboard_str
-        clipboard_str += x + "\n"
+    if print_output: print(x)
+    if to_clipboard: clipboard_str += x + "\n"
     return
 
 def to_full(a):
@@ -63,11 +61,17 @@ def mister(a):
     global clipboard_str
     mistakes = 0
     flags = 0
+    bracket_errs = 0
+    duplicates = 0
+    superfluous = 0
+    help_text_rm = 0
+    need_comment = 0
     need_test = defaultdict(int)
     mistake_text = defaultdict(str)
     cmd_text = defaultdict(str)
     found = defaultdict(bool)
     comment_found = defaultdict(bool)
+    comment_line = defaultdict(int)
     source_dir = "c:/games/inform/%s.inform/Source/" % a
     in_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/%s mistakes.i7x" % a
     count = 0
@@ -149,29 +153,41 @@ def mister(a):
                     print('Line', count, 'comment mentions search info:', line.strip().lower())
                 if line.startswith("##condition(s)") or line.startswith("##location"):
                     print('Line', count, 'has helper text to remove:', line.strip().lower())
+                    help_text_rm += 1
                 brax = line.count('[')
                 if brax > bracket_minimum and not line.startswith('#'):
                     print(brax, 'floating ' + ('if' if '[if' in line else 'code') + '-brackets in line', count, 'of', short_fi, ':', line.strip().lower())
+                    bracket_errs += 1
+                    if to_clipboard:
+                        clipboard_str += re.sub("mistake test", "mistake retest", last_mistake) + last_cmd + line + '\n'
                 retest = False
                 if line.startswith("#mistake "):
+                    last_mistake = line
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
                     if test_note not in comment_found.keys():
                         print('Superfluous(?) mistake test', test_note, 'at line', count, 'of', short_fi)
                         if '/' in test_note:
                             slashes.append(test_note)
+                        superfluous += 1
                     else:
                         if comment_found[test_note]:
-                            print('Duplicate mistake test for', test_note, 'at line', count, '(reroute to mistake retest?)')
+                            print('Duplicate mistake test for', test_note, 'at line', count, 'original', comment_line[test_note], 'D=', count - comment_line[test_note], '(reroute to mistake retest?)')
+                            duplicates += 1
+                        else:
+                            comment_found[test_note] = True
+                            comment_line[test_note] = count
                         err_count += 1
                         # print("Got", test_note)
                         comment_found[test_note] = True
                 elif line.startswith('>'):
+                    last_cmd = line
                     ll = re.sub("^>", "", line.strip().lower())
                     if ll != test_note:
                         if ll in need_test.keys():
                             if found[ll] is False:
                                 err_count += 1
-                                if print_output: print("({:4d}) {:14s} Line {:4d} #mistake test for {:s}".format(err_count, fi, count, ll))
+                                if print_output: print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test for {:s}".format(err_count, fi, count, ll))
+                                need_comment += 1
                             extra_text[count] = ll
                             found[ll] = True
                     if test_note in found.keys():
@@ -247,10 +263,10 @@ def mister(a):
         if len(mults):
             print("Combo-mults possibly false flagged:")
             print("/".join(mults))
-    if not (mistakes + flags):
+    if not (mistakes + flags + duplicates + superfluous + bracket_errs + help_text_rm + need_comment):
         print("No errors found for {:s}!".format(a))
     else:
-        print(a, mistakes, "mistakes,", flags, "flags")
+        print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment")
 
 # note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
