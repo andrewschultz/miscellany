@@ -44,7 +44,23 @@ close(A);
 if ($projToRead) {
   my $infBase = "c:\\games\\inform\\$projToRead.inform";
   print "Copying over regression test suite\n";
-  my $q = `copy $infBase\\Source\\reg-*.txt c:\\games\\inform\\prt`;
+  my $q = "";
+  my @g = glob("$infBase\\Source\\reg-*.txt");
+  if ( scalar @g ) {
+    print "REG files first.\n";
+    $q .= `copy $infBase\\Source\\reg-*.txt c:\\games\\inform\\prt`;
+  }
+  else {
+    print "No REG files.\n";
+  }
+  @g = glob("$infBase\\Source\\rmo-*.txt");
+  if ( scalar @g ) {
+    print "Now RMO files.\n";
+    $q .= `copy $infBase\\Source\\rmo-*.txt c:\\games\\inform\\prt`;
+  }
+  else {
+    print("No RMO files.\n");
+  }
   print $q;
   if ( !$ignoreBinary ) {
     print "Looking for build file in $infBase\\Build.\n";

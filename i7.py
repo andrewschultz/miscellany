@@ -19,6 +19,9 @@ def open_source():
     npo(main.__file__)
     exit()
 
+def wm(x1, x2):
+    os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
+
 def src(x):
     return sdir(x) + "/" + "story.ni"
 
