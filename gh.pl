@@ -38,6 +38,7 @@ my $executeDontBail     = 0;
 my $doPerlTidy          = 1;
 
 my $execLevel = 1;
+my $copyLevel = 1;
 
 ##########################
 #constants
@@ -389,7 +390,9 @@ sub processTerms {
 "WARNING: you are copying over before running modifying scripts.\n";
             $warnYet = 1;
           }
-          if ($verboseTest) { $quickCheck .= "test command>>>>>$a\n"; }
+          if ($verboseTest) {
+            $quickCheck .= "test command (zap with nvt)>>>>>$a\n";
+          }
           $quickCheck .= `$b`;
           $cmdYet = 1;
         }
