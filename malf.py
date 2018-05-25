@@ -25,6 +25,7 @@ default_proj = 'ai'
 detail_debug = False
 copy_not_show = False
 track_global_duplicates = True
+super_quiet = False
 
 projs = []
 
@@ -49,6 +50,7 @@ def usage():
     print("c = copy don't show")
     print("d = detail debug")
     print("g = track global and not just local duplicates")
+    print("sq = super_quiet (for commit checks)")
     print("(a)# = outline level to sort. 1 for first, no # for all:", '/'.join(all_alpha))
     print("You can specify multiple projects or abbreviations.")
     exit()
@@ -108,7 +110,7 @@ def sort_mistake(pr):
     if not os.path.exists(mf):
         print("No mistake file", mf)
         return
-    print("Opening", mf)
+    if not super_quiet: print("Opening", mf)
     current_lines = ""
     sect_to_sort = []
     need_alpha = False
@@ -116,7 +118,7 @@ def sort_mistake(pr):
     glo_dupes = 0
     f = open(temp_file, "w", newline="\n")
     with open(mf) as file:
-        for (linecount, line) in enumerate(file):
+        for (linecount, line) in enumerate(file, 1):
             ll = line.lower().strip()
             if ll.startswith('understand'):
                 for x in all_mistakes(ll):
@@ -159,7 +161,7 @@ def sort_mistake(pr):
         f.write(line)
     f.close()
     if cmp(temp_file, mf):
-        print("No change for", mf)
+        if not super_quiet: print("No change for", mf)
     else:
         if copy_not_show:
             copy(temp_file, mf)
@@ -170,8 +172,9 @@ def sort_mistake(pr):
             toalf(mf, temp_detail_1)
             toalf(temp_file, temp_detail_2)
             if cmp(temp_detail_1, temp_detail_2):
-                print("Files are identical except for sorting.")
+                if not super_quiet: print("Pre/post sorting files are identical. No copying.")
             else:
+                if not super_quiet: print("Pre/post sorting files are different. Copying.")
                 os.system("wm {:s} {:s}".format(temp_detail_1, temp_detail_2))
                 os.remove(temp_detail_1)
                 os.remove(temp_detail_2)
@@ -187,6 +190,7 @@ while count < len(sys.argv):
     elif (arg[0] == 'a' and arg[1:].isdigit()) or arg.isdigit() or (arg[-1:] =='a' and arg[:-1].isdigit()): alpha_level = get_alf_level(arg)
     elif arg == 'd': detail_debug = True
     elif arg == 'g': track_global_duplicates = True
+    elif arg == 'sq': super_quiet = True
     elif arg == '?': usage()
     elif not i7.lpro(arg):
         print(arg, "does not map to any project. Showing usage.")
@@ -202,10 +206,10 @@ if detail_debug:
     print('OFF:', ', '.join(alpha_off), '({:d})'.format(len(alpha_off)))
 
 if len(projs) == 0:
-    print("Using default", default_proj)
+    if not super_quiet: print("Using default", default_proj)
     projs = [ default_proj ]
 
-print("Okay, processing", ', '.join(projs))
+if not super_quiet: print("Okay, processing", ', '.join(projs))
 
 for q in projs:
     sort_mistake(q)
