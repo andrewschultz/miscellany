@@ -42,6 +42,8 @@ if not os.path.exists('story.ni'):
 
 fout = open(f2, "w", newline="\n")
 
+if not os.path.exists("salf.txt"): sys.exit("Need salf.txt in path to do anything.")
+
 with open("salf.txt") as file:
     for line in file:
         if line.startswith(';'): break

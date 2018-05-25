@@ -46,7 +46,7 @@ def to_output(f_i, f_o):
     lines = []
     so_far = ""
     with open(f_i) as file:
-        for (lc,line) in enumerate(file):
+        for (lc,line) in enumerate(file, 1):
             if line.startswith('>'):
                 if re.search("^> *[\*;]", line):
                     f2.write("=" * 50 + "Line " + str(lc) + "\n")

@@ -106,8 +106,7 @@ def get_file(fname):
     actives = []
     old_actives = []
     with open(fname) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
@@ -192,6 +191,18 @@ def get_file(fname):
                 for x in ll:
                     if x.isdigit(): actives[int(x)] = True
                 continue
+            if line.startswith("==c-"):
+                old_actives = list(actives)
+                class_name = ll[4:]
+                class_array = branch_classes[class_name].split(',')
+                actives = [False] * len(file_array)
+                for x in class_array:
+                    actives[int(x)] = True
+            if line.startswith("==c="):
+                class_array = ll[4:].split(':')
+                if len(class_array) != 2:
+                    sys.exit("Line", line_count, "needs exactly 1 : ... ", ll)
+                branch_classes[class_array[0]] = class_array[1]
             if line.startswith("==="):
                 ll = re.sub("^=+", "", line.lower().strip()).split(',')
                 actives = [False] * len(file_array)
@@ -256,7 +267,7 @@ cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
 
 with open('c:/writing/scripts/rbr.txt') as file:
-    for (lc, line) in enumerate(file):
+    for (lc, line) in enumerate(file, 1):
         ll = line.lower().strip()
         if ll.startswith(';'): break
         if ll.startswith('#'): continue
