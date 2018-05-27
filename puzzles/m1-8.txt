@@ -1,3 +1,4 @@
+#completed
 puz1
 x=-23
 g=188

@@ -1,3 +1,4 @@
+#completed
 puz3
 t=70
 20
