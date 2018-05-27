@@ -23,6 +23,7 @@ our %i7x = ( "12" => "shuffling",
   "sa" => "shuffling",
   "roi" => "roiling",
   "s13" => "roiling",
+  "sts" => "stale-tales-slate", # not one game, but one repo
   "3" => "threediopolis",
   "3d" => "threediopolis",
   "13" => "threediopolis",
@@ -55,7 +56,9 @@ our %i7x = ( "12" => "shuffling",
   "sw" => "spell-woken",
   "mo" => "molesworth",
   "mw" => "molesworth",
-  "69" => "69105more"
+  "69" => "69105more",
+  "qb" => "big-nose",
+  "bn" => "big-nose"
 );
 
 our %i7xr = ( "shuffling" => "sa",
@@ -67,7 +70,8 @@ our %i7xr = ( "shuffling" => "sa",
   "slicker-city" =>"sc" ,
   "btp-st" =>"bs" ,
   "btp" => "buck-the-past",
-  "ailihphilia" => "ai"
+  "ailihphilia" => "ai",
+  "big-nose" => "qb",
 );
 
 our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "ailihphilia", "spell-woken");

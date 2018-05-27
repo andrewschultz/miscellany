@@ -142,6 +142,7 @@ i7x = { "12": "shuffling",
   "sa": "shuffling",
   "roi": "roiling",
   "s13": "roiling",
+  "sts": "stale-tales-slate",
   "3": "threediopolis",
   "3d": "threediopolis",
   "13": "threediopolis",
@@ -164,7 +165,9 @@ i7x = { "12": "shuffling",
   "pu": "ailihphilia",
   "up": "ailihphilia",
   "sw": "spell-woken",
-  "69": "69105more"
+  "69": "69105more",
+  "qb": "big-nose",
+  "bn": "big-nose"
 };
 
 i7xr = { "shuffling": "sa",
@@ -177,7 +180,8 @@ i7xr = { "shuffling": "sa",
   "btp-st":"bs" ,
   "buck-the-past": "btp",
   "ailihphilia": "ai",
-  "molesworth": "mo"
+  "molesworth": "mo",
+  "big-nose": "qb"
 };
 
 i7f = {
