@@ -147,7 +147,11 @@ while ( $count <= $#ARGV ) {
       exit;
     };
     /^-?it$/i && do { $ignoreBackwardsTime = 1; $count++; next; };
-    /^-?l$/i && do { launchRepo($a2); exit(); };
+    /^-?l(i)?$/i && do {
+      die("Need project before -l(i)") if !$a2;
+      launchRepo( defined( $i7x{$a2} ) ? $i7x{$a2} : $a2, $arg =~ /i/i );
+      exit();
+    };
     /^-?tr$/i      && do { $timeReverse         = 1;  $count++; next; };
     /^-?j$/i       && do { $justPrint           = 1;  $count++; next; };
     /^-?f$/i       && do { $byFile              = 1;  $count++; next; };
@@ -1211,12 +1215,16 @@ sub allProjs {
 sub launchRepo {
   my $toLaunch = $_[0];
 
-  $toLaunch = $altHash{$toLaunch} if ( defined( $altHash{$toLaunch} ) );
-
   my $myUrl = "https://github.com/andrewschultz/" . $toLaunch;
   $myUrl = "https://bitbucket.org/andrewschultz/" . $toLaunch
     if ( defined( $bitBucket{$toLaunch} ) );
-  print "Opening $myUrl...\n";
+  $myUrl .= "/issues?status=new&status=open"
+    if $_[1] && defined( $bitBucket{$toLaunch} );
+  $myUrl .= "/issues"
+    if $_[1]
+    && !defined( $bitBucket{$toLaunch} )
+    ; # I could collapse this code but it's a problem if things change in the future
+  print "Opening repo $toLaunch at $myUrl...\n";
   `start $myUrl`;
   exit();
 }
