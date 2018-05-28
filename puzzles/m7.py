@@ -17,6 +17,7 @@
 import copy
 import sys
 
+less_than_wanted = 0
 cur_max = 0
 cur_low = 1000
 puz_num = 7
@@ -24,6 +25,7 @@ exact_wanted = 0
 from collections import defaultdict
 
 exact_array = []
+less_than_array = []
 worst_array = []
 best_array = []
 vals = defaultdict(int)
@@ -39,6 +41,8 @@ def sift_thru(node, cur_value, jumps, trav_string, graph):
     if jumps == 0 or node not in graph.keys():
         if cur_value == exact_wanted:
             exact_array.append(trav_string)
+        if cur_value < less_than_wanted:
+            less_than_array.append(trav_string + '=' + str(cur_value))
         if cur_value > cur_max:
             best_array = [trav_string]
             cur_max = cur_value
@@ -99,6 +103,9 @@ with open("m7.txt") as file:
                 if va[a].startswith('e'):
                     exact_wanted = int(va[a][1:])
                     continue
+                if va[a].startswith('<'):
+                    less_than_wanted = int(va[a][1:])
+                    continue
                 vals[chr(count+97)] = int(va[a])
                 count += 1
                 # print(chr(a+97), a, va[a])
@@ -134,5 +141,9 @@ print("j           m")
 check_dict(['a', 'd', 'j', 'm'], 4)
 print("BEST", best_array, cur_max)
 if cur_low < 1000: print("WORST", worst_array, cur_low)
+
 if exact_wanted:
     print(exact_wanted, exact_array, len(exact_array), "times")
+
+if less_than_wanted:
+    print(less_than_wanted, less_than_array, len(less_than_array), "times")
