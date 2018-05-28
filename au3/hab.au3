@@ -84,7 +84,6 @@ While $cmdCount <= $CmdLine[0]
   EndIf
   $didAnything = True
   If $myCmd == 'a' Then
-
     ToHab()
 	    if $nextNum < 1 Then
 		  needPositive()
@@ -109,8 +108,7 @@ While $cmdCount <= $CmdLine[0]
       sleep($delay/2)
     Next
   ElseIf $myCmd == 'd' Then
-    $delay = 1000 * GetNumArgOrBail($cmdCount+1)
-	$nextCmd = $cmdCount + 2
+    $delay = 1000 * $nextNum
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -123,6 +121,18 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	sleep($preDelay * 1000)
     DoInt()
+  ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
+    ToHab()
+	ToTasks()
+	$old_delay = $delay
+	$delay = adjust_delay($delay)
+    $clicks = $nextNum
+    CheckClicks()
+	for $i = 1 to $nextNum
+      clickSkill(1, $EARTHQUAKE)
+      clickSkill(2, $ETHEREAL_SURGE)
+	Next
+	$delay = $old_delay
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
@@ -186,13 +196,13 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[12] = [ "-a, -b, -i, -iw, -m/-w, -o, -p, -r, -t or -x are the options.", _
+  Local $usgAry[13] = [ "-a, -b, -e, -i, -iw, -m/-w, -o, -p, -r, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
   "-iw = initial wait,", _
-  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake", _
+  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
   "-r = repeated habit on the left column, needs # and positioning", _
@@ -326,7 +336,7 @@ EndFunc
 
 Func ToTasks()
   sleep(1000)
-  MouseMove ( 200, 100 )
+  MouseMove ( 160, 90 )
   sleep(1000)
 EndFunc
 
@@ -357,6 +367,17 @@ EndFunc
 Func NeedPositive()
   MsgBox($MB_OK, "Need positive #", "Need positive # after arg ")
   exit
+EndFunc
+
+Func adjust_delay($x)
+  if $x > 10000 Then
+    return $x
+  EndIf
+  $y = $x * 2
+  if $y > 10000 Then
+    return 10000
+  EndIf
+  return $y
 EndFunc
 
 Func ToHome()
