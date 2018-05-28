@@ -6,3 +6,93 @@ PROB15
 1d,2r,2d,3l,1r,3l
 3u,1u,1r,1d,2l,4l
 3u,1l,5u,2r,2u,1u
+PROB31
+4d,3d,4d,2r,3d,5l
+2r,3d,5d,1r,1d,5l
+3d,1u,3r,1l,3l,1d
+2r,1l,3u,3d,1l,ff
+4r 4r 1d 4u 2d 1d
+1r 1d 1r 4u 5u 1l
+4u 6u 2l 4u 1r 5u
+# bad solution
+PROB47
+3r 3r 5d 1l 5d 3d
+1r 2r 2r 4d 1d 2l
+1u 2u 1u 1l 3l 5l
+2r 1l 3d 1u ff 1d
+4u 3r 1l 1u 1l 5l
+1d 4r 2l 1d 3l 3u
+4r 3u 3r 2l 3u 6u
+PROB63
+2r 2d 4d 1r ff 4l
+3r 5d 3r 1u 3l 1u
+2r 1d 1u 2r 3d 1l
+1u 1r 2d 2d 4l 2l
+4u 2r 2r 2u 3u 5l
+4u 1u 1d 2r 2u 1u
+1u 1u 2r 3l 1l 3u
+# 3l to 3r gives undescriptive error
+PROB79
+1d 1d 1l 3l 6d 1l
+2r 4r 1u 1d 1l 1u
+1d 1d 1l 2r 3d 1l
+2r 4r 1u 3u ff 2l
+2u 1l 1d 1l 3u 1l
+1d 1l 1r 2r 2u 1d
+2r 2u 1l 2u 1l 2u
+PROB95
+3d 1l 3d 1l 1d 1d
+3r 1u 1d 1u 2l 2d
+1u 1l 3r 1r 4d 2u
+1r 1u 2r 1u 3u 2l
+1r ff 2l 1d 1d 1l
+1d 1d 1u 2l 1r 5l
+3r 1r 1u 2u 1r 2u
+PROB111
+1d 1l 2d 1r 1d 3d
+2r ff 1u 2l 1r 1d
+1d 3r 1l 1u 1l 5l
+1r 3u 2d 1r 1d 3d
+2d 1d 1r 1d 2l 5l
+4r 1l 3r 5u 1d 1u
+1r 2u 3u 3u 1l 3l
+PROB127
+5d 6d 1l 1d 4l 2l
+3d 1l 1u 2r 2l 5d
+2r 3d 4d 2r 4l 2u
+1r 1u ff 3l 2u 1l
+5r 1r 1d 2l 2u 1l
+5r 3r 2u 1u 1l 2u
+4r 5u 1r 3u 6u 5l
+PROB143
+1d 4r 1r 6d 47 6d
+5r 3r 1r 4d 2l 4d
+4r 1u 1l ff 4d 5l
+4r 3d 1u 1l 3u 4l
+5r 1l 4u 1u 1l 3l
+4r 5u 2l 3u 1u 2u
+3u 2u 1u 1l 4l 4u
+PROB159
+2d 2d 2l 2r 1d 1d
+1r 1u 1u 1d 1l 3l
+1u 3r 3r 4d 2u 4d
+3d 3d 2l 3u 3l 2l
+5r 2r ff 1d 3l 1u
+4r 4r 1u 1l 1u 5l
+2u 1u 3u 1r 3u 3l
+PROB175
+6d 3d 4d 2r 2l 5l
+3r 1u 1d 1d 3l 1l
+1d 2d 2l 1r 3d 4l
+2d 1r 3d 2r ff 1d
+3u 2d 2l 4u 1u 1l
+1r 1r 1r 2u 1r 4u
+5r 2r 5u 1r 6u 4u
+PROB191
+3d 1r 5d 2r 4l 4d
+3r 5d 1l 2d 1d 2d
+1u 1l 3r ff 2l 2l
+3d 3u 1d 2l 3u 3l
+1r 2u 1r 1d 3u 2d
+1u 1l 3r 1r 1u 4u
+3r 1u 5u 6u 3u 3l

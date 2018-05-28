@@ -1,7 +1,15 @@
+# combo lock touch all 49 squares in order, each sends you to another
+
+import sys
+import re
+
 get_next = False
 rows_got = 0
 num = 15
 brute_force = False
+
+if len(sys.argv) > 1:
+    num = int(sys.argv[1])
 
 txtdir = { 'l': "<", 'r': ">", 'u': "^", 'd': "v" }
 
@@ -57,6 +65,7 @@ def new_square(y, x):
         return (y - dist, x)
     if dir == 'd':
         return (y + dist, x)
+    return (-1, -1)
 
 def first_unfound(g):
     for y in range(height):
@@ -79,7 +88,7 @@ with open("m15.txt") as file:
             get_next = True
             continue
         if not get_next: continue
-        board[rows_got] = line.lower().strip().split(',')
+        board[rows_got] = re.split("[ ,]", line.lower().strip())
         # print(board[rows_got], len(board[rows_got]))
         for x in range(width):
             if 'f' in board[rows_got][x]:
