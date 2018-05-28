@@ -1,30 +1,42 @@
 # combo lock touch all 49 squares in order, each sends you to another
 
+import copy
 import sys
 import re
 
 get_next = False
 rows_got = 0
+unreachable = 0
 num = 15
 brute_force = False
 
-if len(sys.argv) > 1:
-    num = int(sys.argv[1])
+def usage():
+    print("b = brute force")
+    print("# = ppuzzle number (15+16x up to/including 191)")
+    exit()
+
+while argc < len(sys.argv):
+    arg = sys.argv[argc]
+    if arg[0] == '-': arg = arg[1:]
+    if arg.isdigit(): num = int(arg)
+    elif arg == 'b': brute_force = True
+    else: usage()
+    argc += 1
 
 txtdir = { 'l': "<", 'r': ">", 'u': "^", 'd': "v" }
 
-def square_before(y, x):
+def square_before(y, x): # we could spruce this up by making an array but that is tinkering
     yr = -1
     xr = -1
     for w in range(height):
-        if new_square(w, x) == (y, x):
+        if new_square(w, x) == (y, x) and not got_yet[w][x]:
             if yr != -1:
                 print("Double solution to", x, y, "at", xr, yr, "and", x, w)
                 exit()
             yr = w
             xr = x
     for z in range(width):
-        if new_square(y, z) == (y, x):
+        if new_square(y, z) == (y, x) and not got_yet[y][z]:
             if yr != -1:
                 print("Double solution to", x, y, "at", xr, yr, "and", z, y)
                 exit()
@@ -88,6 +100,9 @@ with open("m15.txt") as file:
             get_next = True
             continue
         if not get_next: continue
+        if line.startswith("unreach="):
+            unreachable = int(line[8:])
+            continue
         board[rows_got] = re.split("[ ,]", line.lower().strip())
         # print(board[rows_got], len(board[rows_got]))
         for x in range(width):
@@ -124,6 +139,32 @@ if brute_force:
         else:
             print(gots(), "tagged so far.")
 else:
+    if unreachable:
+        isos = 0
+        reachable = copy.deepcopy(got_yet)
+        poss_dupe = copy.deepcopy(got_yet)
+        for x in range(0, width):
+            for y in range(0, height):
+                (y1, x1) = new_square(y, x)
+                if reachable[y1][x1]:
+                    # print(x, y, 'may duplicate where something else goes')
+                    poss_dupe[y][x] = True
+                reachable[y1][x1] = True
+        for x in range(0, width):
+            for y in range(0, height):
+                if poss_dupe[y][x] and not reachable[y][x]:
+                    print(y, x, 'looks isolated.')
+                    isos += 1
+                    got_yet[y][x] = True
+        if isos != unreachable:
+            sys.exit("{:d} isolated, {:d flagged as unreachable. The two should be equal. Bailing.".format(iso, unreachable))
+        else:
+            print("Found exactly", isos, "isolated, as expected.")
+        for x in range(0, width):
+            for y in range(0, height):
+                if not reachable[y][x]:
+                    continue
+                    # print(x, y, "not reachable")
     count = 0
     (y, x) = (fy, fx)
     while (gots() < 42):
