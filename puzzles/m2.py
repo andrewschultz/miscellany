@@ -3,6 +3,8 @@ import re
 import numpy
 from collections import defaultdict
 
+read_file = "m2.txt"
+
 count = defaultdict(int)
 
 class tile:
@@ -35,13 +37,13 @@ pcs = []
 def get_puzzle():
     global cur_walkthrough
     try:
-        idx = input("Pick a puzzle(2, 18, ..., 194):")
+        idx = input("Pick a puzzle(2, 18, ..., 194 or 199):")
     except KeyboardInterrupt:
         print("Bye!")
         exit()
     if not idx: idx = "2"
     count.clear()
-    with open("puz.txt") as file:
+    with open(read_file) as file:
         for line in file:
             # if line.startswith("#"): continue
             if not line.startswith(idx + ':'): continue
@@ -144,15 +146,22 @@ def try_to_place(p, xi, yi):
     return True
 
 def print_odd_freq():
-    print_str = "ODDS:"
+    temp_dic = defaultdict(int)
+    print_str = "ODDS: "
     rares = "RARES:"
+    lefts = "LEFT: "
     for i in range (0, 10):
         if (count[i] % 2 == 1):
             print_str = "{:s} {:d} ({:d})".format(print_str, i, count[i])
         if count[i] < 3 and count[i] > 0:
             rares = "{:s} {:d} ({:d})".format(rares, i, count[i])
+        if not pcs[i].in_puz:
+            for x in pcs[i].digits:
+                temp_dic[x] += 1
+    lefts += ' '.join(['{:d} ({:d})'.format(x, temp_dic[x]) for x in sorted(temp_dic.keys())])
     print(print_str)
     print(rares)
+    print(lefts)
 
 def print_board():
     for j in range (0, 5):
@@ -226,6 +235,7 @@ def play_one_game():
             continue
         if mv is 'r':
             reset_board()
+            print("Board reset.")
             continue
         if mv.startswith('w'):
             print("WALKTHROUGH:", cur_walkthrough)
