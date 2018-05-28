@@ -3,4 +3,12 @@ abcc=48
 caaa=46
 bbbc=70
 acab=54
-col=2
+54,?,54,48
+puz22
+aaab=177
+cbcb=206
+abac=191
+bacb=192
+191,178,?,193
+puz38
+col=
