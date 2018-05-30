@@ -9,37 +9,39 @@ rows_got = 0
 unreachable = 0
 num = 15
 brute_force = False
+debug = False
+
+argc = 1
 
 def usage():
     print("b = brute force")
-    print("# = ppuzzle number (15+16x up to/including 191)")
+    print("b = debug")
+    print("# = puzzle number (15+16x up to/including 191)")
     exit()
 
-while argc < len(sys.argv):
-    arg = sys.argv[argc]
-    if arg[0] == '-': arg = arg[1:]
-    if arg.isdigit(): num = int(arg)
-    elif arg == 'b': brute_force = True
-    else: usage()
-    argc += 1
+def print_got_yet():
+    for y in range(0, height):
+        print(' '.join([str(int(q)) for q in got_yet[y]]))
 
-txtdir = { 'l': "<", 'r': ">", 'u': "^", 'd': "v" }
-
-def square_before(y, x): # we could spruce this up by making an array but that is tinkering
+def square_before(y, x, dupe_search = False): # we could spruce this up by making an array but that is tinkering
     yr = -1
     xr = -1
     for w in range(height):
-        if new_square(w, x) == (y, x) and not got_yet[w][x]:
-            if yr != -1:
-                print("Double solution to", x, y, "at", xr, yr, "and", x, w)
-                exit()
+        if new_square(w, x) == (y, x) and not ignore_this[w][x]:
+            if not got_yet[w][x]:
+                if yr != -1:
+                    print("Double solution to", x, y, "at", xr, yr, "and", x, w)
+                    exit()
+            elif dupe_search: return (w, x)
             yr = w
             xr = x
     for z in range(width):
-        if new_square(y, z) == (y, x) and not got_yet[y][z]:
-            if yr != -1:
-                print("Double solution to", x, y, "at", xr, yr, "and", z, y)
-                exit()
+        if new_square(y, z) == (y, x) and not ignore_this[y][z]:
+            if not got_yet[y][z]:
+                if yr != -1:
+                    print("Double solution to", x, y, "at", xr, yr, "and", z, y)
+                    exit()
+            elif dupe_search: return (y, z)
             yr = y
             xr = z
     return (yr, xr)
@@ -50,8 +52,10 @@ def dirtxt(q):
     return txtdir[dir] * dist
 
 def sol_show(y, x):
+    count = 0
     while 'f' not in board[y][x]:
-        str = "{:d}, {:d} {:s} to ".format(x, y, dirtxt(board[y][x]))
+        count += 1
+        str = "{:2d}: {:d}, {:d} ({:s}) {:s} to ".format(count, x, y, board[y][x], dirtxt(board[y][x]))
         (y, x) = new_square(y, x)
         str += "{:d}, {:d}".format(x, y)
         print(str)
@@ -94,6 +98,17 @@ got_yet = [[False] * width for i in range(height)]
 fx = -1
 fy = -1
 
+while argc < len(sys.argv):
+    arg = sys.argv[argc]
+    if arg[0] == '-': arg = arg[1:]
+    if arg.isdigit(): num = int(arg)
+    elif arg == 'b': brute_force = True
+    elif arg == 'd': debug = True
+    else: usage()
+    argc += 1
+
+txtdir = { 'l': "<", 'r': ">", 'u': "^", 'd': "v" }
+
 with open("m15.txt") as file:
     for line in file:
         if 'PROB' + str(num) in line:
@@ -121,23 +136,33 @@ with open("m15.txt") as file:
 so_far = 1;
 # print(board)
 
+ignore_this = copy.deepcopy(got_yet)
+
 if brute_force:
+    confusion = False
     while (gots() < 42):
         (y, x) = first_unfound(got_yet)
+        if debug: print(gots(), 'tagged to start at', x, y)
         temp_y = y
         temp_x = x
         while not got_yet[y][x]:
+            vtemp_y = y
+            vtemp_x = x
             got_yet[y][x] = True
             (y, x) = new_square(y, x)
-        if y != last_y or x != last_x: print("Boom! Error", y, x, "should be", last_y, last_x)
-        last_y = temp_y
-        last_x = temp_x
+        if y != last_y or x != last_x:
+            print("Uh oh!", vtemp_x, vtemp_y, "to", x, y, "got confusing:", square_before(y, x, True), "may be multiple solution.")
+            if confusion: print("This may be a relic from the previous confusion.")
+            confusion = True
+        else:
+            confusion = False
+            last_y = temp_y
+            last_x = temp_x
         if gots() == 42:
             print("We have a soluton!")
-            sol_show(y, x)
+            sol_show(last_y, last_x)
             exit()
-        else:
-            print(gots(), "tagged so far.")
+        elif debug: print(gots(), "tagged so far.")
 else:
     if unreachable:
         isos = 0
@@ -156,6 +181,7 @@ else:
                     print(y, x, 'looks isolated.')
                     isos += 1
                     got_yet[y][x] = True
+                    ignore_this[y][x] = True
         if isos != unreachable:
             sys.exit("{:d} isolated, {:d flagged as unreachable. The two should be equal. Bailing.".format(iso, unreachable))
         else:
