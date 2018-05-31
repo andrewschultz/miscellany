@@ -11,13 +11,13 @@ DONE OR JUST NEED DATA ENTRY OF ALL PUZZLES:
 * 10 = find divisors (but stupid)
 * 11 = magic square (could try for intelligence/guesses)
 * 13 = scales (equations and unknowns sort of)
+* 14 = number pattern recognition (a / b / c -> d)
 * 15 = lock / reverse engineering
 
 TO DO:
 
 WON'T DO:
-* 4 = number pattern recognition
-* 9 = number pattern recognition
-* 14 = number pattern recognition
+* 4 = number pattern recognition in grid, boring
+* 9 = number pattern recognition in grid, boring
 * 12 = planet rotation (breaks down to fraction arithmetic)
 * 16 = equation-solving (multiple solutions, easy but not programmable)
