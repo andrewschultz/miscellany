@@ -33,6 +33,11 @@ in_file = ""
 in_dir = os.getcwd()
 proj = ""
 
+def post_copy():
+    if copy_over_post:
+        print("Running prt.pl after -- try -np to disable this")
+        subprocess.run(["perl", "c:\\writing\\scripts\\prt.pl"], stdout=subprocess.PIPE)
+
 def examples():
     print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
     print("==t5 means only use file 5 until next empty line. Then it switches back to what was there before. A second ==t wipes out the first saved array.")
@@ -107,6 +112,7 @@ def get_file(fname):
     old_actives = []
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if not len(file_array): continue # allows for comments at the start
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
@@ -189,7 +195,7 @@ def get_file(fname):
                 towhich = line.startswith("==t!")
                 actives = [towhich] * len(file_array)
                 for x in ll:
-                    if x.isdigit(): actives[int(x)] = True
+                    if x.isdigit(): actives[int(x)] = not towhich
                 continue
             if line.startswith("==c-"):
                 old_actives = list(actives)
@@ -359,13 +365,15 @@ while count < len(sys.argv):
     count += 1
 
 if in_file:
-    os.chdir(os.path.dirname(in_file))
+    if not os.path.isfile(in_file): sys.exit(in_file + " not found.")
+    os.chdir(os.path.dirname(os.path.abspath(in_file)))
     mydir = os.getcwd()
     if edit_main_branch:
         print("Opening branch file", in_file)
         os.system(in_file)
     else:
         get_file(in_file)
+        post_copy()
     exit()
 
 if not proj:
@@ -381,6 +389,4 @@ i7.go_proj(proj)
 for x in branch_list[proj]:
     get_file(x)
 
-if copy_over_post:
-    print("Running prt.pl after -- try -np to disable this")
-    subprocess.run(["perl", "c:\\writing\\scripts\\prt.pl"], stdout=subprocess.PIPE)
+post_copy()
