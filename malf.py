@@ -114,6 +114,7 @@ def sort_mistake(pr):
     current_lines = ""
     sect_to_sort = []
     need_alpha = False
+    ignore_dupe_next_line = False
     loc_dupes = 0
     glo_dupes = 0
     f = open(temp_file, "w", newline="\n")
@@ -122,14 +123,17 @@ def sort_mistake(pr):
             ll = line.lower().strip()
             if ll.startswith('understand'):
                 for x in all_mistakes(ll):
-                    if x in local_duplicates.keys():
-                        print(x, "at line", linecount, "locally duplicated from", local_duplicates[x])
-                        loc_dupes += 1
-                    elif track_global_duplicates and x in global_duplicates.keys():
-                        glo_dupes += 1
-                        print(x, "at line", linecount, "globally duplicated from", global_duplicates[x])
-                    local_duplicates[x] = linecount
-                    global_duplicates[x] = linecount
+                    if not ignore_dupe_next_line:
+                        if x in local_duplicates.keys():
+                            print(x, "at line", linecount, "locally duplicated from", local_duplicates[x])
+                            loc_dupes += 1
+                        elif track_global_duplicates and x in global_duplicates.keys():
+                            glo_dupes += 1
+                            print(x, "at line", linecount, "globally duplicated from", global_duplicates[x])
+                    if not x in local_duplicates.keys(): local_duplicates[x] = linecount
+                    if not x in global_duplicates.keys(): global_duplicates[x] = linecount
+            if ignore_dupe_next_line: ignore_dupe_next_line = False
+            if ll.startswith('[def'): ignore_dupe_next_line = True
             if is_on_heading(line) or is_off_heading(line) or line.strip().endswith('ends here.'):
                 if current_lines:
                     print("Need carriage return before line", linecount, ":", line.strip())

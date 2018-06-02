@@ -32,7 +32,7 @@ def do_one_sort(sort_string, out_file):
 # start main
 
 if len(sys.argv) > 1:
-    go_proj(sys.argv[1])
+    i7.go_proj(sys.argv[1])
 else:
     print("Using current directory.")
 
