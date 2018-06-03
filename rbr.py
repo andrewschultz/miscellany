@@ -19,6 +19,7 @@ from filecmp import cmp
 monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
 times = defaultdict(int)
+abbrevs = defaultdict(lambda: defaultdict(str))
 
 temp_dir = "c:/games/inform/prt/temp"
 
@@ -112,6 +113,15 @@ def get_file(fname):
     old_actives = []
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith("files="):
+                file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
+                file_array = [os.path.join(temp_dir, f) for f in file_array_base]
+                actives = [True] * len(file_array)
+                last_cr = [False] * len(file_array)
+                for x in file_array:
+                    f = open(x, "w", newline="\n")
+                    file_list.append(f)
+                continue
             if not len(file_array): continue # allows for comments at the start
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
@@ -143,15 +153,6 @@ def get_file(fname):
                     print("TEXT:", line.strip())
                 for x in range(len(l2)):
                     file_list[x].write(l2[x] + "\n")
-                continue
-            if line.startswith("files="):
-                file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
-                file_array = [os.path.join(temp_dir, f) for f in file_array_base]
-                actives = [True] * len(file_array)
-                last_cr = [False] * len(file_array)
-                for x in file_array:
-                    f = open(x, "w", newline="\n")
-                    file_list.append(f)
                 continue
             if all_false(actives):
                 if always_be_writing and len(actives):
@@ -288,6 +289,13 @@ with open('c:/writing/scripts/rbr.txt') as file:
         if ll.startswith('project') or ll.startswith('projname'):
             cur_proj = vars
             continue
+        if ll.startswith('abbrevs'):
+            temp = ll[8:].split(',')
+            for t in temp:
+                t2 = t.split('=')
+                if len(t2) != 2: sys.exit(t + " needs exactly one = at line" + str(lc))
+                abbrevs[t2[0]][cur_proj] = t2[1]
+            continue
         if ll.startswith('branchfiles'):
             branch_list[cur_proj] = vars.split(",")
             if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = vars.split(",")
@@ -328,6 +336,8 @@ with open('c:/writing/scripts/rbr.txt') as file:
 count = 1
 
 projs = []
+poss_abbrev = []
+my_file_list = []
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -357,6 +367,8 @@ while count < len(sys.argv):
         examples()
     elif arg == '?':
         usage()
+    elif arg in abbrevs.keys():
+        poss_abbrev.append(arg)
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
@@ -385,8 +397,17 @@ if not proj:
         print("Going with default", def_proj)
         proj = def_proj
 
+for pa in poss_abbrev:
+    if proj in abbrevs[pa].keys():
+        print("Adding", abbrevs[pa][proj])
+        my_file_list.append(abbrevs[pa][proj])
+    else:
+        print(pa, 'has nothing for current project', proj, 'but would be valid for', '/'.join(sorted(abbrevs[pa].keys())))
+
+if not len(my_file_list): my_file_list = list(branch_list[proj])
+
 i7.go_proj(proj)
-for x in branch_list[proj]:
+for x in my_file_list:
     get_file(x)
 
 post_copy()
