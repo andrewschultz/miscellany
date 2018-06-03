@@ -1,5 +1,6 @@
 import sys
 
+from collections import defaultdict
 from fractions import Fraction
 from itertools import permutations
 
@@ -76,6 +77,26 @@ with open("m14.txt") as file:
 only_one = False
 got_one = False
 print_all = False
+equivalence_classes = True
+
+firsts = defaultdict(int)
+eqc = defaultdict(str)
+sums = defaultdict(str)
+
+if equivalence_classes:
+    for q in range(0, 192):
+        j = equat(q)
+        j.make_new_vals([17, 83, 94])
+        ev = j.eval_expr()
+        if ev in eqc.keys():
+            eqc[ev] += ", {:d}".format(q)
+        else:
+            eqc[ev] = str(q)
+            firsts[q] = ev
+    for x in sorted(firsts.keys()):
+        if ',' not in eqc[firsts[x]]: print(x, "unique")
+        else: print(firsts[x], '(', eqc[firsts[x]].count(',') + 1, ')', eqc[firsts[x]])
+    exit()
 
 for q in range(0,192):
     j = equat(q)
