@@ -48,8 +48,10 @@ While $cmdCount <= $CmdLine[0]
   $cmd = StringLower($CmdLine[$cmdCount])
   if $cmd == 'w' or $cmd == '-w' Then
     $walkthrough = 1
+	$cmdCount = $cmdCount + 1
+	ContinueLoop
   Else
-    $project = $CmdLine[1]
+    $project = $CmdLine[$cmdCount]
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
     Endif
@@ -59,7 +61,11 @@ WEnd
 
 if $walkthrough Then
   if not $wthruHash.Exists($project) Then
-    MsgBox($MB_OK, "Nothing to wthr", $project)
+    MsgBox($MB_OK, "Nothing to walkthrough", $project)
+    Exit
+  EndIf
+  if not $waitHash.Exists($project) Then
+    MsgBox($MB_OK, "No waithash entry", $project)
     Exit
   EndIf
 EndIf
@@ -100,7 +106,6 @@ Func OpenIDE($project)
 	  return
     Endif
   Endif
-  MsgBox($MB_OK, "2", "2")
   if (WinExists($pwin)) or (WinExists($project & ".inform* - Inform")) Then
     WinActivate($pwin);
     WinWaitActive($pwin);
@@ -120,7 +125,6 @@ Func OpenIDE($project)
 
   Endif
 
-  MsgBox($MB_OK, "3 " & $build, "3 " & $project & ".inform - Inform")
   if $build == 1 Then
     sleep(1000);
     WinWaitActive($project & ".inform - Inform");
@@ -131,7 +135,6 @@ Func OpenIDE($project)
   Endif
   Beep (600, 200)
 
-  MsgBox($MB_OK, "4", "4" & $walkthrough)
   if $walkthrough Then
     MouseClick ( "left", 1200, 800, 1 )
 	Sleep(40000)
