@@ -8,14 +8,14 @@
 #include <MsgBoxConstants.au3>
 #include <Date.au3>
 
-Local $project = "buck-the-past";
+Local $project = EnvGet("PROJ")
 Local $stuff = 1;
 Local $build = 1;
 
 ; $toRead is defined in ide-h.au3
 ;
-; $hash = ObjCreate("Scripting.Dictionary")
-; $hash.Add ("d",   "dirk")
+; $projHash = ObjCreate("Scripting.Dictionary")
+; $projHash.Add ("d",   "dirk")
 ;
 ; this is not included here b/c changing the default would mean another github pull/push
 ; plus there are private projects
@@ -23,18 +23,20 @@ Local $build = 1;
 
 Opt("WinTitleMatchMode", -2)
 
-if $CmdLine[0] > 0 Then
+Local $cmdCount = 0
+
+While $cmdCount <= $CmdLine[0]
   if $CmdLine[1] == '0' Then
     Local $cmdStr = ""
 	Local $count = 0
-    For $key In $hash
+    For $key In $projHash
 	  if Mod($count, 3) > 0 Then
 	    $cmdStr = $cmdStr & " / "
 	  ElseIf $count > 0 Then
 	    $cmdStr = $cmdStr & @CRLF
 	  Endif
 	  $count = $count + 1
-	  $cmdStr = $cmdStr & $key & " " & $hash.Item($key)
+	  $cmdStr = $cmdStr & $key & " " & $projHash.Item($key)
     Next
 	if Mod ($count, 2) == 1 Then
 	  $cmdStr = $cmdStr & @CRLF
@@ -43,16 +45,33 @@ if $CmdLine[0] > 0 Then
     MsgBox($MB_OK, "List of projects", $cmdStr)
     Exit
   Endif
-  $project = $CmdLine[1]
-  if $hash.Exists($project) Then
-    $project = $hash.Item($project)
-  Endif
-Endif
+  $cmd = StringLower($CmdLine[$cmdCount])
+  if $cmd == 'w' or $cmd == '-w' Then
+    $walkthrough = 1
+  Else
+    $project = $CmdLine[1]
+    if $projHash.Exists($project) Then
+      $project = $projHash.Item($project)
+    Endif
+  EndIf
+  $cmdCount = $CmdCount + 1
+WEnd
+
+if $walkthrough Then
+  if not $wthruHash.Exists($project) Then
+    MsgBox($MB_OK, "Nothing to wthr", $project)
+    Exit
+  EndIf
+EndIf
 
 Local $dirToCheck = "c:\\games\\inform\\" & $project & ".inform"
 
 if not FileExists($dirToCheck) Then
-  MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
+  if $project = EnvGet("PROJ") Then
+    MsgBox($MB_OK, "No such default directory", "The default directory does not exist. You may need to change the PROJ environment variable.")
+  Else
+    MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
+  EndIf
   Exit
 EndIf
 
@@ -66,12 +85,14 @@ OpenIDE($project)
 
 Func OpenIDE($project)
   $toCheck = "[REGEXPTITLE:$project" & ".inform\*? - Inform]"
+  $pwin = $project & ".inform - Inform"
   if (WinExists($toCheck)) Then
     Local $fileTimeA = FileGetTime($dirToCheck & "\\source\\story.ni", $FT_MODIFIED, $FT_ARRAY)
 	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
 	Local $nowTime = _NowCalc()
 	Local $dd = _DateDiff('h', $fileTime, $nowTime)
-	if $dd >= 23 Then
+
+	if $dd >= 23 and not $walkthrough Then
       ; MsgBox($MB_OK, $dd & " hours since last change, not building", "Blah")
 	  ; only activate this
       WinActivate($toCheck);
@@ -79,9 +100,10 @@ Func OpenIDE($project)
 	  return
     Endif
   Endif
-  if (WinExists($project & ".inform - Inform")) or (WinExists($project & ".inform* - Inform")) Then
-    WinActivate($project & ".inform - Inform");
-    WinWaitActive($project & ".inform - Inform");
+  MsgBox($MB_OK, "2", "2")
+  if (WinExists($pwin)) or (WinExists($project & ".inform* - Inform")) Then
+    WinActivate($pwin);
+    WinWaitActive($pwin);
   Else
   ; open the window
   run("C:\\Program Files (x86)\\Inform 7\\Inform7.exe");
@@ -98,12 +120,22 @@ Func OpenIDE($project)
 
   Endif
 
+  MsgBox($MB_OK, "3 " & $build, "3 " & $project & ".inform - Inform")
   if $build == 1 Then
-    sleep(1);
+    sleep(1000);
     WinWaitActive($project & ".inform - Inform");
-    Send("{F5}");
+    sleep(1000);
+    MouseClick ( "left", 50, 50, 1 )
+    ; Send("{F5}");
     $x = ControlGetHandle(".inform - Inform", "", "[CLASS:ToolbarWindow32; INSTANCE:2]");
   Endif
   Beep (600, 200)
+
+  MsgBox($MB_OK, "4", "4" & $walkthrough)
+  if $walkthrough Then
+    MouseClick ( "left", 1200, 800, 1 )
+	Sleep(40000)
+	Send("test " & $wthruHash.item($project) & @CRLF)
+  EndIf
 
 EndFunc
