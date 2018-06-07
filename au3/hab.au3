@@ -33,6 +33,10 @@ Local $clicks = 0, $clicks2 = 0, $delay = 6000
 Local $cmdCount = 1
 Local $nextCmd = 2
 Local $lastCmd = 0
+Local $startMP = 0
+Local $finalMP = 0
+Local $MPloss = 0
+Local $onlyTrackMP = 0
 
 Local $preDelay = 0
 
@@ -78,10 +82,22 @@ While $cmdCount <= $CmdLine[0]
     $nextNum = $CmdLine[$cmdCount+1]
 	$nextCmd = $cmdCount + 2
   EndIf
+
+  ; test options
   If $myCmd == 'te' Then
     $testDontClick = True
+	$cmdCount = $nextCmd
     ContinueLoop
+  ElseIf $myCmd == 'om' Then
+    $onlyTrackMp = 1
+	$cmdCount = $nextCmd
+	ContinueLoop
+  ElseIf $myCmd == '=' or $myCmd == 's' Then
+    $startMP = $nextNum
+	$cmdCount = $nextCmd
+	ContinueLoop
   EndIf
+
   $didAnything = True
   If $myCmd == 'a' Then
     ToHab()
@@ -95,13 +111,12 @@ While $cmdCount <= $CmdLine[0]
             sleep(2000)
           Endif
         Next
-
   ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
     CheckIfOnTask()
     for $i = 1 to $clicks
-      clickSkill($BREATH_OF_FIRE, 1)
+      clickSkill($BREATH_OF_FIRE, 1, 10)
       sleep($delay/2)
       MouseMove($MousePos[0], $MousePos[1])
       MouseClick("left")
@@ -121,16 +136,33 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	sleep($preDelay * 1000)
     DoInt()
+  ElseIf StringInStr($CmdLine[$cmdCount], ",") Then
+    Local $spells[3] = StringSplit($CmdLine[$cmdCount], ",")
+	Local $spellOrd = [ Number($spells[1]), Number($spells[2]) ]
+	_ArraySort($spellOrd)
+	ToHab()
+	ToTasks()
+	clickSkill($spellOrd[0], $EARTHQUAKE, 35)
+	if not $onlyTrackMp Then
+	  sleep(12000)
+    EndIf
+	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30)
+	MsgBox($MB_OK, "Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
+	MsgBox($MB_OK, $StartMP, $FinalMP)
+	ExitLoop
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
     ToHab()
 	ToTasks()
 	$old_delay = $delay
-	$delay = adjust_delay($delay)
+	$delay = 15000 ; adjust_delay($delay)
     $clicks = $nextNum
     CheckClicks()
 	for $i = 1 to $nextNum
-      clickSkill(1, $EARTHQUAKE)
-      clickSkill(2, $ETHEREAL_SURGE)
+      clickSkill(2, $ETHEREAL_SURGE, 30, True)
+      clickSkill(1, $EARTHQUAKE, 35)
+	  if $i < $nextNum Then
+        sleep($delay)
+      EndIf
 	Next
 	$delay = $old_delay
   ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
@@ -141,8 +173,8 @@ While $cmdCount <= $CmdLine[0]
       $clicks2 = $cmdLine[3]
     Endif
     CheckClicks()
-    clickSkill($clicks, $ETHEREAL_SURGE)
-    clickSkill($clicks2, $EARTHQUAKE)
+    clickSkill($clicks, $ETHEREAL_SURGE, 30)
+    clickSkill($clicks2, $EARTHQUAKE, 35)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -192,11 +224,16 @@ Elseif $didAnything == False Then
   Usage(0, "(no useful commands)")
 EndIf
 
+If $startMP > 0 Then
+  $finalMP = $startMP - $MPloss
+  MsgBox($MB_OK, "Projected MP change", "start=" & $startMP & @CRLF & "end=" & $finalMP)
+EndIf
+
 ; end main
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[13] = [ "-a, -b, -e, -i, -iw, -m/-w, -o, -p, -r, -t or -x are the options.", _
+  Local $usgAry[14] = [ "-a, -b, -e, -i, -iw, -m/-w, -o, -p, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times", _
   "-b does fiery blast, needs # and positioning", _
   "-d adjusts delay, though it needs to come before other commands", _
@@ -206,6 +243,7 @@ Func Usage($questionmark, $badCmd = "")
   "-o = only click tasks: test option", _
   "-p = perception gear", _
   "-r = repeated habit on the left column, needs # and positioning", _
+  "-s or -= = gives starting MP so you can see final MP as well", _
   "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
   "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
   ]
@@ -254,14 +292,18 @@ Func PickAttr($y)
     sleep(2000)
 EndFunc
 
-Func clickSkill($clicks, $x)
+Func clickSkill($clicks, $x, $cost, $delayLast = False)
+  $MPloss = $MPloss + $cost
+  if $onlyTrackMp Then
+    Return
+  EndIf
   if $testDontClick == True Then
     MsgBox($MB_OK, "Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
     exit
   EndIf
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
-    if $i < $clicks Then
+    if $i < $clicks or $delayLast Then
       MouseMove ( $xi + $xd * $x, $yi - 60 )
       sleep($delay)
     Endif
@@ -319,7 +361,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
     ; need to wait to make sure the page loads after clicking "tasks"
   sleep(2000)
 
-  clickSkill($times, 2)
+  clickSkill($times, 2, 25)
 
   if $unequipPer == True Then
     DoInt()
