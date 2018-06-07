@@ -30,6 +30,9 @@ my $questionLast    = 0;
 my $ghAfter         = 0;
 my $launchPost      = "";
 
+my $questionsThisTime = 0;
+my $answersThisTime   = 0;
+
 #$exp{"pc"} = "compound";
 my $default = "btp";
 $exp{"0"}  = "sc";
@@ -164,7 +167,6 @@ while ( $a = <A> ) {
     $a =~ s/^raw=//i;
     chomp($a);
     $rawFile = "$invDir\\$a";
-    $a       = <A>;
     next;
   }
 }
@@ -200,7 +202,7 @@ my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>
-' . $a . '
+' . $title . '
 </title>
 
 </head>
@@ -208,7 +210,7 @@ my $header = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 
 <noscript><p style="color:#633;font-weight:bold;">This page requires JavaScript enabled in your browser to see the hints.</p></noscript>
 
-<center><h1>' . $a . '</h1></center>
+<center><h1>' . $title . '</h1></center>
 <center><h2>Invisiclues hint javascript thanks to <a href="http://nitku.net/blog">Undo Restart Restore</a></h2></center>
 
 <center>[NOTE: tab/enter may be quicker to reveal clues than futzing with the mouse.]</center>
@@ -237,9 +239,9 @@ while ( $a = <A> ) {
       print "WARNING line $. has no question before it: $a\n";
       $questionLast = 1;          # don't repeat the error printout
     }
-    $levels[$lastLev]++;
-    $a   = addBoldItalic($a);
-    $otl = currentOutline(@levels);
+    $answersThisTime++;
+    $a = addBoldItalic($a);
+    $otl = currentOutline( \@levels, $questionsThisTime, $answersThisTime );
     print B
 "<a href=\"#\" onclick=\"document.getElementById('$otl').style.display = 'block'; this.style.display = 'none'; return false;\">"
       . cbr()
@@ -251,15 +253,16 @@ while ( $a = <A> ) {
   if ($lastWasInvisiclue) { print B "</div>\n"; }
   $lastWasInvisiclue = 0;
   if ( $a =~ /^\?/ ) {
-    $questionLast = 1;
+    $questionsThisTime++;
+    $answersThisTime = 0;
+    $questionLast    = 1;
     my $ll = $lastLev + 1;
     $a =~ s/^.//g;
-    $levels[$lastLev]++;
-    $otl = currentOutline(@levels);
+    $otl = currentOutline( \@levels, $questionsThisTime, $answersThisTime );
     print B "<h$ll>$a</h$ll>\n<div>\n";
     next;
   }
-  $questionLast = 0;
+  $questionLast = $questionsThisTime = $answersThisTime = 0;
   if ($debug) { print "Outlining $a.\n"; }
   $temp = $a;
   my $times = $temp =~ tr/>//;
@@ -268,11 +271,12 @@ while ( $a = <A> ) {
   #print "1 $a\n2 $temp\n";
   $levels[$times]++;
   for ( $times + 1 .. 9 ) { @levels[$_] = 0; }
-  $otl = currentOutline(@levels);
-  if ($debug) { print "Element number $otl!!\n"; }
+  $otl = currentOutline( \@levels, $questionsThisTime, $answersThisTime );
+
+  # if ($debug) { print "Element number $otl!!\n"; }
   my $t2 = $lastLev - $times;
 
-  if ($debug) { print "Current level $times Last level $lastLev\n"; }
+  if ($debug) { print "Current level $times Last level $lastLev ... $otl\n"; }
 
   if ( $t2 >= 0 ) {
     for ( 0 .. $t2 ) {
@@ -331,13 +335,14 @@ if ($theDir) {
 }
 
 sub currentOutline {
+  my @ary = @{ $_[0] };
   my $retString;
 
   #print "@_ is the current level.\n";
   for my $q ( 1 .. 9 ) {
-    if ( $_[$q] == 0 ) { return $retString; }
-    elsif ( $q == 1 ) { $retString = "$_[$q]"; }
-    else              { $retString .= ".$_[$q]"; }
+    if ( $ary[$q] == 0 ) { return "$retString.q.$_[1].$_[2]"; }
+    elsif ( $q == 1 ) { $retString = "$ary[$q]"; }
+    else              { $retString .= ".$ary[$q]"; }
   }
   print "Oops missed.\n";
 }
