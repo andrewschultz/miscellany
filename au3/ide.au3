@@ -11,6 +11,7 @@
 Local $project = EnvGet("PROJ")
 Local $stuff = 1;
 Local $build = 1;
+Local $walkthrough = 0;
 
 ; $toRead is defined in ide-h.au3
 ;
@@ -26,7 +27,7 @@ Opt("WinTitleMatchMode", -2)
 Local $cmdCount = 0
 
 While $cmdCount <= $CmdLine[0]
-  if $CmdLine[1] == '0' Then
+  if $CmdLine[$cmdCount] == '0' Then
     Local $cmdStr = ""
 	Local $count = 0
     For $key In $projHash
@@ -61,11 +62,11 @@ WEnd
 
 if $walkthrough Then
   if not $wthruHash.Exists($project) Then
-    MsgBox($MB_OK, "Nothing to walkthrough", $project)
+    MsgBox($MB_OK, "Need wthruhash entry", "Define wthruhash entry for " & $project & " in ide-h.au3.")
     Exit
   EndIf
   if not $waitHash.Exists($project) Then
-    MsgBox($MB_OK, "No waithash entry", $project)
+    MsgBox($MB_OK, "Need waithash entry", "Define waithash entry for " & $project & " in ide-h.au3.")
     Exit
   EndIf
 EndIf
