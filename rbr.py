@@ -186,6 +186,14 @@ def get_file(fname):
                     if x.isdigit():
                         actives[int(x)] = True
                 continue
+            if line.startswith("=one="):
+                la = line[5:].split("\t")
+                temp_actives = [False] * len(file_array)
+                string_out = re.sub(r"\\{2,}", "\n", la[1])
+                for x in la[int(0)].split(","): temp_actives[int(x)] = True
+                for x in range(0, len(file_array)):
+                    if temp_actives[x]: file_list[x].write(string_out)
+                continue
             if line.startswith("==t"):
                 if temp_diverge:
                     print("Oops, bailing due to second temporary divergence ==t at line", line_count, ":", line.strip())

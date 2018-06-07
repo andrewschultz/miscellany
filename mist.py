@@ -28,6 +28,8 @@ short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 default_room_level = 'chapter'
 levs = { }
 
+clipboard_str = ""
+
 for x in short:
     srev[short[x]] = x
 
@@ -48,6 +50,7 @@ def usage():
 
 def clip_out(x):
     if print_output: print(x)
+    global clipboard_str
     if to_clipboard: clipboard_str += x + "\n"
     return
 
@@ -231,11 +234,11 @@ def mister(a):
                             print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
                     if print_location and print_output: print("##location =", location[f])
                     if print_condition and print_output: print("##condition(s)", condition[f])
+                    clip_out("#mistake test for {:s}".format(cmd_text[f]))
                     for ct in cmd_text[f].split('/'):
-                        clip_out("#mistake test for {:s}".format(f))
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
                         clip_out(mistake_text[f])
-                        if to_clipboard: clipboard_str += "\n"
+                    if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
                     if print_output: print()
     if check_stuff_after:

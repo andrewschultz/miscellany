@@ -10,6 +10,7 @@ from collections import defaultdict
 from shutil import copy
 import os
 import sys
+import i7
 from filecmp import cmp
 
 copy_over = True
