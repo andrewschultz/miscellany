@@ -63,19 +63,8 @@ while $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
 
-  Local $digitIndex = -1
-  For $x = StringLen($myCmd) to 1 step -1
-    if StringIsDigit(StringMid($myCmd, $x)) Then
-	  $digitIndex = $x - 1
-	EndIf
-  Next
-
-  if $digitIndex > -1 Then
-    $newCmd = StringLeft($myCmd, $digitIndex)
-	$nextNum = StringMid($myCmd, $digitIndex + 1)
-	; MsgBox($MB_OK, "Wipe out nums", $myCmd & " " & $newCmd & @CRLF & $nextNum)
-	$myCmd = $newCmd
-  EndIf
+  $nextNum = digit_part($myCmd)
+  $myCmd = string_part($myCmd)
 
   if not meta_cmd($myCmd) Then
     ContinueLoop
@@ -467,6 +456,33 @@ Func meta_cmd($param)
   Next
 
   Return False
+EndFunc
+
+Func string_part($param)
+
+  Local $digitIndex = StringLen($param)
+  For $x = StringLen($param) to 1 step -1
+    if StringIsDigit(StringMid($param, $x)) Then
+	  $digitIndex = $x - 1
+	EndIf
+  Next
+  ; MsgBox($MB_OK, "string digit part", $digitIndex)
+  return StringLeft($param, $digitIndex)
+
+EndFunc
+
+Func digit_part($param)
+
+  Local $digitIndex = -1
+  For $x = StringLen($param) to 1 step -1
+	; MsgBox($MB_OK, "debug", $x & " " & StringMid($param, $x))
+    if StringIsDigit(StringMid($param, $x)) Then
+	  $digitIndex = $x
+	EndIf
+  Next
+  ; MsgBox($MB_OK, "digit part", $digitIndex)
+  return StringMid($param, $digitIndex)
+
 EndFunc
 
 Func Init()
