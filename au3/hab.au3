@@ -16,20 +16,14 @@
 ; x = express (e = equip only, r = reequip only, q = no nag)
 ;
 
+; in case I ever want to change default constants
+#include <hab-h.au3>
+
 #include <MsgBoxConstants.au3>
 #include <Array.au3>
 
-; constants for main attributes (pull down menu/outfits)
-Const $CON = 1, $PER = 2, $STR = 3, $INT = 4
-
-; constants for mage skill names
-Const $BURST_OF_FLAME = 0, $ETHEREAL_SURGE = 1, $EARTHQUAKE = 2, $CHILLING_FROST = 3
-
-; constants for where to click on a skill
-Local $xi = 540, $yi = 980, $xd = 190
-
 ; constants for click frequency
-Local $clicks = 0, $clicks2 = 0, $delay = 6000
+Local $clicks = 0, $clicks2 = 0
 Local $cmdCount = 1
 Local $nextCmd = 2
 Local $lastCmd = 0
@@ -60,15 +54,66 @@ If $cmdLine[0] == 1 and StringIsDigit($cmdLine[1]) Then
   exit
 EndIf
 
+; process meta commands first
+
+while $cmdCount <= $CmdLine[0]
+  $myCmd = StringLower($CmdLine[$cmdCount])
+  $cmdCount += 1
+  if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
+    $myCmd = StringMid($myCmd, 2)
+  EndIf
+
+  Local $digitIndex = -1
+  For $x = StringLen($myCmd) to 1 step -1
+    if StringIsDigit(StringMid($myCmd, $x)) Then
+	  $digitIndex = $x - 1
+	EndIf
+  Next
+
+  if $digitIndex > -1 Then
+    $newCmd = StringLeft($myCmd, $digitIndex)
+	$nextNum = StringMid($myCmd, $digitIndex + 1)
+	; MsgBox($MB_OK, "Wipe out nums", $myCmd & " " & $newCmd & @CRLF & $nextNum)
+	$myCmd = $newCmd
+  EndIf
+
+  if not meta_cmd($myCmd) Then
+    ContinueLoop
+  EndIf
+  ; MsgBox($MB_OK, "found meta command", $myCmd)
+
+  If $myCmd == 'te' Then
+    $testDontClick = True
+	$cmdCount = $nextCmd
+  ElseIf $myCmd == 'om' Then
+    $onlyTrackMp = 1
+	$cmdCount = $nextCmd
+  ElseIf $myCmd == '=' or $myCmd == 's' Then
+    $startMP = $nextNum
+	$cmdCount = $nextCmd
+  Else
+    MsgBox($MB_OK, "unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
+	Exit
+  EndIf
+
+WEnd
+
+$cmdCount = 1
+
 While $cmdCount <= $CmdLine[0]
   if $cmdCount == $lastCmd Then
-    MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " vs " & $nextCmd & " in full array " & _ArrayToString($CmdLine, "/", "1:"))
+    MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " argument #" & @CRLF & $nextCmd & " argument value" & @CRLF & _ArrayToString($CmdLine, "/"))
 	exit
   EndIf
   $lastCmd = $cmdCount
   $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
+  EndIf
+  if meta_cmd($myCmd) Then
+    MsgBox($MB_OK, "ignored meta command", $myCmd)
+    $cmdCount += 1
+	ContinueLoop
   EndIf
   $nextCmd = $cmdCount + 1
   $nextNum = -1
@@ -81,21 +126,6 @@ While $cmdCount <= $CmdLine[0]
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
 	$nextCmd = $cmdCount + 2
-  EndIf
-
-  ; test options
-  If $myCmd == 'te' Then
-    $testDontClick = True
-	$cmdCount = $nextCmd
-    ContinueLoop
-  ElseIf $myCmd == 'om' Then
-    $onlyTrackMp = 1
-	$cmdCount = $nextCmd
-	ContinueLoop
-  ElseIf $myCmd == '=' or $myCmd == 's' Then
-    $startMP = $nextNum
-	$cmdCount = $nextCmd
-	ContinueLoop
   EndIf
 
   $didAnything = True
@@ -424,6 +454,19 @@ EndFunc
 
 Func ToHome()
   Send("{CTRLDOWN}{HOME}{CTRLUP}")
+EndFunc
+
+Func meta_cmd($param)
+  Local $metas[4] = [ 'om', 'te', '=', 's' ]
+  Local $um = UBound($metas) - 1
+
+  For $x = 0 to $um
+    if $param == $metas[$x] Then
+	  Return True
+    EndIf
+  Next
+
+  Return False
 EndFunc
 
 Func Init()
