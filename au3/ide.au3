@@ -7,6 +7,7 @@
 #include "ide-h.au3"
 #include <MsgBoxConstants.au3>
 #include <Date.au3>
+#include "c:\\scripts\\andrew.au3"
 
 Local $project = EnvGet("PROJ")
 Local $stuff = 1;
@@ -43,7 +44,7 @@ While $cmdCount <= $CmdLine[0]
 	  $cmdStr = $cmdStr & @CRLF
     Endif
 	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
-    MsgBox($MB_OK, "List of projects", $cmdStr)
+    MOK("List of projects", $cmdStr)
     Exit
   Endif
   $cmd = StringLower($CmdLine[$cmdCount])
@@ -62,11 +63,11 @@ WEnd
 
 if $walkthrough Then
   if not $wthruHash.Exists($project) Then
-    MsgBox($MB_OK, "Need wthruhash entry", "Define wthruhash entry for " & $project & " in ide-h.au3.")
+    MOK("Need wthruhash entry", "Define wthruhash entry for " & $project & " in ide-h.au3.")
     Exit
   EndIf
   if not $waitHash.Exists($project) Then
-    MsgBox($MB_OK, "Need waithash entry", "Define waithash entry for " & $project & " in ide-h.au3.")
+    MOK("Need waithash entry", "Define waithash entry for " & $project & " in ide-h.au3.")
     Exit
   EndIf
 EndIf
@@ -75,9 +76,9 @@ Local $dirToCheck = "c:\\games\\inform\\" & $project & ".inform"
 
 if not FileExists($dirToCheck) Then
   if $project = EnvGet("PROJ") Then
-    MsgBox($MB_OK, "No such default directory", "The default directory does not exist. You may need to change the PROJ environment variable.")
+    MOK("No such default directory", "The default directory does not exist. You may need to change the PROJ environment variable.")
   Else
-    MsgBox($MB_OK, "no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
+    MOK("no such directory", $dirToCheck & @CRLF & "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
   EndIf
   Exit
 EndIf
@@ -100,7 +101,7 @@ Func OpenIDE($project)
 	Local $dd = _DateDiff('h', $fileTime, $nowTime)
 
 	if $dd >= 23 and not $walkthrough Then
-      ; MsgBox($MB_OK, $dd & " hours since last change, not building", "Blah")
+      ; MOK($dd & " hours since last change, not building", "Blah")
 	  ; only activate this
       WinActivate($toCheck);
       WinWaitActive($toCheck);

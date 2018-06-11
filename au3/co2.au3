@@ -1,4 +1,10 @@
+; co2.au3
+;
+; code academy script to run daily to keep streak going
+;
+
 #include <MsgBoxConstants.au3>
+#include "c:\\scripts\\andrew.au3"
 
 Opt("WinTitleMatchMode", -2)
 Opt("SendKeyDelay", 50)
@@ -35,7 +41,7 @@ while $count <= $cmdLine[0]
   ElseIf $CmdLine[$count] == -1 Then
     $verticalInit = 337
   Else
-    MsgBox($MB_OK, "need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
+    MOK("need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
     Exit
   EndIf
   $count = $count + 1

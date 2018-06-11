@@ -18,6 +18,7 @@
 
 ; in case I ever want to change default constants
 #include <hab-h.au3>
+#include "c:\\scripts\\andrew.au3"
 
 #include <MsgBoxConstants.au3>
 #include <Array.au3>
@@ -69,7 +70,7 @@ while $cmdCount <= $CmdLine[0]
   if not meta_cmd($myCmd) Then
     ContinueLoop
   EndIf
-  ; MsgBox($MB_OK, "found meta command", $myCmd)
+  ; MOK("found meta command", $myCmd)
 
   If $myCmd == 'te' Then
     $testDontClick = True
@@ -81,7 +82,7 @@ while $cmdCount <= $CmdLine[0]
     $startMP = $nextNum
 	$cmdCount = $nextCmd
   Else
-    MsgBox($MB_OK, "unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
+    MOK("unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
 	Exit
   EndIf
 
@@ -91,7 +92,7 @@ $cmdCount = 1
 
 While $cmdCount <= $CmdLine[0]
   if $cmdCount == $lastCmd Then
-    MsgBox($MB_OK, "oops possible infinite loop", $cmdCount & " argument #" & @CRLF & $nextCmd & " argument value" & @CRLF & _ArrayToString($CmdLine, "/"))
+    MOK("oops possible infinite loop", $cmdCount & " argument #" & @CRLF & $nextCmd & " argument value" & @CRLF & _ArrayToString($CmdLine, "/"))
 	exit
   EndIf
   $lastCmd = $cmdCount
@@ -100,7 +101,7 @@ While $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if meta_cmd($myCmd) Then
-    MsgBox($MB_OK, "ignored meta command", $myCmd)
+    MOK("ignored meta command", $myCmd)
     $cmdCount += 1
 	ContinueLoop
   EndIf
@@ -166,8 +167,7 @@ While $cmdCount <= $CmdLine[0]
 	  sleep(12000)
     EndIf
 	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30)
-	MsgBox($MB_OK, "Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
-	MsgBox($MB_OK, $StartMP, $FinalMP)
+	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
 	ExitLoop
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
     ToHab()
@@ -221,7 +221,7 @@ While $cmdCount <= $CmdLine[0]
     if StringInStr($additional, 'r') Then
       ToolsTrade($clicks, False, True)
       if StringInStr($additional, 'e') Then
-        MsgBox($MB_OK, "Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both.")
+        MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both.")
         exit
       EndIf
     ElseIf StringInStr($additional, 'e') Then
@@ -245,7 +245,7 @@ EndIf
 
 If $startMP > 0 Then
   $finalMP = $startMP - $MPloss
-  MsgBox($MB_OK, "Projected MP change", "start=" & $startMP & @CRLF & "end=" & $finalMP)
+  MOK("Projected MP change", "start=" & $startMP & @CRLF & "end=" & $finalMP)
 EndIf
 
 ; end main
@@ -276,7 +276,7 @@ Func Usage($questionmark, $badCmd = "")
     $header = $header & " " & $badCmd
   EndIf
 
-  MsgBox($MB_OK, $header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
+  MOK($header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
   Exit
 EndFunc
 
@@ -312,12 +312,12 @@ Func PickAttr($y)
 EndFunc
 
 Func clickSkill($clicks, $x, $cost, $delayLast = False)
-  $MPloss = $MPloss + $cost
+  $MPloss = $MPloss + $cost * $clicks
   if $onlyTrackMp Then
     Return
   EndIf
   if $testDontClick == True Then
-    MsgBox($MB_OK, "Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
+    MOK("Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
     exit
   EndIf
   for $i = 1 to $clicks
@@ -368,7 +368,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
   ;   $delay = $CmdLine[3] * 1000
   ; Endif
 
-  ; MsgBox($MB_OK, "debug popup", " " & $clicks & " clicks and delay = " & $delay)
+  ; MOK("debug popup", " " & $clicks & " clicks and delay = " & $delay)
 
   if $equipPer == True Then
     DoPer()
@@ -390,7 +390,7 @@ EndFunc
 
 Func CheckClicks() ; this is not perfect but it does the job for now
   if $clicks < 1 and $clicks2 < 1 Then
-    MsgBox($MB_OK, "Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
+    MOK("Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
     exit
   Endif
 EndFunc
@@ -404,18 +404,18 @@ EndFunc
 Func CheckIfOnTask()
   $MousePos = MouseGetPos()
   If $MousePos[0] > 60 Then
-    MsgBox($MB_OK, "Bad mouse position", "You need to position the mouse over a (+) for repeat- or breath-of-fire-cast to work.")
+    MOK("Bad mouse position", "You need to position the mouse over a (+) for repeat- or breath-of-fire-cast to work.")
     exit
   EndIf
 EndFunc
 
 Func GetNumArgOrBail($cmdIdx)
     if $cmdLine[0] < $cmdIdx Then
-      MsgBox($MB_OK, "Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
+      MOK("Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
       exit
     EndIf
     if $cmdLine[$cmdIdx] <= 0 Then
-      MsgBox($MB_OK, "Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
+      MOK("Need # after arg " & ($cmdIdx - 1) & " " & $cmdLine[$cmdIdx-1], "You need to specify a number of clicks for skill casting/armoire raiding.")
       exit
     EndIf
     return $cmdLine[$cmdIdx]
@@ -426,7 +426,7 @@ Func Bail()
 EndFunc
 
 Func NeedPositive()
-  MsgBox($MB_OK, "Need positive #", "Need positive # after arg ")
+  MOK("Need positive #", "Need positive # after arg ")
   exit
 EndFunc
 
@@ -450,7 +450,7 @@ Func meta_cmd($param)
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
-    if $param == $metas[$x] Then
+    if StringLeft($param, StringLen($metas[$x])) == $metas[$x] Then
 	  Return True
     EndIf
   Next
@@ -466,7 +466,7 @@ Func string_part($param)
 	  $digitIndex = $x - 1
 	EndIf
   Next
-  ; MsgBox($MB_OK, "string digit part", $digitIndex)
+  ; MOK("string digit part", $digitIndex)
   return StringLeft($param, $digitIndex)
 
 EndFunc
@@ -475,12 +475,12 @@ Func digit_part($param)
 
   Local $digitIndex = -1
   For $x = StringLen($param) to 1 step -1
-	; MsgBox($MB_OK, "debug", $x & " " & StringMid($param, $x))
+	; MOK("debug", $x & " " & StringMid($param, $x))
     if StringIsDigit(StringMid($param, $x)) Then
 	  $digitIndex = $x
 	EndIf
   Next
-  ; MsgBox($MB_OK, "digit part", $digitIndex)
+  ; MOK("digit part", $digitIndex)
   return StringMid($param, $digitIndex)
 
 EndFunc
