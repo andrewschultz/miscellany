@@ -69,6 +69,8 @@ def go_proj(x):
     os.chdir(proj2dir(x))
     return
 
+to_proj = go_proj
+
 def dir2proj(x = os.getcwd()):
     if os.path.exists(x + "\\story.ni"):
         x2 = re.sub("\.inform.*", "", x)
@@ -80,7 +82,7 @@ def dir2proj(x = os.getcwd()):
 sproj = d2p = dir2proj
 
 def npo(my_file, my_line = 0, print_cmd = False):
-    cmd = "start \"\" {:s} {:s} -n{:d}".format(np, my_file, my_line)
+    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
     if print_cmd: print("Launching", my_file, "at line", my_line, "in notepad++.")
     os.system(cmd)
 
@@ -162,6 +164,7 @@ i7x = { "12": "shuffling",
   "mo": "molesworth",
   "mw": "molesworth",
   "ai": "ailihphilia",
+  "ail": "ailihphilia",
   "pu": "ailihphilia",
   "up": "ailihphilia",
   "sw": "spell-woken",

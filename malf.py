@@ -132,6 +132,7 @@ def sort_mistake(pr):
                             print(x, "at line", linecount, "globally duplicated from", global_duplicates[x])
                     if not x in local_duplicates.keys(): local_duplicates[x] = linecount
                     if not x in global_duplicates.keys(): global_duplicates[x] = linecount
+            elif ll.startswith('u'): sys.exit("Possible misspelling of understand at line {:d} : {:s}".format(linecount, ll))
             if ignore_dupe_next_line: ignore_dupe_next_line = False
             if ll.startswith('[def'): ignore_dupe_next_line = True
             if is_on_heading(line) or is_off_heading(line) or line.strip().endswith('ends here.'):
@@ -164,6 +165,7 @@ def sort_mistake(pr):
     elif need_alpha:
         f.write(line)
     f.close()
+    if os.stat(temp_file).st_size != os.stat(mf).st_size: sys.exit("WARNING corrupt data likely: {:s} and {:s} not the same size, {:d} and {:d} respectively.".format(file, mf, os.stat(temp_file).st_size, os.stat(mf).st_size))
     if cmp(temp_file, mf):
         if not super_quiet: print("No change for", mf)
     else:
