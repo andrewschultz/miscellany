@@ -47,7 +47,8 @@ def test_file(x):
 tefi = test_file
 
 def triz(x):
-    return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x)
+    u = { "shuffling": "shuffling-around" }
+    return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x if x not in u.keys() else u[x])
 
 def hfile(x, y):
     x2 = re.sub("-", " ", x)

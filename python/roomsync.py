@@ -4,10 +4,11 @@
 # compares map text from trizbort to source text from an Inform story.ni file
 # also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
-# verified so far on UP, BTP
+# verified so far on Ailiphilia and Buck the Past
 #
 # also rooms that map *from* a map *to* a
 
+#import traceback
 import os
 import i7
 import sys
@@ -54,15 +55,25 @@ def read_ignore_file():
                 ary = ll.split("~")
                 if len(ary) != 2:
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
-                if verbose: print("Renaming", ary[0], "to", ary[1])
+                if verbose: print("INVIS Renaming", ary[0], "to", ary[1])
                 invis_renamer[ary[0]] = ary[1]
+            elif line.startswith("triz-rename:"):
+                ll = re.sub("^triz-rename:", "", line.strip().lower())
+                ary = ll.split("~")
+                if len(ary) != 2:
+                    print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
+                triz_renamer[ary[0]] = ary[1]
 
 def match_source_invisiclues():
+    room_level = 2
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
     print("Checking invisiclues file", invisfile, "...")
     with open(invisfile) as file:
         for line in file:
-            if line.startswith(">>") and not line.startswith(">>>"):
+            if line.startswith("##roomlevel="):
+                room_level = int(re.sub("^##roomlevel=", "", line.strip().lower()))
+                continue
+            if line.startswith(">" * room_level) and not line.startswith(">" * (room_level + 1)):
                 ll = re.sub(">>", "", line.strip().lower())
                 ll = re.sub(", ?", " ", ll)
                 invis_rooms[ll] = 1
@@ -73,7 +84,9 @@ def match_source_invisiclues():
     print_barrier = True
     inviserr = defaultdict(bool)
     for a in b:
-        if a not in invis_rooms.keys():
+        if a not in invis_rooms.keys() and source[a] != "back set":
+            # this second condition above is a bad hack for now to avoid BTP flagging fake death rooms.
+            # in the future we will want to divide roomsync by projects and have ignored-region as well
             if print_barrier:
                 print("=" * 40)
                 print_barrier = False
@@ -91,16 +104,47 @@ def match_source_invisiclues():
             inviserr['<' + a] = True
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
+def match_source_triz():
+    source_mod = defaultdict(bool)
+    count = 0
+    for x in source.keys():
+        if x in triz_renamer.keys():
+            source_mod[triz_renamer[x]] = source[x]
+            triz[triz_renamer[x]] = triz[x]
+            triz.pop(x)
+        else: source_mod[x] = source[x]
+
+    for a in list(set(triz.keys()) | set(source_mod.keys())):
+        # if a in triz.keys():
+            # print (a, "is in triz and source keys.")
+        if a not in triz.keys() and a not in ignore.keys():
+            count += 1
+            print (count, a, "is in the source but not in the Trizbort map.")
+            maperr.append(a)
+            continue
+        if a not in source_mod.keys() and a not in ignore.keys():
+            count += 1
+            print(count, a, "is in the Trizbort map but not in the source.")
+            sourceerr.append(a)
+            continue
+        if a in ignore.keys():
+            continue
+        if triz[a] != source[a]:
+            print(a, "has different regions: source =", source[a], "and trizbort =", triz[a])
+            # print(a, triz[a], source[a])
+
 # default dictionaries and such
 source = defaultdict(bool)
 triz = defaultdict(bool)
 invis_rooms = defaultdict(bool)
-ignore = defaultdict(bool)
+ignore = defaultdict(bool) # specific rooms to ignore
 room_renamer = defaultdict(str)
 invis_renamer = defaultdict(str)
+triz_renamer = defaultdict(str)
 project = "buck-the-past"
 
 invisiclues_search = True
+triz_search = True
 verbose = False
 
 ignore_file = re.sub("py$", "txt", main.__file__)
@@ -148,16 +192,18 @@ root = e.getroot()
 for elem in e.iter('room'):
     if elem.get('name'):
         x = str(elem.get('name')).lower()
-        x = re.sub(" ?[\/\(].*", "", x, flags=re.IGNORECASE)
-        x = re.sub(", ?", " ", x)
-        triz[x] = str(elem.get('region')).lower()
+        x = re.sub(" *\(.*\)", "", x) # get rid of parenthetical/alternate name
+        x = re.sub(",", "", x) # get rid of commas Inform source doesn't like
+        stuf_ary = re.split(" */ *", x) # optional for if a room name changes
+        for q in stuf_ary:
+            triz[q] = str(elem.get('region')).lower()
     # print (x,triz[x])
     # triz[atype.get('name')] = 1;
 
 def region_name(li):
     li2 = re.sub("\".*?\"", "", li)
     if not re.search("(is|room) +in ", li2): return ""
-    li2 = re.sub(".*?(is|room) +in *", "", li2)
+    li2 = re.sub(".*?(is|room) +in +", "", li2)
     li2 = re.sub("\..*", "", li2)
     return li2
 
@@ -191,8 +237,9 @@ with open(source_file) as f:
             l1 = re.sub(" is (an innie|an outie|a|a privately-named) (passroom|pushroom|room) in .*", "", line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
             l2 = re.sub("\".*", "", line, flags=re.IGNORECASE)
-            l2 = re.sub(".*is (a (privately-named )?(passroom|pushroom|room) )?in ", "", l2, flags=re.IGNORECASE)
+            l2 = re.sub(".*is (a|a privately-named|an innie) (passroom|pushroom|room) in ", "", l2, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
+            if 'idle deli' in l2: print("!!", l1, "/", l2)
             source[if_rename(l1)] = l2
 
 missmap = 0
@@ -202,29 +249,13 @@ sourceerr = []
 
 count = 0
 
-for a in list(set(triz.keys()) | set(source.keys())):
-    # if a in triz.keys():
-        # print (a, "is in triz and source keys.")
-    if a not in triz.keys() and a not in ignore.keys():
-        count += 1
-        print (count, a, "is in the source but not in the Trizbort map.")
-        maperr.append(a)
-        continue
-    if a not in source.keys() and a not in ignore.keys():
-        count += 1
-        print(count, a, "is in the Trizbort map but not in the source.")
-        sourceerr.append(a)
-        continue
-    if a in ignore.keys():
-        continue
-    if triz[a] != source[a]:
-        print(a, "has different regions: source =", source[a], "and trizbort =", triz[a])
-        # print(a, triz[a], source[a])
+if invisiclues_search:
+    match_source_invisiclues()
+
+if triz_search:
+    match_source_triz()
 
 print ("TEST RESULTS:triz2source-" + project + ",0,0," + " / ".join(sourceerr))
 print ("TEST RESULTS:triz2map-" + project + ",0,0," + "/ ".join(maperr))
-
-if invisiclues_search:
-    match_source_invisiclues()
 
 # random note: use 2to3.py

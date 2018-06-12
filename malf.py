@@ -120,7 +120,7 @@ def sort_mistake(pr):
     f = open(temp_file, "w", newline="\n")
     with open(mf) as file:
         for (linecount, line) in enumerate(file, 1):
-            ll = line.lower().strip()
+            ll = line.lower().rstrip()
             if ll.startswith('understand'):
                 for x in all_mistakes(ll):
                     if not ignore_dupe_next_line:
