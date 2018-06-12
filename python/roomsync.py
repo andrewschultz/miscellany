@@ -28,8 +28,8 @@ def format_help():
     exit()
 
 def if_rename(x):
-    if x in renamer.keys():
-        return renamer[x]
+    if x in room_renamer.keys():
+        return room_renamer[x]
     return x
 
 def read_ignore_file():
@@ -42,13 +42,20 @@ def read_ignore_file():
             if line.startswith('ignore:'):
                 ll = re.sub("^ignore:", "", line.strip().lower())
                 ignore[ll] = 1
-            elif line.startswith("rename:"):
-                ll = re.sub("^rename:", "", line.strip().lower())
+            elif line.startswith("room-rename:"):
+                ll = re.sub("^room-rename:", "", line.strip().lower())
                 ary = ll.split("~")
                 if len(ary) != 2:
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
                 if verbose: print("Renaming", ary[0], "to", ary[1])
-                renamer[ary[0]] = ary[1]
+                room_renamer[ary[0]] = ary[1]
+            elif line.startswith("invis-rename:"):
+                ll = re.sub("^invis-rename:", "", line.strip().lower())
+                ary = ll.split("~")
+                if len(ary) != 2:
+                    print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
+                if verbose: print("Renaming", ary[0], "to", ary[1])
+                invis_renamer[ary[0]] = ary[1]
 
 def match_source_invisiclues():
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
@@ -59,7 +66,9 @@ def match_source_invisiclues():
                 ll = re.sub(">>", "", line.strip().lower())
                 ll = re.sub(", ?", " ", ll)
                 invis_rooms[ll] = 1
-    b = [x for x in list(set(source.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
+    modsource = defaultdict(bool)
+    for q in source.keys(): modsource[invis_renamer[q] if q in invis_renamer.keys() else q] = True # this is if we don't want to spoil room names
+    b = [x for x in list(set(modsource.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
     count = 0
     print_barrier = True
     inviserr = defaultdict(bool)
@@ -73,7 +82,7 @@ def match_source_invisiclues():
             inviserr['>' + a] = True
     print_barrier = (count > 0)
     for a in b:
-        if a not in source.keys():
+        if a not in modsource.keys():
             if print_barrier:
                 print("=" * 40)
                 print_barrier = False
@@ -87,7 +96,8 @@ source = defaultdict(bool)
 triz = defaultdict(bool)
 invis_rooms = defaultdict(bool)
 ignore = defaultdict(bool)
-renamer = defaultdict(str)
+room_renamer = defaultdict(str)
+invis_renamer = defaultdict(str)
 project = "buck-the-past"
 
 invisiclues_search = True
@@ -144,6 +154,13 @@ for elem in e.iter('room'):
     # print (x,triz[x])
     # triz[atype.get('name')] = 1;
 
+def region_name(li):
+    li2 = re.sub("\".*?\"", "", li)
+    if not re.search("(is|room) +in ", li2): return ""
+    li2 = re.sub(".*?(is|room) +in *", "", li2)
+    li2 = re.sub("\..*", "", li2)
+    return li2
+
 with open(source_file) as f:
     for (line_count, line) in enumerate(f, 1):
         if "\t" in line: continue
@@ -162,19 +179,20 @@ with open(source_file) as f:
             l2 = re.sub(".*is in ", "", l2, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
             source[if_rename(l1)] = l2
-        elif re.search("^[^\t\"\[]*is a (privately-named )?(passroom|pushroom|room) in ", line, flags=re.IGNORECASE):
-            l1 = re.sub(" is a (privately-named )?(passroom|pushroom|room) in .*", "", line, flags=re.IGNORECASE)
+        elif re.search("^[^\t\"\[\.]*is (above|below|((north|south|east|west|up|down|inside|outside) of))", line, flags=re.IGNORECASE):
+            l1 = re.sub(' is .*', '', line, flags=re.IGNORECASE)
+            l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
+            l2 = region_name(line)
+            if l2:
+                source[if_rename(l1)] = l2
+            elif if_rename(l1) not in source.keys():
+                print("WARNING no region name for", l1, line_count)
+        elif re.search("^[^\t\"\[]* is (an innie|an outie|a|a privately-named) (passroom|pushroom|room) in ", line, flags=re.IGNORECASE):
+            l1 = re.sub(" is (an innie|an outie|a|a privately-named) (passroom|pushroom|room) in .*", "", line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
             l2 = re.sub("\".*", "", line, flags=re.IGNORECASE)
             l2 = re.sub(".*is (a (privately-named )?(passroom|pushroom|room) )?in ", "", l2, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
-            source[if_rename(l1)] = l2
-        elif re.search("^[^\t\"\[\.]*is (above|below|((north|south|east|west|up|down|inside|outside) of))", line, flags=re.IGNORECASE):
-            l1 = re.sub(' is .*', '', line, flags=re.IGNORECASE)
-            l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
-            l2 = re.sub(".*it is in ", "", line, flags=re.IGNORECASE)
-            l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
-            if 'door' in l1: sys.exit("{:d}: Adding {:s} -> {:s}".format(line_count, l1, l2))
             source[if_rename(l1)] = l2
 
 missmap = 0
