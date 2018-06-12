@@ -44,7 +44,7 @@ def read_ignore_file():
                 ignore[ll] = 1
             elif line.startswith("rename:"):
                 ll = re.sub("^rename:", "", line.strip().lower())
-                ary = ll.split("/")
+                ary = ll.split("~")
                 if len(ary) != 2:
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
                 if verbose: print("Renaming", ary[0], "to", ary[1])
@@ -55,7 +55,7 @@ def match_source_invisiclues():
     print("Checking invisiclues file", invisfile, "...")
     with open(invisfile) as file:
         for line in file:
-            if line.startswith(">>"):
+            if line.startswith(">>") and not line.startswith(">>>"):
                 ll = re.sub(">>", "", line.strip().lower())
                 ll = re.sub(", ?", " ", ll)
                 invis_rooms[ll] = 1
@@ -145,38 +145,36 @@ for elem in e.iter('room'):
     # triz[atype.get('name')] = 1;
 
 with open(source_file) as f:
-    for line in f:
-        if re.search("^there is a (passroom|pushroom|room) called ", line, re.IGNORECASE):
-            line = line.rstrip().lower()
-            l1 = re.sub("^there is a (passroom|pushroom|room) called ", "", line, re.IGNORECASE)
+    for (line_count, line) in enumerate(f, 1):
+        if "\t" in line: continue
+        line = line.rstrip().lower()
+        if re.search("^there is a (passroom|pushroom|room) called ", line, flags=re.IGNORECASE):
+            l1 = re.sub("^there is a (passroom|pushroom|room) called ", "", line, flags=re.IGNORECASE)
             l1 = re.sub("\..*", "", l1, re.IGNORECASE)
             l2 = re.sub(".*is in ", "", line, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
             source[if_rename(l1)] = l2
-        if re.search("^(a|the) (passroom|pushroom|room) called ", line, re.IGNORECASE):
-            line = line.rstrip().lower()
-            l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", line, re.IGNORECASE)
+        elif re.search("^(a|the) (passroom|pushroom|room) called ", line, flags=re.IGNORECASE):
+            l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", line, flags=re.IGNORECASE)
             l1 = re.sub(" is .*", "", l1, re.IGNORECASE)
             l2 = re.sub("\".*", "", line, re.IGNORECASE)
             l2 = re.sub(".*is a room in ", "", l2, re.IGNORECASE)
             l2 = re.sub(".*is in ", "", l2, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
             source[if_rename(l1)] = l2
-            print(ll, l2)
-        if re.search("^[^\t].*is a (privately-named )?(passroom|pushroom|room) in ", line, re.IGNORECASE):
-            line = line.rstrip().lower()
+        elif re.search("^[^\t\"\[]*is a (privately-named )?(passroom|pushroom|room) in ", line, flags=re.IGNORECASE):
             l1 = re.sub(" is a (privately-named )?(passroom|pushroom|room) in .*", "", line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
             l2 = re.sub("\".*", "", line, flags=re.IGNORECASE)
             l2 = re.sub(".*is (a (privately-named )?(passroom|pushroom|room) )?in ", "", l2, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
             source[if_rename(l1)] = l2
-        if re.search("^[^\t].*is (above|below|((north|south|east|west|up|down|inside|outside) of)).*it is in", line, re.IGNORECASE):
-            line = line.rstrip().lower()
+        elif re.search("^[^\t\"\[\.]*is (above|below|((north|south|east|west|up|down|inside|outside) of))", line, flags=re.IGNORECASE):
             l1 = re.sub(' is .*', '', line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
             l2 = re.sub(".*it is in ", "", line, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
+            if 'door' in l1: sys.exit("{:d}: Adding {:s} -> {:s}".format(line_count, l1, l2))
             source[if_rename(l1)] = l2
 
 missmap = 0
