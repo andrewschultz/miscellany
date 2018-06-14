@@ -17,8 +17,8 @@ Local $lesson_delay = 2
 Local $wait = 0
 Local $launch = 0
 Local $start = 0
-Local $verticalInit = 720
-Local $horizInit = 1380
+Local $verticalInit = 700
+Local $horizInit = 1400
 
 Local $substring = "learn"
 
@@ -147,7 +147,7 @@ Opt("SendKeyDelay", 0)
 Send("{ALTDOWN}d{ALTUP}")
 send("https://www.codecademy.com/" & $substring & "{ENTER}")
 
-; this was a workaround for a 32 bit btowser but with 64 bit AutoIt/Browser it's not necessary
+; this was a workaround for a 32 bir btowser but with 64 bit AutoIt/Browser it's not necessary
 
 ; MouseClick("left", 500, 55, 1)
 ; Opt("SendKeyDelay", 0)

@@ -59,7 +59,8 @@ EndIf
 
 while $cmdCount <= $CmdLine[0]
   $myCmd = StringLower($CmdLine[$cmdCount])
-  $cmdCount += 1
+  $nextCmd = $cmdCount + 1
+
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $myCmd = StringMid($myCmd, 2)
   EndIf
@@ -68,9 +69,9 @@ while $cmdCount <= $CmdLine[0]
   $myCmd = string_part($myCmd)
 
   if not meta_cmd($myCmd) Then
+    $cmdCount = $nextCmd
     ContinueLoop
   EndIf
-  ; MOK("found meta command", $myCmd)
 
   If $myCmd == 'te' Then
     $testDontClick = True
@@ -81,12 +82,17 @@ while $cmdCount <= $CmdLine[0]
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
 	$cmdCount = $nextCmd
+	; MOK("Starting MP", "Starting MP = " & $startMP)
   Else
     MOK("unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
 	Exit
   EndIf
 
 WEnd
+
+;uncomment-able code below
+;MOK("Debug checkpoint", "Meta command reading done")
+;Exit
 
 $cmdCount = 1
 
@@ -245,7 +251,7 @@ EndIf
 
 If $startMP > 0 Then
   $finalMP = $startMP - $MPloss
-  MOK("Projected MP change", "start=" & $startMP & @CRLF & "end=" & $finalMP)
+  MOK("Projected MP change", "start=" & $startMP & @CRLF & "MP loss=" & $MPloss & "end=" & $finalMP)
 EndIf
 
 ; end main

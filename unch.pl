@@ -42,8 +42,8 @@ my %exp = (
   "uo"    => "ugly-oafs",
   "tr"    => "trizbort",
   "btp"   => "buck-the-past",
-  "ru"    => "rube-cube",
-  "sw"    => "spell-woken",
+  "cc"    => "cube-cavern",
+  "tm"    => "tragic-mix",
   "up"    => "put-it-up"
 );
 
