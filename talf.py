@@ -34,6 +34,7 @@ launch_dif = True
 override_source_size_differences = False
 override_omissions = False
 show_ignored = False
+zap_apostrophes = False
 
 ignored_tables = ""
 
@@ -50,7 +51,7 @@ def usage():
 
 force_lower = True
 
-def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BTP a=activation of
+def tab(a, b, c, zap_apostrophes = False): # b = boolean i = integer q = quote l = lower case e=e# for BTP a=activation of
     if force_lower:
         a = a.lower()
     if 'k' in c:
@@ -117,7 +118,9 @@ def tab(a, b, c): # b = boolean i = integer q = quote l = lower case e=e# for BT
             return 0
     if 'q' in c:
         r = re.sub("^\"", "", ary[b].lower(), 0, re.IGNORECASE)
-        r = re.sub("^[the|a|\(] ", "", r, 0, re.IGNORECASE)
+        if zap_apostrophes: r = re.sub("('|\['\])", "", r, 0, re.IGNORECASE)
+        r = re.sub("^(the|a|an|\() ", "", r, 0, re.IGNORECASE)
+        r = re.sub("^\['\]", "", r, 0, re.IGNORECASE)
         r = re.sub("\".*", "", r, 0, re.IGNORECASE)
         return r
     return ary[b]
@@ -143,7 +146,7 @@ def process_table_array(sort_orders, table_rows, file_stream):
         # print("Before:")
         #print(q, sort_orders, my_col, my_type)
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
-        table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type), reverse=reverse_order)
+        table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type, zap_apostrophes), reverse=reverse_order)
         # print("After:")
         # print('\n'.join(table_rows) + '\n')
     file_stream.write('\n'.join(table_rows) + '\n')
@@ -360,30 +363,19 @@ while count < len(sys.argv):
         count += 1
         continue
     if arg.startswith('-'): arg = arg[1:]
-    if arg == 'l':
-        launch_dif = True
-    elif arg == 'nl':
-        launch_dif = False
-    elif arg == 'p':
-        popup_err = True
-    elif arg == 'np':
-        popup_err = False
-    elif arg == 'c':
-        copy_over = True
-    elif arg == 'ec':
-        open_source()
-    elif arg == 'e':
-        os.system(table_default_file)
-    elif arg == 'os':
-        override_source_size_differences = True
-    elif arg == 'oo':
-        override_omissions = True
-    elif arg == 'si':
-        show_ignored = True
-    elif arg == 'nc':
-        copy_over = False
-    elif arg == '?':
-        usage()
+    if arg == 'l': launch_dif = True
+    elif arg == 'nl': launch_dif = False
+    elif arg == 'p': popup_err = True
+    elif arg == 'np': popup_err = False
+    elif arg == 'c': copy_over = True
+    elif arg == 'ec': open_source()
+    elif arg == 'e': os.system(table_default_file)
+    elif arg == 'os': override_source_size_differences = True
+    elif arg == 'oo': override_omissions = True
+    elif arg == 'si': show_ignored = True
+    elif arg == 'nc': copy_over = False
+    elif arg == 'za': zap_apostrophes = True
+    elif arg == '?': usage()
     else:
         print(arg, "is an invalid parameter.")
         usage()
