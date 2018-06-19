@@ -82,10 +82,11 @@ def dir2proj(x = os.getcwd()):
 
 sproj = d2p = dir2proj
 
-def npo(my_file, my_line = 0, print_cmd = False):
+def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
-    if print_cmd: print("Launching", my_file, "at line", my_line, "in notepad++.")
+    if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
     os.system(cmd)
+    if bail: exit()
 
 def see_uniq_and_vers():
     i7rev = defaultdict(list)
@@ -117,6 +118,17 @@ def revproj(a):
                 exit()
             return_val = b
     return return_val
+
+def all_proj_fi(x, bail = True):
+    xp = i7xr[x] if x in i7xr.keys() else x
+    if xp not in i7c.keys():
+        if bail: raise("No full project named {:s}".format(x))
+        return []
+    ary = []
+    for q in i7c[xp].keys(): ary += i7f[q]
+    return ary
+
+apf = all_proj_fi
 
 i7xd = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\"
 
@@ -171,7 +183,11 @@ i7x = { "12": "shuffling",
   "sw": "spell-woken",
   "69": "69105more",
   "qb": "big-nose",
-  "bn": "big-nose"
+  "bn": "big-nose",
+  "ss": "status-seeker",
+  "as": "alec-smart",
+  "ops": "opolis",
+  "op": "opolis"
 };
 
 i7xr = { "shuffling": "sa",
@@ -185,7 +201,8 @@ i7xr = { "shuffling": "sa",
   "buck-the-past": "btp",
   "ailihphilia": "ai",
   "molesworth": "mo",
-  "big-nose": "qb"
+  "big-nose": "qb",
+  "opolis": "op"
 };
 
 i7f = {
