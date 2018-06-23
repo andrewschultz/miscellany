@@ -1218,7 +1218,7 @@ sub launchRepo {
   my $myUrl = "https://github.com/andrewschultz/" . $toLaunch;
   $myUrl = "https://bitbucket.org/andrewschultz/" . $toLaunch
     if ( defined( $bitBucket{$toLaunch} ) );
-  $myUrl .= "/issues?status=new&status=open"
+  $myUrl .= "/issues?status=new^&status=open"
     if $_[1] && defined( $bitBucket{$toLaunch} );
   $myUrl .= "/issues"
     if $_[1]

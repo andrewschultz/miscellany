@@ -245,13 +245,15 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     line_count = 0
     err_line.clear()
     with open(f) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             if need_head:
                 temp_out.write(line)
                 need_head = False
                 continue
             if in_sortable_table:
+                if re.search("ends here(\.)?$", line):
+                    print("Final table needs space before indicating header file ends.")
+                    i7.npo(f, line_count)
                 if line.startswith("[") or not line.strip():
                     process_table_array(what_to_sort, row_array, temp_out)
                     # print("Wrote", cur_table)

@@ -17,7 +17,7 @@ Local $lesson_delay = 2
 Local $wait = 0
 Local $launch = 0
 Local $start = 0
-Local $verticalInit = 700
+Local $verticalInit = 710
 Local $horizInit = 1400
 
 Local $substring = "learn"

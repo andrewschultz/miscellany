@@ -66,6 +66,7 @@ my $maxFileFind       = 25;
 my $getClipboard      = 0;
 my $zapBrackets       = 0;
 my $launchFirstSource = 0;
+my $launchLastSource  = 0;
 my $forceNum          = 1;
 my $ignoreRand        = 0;
 my $inQuotes          = 0;
@@ -83,7 +84,8 @@ while ( $count <= $#ARGV ) {
 
   for ($a) {
     /^0$/ && do { processNameConditionals(); exit; };
-    /^1st$/ && do { $launchFirstSource = 1; $count++; next; };
+    /^(l1|1st)$/ && do { $launchFirstSource = 1; $count++; next; };
+    /^(ll)$/     && do { $launchLastSource  = 1; $count++; next; };
     /^-?e$/ && do { `$gqfile`; exit; };
     /^\// && do {
       $thisAry[0] =~ s/^\///g;
@@ -237,7 +239,7 @@ sub tryOneSet {
 
   foreach $myrun (@runs) {
     processFiles($myrun);
-    if ($launchFirstSource) {
+    if ( $launchFirstSource || $launchLastSource ) {
       `$np $fileToOpen -n$lineToOpen`;
     }
     if ($othersToo) {
@@ -526,7 +528,7 @@ sub processOneFile {
       }
       if ( $_[0] =~ /story.ni/ ) {
         $fileToOpen = $_[0];
-        $lineToOpen = $. if !$lineToOpen;
+        $lineToOpen = $. if !$lineToOpen || $launchLastSource;
       }
     }
   }
@@ -828,6 +830,8 @@ sub toProj {
 sub usage {
   print <<EOT;
 0 = process Roiling name conditionals
+-1st/l1 = launch 1st in source
+-ll = launch last
 -e = open manifest file of which group checks what
 -h = show headers
 -ha = history of all, -hi = specific history
