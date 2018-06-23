@@ -47,6 +47,8 @@ my $othersToo      = 0;
 my $foundTotal     = 0;
 my $stringAtEnd    = "";
 
+my @ignore_array = ();
+
 my $fileToOpen = "";
 my $lineToOpen = 0;
 
@@ -115,10 +117,47 @@ while ( $count <= $#ARGV ) {
     /^-?n$/ && do { @runs = ("names"); $count++; next; };    # names
     /^-?(3d|3|4d|4|opo)$/i
       && do { @runs = ("opo"); $count++; next; };            # 3dop try
-    /^(-?(btp|sc|pc|ss)|-as)$/i
-      && do { @runs = ("as"); $count++; next; };             # Alec Smart?
-    /^-?(r|roi|s|sa|sts)$/i
-      && do { @runs = ("sts"); $count++; next; };  # roiling original? (default)
+    /^-?as[0-9]*$/i
+      && do {
+      @runs = ("as");
+      if ( $a =~ /[0-9]/ ) {
+        if ( $a !~ /1/ ) { push( @ignore_array, "compound" ); }
+        if ( $a !~ /2/ ) { push( @ignore_array, "slicker" ); }
+        if ( $a !~ /3/ ) { push( @ignore_array, "buck" ); }
+        if ( $a !~ /4/ ) { push( @ignore_array, "seeker" ); }
+      }
+      $count++;
+      next;
+      };                                                     # Alec Smart?
+    /^-?btp$/i && do {
+      @runs = ("as");
+      @ignore_array = ( @ignore_array, "compound", "slicker", "seeker" );
+    };
+    /^-?sc$/i && do {
+      @runs = ("sc");
+      @ignore_array = ( @ignore_array, "compound", "buck", "seeker" );
+    };
+    /^-?pc$/i && do {
+      @runs = ("pc");
+      @ignore_array = ( @ignore_array, "buck", "slicker", "seeker" );
+    };
+    /^-?ss$/i && do {
+      @runs = ("as");
+      @ignore_array = ( @ignore_array, "compound", "slicker", "buck" );
+    };
+    /^-?(r|roi|s|sa|sts)[0-9]*$/i
+      && do {
+      @runs = ("sts");
+      if ( $a =~ /[0-9]/ ) {
+        if ( $a !~ /2/ ) {
+          push( @ignore_array, "roiling" );
+          push( @ignore_array, "roi.txt" );
+        }
+        if ( $a !~ /1/ ) { push( @ignore_array, "shuffling" ); }
+      }
+      $count++;
+      next;
+      };    # roiling original? (default)
     /^-?(odd)$/i
       && do { @runs = ("odd"); $count++; next; };    # odd games
     /^-?(pu|up|ai)$/i
@@ -343,12 +382,18 @@ sub processListFile {
   my $line;
   my $defaultString;
   my $currentLedger;
+  my $match;
 
   open( A, $gqfile ) || die("Can't find $gqfile.");
 
+OUTER:
   while ( $line = <A> ) {
     if ( $line =~ /^#/ ) { next; }
     if ( $line =~ /^;/ ) { last; }
+    for $match (@ignore_array) {
+      if ( $line =~ /$match/i ) { print("Skipping $line"); next OUTER; }
+    }
+
     if ( $line =~ /^MAP=/ ) {
       chomp($line);
       $line =~ s/^MAP=//;

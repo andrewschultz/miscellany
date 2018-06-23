@@ -11,6 +11,7 @@
 
 use strict;
 use warnings;
+use POSIX;
 
 my @levels = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
@@ -60,8 +61,8 @@ while ( $count <= $#ARGV ) {
         }
       }
       elsif ( -f "$invDir\\$a.txt" ) {
-        print "Getting filename $a.txt.\n";
-        $filename = "$a.txt";
+        print "Getting filename $a.txt in invisiclues directory.\n";
+        $filename = "$invDir\\$a.txt";
         $count++;
         next;
       }
@@ -98,7 +99,7 @@ while ( $count <= $#ARGV ) {
   }
 }
 
-if ( ( !-f "$invDir/$filename" ) && ( !$createTextFile ) ) {
+if ( ( !-f "$filename" ) && ( !$createTextFile ) ) {
   print "No valid filename, going to usage.\n";
   usage();
 }
@@ -126,9 +127,15 @@ if ($launchTextFile) {
 my $outname = "$invDir\\invis-$filename";
 $outname =~ s/txt$/htm/gi;
 
-my $fileShort = $filename;
+( my $fileShort = $filename ) =~ s/.*[\\\/]//;
 
-if ( !-f $filename ) { $filename = "$invDir\\$filename"; }
+if ( ( -f $filename )
+  && ( getcwd() ne "c:\\writing\\scripts\\invis" )
+  && ( getcwd() ne "c:\\writing\\scripts" ) )
+{
+  print
+"WARNING there is a $filename in the local directory but I'm using the one in $invDir.\n";
+}
 
 open( A, "$filename" ) || die( "Can't open input file " . $filename );
 
@@ -187,7 +194,8 @@ if ( $updateOnly && defined( -M $outname ) ) {
 "$outname was modified after $filename, but since the source was updated, we will regenerate it.\n";
     }
     else {
-      print "$outname is already up to date. Run with -f to force things.\n";
+      print
+"$outname is already up to date. Its timestamp is after $filename. Run with -f to force things.\n";
       launchIt();
       exit;
     }
