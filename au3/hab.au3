@@ -66,7 +66,7 @@ while $cmdCount <= $CmdLine[0]
   EndIf
 
   $nextNum = digit_part($myCmd)
-  $myCmd = string_part($myCmd)
+  $myCmd = string_part($myCmd, True)
 
   if not meta_cmd($myCmd) Then
     $cmdCount = $nextCmd
@@ -94,6 +94,8 @@ WEnd
 ;MOK("Debug checkpoint", "Meta command reading done")
 ;Exit
 
+; this is the main loop
+
 $cmdCount = 1
 
 While $cmdCount <= $CmdLine[0]
@@ -107,7 +109,7 @@ While $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if meta_cmd($myCmd) Then
-    MOK("ignored meta command", $myCmd)
+    ; MOK("ignored meta command", $myCmd)
     $cmdCount += 1
 	ContinueLoop
   EndIf
@@ -464,15 +466,17 @@ Func meta_cmd($param)
   Return False
 EndFunc
 
-Func string_part($param)
+Func string_part($param, $greedy = False)
 
   Local $digitIndex = StringLen($param)
   For $x = StringLen($param) to 1 step -1
     if StringIsDigit(StringMid($param, $x)) Then
 	  $digitIndex = $x - 1
+    Elseif $greedy and StringIsDigit(StringMid($param, $x, 1)) Then
+	  $digitIndex = $x - 1
 	EndIf
   Next
-  ; MOK("string digit part", $digitIndex)
+  ; MOK("string digit part", $digitIndex & @CRLF & StringLeft($param, $digitIndex))
   return StringLeft($param, $digitIndex)
 
 EndFunc

@@ -19,6 +19,9 @@ def open_source():
     npo(main.__file__)
     exit()
 
+def plur(a):
+    return '' if a == 1 else 's'
+
 def wm(x1, x2):
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
