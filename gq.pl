@@ -46,6 +46,8 @@ my $lastHeader     = "";
 my $othersToo      = 0;
 my $foundTotal     = 0;
 my $stringAtEnd    = "";
+my $skippedAny     = 0;
+my $verbose        = 0;
 
 my @ignore_array = ();
 
@@ -97,6 +99,8 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?v$/
+      && do { $verbose = 1; $count++; next; }; # verbose e.g. show what files skipped
     /^-?a$/      && do { $runAll = 1;        $count++; next; };    # run all
     /^-?(o|oa)$/ && do { @runs   = ("oafs"); $count++; next; };    # oafs?
     /,/          && do {
@@ -391,7 +395,11 @@ OUTER:
     if ( $line =~ /^#/ ) { next; }
     if ( $line =~ /^;/ ) { last; }
     for $match (@ignore_array) {
-      if ( $line =~ /$match/i ) { print("Skipping $line"); next OUTER; }
+      if ( $line =~ /$match/i ) {
+        $skippedAny = 0;
+        print("Skipping $line") if $verbose;
+        next OUTER;
+      }
     }
 
     if ( $line =~ /^MAP=/ ) {
@@ -451,7 +459,8 @@ sub processFiles {
   }
   if ( $#gots == -1 ) {
     print
-"No matches anywhere! This is good, if you're redacting, or bad, if you hoped to find something.\n";
+"No matches anywhere! This is good, if you're redacting, or bad, if you hoped to find something."
+      . ( $skippedAny ? " (you skipped a few files, though)" : "" ) . "\n";
   }
   else {
     if ( $#blanks > -1 ) {
@@ -872,6 +881,16 @@ sub toProj {
   elsif ( $_[0] =~ /(roiling|shuffling)/i )          { return "sts"; }
 }
 
+sub use_cases {
+  print <<EOT;
+DETAILED USE CASES:
+ga, gq and gr are batch files for quick use: they correspond to gq.pl as (args), gq.pl (args), gq.pl sts (args).
+gr r1 intro will look for "intro" only in Shuffling Around's files. r2 is only roiling.
+ga as14 stuff will look for "stuff" only in Problems Compound and Seeker Status and not Slicker City/Buck the Past.
+EOT
+  exit;
+}
+
 sub usage {
   print <<EOT;
 0 = process Roiling name conditionals
@@ -891,14 +910,16 @@ sub usage {
 -w = push line numbers to err files
 -c = clipboard (invalidates comand line)
 -f = use outside file gq-r.txt for input, -f (letter) = use gq-arg.txt
+-v = verbose output e.g. tell what we skipped
 -mo = maximum to find overall (default=100, 0=no limit)
 -mf = maximum to find in file (default=25, 0=no limit)
 -mu = unset both maximums above
 -hi = open history of specified groups, -ha = open history of all
 -sr = show rules, if text shows up in a rule
 -z = zap bracketed text
-/3d = only look in tables of 3d (for instance{)
-as, opo, sts are the main ones. -a runs all. You can split with 3d,sa if you want.
+/3d = only look in tables of (for instance) 3d
+-? = usage, -?? = use cases
+as, opo, sts are the main ones. -a runs all. You can split with 3d,sa if you want. r(1,2) or as(1,2,3,4) also can focus on certain projects.
 EOT
   exit;
 }

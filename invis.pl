@@ -39,6 +39,7 @@ my $default = "btp";
 $exp{"0"}  = "sc";
 $exp{"1"}  = "sa";
 $exp{"2"}  = "roi";
+$exp{"ro"} = "roi";
 $exp{"3"}  = "3d";
 $exp{"up"} = "pu";
 
@@ -53,10 +54,10 @@ while ( $count <= $#ARGV ) {
     do {
       if ( defined( $exp{$a} ) ) {
         if ( -f "$invDir\\$filename" ) {
-          $filename = "$exp{$a}.txt";
+          $filename = "$invDir\\$exp{$a}.txt";
           print "$a mapped to $exp{$a}...\n";
           $count++;
-          $launchPost = $a;
+          $launchPost = $exp{$a};
           next;
         }
       }
@@ -100,20 +101,19 @@ while ( $count <= $#ARGV ) {
 }
 
 if ( ( !-f "$filename" ) && ( !$createTextFile ) ) {
-  print "No valid filename, going to usage.\n";
+  print "No valid filename $filename, going to usage.\n";
   usage();
 }
 
 if ($launchTextFile) {
-  my $longFile = "c:\\writing\\scripts\\invis\\$filename";
-  if ( $createTextFile || ( -f $longFile ) ) {
-    if ( $createTextFile && ( -f $longFile ) ) {
+  if ( $createTextFile || ( -f $filename ) ) {
+    if ( $createTextFile && ( -f $filename ) ) {
       print "Note: $filename already exists.\n";
     }
-    if ( -f $longFile ) { `$longFile`; }
+    if ( -f $filename ) { `$filename`; }
     else {
       my $cmd =
-"start \"\" \"c:\\program files (x86)\\Notepad++\\Notepad++\" \"$longFile\"";
+"start \"\" \"c:\\program files (x86)\\Notepad++\\Notepad++\" \"$filename\"";
       `$cmd`;
       die($cmd);
     }
@@ -364,7 +364,7 @@ sub printAllFiles {
   opendir( DIR, $invDir );
   my @dfi = sort( readdir DIR );
   for my $fi (@dfi) {
-    if ( $fi =~ /\.txt/ ) {
+    if ( ( $fi =~ /\.txt/i ) && ( $fi !~ /\.bak/i ) ) {
       if ( $_[0] ) { $fi =~ s/\.txt//g; print " $fi"; }
       else         { print "$fi\n"; }
     }
@@ -444,6 +444,9 @@ EOT
 
   print "Current files in directory:";
   printAllFiles(1);
+  print "\n";
+  print "Current shortcuts:";
+  print join( ', ', ( map { "$_=$exp{$_}" } sort keys %exp ) );
   print "\n";
   exit;
 }

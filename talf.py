@@ -242,15 +242,19 @@ def table_alf_one_file(f, launch=False, copy_over=False):
 
     temp_out = open(f2, "w", newline="\n")
     has_default = f in default_sort.keys()
-    line_count = 0
+    tabs_this_table = 0
     err_line.clear()
     with open(f) as file:
         for (line_count, line) in enumerate(file, 1):
             if need_head:
                 temp_out.write(line)
+                tabs_this_table = len(line.split("\t"))
                 need_head = False
                 continue
             if in_sortable_table:
+                if tabs_this_table > 1 and len(line.split("\t")) == 1 and not line.startswith("\""):
+                    print("It looks like you put in a non-table comment.")
+                    i7.npo(f, line_count)
                 if re.search("ends here(\.)?$", line):
                     print("Final table needs space before indicating header file ends.")
                     i7.npo(f, line_count)
