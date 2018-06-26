@@ -131,7 +131,8 @@ $outname =~ s/txt$/htm/gi;
 
 if ( ( -f $filename )
   && ( getcwd() ne "c:\\writing\\scripts\\invis" )
-  && ( getcwd() ne "c:\\writing\\scripts" ) )
+  && ( getcwd() ne "c:\\writing\\scripts" )
+  && ( $filename !~ /[\\\/]/ ) )
 {
   print
 "WARNING there is a $filename in the local directory but I'm using the one in $invDir.\n";

@@ -165,7 +165,7 @@ def sort_mistake(pr):
     elif need_alpha:
         f.write(line)
     f.close()
-    if os.stat(temp_file).st_size != os.stat(mf).st_size: sys.exit("WARNING corrupt data likely: {:s} and {:s} not the same size, {:d} and {:d} respectively.".format(file, mf, os.stat(temp_file).st_size, os.stat(mf).st_size))
+    if os.stat(temp_file).st_size != os.stat(mf).st_size: sys.exit("WARNING corrupt data likely: {:s} and {:s} not the same size, {:d} and {:d} respectively.".format(mf, temp_file, os.stat(temp_file).st_size, os.stat(mf).st_size))
     if cmp(temp_file, mf):
         if not super_quiet: print("No change for", mf)
     else:

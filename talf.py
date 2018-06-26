@@ -252,9 +252,6 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 need_head = False
                 continue
             if in_sortable_table:
-                if tabs_this_table > 1 and len(line.split("\t")) == 1 and not line.startswith("\""):
-                    print("It looks like you put in a non-table comment.")
-                    i7.npo(f, line_count)
                 if re.search("ends here(\.)?$", line):
                     print("Final table needs space before indicating header file ends.")
                     i7.npo(f, line_count)
@@ -265,6 +262,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     in_table = False
                     row_array = []
                     temp_out.write(line)
+                elif tabs_this_table > 1 and len(line.split("\t")) == 1 and not line.startswith("\""):
+                    print("It looks like you put in a non-table comment at line", line_count, ":", line.strip())
+                    i7.npo(f, line_count)
                 else:
                     row_array.append(line.strip())
                     err_line[line.strip().lower()] = line_count
