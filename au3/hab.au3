@@ -253,7 +253,7 @@ EndIf
 
 If $startMP > 0 Then
   $finalMP = $startMP - $MPloss
-  MOK("Projected MP change", "start=" & $startMP & @CRLF & "MP loss=" & $MPloss & "end=" & $finalMP)
+  MOK("Projected MP change", "start=" & $startMP & @CRLF & "MP loss=" & $MPloss & @CRLF & "end=" & $finalMP)
 EndIf
 
 ; end main

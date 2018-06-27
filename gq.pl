@@ -138,11 +138,11 @@ while ( $count <= $#ARGV ) {
       @ignore_array = ( @ignore_array, "compound", "slicker", "seeker" );
     };
     /^-?sc$/i && do {
-      @runs = ("sc");
+      @runs = ("as");
       @ignore_array = ( @ignore_array, "compound", "buck", "seeker" );
     };
     /^-?pc$/i && do {
-      @runs = ("pc");
+      @runs = ("as");
       @ignore_array = ( @ignore_array, "buck", "slicker", "seeker" );
     };
     /^-?ss$/i && do {
@@ -440,6 +440,8 @@ OUTER:
 
 sub processFiles {
   my @x = split( /\n/, $cmds{ $_[0] } );
+
+  #for my $q (sort keys %cmds) { print "$q...$cmds{$q}\n"; } return;
 
   foreach my $cmd (@x) {
     if ( $foundTotal == $maxOverallFind ) { print "Skipping $cmd\n"; next; }

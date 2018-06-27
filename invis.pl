@@ -35,7 +35,6 @@ my $questionsThisTime = 0;
 my $answersThisTime   = 0;
 
 #$exp{"pc"} = "compound";
-my $default = "btp";
 $exp{"0"}  = "sc";
 $exp{"1"}  = "sa";
 $exp{"2"}  = "roi";
@@ -44,9 +43,28 @@ $exp{"3"}  = "3d";
 $exp{"up"} = "pu";
 
 ###trickier variables
-my $cmd      = "";
-my $invDir   = "c:\\writing\\scripts\\invis";
-my $filename = "$default.txt";
+my $cmd       = "";
+my $invDir    = "c:\\writing\\scripts\\invis";
+my $default   = "ai";
+my $filename  = "$invDir\\$default.txt";
+my $invisData = "$invDir\\invis.txt";
+
+open( A, $invisData ) || warn("No $invisData file to read.");
+my $line;
+
+OUTER:
+while ( $line = <A> ) {
+  chomp($line);
+  for ($line) {
+    /^DEFAULT=/ && do {
+      if ( $line =~ /^default=/i ) {
+        ( $default = $line ) =~ s/.*=//;
+      }
+    };
+    /^;/ && do { last OUTER; };
+    /^#/ && do { continue; };
+  }
+}
 
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );

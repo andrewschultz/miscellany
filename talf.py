@@ -119,6 +119,7 @@ def tab(a, b, c, zap_apostrophes = False): # b = boolean i = integer q = quote l
     if 'q' in c:
         r = re.sub("^\"", "", ary[b].lower(), 0, re.IGNORECASE)
         if zap_apostrophes: r = re.sub("('|\['\])", "", r, 0, re.IGNORECASE)
+        else: r = re.sub("^('|\['\])", "", r, 0, re.IGNORECASE)
         r = re.sub("^(the|a|an|\() ", "", r, 0, re.IGNORECASE)
         r = re.sub("^\['\]", "", r, 0, re.IGNORECASE)
         r = re.sub("\".*", "", r, 0, re.IGNORECASE)
