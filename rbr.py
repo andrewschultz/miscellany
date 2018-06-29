@@ -231,6 +231,7 @@ def get_file(fname):
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
+                    line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
                     if last_cr[ct] and (len(line_write.strip()) == 0):
                         pass
                     else:
