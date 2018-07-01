@@ -23,11 +23,14 @@ abbrevs = defaultdict(lambda: defaultdict(str))
 
 temp_dir = "c:/games/inform/prt/temp"
 
+edit_individual_files = False
+verify_nudges = False
 always_be_writing = False
 edit_main_branch = False
 debug = False
 monty_process = False
 
+quiet = False
 copy_over_post = True
 
 in_file = ""
@@ -73,6 +76,7 @@ def usage():
     print("-c = edit rbr.py")
     print("-d = debug on")
     print("-m = Monty process")
+    print("-q = Quiet")
     print("-np = no copy over post, -p = copy over post (default)")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
@@ -127,7 +131,7 @@ def get_file(fname):
     line_count = 0
     dupe_file_name = ""
     temp_diverge = False
-    print("Poking at", fname)
+    if not quiet: print("Poking at", fname)
     actives = []
     old_actives = []
     with open(fname) as file:
@@ -155,7 +159,8 @@ def get_file(fname):
             if line.startswith("'") or line.strip().endswith("'"): print("Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
             if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR/apostrophe coding artifact in line", line_count, ":", line.strip())
             if '##location' in line or '##condition' in line: print("Excess generated text from mist.py in line", line_count, ":", line.strip())
-            if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+            if '[if' in line or '[unless' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+            #elif '[' in line and ']' in line: print("Text replacement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
@@ -223,7 +228,11 @@ def get_file(fname):
                 towhich = line.startswith("==t!") or line.startswith("==t-")
                 actives = [towhich] * len(file_array)
                 for x in ll:
-                    if x.isdigit(): actives[int(x)] = not towhich
+                    try:
+                        if x.isdigit(): actives[int(x)] = not towhich
+                    except:
+                        print("uh oh went boom on", x, "at line", line_count)
+                        exit()
                 continue
             if line.startswith("==c-"):
                 old_actives = list(actives)
@@ -293,7 +302,7 @@ def get_file(fname):
             copy(x, xb)
         os.remove(x)
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
-        print("Nothing changed.")
+        if not quiet: print("Nothing changed.")
         return
     if len(new_files.keys()) > 0: print("New files:", ', '.join(sorted(new_files.keys())), 'from', fname)
     if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
@@ -377,11 +386,15 @@ while count < len(sys.argv):
     elif arg == 'e':
         os.system("rbr.txt")
         exit()
+    elif arg[:2] == 'e:':
+        edit_individual_files = True
     elif arg == 'er': edit_main_branch = True
     elif arg[:2] == 's4': search_for(arg[2:])
     elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg[:1] == 'v': verify_nudges = True
     elif arg == 'd': debug = True
     elif arg == 'm': monty_process = True
+    elif arg == 'q': quiet = True
+    elif arg == 'nq' or arg == 'qn': quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg in i7.i7x.keys():
@@ -437,11 +450,16 @@ if verify_nudges:
     exit()
 
 for pa in poss_abbrev:
-    if proj in abbrevs[pa].keys():
-        print("Adding", abbrevs[pa][proj])
-        my_file_list.append(abbrevs[pa][proj])
+    proj2 = i7.i7xr[proj] if proj in i7.i7xr.keys() else proj
+    if proj2 in abbrevs[pa].keys():
+        print("Adding specific file", abbrevs[pa][proj2], "from", proj2)
+        my_file_list.append(abbrevs[pa][proj2])
     else:
         print(pa, 'has nothing for current project', proj, 'but would be valid for', '/'.join(sorted(abbrevs[pa].keys())))
+
+if edit_individual_files:
+    for mf in my_file_list: os.system(mf)
+    exit()
 
 if not len(my_file_list): my_file_list = list(branch_list[proj])
 
