@@ -15,6 +15,8 @@ f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
 
+oo = [ 'off', 'on' ]
+
 def open_source():
     npo(main.__file__)
     exit()
@@ -24,6 +26,13 @@ def plur(a):
 
 def wm(x1, x2):
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
+
+def remove_quotes(x):
+    temp = re.sub("\"", "", x)
+    temp = re.sub("\".*", "", x)
+    return temp
+
+rq = remove_quotes
 
 def src(x):
     return sdir(x) + "/" + "story.ni"
