@@ -34,6 +34,25 @@ in_file = ""
 in_dir = os.getcwd()
 proj = ""
 
+def should_be_nudge(x):
+    if not x.startswith('#'): return False
+    if x.startswith('##'): return False
+    if re.search("(spechelp|mistake|nudge)", x): return True
+    return False
+
+def search_for(x):
+    a1 = glob.glob("reg-*.txt")
+    a1 += glob.glob("rbr-*.txt")
+    got_count = 0
+    for a2 in a1:
+        with open(a2) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if x in line:
+                    got_count += 1
+                    print(got_count, a2, line_count, line.strip())
+    if not got_count: print("Found nothing for", x)
+    exit()
+
 def post_copy():
     if copy_over_post:
         print("Running prt.pl after -- try -np to disable this")
@@ -134,7 +153,7 @@ def get_file(fname):
                 continue
             if line.strip() == "\\\\": line = "\n"
             if line.startswith("'") or line.strip().endswith("'"): print("Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
-            if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR artifact in line", line_count, ":", line.strip())
+            if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR/apostrophe coding artifact in line", line_count, ":", line.strip())
             if '##location' in line or '##condition' in line: print("Excess generated text from mist.py in line", line_count, ":", line.strip())
             if '[if' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             if line.startswith("dupefile="):
@@ -157,8 +176,7 @@ def get_file(fname):
             if all_false(actives):
                 if always_be_writing and len(actives):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
-            if line.startswith(">"):
-                last_cmd = line.lower().strip()
+            if line.startswith(">"): last_cmd = line.lower().strip()
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
@@ -201,7 +219,8 @@ def get_file(fname):
                 old_actives = list(actives)
                 temp_diverge = True
                 ll = re.sub("^==t(!)?", "", line.lower().strip()).split(',')
-                towhich = line.startswith("==t!")
+                if line.startswith("==t-"): print("WARNING ==t- should be ==t! for total searchable conformance and stuff.")
+                towhich = line.startswith("==t!") or line.startswith("==t-")
                 actives = [towhich] * len(file_array)
                 for x in ll:
                     if x.isdigit(): actives[int(x)] = not towhich
@@ -219,6 +238,7 @@ def get_file(fname):
                     sys.exit("Line", line_count, "needs exactly 1 : ... ", ll)
                 branch_classes[class_array[0]] = class_array[1]
             if line.startswith("==="):
+                if not line[3].isnumeric() and line[3] != '!': sys.exit("extra = in header {:s} line {:d}: {:s}".format(fname, line_count, line.strip()))
                 ll = re.sub("^=+", "", line.lower().strip()).split(',')
                 actives = [False] * len(file_array)
                 for x in ll:
@@ -357,27 +377,20 @@ while count < len(sys.argv):
     elif arg == 'e':
         os.system("rbr.txt")
         exit()
-    elif arg == 'er':
-        edit_main_branch = True
-    elif arg == 'd':
-        debug = True
-    elif arg == 'm':
-        monty_process = True
-    elif arg == 'np':
-        copy_over_post = False
-    elif arg == 'p':
-        copy_over_post = True
+    elif arg == 'er': edit_main_branch = True
+    elif arg[:2] == 's4': search_for(arg[2:])
+    elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg[:1] == 'v': verify_nudges = True
+    elif arg == 'd': debug = True
+    elif arg == 'm': monty_process = True
+    elif arg == 'np': copy_over_post = False
+    elif arg == 'p': copy_over_post = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
-    elif os.path.exists(arg):
-        in_file = arg
-    elif arg == 'x':
-        examples()
-    elif arg == '?':
-        usage()
-    elif arg in abbrevs.keys():
-        poss_abbrev.append(arg)
+    elif os.path.exists(arg): in_file = arg
+    elif arg == 'x': examples()
+    elif arg == '?': usage()
+    elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
@@ -405,6 +418,23 @@ if not proj:
     else:
         print("Going with default", def_proj)
         proj = def_proj
+
+if verify_nudges:
+    q = glob.glob("reg-*.txt")
+    nudge_overall = 0
+    for q1 in q:
+        if 'nudmis' in q1: continue
+        if 'nudges' in q1: continue
+        if 'roi-' in q1: continue
+        print("Checking nudges for", q1)
+        nudge_this = 0
+        with open(q1) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if should_be_nudge(line):
+                    nudge_overall += 1
+                    nudge_this += 1
+                    print(nudge_overall, nudge_this, q1, line_count, "mis-assigned nudge-check:", line.strip())
+    exit()
 
 for pa in poss_abbrev:
     if proj in abbrevs[pa].keys():
