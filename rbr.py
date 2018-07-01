@@ -16,6 +16,7 @@ from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
 
+to_match = defaultdict(str)
 monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
 times = defaultdict(int)
@@ -42,6 +43,15 @@ def should_be_nudge(x):
     if x.startswith('##'): return False
     if re.search("(spechelp|mistake|nudge)", x): return True
     return False
+
+def replace_mapping(x, my_f, my_l):
+    if y.startswith('@'): y = x[1:]
+    elif y.startswith('`'): y = x[1:]
+    else:
+        y = re.sub("=\{", "", x.strip())
+        y = re.sub("\}.*", "", y)
+    if y not in to_match.keys(): sys.exit("Oops, line {:d} of {:s} has undefined matching-class {:s}.".format(my_l, my_f, y))
+    return "==" + to_match[y]
 
 def search_for(x):
     a1 = glob.glob("reg-*.txt")
@@ -136,6 +146,11 @@ def get_file(fname):
     old_actives = []
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith("~\t"):
+                eq_array = line.strip().lower().split("\t")
+                if len(eq_array) != 3: sys.exit("Bad equivalence array at line {:d} of file {:s}: needs exactly two tabs.".format(line_count, fname))
+                to_match[eq_array[1]] = eq_array[2]
+                continue
             if line.startswith("files="):
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
                 file_array = [os.path.join(temp_dir, f) for f in file_array_base]
@@ -146,6 +161,7 @@ def get_file(fname):
                     file_list.append(f)
                 continue
             if not len(file_array): continue # allows for comments at the start
+            if re.search("^(`|=\{|@)", line): line = replace_mapping(line, fname, line_count)
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
