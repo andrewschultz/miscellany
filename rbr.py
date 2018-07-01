@@ -21,15 +21,20 @@ monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
 times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
+generic_bracket_error = defaultdict(int)
 
 temp_dir = "c:/games/inform/prt/temp"
 
+flag_all_brackets = False
 edit_individual_files = False
 verify_nudges = False
 always_be_writing = False
 edit_main_branch = False
 debug = False
 monty_process = False
+
+max_flag_brackets = 0
+cur_flag_brackets = 0
 
 quiet = False
 copy_over_post = True
@@ -44,12 +49,41 @@ def should_be_nudge(x):
     if re.search("(spechelp|mistake|nudge)", x): return True
     return False
 
+def vet_potential_errors(line, line_count, cur_pot):
+    if line.startswith("'") or line.strip().endswith("'"):
+        print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
+        return True
+    elif '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
+        print(cur_pot+1, "CR/apostrophe coding artifact in line", line_count, ":", line.strip())
+        return True
+    elif '[i]' in line or '[r]' in line or '[b]' in line:
+        print(cur_pot+1, "Formatting artifact in line", line_count, ":", line.strip())
+        return True
+    if '##location' in line or '##condition' in line:
+        print(cur_pot+1, "Excess generated text from mist.py in line", line_count, ":", line.strip())
+        return True
+    if '[if' in line or '[unless' in line or '[one of]' in line:
+        print(cur_pot+1, "Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+        return True
+    if '[' in line and ']' in line:
+        lmod = re.sub("^[^\[]*\[", "", line.strip())
+        lmod = re.sub("\].*", "", lmod)
+        generic_bracket_error[lmod] += 1
+        if flag_all_brackets:
+            global cur_flag_brackets
+            cur_flag_brackets += 1
+            if max_flag_brackets and cur_flag_brackets > max_flag_brackets: return False
+            print(cur_flag_brackets, "Text replacement/brackets artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+            return False
+    return False
+
 def replace_mapping(x, my_f, my_l):
-    if y.startswith('@'): y = x[1:]
-    elif y.startswith('`'): y = x[1:]
+    if x.startswith('@'): y = x[1:]
+    elif x.startswith('`'): y = x[1:]
     else:
         y = re.sub("=\{", "", x.strip())
         y = re.sub("\}.*", "", y)
+    y = y.strip()
     if y not in to_match.keys(): sys.exit("Oops, line {:d} of {:s} has undefined matching-class {:s}.".format(my_l, my_f, y))
     return "==" + to_match[y]
 
@@ -85,6 +119,7 @@ def usage():
     print("-e = edit rbr.txt")
     print("-c = edit rbr.py")
     print("-d = debug on")
+    print("-f = flag all brackets")
     print("-m = Monty process")
     print("-q = Quiet")
     print("-np = no copy over post, -p = copy over post (default)")
@@ -144,6 +179,7 @@ def get_file(fname):
     if not quiet: print("Poking at", fname)
     actives = []
     old_actives = []
+    generic_bracket_error.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("~\t"):
@@ -172,11 +208,7 @@ def get_file(fname):
                 actives = list(old_actives)
                 continue
             if line.strip() == "\\\\": line = "\n"
-            if line.startswith("'") or line.strip().endswith("'"): print("Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
-            if '[\']' in line or '[line break]' in line or '[paragraph break]' in line: print("CR/apostrophe coding artifact in line", line_count, ":", line.strip())
-            if '##location' in line or '##condition' in line: print("Excess generated text from mist.py in line", line_count, ":", line.strip())
-            if '[if' in line or '[unless' in line or '[one of]' in line: print("Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
-            #elif '[' in line and ']' in line: print("Text replacement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+            warns += vet_potential_errors(line, line_count, warns)
             if line.startswith("dupefile="):
                 dupe_file_name = re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
@@ -317,6 +349,12 @@ def get_file(fname):
             changed_files[xb] = True
             copy(x, xb)
         os.remove(x)
+    if len(generic_bracket_error) > 0:
+        singletons = 0
+        for x in sorted(generic_bracket_error.keys(), key = lambda x: (generic_bracket_error[x], x)):
+            if generic_bracket_error[x] > 1: print(x, generic_bracket_error[x])
+            else: singletons += 1
+        if singletons: print("Number of singletons:", singletons)
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
         if not quiet: print("Nothing changed.")
         return
@@ -408,6 +446,11 @@ while count < len(sys.argv):
     elif arg[:2] == 's4': search_for(arg[2:])
     elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg[:1] == 'v': verify_nudges = True
     elif arg == 'd': debug = True
+    elif arg[0] == 'f':
+        flag_all_brackets = True
+        if arg[1:].isdigit():
+            max_flag_brackets = int(arg[1:])
+    elif arg == 'nf' or arg == 'fn': flag_all_brackets = False
     elif arg == 'm': monty_process = True
     elif arg == 'q': quiet = True
     elif arg == 'nq' or arg == 'qn': quiet = False
