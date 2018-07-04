@@ -300,9 +300,9 @@ Func PickItem($x, $y)
 EndFunc
 
 Func GoEquip()
-  MouseMove ( 271, 89 )
+  MouseMove ( 250, 89 )
   sleep(1000)
-  MouseClick ( "left", 271, 165, 1 )
+  MouseClick ( "left", 250, 165, 1 )
   sleep(2000)
 EndFunc
 
@@ -345,10 +345,12 @@ Func DoInt()
 
   PickAttr(4)
 
-  PickItem(6, 0) ; the first one-handed wand, so we can get more benefits from the off-hand
+  ; the first one-handed item, which gives slightly more benefits from the off-hand (Nomad's scimitar, formerly wand of hearts before CRON rewards)
+  PickItem(1, 0)
   PickItem(0, 1)
   PickItem(0, 2)
   PickItem(0, 3)
+  ClickEyewearAndAccessory()
 
   ToTasks()
 EndFunc
@@ -364,6 +366,25 @@ Func DoPer()
   PickItem(0, 1)
   PickItem(0, 2)
   PickItem(0, 3)
+  ClickEyewearAndAccessory()
+
+EndFunc
+
+Func ClickEyewearAndAccessory()
+  Send("{HOME}")
+  sleep(600)
+  Send("{PGDN}")
+  sleep(600)
+  MouseClick("left", 248, 496, 1)
+  sleep(1000)
+  MouseClick("left", 814, 510, 1)
+  sleep(1000)
+  MouseClick("left", 248, 648, 1)
+  sleep(1000)
+  MouseClick("left", 814, 540, 1)
+  sleep(600)
+  Send("{PGUP}")
+  sleep(600)
 EndFunc
 
 Func ToolsTrade($times, $equipPer, $unequipPer)
@@ -384,9 +405,6 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
 
   ToHab()
   ToTasks()
-  MouseClick ( "left", 200, 100, 1 )
-    ; need to wait to make sure the page loads after clicking "tasks"
-  sleep(2000)
 
   clickSkill($times, 2, 25)
 
@@ -405,7 +423,7 @@ EndFunc
 
 Func ToTasks()
   sleep(1000)
-  MouseMove ( 160, 90 )
+  MouseClick ( "left", 160, 90)
   sleep(1000)
 EndFunc
 
