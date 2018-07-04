@@ -60,8 +60,10 @@ def to_full(a):
     print(a, "not a project with a recognized mistake file.")
     exit()
 
-def mister(a):
+def mister(a, my_file, do_standard):
     global clipboard_str
+    check_this_after = check_stuff_after and do_standard
+    to_look = files[a] if do_standard else smallfiles[a]
     mistakes = 0
     flags = 0
     bracket_errs = 0
@@ -75,17 +77,15 @@ def mister(a):
     found = defaultdict(bool)
     comment_found = defaultdict(bool)
     comment_line = defaultdict(int)
-    source_dir = "c:/games/inform/%s.inform/Source/" % a
-    in_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/%s mistakes.i7x" % a
+    source_dir = "c:/games/inform/{:s}.inform/Source/".format(a)
     count = 0
     special_def = ''
     room_sect_var = default_room_level if a not in levs.keys() else levs[a]
     last_loc = '(none)'
     slashes = []
     mults = []
-    with open(in_file) as file:
-        for line in file:
-            count += 1
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
             l = line.strip()
             if line.startswith(room_sect_var):
                 last_loc = re.sub(r'^[a-z]+ +', '', line.strip().lower())
@@ -124,7 +124,7 @@ def mister(a):
     # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
     extra_text = defaultdict(str)
     ignore_next = False
-    for fi in files[a]:
+    for fi in to_look:
         short_fi = re.sub(".*[\\\/]", "", fi)
         retest = False
         with open(fi) as file:
@@ -237,11 +237,11 @@ def mister(a):
                     clip_out("#mistake test for {:s}".format(cmd_text[f]))
                     for ct in cmd_text[f].split('/'):
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
-                        clip_out(mistake_text[f])
+                        clip_out(mistake_text[f] if do_standard else "I didn't recognize that action. You can type VERB or VERBS to get a list of them.")
                     if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
                     if print_output: print()
-    if check_stuff_after:
+    if check_this_after:
         regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
         check_ary = ['>' + x for x in sorted(check_after.keys())]
         files_to_check = defaultdict(bool)
@@ -274,7 +274,10 @@ def mister(a):
 # note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
   'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
-  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt' ]
+  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt']
+}
+
+smallfiles = { 'ailihphilia' : ['c:/games/inform/ailihphilia.inform/source/reg-ai-mist-neg.txt']
 }
 
 edit_source = False
@@ -365,7 +368,12 @@ if edit_source:
     if not run_check: exit()
 
 for e in sorted(added.keys()):
-    mister(e)
+    mist_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/{:s} mistakes.i7x".format(e)
+    if e in smallfiles.keys():
+        print(e, "smallfile check")
+        mister(e, mist_file, False)
+    print(e, "regular file check")
+    mister(e, mist_file, True)
 
 if clipboard_str:
     pyperclip.copy(clipboard_str)

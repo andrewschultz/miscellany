@@ -82,7 +82,7 @@ def go_proj(x):
     os.chdir(proj2dir(x))
     return
 
-to_proj = go_proj
+go_p = to_proj = go_proj
 
 def dir2proj(x = os.getcwd()):
     if os.path.exists(x + "\\story.ni"):
