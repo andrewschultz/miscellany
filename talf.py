@@ -253,6 +253,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 need_head = False
                 continue
             if in_sortable_table:
+                if line.count("\"") % 2 and 'ibq' not in line:
+                    print("Odd number of quotes at line {:d}: {:s}".format(line_count, line))
+                    i7.npo(f, line_count)
                 if re.search("ends here(\.)?$", line):
                     print("Final table needs space before indicating header file ends.")
                     i7.npo(f, line_count)
@@ -392,8 +395,13 @@ projset = set(projects)
 diff = len(projects) - len(projset)
 
 if len(projects) == 0:
-    print("Need to write in a project.")
-    exit()
+    d2p = i7.dir2proj()
+    if d2p:
+        print("Using default project", d2p, "since you're in that directory.")
+        projects = [ d2p ]
+    else:
+        print("Need to write in a project.")
+        exit()
 
 if diff > 0:
     print(diff, "duplicate project" + ("s" if diff > 1 else ""), "weeded out")
