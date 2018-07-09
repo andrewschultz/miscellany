@@ -65,7 +65,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     if '[if' in line or '[unless' in line or '[one of]' in line:
         print(cur_pot+1, "Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
         return True
-    if '[' in line and ']' in line:
+    if '[' in line and ']' in line and not line.startswith('#'):
         lmod = re.sub("^[^\[]*\[", "", line.strip())
         lmod = re.sub("\].*", "", lmod)
         generic_bracket_error[lmod] += 1
@@ -123,6 +123,7 @@ def usage():
     print("-m = Monty process")
     print("-q = Quiet")
     print("-np = no copy over post, -p = copy over post (default)")
+    print("-si = show singletons with brackets, -nsi/-sin = only count them")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
     exit()
@@ -352,9 +353,9 @@ def get_file(fname):
     if len(generic_bracket_error) > 0:
         singletons = 0
         for x in sorted(generic_bracket_error.keys(), key = lambda x: (generic_bracket_error[x], x)):
-            if generic_bracket_error[x] > 1: print(x, generic_bracket_error[x])
+            if generic_bracket_error[x] > 1 or show_singletons: print(x, generic_bracket_error[x])
             else: singletons += 1
-        if singletons: print("Number of singletons:", singletons)
+        if singletons: print("Number of singletons (show detail with -ss):", singletons)
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
         if not quiet: print("Nothing changed.")
         return
@@ -460,6 +461,8 @@ while count < len(sys.argv):
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
     elif os.path.exists(arg): in_file = arg
+    elif arg == 'si': show_singletons = True
+    elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)

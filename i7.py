@@ -14,6 +14,7 @@ np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
+prt = "c:\\games\\inform\\prt"
 
 oo = [ 'off', 'on' ]
 
