@@ -109,8 +109,7 @@ to say off-on of (t - a truth state):
 
 book screenreading hooks
 
-to say 2da: [this is so people with screen readers won't be annoyed by dashes]
-	say "[unless screenread is true]--[end if]";
+to say 2da: say "[unless screenread is true]--[end if]"; [this is so people with screen readers won't be annoyed by dashes]
 
 to say equal-banner of (nu - a number):
 	if screenread is true, continue the action;
@@ -121,27 +120,28 @@ to say equal-banner of (nu - a number):
 	repeat with nu3 running from 1 to nu2:
 		say "=";
 
-to say srsp:
-	if screenread is true:
-		say " ";
+to say srsp: if screenread is true, say " ";
 
 screenread is a truth state that varies.
 
+use-custom-screenread is a truth state that varies.
+
 to ask-screenread:
-	say "This game has some support for screen readers, such as eliminating excess punctuation. Are you using one?";
+	if use-custom-screenread is false, say "This game has some support for screen readers, such as eliminating excess punctuation. Are you using one?";
 	if the player consents:
 		now screenread is true;
 	else:
 		now screenread is false;
-	say "Screen reading support will be [on-off of screenread] for this session. Toggle it with SCREEN.";
+	say "Screen reading support will be [on-off of screenread] for this session. Toggle it with SCREEN or SCR.";
 
 chapter screening
 
 screening is an action out of world.
 
 understand the command "screen" as something new.
+understand the command "scr" as something new.
 
-understand "screen" as screening.
+understand "screen" and "scr" as screening.
 
 carry out screening:
 	if screenread is true:
