@@ -273,16 +273,16 @@ sub runProj {
       $mat =~ s/ materials/\.materials/g;
       $bmat =~ s/ materials/\.materials/g;
     }
-    doOneBuild( $betaDir, "~D", "$baseDir\\beta Materials", "beta", "$_[0]" );
+    doOneBuild( $betaDir, "~S~D", "$baseDir\\beta Materials", "beta", "$_[0]" );
   }
 
   if ($release) {
-    doOneBuild( "$bdir", "~D", "$baseDir\\$_[0] Materials", "release",
-      "$_[0]" );
+    doOneBuild( "$bdir", "~S~D", "$baseDir\\$_[0] Materials",
+      "release", "$_[0]" );
   }
 
   if ($debug) {
-    doOneBuild( "$bdir", "D", "$baseDir\\$_[0] Materials", "debug", "$_[0]" );
+    doOneBuild( "$bdir", "SD", "$baseDir\\$_[0] Materials", "debug", "$_[0]" );
   }
 
   if ( $debugTables != 0 ) {
@@ -316,7 +316,6 @@ sub doOneBuild {
   if ( $_[3] eq "beta" ) {
     copyToBeta($bdir);
   }
-
   my $blorbFileShort = getFile("$_[0]/Release.blurb");
   if ( $_[3] ne "debug" || ( !$ignoreDRBPrefix ) ) {
     $blorbFileShort = "$_[3]-$blorbFileShort";
@@ -348,8 +347,8 @@ sub doOneBuild {
 
   my $compileCmd = sprintf(
 "\"$infDir\\Compilers\\ni\" %s -rules \"$infDir\\Inform7\\Extensions\" -package \"$_[0]\" -extension=\"$ex\"",
-    ( $_[3] eq "R" ) ? "-release" : "" );
-  print "$compileCmd\n";
+    ( $_[3] eq "release" || $_[3] eq "beta" ) ? "-release" : "" );
+
   my $compileCheck = `$compileCmd`;
 
   my $doneTime = time() - $startTime;
@@ -373,9 +372,13 @@ sub doOneBuild {
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i7->i6 succeeded,0,0,0\n";
 
   delIfThere($outFile);
-  system(
-"\"$infDir/Compilers/$i6x\" -kw~S$dflag$iflag +include_path=$_[0] $infOut $outFile"
-  );
+  my $sysCmd =
+"\"$infDir/Compilers/$i6x\" -kw$dflag$iflag +include_path=$_[0] $infOut $outFile";
+  sysprint($sysCmd);
+
+# debug   C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kwSDG +include_path=..\Source,.\ auto.inf output.ulx
+# release C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kw~S~DG +include_path=..\Source,.\ auto.inf output.ulx
+  exit();
 
   if ( !-f $outFile ) {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary failed,0,1,0\n";
@@ -389,6 +392,19 @@ sub doOneBuild {
 
   ################this reloads the final output file
   delIfThere("$outFinal");
+
+  open( A, "$betaDir\\Release.blurb" ) || die("Can't open blurb file...");
+  open( B, ">$betaDir\\Release2.blurb" );
+  my $line;
+  while ( $line = <A> ) {
+    $line =~ s/output/icl-output/gi if ( $line =~ /storyfile \"/ );
+    print B $line;
+  }
+  close(A);
+  close(B);
+  system("xcopy /y \"$betaDir\\Release2.blurb\" \"$betaDir\\Release.blurb\"");
+
+  sleep(1);
   sysprint(
 "\"$infDir/Compilers/cblorb\" -windows \"$_[0]\\Release.blurb\" \"$outFinal\""
   );
@@ -401,7 +417,7 @@ sub doOneBuild {
   if ( -f $outFinal ) {
     writeToLog( $outFinal, @_ );
     if ( $_[3] eq "debug" ) {
-      my ( $baseName = $outFinal ) =~ s/.*[\\\/]//g;
+      ( my $baseName = $outFinal ) =~ s/.*[\\\/]//g;
       print("Copying $baseName over...");
       copy( $outFinal, "c:/games/inform/prt/$baseName" );
     }
@@ -449,7 +465,6 @@ sub copyToBeta {
   $mtr =~ s/\.inform/ materials/g;
 
   print "Copying blurb file...\n";
-  system("copy \"$_[0]\\Release.blurb\" \"$betaDir\\Release.blurb\"");
   print "Copying UUID file...\n";
   system("copy \"$_[0]\\uuid.txt\" \"$betaDir\\uuid.txt\"");
   system("erase \"$bmat\\Figures\"*");

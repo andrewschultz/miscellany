@@ -350,7 +350,7 @@ Func DoInt()
   PickItem(0, 1)
   PickItem(0, 2)
   PickItem(0, 3)
-  ClickEyewearAndAccessory()
+  ClickEyewearAndAccessory(True)
 
   ToTasks()
 EndFunc
@@ -366,11 +366,16 @@ Func DoPer()
   PickItem(0, 1)
   PickItem(0, 2)
   PickItem(0, 3)
-  ClickEyewearAndAccessory()
+  ClickEyewearAndAccessory(False)
 
 EndFunc
 
-Func ClickEyewearAndAccessory()
+Func ClickEyewearAndAccessory($to_int)
+  if $to_int Then
+    $body_accessory_y = 510 ; Aether amulet has no extra line
+  else
+    $body_accessory_y = 540 ; Cozy scarf has extra line
+  EndIf
   Send("{HOME}")
   sleep(600)
   Send("{PGDN}")
@@ -381,7 +386,7 @@ Func ClickEyewearAndAccessory()
   sleep(1000)
   MouseClick("left", 248, 648, 1)
   sleep(1000)
-  MouseClick("left", 814, 540, 1)
+  MouseClick("left", 814, $body_accessory_y, 1)
   sleep(600)
   Send("{PGUP}")
   sleep(600)
