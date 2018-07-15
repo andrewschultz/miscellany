@@ -406,6 +406,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
 
   if $equipPer == True Then
     DoPer()
+	Sleep(500)
   EndIf
 
   ToHab()

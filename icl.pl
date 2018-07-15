@@ -378,7 +378,6 @@ sub doOneBuild {
 
 # debug   C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kwSDG +include_path=..\Source,.\ auto.inf output.ulx
 # release C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kw~S~DG +include_path=..\Source,.\ auto.inf output.ulx
-  exit();
 
   if ( !-f $outFile ) {
     print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary failed,0,1,0\n";

@@ -238,6 +238,7 @@ sub readZupFile {
       /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
       /^!/ && do {
         if ($dropboxSimpleCopy) {
+          die("OUTFILE wasn't defined during simple copy!") if !$outFile;
           print("Copying $outFile from $zipdir to $dbbin.\n");
           my $cmd = "copy \"$zipdir\\$outFile\" \"$dbbin\\$outFile\"";
           print `$cmd`;
@@ -299,7 +300,6 @@ sub readZupFile {
         }
         return;
       };
-      next if $dropboxSimpleCopy;
       /^out=/i && do {
         $a =~ s/^out=//gi;
         $outFile = $a;
