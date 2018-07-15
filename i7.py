@@ -6,6 +6,7 @@
 #
 
 from collections import defaultdict
+import sys
 import re
 import os
 import __main__ as main
@@ -39,23 +40,23 @@ def src(x):
     return sdir(x) + "/" + "story.ni"
 
 def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
 
 def hdr(x, y):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x).title(), y.title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x, True).title(), y.title())
 
 def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x).title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
 
 mifi = mistake_file
 
 def table_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x).title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x, True).title())
 
 tafi = table_file
 
 def test_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x).title())
+    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x, True).title())
 
 tefi = test_file
 
@@ -101,25 +102,31 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     os.system(cmd)
     if bail: exit()
 
-def see_uniq_and_vers():
+def see_uniq_and_vers(args):
+    if args[0] == '-': args = args[1:]
+    print("Testing verxions/release #s/etc")
+    verbose = False
+    release_test = False
+    if 'v' in args: verbose = True
+    if 'r' in args: release_test = True
     i7rev = defaultdict(list)
     for x in i7x.keys():
         i7rev[i7x[x]].append(x)
+    if release_test:
+        for y in sorted(i7rev.keys()):
+            if y not in i7rn.keys(): print(y, "needs a release number or file name")
     for y in sorted(i7rev.keys()):
         if len(i7rev[y]) == 1:
             # print(y, "is unique")
             if y in i7xr.keys():
-                print(y, "doesn't need to be in i7xr.")
+                print(y, "doesn't need to be in i7xr. It is uniquely defined from", i7xr[y] + '.')
             else:
-                print("Defining", y, "reverse to", i7rev[y][0])
+                if verbose: print("Defining", y, "reverse to", i7rev[y][0] + '.')
                 i7xr[y] = i7rev[y][0]
         else:
             # print(y, "is mapped to", len(i7rev[y]), "different values:", i7rev[y])
             if y not in i7xr.keys():
                 print(y, "should be in i7xr, with", len(i7rev[y]), "different values.")
-    for y in sorted(i7rev.keys()):
-        if y not in i7rn.keys():
-            print(y, "needs a release number or file name")
 
 def revproj(a):
     return_val = ""
@@ -148,7 +155,7 @@ i7xd = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\
 i7c = {
   "sts": ["roiling", "shuffling"],
   "ops": ["threediopolis", "fourdiopolis"],
-  "as": ["slicker-city", "compound", "buck-the-past" ]
+  "as": ["slicker-city", "compound", "buck-the-past", "seeker-status" ]
 }
 
 #
@@ -193,7 +200,8 @@ i7x = { "12": "shuffling",
   "ail": "ailihphilia",
   "pu": "ailihphilia",
   "up": "ailihphilia",
-  "sw": "spell-woken",
+  #"sw": "tragic-mix",
+  "tm": "tragic-mix",
   "69": "69105more",
   "qb": "big-nose",
   "bn": "big-nose",
@@ -211,11 +219,10 @@ i7xr = { "shuffling": "sa",
   "compound": "pc",
   "slicker-city":"sc" ,
   "btp-st":"bs" ,
-  "buck-the-past": "btp",
   "ailihphilia": "ai",
   "molesworth": "mo",
   "big-nose": "qb",
-  "opolis": "op"
+  "opolis": "op",
 };
 
 i7f = {
@@ -228,8 +235,17 @@ i7f = {
     "ailihphilia": [ tafi('ai'), tefi('ai'), mifi('ai'), src('ai') ]
   }
 
+def valid_arg(x):
+    if x[0] == '-': x = x[1:];
+    if '?' not in x: return False
+    x = re.sub("\?", "", x)
+    return re.search("^[rv]*$", x)
+
 if "i7.py" in main.__file__:
+    if len(sys.argv) > 1 and valid_arg(sys.argv[1]):
+        see_uniq_and_vers(sys.argv[1])
+        exit()
     print("i7.py is a header file. It should not be run on its own.")
-    print("Try running something else with the line import i7, instead.")
+    print("Try running something else with the line import i7, instead, or ? to run a test.")
     # see_uniq_and_vers()
     exit()
