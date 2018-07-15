@@ -4,7 +4,7 @@
 # compares map text from trizbort to source text from an Inform story.ni file
 # also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
-# verified so far on Ailiphilia and Buck the Past
+# verified so far on Ailiphilia, Buck the Past and Tragic Mix
 #
 # also rooms that map *from* a map *to* a
 
@@ -66,7 +66,9 @@ def read_ignore_file():
 
 def match_source_invisiclues():
     room_level = 2
+    if not i7.revproj(project): sys.exit("Can't figure out a project for {:s}.".format(project))
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
+    if not os.path.exists(invisfile): sys.exit("No file {:s}. Bailing.".format(invisfile))
     print("Checking invisiclues file", invisfile, "...")
     with open(invisfile) as file:
         for line in file:
@@ -141,7 +143,9 @@ ignore = defaultdict(bool) # specific rooms to ignore
 room_renamer = defaultdict(str)
 invis_renamer = defaultdict(str)
 triz_renamer = defaultdict(str)
-project = "buck-the-past"
+
+default_project = "buck-the-past"
+project = ""
 
 invisiclues_search = True
 triz_search = True
@@ -225,6 +229,9 @@ with open(source_file) as f:
             l2 = re.sub(".*is in ", "", l2, re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, re.IGNORECASE)
             source[if_rename(l1)] = l2
+        elif re.search(" is a room\.", line, flags=re.IGNORECASE):
+            l1 = re.sub(" is a room.*", "", line)
+            source[l1] = "NONE"
         elif re.search("^[^\t\"\[\.]*is (above|below|((north|south|east|west|up|down|inside|outside) of))", line, flags=re.IGNORECASE):
             l1 = re.sub(' is .*', '', line, flags=re.IGNORECASE)
             l1 = re.sub("^(a|the) (passroom|pushroom|room) called ", "", l1, flags=re.IGNORECASE)
@@ -249,11 +256,13 @@ sourceerr = []
 
 count = 0
 
-if invisiclues_search:
-    match_source_invisiclues()
+if not project:
+    print ("No project. Defining default project", default_project)
+    project = default_project
 
-if triz_search:
-    match_source_triz()
+if invisiclues_search: match_source_invisiclues()
+
+if triz_search: match_source_triz()
 
 print ("TEST RESULTS:triz2source-" + project + ",0,0," + " / ".join(sourceerr))
 print ("TEST RESULTS:triz2map-" + project + ",0,0," + "/ ".join(maperr))
