@@ -78,6 +78,10 @@ to say wfak-d:
 	if debug-state is false:
 		wfak;
 
+book plural
+
+to say plur of (n - a number): if n is not 1, say "s"
+
 book basic math
 
 to decide what number is abs of (n - a number):

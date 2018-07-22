@@ -352,6 +352,7 @@ Func DoInt()
   PickItem(0, 3)
   ClickEyewearAndAccessory(True)
 
+  Send("{PGUP}")
   ToTasks()
 EndFunc
 

@@ -40,6 +40,7 @@ def edit_name(x):
 
 def to_output(f_i, f_o):
     f2 = open(f_o, "w")
+    f2.write("#created with tc.py\n#\n")
     count = 0
     comments = 0
     lines_in_out_file = 0
@@ -106,7 +107,8 @@ if not len(my_files) and not launch_html and not make_html:
 
 for mf in my_files:
     if 'comments' in mf:
-        print("COMMENTS is probably a file output by tc. Change", os.path.basename(mf))
+        print("COMMENTS is probably a file output by tc. Ignoring", os.path.basename(mf))
+        continue
     if not os.path.exists(mf):
         print(mf, "does not exist, skipping.")
         if the_glob: print("Not sure what happened, since this was from a glob.")
@@ -123,6 +125,12 @@ for mf in my_files:
         else:
             ona = out_name(mf)
             print(os.path.basename(mf), "to", os.path.basename(ona))
+            if os.path.exists(ona):
+                if write_over == False:
+                    print(ona, "exists. Use -wo to write over.")
+                    continue
+                else:
+                    print("Overwriting", ona)
             to_output(mf, ona)
         if launch_after:
             if len(my_files) > cur_launched:

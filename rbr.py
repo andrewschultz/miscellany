@@ -183,6 +183,13 @@ def get_file(fname):
     generic_bracket_error.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith("{--"):
+                vta_before = re.sub("\}.*", "", line.strip())
+                vta_after = re.sub("^.*?\}", "")
+                very_temp_array = [int(x) for x in vta[3:].split(",")]
+                for q in very_temp_array:
+                    file_list[q].write(re.sub("\\", "\n", vta_after))
+                continue
             if line.startswith("~\t"):
                 eq_array = line.strip().lower().split("\t")
                 if len(eq_array) != 3: sys.exit("Bad equivalence array at line {:d} of file {:s}: needs exactly two tabs.".format(line_count, fname))
