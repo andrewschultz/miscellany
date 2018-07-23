@@ -3,12 +3,34 @@ import re
 import os
 from collections import defaultdict
 
+alphabetize = True
+
+count = 1
+
+def usage():
+    print("-a = alphabetize sections, -an/-na = don't")
+    exit()
+
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg == 'a': alphabetize = True
+    elif arg == 'na' or arg == 'an': alphabetize = False
+    count += 1
+
+def file_len(fname):
+    with open(fname) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
 def alec_smart_org(a, cs):
     if a.startswith("FEM"): return "btp-fem"
     if a.startswith("FARM"): return "btp-farm"
     return cs
 
 def alfit(mystr):
+    if not mystr.strip(): return ""
     return "\n".join(sorted(mystr.strip().split("\n"))) + "\n"
 
 def spoonerism_org(a, cs):
@@ -78,11 +100,12 @@ def process_sections(a, loc_func):
     for x in sorted(section_rollup.keys(), key=order_dict.get):
         print("Writing out", x)
         f.write(x + '\n')
-        q = alfit(section_rollup[x])
-        f.write(q)
+        if alphabetize: f.write(alfit(section_rollup[x]))
+        else: f.write(section_rollup[x])
         f.write("\n")
     f.close()
     print(os.path.getsize(a), os.path.getsize(tf))
+    print(file_len(a), file_len(tf))
     os.system("wm {:s} {:s}".format(a, tf))
     exit()
 
