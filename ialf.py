@@ -4,11 +4,15 @@ import os
 from collections import defaultdict
 
 alphabetize = True
+ignore_differences = False
+copy_back = False
+compare_it = True
 
 count = 1
 
 def usage():
     print("-a = alphabetize sections, -an/-na = don't")
+    print("-id = ignore differences, -cb = copy back, -nc = copy no compare")
     exit()
 
 while count < len(sys.argv):
@@ -16,6 +20,15 @@ while count < len(sys.argv):
     if arg[0] == '-': arg = arg[1:]
     if arg == 'a': alphabetize = True
     elif arg == 'na' or arg == 'an': alphabetize = False
+    elif arg == 'id': ignore_differences = True
+    elif arg == 'cb': copy_back = True
+    elif arg == 'nc':
+        copy_back = True
+        compare_it = False
+    elif arg == '?': usage()
+    else:
+        print("Bad argument", arg)
+        usage()
     count += 1
 
 def file_len(fname):
@@ -28,10 +41,6 @@ def alec_smart_org(a, cs):
     if a.startswith("FEM"): return "btp-fem"
     if a.startswith("FARM"): return "btp-farm"
     return cs
-
-def alfit(mystr):
-    if not mystr.strip(): return ""
-    return "\n".join(sorted(mystr.strip().split("\n"))) + "\n"
 
 def spoonerism_org(a, cs):
     b = re.search("=([1-9])", a)
@@ -47,7 +56,12 @@ def spoonerism_org(a, cs):
 def comment_and_alf_sort(a):
     is_comment = a.startswith('#')
     b = re.sub("^#*", "", a).lower()
-    return(a, b)
+    b = re.sub("^ +", "", b)
+    return(is_comment, b)
+
+def alfit(mystr):
+    if not mystr.strip(): return ""
+    return "\n".join(sorted(mystr.strip().split("\n"), key=comment_and_alf_sort)) + "\n"
 
 def ailihphilia_sort(a):
     b = re.sub("^[^0-9]*", "", a)
@@ -106,7 +120,10 @@ def process_sections(a, loc_func):
     f.close()
     print(os.path.getsize(a), os.path.getsize(tf))
     print(file_len(a), file_len(tf))
-    os.system("wm {:s} {:s}".format(a, tf))
+    if compare_it: os.system("wm {:s} {:s}".format(a, tf))
+    if file_len(a) != file_len(tf) and not ignore_differences:
+        sys.exit("File size differences. Bailing. Use -id to override.")
+    if copy_back: copy(tf, a)
     exit()
 
 def sample_section_sorts():
