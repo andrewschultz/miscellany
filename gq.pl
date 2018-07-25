@@ -439,7 +439,12 @@ OUTER:
 }
 
 sub processFiles {
-  my @x = split( /\n/, $cmds{ $_[0] } );
+  my @x;
+  if ( defined( $cmds{ $_[0] } ) ) { @x = split( /\n/, $cmds{ $_[0] } ); }
+  if ( !@x ) {
+    print "Using only story file for $_[0].\n";
+    @x = ("story.ni");
+  }
 
   #for my $q (sort keys %cmds) { print "$q...$cmds{$q}\n"; } return;
 
@@ -881,6 +886,7 @@ sub toProj {
   elsif ( $_[0] =~ /(compound|slicker|buck|past)/i ) { return "as"; }
   elsif ( $_[0] =~ /ailihphilia/i )                  { return "ai"; }
   elsif ( $_[0] =~ /(roiling|shuffling)/i )          { return "sts"; }
+  elsif ( $_[0] =~ /(tragic)/i )                     { return "tm"; }
 }
 
 sub use_cases {

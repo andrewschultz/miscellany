@@ -9,6 +9,8 @@ from collections import defaultdict
 import sys
 import re
 import os
+import glob
+from shutil import copy
 import __main__ as main
 
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
@@ -19,9 +21,24 @@ prt = "c:\\games\\inform\\prt"
 
 oo = [ 'off', 'on' ]
 
+smart = "c:/writing/smart.otl"
+spoon = "c:/writing/spopal.otl"
+
 def open_source():
     npo(main.__file__)
     exit()
+
+# to python regression test
+def to_prt(include_glob = "reg-*", exclude_glob = ""):
+    j = glob.glob(include_glob)
+    xg = '(no exclude)' if not exclude_glob else exclude_glob
+    for j1 in j:
+        if re.search(exclude_glob, j):
+            uncopied += 1
+            continue
+        copy(j1, "c:/games/inform/prt/{:s}".format(os.path.basename(j1)))
+        copied += 1
+    print(copied, "copied of ", include_glob, "-", xg, ",", uncopied, "uncopied")
 
 def plur(a):
     return '' if a == 1 else 's'
@@ -228,10 +245,10 @@ i7xr = { "shuffling": "sa",
 i7f = {
     "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa') ],
     "roiling": [ hdr('roi', 'Nudges'), hdr('roi', 'Random Text'), mistake_file('roi'), src('roi') ],
-    "buck-the-past": [ tafi('btp'), src('btp') ],
     "compound": [ tafi('pc'), src('pc') ],
     "slicker-city": [ tafi('sc'), src('sc') ],
-    "spell-woken": [ tafi('sw'), src('sw') ],
+    "buck-the-past": [ tafi('btp'), src('btp') ],
+    "tragic-mix": [ tafi('tm'), src('tm') ],
     "ailihphilia": [ tafi('ai'), tefi('ai'), mifi('ai'), src('ai') ]
   }
 
