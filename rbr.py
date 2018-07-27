@@ -23,7 +23,9 @@ times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
 generic_bracket_error = defaultdict(int)
 
-temp_dir = "c:/games/inform/prt/temp"
+new_files = defaultdict(bool)
+changed_files = defaultdict(bool)
+unchanged_files = defaultdict(bool)
 
 flag_all_brackets = False
 edit_individual_files = False
@@ -32,6 +34,7 @@ always_be_writing = False
 edit_main_branch = False
 debug = False
 monty_process = False
+force_all_regs = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
@@ -100,10 +103,16 @@ def search_for(x):
     if not got_count: print("Found nothing for", x)
     exit()
 
-def post_copy():
+def post_copy(file_array):
     if copy_over_post:
-        print("Running prt.pl after -- try -np to disable this")
-        subprocess.run(["perl", "c:\\writing\\scripts\\prt.pl"], stdout=subprocess.PIPE)
+        if force_all_regs:
+            print("Copying all files over to PRT directory.")
+            for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
+        elif len(changed_files.keys()):
+            print("Copying changed files over to PRT directory.")
+            for q in changed_files.keys(): copy(q, os.path.join(i7.prt, os.path.basename(q)))
+        else:
+            print("No files copied over to PRT directory. Try -fp or -pf to force copying of all files encompassed by", in_file)
 
 def examples():
     print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
@@ -146,8 +155,8 @@ def write_monty_file(fname, testnum):
     mytest = monty_detail[testnum]
     new_file_name = re.sub("^reg", "rmo", fname)
     new_file_name = re.sub("\.", "-{:s}-{:s}.".format(testnum, mytest), new_file_name)
-    from_file = os.path.join(temp_dir, fname)
-    to_file = os.path.join(temp_dir, new_file_name)
+    from_file = os.path.join(i7.prt_temp, fname)
+    to_file = os.path.join(i7.prt_temp, new_file_name)
     cmd_yet = False
     f = open(new_file_name, "w", newline="\n")
     with open(fname) as file:
@@ -197,7 +206,7 @@ def get_file(fname):
                 continue
             if line.startswith("files="):
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
-                file_array = [os.path.join(temp_dir, f) for f in file_array_base]
+                file_array = [os.path.join(i7.prt_temp, f) for f in file_array_base]
                 actives = [True] * len(file_array)
                 last_cr = [False] * len(file_array)
                 for x in file_array:
@@ -336,9 +345,9 @@ def get_file(fname):
         file_list[ct].close()
     if dupe_file_name: dupe_file.close()
     if warns > 0: print(warns, "potential bad commands.")
-    new_files = defaultdict(bool)
-    changed_files = defaultdict(bool)
-    unchanged_files = defaultdict(bool)
+    new_files.clear()
+    changed_files.clear()
+    unchanged_files.clear()
     if monty_process:
         print(file_array)
         for x in file_array:
@@ -363,12 +372,12 @@ def get_file(fname):
             if generic_bracket_error[x] > 1 or show_singletons: print(x, generic_bracket_error[x])
             else: singletons += 1
         if singletons: print("Number of singletons (show detail with -ss):", singletons)
-    if len(new_files.keys()) + len(changed_files.keys()) == 0:
-        if not quiet: print("Nothing changed.")
-        return
     if len(new_files.keys()) > 0: print("New files:", ', '.join(sorted(new_files.keys())), 'from', fname)
     if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
-    if len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
+    if len(new_files.keys()) + len(changed_files.keys()) == 0:
+        if not quiet: print("Nothing changed.")
+        if len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
+    post_copy(file_array_base)
 
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
@@ -454,16 +463,13 @@ while count < len(sys.argv):
     elif arg[:2] == 's4': search_for(arg[2:])
     elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg[:1] == 'v': verify_nudges = True
     elif arg == 'd': debug = True
-    elif arg[0] == 'f':
-        flag_all_brackets = True
-        if arg[1:].isdigit():
-            max_flag_brackets = int(arg[1:])
     elif arg == 'nf' or arg == 'fn': flag_all_brackets = False
     elif arg == 'm': monty_process = True
     elif arg == 'q': quiet = True
     elif arg == 'nq' or arg == 'qn': quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
+    elif arg == 'pf' or arg == 'fp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
@@ -473,6 +479,10 @@ while count < len(sys.argv):
     elif arg == 'x': examples()
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
+    elif arg[0] == 'f':
+        flag_all_brackets = True
+        if arg[1:].isdigit():
+            max_flag_brackets = int(arg[1:])
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
@@ -489,7 +499,6 @@ if in_file:
         os.system(in_file)
     else:
         get_file(in_file)
-        post_copy()
     exit()
 
 if not proj:
@@ -536,4 +545,3 @@ i7.go_proj(proj)
 for x in my_file_list:
     get_file(x)
 
-post_copy()
