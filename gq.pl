@@ -188,7 +188,7 @@ while ( $count <= $#ARGV ) {
     /^-?ir$/ && do { $ignoreRand  = 1;  $count++; next; };
     /^-?nd$/ && do { newDefault($b); $count++; next; };
     /^-?#$/    && do { $forceNum      = 1; $count++; next; };
-    / ^ -?ft$/ && do { $printUntabbed = 0; $count++; next; };
+    /^-?ft$/   && do { $printUntabbed = 0; $count++; next; };
     /^-? zb $/ && do { $zapBrackets   = 1; $count++; next; };
     /^-mo$/    && do {
 
@@ -252,6 +252,9 @@ if ( ( $#runs == -1 ) && ( $#ARGV > 1 ) ) {
   print
     "NOTE: if a project name overlaps a flag, use the comma to detect it.\n";
 }
+
+die("Must print either tabbed or untabbed.")
+  if ( !$printTabbed && !$printUntabbed );
 
 processListFile();
 

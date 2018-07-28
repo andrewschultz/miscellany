@@ -18,6 +18,7 @@ f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
 prt = "c:\\games\\inform\\prt"
+prt_temp = prt + "/temp"
 
 oo = [ 'off', 'on' ]
 

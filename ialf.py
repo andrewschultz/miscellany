@@ -53,6 +53,13 @@ def spoonerism_org(a, cs):
     if '*'in a: return "sw"
     return cs
 
+def comment_and_alf_sort_by_mult(a):
+    is_comment = a.startswith('#')
+    b = re.sub("^#*", "", a).lower()
+    b = re.sub("^ +", "", b)
+    c = sorted(b.split(" *(\*|[0-9]*=[0-9]*) *"))
+    return(is_comment, c[0])
+
 def comment_and_alf_sort(a):
     is_comment = a.startswith('#')
     b = re.sub("^#*", "", a).lower()

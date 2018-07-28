@@ -109,8 +109,8 @@ while ( $count <= $#ARGV ) {
       for ( sort keys %exp ) { print "$_ -> $exp{$_}\n"; }
       exit();
     };
-    /^-?v$/ && do { $verbose        = 1; $count++; next; };
-    /^-?e$/ && do { $launchTextFile = 1; $count++; next; };
+    /^-?v$/     && do { $verbose        = 1; $count++; next; };
+    /^-?e(d)?$/ && do { $launchTextFile = 1; $count++; next; };
     /^-?en$/
       && do { $createTextFile = 1; $launchTextFile = 1; $count++; next; };
     usage();
@@ -449,8 +449,8 @@ sub usage {
 ===========================USAGE
 -a  = show all files
 -d  = debug
--e  = edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
--en = edits a new text file (e.g. -e btp edits \\writing\\scripts\\invis\\btp)
+-e  = (ed) edits the next file (e.g. -e btp edits \\writing\\scripts\\invis\\btp.txt)
+-en = edits a new text file (e.g. -e btp edits \\writing\\scripts\\invis\\btp.txt)
 -f  = force a redo if HTM file's mod date >= the generating file
 -gh = runs GH post-invis processing
 -l  = launch HTM invisiclues after
