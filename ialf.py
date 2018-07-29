@@ -1,3 +1,12 @@
+#ialf.py
+#
+#a section sorter and reporter
+#
+#replaces perl alphabetizer for BTP/Alec Smart
+#also organizes spoonerisms
+#
+
+import i7
 import sys
 import re
 import os
@@ -7,6 +16,10 @@ alphabetize = True
 ignore_differences = False
 copy_back = False
 compare_it = True
+
+show_sections_instead = False
+default_proj = 'tm'
+proj = ''
 
 count = 1
 
@@ -26,6 +39,10 @@ while count < len(sys.argv):
         copy_back = True
         compare_it = False
     elif arg == '?': usage()
+    elif arg == 's': show_sections_instead = True
+    elif arg == 'p':
+        count += 1
+        proj = sys.argv[count].lower()
     else:
         print("Bad argument", arg)
         usage()
@@ -38,6 +55,7 @@ def file_len(fname):
     return i + 1
 
 def alec_smart_org(a, cs):
+    if a.startswith("AUTH") or a.startswith("AUT") or a.startswith("AUTHOR"): return "btp-auth"
     if a.startswith("FEM"): return "btp-fem"
     if a.startswith("FARM"): return "btp-farm"
     return cs
@@ -94,7 +112,10 @@ def show_sections(a):
                 print("Adding blank", line)
                 order_dict[line.strip()] = line_count
 
-def process_sections(a, loc_func):
+def process_sections(a, loc_func, show_sections_instead):
+    if show_sections_instead:
+        show_sections(a)
+        return
     tf = "c:/writing/temp-ialf.txt"
     f = open(tf, "w")
     backslash_yet = False
@@ -144,10 +165,18 @@ order_dict = defaultdict(int)
 section_rollup = defaultdict(str)
 current_section_full = defaultdict(str)
 
-#show_sections("c:/writing/spopal.otl")
-show_sections("c:/writing/spopal.otl")
-process_sections("c:/writing/spopal.otl", spoonerism_org)
+#see about dictionary of functions?
+
+if not proj:
+    proj = default_proj
+    print("Going with", default_proj)
+
+if proj == 'btp' or proj == 'as' or proj == 'ss':
+    process_sections(i7.smart, alec_smart_org, show_sections_instead)
+elif proj == 'tm' or proj == 'sw': process_sections(i7.spoon, spoonerism_org, show_sections_instead)
+else: sys.exit("Undefined project " + proj)
+
+#show_sections(i7.smart)
+#show_sections(i7.spoon)
 
 exit()
-
-#show_sections("c:/writing/smart.otl")
