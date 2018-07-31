@@ -20,10 +20,40 @@ f_l = "c:/writing/dict/lasts.txt"
 prt = "c:\\games\\inform\\prt"
 prt_temp = prt + "/temp"
 
+table_row_count = defaultdict(int)
+
 oo = [ 'off', 'on' ]
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
+
+def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
+    if clear_trc: table_row_count.clear()
+    table_start = 0
+    table_name = ''
+    if os.path.exists(q): # it's a file
+        if show_detail: print("Reading", q)
+        with open(q) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if line.startswith('table'):
+                    table_name = re.sub(" \[.*", "", line.strip())
+                    if table_name in table_row_count.keys():
+                        my_msg = "Duplicate table name found: {:s}, {:s}, line {:d}".format(table_name, q, line_count)
+                        if bail_on_dupe: sys.exit(my_msg)
+                        print("WARNING:", my_msg)
+                    if lower_case: table_name = table_name.lower()
+                    table_start = line_count + 2
+                if not line.strip():
+                    if table_name:
+                        table_row_count[table_name] = line_count - table_start
+                        if show_detail: print(table_name, table_row_count)
+    elif proj_exp(q, False):
+        for q2 in i7f[proj_exp(q, False)]:
+            get_table_row_count(q2, show_detail = show_detail)
+    else:
+        print("No project or file", q)
+
+get_trc = get_table_row_count
 
 def open_source():
     npo(main.__file__)
@@ -86,10 +116,13 @@ def hfile(x, y):
     x2 = re.sub("-", " ", x)
     return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
 
+def proj_exp(x, return_nonblank = True):
+    if x in i7xr.keys(): return x
+    elif x in i7x.keys(): return i7x[x]
+    return (x if return_nonblank else '')
+
 def lpro(x, spaces=False):
-    retval = ''
-    if x in i7xr.keys(): retval = x
-    elif x in i7x.keys(): retval = i7x[x]
+    retval = proj_exp(x, False)
     if spaces: retval = re.sub("-", " ", retval)
     return retval
 
