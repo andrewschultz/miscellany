@@ -2,10 +2,11 @@
 #
 # searches for duplicate-ish table entries
 #
-# todo: specify project
-# todo: allow write-over
+# todo: specify project (currently just i7)
+# todo: allow write-over (?)
 
 from collections import defaultdict
+import i7
 import re
 import sys
 
@@ -48,6 +49,8 @@ while count < len(sys.argv):
         usage()
     count += 1
 
+i7.get_table_row_count('ai', lower_case = True)
+
 with open(table_file) as file:
     for line in file:
         line_num += 1
@@ -66,7 +69,11 @@ with open(table_file) as file:
             l0 = re.sub("[^a-z ]", "", l0)
             l1 = re.sub("[^a-z]", "", l0)
             if l0 in dup_yet.keys():
-                print("Uh oh, line", line_num, "/", cur_table, "has", l0, "which duplicates line", dup_yet[l0], "/", t2d[l0])
+                if cur_table == t2d[l0]:
+                    print("Uh oh, duplicate entry", l0, "in", cur_table, "line", line_num, "~", dup_yet[l0])
+                else:
+                    table_delt = i7.table_row_count[cur_table] - i7.table_row_count[t2d[l0]]
+                    print("Uh oh, line {:d}/{:s} sz {:d} has >{:s}< which duplicates line {:d}/{:s} sz {:d}. {:s}".format(line_num, cur_table, i7.table_row_count[cur_table], l0, dup_yet[l0], t2d[l0], i7.table_row_count[t2d[l0]], 'EQUAL' if table_delt == 0 else (cur_table if table_delt > 0 else t2d[l0]) + ' BIGGER')) # , "which duplicates line", )
                 dupes += 1
             elif l0 in dup_reverse.keys():
                 print("Reversed duplicate", l0, "vs", wordrev(l0), "at line", line_num, "originally at", dup_reverse[l0])
