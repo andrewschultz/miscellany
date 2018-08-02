@@ -8,6 +8,9 @@ use strict;
 use warnings;
 use i7;
 use i7proj;
+use File::Basename;
+use File::Compare;
+use File::Copy;
 
 my %fileCopy;
 
@@ -41,27 +44,16 @@ while ( $a = <A> ) {
 }
 close(A);
 
+my $infBase = "c:\\games\\inform\\$projToRead.inform";
+
 if ($projToRead) {
-  my $infBase = "c:\\games\\inform\\$projToRead.inform";
+  my $news = 0;
+  my $difs = 0;
+
   print "Copying over regression test suite\n";
   my $q = "";
-  my @g = glob("$infBase\\Source\\reg-*.txt");
-  if ( scalar @g ) {
-    print "REG files first.\n";
-    $q .= `copy $infBase\\Source\\reg-*.txt c:\\games\\inform\\prt`;
-  }
-  else {
-    print "No REG files.\n";
-  }
-  @g = glob("$infBase\\Source\\rmo-*.txt");
-  if ( scalar @g ) {
-    print "Now RMO files.\n";
-    $q .= `copy $infBase\\Source\\rmo-*.txt c:\\games\\inform\\prt`;
-  }
-  else {
-    print("No RMO files.\n");
-  }
-  print $q;
+  glob_over("reg");
+  glob_over("rmo");
   if ( !$ignoreBinary ) {
     print "Looking for build file in $infBase\\Build.\n";
     if ( -f "$infBase\\Build\\output.ulx" ) {
@@ -95,3 +87,31 @@ if ($projToRead) {
   }
 }
 else { print "No project found.\n"; }
+
+##########################################################
+
+sub glob_over {
+  my $news = 0;
+  my $difs = 0;
+  my @g    = glob("$infBase\\Source\\$_[0]-*.txt");
+  if ( scalar @g ) {
+    print "REG files first.\n";
+    for my $g2 (@g) {
+      my $g3 = "$prt\\" . ( basename $g2);
+      if ( !-f $g3 ) {
+        copy( $g2, $g3 );
+        print "Copying new file $g2 to $g3\n";
+        $news++;
+      }
+      if ( compare( $g2, $g3 ) ) {
+        copy( $g2, $g3 );
+        print "Copying modified file $g2 to $g3\n";
+        $difs++;
+      }
+    }
+    print "$news new, $difs dif\n";
+  }
+  else {
+    print "No $_[0] files.\n";
+  }
+}

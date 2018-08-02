@@ -93,6 +93,12 @@ def mistake_file(x):
 def hdr(x, y):
     return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x, True).title(), y.title())
 
+def notes_file(x):
+    return sdir(x) + "/" + "notes.txt"
+
+def walkthrough_file(x):
+    return sdir(x) + "/" + "walkthrough.txt"
+
 def mistake_file(x):
     return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
 
@@ -277,8 +283,8 @@ i7xr = { "shuffling": "sa",
 };
 
 i7f = {
-    "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa') ],
-    "roiling": [ hdr('roi', 'Nudges'), hdr('roi', 'Random Text'), mistake_file('roi'), src('roi') ],
+    "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa'), tafi('sa') ],
+    "roiling": [ hdr('roi', 'Nudges'), hdr('roi', 'Random Text'), mistake_file('roi'), src('roi'), tafi('roi') ],
     "compound": [ tafi('pc'), src('pc') ],
     "slicker-city": [ tafi('sc'), src('sc') ],
     "buck-the-past": [ tafi('btp'), src('btp') ],
