@@ -17,7 +17,7 @@ np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
-prt = "c:\\games\\inform\\prt"
+prt = "c:/games/inform/prt"
 prt_temp = prt + "/temp"
 
 table_row_count = defaultdict(int)
@@ -67,8 +67,10 @@ def to_prt(include_glob = "reg-*", exclude_glob = ""):
         if re.search(exclude_glob, j):
             uncopied += 1
             continue
-        copy(j1, "c:/games/inform/prt/{:s}".format(os.path.basename(j1)))
-        copied += 1
+        prt_out = os.path.join(prt, os.path.basename(j1))
+        if not cmp(j1, prt_out):
+            copy(j1, prt_out)
+            copied += 1
     print(copied, "copied of ", include_glob, "-", xg, ",", uncopied, "uncopied")
 
 def plur(a):

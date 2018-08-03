@@ -5,6 +5,8 @@
 # usage rbr.py (project name) e.g. rbr.py ai
 #
 # or you can run it from a project source directory
+#
+# ?? how to detect dupe file change?
 
 import sys
 import re
@@ -46,6 +48,8 @@ in_file = ""
 in_dir = os.getcwd()
 proj = ""
 
+show_singletons = False
+
 def should_be_nudge(x):
     if not x.startswith('#'): return False
     if x.startswith('##'): return False
@@ -71,6 +75,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     if '[' in line and ']' in line and not line.startswith('#'):
         lmod = re.sub("^[^\[]*\[", "", line.strip())
         lmod = re.sub("\].*", "", lmod)
+        lmod = "{:d} {:s}".format(line_count, lmod)
         generic_bracket_error[lmod] += 1
         if flag_all_brackets:
             global cur_flag_brackets
@@ -227,7 +232,7 @@ def get_file(fname):
             if line.strip() == "\\\\": line = "\n"
             warns += vet_potential_errors(line, line_count, warns)
             if line.startswith("dupefile="):
-                dupe_file_name = re.sub(".*=", "", line.lower().strip())
+                dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
                 continue
             if re.search("^TSV(I)?[=:]", line): #tab separated values
@@ -335,15 +340,18 @@ def get_file(fname):
             if actives[dupe_val]:
                 if dupe_file_name:
                     dupe_file.write(line)
-                    if 'by one point' in line:
+                    if 'Last Lousy Point' in line: dupe_file.write("!by one point\n")
+                    if 'by one point' in line or 'Last Lousy Point' in line:
                         reps = 1
                         if times[last_cmd[1:]] > 1: reps = times[last_cmd[1:]]
                         for x in range(0, reps):
                             dupe_file.write("\n" + last_cmd + "\n")
-                            dupe_file.write("!by one point\n")
+                            dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
     for ct in range(0, len(file_array)):
         file_list[ct].close()
-    if dupe_file_name: dupe_file.close()
+    if dupe_file_name:
+        dupe_file.close()
+        file_array.append(dupe_file_name)
     if warns > 0: print(warns, "potential bad commands.")
     new_files.clear()
     changed_files.clear()
@@ -369,14 +377,14 @@ def get_file(fname):
     if len(generic_bracket_error) > 0:
         singletons = 0
         for x in sorted(generic_bracket_error.keys(), key = lambda x: (generic_bracket_error[x], x)):
-            if generic_bracket_error[x] > 1 or show_singletons: print(x, generic_bracket_error[x])
+            if generic_bracket_error[x] > 1 or show_singletons: print("Bracketed text error ({:d} time(s)) line/stuff =".format(generic_bracket_error[x]), x)
             else: singletons += 1
-        if singletons: print("Number of singletons (show detail with -ss):", singletons)
+        if singletons: print("Number of singletons (show detail with -si):", singletons)
     if len(new_files.keys()) > 0: print("New files:", ', '.join(sorted(new_files.keys())), 'from', fname)
     if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
         if not quiet: print("Nothing changed.")
-        if len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
+    elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
     post_copy(file_array_base)
 
 cur_proj = ""
