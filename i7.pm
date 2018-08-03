@@ -188,6 +188,14 @@ sub tableFile
 ############################################
 # gives a file with the extension txt
 
+sub to_proj
+{
+  my $temp = $_[0];
+  return $i7x{$_[0]} if defined($i7x{$_[0]});
+  return $_[0];
+
+}
+
 sub tx
 {
   my $temp = $_[0];

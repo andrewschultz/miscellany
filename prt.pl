@@ -20,18 +20,31 @@ my $ignoreBinary = 0;
 my $prt          = "c:\\games\\inform\\prt";
 my $projToRead   = "";
 my $projName     = getcwd();
+my $defaultProj  = "ai";
 
-$projName =~ s/\.inform.*//g;
-$projName =~ s/.*[\\\/]//g;
+if ( $projName =~ /\.inform/ ) {
+  $projName =~ s/\.inform.*//g;
+  $projName =~ s/.*[\\\/]//g;
+}
+else {
+  $projName = "";
+}
 
 if ( $#ARGV >= 0 ) {
   my $arg = $ARGV[0];
   if ( $arg =~ /^-/ ) { $arg =~ s/^-//g; $ignoreBinary = 1; }
   $projToRead = $i7x{$arg};
-  if ( !$projToRead ) { die("Couldn't find any project for $arg.\n"); }
+  if ( !$projToRead && ( !$defaultProj ) ) {
+    die("Couldn't find any project for $arg.\n");
+  }
 }
 elsif ( $i7x{$projName} ) { $projToRead = $projName; }
 elsif ($projName)         { $projToRead = $projName; }
+
+if ( !$projToRead && $defaultProj ) {
+  $projToRead = i7::to_proj($defaultProj);
+  print "Going with default project $defaultProj/$projToRead.\n";
+}
 
 open( A, "c:/writing/scripts/prt.txt" );
 
