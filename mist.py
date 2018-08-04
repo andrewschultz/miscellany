@@ -108,9 +108,9 @@ def mister(a, my_file, do_standard):
                 mistake_text[x] = re.sub(".*\(\"", "", l)
                 mistake_text[x] = re.sub("\"\).*", "", mistake_text[x])
                 mistake_text[x] = re.sub("\[mis of [0-9]+\]", "", mistake_text[x])
-                if x in need_test.keys():
-                    print('Uh oh,', x, 'duplicates line', need_test[x], 'at line', count)
-                need_test[x] = count
+                if x in need_test.keys() and '[okdup]' not in l.lower():
+                    print('Uh oh,', x, 'duplicates line', need_test[x], 'at line', line_count, 'in', os.path.basename(my_file))
+                need_test[x] = line_count
                 found[x] = False
                 comment_found[x] = False
                 if 'when' in l.lower():
@@ -370,9 +370,9 @@ if edit_source:
 for e in sorted(added.keys()):
     mist_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/{:s} mistakes.i7x".format(e)
     if e in smallfiles.keys():
-        print(e, "smallfile check")
+        print(e, "smallfile check:", ', '.join(smallfiles[e]))
         mister(e, mist_file, False)
-    print(e, "regular file check")
+    print(e, "regular file check:", os.path.basename(mist_file))
     mister(e, mist_file, True)
 
 if clipboard_str:
