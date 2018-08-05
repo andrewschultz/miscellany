@@ -2,6 +2,8 @@
 #
 # mistake file/script tracker/aligner
 #
+# mist-d.txt has default messages for projects for error testing
+#
 
 import i7
 import os
@@ -22,6 +24,8 @@ srev = defaultdict(str)
 condition = defaultdict(str)
 location = defaultdict(str)
 
+base_err = defaultdict(str)
+
 short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 
 #unusued, but if something is not the default_room_level, it goes here.
@@ -30,8 +34,9 @@ levs = { }
 
 clipboard_str = ""
 
-for x in short:
-    srev[short[x]] = x
+mistake_defaults = "c:/writing/scripts/mist-d.txt"
+
+for x in short: srev[short[x]] = x
 
 def usage():
     print("All commands can be with or without hyphen")
@@ -48,6 +53,10 @@ def usage():
     print("Other arguments are the project name, short or long")
     exit()
 
+def mistake_msg(proj):
+    if proj in base_err.keys(): return base_err[proj]
+    return "(Need default for project {:s} in {:s}) That's not something you can do or say here.".format(proj, mistake_defaults)
+
 def clip_out(x):
     if print_output: print(x)
     global clipboard_str
@@ -59,6 +68,15 @@ def to_full(a):
     if a in short.keys(): return a
     print(a, "not a project with a recognized mistake file.")
     exit()
+
+def read_mistake_defaults():
+    with open(mistake_defaults) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            l0 = "\t".split(line.lower().strip())
+            if len(l0) != 2: sys.exit("Need a tab separating project and default message at line {:d}.".format(line_count))
+            base_err[l0[0]] = l0[1]
 
 def mister(a, my_file, do_standard):
     global clipboard_str
@@ -237,7 +255,7 @@ def mister(a, my_file, do_standard):
                     clip_out("#mistake test for {:s}".format(cmd_text[f]))
                     for ct in cmd_text[f].split('/'):
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
-                        clip_out(mistake_text[f] if do_standard else "I didn't recognize that action. You can type VERB or VERBS to get a list of them.")
+                        clip_out(mistake_text[f] if do_standard else mistake_msg(a))
                     if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
                     if print_output: print()
