@@ -22,10 +22,20 @@ prt_temp = prt + "/temp"
 
 table_row_count = defaultdict(int)
 
+outline_val_hash = { 'volume': 5, 'book': 4, 'part': 3, 'chapter': 2, 'section': 1 }
+ovh = outline_val_hash
+outline_val = [ 'section', 'chapter', 'part', 'book', 'volume' ]
+ov = outline_val
+
 oo = [ 'off', 'on' ]
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
+
+def new_lev(x):
+    for j in range (0, len(ov)):
+        if x.lower().startswith(ov[j]): return j+1
+    return 0
 
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
