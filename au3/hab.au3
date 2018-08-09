@@ -33,6 +33,9 @@ Local $finalMP = 0
 Local $MPloss = 0
 Local $onlyTrackMP = 0
 
+Local $horiz_delta = 95
+Local $vert_delta = 160
+
 Local $preDelay = 0
 
 Local $testDontClick = False, $didAnything = False
@@ -290,8 +293,8 @@ EndFunc
 
 Func PickItem($x, $y)
   ; this varies based on screen size
-  $x2 = $x * 95 + 250
-  $y2 = $y * 160 + 430
+  $x2 = $x * $horiz_delta + 250
+  $y2 = $y * $vert_delta + 430
   MouseClick ( "left", $x2, $y2, 1)
   sleep(2000)
   ; verify you want to equip the item
@@ -372,11 +375,6 @@ Func DoPer()
 EndFunc
 
 Func ClickEyewearAndAccessory($to_int)
-  if $to_int Then
-    $body_accessory_y = 510 ; Aether amulet has no extra line
-  else
-    $body_accessory_y = 540 ; Cozy scarf has extra line
-  EndIf
   Send("{HOME}")
   sleep(600)
   Send("{PGDN}")
@@ -385,9 +383,12 @@ Func ClickEyewearAndAccessory($to_int)
   sleep(1000)
   MouseClick("left", 814, 510, 1)
   sleep(1000)
-  MouseClick("left", 248, 648, 1)
+  ; Aether amulet has no extra line
+  ; Cozy scarf has extra line
+  MouseClick("left", 248 + $horiz_delta * $to_int, 648, 1)
   sleep(1000)
-  MouseClick("left", 814, $body_accessory_y, 1)
+  ; since I bought the royal gryphon cloak it appears on the left when sorting by intelligence
+  MouseClick("left", 814, 510 + 30 * $to_int, 1)
   sleep(600)
   Send("{PGUP}")
   sleep(600)
