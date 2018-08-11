@@ -88,10 +88,13 @@ with open(file_name) as file:
             if ignore_section: continue
             if line.startswith("understand") and 'as something new' in line:
                 c += 1
-                j = re.compile('"([a-z ]+)"')
+                j = re.compile('"([a-z \/]+)"')
                 for q in j.findall(line):
-                    if q in understand_entries.keys(): print("WARNING", q, "appears in", understand_entries[q], "and is repeated at", line_count)
-                    else: understand_entries[q] = line_count
+                    q2 = q.split('/')
+                    #print(line_count, q2)
+                    for q3 in q2:
+                        if q3 in understand_entries.keys(): print("Line", line_count, "WARNING", q3, "appears in", understand_entries[q3], "and is repeated at", line_count)
+                        else: understand_entries[q3] = line_count
                 #print(cur_lev, cur_nfr, c, outline_str, line_count, line.strip())
                 continue
 
@@ -102,13 +105,17 @@ x = set(understand_entries.keys()).union(set(lv_entries.keys())).difference(my_i
 x1 = x.difference(set(lv_entries.keys()))
 x2 = x.difference(set(understand_entries.keys()))
 
-for y in sorted(list(x1)):
-    if y not in lv_entries.keys(): print(y, understand_entries[y], "needs LV entry or needs to be in the ignore file.")
+if len(x1):
+    print("================BELOW needs LV entry or needs to be in the ignore file.")
+    for y in sorted(list(x1), key=understand_entries.get):
+        if y not in lv_entries.keys(): print("{:5d}:".format(understand_entries[y]), y)
 
-for y in sorted(list(x2)):
-    if y not in understand_entries.keys(): print(y, lv_entries[y], "needs UNDERSTAND/AS line or needs to be in the ignore file.")
+if len(x2):
+    print("================BELOW need UNDERSTAND/AS line or needs to be in the ignore file. Or maybe it can be deleted altogether, since it might not be in reachable code.")
+    for y in sorted(list(x2), key=lv_entries.get):
+        if y not in understand_entries.keys(): print("{:5d}:".format(lv_entries[y]), y, )
 
-if len(x1): print(len(x1), "understand/no languageverb")
-if len(x2): print(len(x2), "no languageverb/understand")
+if len(x1): print(len(x1), "PRESENT understand     /MISSING no languageverb")
+if len(x2): print(len(x2), "MISSING no languageverb/PRESENT understand")
 
-if not ever_ignore_section: print("No", lanv_ignore, "anywhere in story.ni.")
+if not ever_ignore_section: print("No", '"[{:s}]"'.format(lanv_ignore), "anywhere in story.ni. This isn't critical, but if there are specific verbs the game disables, it is a help.")
