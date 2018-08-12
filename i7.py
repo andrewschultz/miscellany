@@ -69,6 +69,15 @@ def open_source():
     npo(main.__file__)
     exit()
 
+# can't use os as it is, well, an imported package
+o_s = open_source
+
+def open_source_config():
+    npo(re.sub("py$", "txt", main.__file__))
+    exit()
+
+oc = o_c = open_config = open_source_config
+
 # to python regression test
 def to_prt(include_glob = "reg-*", exclude_glob = ""):
     j = glob.glob(include_glob)
