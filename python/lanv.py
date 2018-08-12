@@ -4,6 +4,7 @@
 #
 # usage: (no arguments yet, just looks at story.ni)
 
+import sys
 import os
 import i7
 import re
@@ -19,7 +20,6 @@ lasts = [ '' ] * 6
 cur_nfr = 0
 cur_lev = 0
 
-file_name = "story.ni"
 ignore_file = "c:/writing/scripts/lanv.txt"
 
 lanv_ignore = "lanv.py should ignore this"
@@ -58,8 +58,27 @@ def read_ignore_file():
                     continue
                 ignore_verbs[cur_proj][verb] = True
 
-proj_name = "ailihphilia"
-if i7.dir2proj(os.getcwd()): proj_name = i7.dir2proj(os.getcwd())
+count = 1
+tried_yet = ''
+default_project = "ailihphilia"
+
+while count < len(sys.argv):
+    arg = sys.argv[count]
+    if arg == 'c': i7.open_source()
+    elif arg == 'e': i7.open_config()
+    else:
+        if tried_yet: sys.exit("Tried to define a project name -- or a bad flag -- twice. {:s}/{:s}.".format(tried_yet, arg))
+        tried_yet = arg
+        proj_name = i7.proj_exp(arg, False)
+        if not proj_name: print ("WARNING", arg, "not identified as a project.")
+    count += 1
+
+if not proj_name:
+    if i7.dir2proj(os.getcwd()): proj_name = i7.dir2proj(os.getcwd())
+    else: proj_name = default_project
+    print("No project name, going with", proj_name)
+
+file_name = i7.src(proj_name)
 
 read_language_verb(file_name)
 read_ignore_file()
