@@ -15,14 +15,37 @@ c = 0
 ignore_verbs = defaultdict(lambda: defaultdict(bool))
 lv_entries = defaultdict(int)
 understand_entries = defaultdict(int)
+unit_test_file = defaultdict(str)
+translation = defaultdict(str)
 
 lasts = [ '' ] * 6
 cur_nfr = 0
 cur_lev = 0
 
-ignore_file = "c:/writing/scripts/lanv.txt"
+proj_name = ''
+lanv_config = "c:/writing/scripts/lanv.txt"
 
 lanv_ignore = "lanv.py should ignore this"
+
+def check_unit_tests(proj):
+    in_unit_file = defaultdict(str)
+    if proj not in unit_test_file.keys(): sys.exit("Couldn't find unit test file for {:s} in {:s}.".format(proj, lanv_config))
+    tf = unit_test_file[proj]
+    if not os.path.exists(tf): sys.exit("BAILING: {:s} does not exist.".format(unit_test_file[proj]))
+    with open(tf) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(">") and "xtratxt" in line:
+                l2 = re.sub("^>", "", line.lower().strip())
+                l2 = re.sub(" *xtratxt.*", "", l2)
+                in_unit_file[l2] = line_count
+                print(l2)
+    x3 = x.difference(set(in_unit_file.keys()))
+    for x4 in sorted(x3):
+        if x4 not in translation.keys():
+            print(">{:s} xtratxt\nDOESN'T APPEAR TO BE IN LANGUAGEVERB.\n".format(x4))
+        else:
+            print(">{:s} xtratxt\nI only understood you as far as wanting to {:s}.\n".format(x4, translation[x4]))
+    if len(x3): print(len(x3), "total commands to fill into", tf)
 
 def read_language_verb(f):
     got_lv_yet = False
@@ -32,17 +55,21 @@ def read_language_verb(f):
             if not got_lv_yet: continue
             if 'after "Language.i6t".' in line: break
             if "'" in line:
+                quoted_bit = re.sub(".*print ['\"]", "", line.strip())
+                quoted_bit = re.sub("['\"].*", "", quoted_bit)
                 j = re.compile("'([a-z ]+)[\\\/]*'")
                 for q in j.findall(line):
                     if q in lv_entries.keys(): print("WARNING", q, "appears in", lv_entries[q], "and is repeated at", line_count)
-                    else: lv_entries[q] = line_count
+                    else:
+                        lv_entries[q] = line_count
+                        translation[q] = quoted_bit
                 # print(j.findall(line))
     if not got_lv_yet: sys.exit("{:s} has no LanguageVerb replacement function. Bailing.")
     return
 
-def read_ignore_file():
+def read_lanv_config():
     cur_proj = "general"
-    with open(ignore_file) as file:
+    with open(lanv_config) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
             if line.startswith('#'): continue
@@ -50,22 +77,28 @@ def read_ignore_file():
                 l = re.sub(".*=", "", line.strip())
                 cur_proj = l.lower()
                 continue
+            if line.lower().startswith("testfile="):
+                l = re.sub(".*=", "", line.strip())
+                unit_test_file[cur_proj] = l
+                continue
             ll = line.lower().strip().split(',')
             #print(cur_proj, ll)
             for verb in ll:
                 if verb in ignore_verbs[cur_proj].keys():
-                    print(cur_proj, "has duplicate verb", verb," at line", line_count, "in", ignore_file)
+                    print(cur_proj, "has duplicate verb", verb," at line", line_count, "in", lanv_config)
                     continue
                 ignore_verbs[cur_proj][verb] = True
 
 count = 1
 tried_yet = ''
 default_project = "ailihphilia"
+check_test_file = False
 
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg == 'c': i7.open_source()
     elif arg == 'e': i7.open_config()
+    elif arg == 't': check_test_file = True
     else:
         if tried_yet: sys.exit("Tried to define a project name -- or a bad flag -- twice. {:s}/{:s}.".format(tried_yet, arg))
         tried_yet = arg
@@ -81,7 +114,7 @@ if not proj_name:
 file_name = i7.src(proj_name)
 
 read_language_verb(file_name)
-read_ignore_file()
+read_lanv_config()
 
 ever_ignore_section = ignore_section = False
 
@@ -113,7 +146,8 @@ with open(file_name) as file:
                     #print(line_count, q2)
                     for q3 in q2:
                         if q3 in understand_entries.keys(): print("Line", line_count, "WARNING", q3, "appears in", understand_entries[q3], "and is repeated at", line_count)
-                        else: understand_entries[q3] = line_count
+                        else:
+                            understand_entries[q3] = line_count
                 #print(cur_lev, cur_nfr, c, outline_str, line_count, line.strip())
                 continue
 
@@ -136,5 +170,7 @@ if len(x2):
 
 if len(x1): print(len(x1), "PRESENT understand     /MISSING no languageverb")
 if len(x2): print(len(x2), "MISSING no languageverb/PRESENT understand")
+
+if check_test_file: check_unit_tests(proj_name)
 
 if not ever_ignore_section: print("No", '"[{:s}]"'.format(lanv_ignore), "anywhere in story.ni. This isn't critical, but if there are specific verbs the game disables, it is a help.")
