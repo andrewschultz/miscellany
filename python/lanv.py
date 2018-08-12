@@ -16,6 +16,7 @@ ignore_verbs = defaultdict(lambda: defaultdict(bool))
 lv_entries = defaultdict(int)
 understand_entries = defaultdict(int)
 unit_test_file = defaultdict(str)
+err_msg = defaultdict(str)
 translation = defaultdict(str)
 
 lasts = [ '' ] * 6
@@ -27,24 +28,35 @@ lanv_config = "c:/writing/scripts/lanv.txt"
 
 lanv_ignore = "lanv.py should ignore this"
 
+def lang_verb_line(f):
+    with open(f) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if '[ LanguageVerb' in line: return line_count
+    sys.exit("Could not fine line with [ LanguageVerb in {:s}. Bailing.".format(f))
+
 def check_unit_tests(proj):
     in_unit_file = defaultdict(str)
     if proj not in unit_test_file.keys(): sys.exit("Couldn't find unit test file for {:s} in {:s}.".format(proj, lanv_config))
     tf = unit_test_file[proj]
     if not os.path.exists(tf): sys.exit("BAILING: {:s} does not exist.".format(unit_test_file[proj]))
+    need_text_next = False
     with open(tf) as file:
         for (line_count, line) in enumerate(file, 1):
+            if need_text_next:
+                need_text_next = False
+                if line.startswith('>') or line.startswith('#') or not re.search("[a-z]", line, re.IGNORECASE): print("WARNING Line", line_count, "may need verification text.")
+                continue
             if line.startswith(">") and "xtratxt" in line:
+                need_text_next = True
                 l2 = re.sub("^>", "", line.lower().strip())
                 l2 = re.sub(" *xtratxt.*", "", l2)
                 in_unit_file[l2] = line_count
-                print(l2)
     x3 = x.difference(set(in_unit_file.keys()))
     for x4 in sorted(x3):
-        if x4 not in translation.keys():
+        if x4 not in translation.keys() or not translation[x4]:
             print(">{:s} xtratxt\nDOESN'T APPEAR TO BE IN LANGUAGEVERB.\n".format(x4))
         else:
-            print(">{:s} xtratxt\nI only understood you as far as wanting to {:s}.\n".format(x4, translation[x4]))
+            print(">{:s} xtratxt\n{:s}\n{:s}.\n".format(x4, err_msg[x4] if x4 in err_msg.keys() else "I only understood you as far as wanting to", translation[x4]))
     if len(x3): print(len(x3), "total commands to fill into", tf)
 
 def read_language_verb(f):
@@ -57,6 +69,11 @@ def read_language_verb(f):
             if "'" in line:
                 quoted_bit = re.sub(".*print ['\"]", "", line.strip())
                 quoted_bit = re.sub("['\"].*", "", quoted_bit)
+                if re.search("print ['\"][A-Z]", line):
+                    lw = quoted_bit.split(" ")
+                    print(lw[0], lw)
+                    if lw[0] != lw[0].upper() or get_all_caps:
+                        print("WARNING:", quoted_bit, "may need to be in lowercase to start.")
                 j = re.compile("'([a-z ]+)[\\\/]*'")
                 for q in j.findall(line):
                     if q in lv_entries.keys(): print("WARNING", q, "appears in", lv_entries[q], "and is repeated at", line_count)
@@ -65,6 +82,7 @@ def read_language_verb(f):
                         translation[q] = quoted_bit
                 # print(j.findall(line))
     if not got_lv_yet: sys.exit("{:s} has no LanguageVerb replacement function. Bailing.")
+    sys.exit("!")
     return
 
 def read_lanv_config():
@@ -76,6 +94,10 @@ def read_lanv_config():
             if line.lower().startswith("project="):
                 l = re.sub(".*=", "", line.strip())
                 cur_proj = l.lower()
+                continue
+            if line.lower().startswith("errmsg="):
+                l = re.sub(".*=", "", line.strip())
+                err_msg[cur_proj] = l
                 continue
             if line.lower().startswith("testfile="):
                 l = re.sub(".*=", "", line.strip())
@@ -93,12 +115,15 @@ count = 1
 tried_yet = ''
 default_project = "ailihphilia"
 check_test_file = False
+get_all_caps = False
 
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg == 'c': i7.open_source()
+    elif arg == 'cl': open_lang_verb_line = True
     elif arg == 'e': i7.open_config()
     elif arg == 't': check_test_file = True
+    elif arg == 'gac': get_all_caps = True # detects ALL CAPS at start of a subject e.g. "SEARCH" is flagged along with "Search"
     else:
         if tried_yet: sys.exit("Tried to define a project name -- or a bad flag -- twice. {:s}/{:s}.".format(tried_yet, arg))
         tried_yet = arg
@@ -112,6 +137,8 @@ if not proj_name:
     print("No project name, going with", proj_name)
 
 file_name = i7.src(proj_name)
+
+if open_lang_verb_line: i7.npo(file_name, lang_verb_line(file_name))
 
 read_language_verb(file_name)
 read_lanv_config()
