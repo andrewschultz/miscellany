@@ -43,19 +43,9 @@ Local $testDontClick = False, $didAnything = False
 Init()
 
 ; put this along with 'a' into its own function.
-If $cmdLine[0] == 1 and StringIsDigit($cmdLine[1]) Then
+If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
     ToHab()
-	    if $cmdLine[1] < 1 Then
-		  needPositive()
-	    EndIf
-        for $i = 1 to $cmdLine[1]
-          MouseClick ( "left", 1325, 450, 1 )
-          MouseMove(1275, 400)
-          if $i < $cmdLine[1] Then
-            sleep(2000)
-          Endif
-        Next
-  exit
+	justClick($cmdLine[1])
 EndIf
 
 ; process meta commands first
@@ -132,16 +122,7 @@ While $cmdCount <= $CmdLine[0]
   $didAnything = True
   If $myCmd == 'a' Then
     ToHab()
-	    if $nextNum < 1 Then
-		  needPositive()
-	    EndIf
-        for $i = 1 to $nextNum
-          MouseClick ( "left", 1325, 450, 1 )
-          MouseMove(1275, 400)
-          if $i < $nextNum Then
-            sleep(2000)
-          Endif
-        Next
+	justClick(StringMid($myCmd, 2))
   ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
@@ -264,7 +245,7 @@ EndIf
 
 Func Usage($questionmark, $badCmd = "")
   Local $usgAry[14] = [ "-a, -b, -e, -i, -iw, -m/-w, -o, -p, -r, -s/-=, -t or -x are the options.", _
-  "-a (or only a number in the arguments) opens the armoire # times", _
+  "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
@@ -388,7 +369,7 @@ Func ClickEyewearAndAccessory($to_int)
   MouseClick("left", 248 + $horiz_delta * $to_int, 648, 1)
   sleep(1000)
   ; since I bought the royal gryphon cloak it appears on the left when sorting by intelligence
-  MouseClick("left", 814, 510 + 30 * $to_int, 1)
+  MouseClick("left", 814, 540 - 30 * $to_int, 1)
   sleep(600)
   Send("{PGUP}")
   sleep(600)
@@ -519,6 +500,29 @@ Func digit_part($param)
   ; MOK("digit part", $digitIndex)
   return StringMid($param, $digitIndex)
 
+EndFunc
+
+Func justClick($clicksToDo)
+  $xi = 1325
+  $yi = 450
+  if $clicksToDo == 0 Then
+    MsgBox($MB_OKCANCEL, "Oops", "Need a number, positive or negative")
+	Exit
+  EndIf
+  if $clicksToDo < 0 Then
+    Local $aPos = MouseGetPos()
+	$xi = $aPos[0]
+	$yi = $aPos[1]
+	$clicksToDo = - $clicksToDo
+  EndIf
+  for $i = 1 to $clicksToDo
+    MouseClick ( "left", $xi, $yi, 1 )
+    MouseMove($xi - 50, $yi)
+    if $i < $cmdLine[1] Then
+      sleep(2000)
+    Endif
+  Next
+  Exit
 EndFunc
 
 Func Init()
