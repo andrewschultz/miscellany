@@ -21,6 +21,7 @@
 #include "c:\\scripts\\andrew.au3"
 
 #include <MsgBoxConstants.au3>
+#include <Math.au3>
 #include <Array.au3>
 
 ; constants for click frequency
@@ -517,8 +518,8 @@ Func justClick($clicksToDo)
   EndIf
   for $i = 1 to $clicksToDo
     MouseClick ( "left", $xi, $yi, 1 )
-    MouseMove($xi - 50, $yi)
-    if $i < $cmdLine[1] Then
+    MouseMove(_Max(0, $xi - 50), _Max(0, $yi - 50))
+    if $i < $clicksToDo Then
       sleep(2000)
     Endif
   Next
