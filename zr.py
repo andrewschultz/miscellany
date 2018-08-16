@@ -24,6 +24,7 @@ if not os.path.exists("story.ni"):
 
 only_test = False
 source_only = False
+quick_quote_reject = True
 
 always_adj = defaultdict(bool)
 cap_search = defaultdict(bool)
@@ -37,6 +38,7 @@ def usage():
     print("Currently you can specify the project to change to, with a shortcut or full name.")
     print("c edits the source, though you can just type np zr.py instead.")
     print("e edits the text, though you can just type zr.txt instead.")
+    print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
     print("t only tests things. It doesn't copy back over.")
 
 def title_unless_caps(a, b):
@@ -48,6 +50,11 @@ def title_unless_caps(a, b):
     if a.endswith('"'): b = b + '"'
     return b
 
+def with_quotes(a, b):
+    if "'{:s}'".format(a) in b: return True
+    if '"{:s}"'.format(a) in b: return True
+    return False
+
 while count < len(sys.argv):
     myarg = sys.argv[count].lower()
     if (myarg[0] == '-'):
@@ -57,10 +64,10 @@ while count < len(sys.argv):
         exit()
     elif myarg == 'c':
         i7.open_source()
-    elif myarg == 's':
-        source_only = True
-    elif myarg == 't':
-        only_test = True
+    elif myarg == 's': source_only = True
+    elif myarg == 't': only_test = True
+    elif myarg == 'q': quick_quote_reject = True
+    elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
     elif myarg in i7.i7x.keys():
         newdir = "c:/games/inform/{:s}.inform/source".format(i7.i7x[sys.argv[count]])
         os.chdir(newdir)
@@ -136,6 +143,7 @@ def check_source(a):
                 for x in cs:
                     if x.lower() in line.lower():
                         ll_old = ll
+                        if quick_quote_reject and with_quotes(x.lower(), line.lower()): continue
                         # once I understand regex better, I want to try this...
                         # ll = re.sub(r'(?<=^(([^"]*(?<!\\)"[^"]*(?<!\\)"[^"]*)*|[^"]*))\b{:s}\b'.format(regex_detail[x] if x in regex_detail.keys() else x), lambda match: title_unless_caps(match.group(0), x, match), ll, 0, re.IGNORECASE)
                         ll = re.sub(r'(\"?)\b{:s}\b(\"?)'.format(regex_detail[x] if x in regex_detail.keys() else x),
