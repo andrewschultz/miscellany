@@ -222,25 +222,6 @@ carry out bkling:
 		say "--[QQ][line break]";
 	the rule succeeds;
 
-chapter auing
-
-auing is an action applying to one number.
-
-understand the command "au" as something new.
-
-understand "au [number]" as auing.
-
-carry out auing:
-	if number understood > 1 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
-	if number understood is yn-auto, say "It's already set to [auto-set]." instead;
-	say "Y/N responses changed from [auto-set] to ";
-	now yn-auto is number understood;
-	say "[auto-set].";
-	the rule succeeds;
-
-to say auto-set:
-	say "[if yn-auto is 1]auto-yes[else if yn-auto is -1]auto-no[else]no auto[end if]";
-
 chapter direction stubs
 
 definition: a direction (called d) is diagonal:
@@ -291,6 +272,43 @@ Include (-
 ];
 
 -)
+
+volume overgeneral testing - not for release
+
+chapter auing
+
+[* this tells the debug version when or how to auto-respond to yes/no prompts *]
+
+auing is an action applying to one number.
+
+understand the command "au" as something new.
+
+understand "au [number]" as auing.
+
+carry out auing:
+	if number understood > 1 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
+	if number understood is yn-auto, say "It's already set to [auto-set]." instead;
+	say "Y/N responses changed from [auto-set] to ";
+	now yn-auto is number understood;
+	say "[auto-set].";
+	the rule succeeds;
+
+to say auto-set:
+	say "[if yn-auto is 1]auto-yes[else if yn-auto is -1]auto-no[else]no auto[end if]";
+
+chapter wining
+
+[* this automatically wins the game so I can test endgame stuff *]
+
+wining is an action applying to nothing.
+
+understand the command "win" as something new.
+
+understand "win" as wining.
+
+carry out wining:
+	end the story finally;
+	the rule succeeds;
 
 Trivial Niceties Z-Only ends here.
 
