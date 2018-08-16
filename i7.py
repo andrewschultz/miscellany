@@ -32,6 +32,16 @@ oo = [ 'off', 'on' ]
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+def words_file(x):
+    if type(x) = str: return "c:/writing/dict/words-{:d}.txt".format(x)
+    if x.isdigit():
+        x2 = int(x)
+        return "c:/writing/dict/words-{:d}.txt".format(x)
+    print ("Words_file call needs integer or string-like integer.")
+    return "c:/writing/dict/words-0.txt"
+
+w_f = words_file
+
 def new_lev(x):
     for j in range (0, len(ov)):
         if x.lower().startswith(ov[j]): return j+1
