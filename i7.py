@@ -18,13 +18,13 @@ f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
 prt = "c:/games/inform/prt"
-prt_temp = prt + "/temp"
+prt_temp = os.path.join(prt, "temp")
 
 table_row_count = defaultdict(int)
 
 outline_val_hash = { 'volume': 5, 'book': 4, 'part': 3, 'chapter': 2, 'section': 1 }
 ovh = outline_val_hash
-outline_val = [ 'section', 'chapter', 'part', 'book', 'volume' ]
+outline_val = sorted(outline_val_hash, key=outline_val_hash.get)
 ov = outline_val
 
 oo = [ 'off', 'on' ]
@@ -33,7 +33,7 @@ smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
 def words_file(x):
-    if type(x) = str: return "c:/writing/dict/words-{:d}.txt".format(x)
+    if type(x) == str: return "c:/writing/dict/words-{:d}.txt".format(x)
     if x.isdigit():
         x2 = int(x)
         return "c:/writing/dict/words-{:d}.txt".format(x)

@@ -47,7 +47,7 @@ def to_output(f_i, f_o):
     lines = []
     so_far = ""
     with open(f_i) as file:
-        for (lc,line) in enumerate(file, 1):
+        for (lc, line) in enumerate(file, 1):
             if line.startswith('>'):
                 if re.search("^> *[\*;]", line):
                     f2.write("=" * 50 + "Line " + str(lc) + "\n")
@@ -58,8 +58,7 @@ def to_output(f_i, f_o):
                     comments = comments + 1
                 else:
                     so_far = "(prev) " + line
-                    if line != line.lower():
-                        print(f_i, lc, line.strip(), "may be a comment.")
+                    if line != line.lower() and '>Start of a transcript of' not in line: print(f_i, lc, line.strip(), "may be a comment.")
                 continue
             so_far = so_far + line
     if so_far != "":
