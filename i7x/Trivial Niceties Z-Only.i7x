@@ -148,10 +148,7 @@ understand the command "scr" as something new.
 understand "screen" and "scr" as screening.
 
 carry out screening:
-	if screenread is true:
-		now screenread is false;
-	else:
-		now screenread is true;
+	now screenread is whether or not screenread is false;
 	say "Screen reader support is now [on-off of screenread].";
 	the rule succeeds;
 

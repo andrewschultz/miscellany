@@ -119,7 +119,7 @@ def remove_quotes(x):
 rq = remove_quotes
 
 def src(x):
-    return sdir(x) + "/" + "story.ni"
+    return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
 def mistake_file(x):
     return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
