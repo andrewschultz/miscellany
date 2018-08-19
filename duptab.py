@@ -2,8 +2,9 @@
 #
 # searches for duplicate-ish table entries
 #
-# todo: specify project (currently just i7)
+# todo: specify project (currently just i7 ailihphilia)
 # todo: allow write-over (?)
+#
 
 from collections import defaultdict
 import i7
@@ -14,6 +15,9 @@ dup_yet = defaultdict(int)
 dup_reverse = defaultdict(int)
 dup_no_space = defaultdict(str)
 t2d = defaultdict(int)
+format_string = defaultdict(str)
+
+dup_table_custom = "c:/writing/scripts/duptab.txt"
 
 # options
 check_spaceless = True
@@ -31,6 +35,13 @@ def wordrev(w):
 
 count = 1
 
+def read_format_strings():
+    with open(dup_table_custom) as file:
+        for line in file:
+            if "\t" in line:
+                l = line.lower().split("\t")
+                format_string[l[0]] = l[1]
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
@@ -45,10 +56,8 @@ def chop_up(format_str, format_ary):
     ret_str = format_str
     for x in range(0, len(format_ary)):
         brax = '<{:d}>'.format(x)
-        if brax in x: ret_str = re.sub(brax, format_ary[x], ret_str)
+        if brax in ret_str: ret_str = re.sub(brax, format_ary[x], ret_str)
     return ret_str
-
-format_string = defaultdict(str)
 
 def table_hack(file_name):
     global dupes
@@ -62,7 +71,7 @@ def table_hack(file_name):
         for (line_count, line) in enumerate(file, 1):
             if line.startswith('table') and not in_table:
                 in_table = True
-                cur_table = line.lower().strip()
+                cur_table = re.sub(" \[.*", "", line.lower().strip())
                 temp_dup_table.clear()
                 continue
             if not line.strip():
@@ -70,10 +79,11 @@ def table_hack(file_name):
                 continue
             if in_table:
                 ll = line.lower().strip().split("\t")
-                if cur_table in format_string.keys(): lsort = chop_up(format_string[cur_table], ll)
+                if cur_table in format_string.keys():
+                    lsort = chop_up(format_string[cur_table], ll)
                 else: lsort = ll[0]
                 if lsort in temp_dup_table.keys():
-                    print(cur_table, '/', lsort, line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
+                    print(cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
                 else:
                     if re.search("[a-z0-9]", lsort): temp_dup_table[lsort] = line_count
                 ignore_ok = 'okdup' in line.lower()
@@ -102,6 +112,8 @@ def table_hack(file_name):
 
 dupes = 0
 dupe_without_spaces = 0
+
+read_format_strings()
 
 table_hack('story.ni')
 table_hack(i7.tafi('ai'))
