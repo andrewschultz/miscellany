@@ -32,6 +32,9 @@ oo = [ 'off', 'on' ]
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+def no_lead_art(x):
+    return re.sub("^(some|the|an|a) (thing called )?", "", x, 0, re.IGNORECASE)
+
 def words_file(x):
     if type(x) == str: return "c:/writing/dict/words-{:d}.txt".format(x)
     if x.isdigit():
