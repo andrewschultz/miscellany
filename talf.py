@@ -46,18 +46,17 @@ def usage():
     print("-e edits the data file. -ec edits the code file.")
     print("-si shows all ignored tables.")
     print("-p = popup on error.")
+    print("-nf-fn and -fl/-lf toggle forcing to lower for sorting, which is on by default.")
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
 force_lower = True
 
-def tab(a, b, c, zap_apostrophes = False): # b = boolean i = integer q = quote l = lower case e=e# for BTP a=activation of
-    if force_lower:
-        a = a.lower()
-    if 'k' in c:
-        pass
-    elif 'l' in c:
-        a = a.lower()
+def tab(a, b, c, zap_apostrophes = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
+    # print(a, b, c, zap_apostrophes)
+    if force_lower and 'u' not in c: a = a.lower()
+    elif 'k' in c: pass
+    elif 'l' in c: a = a.lower()
     ary = re.split("\t+", a)
     orig = ary[b]
     ret = ary[b]
@@ -220,6 +219,7 @@ def got_match(full_table_line, target_dict):
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
+    if 'story' not in f: return
     global ignored_tables
     fs = os.path.basename(f)
     files_read[f] = True
@@ -231,7 +231,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         ignore_sort[f].clear()
 
     if f not in table_sort.keys() and f not in default_sort.keys():
-        print(f, "has no table sort keys or default sorts. Returning.")
+        print(f, "has no table sort keys or default sorts. Returning. You may wish to check for slash directions.")
+        if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys():
+            print("NOTE: brief check shows", f, "very likely has slashes normalized badly.")
         return
     f2 = f + "2"
     row_array = []
@@ -385,6 +387,8 @@ while count < len(sys.argv):
     elif arg == 'si': show_ignored = True
     elif arg == 'nc': copy_over = False
     elif arg == 'za': zap_apostrophes = True
+    elif arg == 'fl' or arg == 'lf': force_lower = True
+    elif arg == 'fn' or arg == 'nf': force_lower = False
     elif arg == '?': usage()
     else:
         print(arg, "is an invalid parameter.")
@@ -410,8 +414,7 @@ if diff > 0:
 read_table_and_default_file()
 
 for x in projects:
-    for y in i7.i7f[x]:
-        table_alf_one_file(y.lower(), launch_dif, copy_over)
+    for y in i7.i7f[x]: table_alf_one_file(y.lower(), launch_dif, copy_over)
 
 if show_ignored:
     if ignored_tables:

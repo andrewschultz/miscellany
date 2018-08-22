@@ -476,7 +476,9 @@ sub processFiles {
     if ( $#blanks > -1 ) {
       print "FILES WITH NO MATCHES: " . join( ", ", @blanks ) . "\n";
     }
-    print "FILES WITH MATCHES: "
+    print "FILES WITH MATCHES ("
+      . ( scalar @gots )
+      . "/$foundTotal): "
       . join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
   }
   if ( $errStuff[0] ) {

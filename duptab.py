@@ -115,8 +115,10 @@ dupe_without_spaces = 0
 
 read_format_strings()
 
-table_hack('story.ni')
-table_hack(i7.tafi('ai'))
+this_project = 'ai'
+
+table_hack(i7.src(this_project))
+table_hack(i7.tafi(this_project))
 
 print(dupes, "total duplicates.")
 if dupe_without_spaces: print(dupe_without_spaces, "dupes without spaces e.g. Not On vs No Ton.")

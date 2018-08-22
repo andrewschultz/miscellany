@@ -4,6 +4,8 @@
 #
 # tc.py (optional file name) (output file name)
 #
+# * uses a wildcard
+#
 
 from shutil import copy
 import glob
@@ -41,9 +43,7 @@ def edit_name(x):
 def to_output(f_i, f_o):
     f2 = open(f_o, "w")
     f2.write("#created with tc.py\n#\n")
-    count = 0
-    comments = 0
-    lines_in_out_file = 0
+    count = comments = lines_in_out_file = 0
     lines = []
     so_far = ""
     with open(f_i) as file:
@@ -105,8 +105,9 @@ if not len(my_files) and not launch_html and not make_html:
     print("No files/html commands specified. Use * to add them all, or specify them in the arguments. -? for usage.")
 
 for mf in my_files:
+    if not mf.lower().endswith('txt'): continue
     if 'comments' in mf:
-        print("COMMENTS is probably a file output by tc. Ignoring", os.path.basename(mf))
+        print(mf, "contains COMMENTS and is probably a file output by tc. Ignoring", os.path.basename(mf))
         continue
     if not os.path.exists(mf):
         print(mf, "does not exist, skipping.")
@@ -136,8 +137,7 @@ for mf in my_files:
                 print("Launching", ona)
                 os.system(ona)
                 cur_launched += 1
-            else:
-                warn_too_many = True
+            else: warn_too_many = True
 
 if make_html:
     h_ary = glob.glob("comments*") + glob.glob("*comments") + glob.glob("*comments.txt")
@@ -150,5 +150,4 @@ if make_html:
 
 if launch_html: os.system(tran_fi)
 
-if warn_too_many:
-    print("Too many files to launch.")
+if warn_too_many: print("Too many files to launch.")
