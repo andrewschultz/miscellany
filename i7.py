@@ -121,6 +121,19 @@ rq = remove_quotes
 def src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
+def build_log(x):
+    return os.path.normpath(os.path.join(sdir(x), "..\\Build\\Debug log.txt"))
+
+bl = build_log
+
+def build_log_open(x):
+    blx = build_log(x)
+    print(x, blx)
+    if os.path.exists(blx): npo(blx)
+    else: sys.exit("No build log for", x, "at", blx)
+
+blo = bl_o = build_log_open
+
 def mistake_file(x):
     return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
 
