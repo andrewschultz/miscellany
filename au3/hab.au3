@@ -33,6 +33,7 @@ Local $startMP = 0
 Local $finalMP = 0
 Local $MPloss = 0
 Local $onlyTrackMP = 0
+Local $closeAfter = 0
 
 Local $horiz_delta = 95
 Local $vert_delta = 160
@@ -47,6 +48,7 @@ Init()
 If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
     ToHab()
 	justClick($cmdLine[1])
+	Exit
 EndIf
 
 ; process meta commands first
@@ -98,8 +100,10 @@ While $cmdCount <= $CmdLine[0]
 	exit
   EndIf
   $lastCmd = $cmdCount
+  $negative = 0
   $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
+    $negative = 1
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if meta_cmd($myCmd) Then
@@ -121,7 +125,15 @@ While $cmdCount <= $CmdLine[0]
   EndIf
 
   $didAnything = True
-  If $myCmd == 'a' Then
+  If StringIsDigit($myCmd) Then
+    ToHab()
+	ToTasks()
+    if $negative == 0 Then
+	  justClick($myCmd)
+    Else
+	  justClick(0 - $myCmd)
+	EndIf
+  ElseIf $myCmd == 'a' Then
     ToHab()
 	justClick(StringMid($myCmd, 2))
   ElseIf $myCmd == 'b' Then
@@ -135,6 +147,8 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
+  ElseIf $myCmd == 'ca' Then
+    $closeAfter = 1
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'i' Then
@@ -241,13 +255,19 @@ If $startMP > 0 Then
   MOK("Projected MP change", "start=" & $startMP & @CRLF & "MP loss=" & $MPloss & @CRLF & "end=" & $finalMP)
 EndIf
 
+If $closeAfter > 0 Then
+  Sleep(3000)
+  Send("{CTRLDOWN}w{CTRLUP}")
+EndIf
+
 ; end main
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[14] = [ "-a, -b, -e, -i, -iw, -m/-w, -o, -p, -r, -s/-=, -t or -x are the options.", _
+  Local $usgAry[15] = [ "-a, -b, -ca, -d, -e, -i, -iw, -m/-w, -o, -p, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
+  "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
   "-iw = initial wait,", _
@@ -437,10 +457,6 @@ Func GetNumArgOrBail($cmdIdx)
     return $cmdLine[$cmdIdx]
 EndFunc
 
-Func Bail()
-  exit
-EndFunc
-
 Func NeedPositive()
   MOK("Need positive #", "Need positive # after arg ")
   exit
@@ -523,7 +539,6 @@ Func justClick($clicksToDo)
       sleep(2000)
     Endif
   Next
-  Exit
 EndFunc
 
 Func Init()
@@ -532,4 +547,8 @@ Func Init()
   HotKeySet("{F9}", "Bail")
   HotKeySet("{F10}", "Bail")
   HotKeySet("{F11}", "Bail")
+EndFunc
+
+Func Bail()
+  exit
 EndFunc
