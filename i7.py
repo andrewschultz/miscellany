@@ -174,13 +174,15 @@ def proj_exp(x, return_nonblank = True):
     elif x in i7x.keys(): return i7x[x]
     return (x if return_nonblank else '')
 
+pex = proj_exp
+
 def lpro(x, spaces=False):
     retval = proj_exp(x, False)
     if spaces: retval = re.sub("-", " ", retval)
     return retval
 
 def proj2dir(x):
-    return "c:\\games\\inform\\{:s}.inform\\source".format(i7x[x] if x in i7x.keys() else x)
+    return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))
 
 sdir = p2d = proj2dir
 
@@ -287,6 +289,7 @@ i7x = { "12": "shuffling",
   "13": "threediopolis",
   "14": "ugly-oafs",
   "oafs": "ugly-oafs",
+  "uo": "ugly-oafs",
   "s15": "dirk",
   "15": "compound",
   "pc": "compound",
