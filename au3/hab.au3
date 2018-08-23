@@ -75,6 +75,9 @@ while $cmdCount <= $CmdLine[0]
   ElseIf $myCmd == 'om' Then
     $onlyTrackMp = 1
 	$cmdCount = $nextCmd
+  ElseIf $myCmd == 'ca' Then
+    $closeAfter = 1
+	$cmdCount = $nextCmd
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
 	$cmdCount = $nextCmd
@@ -101,6 +104,7 @@ While $cmdCount <= $CmdLine[0]
   EndIf
   $lastCmd = $cmdCount
   $negative = 0
+  $skipNextArg = 0
   $myCmd = StringLower($CmdLine[$cmdCount])
   if StringLeft($myCmd, 1) = '-' Then ; allow for -x = x
     $negative = 1
@@ -121,7 +125,7 @@ While $cmdCount <= $CmdLine[0]
 	$myCmd = StringLeft($myCmd, 2)
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
-	$nextCmd = $cmdCount + 2
+	$skipNextArg = 1
   EndIf
 
   $didAnything = True
@@ -147,8 +151,6 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
-  ElseIf $myCmd == 'ca' Then
-    $closeAfter = 1
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'i' Then
@@ -156,10 +158,9 @@ While $cmdCount <= $CmdLine[0]
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
     if $myCmd == 'iw' Then
 	  $preDelay = $nextNum
-	  $nextCmd = $cmdCount + 2
+	  $skipNextArg = 1
     Else
 	  $preDelay = StringMid($myCmd, 3)
-	  $nextCmd = $cmdCount + 1
     EndIf
 	sleep($preDelay * 1000)
     DoInt()
@@ -241,7 +242,7 @@ While $cmdCount <= $CmdLine[0]
   Else
     Usage(0, $cmdLine[$cmdCount])
   Endif
-  $cmdCount = $nextCmd
+  $cmdCount = $nextCmd + $skipNextArg
 WEnd
 
 if $cmdLine[0] == 0 Then
@@ -478,7 +479,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[4] = [ 'om', 'te', '=', 's' ]
+  Local $metas[4] = [ 'om', 'te', '=', 's', 'ca' ]
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
