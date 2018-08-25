@@ -17,7 +17,8 @@ Local $lesson_delay = 2
 Local $wait = 0
 Local $launch = 0
 Local $start = 0
-Local $verticalInit = 710
+Local $verticalInit1 = 710
+Local $verticalInit2 = 632
 Local $horizInit = 1400
 
 Local $substring = "learn"
@@ -32,6 +33,12 @@ while $count <= $cmdLine[0]
     $substring = "learn"
   Elseif $arg == 'x' Then
     $launch = 1
+  Elseif StringMid($CmdLine[$count], 4, 1) == '-' Then
+    $verticalInit1 = StringMid($CmdLine[$count], 1, 3)
+    $verticalInit2 = StringMid($CmdLine[$count], 5, 3)
+  Elseif StringLeft($arg, 1) == 'v' Then
+    $verticalInit1 = StringMid($CmdLine[$count], 2)
+	MsgBox($MB_OK, "!!", $verticalInit1)
   Elseif StringLeft($arg, 1) == 'w' Then
     $wait = StringMid($CmdLine[$count], 2)
   Elseif StringLeft($arg, 1) == 'd' Then
@@ -39,7 +46,7 @@ while $count <= $cmdLine[0]
   ElseIf $CmdLine[$count] > 0 Then
     $start = $CmdLine[$count]
   ElseIf $CmdLine[$count] == -1 Then
-    $verticalInit = 337
+    $verticalInit1 = 337
   Else
     MOK("need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
     Exit
@@ -123,7 +130,7 @@ EndIf
 
 if $start <= 7 Then
 clickCmd()
-send("cd ../../2014/dec{ENTER}")
+send("cd /home/ccuser/workspace/blog/2014/dec{ENTER}")
 send("touch keyboard.txt{ENTER}")
 sleep($lesson_delay * 1000)
 send("{ENTER}{ENTER}cd .{ENTER}")
@@ -169,9 +176,9 @@ Func hitNext()
 EndFunc
 
 Func ResetAndResume()
-  MouseClick("left", $horizInit, $verticalInit, 1)
+  MouseClick("left", $horizInit, $verticalInit1, 1)
   sleep(1500)
-  MouseClick("left", 872, 632, 1)
+  MouseClick("left", 872, $verticalInit2, 1)
   sleep(5000)
   MouseClick("left", 847, 289, 1)
   sleep(10000)

@@ -233,6 +233,12 @@ definition: a direction (called thedir) is planar:
 	if thedir is cardinal or thedir is diagonal, decide yes;
 	decide no;
 
+chapter drop-player-at
+
+to drop-player-at (myrm - a room):
+	move player to myrm, without printing a room description;
+	say "[b][myrm][r]"
+
 chapter basic consents
 
 to decide whether the player test-consents:

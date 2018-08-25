@@ -479,7 +479,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[4] = [ 'om', 'te', '=', 's', 'ca' ]
+  Local $metas[5] = [ 'om', 'te', '=', 's', 'ca' ]
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
