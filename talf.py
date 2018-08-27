@@ -35,6 +35,8 @@ override_source_size_differences = False
 override_omissions = False
 show_ignored = False
 zap_apostrophes = False
+verbose = False
+story_only = table_only = story_and_tables = False
 
 ignored_tables = ""
 
@@ -45,6 +47,8 @@ def usage():
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
     print("-si shows all ignored tables.")
+    print("-so means story only.")
+    print("-to means table file only.")
     print("-p = popup on error.")
     print("-nf-fn and -fl/-lf toggle forcing to lower for sorting, which is on by default.")
     print("You can use a list of projects or an individual project abbreviation.")
@@ -219,7 +223,10 @@ def got_match(full_table_line, target_dict):
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
-    if 'story' not in f: return
+    if story_and_tables:
+        if 'story' not in f.lower() and 'table' not in f.lower(): return
+    elif story_only and 'story' not in f.lower(): return
+    elif table_only and 'table' not in f.lower(): return
     global ignored_tables
     fs = os.path.basename(f)
     files_read[f] = True
@@ -229,7 +236,6 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         for x in ignore_sort[f].keys():
             need_to_catch[f].pop(x)
         ignore_sort[f].clear()
-
     if f not in table_sort.keys() and f not in default_sort.keys():
         print(f, "has no table sort keys or default sorts. Returning. You may wish to check for slash directions.")
         if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys():
@@ -385,6 +391,10 @@ while count < len(sys.argv):
     elif arg == 'os': override_source_size_differences = True
     elif arg == 'oo': override_omissions = True
     elif arg == 'si': show_ignored = True
+    elif arg == 'so': story_only = True
+    elif arg == 'to': table_only = True
+    elif arg == 'ts' or arg == 'st': story_and_tables = True
+    elif arg == 'v': verbose = True
     elif arg == 'nc': copy_over = False
     elif arg == 'za': zap_apostrophes = True
     elif arg == 'fl' or arg == 'lf': force_lower = True
@@ -394,6 +404,8 @@ while count < len(sys.argv):
         print(arg, "is an invalid parameter.")
         usage()
     count += 1
+
+if story_only + table_only + story_and_tables: sys.exit("Options crossed -so, -to, -ts/-st ... can only have one.")
 
 projset = set(projects)
 diff = len(projects) - len(projset)
@@ -414,7 +426,8 @@ if diff > 0:
 read_table_and_default_file()
 
 for x in projects:
-    for y in i7.i7f[x]: table_alf_one_file(y.lower(), launch_dif, copy_over)
+    for y in i7.i7f[x]:
+        table_alf_one_file(y.lower(), launch_dif, copy_over)
 
 if show_ignored:
     if ignored_tables:
