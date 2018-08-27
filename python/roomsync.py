@@ -7,6 +7,9 @@
 # verified so far on Ailiphilia, Buck the Past and Tragic Mix
 #
 # also rooms that map *from* a map *to* a
+#
+# this is not perfect. In the future we will want to divide roomsync by projects
+#
 
 #import traceback
 import os
@@ -43,6 +46,9 @@ def read_ignore_file():
             if line.startswith('ignore:'):
                 ll = re.sub("^ignore:", "", line.strip().lower())
                 ignore[ll] = 1
+            elif line.startswith("regignore:"):
+                ll = re.sub("^regignore:", "", line.strip().lower())
+                region_ignore[ll] = True
             elif line.startswith("room-rename:"):
                 ll = re.sub("^room-rename:", "", line.strip().lower())
                 ary = ll.split("~")
@@ -65,20 +71,37 @@ def read_ignore_file():
                 triz_renamer[ary[0]] = ary[1]
 
 def match_source_invisiclues():
+    invis_region = defaultdict(str)
+    line_dict = defaultdict(int)
+    region_level = 1
     room_level = 2
+    cur_region = ""
     if not i7.revproj(project): sys.exit("Can't figure out a project for {:s}.".format(project))
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
     if not os.path.exists(invisfile): sys.exit("No file {:s}. Bailing.".format(invisfile))
     print("Checking invisiclues file", invisfile, "...")
     with open(invisfile) as file:
-        for line in file:
+        for (line_count, line) in enumerate(file, 1):
             if line.startswith("##roomlevel="):
                 room_level = int(re.sub("^##roomlevel=", "", line.strip().lower()))
                 continue
-            if line.startswith(">" * room_level) and not line.startswith(">" * (room_level + 1)):
+            if line.startswith("##reglevel="):
+                region_level = int(re.sub("^##reglevel=", "", line.strip().lower()))
+                continue
+            if line.startswith("##region="):
+                cur_region = re.sub("^##region=", "", line.strip().lower())
+                continue
+            if region_level and line.startswith(">" * region_level) and not line.startswith(">" * (region_level + 1)):
+                ll = re.sub(">>", "", line.strip().lower())
+                ll = re.sub(", ?", " ", ll)
+                cur_region = re.sub("^>*", "", ll)
+            if room_level and line.startswith(">" * room_level) and not line.startswith(">" * (room_level + 1)):
                 ll = re.sub(">>", "", line.strip().lower())
                 ll = re.sub(", ?", " ", ll)
                 invis_rooms[ll] = 1
+                if not cur_region: sys.exit("Need region for room " + ll)
+                line_dict[ll] = line_count
+                invis_region[ll] = cur_region
     modsource = defaultdict(bool)
     for q in source.keys(): modsource[invis_renamer[q] if q in invis_renamer.keys() else q] = True # this is if we don't want to spoil room names
     b = [x for x in list(set(modsource.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
@@ -86,9 +109,7 @@ def match_source_invisiclues():
     print_barrier = True
     inviserr = defaultdict(bool)
     for a in b:
-        if a not in invis_rooms.keys() and source[a] != "back set":
-            # this second condition above is a bad hack for now to avoid BTP flagging fake death rooms.
-            # in the future we will want to divide roomsync by projects and have ignored-region as well
+        if a not in invis_rooms.keys() and a not in region_ignore.keys():
             if print_barrier:
                 print("=" * 40)
                 print_barrier = False
@@ -104,6 +125,8 @@ def match_source_invisiclues():
             count += 1
             print(count, a, "in invisiclues but not source.")
             inviserr['<' + a] = True
+    for a in b:
+        if invis_region[a] != source[a]: print("WARNING: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(a, line_dict[a], source[a].upper(), invis_region[a].upper()))
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
 def match_source_triz():
@@ -143,6 +166,8 @@ ignore = defaultdict(bool) # specific rooms to ignore
 room_renamer = defaultdict(str)
 invis_renamer = defaultdict(str)
 triz_renamer = defaultdict(str)
+
+region_ignore = defaultdict(bool)
 
 default_project = "buck-the-past"
 project = ""
