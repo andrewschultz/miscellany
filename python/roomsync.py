@@ -76,6 +76,7 @@ def match_source_invisiclues():
     region_level = 1
     room_level = 2
     cur_region = ""
+    room_force = ""
     if not i7.revproj(project): sys.exit("Can't figure out a project for {:s}.".format(project))
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
     if not os.path.exists(invisfile): sys.exit("No file {:s}. Bailing.".format(invisfile))
@@ -88,6 +89,9 @@ def match_source_invisiclues():
             if line.startswith("##reglevel="):
                 region_level = int(re.sub("^##reglevel=", "", line.strip().lower()))
                 continue
+            if line.startswith("##roomforce="):
+                room_force = int(re.sub("^##roomforce=", "", line.strip().lower()))
+                continue
             if line.startswith("##region="):
                 cur_region = re.sub("^##region=", "", line.strip().lower())
                 continue
@@ -96,12 +100,16 @@ def match_source_invisiclues():
                 ll = re.sub(", ?", " ", ll)
                 cur_region = re.sub("^>*", "", ll)
             if room_level and line.startswith(">" * room_level) and not line.startswith(">" * (room_level + 1)):
-                ll = re.sub(">>", "", line.strip().lower())
-                ll = re.sub(", ?", " ", ll)
-                invis_rooms[ll] = 1
-                if not cur_region: sys.exit("Need region for room " + ll)
-                line_dict[ll] = line_count
-                invis_region[ll] = cur_region
+                if room_force:
+                    this_room = room_force
+                    room_force = ""
+                else:
+                    this_room = re.sub(">>", "", line.strip().lower())
+                    this_room = re.sub(", ?", " ", this_room)
+                invis_rooms[this_room] = 1
+                if not cur_region: sys.exit("Need region for room " + this_room)
+                line_dict[this_room] = line_count
+                invis_region[this_room] = cur_region
     modsource = defaultdict(bool)
     for q in source.keys(): modsource[invis_renamer[q] if q in invis_renamer.keys() else q] = True # this is if we don't want to spoil room names
     b = [x for x in list(set(modsource.keys()) | set(invis_rooms.keys())) if x not in ignore.keys()]
@@ -125,8 +133,17 @@ def match_source_invisiclues():
             count += 1
             print(count, a, "in invisiclues but not source.")
             inviserr['<' + a] = True
+    warnings_source = warnings_invis = 0
     for a in b:
-        if invis_region[a] != source[a]: print("WARNING: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(a, line_dict[a], source[a].upper(), invis_region[a].upper()))
+        if a in source.keys() and source[a] in region_ignore.keys(): continue
+        if a not in source.keys():
+            warnings_source += 1
+            print("WARNING: source({:d}) {:s} (invis={:s}) does not have a region in the source.".format(warnings_source, a, invis_region[a]))
+        elif a not in invis_region.keys():
+            warnings_invis += 1
+            print("WARNING: invis({:d}) {:s} (source={:s}) does not have a region in the invisiclues.".format(warnings_invis, a, source[a]))
+        elif invis_region[a] != source[a]:
+            print("WARNING: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(a, line_dict[a], source[a], invis_region[a]))
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
 def match_source_triz():
@@ -239,6 +256,7 @@ def region_name(li):
 with open(source_file) as f:
     for (line_count, line) in enumerate(f, 1):
         if "\t" in line: continue
+        if line.lower().startswith("index map with"): continue
         line = line.rstrip().lower()
         if re.search("^there is a (passroom|pushroom|room) called ", line, flags=re.IGNORECASE):
             l1 = re.sub("^there is a (passroom|pushroom|room) called ", "", line, flags=re.IGNORECASE)
