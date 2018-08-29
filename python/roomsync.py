@@ -36,6 +36,10 @@ def if_rename(x):
         return room_renamer[x]
     return x
 
+my_proj_dir = i7.dir2proj(os.getcwd())
+if not my_proj_dir: sys.exit("Need to be in a valid project directory.")
+read_this = True
+
 def read_ignore_file():
     line_count = 0
     with open(ignore_file) as file:
@@ -43,6 +47,11 @@ def read_ignore_file():
             line_count += 1
             if line.startswith(';'): break
             if line.startswith('#'): continue
+            if line.startswith('project:'):
+                ll = re.sub("^project:", "", line.strip().lower())
+                if not ll or i7.proj_exp(ll) == my_proj_dir: read_this = True
+                else: read_this = False
+            if not read_this: continue
             if line.startswith('ignore:'):
                 ll = re.sub("^ignore:", "", line.strip().lower())
                 ignore[ll] = 1
@@ -248,6 +257,7 @@ for elem in e.iter('room'):
 
 def region_name(li):
     li2 = re.sub("\".*?\"", "", li)
+    if 'scenery in' in li: sys.exit("Warning not to put scenery in room-defining line: " + li)
     if not re.search("(is|room) +in ", li2): return ""
     li2 = re.sub(".*?(is|room) +in +", "", li2)
     li2 = re.sub("\..*", "", li2)
@@ -289,7 +299,6 @@ with open(source_file) as f:
             l2 = re.sub("\".*", "", line, flags=re.IGNORECASE)
             l2 = re.sub(".*is (a|a privately-named|an innie) (passroom|pushroom|room) in ", "", l2, flags=re.IGNORECASE)
             l2 = re.sub("\..*", "", l2, flags=re.IGNORECASE)
-            if 'idle deli' in l2: print("!!", l1, "/", l2)
             source[if_rename(l1)] = l2
 
 missmap = 0
