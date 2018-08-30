@@ -22,28 +22,48 @@ t_start = 0
 
 out_newline = '\n'
 
+def print_whats_missing():
+    print("Your input was missing something...")
+    if not table_to_find: print("Need to give me a table to find--that can be any text.")
+    if not switch_array: print("You need a CSV of numbers.")
+    exit()
+
+def usage():
+    print("=" * 40, "USAGE")
+    print("A comma separated value denotes the new order of rows. To shift the first 5 over left, it would be 1,2,3,4,0.")
+    print("We also need a table name. 'table of' is not needed to start.")
+    print("Currently you have to have a permutation of (0, ..., n) as the program does not fill the other numbers in.")
+    print("-c/-2c = to clipboard")
+    print("-u/-w toggles newline")
+    exit()
+
 def increasing(q):
     q2 = list(range(0, len(q)))
     return Counter(q2) == Counter(q)
 
+if len(sys.argv) == 1:
+    print("No command. Printing usage.")
+    usage()
+
 while count < len(sys.argv):
-    arg = sys.argv[count]
+    arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c' or arg == '2c': to_clipboard = True
     elif arg == 'u': out_newline = '\n'
     elif arg == 'w': out_newline = '\r\n'
-    elif re.search("[a-z]", arg.lower()):
+    elif re.search("[a-z]", arg):
         if arg.startswith("table-of-"):
             print("No need to put table-of- to start.")
             table_to_find = arg
         else:
             table_to_find = ("table of " + arg).lower()
         table_to_find = re.sub("-", " ", table_to_find)
-    elif re.search("[0-9]", arg.lower()):
+    elif re.search("[0-9]", arg):
         switch_array = [int(x) for x in arg.split(",")]
+    elif '?' in arg: usage()
     count += 1
 
-if not table_to_find or not switch_array: sys.exit("Need to define CSV array and table to find.")
+if not table_to_find or not switch_array: print_whats_missing()
 
 if not increasing(switch_array): sys.exit("You need the switch-array to be a permutation of 0, ..., n.")
 
@@ -61,10 +81,11 @@ with open("story.ni") as file:
             print("Table ends line", line_count)
             break
         ll = line.strip()
-        if line_count - t_start > 1:
+        cur_row = line_count - t_start - 1
+        if cur_row:
             lma = re.sub("( *\[[^\]]*\])*$", "", ll)
         else:
-            ll = re.sub("\([^\)]*\)", "", ll)
+            #ll = re.sub(" ?\([^\)]*\)", "", ll)
             cols = len(line.split("\t"))
             if cols < len(switch_array): sys.exit("Switch array is too big, {:d} vs {:d}.".format(len(switch_array), cols))
             if cols > len(switch_array):
@@ -75,6 +96,9 @@ with open("story.ni") as file:
                 print("New array", switch_array)
             lma = str(ll)
         lm = lma.split("\t")
+        if cur_row == 0:
+            for q in lm:
+                if re.search(" [a-z]", q.lower()): print("WARNING space in header", q)
         if "\"" in ll:
             lx = re.sub(".*\"", "", ll)
         else:
