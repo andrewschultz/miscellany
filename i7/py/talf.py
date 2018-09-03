@@ -56,8 +56,10 @@ def usage():
 
 force_lower = True
 
-def tab(a, b, c, zap_apostrophes = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
+def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
     # print(a, b, c, zap_apostrophes)
+    if leave_between_parens: a = re.sub("[\(\)]", "", a)
+    else: a = re.sub("\([^\)]*\)", "", a)
     if force_lower and 'u' not in c: a = a.lower()
     elif 'k' in c: pass
     elif 'l' in c: a = a.lower()
@@ -168,7 +170,7 @@ def read_table_and_default_file():
             if line.startswith(';'): break
             if '=' in line:
                 if line != line.lower(): print("WARNING", table_default_file, "line", line_count, "has upper case letters but shouldn't.")
-                if '/' in line: print("WARNING", table_default_file, "line", line_count, "has forward slashes but needs backward slashes.")
+                if '/' in line and "default" not in line: print("WARNING", table_default_file, "line", line_count, "has forward slashes but needs backward slashes.")
                 right_side = re.sub(".*=", "", ll)
                 right_side = re.sub("/", "\\\\", right_side)
                 right_side = right_side.lower()
@@ -246,9 +248,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     need_head = False
     in_sortable_table = False
     in_table = False
-
-    print("Writing", f)
-
+    if verbose: print("Inspecting", f)
     temp_out = open(f2, "w", newline="\n")
     has_default = f in default_sort.keys()
     tabs_this_table = 0
@@ -305,7 +305,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     cur_table = got_match(line, ignore_sort[f])
                     if cur_table:
                         ignored_tables = ignored_tables + "{:s} Line {:d} (DIRECTED): {:s}".format(fs, line_count, line)
-                        print("Ignoring default for table", cur_table, ("/ " + line if cur_table != line else ""))
+                        print("Ignoring {:s} file default for {:s}{:s}.".format(os.path.basename(f), cur_table, ("/ " + line.strip() if cur_table != line else "")))
                         # print("Zapping", x, "from", os.path.basename(f))
                         need_to_catch[f].pop(cur_table)
                         continue
@@ -329,7 +329,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             in_sortable_table = False
             temp_out.write(line)
     temp_out.close()
-    print("Done writing to", os.path.basename(f2))
+    if verbose: print("Done writing to", os.path.basename(f2))
     if launch:
         if cmp(f, f2):
             print("NO DIFFERENCE, NOT LAUNCHING DIFFERENCE")
