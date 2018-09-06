@@ -25,6 +25,7 @@ genregx[MALE] = r'\b(her|hers|she)\b'
 genregx[FEMALE] = r'\b(him|his|he)\b'
 
 default_gender_proj = "ailihphilia"
+ignore_dict = defaultdict(lambda: defaultdict(str))
 gender_dict = defaultdict(lambda: defaultdict(str))
 flags = re.IGNORECASE
 
@@ -38,8 +39,8 @@ gender_tests = defaultdict(str)
 def to_num(a):
     al = a.lower()
     if al == 'm': return MALE
-    if al == 'f': return BOTH
-    if al == 'n' or al == 'b': return FEMALE
+    if al == 'f': return FEMALE
+    if al == 'n' or al == 'b': return BOTH
     sys.exit(a + " is not recognized. Try m n f or b.")
 
 with open(gender_file) as file:
@@ -49,8 +50,14 @@ with open(gender_file) as file:
         try:
             l0 = line.lower().strip().split(":")
             l1 = l0[1].split("=")
-            gender_dict[l1[0]][to_num(l0[0])] = l1[1]
-            print(l1[0], to_num(l0[0]), l1[1])
+            l1o = l1
+            if l0[0] == 'i':
+                ignore_dict[l1[0]][l1[1]] = True
+            else:
+                if '(' not in l1[1]: l1[1] = '(' + l1[1]
+                if ')' not in l1[1]: l1[1] = l1[1] + ')'
+                if l1 != l1o: print(l1o, "needed parentheses, so I added them.")
+                gender_dict[l1[0]][to_num(l0[0])] = l1[1]
         except:
             print(line_count, line)
             sys.exit("Need something of the form m:ailihphilia=a,b,c")
@@ -75,8 +82,13 @@ with open("story.ni") as file:
         for q in [MALE, FEMALE, BOTH]:
             if q in gender_dict[default_gender_proj].keys():
                 if re.search(genregx[q], line, re.IGNORECASE) and re.search(gender_dict[default_gender_proj][q], line):
-                    count += 1
+                    ignore_this = False
+                    for igs in ignore_dict[default_gender_proj].keys():
+                        if re.search(igs, line): ignore_this = True
+                    if ignore_this: continue
+                    b = re.sub(genregx[q], r'----\1----'.upper(), line, re.IGNORECASE)
+                    b = re.sub(gender_dict[default_gender_proj][q], r"****\1****", b, re.IGNORECASE) # put in parentheses to capture \1
                     print(q, genregx[q], gender_dict[default_gender_proj][q])
-                    print(count, line_count, line.strip())
+                    print(count, line_count, b)
 
 if not count: print("Found nothing for", default_gender_proj)
