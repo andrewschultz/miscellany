@@ -18,14 +18,40 @@ read_file = True
 file_name = ""
 count = 1
 
+def file_vs_clipboard(fn, max_errs = 10):
+    mistakes = 0
+    if not fn: sys.exit("Need a file name")
+    f1 = pyperclip.paste()
+    ca = [q.rstrip() for q in re.split("\n", f1)]
+    f = open(file_name, "r")
+    fa = [ q.rstrip() for q in f.readlines() ]
+    f.close()
+    linum = 0
+    print(len(ca), len(fa))
+    for j in range(0, len(ca)):
+        linum += 1
+        if ca[j] != fa[j]:
+            mistakes += 1
+            print("Mistake #", mistakes, '/', linum, "clip length", len(ca[j]), "file length", len(fa[j]))
+            print("Clipboard!" + ca[j] + "!")
+            print("     File!" + fa[j] + "!")
+            if mistakes == max_errs: break
+    exit()
+
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c': read_file = False
-    else: file_name = sys.argv[1]
+    elif arg == 'fc':
+        compare_file_clipboard = True
+        file_name = sys.argv[count+1]
+        count += 1
+    else: file_name = arg
     count += 1
 
 d = Differ()
+
+if compare_file_clipboard: file_vs_clipboard(file_name)
 
 if read_file:
     if not file_name: sys.exit("Need file name.")
@@ -34,7 +60,7 @@ if read_file:
     print("Reading", file_name, len(rl), "lines")
 else:
     f1 = pyperclip.paste()
-    rl = re.split("(\r?)\n", f1)
+    rl = re.split("\n", f1)
     print("Reading from clipboard", len(rl), "lines")
 
 #print(rl[5])
