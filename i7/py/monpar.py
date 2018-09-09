@@ -14,13 +14,29 @@ cur_test_text = []
 
 in_test_text = False
 read_file = True
+compare_file_clipboard = False
+auto_clip_from_file = True
 
 file_name = ""
 count = 1
 
-def file_vs_clipboard(fn, max_errs = 10):
+def usage():
+    print("-c = clipboard")
+    print("-fc = file/clipboard compare")
+    exit()
+
+# This was a debug function for the first few iterations when the clipboard was not identical to the file it was copied from.
+# From which it was copied. It seems like it could need re-use. So I kept it.
+
+# NOTE: this function is never called with the 2nd 2 variables, but I could if I needed to
+
+def file_vs_clipboard(fn, auto_clipboard_from_file = True, max_errs = 10):
+    if max_errs == 0: max_errs = 10
     mistakes = 0
     if not fn: sys.exit("Need a file name")
+    if auto_clipboard_from_file:
+        f_from = open(fn, 'r').read()
+        pyperclip.copy(f_from)
     f1 = pyperclip.paste()
     ca = [q.rstrip() for q in re.split("\n", f1)]
     f = open(file_name, "r")
