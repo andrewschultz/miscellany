@@ -193,7 +193,7 @@ def go_proj(x):
 go_p = to_proj = go_proj
 
 def dir2proj(x = os.getcwd()):
-    if os.path.exists(x + "\\story.ni"):
+    if os.path.exists(x + "\\story.ni") or ".inform" in x:
         x2 = re.sub("\.inform.*", "", x)
         x2 = re.sub(".*[\\\/]", "", x2)
         if "\\" in x2 or "/" in x2: return ""
@@ -278,59 +278,21 @@ i7rn = { "shuffling": "shuffling_around_release_5",
   "buck-the-past": "1"
 }
 
-# these are arranged roughly in order of completion/creation
-i7x = { "12": "shuffling",
-  "sa": "shuffling",
-  "roi": "roiling",
-  "s13": "roiling",
-  "sts": "stale-tales-slate",
-  "3": "threediopolis",
-  "3d": "threediopolis",
-  "13": "threediopolis",
-  "14": "ugly-oafs",
-  "oafs": "ugly-oafs",
-  "uo": "ugly-oafs",
-  "s15": "dirk",
-  "15": "compound",
-  "pc": "compound",
-  "4": "fourdiopolis",
-  "4d": "fourdiopolis",
-  "s16": "fourdiopolis",
-  "16": "slicker-city",
-  "sc": "slicker-city",
-  "bs": "btp-st",
-  "s17": "btp-st",
-  "btp": "buck-the-past",
-  "mo": "molesworth",
-  "mw": "molesworth",
-  "ai": "ailihphilia",
-  "ail": "ailihphilia",
-  "pu": "ailihphilia",
-  "up": "ailihphilia",
-  #"sw": "tragic-mix",
-  "tm": "tragic-mix",
-  "69": "69105more",
-  "qb": "big-nose",
-  "bn": "big-nose",
-  "ss": "status-seeker",
-  "as": "alec-smart",
-  "ops": "opolis",
-  "op": "opolis"
-};
+i7x = {}
+i7xr = {}
 
-i7xr = { "shuffling": "sa",
-  "roiling": "roi",
-  "threediopolis": "3d",
-  "fourdiopolis": "4d",
-  "ugly-oafs": "uo",
-  "compound": "pc",
-  "slicker-city":"sc" ,
-  "btp-st":"bs" ,
-  "ailihphilia": "ai",
-  "molesworth": "mo",
-  "big-nose": "qb",
-  "opolis": "op",
-};
+with open("c:/writing/scripts/i7p.txt") as file:
+    for line in file:
+        l0 = line.lower().strip().split("=")
+        l1 = l0[1].split(",")
+        for my_l in l1:
+            i7x[my_l] = l0[0]
+        i7xr[l1[0]] = l0[0]
+
+i7com = { "opolis": [ "threediopolis", "fourdiopolis" ],
+  "alec-smart": [ "compound", "slicker-city", "buck-the-past", "seeker-status" ],
+  "stale-tales-slate": [ "shuffling", "roiling" ],
+}
 
 i7f = {
     "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa'), tafi('sa') ],
