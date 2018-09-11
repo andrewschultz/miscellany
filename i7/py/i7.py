@@ -280,19 +280,22 @@ i7rn = { "shuffling": "shuffling_around_release_5",
 
 i7x = {}
 i7xr = {}
+i7com = {}
 
 with open("c:/writing/scripts/i7p.txt") as file:
     for line in file:
+        if line.startswith(';'): break
+        combos = False
         l0 = line.lower().strip().split("=")
         l1 = l0[1].split(",")
+        if l0[0].startswith("combo:"):
+            l0[0] = l0[0][6:]
+            combos = True
         for my_l in l1:
-            i7x[my_l] = l0[0]
-        i7xr[l1[0]] = l0[0]
-
-i7com = { "opolis": [ "threediopolis", "fourdiopolis" ],
-  "alec-smart": [ "compound", "slicker-city", "buck-the-past", "seeker-status" ],
-  "stale-tales-slate": [ "shuffling", "roiling" ],
-}
+            if combos: i7com[my_l] = l1
+            else:
+                i7x[my_l] = l0[0]
+                i7xr[l1[0]] = l0[0]
 
 i7f = {
     "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa'), tafi('sa') ],
