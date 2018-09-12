@@ -34,6 +34,7 @@ Local $finalMP = 0
 Local $MPloss = 0
 Local $onlyTrackMP = 0
 Local $closeAfter = 0
+Local $focused = 0
 
 Local $horiz_delta = 95
 Local $vert_delta = 160
@@ -69,23 +70,35 @@ while $cmdCount <= $CmdLine[0]
     ContinueLoop
   EndIf
 
+MsgBox($MB_OK, "!!", $myCmd)
+
   If $myCmd == 'te' Then
     $testDontClick = True
-	$cmdCount = $nextCmd
+  ElseIf $myCmd == 'f' Then
+    Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
+	WinActivate("[CLASS:MozillaWindowClass]", "")
+	WinWaitActive("[CLASS:MozillaWindowClass]")
+    Send("{CTRLDOWN}9{CTRLUP}")
+	$didAnything = True
+	OpenHabiticaURL(False)
+	$focused = 1
+  ElseIf $myCmd == 'fc' Then
+    OpenHabiticaURL(True)
+	Sleep(10)
+    Send("{CTRLDOWN}w{CTRLUP}")
+	$focused = 1
   ElseIf $myCmd == 'om' Then
     $onlyTrackMp = 1
-	$cmdCount = $nextCmd
   ElseIf $myCmd == 'ca' Then
     $closeAfter = 1
-	$cmdCount = $nextCmd
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
-	$cmdCount = $nextCmd
 	; MOK("Starting MP", "Starting MP = " & $startMP)
   Else
     MOK("unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
 	Exit
   EndIf
+  $cmdCount = $nextCmd
 
 WEnd
 
@@ -221,7 +234,11 @@ While $cmdCount <= $CmdLine[0]
     $additional = StringMid($myCmd, 2)
     $clicks = $nextNum
     if not StringInStr($additional, 'q') Then
-      $res = MsgBox($MB_OKCANCEL, "Warning", "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel." & @CRLF & "-xq avoids this nag.")
+	  local $rightWarning = "Check to make sure the browser is running relatively quickly, or problems may occur. If it is slow, cancel."
+	  if $focused == 1 Then
+	    $rightWarning = "Okay, this is the daily script in case I forgot. It runs " & $clicks & " times."
+	  EndIf
+      $res = MsgBox($MB_OKCANCEL, "Warning",  & @CRLF & "-xq avoids this nag.")
       if $res == $IDCANCEL Then
         exit
       EndIf
@@ -479,7 +496,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[5] = [ 'om', 'te', '=', 's', 'ca' ]
+  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'f', 'fc' ]
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
@@ -548,6 +565,16 @@ Func Init()
   HotKeySet("{F9}", "Bail")
   HotKeySet("{F10}", "Bail")
   HotKeySet("{F11}", "Bail")
+EndFunc
+
+Func OpenHabiticaURL($closeWindow)
+  Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
+  WinActivate("[CLASS:MozillaWindowClass]", "")
+  WinWaitActive("[CLASS:MozillaWindowClass]")
+  if $closeWindow Then
+    Send("{CTRLDOWN}9{CTRLUP}")
+  EndIf
+  $didAnything = True
 EndFunc
 
 Func Bail()
