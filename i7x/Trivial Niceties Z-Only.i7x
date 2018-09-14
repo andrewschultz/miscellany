@@ -237,7 +237,7 @@ chapter drop-player-at
 
 to drop-player-at (myrm - a room):
 	move player to myrm, without printing a room description;
-	say "[b][myrm][r]"
+	say "[b][myrm][r][paragraph break]"
 
 chapter basic consents
 

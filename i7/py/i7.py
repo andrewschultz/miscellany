@@ -295,7 +295,7 @@ with open("c:/writing/scripts/i7p.txt") as file:
             if combos: i7com[my_l] = l1
             else:
                 i7x[my_l] = l0[0]
-                i7xr[l1[0]] = l0[0]
+                i7xr[l0[0]] = l1[0]
 
 i7f = {
     "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa'), tafi('sa') ],

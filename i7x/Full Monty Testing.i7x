@@ -98,6 +98,7 @@ every turn (this is the full monty test rule) :
 	let test-output-yet be false;
 	repeat through table of monties:
 		if on-off entry is true:
+			if test-output-yet is false, say "========START TESTS[line break]";
 			now test-output-yet is true;
 			say "========[test-title entry]:[line break]";
 			follow the test-action entry;

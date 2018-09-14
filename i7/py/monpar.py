@@ -23,6 +23,7 @@ count = 1
 def usage():
     print("-c = clipboard")
     print("-fc = file/clipboard compare")
+    print("-ac = file/clipboard compare, autocopying file to clipboard first")
     exit()
 
 # This was a debug function for the first few iterations when the clipboard was not identical to the file it was copied from.
@@ -58,6 +59,7 @@ while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c': read_file = False
+    elif arg == 'ca': compare_file_clipboard = auto_clip_from_file = True
     elif arg == 'fc':
         compare_file_clipboard = True
         file_name = sys.argv[count+1]
@@ -67,7 +69,7 @@ while count < len(sys.argv):
 
 d = Differ()
 
-if compare_file_clipboard: file_vs_clipboard(file_name)
+if compare_file_clipboard: file_vs_clipboard(file_name, auto_clip_from_file)
 
 if read_file:
     if not file_name: sys.exit("Need file name.")
