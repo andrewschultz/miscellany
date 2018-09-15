@@ -233,6 +233,19 @@ definition: a direction (called thedir) is planar:
 	if thedir is cardinal or thedir is diagonal, decide yes;
 	decide no;
 
+chapter dtoging - not for release
+
+dtoging is an action out of world.
+
+understand the command "dtog" as something new.
+
+understand "dtog" as dtoging.
+
+carry out dtoging:
+	now debug-state is whether or not debug-state is false;
+	say "Debug-state is now [on-off of debug-state].";
+	the rule succeeds;
+
 chapter drop-player-at
 
 to drop-player-at (myrm - a room):
