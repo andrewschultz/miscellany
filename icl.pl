@@ -464,6 +464,7 @@ sub copyToBeta {
   $mtr =~ s/\.inform/ materials/g;
 
   print "Copying blurb file...\n";
+  system("copy \"$_[0]\\Release.blurb\" \"$betaDir\\uuid.txt\"");
   print "Copying UUID file...\n";
   system("copy \"$_[0]\\uuid.txt\" \"$betaDir\\uuid.txt\"");
   system("erase \"$bmat\\Figures\"*");

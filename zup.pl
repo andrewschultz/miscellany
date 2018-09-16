@@ -55,9 +55,10 @@ my $count = 0;
 my $temp;
 my $dropboxLink = "";
 my $needExclam  = 0;
-my $fileMinSize = 0;
-my $fileMaxSize = 0;
+my %fileMinSize;
+my %fileMaxSize;
 my $executedAny = 0;
+my $lastFile    = "";
 
 while ( $count <= $#ARGV ) {
   $a = lc( $ARGV[$count] );
@@ -224,7 +225,6 @@ sub readZupFile {
           $needExclam     = 1;
           $triedSomething = 1;
           $zipUp          = 1;
-          $fileMinSize    = $fileMaxSize = 0;
         }
       }
     }
@@ -253,9 +253,9 @@ sub readZupFile {
           die("OutFile not defined. You need a line with out=X.ZIP in $_[0].");
         }
         my $outLong = "c:/games/inform/zip/$outFile";
-        if ($deleteBefore) {
-          print "Deleting $outLong, suppress with -db\n";
-          unlink <"c:/games/inform/zip/$outFile">;
+        if ( $deleteBefore && ( -f "$outLong" ) ) {
+          print "Deleting $outLong, suppress with -nd\n";
+          unlink <"$outLong">;
         }
         unless ($extractOnly) {
           print "Writing to $outLong...\n";
@@ -286,12 +286,21 @@ sub readZupFile {
         print "Try -x to run executable commands"
           if ( !$executeBeforeZip && $executedAny );
         unless ($extractOnly) {
-          conditional_die( $bailOnFileSize,
-            "$outLong smaller than minimum bound $fileMinSize bytes.\n" )
-            if $fileMinSize && -s "c:/games/inform/zip/$outFile" < $fileMinSize;
-          conditional_die( $bailOnFileSize,
-            "$outLong larger than maximum bound $fileMaxSize bytes.\n" )
-            if $fileMaxSize && -s "c:/games/inform/zip/$outFile" > $fileMaxSize;
+          for my $q ( sort keys %fileMinSize ) {
+            print "\n$q/$fileMinSize{$q}/" . ( -s "$q" ) . "\n";
+            conditional_die( $bailOnFileSize,
+              "$outLong smaller than minimum bound $fileMinSize{$q} bytes.\n" )
+              if ( defined( $fileMinSize{$q} ) )
+              && ( $fileMinSize{$q} )
+              && ( -s "$q" < $fileMinSize{$q} );
+          }
+          for my $q ( sort keys %fileMaxSize ) {
+            conditional_die( $bailOnFileSize,
+              "$outLong larger than maximum bound $fileMaxSize{$q} bytes.\n" )
+              if ( defined( $fileMaxSize{$q} ) )
+              && ( $fileMaxSize{$q} )
+              && ( -s "$q" > $fileMaxSize{$q} );
+          }
         }
         if ($dropboxThisCopy) {
           print("Copying $outFile from $zipdir to $dbbin.\n");
@@ -303,15 +312,17 @@ sub readZupFile {
       /^out=/i && do {
         $a =~ s/^out=//gi;
         $outFile = $a;
+        my $outLong = "c:/games/inform/zip/$outFile";
+        $lastFile = $outLong;
         if ($viewFile) {
           if   ( -f "$outFile" ) { `$outFile`; }
           else                   { print "No file $outFile.\n"; }
           exit();
         }
         elsif ($deleteBefore) {
-          if ( -f $outFile ) {
-            print("Deleting c:/games/inform/zip/$outFile, suppress with -nd\n");
-            unlink <"c:/games/inform/zip/$outFile">;
+          if ( -f $outLong ) {
+            print("Deleting c:/games/inform/zip/$outLong, suppress with -nd\n");
+            unlink <"$outLong">;
           }
         }
         else {
@@ -328,17 +339,24 @@ sub readZupFile {
         next;
       };
       /^min:/ && do {
-        $fileMinSize = $a;
-        $fileMinSize =~ s/.*://;
-        die("File max size $fileMaxSize < file min size $fileMinSize")
-          if ( $fileMaxSize > 0 ) && ( $fileMaxSize < $fileMinSize );
+        $fileMinSize{$lastFile} = $a;
+        $fileMinSize{$lastFile} =~ s/.*://;
+        die(
+"$lastFile File max size $fileMaxSize{$lastFile} < file min size $fileMinSize{$lastFile}"
+          )
+          if ( defined( $fileMaxSize{$lastFile} ) )
+          && ( $fileMaxSize{$lastFile} > 0 )
+          && ( $fileMaxSize{$lastFile} < $fileMinSize{$lastFile} );
         next;
       };
       /^max:/ && do {
-        $fileMaxSize = $a;
-        $fileMaxSize =~ s/.*://;
-        die("File max size $fileMaxSize < file min size $fileMinSize")
-          if ( $fileMaxSize > 0 ) && ( $fileMaxSize < $fileMinSize );
+        $fileMaxSize{$lastFile} = $a;
+        $fileMaxSize{$lastFile} =~ s/.*://;
+        die(
+"File max size $fileMaxSize{$lastFile} < file min size $fileMinSize{$lastFile}"
+          )
+          if ( $fileMaxSize{$lastFile} > 0 )
+          && ( $fileMaxSize{$lastFile} < $fileMinSize{$lastFile} );
         next;
       };
       /^(x:|>>)/i && do {
@@ -434,6 +452,8 @@ sub readZupFile {
           print "No file/directory $a.\n";
         }
         $zip->addFile( "$a", "$b" );
+
+        if ( -f $a ) { $lastFile = $a; }
 
         # print "Writing $a to $b.\n";
         next;
