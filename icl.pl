@@ -215,10 +215,7 @@ for my $toComp (@compileList) {
   $count++;
 }
 
-if ( -f "gameinfo.dbg" ) {
-  print "Deleting gameinfo.dbg file\n";
-  unlink <gameinfo.dbg>;
-}
+delIfThere("gameinfo.dbg");
 
 my $totalTimeGlobal = time() - $startTimeGlobal;
 print "Total time taken: $totalTimeGlobal seconds.\n";
@@ -392,6 +389,8 @@ sub doOneBuild {
   ################this reloads the final output file
   delIfThere("$outFinal");
 
+  print("Modifying $betaDir\\Release.blurb to $betaDir\\Release2.blurb\n");
+
   open( A, "$betaDir\\Release.blurb" ) || die("Can't open blurb file...");
   open( B, ">$betaDir\\Release2.blurb" );
   my $line;
@@ -401,6 +400,9 @@ sub doOneBuild {
   }
   close(A);
   close(B);
+  print(
+"Copying modified $betaDir\\Release2.blurb back to $betaDir\\Release.blurb\n"
+  );
   system("xcopy /y \"$betaDir\\Release2.blurb\" \"$betaDir\\Release.blurb\"");
 
   sleep(1);
@@ -464,7 +466,7 @@ sub copyToBeta {
   $mtr =~ s/\.inform/ materials/g;
 
   print "Copying blurb file...\n";
-  system("copy \"$_[0]\\Release.blurb\" \"$betaDir\\uuid.txt\"");
+  system("copy \"$_[0]\\Release.blurb\" \"$betaDir\\Release.blurb\"");
   print "Copying UUID file...\n";
   system("copy \"$_[0]\\uuid.txt\" \"$betaDir\\uuid.txt\"");
   system("erase \"$bmat\\Figures\"*");
@@ -557,9 +559,9 @@ sub modifyBeta {
   }
   close(A);
   close(B);
-  print "Warning: didn't find VOLUME BETA TESTING - NOT FOR RELEASE line!"
+  print "Warning: didn't find VOLUME BETA TESTING - NOT FOR RELEASE line!\n"
     if ( !$foundBetaLine );
-  print "Warning: didn't find SECTION DEBUG COMPILER GLOBALS line!"
+  print "Warning: didn't find SECTION DEBUG COMPILER GLOBALS line!\n"
     if ( !$foundDebugGlobalsSection );
 }
 

@@ -50,6 +50,7 @@ my $ignoreTimeFlips   = 0;
 my $bailOnFileSize    = 1;
 my $deleteBefore      = 1;
 my $maxTimeDelay      = 1800;
+my $verbose           = 0;
 
 ##################variables
 my $count = 0;
@@ -141,6 +142,12 @@ while ( $count <= $#ARGV ) {
     /^-?v$/ && do {
       print "Viewing the output file, if there.\n";
       $viewFile = 1;
+      $count++;
+      next;
+    };
+    /^-?ve$/ && do {
+      print "Viewing the output file, if there.\n";
+      $verbose = 1;
       $count++;
       next;
     };
@@ -294,7 +301,10 @@ sub readZupFile {
           if ( !$executeBeforeZip && $executedAny );
         unless ($extractOnly) {
           for my $q ( sort keys %fileMinSize ) {
-            print "\n$q/$fileMinSize{$q}/" . ( -s "$q" ) . "\n";
+            print
+"Necessary min size dimension info: $q needs $fileMinSize{$q} < actual size "
+              . ( -s "$q" ) . "\n"
+              if $verbose;
             conditional_die( $bailOnFileSize,
               "$outLong smaller than minimum bound $fileMinSize{$q} bytes.\n" )
               if ( defined( $fileMinSize{$q} ) )
@@ -302,6 +312,10 @@ sub readZupFile {
               && ( -s "$q" < $fileMinSize{$q} );
           }
           for my $q ( sort keys %fileMaxSize ) {
+            print
+"Necessary max size dimension info: $q needs $fileMaxSize{$q} > actual size "
+              . ( -s "$q" ) . "\n"
+              if $verbose;
             conditional_die( $bailOnFileSize,
               "$outLong larger than maximum bound $fileMaxSize{$q} bytes.\n" )
               if ( defined( $fileMaxSize{$q} ) )
