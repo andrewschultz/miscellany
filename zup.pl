@@ -49,6 +49,7 @@ my $dropLinkClipOnly  = 0;
 my $ignoreTimeFlips   = 0;
 my $bailOnFileSize    = 1;
 my $deleteBefore      = 1;
+my $maxTimeDelay      = 1800;
 
 ##################variables
 my $count = 0;
@@ -80,6 +81,12 @@ while ( $count <= $#ARGV ) {
     /^-?a$/ && do {
       print "Kitchen sink flags for ZUP.\n";
       $executeBeforeZip = $dropboxThisCopy = $dropBinOpen = $dropLinkClip = 1;
+      $count++;
+      next;
+    };
+    /^-?mt$/ && do {
+      ( $maxTimeDelay = $a ) =~ s/^-mt//;
+      $maxTimeDelay = 0 if $maxTimeDelay == "";
       $count++;
       next;
     };
@@ -451,6 +458,15 @@ sub readZupFile {
         if ( ( !-f "$a" ) && ( !-d "$a" ) && ( $a !~ /\*/ ) ) {
           print "No file/directory $a.\n";
         }
+        if ( ( $a =~ /\.(z8|z5|glulx|ulx)$/ ) && ($maxTimeDelay) ) {
+          my $timestamp = ctime( stat($a)->mtime );
+          my $xxx       = time() - $timestamp;
+          if ( $xxx > $maxTimeDelay ) {
+            die(
+"$a has taken too long--$xxx vs $maxTimeDelay. Set maxTimeDelay to 0 with the -mt flag to fix this."
+            );
+          }
+        }
         $zip->addFile( "$a", "$b" );
 
         if ( -f $a ) { $lastFile = $a; }
@@ -526,6 +542,7 @@ USAGE: zupt.pl (project)
 -fi/if = ignore bail on bad file size
 -li lists all the project/outfile matches
 -nd = don't delete before (default is to delete output file)
+-mt = change max time delay (default = 1800, 1/2 hour)
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands (x+ forces things in the file)
