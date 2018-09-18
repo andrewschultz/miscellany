@@ -70,22 +70,12 @@ while $cmdCount <= $CmdLine[0]
     ContinueLoop
   EndIf
 
-MsgBox($MB_OK, "!!", $myCmd)
-
   If $myCmd == 'te' Then
     $testDontClick = True
   ElseIf $myCmd == 'f' Then
-    Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
-	WinActivate("[CLASS:MozillaWindowClass]", "")
-	WinWaitActive("[CLASS:MozillaWindowClass]")
-    Send("{CTRLDOWN}9{CTRLUP}")
-	$didAnything = True
 	OpenHabiticaURL(False)
-	$focused = 1
   ElseIf $myCmd == 'fc' Then
     OpenHabiticaURL(True)
-	Sleep(10)
-    Send("{CTRLDOWN}w{CTRLUP}")
 	$focused = 1
   ElseIf $myCmd == 'om' Then
     $onlyTrackMp = 1
@@ -238,7 +228,7 @@ While $cmdCount <= $CmdLine[0]
 	  if $focused == 1 Then
 	    $rightWarning = "Okay, this is the daily script in case I forgot. It runs " & $clicks & " times."
 	  EndIf
-      $res = MsgBox($MB_OKCANCEL, "Warning",  & @CRLF & "-xq avoids this nag.")
+      $res = MsgBox($MB_OKCANCEL, "Warning",  $rightWarning & @CRLF & "-xq avoids this nag.")
       if $res == $IDCANCEL Then
         exit
       EndIf
@@ -571,8 +561,10 @@ Func OpenHabiticaURL($closeWindow)
   Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
   WinActivate("[CLASS:MozillaWindowClass]", "")
   WinWaitActive("[CLASS:MozillaWindowClass]")
+  Send("{CTRLDOWN}9{CTRLUP}")
   if $closeWindow Then
-    Send("{CTRLDOWN}9{CTRLUP}")
+	Sleep(10)
+    Send("{CTRLDOWN}w{CTRLUP}")
   EndIf
   $didAnything = True
 EndFunc

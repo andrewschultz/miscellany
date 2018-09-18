@@ -5,6 +5,7 @@
 
 #include <MsgBoxConstants.au3>
 #include "c:\\scripts\\andrew.au3"
+#include <Array.au3>
 
 Opt("WinTitleMatchMode", -2)
 Opt("SendKeyDelay", 50)
@@ -38,7 +39,6 @@ while $count <= $cmdLine[0]
     $verticalInit2 = StringMid($CmdLine[$count], 5, 3)
   Elseif StringLeft($arg, 1) == 'v' Then
     $verticalInit1 = StringMid($CmdLine[$count], 2)
-	MsgBox($MB_OK, "!!", $verticalInit1)
   Elseif StringLeft($arg, 1) == 'w' Then
     $wait = StringMid($CmdLine[$count], 2)
   Elseif StringLeft($arg, 1) == 'd' Then
@@ -47,6 +47,8 @@ while $count <= $cmdLine[0]
     $start = $CmdLine[$count]
   ElseIf $CmdLine[$count] == -1 Then
     $verticalInit1 = 337
+  ElseIf $CmdLine[$count] == '?' Then
+    Usage()
   Else
     MOK("need valid #", "number must be -1 for re-reset or 1-9 for which step to start with." & "Can also do -s or s for streak info / -l or l to learn (default)")
     Exit
@@ -182,6 +184,22 @@ Func ResetAndResume()
   sleep(5000)
   MouseClick("left", 847, 289, 1)
   sleep(10000)
+EndFunc
+
+Func Usage()
+  Local $usgAry[7] = [ "-s, -l, -x, w, d are the options.", _
+    "-s = to streak page", _
+    "-l = to learn page", _
+    "-x = launch", _
+	"-w = # of seconds to wait", _
+	"-d = delay before each lesson", _
+	"-v = vertical init" _
+	]
+
+  Local $header = "Usage";
+
+  MOK($header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
+  exit
 EndFunc
 
 Func Bail()
