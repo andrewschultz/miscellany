@@ -10,5 +10,6 @@ FILES:
 * salf.py: section alphabetizer e.g. if there are a bunch of rules I want to keep alphabetized
 * talf.py : table alphabetizer
 * tc.py: transcript cutter (only takes asterisked commands)
+* tent.py: table entry checker (avoid checking a blank entry in story.ni file)
 * toast.py: parses Jacques Frechet's Toastball converted files
 * ttwi.py table twiddle
