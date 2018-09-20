@@ -234,6 +234,13 @@ def see_uniq_and_vers(args):
             if y not in i7xr.keys():
                 print(y, "should be in i7xr, with", len(i7rev[y]), "different values.")
 
+def revprojx(a):
+    if a in i7xr.keys(): return i7xr[a]
+    a = re.sub("\.inform.*", "", a)
+    a = re.sub(".*[\\\/]", "", a)
+    if a in i7xr.keys(): return i7xr[a]
+    return a
+
 def revproj(a):
     return_val = ""
     if a in i7xr.keys(): return i7xr[a]
