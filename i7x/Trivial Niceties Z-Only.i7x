@@ -47,9 +47,11 @@ To decide whether currently transcripting: (- CheckTranscriptStatus() -)
 
 section avoid line breaks in consider/follow
 
-[thanks to climbingstars https://www.intfiction.org/forum/viewtopic.php?p=41700]
+[thanks to climbingstars and zarf https://www.intfiction.org/forum/viewtopic.php?p=41700]
 
 To process (RL - a rule): (- ProcessRulebook({RL}, 0, true); -)
+
+To skip upcoming rulebook break: (- say__pc = say__pc | PARA_NORULEBOOKBREAKS; -). [this is when a weird line break pops up because Inform thinks it should after a rule, and you don't want it to. Often seen when writing a list of stuff after processing/considering/following rules.]
 
 book I figured this out! Yay!
 
@@ -81,6 +83,8 @@ to say wfak-d:
 book plural
 
 to say plur of (n - a number): if n is not 1, say "s"
+
+to say this-these of (nu - a number): say "th[if nu is 1]is[else]ese[end if]"
 
 book basic math
 
