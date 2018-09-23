@@ -1,5 +1,6 @@
 FILES:
 
+* defs.py: prints out all definitions functions in story.ni in local directory
 * dlogs.py debug logs
 * duptab.py : checks for duplicate tables
 * genc.py gender check

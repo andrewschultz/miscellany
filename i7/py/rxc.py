@@ -10,8 +10,11 @@ import os
 
 from collections import defaultdict
 
-def proc_tran(my_file, launch=False):
-    if not os.path.exists(my_file): sys.exit("No such file " + my_file)
+ignores = []
+
+def proc_tran(my_file, my_dir = ".", launch=False):
+    if not os.path.exists(my_file) and not os.path.exists(my_file + ".txt"): sys.exit("No such file " + my_file)
+    if not os.path.exists(my_file) and os.path.exists(my_file + ".txt"): my_file += ".txt"
     print("Processing", my_file)
     file_nox = re.sub("\.txt$", "", my_file, 0, re.IGNORECASE)
     cwd = os.getcwd()
@@ -24,8 +27,12 @@ def proc_tran(my_file, launch=False):
     fout.write("** game: /home/andrew/prt/debug-{:s}.ulx\n".format(proj_name))
     fout.write("** interpreter: /home/andrew/prt/glulxe -q\n\n* the-transcript")
     with open(my_file) as file:
-        for line in file:
+        for (line_count, line) in enumerate(file, 1):
             if line.startswith(">"):
+                for i in ignores:
+                    if re.search("^> *" + i, line):
+                        print("Ignoring line", line_count, line.strip())
+                        continue
                 if is_comment(line): continue
                 if re.search("^> *[^a-z0-9]", line):
                     print("Unusual command start in line", line_count, line.strip())
@@ -47,11 +54,31 @@ def is_comment(x):
 unu = defaultdict(int)
 
 if len(sys.argv) == 1: sys.exit("You need to specify a file name.")
+count = 1
 
-if "*" in sys.argv[1]:
-    q = glob.glob(sys.argv[1])
-    for q1 in q:
-        proc_tran(q1)
-else:
-    proc_tran(sys.argv[1], True)
+q = []
 
+this_dir = ""
+
+while count < len(sys.argv):
+    arg = sys.argv[1]
+    if "*" in sys.argv[1]:
+        q = glob.glob(sys.argv[1])
+        for q1 in q:
+            proc_tran(q1)
+    elif arg == 'u':
+        this_dir = ".."
+    elif '/' in arg or "\\" in arg:
+        this_dir = arg
+    elif arg.startswith('i='):
+        ignores = arg[2:].split(",")
+    else:
+        if len(q): sys.exit("Can only define one file at a time, or a glob.")
+        q = [ sys.argv[1] ]
+    count += 1
+
+laun = len(q) == 1
+
+if len(q) == 0: sys.exit("No file(s) specified.")
+
+for qf in q: proc_tran(qf, this_dir, laun)
