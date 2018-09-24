@@ -358,7 +358,9 @@ Func DoInt()
 
   PickAttr(4)
 
-  ; the first one-handed item, which gives slightly more benefits from the off-hand (Nomad's scimitar, formerly wand of hearts before CRON rewards)
+  ; here we don't go with the best weapon, because it is two-handed.
+  ; We pick the first one-handed item, which gives slightly more benefits from the off-hand (Nomad's scimitar, formerly wand of hearts before CRON rewards)
+  ; 16 + 16 > 27 (18 + class bonus of 9). We miss out on 15 perception, but 5 intelligence is more important.
   PickItem(1, 0)
   PickItem(0, 1)
   PickItem(0, 2)
@@ -384,24 +386,42 @@ Func DoPer()
 
 EndFunc
 
+Func ClickEquipItem($vert_delt)
+  sleep(1000)
+  MouseClick("left", 814, 510 + $vert_delt, 1)
+  sleep(1000)
+EndFunc
+
+Func SendWait($x)
+  Send($x)
+  sleep(600)
+EndFunc
+
 Func ClickEyewearAndAccessory($to_int)
-  Send("{HOME}")
-  sleep(600)
-  Send("{PGDN}")
-  sleep(600)
+  ; this bit is fiddly and also on the second page
+  SendWait("{HOME}")
+  SendWait("{PGDN}")
+  ; eyewear: goofy glasses (0 slots over) for PER, aether mask (0 slots over) for INT
   MouseClick("left", 248, 496, 1)
-  sleep(1000)
-  MouseClick("left", 814, 510, 1)
-  sleep(1000)
+  ClickEquipItem(0)
+  ; though eyewear is between head/body accessory, I put head/body together because there are no INT items, and Habitica sorts them randomly for INT.
+  ; however, a strength bonus is a Good Thing, since it increases critical hits.
+  if $to_int Then
+    SendWait("{PGUP}")
+    PickAttr(3)
+    SendWait("{PGDN}")
+  EndIf
+  ; head accessory: goggles of bookbinding (0 slots over) for PER, comical arrow (3 slots over, no INT but STR) afor INT
+  MouseClick("left", 248, 344, 1) ; this is simply not good enough. We should sort by strength, then re-sort by intelligence.
+  ClickEquipItem(0)
+  ; body accessory: cozy scarf (0 slots over) for PER, aether amulet (5 slots over) for INT
   ; Aether amulet has no extra line
   ; Cozy scarf has extra line
-  MouseClick("left", 248 + $horiz_delta * $to_int, 648, 1)
-  sleep(1000)
   ; since I bought the royal gryphon cloak it appears on the left when sorting by intelligence
-  MouseClick("left", 814, 540 - 30 * $to_int, 1)
-  sleep(600)
-  Send("{PGUP}")
-  sleep(600)
+  MouseClick("left", 248, 648, 1)
+  ClickEquipItem(30 - 30 * $to_int)
+  ; aether cloak is the only good back accessory, so we don't need to change it (yet)
+  SendWait("{PGUP}")
 EndFunc
 
 Func ToolsTrade($times, $equipPer, $unequipPer)
