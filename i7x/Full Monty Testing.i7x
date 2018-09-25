@@ -2,6 +2,8 @@ Version 1/161019 of Full Monty Testing by Andrew Schultz begins here.
 
 "Runs tests on a game according to what the player asks for"
 
+include Trivial Niceties Z-Only by Andrew Schultz
+
 volume montying
 
 montying is an action applying to one topic.
@@ -41,7 +43,7 @@ this is the try-dirs rule:
 	shift-player west;
 	shift-player south;
 	shift-player north;
-	unless ignore-widdershins:
+	unless ignore-widdershins is true:
 		shift-player widdershins;
 		shift-player turnwise;
 
@@ -85,7 +87,7 @@ carry out montying:
 	repeat through table of monties:
 		if the topic understood matches montopic entry:
 			now on-off entry is whether or not on-off entry is false;
-			say "[test-title entry] is now [if on-off entry is true]on[else]off[end if].";
+			say "[test-title entry] is now [on-off of on-off entry].";
 			now found-toggle is true;
 	if found-toggle is false:
 		say "That wasn't a recognized flag for MONTY.[paragraph break][monty-sum][line break]";
@@ -126,7 +128,7 @@ understand "montyh" as montyhing.
 
 carry out montyhing:
 	now hide-headers is whether or not hide-headers is false;
-	say "Hide-headers is now [if hide-headers is true]on[else]off[end if].";
+	say "Hide-headers is now [on-off of hide-headers].";
 	the rule succeeds;
 
 chapter montyiing
@@ -139,7 +141,7 @@ understand "montyi" as montyiing.
 
 carry out montyiing:
 	now ignore-widdershins is whether or not ignore-widdershins is false;
-	say "ignore-widdershins is now [if ignore-widdershins is true]on[else]off[end if].";
+	say "ignore-widdershins is now [on-off of ignore-widdershins].";
 	the rule succeeds;
 
 Full Monty Testing ends here.
