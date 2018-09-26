@@ -36,8 +36,16 @@ Local $onlyTrackMP = 0
 Local $closeAfter = 0
 Local $focused = 0
 
+; constants for clicking around. Depending on your browser magnification/monitor size, you may wish to change thses.
+Local $item_popup_h = 814
+Local $item_popup_v = 510
 Local $horiz_delta = 95
 Local $vert_delta = 160
+Local $h_init_page_1 = 250
+Local $v_init_page_1 = 430
+Local $attr_pulldown_h = 1450
+Local $attr_pulldown_init = 330
+Local $attr_pulldown_delta = 30
 
 Local $preDelay = 0
 
@@ -303,12 +311,12 @@ EndFunc
 
 Func PickItem($x, $y)
   ; this varies based on screen size
-  $x2 = $x * $horiz_delta + 250
-  $y2 = $y * $vert_delta + 430
+  $x2 = $x * $horiz_delta + $h_init_page_1
+  $y2 = $y * $vert_delta + $v_init_page_1
   MouseClick ( "left", $x2, $y2, 1)
   sleep(2000)
   ; verify you want to equip the item
-  MouseClick ( "left", 814, 510, 1)
+  MouseClick ( "left", $item_popup_h, $item_popup_c, 1)
   sleep(2000)
 EndFunc
 
@@ -326,9 +334,9 @@ Func ToHab()
 EndFunc
 
 Func PickAttr($y)
-    MouseClick ( "left", 1450, 330, 1)
+    MouseClick ( "left", $attr_pulldown_h, $attr_pulldown_init, 1)
     sleep(1000)
-    MouseClick ( "left", 1450, 360 + $y * 30, 1)
+    MouseClick ( "left", $attr_pulldown_h, $attr_pulldown_init + $attr_pulldown_delta * ($y + 1), 1)
     sleep(2000)
 EndFunc
 
@@ -388,7 +396,7 @@ EndFunc
 
 Func ClickEquipItem($vert_delt)
   sleep(1000)
-  MouseClick("left", 814, 510 + $vert_delt, 1)
+  MouseClick("left", 814, $item_popup_c + $vert_delt, 1)
   sleep(1000)
 EndFunc
 

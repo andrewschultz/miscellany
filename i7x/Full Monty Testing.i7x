@@ -69,6 +69,8 @@ to say monty-sum:
 	repeat through table of monties:
 		say "[2da][test-title entry] can be turned on/off with [topic-as-text entry][line break]";
 	say "[line break]MONTY FULL/ALL and MONTY NONE tracks all these every-move tries, or none of them.[no line break]";
+	say "MONTYH toggles hiding the testing headers/footers, which is currently [on-off of hide-headers].";
+	say "MONTYI toggles ignoring widdershins/turnwise for testing purposes, which is currently [on-off of hide-headers]. These can be used to test generic odd directions."
 
 understand "monty [text]" as montying.
 
