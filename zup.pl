@@ -306,7 +306,8 @@ sub readZupFile {
               . ( -s "$q" ) . "\n"
               if $verbose;
             conditional_die( $bailOnFileSize,
-              "$outLong smaller than minimum bound $fileMinSize{$q} bytes.\n" )
+"$q in $outLong smaller than minimum bound $fileMinSize{$q} bytes.\n"
+              )
               if ( defined( $fileMinSize{$q} ) )
               && ( $fileMinSize{$q} )
               && ( -s "$q" < $fileMinSize{$q} );
@@ -317,7 +318,8 @@ sub readZupFile {
               . ( -s "$q" ) . "\n"
               if $verbose;
             conditional_die( $bailOnFileSize,
-              "$outLong larger than maximum bound $fileMaxSize{$q} bytes.\n" )
+"$q in $outLong larger than maximum bound $fileMaxSize{$q} bytes.\n"
+              )
               if ( defined( $fileMaxSize{$q} ) )
               && ( $fileMaxSize{$q} )
               && ( -s "$q" > $fileMaxSize{$q} );
