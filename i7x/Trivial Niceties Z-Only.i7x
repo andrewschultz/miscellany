@@ -1,6 +1,6 @@
 Version 1/140928 of Trivial Niceties Z-Only by Andrew Schultz begins here.
 
-"This puts in stubs I've used often and probably will again."
+"This puts in stubs I've used often and probably will again. The non-Z-only has stuff that takes up more memory e.g. indexed text."
 
 volume stuff I've used multiple games
 
@@ -10,7 +10,7 @@ to say fill-in-here: say "!!!!" [This is something that should never be in a gam
 
 book screen effects [I always do something silly with the status line, or try a creative wait for any key, because that's fun]
 
-include basic screen effects by Emily Short.
+include Basic Screen Effects by Emily Short.
 
 book thanks to Zarf and Climbingstars
 
