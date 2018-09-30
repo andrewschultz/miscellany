@@ -1,6 +1,6 @@
 Version 1/140928 of Trivial Niceties Z-Only by Andrew Schultz begins here.
 
-"This puts in stubs I've used often and probably will again. The non-Z-only has stuff that takes up more memory e.g. indexed text."
+"This puts in stubs I've used often and probably will again. The non-Z-only in Trivial Niceties includes these and also has functions that takes up more memory e.g. indexed text."
 
 volume stuff I've used multiple games
 
@@ -11,6 +11,8 @@ to say fill-in-here: say "!!!!" [This is something that should never be in a gam
 book screen effects [I always do something silly with the status line, or try a creative wait for any key, because that's fun]
 
 include Basic Screen Effects by Emily Short.
+
+to first-status: (- DrawStatusLine(); -); [ this is so you can change the status line at the start of the game ]
 
 book thanks to Zarf and Climbingstars
 
@@ -47,18 +49,17 @@ To decide whether currently transcripting: (- CheckTranscriptStatus() -)
 
 section avoid line breaks in consider/follow
 
-[thanks to climbingstars and zarf https://www.intfiction.org/forum/viewtopic.php?p=41700]
+[thanks to Climbingstars and Zarf https://www.intfiction.org/forum/viewtopic.php?p=41700]
 
 To process (RL - a rule): (- ProcessRulebook({RL}, 0, true); -)
 
-To skip upcoming rulebook break: (- say__pc = say__pc | PARA_NORULEBOOKBREAKS; -). [this is when a weird line break pops up because Inform thinks it should after a rule, and you don't want it to. Often seen when writing a list of stuff after processing/considering/following rules.]
+To skip upcoming rulebook break: (- say__pc = say__pc | PARA_NORULEBOOKBREAKS; -). [this is when a weird line break pops up because Inform thinks it should after a rule, and you don't want it to. Often seen when writing a list of stuff after processing/considering/following rules and nothing gets printed out.]
 
 book I figured this out! Yay!
 
 [this is useful if we have a problem that occurs before we make a single move]
 
-to force-all-rules:
-	(- debug_Rules = 2; -)
+to force-all-rules: (- debug_Rules = 2; -)
 
 book waiting stubs
 
@@ -76,9 +77,7 @@ to wfak:
 		else:
 			wait for any key;
 
-to say wfak-d:
-	if debug-state is false:
-		wfak;
+to say wfak-d: if debug-state is false, wfak;
 
 book plural
 
@@ -94,26 +93,19 @@ to decide what number is abs of (n - a number):
 
 book style abbreviations
 
-to say r:
-	say "[roman type]";
+to say r: say "[roman type]";
 
-to say i:
-	say "[italic type]";
+to say i: say "[italic type]";
 
-to say b:
-	say "[bold type]";
+to say b: say "[bold type]";
 
-to say fw:
-	say "[fixed letter spacing]"
+to say fw: say "[fixed letter spacing]"
 
-to say vw:
-	say "[variable letter spacing]"
+to say vw: say "[variable letter spacing]"
 
-to say on-off of (t - a truth state):
-	say "[if t is true]on[else]off[end if]";
+to say on-off of (t - a truth state): say "[if t is true]on[else]off[end if]";
 
-to say off-on of (t - a truth state):
-	say "[if t is true]off[else]on[end if]";
+to say off-on of (t - a truth state): say "[if t is true]off[else]on[end if]";
 
 book screenreading hooks
 
@@ -122,8 +114,7 @@ to say 2da: say "[unless screenread is true]--[end if]"; [this is so people with
 to say equal-banner of (nu - a number):
 	if screenread is true, continue the action;
 	let nu2 be nu;
-	if nu2 > 80:
-		now nu2 is 80;
+	if nu2 > 80, now nu2 is 80;
 	if nu2 < 0, continue the action;
 	repeat with nu3 running from 1 to nu2:
 		say "=";
@@ -197,6 +188,8 @@ to decide whether the player dir-consents:
 
 chapter scling
 
+[ * scenery listing ]
+
 scling is an action out of world.
 
 understand the command "scl" as something new.
@@ -210,6 +203,8 @@ carry out scling:
 	the rule succeeds;
 
 chapter bkling
+
+[ * backdrop listing ]
 
 bkling is an action out of world.
 
@@ -238,6 +233,8 @@ definition: a direction (called thedir) is planar:
 	decide no;
 
 chapter dtoging - not for release
+
+[ * toggles debug state ]
 
 dtoging is an action out of world.
 
@@ -293,11 +290,11 @@ Include (-
 
 -)
 
-volume overgeneral testing - not for release
+volume big-picture game state hacking - not for release
 
 chapter auing
 
-[* this tells the debug version when or how to auto-respond to yes/no prompts *]
+[* this lets the user switch how the debug version auto-responds to yes/no prompts *]
 
 auing is an action applying to one number.
 
@@ -318,7 +315,7 @@ to say auto-set:
 
 chapter wining
 
-[* this automatically wins the game so I can test endgame stuff *]
+[* this automatically wins the game so I can test post-game options *]
 
 wining is an action applying to nothing.
 
