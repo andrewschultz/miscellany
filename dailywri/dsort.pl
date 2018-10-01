@@ -7,6 +7,8 @@
 #Usual usage is:
 #dsort -home
 #
+#dsort -home -nm = no move
+#dsort -home -nm -ct = compare each temp file
 
 use strict;
 use warnings;
@@ -15,7 +17,7 @@ use File::Copy;
 use Time::Local;
 
 #############unix Files
-my %whatWhereHash;
+my %whatWhereHash;    # this says what section is in which file
 my %toPrimaryHash;
 my %detailHash;
 
@@ -27,7 +29,7 @@ my %writings;
 my %skipReading;
 
 ########options
-my $daysBack       = 120;
+my $daysBack       = 27;
 my $readOnly       = 0;
 my $outputHash     = 0;
 my $skipOutput     = 0;
@@ -37,15 +39,17 @@ my $debug           = 0;
 my $verifyFirstLine = 0;
 my $looseTest       = 0;
 my $noMove          = 0;
+my $compareTemp     = 0;
 my $quiet           = 0;
 my $verbose         = 0;
 my @fileArray       = 0;
 
 ##############variables
-my $unixFiles = "";
-my $procBytes = 0;
-my $bigString = "";
-my $nolet     = "";
+my $unixFiles         = "";
+my $procBytes         = 0;
+my $bigString         = "";
+my $nolet             = "";
+my $undefinedWritings = "";
 
 #############counters
 my $match;
@@ -61,16 +65,13 @@ my $todaysFile;
 initializeGlobals();
 readCmdLine();
 
-my $undef = "$intoDir/undef.txt";
+my $undef   = "$intoDir/undef.txt";
+my $tempDir = "$intoDir/temp";
 
 my $lastDayString  = todayString(1);
 my $firstDayString = todayString($daysBack);
 
 preprocessFileList(@fileArray);
-
-#print $detailHash{"das-par"};
-
-#die($detailHash{"das-pkg"});
 
 if ($outputHash) { rewriteHashFile(); }
 if ($skipOutput) { exit; }
@@ -108,6 +109,8 @@ while ( $line = <X> ) {
   }
 }
 
+####################read in each daily file
+
 for $dailyDir (@inDirs) {
 
   opendir( DIR, "$dailyDir" );
@@ -131,7 +134,7 @@ for $dailyDir (@inDirs) {
 
     #print "Trying $dailyDir/$fi\n";
     if ( ($firstDayString) && ( $fi lt $firstDayString ) ) {
-      print "$fi too late\n";
+      print "$fi too early\n";
       next;
     }
 
@@ -160,11 +163,32 @@ for $dailyDir (@inDirs) {
     my $time  = timelocal( 59, 59, 23, $day, $month, $year ) + 1;
     my $tdelt = ( time() - $time );
     my $delta = sprintf( "%d", $tdelt / 86400 );
-    print DL "$fi took $delta day(s) rounded down, $tdelt seconds.\n";
+    print DL "$fi took $delta day(s) rounded down, $tdelt seconds.\n"
+      if !$noMove;
   }
 
   close(DL);
+  close(DIR);
 
+}
+
+moveWritingChunks();
+
+if ($compareTemp) {
+  opendir( DIR, "$tempDir" );
+
+  my @tempfiles = readdir DIR;
+
+  # print join(", ", @fileArray) . "\n";
+
+  for my $q (@tempfiles) {
+    next unless -f "$tempDir\\$q";
+    next unless $q =~ /spopal/;
+    my $cmd = "wm $tempDir\\$q $intoDir\\$q";
+    print "$cmd\n";
+    `$cmd`;
+  }
+  exit;
 }
 
 my $unknownBefore = ( -s "$undef" );
@@ -270,7 +294,6 @@ sub chopDailyFile {
 
   #%writings = ();
   my @temp;
-  my $undefinedWritings = "";
 
   my %doubleCheck;
   my %origLines;
@@ -285,7 +308,7 @@ sub chopDailyFile {
   while ( $a = <A> ) {
     chomp($a);
     if ( $a =~ /^\\/ ) {
-      my $aa = chompy($a);
+      my $aa = get_header_name($a);
       if ( $toPrimaryHash{$aa} ) { $b = $toPrimaryHash{$aa}; die; }
       else                       { $b = $aa; }
       if ( defined( $doubleCheck{$b} ) && ( $doubleCheck{$b} == 1 ) ) {
@@ -306,33 +329,35 @@ sub chopDailyFile {
     }
   }
 
-  if ($returnIt) { return; }
-
   close(A);
+
+  if ($returnIt) { return; }
 
   open( A, "$_[0]" );
 
   #print "Reading $_[0]\n";
 
-  #first, we read in from the individual file and sort everything.
+  #first, we read in from the individual daily file and sort everything.
+  print "Before $_[0] vvff $writings{'vvff'}\n";
   while ( $a = <A> ) {
     if ( $a =~ /^\\/ ) {
-      $currentSection = chompy($a);
+      $currentSection = get_header_name($a);
       if ( !$detailHash{$currentSection} ) {
         print "Undefined section $currentSection\n";
       }
 
       #print("Reading section $temp[0] aka '$detailHash{$temp[0]}' from $a\n");
-      if ( $writings{$currentSection} ) {
-        $b = <A>;
-        chomp($b);
-        print
-"WARNING you have two sections '$detailHash{$currentSection}' starting with $b\n";
-        $writings{$currentSection} .= $b;
-      }
+      chomp( my $aa = $a );
+      print "Reading $aa in $_[0]\n";
       next;
     }
-    if ( $a !~ /[a-zA-Z0-9=]/ ) { $currentSection = ""; next; }
+    if ( $a !~ /[a-zA-Z0-9=]/ ) {
+      if ( $currentSection eq 'vvff' ) {
+        print "After $_[0] writings(vvff) = " . $writings{'vvff'} . "\n";
+      }
+      $currentSection = "";
+      next;
+    }
 
     #print "PROCESSING $a [using $currentSection]:";
 
@@ -367,17 +392,25 @@ sub chopDailyFile {
     if ( !isIn( $a, @outFiles ) ) { @outFiles = ( @outFiles, $a ); }
   }
 
+}    #end of chopDailyFile
+
+#######################################
+
+sub moveWritingChunks {
+
   #for (@outFiles) { print "File $_ may be written to\n"; }
 
 #foreach (keys %whatWhereHash) { if ($writings{$_}) { printDebug("put $_ in $whatWhereHash{$_}\n"); } }
 
-  die("Need to create $intoDir/temp") if !-d "$intoDir/temp/";
+  die("Need to create $tempDir") if !-d "$tempDir/";
 
   for (@outFiles) {
 
     #print "Looking at $_\n";
 
-    my $tempOut = "$intoDir/temp/$_";
+    my $hashval;
+    my $cr      = "";
+    my $tempOut = "$tempDir/$_";
 
     open( A, "$intoDir/$_" );
     open( B, ">$tempOut" );
@@ -387,7 +420,7 @@ sub chopDailyFile {
         #print "OK, starting $hashval\n";
         print B $a;
         while ( ( $b = <A> ) ) {
-          last if $b =~ /[a-zA-Z0-9=]/;
+          last if $b !~ /[a-zA-Z0-9=]/;
           print B $b;
         }
 
@@ -410,7 +443,7 @@ sub chopDailyFile {
         #print "Put $a--$writings{$hashval}$cr==to temp-$_\n";
         #print "Deleting $hashval\n";
 
-        #print "Deleting $hashval.\n";
+        print "Deleting $hashval.\n";
         delete $writings{$hashval};
       }
       else { print B $a; }
@@ -447,7 +480,7 @@ sub chopDailyFile {
 
   #for $qz (keys %writings) { print "$qz = $writings{$qz}\n"; }
 
-}    #end of chopDaily
+}
 
 #######################################
 
@@ -481,7 +514,7 @@ sub haveWriting {
   return 0;
 }
 
-sub chompy {
+sub get_header_name {
   my $temp = $_[0];
   chomp($temp);
   $temp =~ s/^\\//g;
@@ -539,17 +572,18 @@ sub preprocessFileList {
           else {
             $whatWhereHash{$_} = $thisFile;
             if ( $detailHash{$_} ) {
-              die("Oops. We have 2 descriptors of $_.\n");
+              die(
+"Oops. We have 2 descriptors of $_, $whatWhereHash{$_} $detailHash{$_} vs $thisFile $. vs $b[0].\n"
+              );
             }
             $detailHash{$_} = $b[1];
           }
         }
       }
     }
-    close(A);
     die( "Need descriptors for " . join( ", ", @descriptors ) )
       if scalar @descriptors;
-
+    close(A);
   }    #exit;
 
 }
@@ -659,8 +693,9 @@ sub readCmdLine {
         next;
       };
       /^-?oo$/ && do { $outputHash = 1; $skipOutput = 1; $count++; next; };
-      /^-?o$/  && do { $outputHash = 1; $count++; next; };
-      /^-?nm$/ && do { $noMove     = 1; $count++; next; };
+      /^-?o$/  && do { $outputHash  = 1; $count++; next; };
+      /^-?nm$/ && do { $noMove      = 1; $count++; next; };
+      /^-?ct$/ && do { $compareTemp = 1; $count++; next; };
       /^-?(bl)$/ && do { $lastDayString  = $b; $count += 2; next; };
       /^-?(af)$/ && do { $firstDayString = $b; $count += 2; next; };
       /^-?[0-9]+$/
@@ -745,6 +780,7 @@ sub fishForFiles {
       $fileHash{$x} = 1;
     }
   }
+  close(A);
   @fileArray = sort keys %fileHash;
 }
 
