@@ -119,6 +119,11 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?n$/ && do { @runs = ("names"); $count++; next; };    # names
+    /^-?sno$/i && do {
+      @runs = ("sno");
+      $count++;
+      next;
+    };
     /^-?(3d|3|4d|4|opo)$/i
       && do { @runs = ("opo"); $count++; next; };            # 3dop try
     /^-?as[0-9]*$/i
@@ -308,74 +313,80 @@ sub addSaveFile {
   my $q = $_[0];
   $q =~ s/ //g;
   my $dontrewrite = 0;
+  my $skipRead    = 0;
   push( @saveData, $_[0] );
   $saveHash{$q} = 1;
 
-  open( A, $saveFile ) || warn("No save file $saveFile.");
-  while ( $a = <A> ) {
-    chomp($a);
-    $a = lc($a);
-    if ( $a =~ /[ \.-]/ ) {
-      my @words = split( /[ \.-]/, lc $a );
-      if ( $saveHash{"$words[1]$words[0]"} ) {
+  open( A, $saveFile ) || do {
+    warn("No save file $saveFile.");
+    $skipRead = 1;
+  };
+  if ( !$skipRead ) {
+    while ( $a = <A> ) {
+      chomp($a);
+      $a = lc($a);
+      if ( $a =~ /[ \.-]/ ) {
+        my @words = split( /[ \.-]/, lc $a );
+        if ( $saveHash{"$words[1]$words[0]"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[1]s$words[0]"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[1]$words[0]s"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[1]s$words[0]s"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[0]$words[1]"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[0]s$words[1]"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[0]$words[1]s"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+        if ( $saveHash{"$words[0]s$words[1]s"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        }
+      }
+      else {
+        if ( $saveHash{$a} || $saveHash{"${a}s"} ) {
+          print "$a already in save list.\n";
+          $dontrewrite = 1;
+          last;
+        } # trick/reference: how to separate perl variables from interpolated strings
+      }
+      $a =~ s/ //g;
+      if ( $a eq $q ) {
         print "$a already in save list.\n";
         $dontrewrite = 1;
         last;
       }
-      if ( $saveHash{"$words[1]s$words[0]"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[1]$words[0]s"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[1]s$words[0]s"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[0]$words[1]"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[0]s$words[1]"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[0]$words[1]s"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
-      if ( $saveHash{"$words[0]s$words[1]s"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      }
+      $saveHash{$a} = 1;
+      if ( $#saveData == 99 ) { last; }
+      push( @saveData, $a );
     }
-    else {
-      if ( $saveHash{$a} || $saveHash{"${a}s"} ) {
-        print "$a already in save list.\n";
-        $dontrewrite = 1;
-        last;
-      } # trick/reference: how to separate perl variables from interpolated strings
-    }
-    $a =~ s/ //g;
-    if ( $a eq $q ) {
-      print "$a already in save list.\n";
-      $dontrewrite = 1;
-      last;
-    }
-    $saveHash{$a} = 1;
-    if ( $#saveData == 99 ) { last; }
-    push( @saveData, $a );
+    close(A);
   }
-  close(A);
   if ($dontrewrite) { return; }
   open( A, ">$saveFile" );
   for (@saveData) {
@@ -516,7 +527,7 @@ sub processOneFile {
   if ( $modFile =~ /\.i7x/ )      { $modFile =~ s/.*[\\\/]/EXT /g; }
 
   # print "$_[0] => $modFile\n"; return;
-  open( A, "$_[0]" ) || die("No $_[0]");
+  open( A, "$_[0]" ) || die("No $_[0]. Create it or remove it from gq.txt.");
   while ( $a = <A> ) {
     my $temp = $a;
     if ( $inQuotes && ( $a =~ /\"/ ) ) {
