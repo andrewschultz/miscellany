@@ -12,7 +12,7 @@ book screen effects [I always do something silly with the status line, or try a 
 
 include Basic Screen Effects by Emily Short.
 
-to first-status: (- DrawStatusLine(); -); [ this is so you can change the status line at the start of the game ]
+to force-status: (- DrawStatusLine(); -); [ this is so you can change the status line at the start of the game ]
 
 book thanks to Zarf and Climbingstars
 

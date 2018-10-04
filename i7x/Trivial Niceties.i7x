@@ -18,6 +18,8 @@ to dn (myt - indexed text):
 	if debug-state is true:
 		say "[myt]";
 
+debug-count is a number that varies;
+
 to d1:
 	now debug-count is 1;
 	say "[debug-count].";

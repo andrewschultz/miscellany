@@ -292,6 +292,10 @@ i7com = {}
 with open("c:/writing/scripts/i7p.txt") as file:
     for line in file:
         if line.startswith(';'): break
+        if line.startswith('#'): continue
+        if "=" not in line:
+            print("WARNING line", line.strip(), "needs ; # or =")
+            continue
         combos = False
         l0 = line.lower().strip().split("=")
         l1 = l0[1].split(",")

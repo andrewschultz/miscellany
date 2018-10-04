@@ -42,7 +42,12 @@ while $count <= $cmdLine[0]
   Elseif StringLeft($arg, 1) == 'w' Then
     $wait = StringMid($CmdLine[$count], 2)
   Elseif StringLeft($arg, 1) == 'd' Then
-    $lesson_delay = StringMid($CmdLine[$count], 2)
+    if StringIsDigit(StringMid($CmdLine[$count], 2)) Then
+	  $count += 1
+	  $lesson_delay = $CmdLine[$count]
+	Else
+	  $lesson_delay = StringMid($CmdLine[$count], 2)
+    EndIf
   ElseIf $CmdLine[$count] > 0 Then
     $start = $CmdLine[$count]
   ElseIf $CmdLine[$count] == -1 Then
