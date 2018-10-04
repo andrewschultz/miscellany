@@ -23,14 +23,16 @@ my $oow;
 
 for $v (@verbs) {
 
-  my $vo = $v;
+  my $applyTo = "";
+  my $inBrax  = "";
+  my $vo      = $v;
   $v =~ s/^[a-zA-Z0-9#]{1,2}-//gi;
   $v =~ s/\./ /g;
 
   ( my $vn = $v ) =~ s/-/ /;
   $v =~ s/-//;
 
-  if ( $vo =~ /w-/ ) { print "Defining out of world action $v.\n"; }
+  if ( $vo =~ /w-/ ) { $applyTo = "out of world"; }
   elsif ( $vo =~ /a-/ ) {
     print "Defining instead rule for $v.\n";
     $code = sprintf(
@@ -38,86 +40,51 @@ for $v (@verbs) {
       $code );
   }
   elsif ( $vo =~ /d-/ ) {
-    print "Defining action applying to one direction $v.\n";
+    $applyTo = "applying to one direction";
+    $inBrax  = "[any thing]";
   }
-  elsif ( $vo =~ /o-/ ) { print "Defining action applying to one thing $v.\n"; }
+  elsif ( $vo =~ /o-/ ) {
+    $applyTo = "applying to one thing";
+    $inBrax  = " [thing]";
+  }
+  elsif ( $vo =~ /ov-/ ) {
+    $applyTo = "applying to one visible thing";
+    $inBrax  = " [any thing]";
+  }
   elsif ( $vo =~ /p-/ ) {
-    print "Defining action applying to one person $v.\n";
+    $applyTo = "applying to one person";
+    $inBrax  = " [person]";
   }
   elsif ( $vo =~ /#-/ ) {
-    print "Defining action applying to one number $v.\n";
+    $applyTo = "applying to one number";
+    $inBrax  = " [number]";
   }
-  else { print "Defining action applying to nothing $v.\n"; }
+  else { $applyTo = "applying to nothing"; }
+
+  print "Defining action $applyTo.\n";
 
   $oow = "applying to nothing";
   if ( $vo =~ /w-/ ) { $oow = "out of world"; }
 
   #print "$b from $v\n"; next;
 
-  if ( ( $vo =~ /^ts-/ ) || ( $vo =~ /^t-/ ) ) {
+  if ($applyTo) {
+    $code = sprintf(
+      "%schapter %sing\n\n%sing is an action %s.
+
+understand the command \"%s\" as something new.
+
+understand \"%s%s\" as %sing.
+
+carry out %sing:
+	the rule succeeds.
+
+", $code, $v, $v, $applyTo, $vn, $vn, $inBrax, $v, $v
+    );
+  }
+  elsif ( ( $vo =~ /^ts-/ ) || ( $vo =~ /^t-/ ) ) {
     $code =
       sprintf( "%s%s is a truth state that varies. %s is usually false.\n\n",
-      $code, $v, $v );
-  }
-  elsif ( $vo =~ /^#-/ ) {
-    $code = sprintf(
-      "%schapter %sing\n\n%sing is an action applying to one number.
-
-understand the command \"%s\" as something new.
-
-understand \"%s [number]\" as %sing.
-
-carry out %sing:
-	the rule succeeds.
-
-", $code, $v, $v, $vn, $vn, $v, $v
-    );
-  }
-  elsif ( $vo =~ /^o-/ ) {
-    $code = sprintf(
-      "%schapter %sing\n\n%sing is an action applying to one thing.
-
-understand the command \"%s\" as something new.
-
-understand \"%s [something]\" as %sing.
-
-carry out %sing:
-	the rule succeeds.
-
-", $code, $v, $v, $vn, $vn, $v, $v
-    );
-  }
-  elsif ( $vo =~ /^d-/ ) {
-    $code = sprintf(
-      "%schapter %sing\n\n%sing is an action applying to one direction.
-
-understand the command \"%s\" as something new.
-
-understand \"%s [direction]\" as %sing.
-
-carry out %sing:
-	the rule succeeds.
-
-", $code, $v, $v, $vn, $vn, $v, $v
-    );
-  }
-  elsif ( $vo =~ /^p-/ ) {
-    $code = sprintf(
-      "%schapter %sing\n\n%sing is an action applying to one person.
-
-understand the command \"%s\" as something new.
-
-understand \"%s [person]\" as %sing.
-
-carry out %sing:
-	the rule succeeds.
-
-", $code, $v, $v, $vn, $vn, $v, $v
-    );
-  }
-  elsif ( $vo =~ /^n-/ ) {
-    print "Defining number $v.\n";
-    $code = sprintf( "%s%s is a number that varies. %s is usually 0.\n\n",
       $code, $v, $v );
   }
   elsif ( $vo =~ /^rm-/ ) {
@@ -133,19 +100,7 @@ carry out %sing:
       $code, $v, $v, $v, $v );
   }
   else {
-
-    $code = sprintf(
-      "%schapter %sing\n\n%sing is an action $oow.
-
-understand the command \"%s\" as something new.
-
-understand \"%s\" as %sing.
-
-carry out %sing:
-	the rule succeeds;
-
-", $code, $v, $v, $vn, $vn, $v, $v
-    );
+    print("Couldn't find anything to do.\n");
   }
 
 }
