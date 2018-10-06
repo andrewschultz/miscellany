@@ -25,11 +25,12 @@ my $myNotesFile = "notes9.otl";
 my $dailyLog    = "c:\\writing\\daily-log.txt";
 my @outFiles;
 my @inDirs;
+my @toShift = ();
 my %writings;
 my %skipReading;
 
 ########options
-my $daysBack       = 27;
+my $daysBack       = 35;
 my $readOnly       = 0;
 my $outputHash     = 0;
 my $skipOutput     = 0;
@@ -200,7 +201,15 @@ my $afterTime  = time() - $beforeTime;
 my $afterBytes = readFileSizes();
 print "Before $beforeBytes After $afterBytes Dif "
   . ( $afterBytes - $beforeBytes )
-  . "\nBytes of files processed=$procBytes\nBytes of unknown=$unknownDelta added, $unknownAfter total.\nProcessing took $afterTime seconds.";
+  . "\nBytes of files processed=$procBytes\nBytes of unknown=$unknownDelta added, $unknownAfter total.\nProcessing took $afterTime seconds.\n";
+
+if ( ( scalar @toShift ) > 0 ) {
+  for my $t (@toShift) {
+    ( my $t2 = $t ) =~ s/daily/daily\/done/i;
+    print("MOVED: $t to $t2.\n");
+    move( $t, $t2 );
+  }
+}
 
 if ($bigString) {
   $bigString =~ s/\//\\/g;
@@ -333,12 +342,13 @@ sub chopDailyFile {
 
   if ($returnIt) { return; }
 
+  push( @toShift, $_[0] );
+
   open( A, "$_[0]" );
 
   #print "Reading $_[0]\n";
 
   #first, we read in from the individual daily file and sort everything.
-  print "Before $_[0] vvff $writings{'vvff'}\n";
   while ( $a = <A> ) {
     if ( $a =~ /^\\/ ) {
       $currentSection = get_header_name($a);
