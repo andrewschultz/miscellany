@@ -1,8 +1,5 @@
 # bolds.py
 # looks for misplaced bold in story.ni locally
-# todo: see about opening at first err line
-# todo: read from separate file
-# todo: specific ignores for each project
 
 import re
 import i7
@@ -13,18 +10,17 @@ from collections import defaultdict
 
 bolds_data = "c:/writing/scripts/bolds.txt"
 
-caps = defaultdict(lambda: defaultdict(int))
+caps = defaultdict(lambda: defaultdict(bool))
+ignores = defaultdict(lambda: defaultdict(bool))
 
 my_project = "ailihphilia"
 
 def skipit(a):
     if '"' not in a: return True
-    if 'No LOL on' in a: return True
-    if ']REI' in a: return True
-    if 'VERSES REV' in a: return True
-    if 'verb-abbrev is' in a: return True
-    if re.search(": *print", a): return True
     if a.startswith("["): return True
+    for q in ignores[my_project].keys():
+        if q in a: return True
+    if re.search(": *print", a): return True
     if a.startswith("USE / GOOD"): return True
     if 'REV OVER doesn\'t think' in a: return True
     return False
@@ -105,12 +101,23 @@ def read_data_file():
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
+            if re.search("^IGNORE[:=]", line):
+                l2 = re.sub("^IGNORE[:=]", "", line.rstrip())
+                ignores[cur_proj][l2] = True
+                continue
             if re.search("^(PROJ|PROJECT)=", line):
                 l2 = re.sub("^(PROJ|PROJECT)=", "", line.rstrip())
                 cur_proj = l2
                 continue
             l2 = line.rstrip()
             caps[cur_proj][l2] = True
+
+count = 1
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg == 'e': i7.npo(bolds_data)
+    count += 1
 
 if not os.path.exists("story.ni"): sys.exit("Need a directory with story.ni.")
 
