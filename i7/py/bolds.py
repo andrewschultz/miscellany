@@ -1,6 +1,8 @@
 # bolds.py
 # looks for misplaced bold in story.ni locally
 # todo: see about opening at first err line
+# todo: read from separate file
+# todo: specific ignores for each project
 
 import re
 import i7
@@ -9,9 +11,11 @@ import sys
 
 from collections import defaultdict
 
-caps = [ "THINK", "TIP IT", "DEVED", "DEV ED", "SMH MS", "GUY UG", "TOOLS LOOT", "NI WIN", "N I WIN", "META", "SHUTTUHS", "LO VOL", "LOVE VOL", "DEEP SPEED", "REV OVER", "ROT", "REI", "REV", "MM", "GRAMMAR G", "VERB", "VERBS", "ABOUT" ]
+bolds_data = "c:/writing/scripts/bolds.txt"
 
-caps_par = "|".join(caps)
+caps = defaultdict(lambda: defaultdict(int))
+
+my_project = "ailihphilia"
 
 def skipit(a):
     if '"' not in a: return True
@@ -87,7 +91,24 @@ def check_bold_italic():
     if imbalances: print(imbalances, "imbalances")
     else: print("No bold/italic/regular imbalances found.")
 
+def read_data_file():
+    if not os.path.exists(bolds_data): sys.exit("Need file " + bolds_data)
+    with open(bolds_data) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            if re.search("^(PROJ|PROJECT)=", line):
+                l2 = re.sub("^(PROJ|PROJECT)=", "", line.rstrip())
+                cur_proj = l2
+                continue
+            l2 = line.rstrip()
+            caps[cur_proj][l2] = True
+
 if not os.path.exists("story.ni"): sys.exit("Need a directory with story.ni.")
+
+read_data_file()
+
+caps_par = "|".join(caps[my_project].keys())
 
 #find_caps()
 #bruteforce()
