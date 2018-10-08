@@ -45,6 +45,12 @@ def words_file(x):
 
 w_f = words_file
 
+def in_quotes(x, get_second=True, get_comments=False):
+    j = x.split('"')[get_second::2]
+    retval = ' '.join(j)
+    if not get_comments: retval = re.sub("\[[\]]*\]", "", retval)
+    return retval
+
 def new_lev(x):
     for j in range (0, len(ov)):
         if x.lower().startswith(ov[j]): return j+1
