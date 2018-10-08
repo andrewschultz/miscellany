@@ -19,6 +19,7 @@ my_project = "ailihphilia"
 
 def skipit(a):
     if '"' not in a: return True
+    if 'No LOL on' in a: return True
     if ']REI' in a: return True
     if 'VERSES REV' in a: return True
     if 'verb-abbrev is' in a: return True
@@ -41,6 +42,7 @@ def bruteforce():
     if count == 0: print("NO ERRORS! Yay!")
 
 def sophisticated():
+    retval = 0
     finerr = defaultdict(str)
     print("Sophisticated run:")
     count = 0
@@ -52,6 +54,7 @@ def sophisticated():
             q = re.findall(r"(?<!(\[b\]))\b({:s})\b(?!(\[r\]))".format(caps_par), l2)
             if q:
                 if skipit(line): continue
+                if not retval: retval = line_count
                 count += 1
                 countall += len(q)
                 adds = [x[1] for x in q]
@@ -61,8 +64,10 @@ def sophisticated():
     else:
         for q in sorted(finerr.keys(), key=lambda x: (len(finerr[x]), finerr[x])):
             print("{:10s}".format(q), finerr[q])
+    return retval
 
 def find_caps():
+    retval = 0
     capfind = defaultdict(int)
     print("Find caps:")
     count = 0
@@ -72,9 +77,12 @@ def find_caps():
             if skipit(line): continue
             l2 = i7.in_quotes(line)
             q = re.findall(r"([A-Z])([A-Z ]*[A-Z])".format(caps_par), l2)
-            for l in q: capfind[l[0]+l[1]] += 1
+            if q: retval = line_count
+            for l in q:
+                capfind[l[0]+l[1]] += 1
     for q in sorted(capfind.keys(), key=capfind.get):
         print(q, capfind[q])
+    return retval
 
 def check_bold_italic():
     imbalances = 0
@@ -112,5 +120,7 @@ caps_par = "|".join(caps[my_project].keys())
 
 #find_caps()
 #bruteforce()
-sophisticated()
+line_to_open = sophisticated()
 check_bold_italic()
+
+if line_to_open: i7.npo("story.ni", line_to_open)
