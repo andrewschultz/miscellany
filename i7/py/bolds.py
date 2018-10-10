@@ -13,8 +13,18 @@ bolds_data = "c:/writing/scripts/bolds.txt"
 caps = defaultdict(lambda: defaultdict(bool))
 ignores = defaultdict(lambda: defaultdict(bool))
 
+line_to_open = 0
 my_project = "ailihphilia"
 cmd_line_proj = ""
+
+def usage():
+    print("-f = find caps")
+    print("-b = brute_force_bool")
+    print("-s = sophisticated_bool")
+    print("-c = check_bold_italic_bool")
+    print("-nx/-xn negates options above. Only -s is on to start.")
+    print("Any project or abbreviation can be used.")
+    exit()
 
 def skipit(a):
     if '"' not in a: return True
@@ -26,7 +36,7 @@ def skipit(a):
     if 'REV OVER doesn\'t think' in a: return True
     return False
 
-def bruteforce():
+def brute_force():
     print("Brute force run:")
     count = 0
     with open("story.ni") as file:
@@ -117,10 +127,24 @@ def read_data_file():
             caps[cur_proj][l2] = True
 
 count = 1
+find_caps_bool = False
+brute_force_bool = False
+sophisticated_bool = True
+check_bold_italic_bool = False
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
-    elif arg == 'e': i7.npo(bolds_data)
+    if arg == 'e': i7.npo(bolds_data)
+    elif arg == 'f': find_caps_bool = True
+    elif arg == 'nf' or arg == 'fn': find_caps_bool = False
+    elif arg == 'b': brute_force_bool = True
+    elif arg == 'nb' or arg == 'bn': brute_force_bool = False
+    elif arg == 's': sophisticated_bool = True
+    elif arg == 'ns' or arg == 'sn': sophisticated_bool = False
+    elif arg == 'c': check_bold_italic_bool = True
+    elif arg == 'nc' or arg == 'cn': check_bold_italic_bool = False
+    elif arg == '?': usage()
     else:
         if cmd_line_proj: sys.exit("You tried to define 2 cmd line projects, {:s} then {:s}.".format(cmd_line_proj, arg))
         cmd_line_proj = i7.proj_exp(arg)
@@ -141,9 +165,9 @@ read_data_file()
 
 caps_par = "|".join(set(caps[my_project].keys()) | set(caps["generic"].keys()))
 
-#find_caps()
-#bruteforce()
-line_to_open = sophisticated()
-check_bold_italic()
+if find_caps_bool: find_caps()
+if brute_force_bool: brute_force()
+if sophisticated_bool: line_to_open = sophisticated()
+if check_bold_italic_bool: check_bold_italic()
 
 if line_to_open: i7.npo("story.ni", line_to_open)
