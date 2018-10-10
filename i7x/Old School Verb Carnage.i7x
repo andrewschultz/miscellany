@@ -36,7 +36,7 @@ understand the command "touch" as "slice".
 understand the command "attach" as "slice".
 understand the command "tie" as "slice".
 
-understand "slice [text]" and "prune [text]" and "chop [text]" and "kiss [text]" and "hug [text]" and "embrace [text]" and "buy [text]" and "purchase [text]" and "buy [text]" and "light [text]" and "jump [text]" and "hop [text]" and "skip [text]" and "sip [text]" and "swallow [text]" and "shine [text]" and "polish [text]" and "sweep [text]" and "clean [text]" and "dust [text]" and "wipe [text]" and "scrub [text]" and "fight [text]" and "torture [text]" and "wreck [text]" and "crack [text]" and "murder [text]" and "kill [text]" and "punch [text]" and "thump [text]" and "sorry [text]" and "touch [text]" and "attach [text]" and "tie [text]" as os2ing.
+understand "slice [text]" as os2ing.
 
 oldschooling is an action out of world.
 

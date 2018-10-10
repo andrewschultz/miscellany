@@ -4,6 +4,9 @@
 #
 # along with very basic python functions
 #
+# dir2proj converts current directory to project
+# in_quotes only gets text in quotes
+# proj_exp = project expansion
 
 from collections import defaultdict
 import sys

@@ -14,6 +14,7 @@ caps = defaultdict(lambda: defaultdict(bool))
 ignores = defaultdict(lambda: defaultdict(bool))
 
 my_project = "ailihphilia"
+cmd_line_proj = ""
 
 def skipit(a):
     if '"' not in a: return True
@@ -97,6 +98,7 @@ def check_bold_italic():
 
 def read_data_file():
     if not os.path.exists(bolds_data): sys.exit("Need file " + bolds_data)
+    cur_proj = "generic"
     with open(bolds_data) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
@@ -106,24 +108,38 @@ def read_data_file():
                 ignores[cur_proj][l2] = True
                 continue
             if re.search("^(PROJ|PROJECT)=", line):
-                l2 = re.sub("^(PROJ|PROJECT)=", "", line.rstrip())
+                l2 = re.sub("^(PROJ|PROJECT)=", "", line.rstrip()).lower()
                 cur_proj = l2
                 continue
             l2 = line.rstrip()
+            if l2 in caps["generic"].keys():
+                print("WARNING", l2, "in generic caps keys as well as", cur_proj, "at line", line_count)
             caps[cur_proj][l2] = True
 
 count = 1
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
-    if arg == 'e': i7.npo(bolds_data)
+    elif arg == 'e': i7.npo(bolds_data)
+    else:
+        if cmd_line_proj: sys.exit("You tried to define 2 cmd line projects, {:s} then {:s}.".format(cmd_line_proj, arg))
+        cmd_line_proj = i7.proj_exp(arg)
     count += 1
+
+if cmd_line_proj:
+    print("Changing dir to", cmd_line_proj)
+    try:
+        os.chdir(to_proj(cmd_line_project))
+    except:
+        sys.exit("Can't map", cmd_line_proj, "to a directory.")
+
+my_proj = i7.dir2proj(os.getcwd())
 
 if not os.path.exists("story.ni"): sys.exit("Need a directory with story.ni.")
 
 read_data_file()
 
-caps_par = "|".join(caps[my_project].keys())
+caps_par = "|".join(set(caps[my_project].keys()) | set(caps["generic"].keys()))
 
 #find_caps()
 #bruteforce()
