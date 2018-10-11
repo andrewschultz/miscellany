@@ -23,6 +23,7 @@ def usage():
     print("-s = sophisticated_bool")
     print("-c = check_bold_italic_bool")
     print("-nx/-xn negates options above. Only -s is on to start.")
+    print("-[fbsc]o/-o[fbsc] = only one option.")
     print("Any project or abbreviation can be used.")
     exit()
 
@@ -138,12 +139,24 @@ while count < len(sys.argv):
     if arg == 'e': i7.npo(bolds_data)
     elif arg == 'f': find_caps_bool = True
     elif arg == 'nf' or arg == 'fn': find_caps_bool = False
+    elif arg == 'ob' or arg == 'bo':
+        sophisticated_bool = brute_force_bool = check_bold_italic_bool = False
+        find_caps_bool = True
     elif arg == 'b': brute_force_bool = True
     elif arg == 'nb' or arg == 'bn': brute_force_bool = False
+    elif arg == 'ob' or arg == 'bo':
+        sophisticated_bool = brute_force_bool = find_caps_bool = False
+        check_bold_italic_bool = True
     elif arg == 's': sophisticated_bool = True
     elif arg == 'ns' or arg == 'sn': sophisticated_bool = False
+    elif arg == 'os' or arg == 'so':
+        check_bold_italic_bool = brute_force_bool = find_caps_bool = False
+        sophisticated_bool = True
     elif arg == 'c': check_bold_italic_bool = True
     elif arg == 'nc' or arg == 'cn': check_bold_italic_bool = False
+    elif arg == 'oc' or arg == 'co':
+        sophisticated_bool = brute_force_bool = find_caps_bool = False
+        check_bold_italic_bool = True
     elif arg == '?': usage()
     else:
         if cmd_line_proj: sys.exit("You tried to define 2 cmd line projects, {:s} then {:s}.".format(cmd_line_proj, arg))
