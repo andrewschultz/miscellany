@@ -59,6 +59,22 @@ def new_lev(x):
         if x.lower().startswith(ov[j]): return j+1
     return 0
 
+def file_len(fname):
+    with open(fname) as f:
+        for i, l in enumerate(f):
+            pass
+    return i + 1
+
+def file_len_eq(f1, f2, bail = True):
+    fl1 = file_len(f1)
+    fl2 = file_len(f2)
+    if fl1 != fl2:
+        oops_string = "{:s} and {:s} have different # of lines, suggesting corrupt data: {:d} vs {:d}.".format(f1, f2, fl1, fl2)
+        if bail:
+            sys.exit(oops_string)
+        else:
+            print(oops_string)
+
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
     table_start = 0

@@ -86,7 +86,7 @@ def all_mistakes(a):
 
 def toalf(a, b):
     f0 = open(a, "r")
-    f = open(b, "w", newline="\n")
+    f = open(b, "w", newline=my_newline)
     l = f0.readlines()
     for l2 in sorted(l): f.write(l2)
     f.close()
@@ -117,7 +117,7 @@ def sort_mistake(pr):
     ignore_dupe_next_line = False
     loc_dupes = 0
     glo_dupes = 0
-    f = open(temp_file, "w", newline="\n")
+    f = open(temp_file, "w", newline=my_newline)
     with open(mf) as file:
         for (linecount, line) in enumerate(file, 1):
             ll = line.lower().rstrip()
@@ -165,7 +165,7 @@ def sort_mistake(pr):
     elif need_alpha:
         f.write(line)
     f.close()
-    if os.stat(temp_file).st_size != os.stat(mf).st_size: sys.exit("WARNING corrupt data likely: {:s} and {:s} not the same size, {:d} and {:d} respectively.".format(mf, temp_file, os.stat(temp_file).st_size, os.stat(mf).st_size))
+    i7.file_len_eq(mf, temp_file)
     if cmp(temp_file, mf):
         if not super_quiet: print("No change for", mf)
     else:
@@ -189,6 +189,8 @@ def sort_mistake(pr):
     if track_global_duplicates: dupe_summary += ", {:d} global duplicates.".format(glo_dupes)
     print(dupe_summary)
 
+unix_newline = True
+
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
@@ -197,12 +199,16 @@ while count < len(sys.argv):
     elif arg == 'd': detail_debug = True
     elif arg == 'g': track_global_duplicates = True
     elif arg == 'sq': super_quiet = True
+    elif arg == 'u': unix_newline = True
+    elif arg == 'w': unix_newline = False
     elif arg == '?': usage()
     elif not i7.lpro(arg):
         print(arg, "does not map to any project. Showing usage.")
         usage()
     else: projs.append(i7.lpro(arg))
     count = count + 1
+
+my_newline = "\n" if unix_newline else "\r\n"
 
 alpha_on = all_alpha[:alpha_level]
 alpha_off = all_alpha[alpha_level:]
