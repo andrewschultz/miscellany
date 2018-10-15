@@ -19,64 +19,49 @@ $VERSION     = 1.00;
 @EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np npx openWinOrUnix isWindows shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
-our %i7x = ( "12" => "shuffling",
-  "sa" => "shuffling",
-  "roi" => "roiling",
-  "s13" => "roiling",
-  "sts" => "stale-tales-slate", # not one game, but one repo
-  "3" => "threediopolis",
-  "3d" => "threediopolis",
-  "13" => "threediopolis",
-  "14" => "ugly-oafs",
-  "oafs" => "ugly-oafs",
-  "s15" => "dirk",
-  "15" => "compound",
-  "pc" => "compound",
-  "4" => "fourdiopolis",
-  "4d" => "fourdiopolis",
-  "s16" => "fourdiopolis",
-  "16" => "slicker-city",
-  "sc" => "slicker-city",
-  "bs" => "btp-st",
-  "s17" => "btp-st",
-  "btp" => "buck-the-past",
-  "e11" => "dash",
-  "e13" => "ghost",
-  "e14" => "Candy Rush Saga",
-  "e15" => "heezy-park",
-  "e16" => "checkered-haunting",
-  "e17a" => "uxmulbrufyuz",
-  "e17b" => "vivid-mimic",
-  "ss" => "seeker-status",
-  "17" => "cube-cavern",
-  "cc" => "cube-cavern",
-  "ai" => "ailihphilia",
-  "ail" => "ailihphilia",
-  "pu" => "ailihphilia",
-  "up" => "ailihphilia",
-  "tm" => "tragic-mix",
-  "mo" => "molesworth",
-  "mw" => "molesworth",
-  "69" => "69105more",
-  "qb" => "big-nose",
-  "bn" => "big-nose"
-);
+our %i7x = ();
+our %i7xr = ();
+our @i7gh = ();
+our @i7bb = ();
 
-our %i7xr = ( "shuffling" => "sa",
-  "roiling" => "roi",
-  "threediopolis" => "3d",
-  "fourdiopolis" => "4d",
-  "ugly-oafs" => "uo",
-  "compound" => "pc",
-  "slicker-city" =>"sc" ,
-  "btp-st" =>"bs" ,
-  "btp" => "buck-the-past",
-  "ailihphilia" => "ai",
-  "big-nose" => "qb",
-);
+open(A, "c:/writing/scripts/i7p.txt") || die ("Can't open i7p.txt");
 
-our @i7gh = ("threediopolis", "short-games", "fourdiopolis", "stale-tales-slate", "the-problems-compound", "slicker-city", "misc", "ugly-oafs", "dirk", "trizbort", "writing", "ailihphilia", "tragic-mix");
-our @i7bb = ("seeker-status", "buck-the-past",  "ailihphilia", "big-nose", "curate");
+our $i7p_line;
+
+while ($i7p_line = <A>)
+{
+  next if $i7p_line =~ /^#/;
+  last if $i7p_line =~ /^;/;
+  chomp($i7p_line);
+  my $temp = $i7p_line;
+  $temp =~ s/.*://;
+
+  if ($i7p_line =~ /^GITHUB:/)
+  {
+    @i7gh = split(/,/, $temp);
+    next;
+  }
+  elsif ($i7p_line =~ /^BITBUCKET:/)
+  {
+    @i7bb = split(/,/, $temp);
+    next;
+  }
+
+  my @i7xary = split(/=/, $i7p_line);
+  my @poss_proj;
+  if ($i7xary[1] !~ /,/)
+  {
+    $i7x{$i7xary[1]} = $i7xary[0];
+    $i7xr{$i7xary[0]} = $i7xary[1];
+  }
+  else
+  {
+    @poss_proj = split(/,/, $i7xary[1]);
+	for my $p (@poss_proj) {
+	  $i7x{$p} = $i7xary[0];
+	}
+  }
+}
 
 our @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");
 
