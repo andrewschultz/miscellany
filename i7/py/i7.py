@@ -314,10 +314,20 @@ i7x = {}
 i7xr = {}
 i7com = {}
 
+i7bb = []
+i7gh = []
+
 with open("c:/writing/scripts/i7p.txt") as file:
     for line in file:
         if line.startswith(';'): break
         if line.startswith('#'): continue
+        ll = line.lower().strip()
+        if ll.startswith("bitbucket:"):
+            i7bb = re.sub(".*:", "", ll).split(",")
+            continue
+        if ll.startswith("github:"):
+            i7gh = re.sub(".*:", "", ll).split(",")
+            continue
         if "=" not in line:
             print("WARNING line", line.strip(), "needs ; # or =")
             continue
