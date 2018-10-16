@@ -318,7 +318,7 @@ i7bb = []
 i7gh = []
 
 with open("c:/writing/scripts/i7p.txt") as file:
-    for line in file:
+    for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.lower().strip()
@@ -327,6 +327,13 @@ with open("c:/writing/scripts/i7p.txt") as file:
             continue
         if ll.startswith("github:"):
             i7gh = re.sub(".*:", "", ll).split(",")
+            continue
+        if ll.startswith("combo:"):
+            l1 = ll[6:].split("=")
+            i7com[l1[0]] = l1[1]
+            continue
+        if ":" in ll:
+            print("WARNING: line {:d} has unrecognized colon: {:s}".format(line_count, ll))
             continue
         if "=" not in line:
             print("WARNING line", line.strip(), "needs ; # or =")

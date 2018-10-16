@@ -23,6 +23,7 @@ our %i7x = ();
 our %i7xr = ();
 our @i7gh = ();
 our @i7bb = ();
+our %i7com = ();
 
 open(A, "c:/writing/scripts/i7p.txt") || die ("Can't open i7p.txt");
 
@@ -45,6 +46,17 @@ while ($i7p_line = <A>)
   {
     @i7bb = split(/,/, $temp);
     next;
+  }
+  elsif ($i7p_line =~ /^COMBO:/i)
+  {
+    (my $temp = $i7p_line) =~ s/.*://;
+    my @tempAry = split(/=/, $temp);
+    $i7com{$tempAry[0]} = $tempAry[1];
+    next;
+  }
+  elsif ($i7p_line =~ /:/)
+  {
+    warn("WARNING: line $. has an unrecognized colon: $i7p_line\n");
   }
 
   my @i7xary = split(/=/, $i7p_line);
