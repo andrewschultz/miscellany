@@ -1,6 +1,6 @@
 ########################################################
 #
-#zupt.pl
+#zup.pl
 #
 #given a manifest of files, this zips the latest version into, uh, a zip file
 #
@@ -11,7 +11,10 @@ use File::stat;
 use File::Path;
 
 use Win32::Clipboard;
+use Win32API::File qw( GetFileAttributes FILE_ATTRIBUTE_REPARSE_POINT );
+use Win32::Symlink;
 
+use Cwd 'abs_path';
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 
 ################constants first
@@ -482,6 +485,15 @@ sub readZupFile {
 "$a has taken too long--$xxx vs $maxTimeDelay. Set maxTimeDelay to 0 with the -mt flag to fix this."
             );
           }
+        }
+        my $is_link = GetFileAttributes($a) & FILE_ATTRIBUTE_REPARSE_POINT;
+        if ($is_link) {
+          ( my $a2 = $a ) =~ s/\//\\/g;
+          my $q = `dir \"$a2\"`;
+          $q =~ s/.*\[//sm;
+          $q =~ s/].*//sm;
+          print "Symlink $a -> $q\n";
+          $a = $q;
         }
         $zip->addFile( "$a", "$b" );
 
