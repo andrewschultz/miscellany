@@ -35,6 +35,8 @@ oo = [ 'off', 'on' ]
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+extdir = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz'
+
 def file_to_alf(fname, out_name, ignore_blanks):
     fo = open(fname, "rU")
     fl = sorted(fo.readlines())
@@ -188,11 +190,8 @@ def build_log_open(x):
 
 blo = bl_o = build_log_open
 
-def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
-
 def hdr(x, y):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} {:s}.i7x'.format(lpro(x, True).title(), y.title())
+    return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), y.title())
 
 def notes_file(x):
     return sdir(x) + "/" + "notes.txt"
@@ -201,17 +200,17 @@ def walkthrough_file(x):
     return sdir(x) + "/" + "walkthrough.txt"
 
 def mistake_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Mistakes.i7x'.format(lpro(x, True).title())
+    return '{:s}\{:s} Mistakes.i7x'.format(extdir, lpro(x, True).title())
 
 mifi = mistake_file
 
 def table_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tables.i7x'.format(lpro(x, True).title())
+    return '{:s}\{:s} Tables.i7x'.format(extdir, lpro(x, True).title())
 
 tafi = table_file
 
 def test_file(x):
-    return 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\{:s} Tests.i7x'.format(lpro(x, True).title())
+    return '{:s}\{:s} Tests.i7x'.format(extdir, lpro(x, True).title())
 
 tefi = test_file
 
@@ -221,7 +220,7 @@ def triz(x):
 
 def hfile(x, y):
     x2 = re.sub("-", " ", x)
-    return "c:\\program files (x86)\\inform 7\\inform7\\extensions\\andrew schultz\\{:s} {:s}.i7x".format(x2, y)
+    return "{:s}\\{:s} {:s}.i7x".format(extdir, x2, y)
 
 def proj_exp(x, return_nonblank = True):
     if x in i7xr.keys(): return x
@@ -316,8 +315,6 @@ def all_proj_fi(x, bail = True):
     return ary
 
 apf = all_proj_fi
-
-i7xd = "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\"
 
 i7c = {
   "sts": ["roiling", "shuffling"],
