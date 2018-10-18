@@ -35,6 +35,35 @@ oo = [ 'off', 'on' ]
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+def file_to_alf(fname, out_name, ignore_blanks):
+    fo = open(fname, "rU")
+    fl = sorted(fo.readlines())
+    if ignore_blanks: fl = list(filter(None, fl))
+    f2 = open(out_name, "w")
+    f2.write(out_name)
+
+def file_alf_compare(f1, f2):
+    a1 = "c:/writing/temp/alf-1.txt"
+    a2 = "c:/writing/temp/alf-2.txt"
+    file_to_alf(f1, a1)
+    file_to_alf(f2, a2)
+    return filecmp.cmp(a1, a2)
+
+def file_char_size(fname):
+    len = 0
+    with open(fname) as file:
+        for line in file:
+            len += len(line)
+    return len
+
+def file_line_len(fname, count_blanks = False):
+    blanks = 0
+    with open(fname) as f:
+        for i, l in enumerate(f, 1):
+            if not count_blanks and not l.strip(): blanks += 1
+            pass
+    return i + blanks
+
 def no_lead_art(x):
     return re.sub("^(some|the|an|a) (thing called )?", "", x, 0, re.IGNORECASE)
 
