@@ -30,12 +30,14 @@ ovh = outline_val_hash
 outline_val = sorted(outline_val_hash, key=outline_val_hash.get)
 ov = outline_val
 
+auth = "Andrew Schultz"
+
 oo = [ 'off', 'on' ]
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
-extdir = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz'
+extdir = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 
 def file_to_alf(fname, out_name, ignore_blanks):
     fo = open(fname, "rU")
@@ -222,6 +224,11 @@ def hfile(x, y):
     x2 = re.sub("-", " ", x)
     return "{:s}\\{:s} {:s}.i7x".format(extdir, x2, y)
 
+def hf_exp(x, return_nonblank = True):
+    xl = x.lower()
+    if xl in i7hfx.keys(): return i7hfx[xl]
+    else: return xl
+
 def proj_exp(x, return_nonblank = True):
     if x in i7xr.keys(): return x
     elif x in i7x.keys(): return i7x[x]
@@ -339,6 +346,7 @@ i7rn = { "shuffling": "shuffling_around_release_5",
 i7x = {}
 i7xr = {}
 i7com = {}
+i7hfx = {}
 
 i7bb = []
 i7gh = []
@@ -348,6 +356,10 @@ with open("c:/writing/scripts/i7p.txt") as file:
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.lower().strip()
+        if ll.startswith("headname:"):
+            l1 = ll[9:].split("=")
+            for x in l1[1].split(","): i7hfx[x] = l1[0]
+            continue
         if ll.startswith("bitbucket:"):
             i7bb = re.sub(".*:", "", ll).split(",")
             continue

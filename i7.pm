@@ -56,6 +56,7 @@ while ($i7p_line = <A>)
   }
   elsif ($i7p_line =~ /:/)
   {
+    next if ($i7p_line =~ /^HEADNAME/); # HEADNAME not processed by Perl. It is for my python functions.
     warn("WARNING: line $. has an unrecognized colon: $i7p_line\n");
   }
 
