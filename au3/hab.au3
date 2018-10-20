@@ -17,6 +17,8 @@
 ;
 
 ; in case I ever want to change default constants
+; hab-h.au3 is what to change instead of hab.au3, so I don't keep tripping source control for every small choice
+; the big one is changing classes
 #include <hab-h.au3>
 #include "c:\\scripts\\andrew.au3"
 
@@ -316,7 +318,7 @@ Func PickItem($x, $y)
   MouseClick ( "left", $x2, $y2, 1)
   sleep(2000)
   ; verify you want to equip the item
-  MouseClick ( "left", $item_popup_h, $item_popup_c, 1)
+  MouseClick ( "left", $item_popup_h, $item_popup_v, 1)
   sleep(2000)
 EndFunc
 
@@ -369,7 +371,16 @@ Func DoInt()
   ; here we don't go with the best weapon, because it is two-handed.
   ; We pick the first one-handed item, which gives slightly more benefits from the off-hand (Nomad's scimitar, formerly wand of hearts before CRON rewards)
   ; 16 + 16 > 27 (18 + class bonus of 9). We miss out on 15 perception, but 5 intelligence is more important.
-  PickItem(1, 0)
+  ; also, intelligence is sorted differently if you are a wizard or if you are not.
+  ;
+  ; also, we can do better than use hard coding and magic numbers to equip the nomad's scimitar below, but this program's not there yet.
+  ; the quick and dirty way would be to have, say 0, 1, CLASS_WIZARD, 9 / 1, 0 / 2, 0 / 3, 0
+  ;
+  if $my_class = $CLASS_WIZARD Then
+	PickItem(9, 0)
+  else
+	PickItem(1, 0)
+  endif
   PickItem(0, 1)
   PickItem(0, 2)
   PickItem(0, 3)
