@@ -14,8 +14,10 @@ my @verbs;
 
 if ( !defined( $ARGV[0] ) ) { usage(); }
 if ( $ARGV[0] =~ /\?/ )     { usage(); }
-if ( $ARGV[0] =~ /,/ ) { @verbs = split( /,/, $ARGV[0] ); }
-else                   { @verbs = @ARGV; }
+if ( $ARGV[0] =~ /,/ ) { @verbs = split( /,/, lc( $ARGV[0] ) ); }
+else {
+  @verbs = map { lc($_) } @ARGV;
+}
 
 my $v;
 my $code = "";
@@ -39,29 +41,29 @@ for $v (@verbs) {
 "%sinstead of doing something with $v:\n\tif action is procedural:\n\t\tcontinue the action;\n\tsay \"[fill-in-here\]\";\n\n",
       $code );
   }
-  elsif ( $vo =~ /d-/ ) {
+  elsif ( $vo =~ /^d-/ ) {
     $applyTo = "applying to one direction";
     $inBrax  = "[any thing]";
   }
-  elsif ( $vo =~ /o-/ ) {
+  elsif ( $vo =~ /^o-/ ) {
     $applyTo = "applying to one thing";
     $inBrax  = " [thing]";
   }
-  elsif ( $vo =~ /ov-/ ) {
+  elsif ( $vo =~ /^ov-/ ) {
     $applyTo = "applying to one visible thing";
     $inBrax  = " [any thing]";
   }
-  elsif ( $vo =~ /p-/ ) {
+  elsif ( $vo =~ /^p-/ ) {
     $applyTo = "applying to one person";
     $inBrax  = " [person]";
   }
-  elsif ( $vo =~ /#-/ ) {
+  elsif ( $vo =~ /^#-/ ) {
     $applyTo = "applying to one number";
     $inBrax  = " [number]";
   }
   else { $applyTo = "applying to nothing"; }
 
-  print "Defining action $applyTo.\n";
+  print "Defining action $applyTo: ${v}ing.\n";
 
   $oow = "applying to nothing";
   if ( $vo =~ /w-/ ) { $oow = "out of world"; }
