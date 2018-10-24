@@ -10,6 +10,40 @@ verbose = False
 
 square2txt = [ '.', '-', '*', 'x' ]
 
+def guesses_array(guess_type, guess_subtype):
+    ret_ary = []
+    mod = 0
+    if guess_type == 0:
+        mod = guess_subtype
+        for j in range(0, 10):
+            for i in range(0, 10):
+                if (i + j) % 2 == mod: ret_ary.append((i, j))
+        return ret_ary
+    if guess_type == 1:
+        mod = guess_subtype
+        for j in range(0, 10):
+            for i in range(0, 10):
+                if (i + j) % 3 == mod: ret_ary.append((i, j))
+        return ret_ary
+    if guess_type == 2:
+        mod = guess_subtype
+        for j in range(0, 10):
+            for i in range(0, 10):
+                if (i - j) % 3 == mod: ret_ary.append((i, j))
+        return ret_ary
+    sys.exit("Bad value for", guesses_array)
+
+print(guesses_array(1, 0))
+print(guesses_array(2, 0))
+exit()
+
+def first_hit(bsb):
+    for j in range (0, 10):
+        for i in range (0, 10):
+            if bsb.guess_board[i][j] == '*':
+                return (i, j)
+    return (-1, -1)
+
 class battleship_ship:
     def __init__(self, length, name, abbr):
         self.vertical = False
