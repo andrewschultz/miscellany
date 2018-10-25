@@ -4,38 +4,63 @@
 # battleship "solver" / algorithm tryer
 #
 
+from random import shuffle
 import sys
 
-verbose = False
+verbose = True
+extra_verbose = False
 
 square2txt = [ '.', '-', '*', 'x' ]
 
-def guesses_array(guess_type, guess_subtype):
-    ret_ary = []
-    mod = 0
-    if guess_type == 0:
-        mod = guess_subtype
-        for j in range(0, 10):
-            for i in range(0, 10):
-                if (i + j) % 2 == mod: ret_ary.append((i, j))
-        return ret_ary
-    if guess_type == 1:
-        mod = guess_subtype
-        for j in range(0, 10):
-            for i in range(0, 10):
-                if (i + j) % 3 == mod: ret_ary.append((i, j))
-        return ret_ary
-    if guess_type == 2:
-        mod = guess_subtype
-        for j in range(0, 10):
-            for i in range(0, 10):
-                if (i - j) % 3 == mod: ret_ary.append((i, j))
-        return ret_ary
-    sys.exit("Bad value for", guesses_array)
+def subtype_list(st):
+    if st: print(st)
+    print("Guess type summary")
+    print("=" * 50)
+    print("Guess type 2 = every 2 squares.\n  0 = 0,1 0,3 ... 1,0 1,2 ...\n  1 = 0,0 0,2 1,1 2,0 0,4 1,3 2,2 3,1 4,0")
+    exit()
 
-print(guesses_array(1, 0))
-print(guesses_array(2, 0))
-exit()
+def guesses_array(guess_type, guess_subtype, guess_mod):
+    ret_ary = []
+    if verbose: print("{:d}-{:d}-{:d} arrangement:".format(guess_type, guess_subtype, guess_mod))
+    if guess_type == 2:
+        if guess_subtype == 0:
+            for j in range(0, 10):
+                for i in range(0, 10):
+                    if (i + j) % 2 == guess_mod: ret_ary.append((i, j))
+            return ret_ary
+        if guess_subtype == 1:
+            for j in range (0+guess_mod, 18+guess_mod+1, 2):
+                for i in range (0, j+1):
+                    k = j - i
+                    if k < 10 and i < 10 and k >= 0 and i >= 0: ret_ary.append((i, k))
+                    #elif extra_verbose: print("Ignoring", i, k)
+            return ret_ary
+        subtype_list("Bad guess subtype {:d} for guess type {:d}.".format(guess_subtype, guess_type))
+    if guess_type == 3:
+        if guess_subtype == 0:
+            for j in range(0, 10):
+                for i in range(0, 10):
+                    if (i + j) % 3 == mod: ret_ary.append((i, j))
+            return ret_ary
+        if guess_subtype == 1:
+            for j in range(0, 10):
+                for i in range(0, 10):
+                    if (i - j) % 3 == mod: ret_ary.append((i, j))
+            return ret_ary
+        subtype_list("Bad guess subtype {:d} for guess type {:d}.".format(guess_subtype, guess_type))
+    if guess_type == 4:
+        if guess_subtype == 0:
+            for j in range(0, 10):
+                for i in range(0, 10):
+                    if (i + j) % 4 == mod: ret_ary.append((i, j))
+            return ret_ary
+        if guess_subtype == 1:
+            for j in range(0, 10):
+                for i in range(0, 10):
+                    if (i - j) % 4 == mod: ret_ary.append((i, j))
+            return ret_ary
+        subtype_list("Bad guess subtype {:d} for guess type {:d}.".format(guess_subtype, guess_type))
+    subtype_list("Bad guess type {:d}.".format(guess_type))
 
 def first_hit(bsb):
     for j in range (0, 10):
@@ -112,6 +137,20 @@ def try_every_other(odds = False):
         if i % 2 == odds:
             guess_list.append((i % 10, i // 10))
     print(guess_list)
+
+def ga_with_len(x):
+    print(len(x), x)
+
+# main program
+
+basic_test = True
+
+if basic_test:
+    ga_with_len(guesses_array(2, 0, 0))
+    ga_with_len(guesses_array(2, 0, 1))
+    ga_with_len(guesses_array(2, 1, 0))
+    ga_with_len(guesses_array(2, 1, 1))
+    exit()
 
 count = 1
 while count < len(sys.argv):
