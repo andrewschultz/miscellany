@@ -347,6 +347,7 @@ i7x = {}
 i7xr = {}
 i7com = {}
 i7hfx = {}
+i7f = {}
 
 i7bb = []
 i7gh = []
@@ -370,15 +371,21 @@ with open("c:/writing/scripts/i7p.txt") as file:
             l1 = ll[6:].split("=")
             i7com[l1[0]] = l1[1]
             continue
+        combos = False
+        l0 = line.lower().strip().split("=")
+        l0p = re.sub(".*:", "", l0[0])
+        l1 = l0[1].split(",")
+        if l0[0].startswith("headers:"):
+            i7f[l0p] = [ src(l0p) ]
+            for q in l1:
+                i7f[l0p].append(hdr(l0p, q))
+            continue
         if ":" in ll:
-            print("WARNING: line {:d} has unrecognized colon: {:s}".format(line_count, ll))
+            print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
             continue
         if "=" not in line:
             print("WARNING line", line.strip(), "needs ; # or =")
             continue
-        combos = False
-        l0 = line.lower().strip().split("=")
-        l1 = l0[1].split(",")
         if l0[0].startswith("combo:"):
             l0[0] = l0[0][6:]
             combos = True
@@ -388,15 +395,7 @@ with open("c:/writing/scripts/i7p.txt") as file:
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
 
-i7f = {
-    "shuffling": [ hdr('sa', 'Nudges'), hdr('sa', 'Random Text'), mistake_file('sa'), src('sa'), tafi('sa') ],
-    "roiling": [ hdr('roi', 'Nudges'), hdr('roi', 'Random Text'), mistake_file('roi'), src('roi'), tafi('roi') ],
-    "compound": [ tafi('pc'), src('pc') ],
-    "slicker-city": [ tafi('sc'), src('sc') ],
-    "buck-the-past": [ tafi('btp'), src('btp') ],
-    "tragic-mix": [ tafi('tm'), src('tm') ],
-    "ailihphilia": [ tafi('ai'), tefi('ai'), mifi('ai'), src('ai') ]
-  }
+exit()
 
 def valid_arg(x):
     if x[0] == '-': x = x[1:];
