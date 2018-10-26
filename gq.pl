@@ -897,12 +897,15 @@ sub tryAry {
 }
 
 sub toProj {
-  if    ( $_[0] =~ /oafs/i )                         { return "oafs"; }
-  elsif ( $_[0] =~ /(threed|fourd)/i )               { return "opo"; }
-  elsif ( $_[0] =~ /(compound|slicker|buck|past)/i ) { return "as"; }
-  elsif ( $_[0] =~ /ailihphilia/i )                  { return "ai"; }
-  elsif ( $_[0] =~ /(roiling|shuffling)/i )          { return "sts"; }
-  elsif ( $_[0] =~ /(tragic)/i )                     { return "tm"; }
+  if    ( $_[0] =~ /oafs/i )                          { return "oafs"; }
+  elsif ( $_[0] =~ /(threed|fourd)/i )                { return "opo"; }
+  elsif ( $_[0] =~ /(compound|slicker|buck|past)/i )  { return "as"; }
+  elsif ( $_[0] =~ /ailihphilia/i )                   { return "ai"; }
+  elsif ( $_[0] =~ /(roiling|shuffling)/i )           { return "sts"; }
+  elsif ( $_[0] =~ /(tragic|vvff|vf|vv|very-vile)/i ) { return "tm"; }
+  ( my $cproj = $pwd ) =~ s/\.inform.*//;
+  $cproj =~ s/.*[\\\/]//;
+  return $cproj if ( -f "story.ni" );
 }
 
 sub use_cases {
