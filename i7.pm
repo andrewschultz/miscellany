@@ -16,7 +16,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
 
 $VERSION     = 1.00;
 @ISA         = qw(Exporter);
-@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %xtraFiles cutArt np npx openWinOrUnix isWindows shortIf sourceFile tableFile tx);
+@EXPORT      = qw(@titleWords $np $npo @i7bb @i7gh %i7x %i7xr %projFiles cutArt np npx openWinOrUnix isWindows shortIf sourceFile tableFile tx);
 #@EXPORT_OK   = qw(i7x $np);
 
 our %i7x = ();
@@ -25,9 +25,13 @@ our @i7gh = ();
 our @i7bb = ();
 our %i7com = ();
 
+our $i7hdir = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\";
+
 open(A, "c:/writing/scripts/i7p.txt") || die ("Can't open i7p.txt");
 
 our $i7p_line;
+
+our %projFiles;
 
 while ($i7p_line = <A>)
 {
@@ -54,10 +58,22 @@ while ($i7p_line = <A>)
     $i7com{$tempAry[0]} = $tempAry[1];
     next;
   }
+  elsif ($i7p_line =~ /^HEADERS:/i)
+  {
+    (my $temp = $i7p_line) =~ s/.*://;
+    my @tempAry = split(/=/, $temp);
+	my @hdrAry = split(/,/, $tempAry[1]);
+	$projFiles{$tempAry[0]} = ( "c:/games/inform/$tempAry[0].inform/source/story.ni" );
+	my $hname = toExt($tempAry[0]);
+	for my $j (@hdrAry) {
+	  my $temp = "$i7hdir$hname $j.i7x";
+	}
+	next;
+  }
   elsif ($i7p_line =~ /:/)
   {
     next if ($i7p_line =~ /^HEADNAME/); # HEADNAME not processed by Perl. It is for my python functions.
-    warn("WARNING: line $. has an unrecognized colon: $i7p_line\n");
+    warn("WARNING: For I7 PERL, line $. has an unrecognized colon: $i7p_line\n");
   }
 
   my @i7xary = split(/=/, $i7p_line);
@@ -77,15 +93,6 @@ while ($i7p_line = <A>)
 }
 
 our @titleWords = ("but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over");
-
-our %xtraFiles;
-
-$xtraFiles{"buck-the-past"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Buck the Past tables.i7x"];
-$xtraFiles{"slicker-city"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Slicker City tables.i7x"];
-$xtraFiles{"compound"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Compound tables.i7x"];
-$xtraFiles{"shuffling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Shuffling random text.i7x"];
-$xtraFiles{"roiling"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling nudges.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Roiling random text.i7x"];
-$xtraFiles{"ailihphilia"} = ["c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Tables.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Tests.i7x", "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Ailihphilia Mistakes.i7x", ];
 
 our $np = "\"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"";
 our $npo = "start \"\" $np";
@@ -194,11 +201,22 @@ sub to_proj
 
 }
 
+sub src {
+  return sprintf("c:/games/inform/%s.inform/source/story.ni", to_proj($_[0]))
+}
+
 sub tx
 {
   my $temp = $_[0];
   $temp =~ s/\.[^\.]*$/.txt/i;
   return $temp;
+}
+
+sub toExt
+{
+  my $x = ucfirst($_[0]);
+  $x =~ s/-/ /g;
+  return $x;
 }
 
 1;

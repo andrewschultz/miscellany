@@ -196,11 +196,11 @@ close(B);
 
 my $sourceFile;
 
-if ( !defined( $xtraFiles{$project} ) ) {
+if ( !defined( $projFiles{$project} ) ) {
   die("No project defined for $project.\n");
 }
 
-my @sourceFileList = @{ $xtraFiles{$project} };
+my @sourceFileList = @{ $projFiles{$project} };
 
 my $tableShort;
 my $table        = 0;
@@ -637,22 +637,18 @@ sub processInitData {
       chomp($line);
       my @filemap = split( /\t/, $line );
       if ( $#filemap != 2 ) { warn "Need 3 fields in $.: $line\n"; next; }
-      if ( !defined( $xtraFiles{ $filemap[1] } ) ) {
-        $xtraFiles{ $filemap[1] } = [];
+      if ( !defined( $projFiles{ $filemap[1] } ) ) {
+        $projFiles{ $filemap[1] } = [];
       }
-      push( @{ $xtraFiles{ $filemap[1] } }, $filemap[2] );
+      push( @{ $projFiles{ $filemap[1] } }, $filemap[2] );
     }
     if ( $line =~ /^story/ ) {
       chomp($line);
       my @filemap = split( /\t/, $line );
       if ( $#filemap != 1 ) { warn "Need 2 fields in $.: $line\n"; next; }
-      if ( !defined( $xtraFiles{ $filemap[1] } ) ) {
-        $xtraFiles{ $filemap[1] } = [];
+      if ( !defined( $projFiles{ $filemap[1] } ) ) {
+        $projFiles{ $filemap[1] } = [];
       }
-      push(
-        @{ $xtraFiles{ $filemap[1] } },
-        "c:/games/inform/$filemap[1].inform/Source/story.ni"
-      );
     }
   }
   close(A);
