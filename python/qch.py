@@ -21,6 +21,17 @@ total_labels = 0
 topdir_ignore = defaultdict(bool)
 alldir_ignore = defaultdict(bool)
 
+def usage():
+    print("                    USAGE")
+    print("=" * 50)
+    print("h         = html output, no launch")
+    print("hl, lh, l = html output with launch")
+    print("i, is, si = ignore success reporting")
+    print("=         = only look in current GitHub repo mirror")
+    print(".         = look in current directory")
+    print("?         = this")
+    exit()
+
 def read_config():
     with open(config_file) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -54,8 +65,7 @@ def readme_process(readme, files_to_see):
         files_need_label += 1
         total_labels += len(f2c.keys())
         print_string += "{:s} NEEDS TO LABEL {:d}\n        {:s}\n".format(readme, len(f2c.keys()), ' / '.join(f2c.keys()))
-    else:
-        print_string += "{:s} up to date.\n".format(readme)
+    elif not ignore_success: print_string += "{:s} up to date.\n".format(readme)
 
 def list_dirs(a, far_down):
     global need_readme
@@ -90,6 +100,7 @@ count = 1
 rd2 = ""
 html_output = False
 html_launch = False
+ignore_success = False
 print_string = ""
 
 while count < len(sys.argv):
@@ -97,6 +108,7 @@ while count < len(sys.argv):
     if arg[0] == '-': arg = arg[1:]
     if arg == 'h': html_output = True
     elif arg == 'hl' or arg == 'lh' or arg == 'l': html_output = html_launch = True
+    elif arg == 'i' or arg == 'is' or arg == 'si': ignore_success = True
     elif arg == '.':
         rd2 = os.getcwd()
         root_dir = rd2
@@ -108,6 +120,7 @@ while count < len(sys.argv):
                 rd2 = '/'.join(ary[0:x+2])
                 root_dir = rd2
         if not rd2: sys.exit("= needs you to be in a github project.")
+    elif arg == '?': usage()
     else:
         if rd2: sys.exit("Attempted to define two directories. Bailing.")
         rd2 = os.path.join(root_dir, i7.proj_exp(sys.argv[1]))
