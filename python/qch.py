@@ -1,9 +1,40 @@
+# qch.py
+#
+# no usage necessary
+# quick check of all README.MD in my github dirs
+#
+
+import re
 import os
 from collections import defaultdict
+
+config_file = "c:/writing/scripts/qch.txt"
+root_dir = "c:/users/andrew/documents/github"
 
 need_readme = 0
 files_need_label = 0
 total_labels = 0
+
+topdir_ignore = defaultdict(bool)
+alldir_ignore = defaultdict(bool)
+
+def read_config():
+    with open(config_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
+            ll = line.strip().lower()
+            if '=' not in line:
+                print(line.strip(), line_count, "does not have =.")
+                continue
+            lary = (re.sub(".*:", "", ll)).split(",")
+            if ll.startswith('topdir'):
+                for q in lary: topdir_ignore[q] = True
+                continue
+            if ll.startswith('alldir'):
+                for q in lary: alldir_ignore[q] = True
+                continue
+            print("Unknown array command = at line", line_count, re.sub("=.*", "", ll))
 
 def readme_process(readme, files_to_see):
     global files_need_label
@@ -22,18 +53,19 @@ def readme_process(readme, files_to_see):
     else:
         print(readme, "up to date.")
 
-def list_dirs(a):
+def list_dirs(a, far_down):
     global need_readme
     any_pl_py = []
     got_readme = False
     perl_count = 0
     python_count = 0
     for x in os.listdir(a):
-        if x == '.' or x == '..' or x == '.git' or x == 'habitica' or x == 'lawless-legends' or x == 'perlmaven' or x.startswith('trizbort'): continue
+        if far_down == 0 and x in topdir_ignore.keys(): continue
+        if x in alldir_ignore.keys(): continue
         x2 = os.path.join(a, x)
         if os.path.isdir(x2):
             #print("Recursing to", x2)
-            list_dirs(x2)
+            list_dirs(x2, far_down + 1)
         if x.endswith("pl") or x.endswith("py"):
             if x.endswith("pl"): perl_count += 1
             else: python_count += 1
@@ -46,6 +78,7 @@ def list_dirs(a):
         else:
             readme_process(os.path.join(a, "readme.MD"), any_pl_py)
 
-list_dirs(".")
+read_config()
+list_dirs(root_dir, 0)
 print("Need readme", need_readme)
 print("Need labels", files_need_label, "total labels", total_labels)
