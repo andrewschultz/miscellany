@@ -395,8 +395,6 @@ with open("c:/writing/scripts/i7p.txt") as file:
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
 
-exit()
-
 def valid_arg(x):
     if x[0] == '-': x = x[1:];
     if '?' not in x: return False
