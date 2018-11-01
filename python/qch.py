@@ -15,6 +15,8 @@ config_file = "c:/writing/scripts/qch.txt"
 root_dir = "c:/users/andrew/documents/github"
 
 need_readme = 0
+need_readme_child = 0
+need_readme_top = 0
 files_need_label = 0
 total_labels = 0
 
@@ -27,6 +29,7 @@ def usage():
     print("h         = html output, no launch")
     print("hl, lh, l = html output with launch")
     print("i, is, si = ignore success reporting")
+    print("s, sy, ys = show success reporting. Default = success reports {:s}.".format(i7.oo[not ignore_success]))
     print("=         = only look in current GitHub repo mirror")
     print(".         = look in current directory")
     print("?         = this")
@@ -41,9 +44,12 @@ def read_config():
             if '=' not in line:
                 print(line.strip(), line_count, "does not have =.")
                 continue
-            lary = (re.sub(".*:", "", ll)).split(",")
+            lary = (re.sub(".*[:=]", "", ll)).split(",")
             if ll.startswith('topdir'):
-                for q in lary: topdir_ignore[q] = True
+                for q in lary:
+                    topdir_ignore[q] = True
+                    q2 = os.path.join(root_dir, q)
+                    if not os.path.exists(q2): print("WARNING:", q2, "is no longer a valid path. Delete from", config_file)
                 continue
             if ll.startswith('alldir'):
                 for q in lary: alldir_ignore[q] = True
@@ -69,7 +75,11 @@ def readme_process(readme, files_to_see):
 
 def list_dirs(a, far_down):
     global need_readme
+    global need_readme_child
+    global need_readme_top
     global print_string
+    global perl_global_count
+    global python_global_count
     if far_down == 0: print_string += "Listing directories for {:s}\n{:s}\n".format(a, '=' * 80)
     any_pl_py = []
     got_readme = False
@@ -90,12 +100,18 @@ def list_dirs(a, far_down):
     if len(any_pl_py):
         if got_readme == False:
             print_string += "{:s} may need readme for {:s} as it has {:d} perl and {:d} python file(s).\n".format(a, ' / '.join(any_pl_py), perl_count, python_count)
+            perl_global_count += perl_count
+            python_global_count += python_count
             need_readme += 1
+            if far_down > 1: need_readme_child += 1
+            else: need_readme_top += 1
         else:
             readme_process(os.path.join(a, "readme.MD"), any_pl_py)
 
 read_config()
 
+perl_global_count = 0
+python_global_count = 0
 count = 1
 rd2 = ""
 html_output = False
@@ -109,6 +125,7 @@ while count < len(sys.argv):
     if arg == 'h': html_output = True
     elif arg == 'hl' or arg == 'lh' or arg == 'l': html_output = html_launch = True
     elif arg == 'i' or arg == 'is' or arg == 'si': ignore_success = True
+    elif arg == 's' or arg == 'ys' or arg == 'sy': ignore_success = False
     elif arg == '.':
         rd2 = os.getcwd()
         root_dir = rd2
@@ -123,15 +140,15 @@ while count < len(sys.argv):
     elif arg == '?': usage()
     else:
         if rd2: sys.exit("Attempted to define two directories. Bailing.")
-        rd2 = os.path.join(root_dir, i7.proj_exp(sys.argv[1]))
+        rd2 = os.path.join(root_dir, i7.proj_exp(sys.argv[1], True, True))
         if not os.path.exists(rd2): sys.exit(rd2 + " is not a valid directory. Try something else.")
         root_dir = rd2
     count += 1
 
 list_dirs(root_dir, 0)
 
-print_string += "Need readme: {:d}\n".format(need_readme)
-print_string += "Need labels: {:d}, total labels {:d}.".format(files_need_label, total_labels)
+print_string += "README files needed: {:d} ({:d} root, {:d} child) with {:d} perl and {:d} python files.\n".format(need_readme, need_readme_top, need_readme_child, perl_global_count, python_global_count)
+print_string += "README files that need to label more files: {:d}, total files that need labeling: {:d}.".format(files_need_label, total_labels)
 
 if html_output:
     f = open(qch_out, "w")
