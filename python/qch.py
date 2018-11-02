@@ -18,7 +18,18 @@ need_readme = 0
 need_readme_child = 0
 need_readme_top = 0
 files_need_label = 0
+files_have_extra = 0
 total_labels = 0
+total_extras = 0
+
+perl_global_count = 0
+python_global_count = 0
+count = 1
+rd2 = ""
+html_output = False
+html_launch = False
+ignore_success = True
+print_string = ""
 
 topdir_ignore = defaultdict(bool)
 alldir_ignore = defaultdict(bool)
@@ -57,20 +68,31 @@ def read_config():
             print("Unknown array command = at line", line_count, re.sub("=.*", "", ll))
 
 def readme_process(readme, files_to_see):
+    if 'puzzle' not in readme: return
     global files_need_label
+    global files_have_extra
     global total_labels
+    global total_extras
     global print_string
     f2c = defaultdict(bool)
+    fir = defaultdict(bool)
     for q in files_to_see:
         f2c[q] = True
     with open(readme) as file:
         for line in file:
-            for q in list(f2c):
-                if q in line: f2c.pop(q, None)
-    if len(f2c):
+            q = re.findall(r"([a-z0-9-]+\.p[ly])", line)
+            if q:
+                for j in q: fir[j] = True
+    extra_files = list(set(fir.keys()) - set(f2c.keys()))
+    missed_files = list(set(f2c.keys()) - set(fir.keys()))
+    if len(extra_files):
+        files_have_extra += 1
+        total_extras += len(extra_files)
+        print_string += "{:s} HAS EXTRA FILES {:d}\n        {:s}\n".format(readme, len(extra_files), ' / '.join(sorted(extra_files)))
+    if len(missed_files):
         files_need_label += 1
-        total_labels += len(f2c.keys())
-        print_string += "{:s} NEEDS TO LABEL {:d}\n        {:s}\n".format(readme, len(f2c.keys()), ' / '.join(f2c.keys()))
+        total_labels += len(missed_files)
+        print_string += "{:s} NEEDS TO LABEL {:d}\n        {:s}\n".format(readme, len(missed_files), ' / '.join(sorted(missed_files)))
     elif not ignore_success: print_string += "{:s} up to date.\n".format(readme)
 
 def list_dirs(a, far_down):
@@ -110,15 +132,6 @@ def list_dirs(a, far_down):
 
 read_config()
 
-perl_global_count = 0
-python_global_count = 0
-count = 1
-rd2 = ""
-html_output = False
-html_launch = False
-ignore_success = False
-print_string = ""
-
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
@@ -148,7 +161,8 @@ while count < len(sys.argv):
 list_dirs(root_dir, 0)
 
 print_string += "README files needed: {:d} ({:d} root, {:d} child) with {:d} perl and {:d} python files.\n".format(need_readme, need_readme_top, need_readme_child, perl_global_count, python_global_count)
-print_string += "README files that need to label more files: {:d}, total files that need labeling: {:d}.".format(files_need_label, total_labels)
+print_string += "README files that need to label more files: {:d}, total files that need labeling: {:d}.\n".format(files_need_label, total_labels)
+print_string += "README files that mistakenly label extra files: {:d}, total files that need labeling: {:d}.\n".format(files_have_extra, total_extras)
 
 if html_output:
     f = open(qch_out, "w")
