@@ -231,7 +231,9 @@ sub readZupFile {
     #print "$a: ";
 
     if ( $a =~ /^name=/i ) {
-      if ($needExclam) { die("Need exclamation mark before $a"); }
+      if ($needExclam) {
+        die("$_[0] line $. needs exclamation mark before $a");
+      }
       $a =~ s/^name=//gi;
       my @b = split( /,/, $a );
 
@@ -254,6 +256,7 @@ sub readZupFile {
     for ($a) {
       /^v=/i && do { $a =~ s/^v=//gi; $version = $a; next; };
       /^!/ && do {
+      FIPRO:
         if ($dropboxSimpleCopy) {
           die("OUTFILE wasn't defined during simple copy!") if !$outFile;
           print("Copying $outFile from $zipdir to $dbbin.\n");
@@ -515,7 +518,13 @@ sub readZupFile {
         $zip->addFile("$a");
         next;
       };
-      /^;/ && do { last; next; };
+      /^;/ && do {
+        if ($outFile) {
+          print("Warning: outfile defined but no ! at the end.");
+          goto FIPRO;
+        }
+        last;
+      };
     }
 
     #print "Cur cmd $cmd\n";
