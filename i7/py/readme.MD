@@ -1,5 +1,10 @@
 FILES:
 
+* the big one
+** i7.py: this has the basic functions I have used and reused in many scripts
+
+* bolds.py: looks for stuff that needs to be bolded or italicizes/sent to regular text in a story.ni file
+* bsh.py: battleship solver/algorithm finder
 * defs.py: prints out all definitions functions in story.ni in local directory
 * dlogs.py debug logs
 * duptab.py : checks for duplicate tables
