@@ -15,12 +15,9 @@ import re
 import sys
 import i7
 
-if not os.path.exists("story.ni"):
-    try:
-        os.chdir("c:/games/inform/ailihphilia.inform/source")
-    except:
-        print("No story.ni and no default directory path.")
-        exit()
+zr_data = "c:/writing/scripts/zr.txt"
+
+proj = i7.dir2proj(os.getcwd())
 
 only_test = False
 source_only = False
@@ -33,6 +30,8 @@ regex_detail = defaultdict(str)
 text_change = defaultdict(str)
 
 count = 1
+
+######################begin functions
 
 def usage():
     print("Currently you can specify the project to change to, with a shortcut or full name.")
@@ -54,62 +53,6 @@ def with_quotes(a, b):
     if "'{:s}'".format(a) in b: return True
     if '"{:s}"'.format(a) in b: return True
     return False
-
-while count < len(sys.argv):
-    myarg = sys.argv[count].lower()
-    if (myarg[0] == '-'):
-        myarg = myarg[1:]
-    if myarg == 'e':
-        os.system("zr.txt")
-        exit()
-    elif myarg == 'c':
-        i7.open_source()
-    elif myarg == 's': source_only = True
-    elif myarg == 't': only_test = True
-    elif myarg == 'q': quick_quote_reject = True
-    elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
-    elif myarg in i7.i7x.keys():
-        newdir = "c:/games/inform/{:s}.inform/source".format(i7.i7x[sys.argv[count]])
-        os.chdir(newdir)
-        print("Changing to", newdir)
-    elif os.path.exists("c:/games/inform/{:s}.inform/source".format(myarg)):
-        newdir = "c:/games/inform/{:s}.inform/source".format(myarg)
-        os.chdir(newdir)
-        print("Changing to", newdir)
-    else:
-        print("Bad argument", sys.argv[count])
-        usage()
-    count += 1
-
-if not os.path.exists("zr.txt"):
-    print("You need a zr.txt in ", os.getcwd(), "or you need to change the project.")
-
-line_count = 0
-with open("zr.txt") as file:
-    for line in file:
-        if line.startswith('#'): continue
-        if line.startswith(';'): break
-        if '>' in line: # this could get hairy later if I use backchecks in regexes
-            ary = line.strip().split(">")
-            if len(ary) > 2:
-                print("Too many >'s at line", line_count, "in zr.txt:", line.strip())
-                exit()
-            text_change[ary[0].lower()] = ary[1]
-        always = False
-        if line.startswith('a:'):
-            line = re.sub('a:', '', line)
-            always = True
-        if not line.strip(): continue
-        line_ary = line.strip().split("\t")
-        if line_ary[0] in cap_search:
-            print("WARNING", line_ary[0], "already accounted for, probably a duplicate.")
-        cap_search[line_ary[0]] = True
-        if always:
-            always_adj[line_ary[0]] = True
-        if len(line_ary) > 1:
-            regex_detail[line_ary[0]] = line_ary[1]
-
-cs = cap_search.keys()
 
 def check_source(a):
     line_count = 0
@@ -184,7 +127,84 @@ def check_source(a):
         except:
             print("Tried and failed to delete tempfile", b)
 
-proj = "ailihphilia"
+#############end functions
+
+if not os.path.exists(zr_data): print("You need the data file {:s} for this to work.".format(zr_data))
+
+while count < len(sys.argv):
+    myarg = sys.argv[count].lower()
+    if (myarg[0] == '-'):
+        myarg = myarg[1:]
+    if myarg == 'e':
+        os.system("zr.txt")
+        exit()
+    elif myarg == 'c':
+        i7.open_source()
+    elif myarg == 's': source_only = True
+    elif myarg == 't': only_test = True
+    elif myarg == 'q': quick_quote_reject = True
+    elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
+    elif myarg in i7.i7x.keys():
+        newdir = "c:/games/inform/{:s}.inform/source".format(i7.i7x[sys.argv[count]])
+        os.chdir(newdir)
+        print("Changing to", newdir)
+    elif os.path.exists("c:/games/inform/{:s}.inform/source".format(myarg)):
+        newdir = "c:/games/inform/{:s}.inform/source".format(myarg)
+        os.chdir(newdir)
+        print("Changing to", newdir)
+    else:
+        print("Bad argument", sys.argv[count])
+        usage()
+    count += 1
+
+if not proj:
+    proj = "ailihphilia"
+    print("Going with default project", proj)
+
+got_proj = False
+in_proj = False
+
+with open(zr_data) as file:
+    for (line_count, line) in enumerate(file, 1):
+        if line.startswith('#'): continue
+        if line.startswith(';'): break
+        if line.startswith("PROJ"):
+            if not line.startswith("PROJ="): sys.exit("You need to start line {:d} with PROJ= not {:s}.".format(line_count, line[:5]))
+            cur_proj = i7.proj_exp(line.lower().strip()[5:])
+            print(cur_proj)
+            if cur_proj == proj:
+                got_proj = True
+                in_proj = True
+            else:
+                in_proj = False
+            continue
+        if not in_proj: continue
+        if '>' in line: # this could get hairy later if I use backchecks in regexes
+            ary = line.strip().split(">")
+            if len(ary) > 2:
+                print("Too many >'s at line", line_count, "in zr.txt:", line.strip())
+                exit()
+            text_change[ary[0].lower()] = ary[1]
+        always = False
+        if line.startswith('a:'):
+            line = re.sub('a:', '', line)
+            always = True
+        if not line.strip(): continue
+        if "\t" in line:
+            line_ary = line.strip().split("\t")
+            regex_detail[line_ary[0]] = line_ary[1]
+            continue
+        q = re.split(", *", line.strip())
+        for q1 in q:
+            if q1 in cap_search: print("WARNING", q1, "already accounted for, probably a duplicate.")
+            cap_search[q1] = True
+            if always:
+                always_adj[q1] = True
+
+if not got_proj: sys.exit("Couldn't find anything in {:s} for {:s}.".format(zr_data, proj))
+
+cs = cap_search.keys()
+
 for x in i7.i7f[proj]:
     if 'tests' in x.lower(): continue
     if source_only and 'story.ni' not in x.lower(): continue
