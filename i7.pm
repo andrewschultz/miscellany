@@ -24,6 +24,8 @@ our %i7xr = ();
 our @i7gh = ();
 our @i7bb = ();
 our %i7com = ();
+our %i7ghp = ();
+our %i7pf = ();
 
 our $i7hdir = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\";
 
@@ -58,6 +60,13 @@ while ($i7p_line = <A>)
     $i7com{$tempAry[0]} = $tempAry[1];
     next;
   }
+  elsif ($i7p_line =~ /^GHPROJ:/i)
+  {
+    (my $temp = $i7p_line) =~ s/.*://;
+    my @tempAry = split(/=/, $temp);
+    $i7ghp{$tempAry[0]} = $tempAry[1];
+    next;
+  }
   elsif ($i7p_line =~ /^HEADERS:/i)
   {
     (my $temp = $i7p_line) =~ s/.*://;
@@ -67,7 +76,8 @@ while ($i7p_line = <A>)
 	my $hname = toExt($tempAry[0]);
 	for my $j (@hdrAry) {
 	  my $temp = "$i7hdir$hname $j.i7x";
-	}
+	};
+
 	next;
   }
   elsif ($i7p_line =~ /:/)

@@ -7,6 +7,9 @@
 # dir2proj converts current directory to project
 # in_quotes only gets text in quotes
 # proj_exp = project expansion
+#
+# todo: erase i7c and see where i7c pops up in other Python files in the whole tree.
+#
 
 from collections import defaultdict
 import sys
@@ -32,12 +35,18 @@ ov = outline_val
 
 auth = "Andrew Schultz"
 
-oo = [ 'off', 'on' ]
+on_off = [ 'off', 'on' ]
+oo = on_off
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
 extdir = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
+
+def i7_usage():
+    print("proj_exp = main function, short name to long. dir2proj = directory to project.")
+    print("mifi tefi tafi = mistake test table files")
+    exit()
 
 def file_to_alf(fname, out_name, ignore_blanks):
     fo = open(fname, "rU")
@@ -229,7 +238,8 @@ def hf_exp(x, return_nonblank = True):
     if xl in i7hfx.keys(): return i7hfx[xl]
     else: return xl
 
-def proj_exp(x, return_nonblank = True):
+def proj_exp(x, return_nonblank = True, to_github = False):
+    if to_github and x in i7gx.keys(): return i7gx[x]
     if x in i7xr.keys(): return x
     elif x in i7x.keys(): return i7x[x]
     return (x if return_nonblank else '')
@@ -343,6 +353,7 @@ i7rn = { "shuffling": "shuffling_around_release_5",
   "buck-the-past": "1"
 }
 
+i7gx = {}
 i7x = {}
 i7xr = {}
 i7com = {}
@@ -371,6 +382,10 @@ with open("c:/writing/scripts/i7p.txt") as file:
             l1 = ll[6:].split("=")
             i7com[l1[0]] = l1[1]
             continue
+        if ll.startswith("ghproj:"):
+            l1 = ll[7:].split("=")
+            i7gx[l1[1]] = l1[0]
+            continue
         combos = False
         l0 = line.lower().strip().split("=")
         l0p = re.sub(".*:", "", l0[0])
@@ -386,9 +401,6 @@ with open("c:/writing/scripts/i7p.txt") as file:
         if "=" not in line:
             print("WARNING line", line.strip(), "needs ; # or =")
             continue
-        if l0[0].startswith("combo:"):
-            l0[0] = l0[0][6:]
-            combos = True
         for my_l in l1:
             if combos: i7com[my_l] = l1
             else:
@@ -403,6 +415,7 @@ def valid_arg(x):
 
 if "i7.py" in main.__file__:
     if len(sys.argv) > 1 and valid_arg(sys.argv[1]):
+        if sys.argv[1] == '?': i7_usage()
         see_uniq_and_vers(sys.argv[1])
         exit()
     print("i7.py is a header file. It should not be run on its own.")
