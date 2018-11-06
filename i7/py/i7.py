@@ -25,6 +25,7 @@ f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
 prt = "c:/games/inform/prt"
 prt_temp = os.path.join(prt, "temp")
+i7_cfg_file = "c:/writing/scripts/i7p.txt"
 
 table_row_count = defaultdict(int)
 
@@ -344,26 +345,24 @@ i7c = {
 # e.g. shuffling -> shuffling_around
 #
 # I could create i7full but that would be arduous
-i7rn = { "shuffling": "shuffling_around_release_5",
-  "roiling": "4",
-  "slicker-city": "2",
-  "compound": "problems_compound_3",
-  "fourdiopolis": "3",
-  "threediopolis": "4",
-  "buck-the-past": "1"
-}
 
-i7gx = {}
-i7x = {}
-i7xr = {}
-i7com = {}
-i7hfx = {}
-i7f = {}
+# i7 defined arrays for both perl/python files
+# read from i7p.txt/i7_cfg_file
 
-i7bb = []
-i7gh = []
+i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most of the time this won't matter--GH = what's on my computer
+i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
+i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
+i7com = {} # combos e.g. opo = 3d and 4d
+i7hfx = {} # header mappings e.g. ta to tables
+i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7rn = {}
 
-with open("c:/writing/scripts/i7p.txt") as file:
+i7bb = [] # list of bitbucket repos
+i7gh = [] # list of github repos
+
+# here is where we sort out stuff like abbreviations and header files
+
+with open(i7_cfg_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
@@ -377,6 +376,10 @@ with open("c:/writing/scripts/i7p.txt") as file:
             continue
         if ll.startswith("github:"):
             i7gh = re.sub(".*:", "", ll).split(",")
+            continue
+        if ll.startswith("release:"):
+            ll = ll[8:].split("=")
+            l7rn{l1[0]] = l1[1]
             continue
         if ll.startswith("combo:"):
             l1 = ll[6:].split("=")
@@ -407,16 +410,18 @@ with open("c:/writing/scripts/i7p.txt") as file:
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
 
-def valid_arg(x):
+def _valid_i7m_arg(x):
     if x[0] == '-': x = x[1:];
     if '?' not in x: return False
     x = re.sub("\?", "", x)
     return re.search("^[rv]*$", x)
 
 if "i7.py" in main.__file__:
-    if len(sys.argv) > 1 and valid_arg(sys.argv[1]):
+    if len(sys.argv) > 1:
         if sys.argv[1] == '?': i7_usage()
-        see_uniq_and_vers(sys.argv[1])
+        if sys.argv[1] == 'e': oc()
+        if _valid_i7m_arg(sys.argv[1]): see_uniq_and_vers(sys.argv[1])
+        else: print("Not a valid argument for the i7 module. ?, e, -[rv].")
         exit()
     print("i7.py is a header file. It should not be run on its own.")
     print("Try running something else with the line import i7, instead, or ? to run a test.")
