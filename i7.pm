@@ -26,6 +26,7 @@ our @i7bb = ();
 our %i7com = ();
 our %i7ghp = ();
 our %i7pf = ();
+our %i7rn = (); # release names
 
 our $i7hdir = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\";
 
@@ -51,6 +52,13 @@ while ($i7p_line = <A>)
   elsif ($i7p_line =~ /^BITBUCKET:/)
   {
     @i7bb = split(/,/, $temp);
+    next;
+  }
+  elsif ($i7p_line =~ /^RELEASE:/)
+  {
+    (my $temp = $i7p_line) =~ s/.*://;
+    my @tempAry = split(/=/, $temp);
+	$i7rn{$tempAry[0]} = $tempAry[1];
     next;
   }
   elsif ($i7p_line =~ /^COMBO:/i)

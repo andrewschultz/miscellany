@@ -355,7 +355,7 @@ i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<
 i7com = {} # combos e.g. opo = 3d and 4d
 i7hfx = {} # header mappings e.g. ta to tables
 i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
-i7rn = {}
+i7rn = {} # release numbers
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -378,8 +378,8 @@ with open(i7_cfg_file) as file:
             i7gh = re.sub(".*:", "", ll).split(",")
             continue
         if ll.startswith("release:"):
-            ll = ll[8:].split("=")
-            l7rn{l1[0]] = l1[1]
+            l1 = ll[8:].split("=")
+            i7rn[l1[0]] = l1[1]
             continue
         if ll.startswith("combo:"):
             l1 = ll[6:].split("=")
