@@ -42,7 +42,7 @@ oo = on_off
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
-extdir = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
+extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 
 def i7_usage():
     print("proj_exp = main function, short name to long. dir2proj = directory to project.")
@@ -205,6 +205,8 @@ blo = bl_o = build_log_open
 def hdr(x, y):
     return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), y.title())
 
+hfile = hdr
+
 def notes_file(x):
     return sdir(x) + "/" + "notes.txt"
 
@@ -230,14 +232,12 @@ def triz(x):
     u = { "shuffling": "shuffling-around" }
     return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x if x not in u.keys() else u[x])
 
-def hfile(x, y):
-    x2 = re.sub("-", " ", x)
-    return "{:s}\\{:s} {:s}.i7x".format(extdir, x2, y)
-
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()
-    if xl in i7hfx.keys(): return i7hfx[xl]
-    else: return xl
+    if xl in i7hfx.keys(): return i7hfx[xl].title()
+    else: return xl.title()
+
+th_exp = hf_exp
 
 def proj_exp(x, return_nonblank = True, to_github = False):
     if to_github and x in i7gx.keys(): return i7gx[x]
