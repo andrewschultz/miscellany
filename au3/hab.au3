@@ -10,6 +10,7 @@
 ; m/w = magic/wizard skills
 ; o = only click to tasks
 ; p = perception outfit
+; q = quick-click upper right side
 ; r = repeatedly access habit (needs #)
 ; t = Tools of the Trade clicks (needs #, optional delay)
 ; te = test
@@ -21,6 +22,7 @@
 ; the big one is changing classes
 #include <hab-h.au3>
 #include "c:\\scripts\\andrew.au3"
+#include "c:\\scripts\\ini.au3"
 
 #include <MsgBoxConstants.au3>
 #include <Math.au3>
@@ -49,11 +51,11 @@ Local $attr_pulldown_h = 1450
 Local $attr_pulldown_init = 330
 Local $attr_pulldown_delta = 30
 
+Local $delay = 3000
+
 Local $preDelay = 0
 
 Local $testDontClick = False, $didAnything = False
-
-Init()
 
 ; put this along with 'a' into its own function.
 If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
@@ -164,6 +166,22 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
+  ElseIf $myCmd == 'q' Then
+    Local $hWnd = WinWait("", "Habitica - Gamify Your Life", 1)
+	if not $hWnd Then
+	  MsgBox($MB_OK, "OOPS", "No Habitica window open.")
+	  Exit
+    EndIf
+    $clicks = $nextNum
+    $xxx = WinGetClientSize($hWnd)
+	ToHab()
+	for $i = 1 to $clicks
+      MouseMove($xxx[0] - 136, 136)
+	  MouseClick("left")
+	  sleep($delay)
+    Next
+	WinClose($hWnd)
+	Exit
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'i' Then
@@ -588,14 +606,6 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
-Func Init()
-  HotKeySet("{F6}", "Bail")
-  HotKeySet("{F7}", "Bail")
-  HotKeySet("{F9}", "Bail")
-  HotKeySet("{F10}", "Bail")
-  HotKeySet("{F11}", "Bail")
-EndFunc
-
 Func OpenHabiticaURL($closeWindow)
   Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
   WinActivate("[CLASS:MozillaWindowClass]", "")
@@ -606,8 +616,4 @@ Func OpenHabiticaURL($closeWindow)
     Send("{CTRLDOWN}w{CTRLUP}")
   EndIf
   $didAnything = True
-EndFunc
-
-Func Bail()
-  exit
 EndFunc
