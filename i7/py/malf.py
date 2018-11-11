@@ -1,12 +1,14 @@
- #
+#
 # malf.py
 #
 # this alphabetizes a mistake file by the possible mistakes inside the chapters/sections.
 #
-# most useful for Ailihphilia and the Stale Tales Slate.
+# Currently useful for:
+#   Ailihphilia, Stale Tales Slate, (2019 project).
 #
 # usage: malf.py ai
 #        malf.py roi sa
+#        malf.py sts opo (opolis games have no mistake file, but appropriate error is thrown, so this is equivalent to the above)
 
 import os
 import sys
@@ -15,12 +17,14 @@ import re
 from filecmp import cmp
 from shutil import copy
 from collections import defaultdict
+from collections import OrderedDict
 
 temp_file = "c:\\games\\inform\\mist.i7x"
 temp_detail_1 = "c:\\games\\inform\\mist1.i7x"
 temp_detail_2 = "c:\\games\\inform\\mist2.i7x"
 
-default_proj = 'ai'
+default_proj = i7.dir2proj()
+if not default_proj: default_proj = 'ai'
 
 detail_debug = False
 copy_not_show = False
@@ -115,29 +119,34 @@ def sort_mistake(pr):
     sect_to_sort = []
     need_alpha = False
     ignore_dupe_next_line = False
+    flag_actual_code = False
     loc_dupes = 0
     glo_dupes = 0
     f = open(temp_file, "w", newline=my_newline)
+    mfs = os.path.basename(mf)
     with open(mf) as file:
-        for (linecount, line) in enumerate(file, 1):
+        for (line_count, line) in enumerate(file, 1):
             ll = line.lower().rstrip()
+            if flag_actual_code and ll and ' DOCUMENTATION ' not in line:
+                sys.exit("Uh oh. Line {:d} in {:s} has code it shouldn't. You need to adjust the 'ends here' line.".format(line_count, mfs))
             if ll.startswith('understand'):
                 for x in all_mistakes(ll):
                     if not ignore_dupe_next_line:
                         if x in local_duplicates.keys():
-                            print(x, "at line", linecount, "locally duplicated from", local_duplicates[x])
+                            print(x, "at line", line_count, "locally duplicated from", local_duplicates[x])
                             loc_dupes += 1
                         elif track_global_duplicates and x in global_duplicates.keys():
                             glo_dupes += 1
-                            print(x, "at line", linecount, "globally duplicated from", global_duplicates[x])
-                    if not x in local_duplicates.keys(): local_duplicates[x] = linecount
-                    if not x in global_duplicates.keys(): global_duplicates[x] = linecount
-            elif ll.startswith('u'): sys.exit("Possible misspelling of understand at line {:d} : {:s}".format(linecount, ll))
+                            print(x, "at line", line_count, "globally duplicated from", global_duplicates[x])
+                    if not x in local_duplicates.keys(): local_duplicates[x] = line_count
+                    if not x in global_duplicates.keys(): global_duplicates[x] = line_count
+            elif ll.startswith('u'): sys.exit("Possible misspelling of understand at line {:d} : {:s}".format(line_count, ll))
             if ignore_dupe_next_line: ignore_dupe_next_line = False
             if ll.startswith('[def'): ignore_dupe_next_line = True
             if is_on_heading(line) or is_off_heading(line) or line.strip().endswith('ends here.'):
+                if line.strip().endswith('ends here.'): flag_actual_code = True
                 if current_lines:
-                    print("Need carriage return before line", linecount, ":", line.strip())
+                    print("Need carriage return before line", line_count, ":", line.strip())
                     exit()
                 if len(sect_to_sort) > 0:
                     s2 = sorted(sect_to_sort, key=mistake_compare)
@@ -158,6 +167,8 @@ def sort_mistake(pr):
                     current_lines = ""
                 continue
             current_lines += line
+    if not flag_actual_code:
+        sys.exit("You should never hit this error, but if you do, you need a line saying\n{:s} ends here.\n".format(mfs))
     if current_lines: sect_to_sort.append(current_lines)
     if len(sect_to_sort):
         s2 = sorted(sect_to_sort, key=str.lower)
@@ -165,7 +176,7 @@ def sort_mistake(pr):
     elif need_alpha:
         f.write(line)
     f.close()
-    i7.file_len_eq(mf, temp_file)
+    i7.file_len_eq(mf, temp_file, True, True)
     if cmp(temp_file, mf):
         if not super_quiet: print("No change for", mf)
     else:
@@ -202,6 +213,8 @@ while count < len(sys.argv):
     elif arg == 'u': unix_newline = True
     elif arg == 'w': unix_newline = False
     elif arg == '?': usage()
+    elif arg in i7.i7com.keys():
+        projs += i7.i7com[arg].split(",")
     elif not i7.lpro(arg):
         print(arg, "does not map to any project. Showing usage.")
         usage()
@@ -223,5 +236,7 @@ if len(projs) == 0:
 
 if not super_quiet: print("Okay, processing", ', '.join(projs))
 
-for q in projs:
+pod = OrderedDict.fromkeys(projs)
+
+for q in pod:
     sort_mistake(q)
