@@ -108,11 +108,12 @@ def file_len(fname):
             pass
     return i + 1
 
-def file_len_eq(f1, f2, bail = True):
+def file_len_eq(f1, f2, bail = True, launch = False):
     fl1 = file_len(f1)
     fl2 = file_len(f2)
     if fl1 != fl2:
         oops_string = "{:s} and {:s} have different # of lines, suggesting corrupt data: {:d} vs {:d}.".format(f1, f2, fl1, fl2)
+        if launch: wm(f1, f2)
         if bail:
             sys.exit(oops_string)
         else:
@@ -261,7 +262,7 @@ def go_proj(x):
     os.chdir(proj2dir(x))
     return
 
-go_p = to_proj = go_proj
+go_p = proj_dir = to_proj = go_proj
 
 def dir2proj(x = os.getcwd()):
     if os.path.exists(x + "\\story.ni") or ".inform" in x:
@@ -325,11 +326,11 @@ def revproj(a):
 
 def all_proj_fi(x, bail = True):
     xp = i7xr[x] if x in i7xr.keys() else x
-    if xp not in i7c.keys():
+    if xp not in i7com.keys():
         if bail: raise("No full project named {:s}".format(x))
         return []
     ary = []
-    for q in i7c[xp].keys(): ary += i7f[q]
+    for q in i7com[xp].keys(): ary += i7f[q]
     return ary
 
 apf = all_proj_fi
@@ -409,6 +410,9 @@ with open(i7_cfg_file) as file:
             else:
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
+    for q in i7x.keys():
+        if i7x[q] in i7com.keys():
+            i7com[q] = i7com[i7x[q]]
 
 def _valid_i7m_arg(x):
     if x[0] == '-': x = x[1:];
