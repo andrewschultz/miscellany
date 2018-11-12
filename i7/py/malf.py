@@ -184,6 +184,7 @@ def sort_mistake(pr):
             copy(temp_file, mf)
         else:
             os.system("wm \"{:s}\" \"{:s}\"".format(mf, temp_file))
+            print("Only showing. Use -c to copy back over.")
         if detail_debug:
             print(os.path.getsize(mf), os.path.getsize(temp_file))
             toalf(mf, temp_detail_1)
