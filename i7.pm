@@ -33,6 +33,7 @@ our $i7hdir = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Sc
 open(A, "c:/writing/scripts/i7p.txt") || die ("Can't open i7p.txt");
 
 our $i7p_line;
+our $curDef;
 
 our %projFiles;
 
@@ -41,8 +42,7 @@ while ($i7p_line = <A>)
   next if $i7p_line =~ /^#/;
   last if $i7p_line =~ /^;/;
   chomp($i7p_line);
-  my $temp = $i7p_line;
-  $temp =~ s/.*://;
+  (my $temp = $i7p_line) =~ s/^.*?://;
 
   if ($i7p_line =~ /^GITHUB:/)
   {
@@ -56,23 +56,25 @@ while ($i7p_line = <A>)
   }
   elsif ($i7p_line =~ /^RELEASE:/)
   {
-    (my $temp = $i7p_line) =~ s/.*://;
     my @tempAry = split(/=/, $temp);
 	$i7rn{$tempAry[0]} = $tempAry[1];
     next;
   }
   elsif ($i7p_line =~ /^COMBO:/i)
   {
-    (my $temp = $i7p_line) =~ s/.*://;
     my @tempAry = split(/=/, $temp);
     $i7com{$tempAry[0]} = $tempAry[1];
     next;
   }
   elsif ($i7p_line =~ /^GHPROJ:/i)
   {
-    (my $temp = $i7p_line) =~ s/.*://;
     my @tempAry = split(/=/, $temp);
     $i7ghp{$tempAry[0]} = $tempAry[1];
+    next;
+  }
+  elsif ($i7p_line =~ /^CURDEF:/i)
+  {
+    $curDef = $temp;
     next;
   }
   elsif ($i7p_line =~ /^HEADERS:/i)

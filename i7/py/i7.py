@@ -118,6 +118,8 @@ def file_len_eq(f1, f2, bail = True, launch = False):
             sys.exit(oops_string)
         else:
             print(oops_string)
+        return False
+    return True
 
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
@@ -368,6 +370,7 @@ with open(i7_cfg_file) as file:
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.lower().strip()
+        lln = re.sub("^.*?:", "", ll)
         if ll.startswith("headname:"):
             l1 = ll[9:].split("=")
             for x in l1[1].split(","): i7hfx[x] = l1[0]
@@ -377,6 +380,9 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("github:"):
             i7gh = re.sub(".*:", "", ll).split(",")
+            continue
+        if ll.startswith("curdef:"):
+            curdef = lln
             continue
         if ll.startswith("release:"):
             l1 = ll[8:].split("=")
