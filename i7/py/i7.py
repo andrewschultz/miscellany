@@ -189,8 +189,21 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
-def src(x):
+def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
+
+src = main_src
+
+def src_file(x, y):
+    if y in i7nonhdr.keys():
+        return os.path.join(sdir(x), i7nonhdr[y])
+    elif y in i7nonhdr.values():
+        return os.path.join(sdir(x), y)
+    if y in i7hfx.keys():
+        return hdr(x, i7hfx[y].title())
+    elif y in i7hfx.values():
+        return hdr(x, y)
+    return ""
 
 def build_log(x):
     return os.path.normpath(os.path.join(sdir(x), "..\\Build\\Debug log.txt"))
@@ -238,6 +251,7 @@ def triz(x):
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()
     if xl in i7hfx.keys(): return i7hfx[xl].title()
+    if xl in i7hfx.values(): return xl.title()
     else: return xl.title()
 
 th_exp = hf_exp
@@ -249,6 +263,12 @@ def proj_exp(x, return_nonblank = True, to_github = False):
     return (x if return_nonblank else '')
 
 pex = proj_exp
+
+def hfi_exp(x, return_nonblank = True):
+    if x in i7nonhdr.keys(): return i7nonhdr[x]
+    if x in i7nonhdr.values(): return x
+    if return_nonblank: return x
+    return ""
 
 def lpro(x, spaces=False):
     retval = proj_exp(x, False)
@@ -359,6 +379,7 @@ i7com = {} # combos e.g. opo = 3d and 4d
 i7hfx = {} # header mappings e.g. ta to tables
 i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
+i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -371,9 +392,13 @@ with open(i7_cfg_file) as file:
         if line.startswith('#'): continue
         ll = line.lower().strip()
         lln = re.sub("^.*?:", "", ll)
+        if ':' not in ll and '=' not in ll: print("WARNING line", line_count, "in i7p.txt needs = or :.")
+        lla = lln.split("=")
         if ll.startswith("headname:"):
-            l1 = ll[9:].split("=")
-            for x in l1[1].split(","): i7hfx[x] = l1[0]
+            for x in lla[1].split(","): i7hfx[x] = lla[0]
+            continue
+        if ll.startswith("nonhdr:"):
+            for x in lla[1].split(","): i7nonhdr[x] = lla[0]
             continue
         if ll.startswith("bitbucket:"):
             i7bb = re.sub(".*:", "", ll).split(",")
@@ -385,16 +410,13 @@ with open(i7_cfg_file) as file:
             curdef = lln
             continue
         if ll.startswith("release:"):
-            l1 = ll[8:].split("=")
-            i7rn[l1[0]] = l1[1]
+            i7rn[lla[0]] = lla[1]
             continue
         if ll.startswith("combo:"):
-            l1 = ll[6:].split("=")
-            i7com[l1[0]] = l1[1]
+            i7com[lla[0]] = lla[1]
             continue
         if ll.startswith("ghproj:"):
-            l1 = ll[7:].split("=")
-            i7gx[l1[1]] = l1[0]
+            i7gx[lla[1]] = lla[0]
             continue
         combos = False
         l0 = line.lower().strip().split("=")
