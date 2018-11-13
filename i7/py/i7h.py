@@ -23,19 +23,17 @@ if len(my_stuff) == 1:
         print("Going with default project", x)
     my_stuff = [x] + my_stuff
 elif len(my_stuff) == 2:
-    if my_stuff[1] in i7.i7x.keys() and my_stuff[0] in i7.i7hfx.keys():
+    if i7.proj_exp(my_stuff[1], False) and i7.hfi_exp(my_stuff[0], False):
         print("Going header-project instead of project-header")
         my_stuff.reverse()
 else:
     print("Too many arguments.")
     sys.exit(usage_str)
 
-if not i7.proj_exp(my_stuff[0]): sys.exit("{:s} is not a valid project or abbreviation.".format(my_stuff[0]))
-if my_stuff[1] not in i7.i7hfx.keys() and my_stuff[1] not in i7.i7hfx.values(): sys.exit("{:s} is not a valid header file name or abbreviation.".format(my_stuff[1]))
+if not i7.proj_exp(my_stuff[0], False): sys.exit("{:s} is not a valid project or abbreviation.".format(my_stuff[0]))
+to_open = i7.src_file(my_stuff[0], my_stuff[1])
 
-hdr = re.sub("-", " ", i7.proj_exp(my_stuff[0]))
-
-to_open = "{:s}\\{:s} {:s}.i7x".format(i7.extdir, hdr.title(), i7.th_exp(my_stuff[1]))
+if not to_open: sys.exit("{:s} is not a valid header file name or abbreviation.".format(my_stuff[1]))
 
 if os.path.exists(to_open):
     print("Opening", to_open)
