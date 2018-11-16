@@ -168,11 +168,11 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
-  ElseIf $myCmd == 'c' Then
+  ElseIf $myCmd == 'c' or $myCmd == 'cv' or $myCmd == 'co' Then
     if $nextNum == -1 Then
 	  $nextNum = 0
 	EndIf
-    open_for_cron($nextNum)
+    open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'q' Then
     Local $hWnd = WinWait("", "Habitica - Gamify Your Life", 1)
 	if not $hWnd Then
@@ -310,7 +310,7 @@ Func Usage($questionmark, $badCmd = "")
   Local $usgAry[15] = [ "-a, -b, -c, -ca, -d, -e, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
-  "-c = open then close for cron", _
+  "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
@@ -627,8 +627,7 @@ Func OpenHabiticaURL($closeWindow)
   $didAnything = True
 EndFunc
 
-
-Func open_for_cron($hours_after)
+Func open_for_cron($hours_after, $auto_close_after = True, $auto_visit_after = False)
   local $x = _Now()
   Local $aMyDate, $aMyTime
   _DateTimeSplit($x, $aMyDate, $aMyTime)
@@ -645,10 +644,12 @@ Func open_for_cron($hours_after)
     MsgBox($MB_OK, "Oops", "Hours after/before must be between 0 and 24.")
     Exit()
   EndIf
-  MsgBox($MB_OK, "Setting delay", $hours_after)
 
   $secondsLeft = 86460 - 3600 * $hours - 60 * $minutes - $seconds + 3600 * $hours_after
-  MsgBox($MB_SYSTEMMODAL, "Auto-run Habitica " & $hours_after, "Waiting " & $secondsLeft)
+
+  $dest_time = _DateAdd( 's', $secondsLeft, _NowCalc())
+  MsgBox($MB_SYSTEMMODAL, "Auto-run Habitica " & $hours_after & " hours after cron", "Waiting " & $secondsLeft & " seconds until " & $dest_time)
+
   sleep($secondsLeft * 1000)
 
   RunWait(@ComSpec & " /c " & "start http://habitica.com")
@@ -658,9 +659,14 @@ Func open_for_cron($hours_after)
   WinActivate("[CLASS:MozillaWindowClass]")
   WinWaitActive("[CLASS:MozillaWindowClass]")
 
-  Send("^9")
+  if $auto_close_after Then
+    Send("^9")
+    Sleep(3000)
+    Send("^w")
+  ElseIf $auto_visit_after Then
+    Send("^9")
+  EndIf
 
-  Sleep(3000)
-  Send("^w")
   Exit()
+
 EndFunc
