@@ -49,6 +49,14 @@ def i7_usage():
     print("mifi tefi tafi = mistake test table files")
     exit()
 
+def is_outline_start(a):
+    ovr = r'^({:s}) '.format("|".join(outline_val_hash))
+    if re.search(ovr, a.lower()): return re.sub(" .*", "", a.lower())
+    return ""
+
+def outline_type(a):
+    return re.sub(" .*", "", a.strip().lower())
+
 def file_to_alf(fname, out_name, ignore_blanks):
     fo = open(fname, "rU")
     fl = sorted(fo.readlines())

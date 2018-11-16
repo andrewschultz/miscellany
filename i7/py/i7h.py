@@ -23,7 +23,7 @@ if len(my_stuff) == 1:
         print("Going with default project", x)
     my_stuff = [x] + my_stuff
 elif len(my_stuff) == 2:
-    if i7.proj_exp(my_stuff[1], False) and i7.hfi_exp(my_stuff[0], False):
+    if i7.proj_exp(my_stuff[1], False) and (i7.hfi_exp(my_stuff[0], False) or i7.hf_exp(my_stuff[0], False)):
         print("Going header-project instead of project-header")
         my_stuff.reverse()
 else:
