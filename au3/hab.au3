@@ -5,6 +5,7 @@
 ;
 ; a = opens armoire (needs #)
 ; b = fiery blast (needs position and number)
+; c = open for cron
 ; d = adjust delay
 ; i = intelligence outfit (default for adventuring)
 ; m/w = magic/wizard skills
@@ -21,6 +22,7 @@
 ; hab-h.au3 is what to change instead of hab.au3, so I don't keep tripping source control for every small choice
 ; the big one is changing classes
 #include <hab-h.au3>
+#include <date.au3>
 #include "c:\\scripts\\andrew.au3"
 #include "c:\\scripts\\ini.au3"
 
@@ -166,6 +168,11 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay/2)
     Next
+  ElseIf $myCmd == 'c' Then
+    if $nextNum == -1 Then
+	  $nextNum = 0
+	EndIf
+    open_for_cron($nextNum)
   ElseIf $myCmd == 'q' Then
     Local $hWnd = WinWait("", "Habitica - Gamify Your Life", 1)
 	if not $hWnd Then
@@ -300,9 +307,10 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[15] = [ "-a, -b, -ca, -d, -e, -i, -iw, -m/-w, -o, -p, -r, -s/-=, -t or -x are the options.", _
+  Local $usgAry[15] = [ "-a, -b, -c, -ca, -d, -e, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
+  "-c = open then close for cron", _
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-i = intelligence gear,", _
@@ -310,6 +318,7 @@ Func Usage($questionmark, $badCmd = "")
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
+  "-q = quick click in upper right", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-s or -= = gives starting MP so you can see final MP as well", _
   "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
@@ -616,4 +625,42 @@ Func OpenHabiticaURL($closeWindow)
     Send("{CTRLDOWN}w{CTRLUP}")
   EndIf
   $didAnything = True
+EndFunc
+
+
+Func open_for_cron($hours_after)
+  local $x = _Now()
+  Local $aMyDate, $aMyTime
+  _DateTimeSplit($x, $aMyDate, $aMyTime)
+
+  Local $hours = $aMyTime[1]
+  Local $minutes = $aMyTime[2]
+  Local $seconds = $aMyTime[3]
+
+  if StringInStr($x, "PM") Then
+    $hours += 12
+  EndIf
+
+  if $hours_after > 24 or $hours_after < 0 Then
+    MsgBox($MB_OK, "Oops", "Hours after/before must be between 0 and 24.")
+    Exit()
+  EndIf
+  MsgBox($MB_OK, "Setting delay", $hours_after)
+
+  $secondsLeft = 86460 - 3600 * $hours - 60 * $minutes - $seconds + 3600 * $hours_after
+  MsgBox($MB_SYSTEMMODAL, "Auto-run Habitica " & $hours_after, "Waiting " & $secondsLeft)
+  sleep($secondsLeft * 1000)
+
+  RunWait(@ComSpec & " /c " & "start http://habitica.com")
+
+  Sleep(12000)
+
+  WinActivate("[CLASS:MozillaWindowClass]")
+  WinWaitActive("[CLASS:MozillaWindowClass]")
+
+  Send("^9")
+
+  Sleep(3000)
+  Send("^w")
+  Exit()
 EndFunc
