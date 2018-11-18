@@ -1,5 +1,8 @@
 #
 # i7h.py
+#
+# opens (existing) header file in inform 7\inform 7\extensions\andrew schultz\
+#
 # called by i7h.bat
 
 import re
@@ -13,11 +16,14 @@ my_stuff = sys.argv[1:]
 
 sl = len(my_stuff)
 
-if sl == 0: sys.exit(usage_str)
+if sl == 0: print(usage_str)
 
 if len(my_stuff) == 1:
     x = i7.dir2proj(os.getcwd())
-    if x: print("You're in project {:s}, so we'll use that to look for header files.".format(x))
+    if x:
+        if i7.dir2proj(my_stuff[1]):
+            sys.exit("In order to use only 1 argument, you need to define a header file type, not a(nother) project.")
+        print("You're in project {:s}, so we'll use that to look for header files.".format(x))
     else:
         x = i7.curdef
         print("Going with default project", x)
