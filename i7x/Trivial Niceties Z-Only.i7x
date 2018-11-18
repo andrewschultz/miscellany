@@ -77,7 +77,12 @@ to wfak:
 		else:
 			wait for any key;
 
-to say wfak-d: if debug-state is false, wfak;
+any-key-yet is a truth state that varies.
+
+to say wfak-d:
+	if any-key-yet is false, say " (when text pauses like this, it means press any key to continue)";
+	now any-key-yet is true;
+	if debug-state is false, wfak;
 
 book plural
 
