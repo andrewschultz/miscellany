@@ -19,12 +19,16 @@ from shutil import copy
 from collections import defaultdict
 from collections import OrderedDict
 
+malf_cfg = "c:/writing/scripts/malf.txt"
+
 temp_file = "c:\\games\\inform\\mist.i7x"
 temp_detail_1 = "c:\\games\\inform\\mist1.i7x"
 temp_detail_2 = "c:\\games\\inform\\mist2.i7x"
 
 default_proj = i7.dir2proj()
 if not default_proj: default_proj = 'ai'
+
+sort_level = defaultdict(str)
 
 detail_debug = False
 copy_not_show = False
@@ -37,6 +41,9 @@ count = 1
 
 alpha_level = 2
 all_alpha = [ 'section', 'chapter', 'part', 'book', 'volume' ]
+
+post_open = True
+post_open_line = 0
 
 def get_alf_level(x):
     x2 = re.sub("a", "", x)
@@ -58,6 +65,18 @@ def usage():
     print("(a)# = outline level to sort. 1 for first, no # for all:", '/'.join(all_alpha))
     print("You can specify multiple projects or abbreviations.")
     exit()
+
+def read_cfg_file():
+    with open(malf_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            ll = line.strip().lower()
+            if "=" not in ll:
+                print("Line", line_count, "does not have = to split the project and what should be sorted.")
+                continue
+            la = ll.split("=")
+            sort_level[la[0]] = la[1]
 
 def breakdowns(e):
     any_slashes = False
@@ -108,6 +127,7 @@ def is_off_heading(a):
     return False
 
 def sort_mistake(pr):
+    global post_open_line
     global_duplicates = defaultdict(int)
     local_duplicates = defaultdict(int)
     mf = i7.mifi(pr)
@@ -124,9 +144,22 @@ def sort_mistake(pr):
     glo_dupes = 0
     f = open(temp_file, "w", newline=my_newline)
     mfs = os.path.basename(mf)
+    last_sorted_header = ""
+    last_sorted_line = 0
     with open(mf) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower().rstrip()
+            if pr in sort_level.keys():
+                q = i7.is_outline_start(ll)
+                if q:
+                    if q == sort_level[pr]:
+                        if ll < last_sorted_header:
+                            print("Chapter alphabetizing: line", line_count, ll.upper(), "behind last sorted header", last_sorted_header.upper())
+                            if not post_open_line: post_open_line = line_count
+                        last_sorted_header = ll
+                        last_sorted_line = line_count
+                    elif i7.outline_val_hash[q] > i7.outline_val_hash[sort_level[pr]]:
+                        last_sorted_header = ""
             if flag_actual_code and ll and ' DOCUMENTATION ' not in line:
                 sys.exit("Uh oh. Line {:d} in {:s} has code it shouldn't. You need to adjust the 'ends here' line.".format(line_count, mfs))
             if ll.startswith('understand'):
@@ -227,6 +260,8 @@ my_newline = "\n" if unix_newline else "\r\n"
 alpha_on = all_alpha[:alpha_level]
 alpha_off = all_alpha[alpha_level:]
 
+read_cfg_file()
+
 if detail_debug:
     print('ON:', ', '.join(alpha_on), '({:d})'.format(len(alpha_on)))
     print('OFF:', ', '.join(alpha_off), '({:d})'.format(len(alpha_off)))
@@ -241,3 +276,6 @@ pod = OrderedDict.fromkeys(projs)
 
 for q in pod:
     sort_mistake(q)
+    if post_open and post_open_line:
+        i7.npo(i7.mifi(q), post_open_line, True, False)
+    post_open_line = 0

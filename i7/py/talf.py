@@ -41,7 +41,7 @@ story_only = table_only = story_and_tables = False
 ignored_tables = ""
 
 def usage():
-    print("-l/-nl decides whether or not to launch, default is", onoff[copy_over])
+    print("-l/-nl decides whether or not to launch, default is", onoff[launch_dif])
     print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
     print("-os overrides size differences")
     print("-oo overrides tables omitted from the data file")
