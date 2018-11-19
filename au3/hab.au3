@@ -7,6 +7,7 @@
 ; b = fiery blast (needs position and number)
 ; c = open for cron
 ; d = adjust delay
+; f = fish for items at end
 ; i = intelligence outfit (default for adventuring)
 ; m/w = magic/wizard skills
 ; o = only click to tasks
@@ -86,7 +87,7 @@ while $cmdCount <= $CmdLine[0]
 
   If $myCmd == 'te' Then
     $testDontClick = True
-  ElseIf $myCmd == 'f' Then
+  ElseIf $myCmd == 'fo' Then
 	OpenHabiticaURL(False)
   ElseIf $myCmd == 'fc' Then
     OpenHabiticaURL(True)
@@ -173,24 +174,14 @@ While $cmdCount <= $CmdLine[0]
 	  $nextNum = 0
 	EndIf
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
-  ElseIf $myCmd == 'q' Then
-    Local $hWnd = WinWait("", "Habitica - Gamify Your Life", 1)
-	if not $hWnd Then
-	  MsgBox($MB_OK, "OOPS", "No Habitica window open.")
-	  Exit
-    EndIf
-    $clicks = $nextNum
-    $xxx = WinGetClientSize($hWnd)
-	ToHab()
-	for $i = 1 to $clicks
-      MouseMove($xxx[0] - 136, 136)
-	  MouseClick("left")
-	  sleep($delay)
-    Next
-	WinClose($hWnd)
-	Exit
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' Then
+    if $nextNum <= 0 Then
+	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f.")
+	  Exit
+    EndIf
+	FishItmBossDmg($nextNum, $myCmd == 'ft')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -245,6 +236,22 @@ While $cmdCount <= $CmdLine[0]
     MouseClick ( "left", 200, 100, 1 )
   ElseIf $myCmd == 'p' Then
     DoPer()
+  ElseIf $myCmd == 'q' Then
+    Local $hWnd = WinWait("", "Habitica - Gamify Your Life", 1)
+	if not $hWnd Then
+	  MsgBox($MB_OK, "OOPS", "No Habitica window open.")
+	  Exit
+    EndIf
+    $clicks = $nextNum
+    $xxx = WinGetClientSize($hWnd)
+	ToHab()
+	for $i = 1 to $clicks
+      MouseMove($xxx[0] - 136, 136)
+	  MouseClick("left")
+	  sleep($delay)
+    Next
+	WinClose($hWnd)
+	Exit
   ElseIf $myCmd == 'r' Then
     ToHab()
     CheckIfOnTask()
@@ -307,12 +314,13 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[15] = [ "-a, -b, -c, -ca, -d, -e, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
+  Local $usgAry[16] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
+  "-f fishes for items X times", _
   "-i = intelligence gear,", _
   "-iw = initial wait,", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
@@ -552,7 +560,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'f', 'fc' ]
+  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc' ]
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
@@ -615,13 +623,27 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
+Func FishItmBossDmg($fishTimes, $toggle_at_end = False)
+  ToHab()
+  for $i = 1 to $fishTimes * 2
+    sleep(1000)
+	MouseClick("left", 680, 276, 1) ; click it on *and* off
+	MouseMove(700, 276) ; click it on *and* off
+  Next
+  if $toggle_at_end == True Then
+    sleep(1000)
+	MouseClick("left", 680, 276, 1)
+	MouseMove(700, 276) ;
+  EndIf
+EndFunc
+
 Func OpenHabiticaURL($closeWindow)
   Run("C:\Program Files (x86)\Mozilla Firefox\firefox -new-tab http://habitica.com")
   WinActivate("[CLASS:MozillaWindowClass]", "")
   WinWaitActive("[CLASS:MozillaWindowClass]")
   Send("{CTRLDOWN}9{CTRLUP}")
   if $closeWindow Then
-	Sleep(10)
+	Sleep(1000)
     Send("{CTRLDOWN}w{CTRLUP}")
   EndIf
   $didAnything = True
