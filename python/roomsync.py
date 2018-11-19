@@ -263,8 +263,42 @@ def region_name(li):
     li2 = re.sub("\..*", "", li2)
     return li2
 
+###### below this needs fixing. It is a hack for IFComp 2019
+
+def rooms_from_table(x):
+    if x == 'table of bad locs': return "Poorly Penned"
+    return ""
+
+def forced_region(tn, pro):
+    return "poorly penned" # obviously to be fixed later
+
+def from_table(my_line, my_proj):
+    q = my_line.lower().split("\t")
+    if len(q) < 2: return ""
+    retval = re.sub("^\"", "", q[3])
+    return re.sub("\".*", "", retval)
+
+###### above this needs fixing. It is a hack for IFComp 2019
+
+current_table = ""
+last_table_line = 0
+
 with open(source_file) as f:
     for (line_count, line) in enumerate(f, 1):
+        if line.startswith("table of") and not current_table:
+            current_table = re.sub(" *[\(\[].*", "", line.lower().strip())
+            last_table_line = line_count
+            continue
+        if current_table:
+            l2 = re.sub(".*[\[\]]", "", line.strip())
+            if not l2:
+                current_table = ""
+                continue
+        if current_table and rooms_from_table(current_table):
+            if line_count - last_table_line == 1: continue
+            source[from_table(line, project)] = forced_region(current_table, project)
+            print(line_count, from_table(line, project), forced_region(current_table, project))
+            continue
         if "\t" in line: continue
         if line.lower().startswith("index map with"): continue
         line = line.rstrip().lower()

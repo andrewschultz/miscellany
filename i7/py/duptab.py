@@ -22,7 +22,9 @@ dup_table_custom = "c:/writing/scripts/duptab.txt"
 # options
 check_spaceless = True
 
-table_file = 'c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz\Ailihphilia Tables.i7x'
+project="ailihphilia"
+
+i7.tafi(project)
 
 def usage():
     print("-ns/-sn removes spaceless checks e.g. No Ton ~ Not On")
