@@ -176,12 +176,12 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' Then
     if $nextNum <= 0 Then
 	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f.")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', not $myCmd == 'ff')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -623,17 +623,25 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
-Func FishItmBossDmg($fishTimes, $toggle_at_end = False)
-  ToHab()
+Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True)
+  if $adjustMouse Then
+    ToHab()
+    $mouseX = 680
+    $mouseY = 276
+  Else
+    Local $aPos = MouseGetPos()
+	$mouseX = $aPos[0]
+	$mouseY = $aPos[1]
+  EndIf
   for $i = 1 to $fishTimes * 2
     sleep(1000)
-	MouseClick("left", 680, 276, 1) ; click it on *and* off
-	MouseMove(700, 276) ; click it on *and* off
+	MouseClick("left", $mouseX, $mouseY, 1) ; click it on *and* off
+	MouseMove($mouseX + 20, $mouseY) ; click it on *and* off
   Next
   if $toggle_at_end == True Then
     sleep(1000)
-	MouseClick("left", 680, 276, 1)
-	MouseMove(700, 276) ;
+	MouseClick("left", $mouseX, $mouseY, 1)
+	MouseMove($mouseX + 20, $mouseY) ;
   EndIf
 EndFunc
 
