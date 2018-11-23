@@ -10,13 +10,27 @@ import pyperclip
 from collections import defaultdict
 
 kfile = "c:/writing/temp/to_keep.txt"
+kfile2 = "c:/writing/temp/to_keep_2.txt"
 
 specials = defaultdict(list)
 
 separator = defaultdict(str)
 separator['possible names'] = "\t"
 
-x = pyperclip.paste()
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg == 'fi': read_paste = True
+    elif arg == 'nf': read_paste = False
+    count += 1
+
+read_paste = False
+
+if read_paste:
+    x = pyperclip.paste()
+else:
+    f = open(kfile), "r"
+    x = f.readlines()
 
 y = x.split("\n")
 y2 = []
@@ -43,7 +57,9 @@ for z in y:
 
 # here we sort specific cases
 for z in y2:
-    if is_palindrome(z): dict_append(specials, 'palindromes', z)
+    if z.startswith('===='): continue
+    elif re.search("[0-9]+ total sorted ideas", z): continue
+    elif is_palindrome(z): dict_append(specials, 'palindromes', z)
     elif ' ' not in z: dict_append(specials, 'possible names', z)
     elif 'what a story' in z.lower(): dict_append(specials, 'what a story', z)
     elif '==' in z: dict_append(specials, 'btp', z)
