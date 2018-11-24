@@ -4,24 +4,21 @@
 ; opens Inform IDE and pushes F5 automatically
 ;
 
+#include <Array.au3>
+#include <File.au3>
+
 #include "ide-h.au3"
 #include <MsgBoxConstants.au3>
 #include <Date.au3>
 #include "c:\\scripts\\andrew.au3"
+#include <File.au3>
 
 Local $project = EnvGet("PROJ")
 Local $stuff = 1;
 Local $build = 1;
 Local $walkthrough = 0;
 
-; $toRead is defined in ide-h.au3
-;
-; $projHash = ObjCreate("Scripting.Dictionary")
-; $projHash.Add ("d",   "dirk")
-;
-; this is not included here b/c changing the default would mean another github pull/push
-; plus there are private projects
-;
+Global $projHash
 
 Opt("WinTitleMatchMode", -2)
 
@@ -90,6 +87,34 @@ OpenIDE($project)
 ;
 ; function(s) below
 ;
+
+Func ReadProjectHash()
+
+  Local $aInput
+  $file = "c:/writing/scripts/i7p.txt"
+  _FileReadToArray($file, $aInput)
+  $projHash = ObjCreate("Scripting.Dictionary")
+
+  For $i = 1 to UBound($aInput) - 1
+	if StringLeft($aInput[$i], 1) == '#' Then
+	  ContinueLoop
+    EndIf
+	if StringInStr($aInput[$i], ":") Then
+	  ContinueLoop
+	EndIf
+    ; MsgBox ($MB_OK, "Line # " & $i, $aInput[$i])
+	if not StringInStr($aInput[$i], "=") Then
+	  ContinueLoop
+    EndIf
+	$my_ary = StringSplit($aInput[$i], "=")
+	$my_from = StringSplit($my_ary[2], ",")
+	for $j = 1 to UBound($my_from) - 1
+      ; MsgBox ($MB_OK, "Line # " & $i, "From: " & $my_from[$j] & @CRLF & "To: " & $my_ary[1])
+	  $projHash.add($my_from[$j], $my_ary[1])
+	Next
+  Next
+
+EndFunc
 
 Func OpenIDE($project)
   $toCheck = "[REGEXPTITLE:$project" & ".inform\*? - Inform]"
