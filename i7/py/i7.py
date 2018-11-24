@@ -44,6 +44,9 @@ spoon = "c:/writing/spopal.otl"
 
 extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 
+def ph(eqs, opt_text = ""):
+    print('=' * eqs + opt_text)
+
 def i7_usage():
     print("proj_exp = main function, short name to long. dir2proj = directory to project.")
     print("mifi tefi tafi = mistake test table files")
