@@ -30,33 +30,10 @@ read_paste = False
 
 count = 0
 
-while count < len(sys.argv):
-    arg = sys.argv[count].lower()
-    if arg[0] == '-': arg = arg[1:]
-    if arg == 'fi': read_paste = False
-    elif arg == 'nf': read_paste = True
-    elif arg == 'l': by_length = True
-    elif arg == 'a': by_length = False
-    elif arg == 'e' or arg == 'e1' or arg == '1e':
-        os.system(kfile)
-        exit()
-    elif arg == 'e2' or arg == '2e':
-        os.system(kfile2)
-        exit()
-    elif arg == 'eb' or arg == 'be' or arg == 'b':
-        os.system(kfile)
-        os.system(kfile2)
-        exit()
-    count += 1
+check_header = True
+header_yet = False
 
-if read_paste:
-    x = pyperclip.paste()
-    y = x.split("\n")
-    out_file = kfile
-else:
-    f = open(kfile, "r")
-    y = [ g.rstrip() for g in f.readlines() ]
-    out_file = kfile2
+##############start functions
 
 y2 = []
 finals = []
@@ -87,13 +64,53 @@ def dict_append(a, b, c):
     a[b].append(c)
     return
 
+##############end functions
+
+if read_paste:
+    x = pyperclip.paste()
+    y = x.split("\n")
+    out_file = kfile
+else:
+    f = open(kfile, "r")
+    y = [ g.rstrip() for g in f.readlines() ]
+    out_file = kfile2
+
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg == 'fi': read_paste = False
+    elif arg == 'nf': read_paste = True
+    elif arg == 'l': by_length = True
+    elif arg == 'a': by_length = False
+    elif arg == 'ch' or arg == 'hc': check_header = True
+    elif arg == 'nh' or arg == 'hn': check_header = False
+    elif arg == 'e' or arg == 'e1' or arg == '1e':
+        os.system(kfile)
+        exit()
+    elif arg == 'e2' or arg == '2e':
+        os.system(kfile2)
+        exit()
+    elif arg == 'eb' or arg == 'be' or arg == 'b':
+        os.system(kfile)
+        os.system(kfile2)
+        exit()
+    count += 1
+
 for z in y:
+    if not header_yet:
+        if "=start actual notes" in z.lower():
+            header_yet = True
+            if not check_header: sys.exit("Header check is turned off, but =start actual notes text was found in file. Change this with -ch or -hc.")
+        if check_header: continue
     if '=' * 10 in z.strip(): continue
     if not z.strip(): continue
     if z.strip() != z.lstrip():
         strips += 1
         strip_length += len(z.strip()) - len(z.lstrip())
     y2.append(z.strip())
+
+if check_header and not header_yet:
+    sys.exit("check_header set to true, but we did not find a header. Bailing. Use -nh or -hn to turn this off.")
 
 # here we sort specific cases
 for z in y2:
