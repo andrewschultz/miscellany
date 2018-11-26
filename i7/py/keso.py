@@ -37,6 +37,16 @@ while count < len(sys.argv):
     elif arg == 'nf': read_paste = True
     elif arg == 'l': by_length = True
     elif arg == 'a': by_length = False
+    elif arg == 'e' or arg == 'e1' or arg == '1e':
+        os.system(kfile)
+        exit()
+    elif arg == 'e2' or arg == '2e':
+        os.system(kfile2)
+        exit()
+    elif arg == 'eb' or arg == 'be' or arg == 'b':
+        os.system(kfile)
+        os.system(kfile2)
+        exit()
     count += 1
 
 if read_paste:
@@ -56,6 +66,12 @@ strip_length = 0
 def is_palindrome(x):
     x = re.sub("[^a-zA-Z]", "", x.lower())
     return x == x[::-1]
+
+def is_onetwo(x):
+    x2 = x.strip().lower()
+    if x2.startswith("1") or x2.startswith("one"):
+        if "2" in x2 or re.search("\b(two|to)\b", x2): return True
+    return False
 
 def is_anagrammy(x):
     if x.lower().startswith("anagram"): return True
@@ -81,15 +97,18 @@ for z in y:
 
 # here we sort specific cases
 for z in y2:
-    if z.startswith('===='): continue
-    elif re.search("[0-9]+ total sorted ideas", z): continue
-    elif is_palindrome(z): dict_append(specials, 'palindromes', z)
-    elif ' / ' in z: dict_append(specials, 'vvff', z)
-    elif re.search("([0-9]=|=[0-9]| \* )", z): dict_append(specials, 'spoonerisms', z)
-    elif ' ' not in z: dict_append(specials, 'possible names', z)
-    elif 'what a story' in z.lower(): dict_append(specials, 'what a story', z)
-    elif '==' in z: dict_append(specials, 'btp', z)
-    elif is_anagrammy(z): dict_append(specials, 'anagrams', z)
+    z_raw = z if z.startswith("#") else re.sub(" *#.*", "", z)
+    z_comments = re.sub("^ *?#", "", z)
+    if z_raw.startswith('===='): continue
+    elif re.search("[0-9]+ total sorted ideas", z_raw): continue
+    elif is_palindrome(z_raw): dict_append(specials, 'palindromes', z)
+    elif is_onetwo(z_raw): dict_append(specials, 'onetwos', z)
+    elif ' / ' in z_raw or ',,' in z_raw: dict_append(specials, 'vvff', z)
+    elif '==' in z_raw: dict_append(specials, 'btp', z)
+    elif '*' in z_raw or re.search("( [0-9=]{2}|[0-9=]{2} )", z_raw): dict_append(specials, 'spoonerisms', z)
+    elif ' ' not in z_raw or "\t" in z_raw: dict_append(specials, 'possible names', z)
+    elif 'what a story' in z_raw.lower(): dict_append(specials, 'what a story', z)
+    elif is_anagrammy(z_raw): dict_append(specials, 'anagrams', z)
     else: finals.append(z)
 
 k = open(out_file, "w")
