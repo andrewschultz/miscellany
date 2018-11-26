@@ -22,10 +22,6 @@ dup_table_custom = "c:/writing/scripts/duptab.txt"
 # options
 check_spaceless = True
 
-project="ailihphilia"
-
-i7.tafi(project)
-
 def usage():
     print("-ns/-sn removes spaceless checks e.g. No Ton ~ Not On")
     print("-s allows spaceless checks (default)")
@@ -43,16 +39,6 @@ def read_format_strings():
             if "\t" in line:
                 l = line.lower().split("\t")
                 format_string[l[0]] = l[1]
-
-while count < len(sys.argv):
-    arg = sys.argv[count].lower()
-    if arg[0] == '-': arg = arg[1:]
-    if arg == 'ns' or arg == 'sn': check_spaceless = False
-    elif arg == 's': check_spaceless = True
-    else:
-        print("Bad argument", arg)
-        usage()
-    count += 1
 
 def chop_up(format_str, format_ary):
     ret_str = format_str
@@ -115,9 +101,26 @@ def table_hack(file_name):
 dupes = 0
 dupe_without_spaces = 0
 
-read_format_strings()
+this_project = ""
 
-this_project = 'ai'
+while count < len(sys.argv):
+    arg = sys.argv[count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg == 'ns' or arg == 'sn': check_spaceless = False
+    elif arg == 's': check_spaceless = True
+    elif arg in i7.i7x.keys(): this_project = i7.i7x[arg]
+    elif arg in i7.i7x.values(): this_project = arg
+    else:
+        print("Bad argument", arg)
+        usage()
+    count += 1
+
+if not this_project:
+    this_project=i7.dir2proj()
+    if not this_project: sys.exit("Could not find project for current working directory. Go to a source directory or specify a project or abbreviation.")
+    print("Pulling default project {:s} from current directory.".format(this_project))
+
+read_format_strings()
 
 table_hack(i7.src(this_project))
 table_hack(i7.tafi(this_project))
