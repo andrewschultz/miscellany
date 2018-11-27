@@ -40,6 +40,11 @@ finals = []
 strips = 0
 strip_length = 0
 
+def new_line_embedded(x):
+    if re.search("\b(uline|new line|newline)\b", x):
+        return re.split(" *\b(uline|new line|newline)\b *", x)
+    return []
+
 def is_palindrome(x):
     x = re.sub("[^a-zA-Z]", "", x.lower())
     return x == x[::-1]
@@ -96,21 +101,31 @@ while count < len(sys.argv):
         exit()
     count += 1
 
+embeddings = []
+
+if read_paste: file_or_clip = "the clipboard text"
+else: file_or_clip = kfile
+
 for z in y:
     if not header_yet:
         if "=start actual notes" in z.lower():
             header_yet = True
-            if not check_header: sys.exit("Header check is turned off, but =start actual notes text was found in file. Change this with -ch or -hc.")
+            if not check_header: sys.exit("Header check is turned off, but =start actual notes text was found in {:s}. Change this with -ch or -hc.".format(file_or_clip))
         if check_header: continue
     if '=' * 10 in z.strip(): continue
     if not z.strip(): continue
     if z.strip() != z.lstrip():
         strips += 1
         strip_length += len(z.strip()) - len(z.lstrip())
-    y2.append(z.strip())
+    if z.new_line_embedded():
+        embeddings.append(z)
+        y = y + z.new_line_embedded()
+        continue
+    else:
+        y2.append(z.strip())
 
 if check_header and not header_yet:
-    sys.exit("check_header set to true, but we did not find a header. Bailing. Use -nh or -hn to turn this off.")
+    sys.exit("check_header set to true, but we did not find a header in {:s}. Bailing. Use -nh or -hn to turn this off.".format(file_or_clip))
 
 # here we sort specific cases
 for z in y2:
@@ -139,6 +154,10 @@ if len(specials.keys()):
 k.write("\n".join(sorted(finals, key=lambda l:len(l) if by_length else l, reverse=by_length)))
 k.write("\n{:d} total sorted ideas\n".format(len(finals)))
 k.close()
+
+if embeddings:
+    print(len(embeddings), "embedded lines:")
+    for q in embeddings: print("      ", q)
 
 print("Opening", out_file)
 os.system(out_file)
