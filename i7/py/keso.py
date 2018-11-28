@@ -13,6 +13,7 @@ from functools import reduce
 
 kfile = "c:/writing/temp/to_keep.txt"
 kfile2 = "c:/writing/temp/to_keep_2.txt"
+kfilef = "c:/writing/temp/to_keep_final.txt"
 
 cmds = defaultdict(str)
 cmds['palindromes'] = "ni no ai"
@@ -25,6 +26,7 @@ specials = defaultdict(list)
 separator = defaultdict(str)
 separator['possible names'] = "\t"
 
+touch_up = False
 by_length = True
 read_paste = False
 
@@ -39,6 +41,29 @@ y2 = []
 finals = []
 strips = 0
 strip_length = 0
+
+def touch_up_ideas(): # this is for converting stuff to multi line that would otherwise get garbled
+    a1 = kfile2.readlines()
+    f2 = open(kfilef, "w")
+    limericks = []
+    limid = []
+    for x in a1:
+        if x.count("/") == 4 and len(x) > 120 and len(x) < 240:
+            temp = re.sub(" *\/ ", "\n", x)
+            limericks.append("====\n" + x)
+            continue
+        if x.startswith("lid:"):
+            limid.append(x[4:])
+            continue
+        f2.write(x + "\n")
+    if len(limericks):
+        f2.write("\n\n\\lim\n")
+        for q in limericks: f2.write(q + "\n")
+    if len(limid):
+        f2.write("\n\n\\lid\n")
+        for q in limid: f2.write(q + "\n")
+    close(f2)
+    os.system(kfilef)
 
 def new_line_embedded(x):
     if re.search("\b(uline|new line|newline)\b", x):
@@ -87,6 +112,7 @@ while count < len(sys.argv):
     elif arg == 'nf': read_paste = True
     elif arg == 'l': by_length = True
     elif arg == 'a': by_length = False
+    elif arg == 'tu': touch_up = True
     elif arg == 'ch' or arg == 'hc': check_header = True
     elif arg == 'nh' or arg == 'hn': check_header = False
     elif arg == 'e' or arg == 'e1' or arg == '1e':
@@ -100,6 +126,8 @@ while count < len(sys.argv):
         os.system(kfile2)
         exit()
     count += 1
+
+if touch_up: touch_up_ideas()
 
 embeddings = []
 
