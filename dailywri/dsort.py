@@ -7,6 +7,9 @@ import sys
 import re
 import os
 from collections import defaultdict
+import datetime
+
+now = datetime.datetime.now()
 
 file_name = defaultdict(str)
 file_comment = defaultdict(lambda:defaultdict(str))
@@ -26,6 +29,8 @@ done_dir = "c:/writing/daily/done"
 temp_dir = "c:/writing/temp"
 backup_dir = "c:/writing/backup"
 idea_hash = "c:/writing/idea-tab.txt"
+
+copy_over = True
 to_temp_only = True
 
 print_warnings = False
@@ -34,11 +39,16 @@ to_temp_only = True
 return_after_first_bug = False
 
 def usage():
-    print("U = upper bound")
-    print("L = lower bound")
-    print("B/D = days back")
+    print("U# = upper bound")
+    print("L# = lower bound")
+    print("B/D# = days back")
+    print("Numbers are right after the letters, with no spaces.")
     print("? = this")
     exit()
+
+def go_back(q):
+    then = now - datetime.timedelta(days=q)
+    return "{:d}{:02d}{:02d}".format(then.year, then.month, then.day)
 
 def to_backups():
     for q in file_name.keys(): copy(q, to_temp(q, backup_dir))
@@ -131,9 +141,11 @@ def get_stuff_from_one_file(x):
     print("Got stuff from", x)
 
 lower_bound = "20170101.txt"
-days_back = 0
-upper_bound = "20190101.txt"
+days_back_start = 0
+days_back_end = 0
+upper_bound = "20170909.txt"
 count = 1
+total_files = 0
 
 while count < len(sys.argv):
     arg = sys.argv[count]
@@ -142,18 +154,26 @@ while count < len(sys.argv):
         upper_bound = arg[1:]
     if len(upper_bound) < 8: upper_bound += '9' * (8 - len(upper_bound))
     elif arg.startswith('l'): lower_bound = arg[1:]
-    elif arg.startswith('b') or arg.startswith("d"):
-        if not arg[1:].isdigit(): sys.exit("-b/d needs digits after for days back.")
-        days_back = int(arg[1:])
+    elif arg.startswith('tf'):
+        try:
+            total_files = int(arg[2:])
+        except:
+            sys.exit("You need a number after -tf.")
+    elif arg.startswith('e'):
+        if not arg[1:].isdigit(): sys.exit("-e needs digits after for days back end.")
+        days_back_end = int(arg[1:])
+    elif arg.startswith('s'):
+        if not arg[1:].isdigit(): sys.exit("-s needs digits after for days back start.")
+        days_back_start = int(arg[1:])
     else:
         print("Invalid command/flag", arg[0], arg)
-    usage()
+        usage()
     count += 1
 
-if days_back:
-    print("Days back overrides")
-    upper_bound = go_back(0)
-    lower_bound = go_back(days_back)
+if days_back_start or days_back_end:
+    upper_bound = go_back(days_back_end)
+    lower_bound = go_back(days_back_start) if days_back_start else '20170000'
+    print("Days back overrides in effect: upper bound={:s}, lower bound={:s}".format(upper_bound, lower_bound))
 
 if lower_bound > upper_bound: sys.exit("Lower bound > upper bound")
 
@@ -162,14 +182,23 @@ readdir = [x for x in os.listdir(daily_dir) if os.path.isfile(x)]
 
 read_hash_file()
 
+daily_files_processed = 0
+
 for file in readdir:
     if not re.search("^20[0-9]{6}\.txt$", file.lower()): continue
     fb = file[:8] # strip the .txt ending
-    if fb < lower_bound: print("Skipping", fb, "too low")
-    if fb > upper_bound: print("Skipping", fb, "too high")
+    if fb < lower_bound:
+        warn_print("Skipping {:s} too low".format(fb))
+        continue
+    if fb > upper_bound:
+        warn_print("Skipping {:s} too high".format(fb))
+        continue
+    daily_files_processed += 1
     get_stuff_from_one_file(file)
 
-exit()
+if not daily_files_processed: sys.exit("Nothing processed. I am copying nothing over.")
+
+sys.exit(copy_over)
 
 if copy_over: # maybe we should put this into a function
     last_backslash = 0
