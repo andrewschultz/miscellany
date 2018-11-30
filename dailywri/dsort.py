@@ -15,7 +15,7 @@ now = datetime.datetime.now()
 file_name = defaultdict(str)
 file_comment = defaultdict(lambda:defaultdict(str))
 cfg_line = defaultdict(lambda:defaultdict(str))
-modified_files = defaultdict(bool)
+changed_out_files = defaultdict(bool)
 daily_done_with = defaultdict(bool)
 or_dict = defaultdict(str)
 text_out = defaultdict(str)
@@ -186,11 +186,16 @@ def get_stuff_from_one_file(x):
                     if return_after_first_bug: return
                 else:
                     section_name = to_section(ll)
+                    continue
                     # print(line_count, section_name, ll, sep="-/-")
             loc_text_out[section_name] += line
     for y in loc_text_out.keys():
+        print("Saw", y, "(", file_name[y], ")", "in", x)
+        if not y:
+            print("Skipping empty section", y, "in", x)
+            continue
         if not file_name[y]: sys.exit("Could not find file name for section {:s}.".format(y))
-        modified_files[file_name[y]] = True
+        changed_out_files[file_name[y]] = True
         if y in need_tabs.keys(): loc_text_out[y] = "\t" + loc_text_out[x]
         text_out[y] += loc_text_out[y]
     daily_done_with[x] = True
@@ -264,12 +269,14 @@ for file in readdir:
 
 if not daily_files_processed: sys.exit("Nothing processed. I am copying nothing over.")
 
-show_section_add()
+# show_section_add()
 
 if copy_over: # maybe we should put this into a function
     cur_out = ""
     last_backslash = 0
-    for x in modified_files.keys():
+    cmds = []
+    print("First, writing to temp dir:")
+    for x in changed_out_files.keys():
         x2 = to_temp(x, base_dir)
         x3 = to_temp(x, temp_dir)
         if not os.path.exists(x2):
@@ -287,17 +294,25 @@ if copy_over: # maybe we should put this into a function
                 if cur_out:
                     if not line.strip():
                         if cur_out in text_out.keys():
+                            if not text_out[cur_out].endswith("\n"): text_out[cur_out] += "\n"
                             crs = text_out[cur_out].count("\n")
                             f.write(text_out[cur_out])
+                            text_out.pop(cur_out)
+                            changed_out_files[file_name[cur_out]] = True
                             print("Added {:d} line{:s} to section {:s} ({:d}-{:d}) in file {:s}.".format(crs, i7.plur(crs), cur_out, last_backslash, line_count, x))
                         cur_out = ""
                 f.write(line)
+        f.close()
+        if wm_diff: cmds.append("wm \"{:s}\" \"{:s}\"".format(x2, x3))
+    if len(text_out.keys()) != 0:
+        print("Uh oh! Some keys weren't resolved:")
+        sys.exit(", ".join(sorted(text_out.keys())))
+    for c in cmds: os.system(c)
+    exit()
     if to_temp_only:
-        print("Look in", temp_dir, "for", '/'.join(modified_files.keys()))
+        print("Look in", temp_dir, "for", '/'.join(changed_out_files.keys()))
     else:
         for x in changed_out_files.keys():
-            if wm_diff:
-                os.system("wm \"{:s}\" \"{:s]\"")
             the_temp = to_temp(x)
             print(the_temp, x)
             # copy(the_temp, x)
