@@ -8,6 +8,7 @@ import sys
 import re
 import os
 from collections import defaultdict
+from shutil import copy
 import datetime
 
 now = datetime.datetime.now()
@@ -31,8 +32,11 @@ done_dir = "c:/writing/daily/done"
 temp_dir = "c:/writing/temp"
 backup_dir = "c:/writing/backup"
 idea_hash = "c:/writing/idea-tab.txt"
+undef_file = "undef.txt"
 
 wm_diff = False
+
+write_to_undef = False
 
 copy_over = True
 to_temp_only = True
@@ -97,6 +101,7 @@ def usage():
     print("B/D# = days back")
     print("Numbers are right after the letters, with no spaces.")
     print("WM = show WinMerge differences, WN/NW = turn it off, default = {:s}".format(i7.on_off[wm_diff]))
+    print("WU/UW = write to undef file, NU/UN = don't write to undef file, default = {:s}".format(i7.on_off[write_to_undef]))
     print("? = this")
     exit()
 
@@ -107,10 +112,11 @@ def go_back(q):
 def to_backups():
     for q in file_name.keys(): copy(q, to_temp(q, backup_dir))
 
-def to_section(x):
+def to_section(x, fill_in_default = False):
     x = re.sub("^\\\\", "", x)
     if x in file_name.keys(): return x
     if x in or_dict.keys(): return or_dict[x]
+    if fill_in_default: return x
     return ""
 
 def warn_print(x):
@@ -185,16 +191,17 @@ def get_stuff_from_one_file(x):
                     found_error = True
                     if return_after_first_bug: return
                 else:
-                    section_name = to_section(ll)
+                    section_name = to_section(ll, True)
                     continue
                     # print(line_count, section_name, ll, sep="-/-")
             loc_text_out[section_name] += line
     for y in loc_text_out.keys():
-        print("Saw", y, "(", file_name[y], ")", "in", x)
-        if not y:
+        if not loc_text_out[y]:
             print("Skipping empty section", y, "in", x)
             continue
-        if not file_name[y]: sys.exit("Could not find file name for section {:s}.".format(y))
+        if y in file_name.keys():
+            print("Saw", y, "(", file_name[y], ")", "in", x)
+        if not file_name[y] and not write_to_undef: sys.exit("Could not find file name for section {:s}. Set write undef flag -wu/-uw.".format(y))
         changed_out_files[file_name[y]] = True
         if y in need_tabs.keys(): loc_text_out[y] = "\t" + loc_text_out[x]
         text_out[y] += loc_text_out[y]
@@ -212,6 +219,8 @@ while count < len(sys.argv):
     arg = sys.argv[count]
     if arg.startswith("-"): arg = arg[1:]
     if arg == 'wm': wm_diff = True
+    elif arg == 'wu' or arg == 'uw': write_to_undef = True
+    elif arg == 'nu' or arg == 'un': write_to_undef = False
     elif arg == 'nw' or arg == 'wn': wm_diff = False
     elif arg == 'bc':
         blank_counter = True
@@ -277,6 +286,7 @@ if copy_over: # maybe we should put this into a function
     cmds = []
     print("First, writing to temp dir:")
     for x in changed_out_files.keys():
+        if not x: continue
         x2 = to_temp(x, base_dir)
         x3 = to_temp(x, temp_dir)
         if not os.path.exists(x2):
@@ -304,9 +314,28 @@ if copy_over: # maybe we should put this into a function
                 f.write(line)
         f.close()
         if wm_diff: cmds.append("wm \"{:s}\" \"{:s}\"".format(x2, x3))
+    any_undef_written = False
+    if write_to_undef:
+        f1 = to_temp(undef_file, base_dir)
+        f2 = to_temp(undef_file, temp_dir)
+        copy(f1, f2)
+        f = open(f2, "a")
+        tso = sorted(text_out.keys())
+        for q in tso:
+            if q not in file_name.keys() or not file_name[q]:
+                if not any_undef_written:
+                    any_undef_written = True
+                    print("Writing undefined headers to", undef_file)
+                    changed_out_files[undef_file] = True
+                    f.write("UNDEF idea dump (python) at {:s}\n\n".format(now.strftime("%Y-%m-%d %H:%m:%S")))
+                    if wm_diff: cmds.append("wm \"{:s}\" \"{:s}\"".format(f1, f2))
+                f.write("\\{:s}\n{:s}\n".format(q, text_out[q]))
+                text_out.pop(q)
+        f.close()
     if len(text_out.keys()) != 0:
         print("Uh oh! Some keys weren't resolved:")
-        sys.exit(", ".join(sorted(text_out.keys())))
+        t = ["{:s}({:s})".format(x, file_name[x]) for x in sorted(text_out.keys())]
+        sys.exit("    " + ", ".join(sorted(t)))
     for c in cmds: os.system(c)
     exit()
     if to_temp_only:
@@ -314,9 +343,12 @@ if copy_over: # maybe we should put this into a function
     else:
         for x in changed_out_files.keys():
             the_temp = to_temp(x)
-            print(the_temp, x)
-            # copy(the_temp, x)
+            the_base = to_temp(x, basedir)
+            print(the_temp, the_base)
+            # copy(the_temp, the_base)
             os.remove(the_temp)
         for j in daily_done_with.keys():
-                print("Move", j, to_temp(j))
-                # os.move(j, to_temp(j))
+            j1 = to_temp(j, daily_dir)
+            j2 = to_temp(j, done_dir)
+            print("Move", j1, j2)
+            # os.move(j1, j2)
