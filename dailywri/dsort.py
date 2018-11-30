@@ -172,6 +172,8 @@ def to_temp(x, backup_dir = temp_dir):
 def get_stuff_from_one_file(x):
     print("Getting stuff from", x)
     loc_text_out = defaultdict(str)
+    loc_sections = defaultdict(int)
+    last_line = defaultdict(int)
     section_name = default_section_name
     last_bad_start = 0
     with open(x) as file:
@@ -192,6 +194,13 @@ def get_stuff_from_one_file(x):
                     if return_after_first_bug: return
                 else:
                     section_name = to_section(ll, True)
+                    check_section = to_section(ll, False)
+                    ls = ll[1:]
+                    if not check_section: print(ls, "may be bad section in", x, "line", line_count)
+                    if ls in loc_sections.keys(): sys.exit("{:s} has 2 local sections of {:s}: line {:d} and {:d}.".format(x, ls, line_count, loc_sections[ls]))
+                    loc_sections[ls] = line_count
+                    if section_name in loc_text_out.keys(): print("WARNING {:s} has semi-duplicate section {:s}/{:s} at line {:d}/{:d}.".format(x, ls, section_name, line_count, last_line[section_name]))
+                    last_line[section_name] = line_count
                     continue
                     # print(line_count, section_name, ll, sep="-/-")
             loc_text_out[section_name] += line
@@ -199,8 +208,7 @@ def get_stuff_from_one_file(x):
         if not loc_text_out[y]:
             print("Skipping empty section", y, "in", x)
             continue
-        if y in file_name.keys():
-            print("Saw", y, "(", file_name[y], ")", "in", x)
+        # if y in file_name.keys(): print("Saw", y, "(", file_name[y], ")", "in", x)
         if not file_name[y] and not write_to_undef: sys.exit("Could not find file name for section {:s}. Set write undef flag -wu/-uw.".format(y))
         changed_out_files[file_name[y]] = True
         if y in need_tabs.keys(): loc_text_out[y] = "\t" + loc_text_out[x]
