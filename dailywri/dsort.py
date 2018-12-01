@@ -13,6 +13,7 @@ import datetime
 
 now = datetime.datetime.now()
 
+full_out_file_list = defaultdict(bool)
 file_name = defaultdict(str)
 file_comment = defaultdict(lambda:defaultdict(str))
 cfg_line = defaultdict(lambda:defaultdict(str))
@@ -20,6 +21,8 @@ changed_out_files = defaultdict(bool)
 daily_done_with = defaultdict(bool)
 or_dict = defaultdict(str)
 text_out = defaultdict(str)
+
+ignore_header_hash = defaultdict(int)
 
 need_tabs = defaultdict(bool)
 
@@ -39,14 +42,54 @@ wm_diff = False
 write_to_undef = False
 
 copy_over = True
-to_temp_only = True
+to_full_only = True
 
 print_warnings = False
 stderr_warnings = False
-to_temp_only = True
+to_full_only = True
 return_after_first_bug = False
 
+outline_check = False
 blank_counter = False
+
+def obscure_header(x):
+    if re.search("^nam-[a-z]{2}$", x): return True
+    if re.search("^sp[0-9]$", x): return True
+    if x == 'unsorted' or x == 'unsure': return True
+    return False
+
+def compare_hash_to_outline():
+    in_out_files = defaultdict(str)
+    last_blank = False
+    need_cr = 0
+    for q in full_out_file_list.keys():
+        q1 = to_full(q, base_dir)
+        with open(q1) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if line.startswith("\\"):
+                    if last_blank:
+                        ll = line[1:].strip()
+                        ll = re.sub("=.*", "", ll)
+                        in_out_files[ll] = q1
+                    else:
+                        print("Need CR before backslash {:s} line {:d}.".format(q, line_count))
+                        need_cr += 1
+                last_blank = len(line.strip()) == 0
+    my_list = list(set(in_out_files.keys()) - set(file_name.keys()) - set(ignore_header_hash.keys()))
+    my_list_2 = [x for x in my_list if not obscure_header(x)]
+    print(need_cr if need_cr else "!!!!HOORAY!!! No", "excess backslash error{:s}.".format(i7.plur(need_cr)))
+    if len(my_list_2):
+        for x in sorted(my_list_2):
+            print("Out_file", in_out_files[x], "has key", x, "but it is not in the idea hash's keys.")
+        print(len(my_list_2), "total file name keys to fill in in the hash file.")
+    else:
+        print("****YAY!!!! All output file headers are defined in the hash file!!!!")
+    my_list = list(set(file_name.keys()) - set(in_out_files.keys()))
+    if not len(my_list): print("****WOOHOO!!!! All entries in idea hash are defined in some output file.")
+    else:
+        for x in sorted(my_list): print("idea hash has", x, "which is not defined in any output file.")
+        print(len(my_list), "total idea hashed not defined in any output file.")
+    exit()
 
 def show_section_add(): # only used for debugging
     to = sorted(text_out.keys())
@@ -59,12 +102,14 @@ def search_for_spaces(my_f):
     if 'hthws' in my_f: return
     if 'sb.otl' in my_f: return
     last_blank = 0
-    my_f_full = to_temp(my_f, base_dir)
+    my_f_full = to_full(my_f, base_dir)
     cur_section = ""
     skip_next = False
     with open(my_f_full) as file:
         for (line_count, line) in enumerate(file, 1):
             # print(line_count, q, line[:30], sep="-/-")
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
             if line.startswith("[") and line.rstrip().endswith("]"):
                 print("Ignoring comment at line", line_count, "in", my_f_full)
                 skip_next = True
@@ -110,7 +155,7 @@ def go_back(q):
     return "{:d}{:02d}{:02d}".format(then.year, then.month, then.day)
 
 def to_backups():
-    for q in file_name.keys(): copy(q, to_temp(q, backup_dir))
+    for q in file_name.keys(): copy(q, to_full(q, backup_dir))
 
 def to_section(x, fill_in_default = False):
     x = re.sub("^\\\\", "", x)
@@ -127,14 +172,19 @@ def warn_print(x):
 
 def read_hash_file():
     stuff = defaultdict(bool)
-    file_list = []
     with open(idea_hash) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
             if line.startswith("FILES:"):
                 lp = re.sub("^[a-z]*?:", "", line.lower().strip())
-                file_list = lp.split(",")
+                for q in lp.split(","): full_out_file_list[q] = True
+                continue
+            if line.startswith("IGNORE:"):
+                lp = re.sub("^[a-z]*?:", "", line.lower().strip())
+                for q in lp.split(","):
+                    if q in ignore_header_hash.keys(): print("Double hash {:s} {:d} {:d}".format(q, line_count, ignore_header_hash[q]))
+                    else: ignore_header_hash[q] = line_count
                 continue
             if line.startswith("NEEDTABS:"):
                 lp = re.sub("^[a-z]*?:", "", line.lower().strip())
@@ -155,18 +205,18 @@ def read_hash_file():
                 file_name[l0[0]] = l0[1]
                 file_comment[l0[0]] = "none" if len(l0) < 3 else l0[2]
                 cfg_line[l0[0]] = line_count
-    if not len(file_list):
+    if not len(full_out_file_list.keys()):
         print("Couldn't find a FILES: in {:s}.".format(idea_hash))
         print("SUGGESTION:")
         sys.exit("FILES:{:s}".format(','.join(sorted(stuff.keys()))))
-    return file_list
+    return sorted(full_out_file_list.keys())
 
 def compare_hash_with_files():
     with open(idea_hash) as file:
         for (line_count, line) in file:
             hash_file_val[l0] = line_count
 
-def to_temp(x, backup_dir = temp_dir):
+def to_full(x, backup_dir = temp_dir):
     return os.path.join(backup_dir, os.path.basename(x))
 
 def get_stuff_from_one_file(x):
@@ -230,6 +280,8 @@ while count < len(sys.argv):
     elif arg == 'wu' or arg == 'uw': write_to_undef = True
     elif arg == 'nu' or arg == 'un': write_to_undef = False
     elif arg == 'nw' or arg == 'wn': wm_diff = False
+    elif arg == 'lc': outline_check = True
+    elif arg == 'ih': i7.npo(idea_hash)
     elif arg == 'bc':
         blank_counter = True
     elif arg.startswith('u'):
@@ -263,6 +315,9 @@ if lower_bound > upper_bound: sys.exit("Lower bound > upper bound")
 
 my_files = read_hash_file()
 
+if outline_check:
+    compare_hash_to_outline()
+
 if blank_counter:
     for mf in my_files: search_for_spaces(mf)
     exit()
@@ -295,8 +350,8 @@ if copy_over: # maybe we should put this into a function
     print("First, writing to temp dir:")
     for x in changed_out_files.keys():
         if not x: continue
-        x2 = to_temp(x, base_dir)
-        x3 = to_temp(x, temp_dir)
+        x2 = to_full(x, base_dir)
+        x3 = to_full(x, temp_dir)
         if not os.path.exists(x2):
             print("Could not find path for", x, "/", x2)
             exit()
@@ -324,8 +379,8 @@ if copy_over: # maybe we should put this into a function
         if wm_diff: cmds.append("wm \"{:s}\" \"{:s}\"".format(x2, x3))
     any_undef_written = False
     if write_to_undef:
-        f1 = to_temp(undef_file, base_dir)
-        f2 = to_temp(undef_file, temp_dir)
+        f1 = to_full(undef_file, base_dir)
+        f2 = to_full(undef_file, temp_dir)
         copy(f1, f2)
         f = open(f2, "a")
         tso = sorted(text_out.keys())
@@ -346,17 +401,17 @@ if copy_over: # maybe we should put this into a function
         sys.exit("    " + ", ".join(sorted(t)))
     for c in cmds: os.system(c)
     exit()
-    if to_temp_only:
+    if to_full_only:
         print("Look in", temp_dir, "for", '/'.join(changed_out_files.keys()))
     else:
         for x in changed_out_files.keys():
-            the_temp = to_temp(x)
-            the_base = to_temp(x, basedir)
+            the_temp = to_full(x)
+            the_base = to_full(x, basedir)
             print(the_temp, the_base)
             # copy(the_temp, the_base)
             os.remove(the_temp)
         for j in daily_done_with.keys():
-            j1 = to_temp(j, daily_dir)
-            j2 = to_temp(j, done_dir)
+            j1 = to_full(j, daily_dir)
+            j2 = to_full(j, done_dir)
             print("Move", j1, j2)
             # os.move(j1, j2)
