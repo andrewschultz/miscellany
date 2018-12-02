@@ -52,6 +52,9 @@ return_after_first_bug = False
 outline_check = False
 blank_counter = False
 
+start_latest = False
+max_files = 0
+
 def obscure_header(x):
     if re.search("^nam-[a-z]{2}$", x): return True
     if re.search("^sp[0-9]$", x): return True
@@ -140,14 +143,21 @@ def space_section(x):
         return "Intro-outline"
     return ""
 
+def usage_sorting_check():
+    print("ih = idea hash")
+    print("lc = outline check (e.g. does {:s} match the out files)".format(idea_hash))
+    exit()
+
 def usage():
     print("U# = upper bound")
     print("L# = lower bound")
     print("B/D# = days back")
+    print("FE(#)/EF(#) = earliest first, FL(#)/LF(#) = latest first")
     print("Numbers are right after the letters, with no spaces.")
     print("WM = show WinMerge differences, WN/NW = turn it off, default = {:s}".format(i7.on_off[wm_diff]))
     print("WU/UW = write to undef file, NU/UN = don't write to undef file, default = {:s}".format(i7.on_off[write_to_undef]))
     print("? = this")
+    print("?? = sorting check stuff")
     exit()
 
 def go_back(q):
@@ -277,6 +287,14 @@ while count < len(sys.argv):
     arg = sys.argv[count]
     if arg.startswith("-"): arg = arg[1:]
     if arg == 'wm': wm_diff = True
+    elif arg.startswith("fl") or arg.startswith("fl"):
+        start_latest = True
+        if len(arg) > 2 and arg[2:].isdigit:
+            max_files = int(arg[2:])
+    elif arg.startswith("fe") or arg.startswith("fe"):
+        start_latest = False
+        if len(arg) > 2 and arg[2:].isdigit:
+            max_files = int(arg[2:])
     elif arg == 'wu' or arg == 'uw': write_to_undef = True
     elif arg == 'nu' or arg == 'un': write_to_undef = False
     elif arg == 'nw' or arg == 'wn': wm_diff = False
@@ -301,6 +319,8 @@ while count < len(sys.argv):
     elif arg.startswith('s'):
         if not arg[1:].isdigit(): sys.exit("-s needs digits after for days back start.")
         days_back_start = int(arg[1:])
+    elif arg == '?': usage()
+    elif arg == '??': usage_sorting_check()
     else:
         print("Invalid command/flag", arg[0], arg)
         usage()
@@ -324,10 +344,14 @@ if blank_counter:
 
 os.chdir(daily_dir)
 readdir = [x for x in os.listdir(daily_dir) if os.path.isfile(x)]
+if start_latest: readdir = reverse(readdir)
 
 daily_files_processed = 0
 
 for file in readdir:
+    if max_files and daily_files_processed > 1:
+        print("Stopping at", file)
+        break
     if not re.search("^20[0-9]{6}\.txt$", file.lower()): continue
     fb = file[:8] # strip the .txt ending
     if fb < lower_bound:
