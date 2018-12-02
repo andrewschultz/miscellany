@@ -16,6 +16,7 @@ import sys
 import re
 import os
 import glob
+from filecmp import cmp
 from shutil import copy
 import __main__ as main
 
@@ -60,19 +61,22 @@ def is_outline_start(a):
 def outline_type(a):
     return re.sub(" .*", "", a.strip().lower())
 
-def file_to_alf(fname, out_name, ignore_blanks):
+def file_to_alf(fname, out_name, ignore_blanks = True):
     fo = open(fname, "rU")
     fl = sorted(fo.readlines())
-    if ignore_blanks: fl = list(filter(None, fl))
+    if ignore_blanks: fl = list(filter(None, [x.strip() for x in fl]))
     f2 = open(out_name, "w")
-    f2.write(out_name)
+    f2.write("\n".join(fl) + "\n")
 
-def file_alf_compare(f1, f2):
+def file_alf_compare(f1, f2, show_win_merge = False):
     a1 = "c:/writing/temp/alf-1.txt"
     a2 = "c:/writing/temp/alf-2.txt"
     file_to_alf(f1, a1)
     file_to_alf(f2, a2)
-    return filecmp.cmp(a1, a2)
+    if show_win_merge:
+        print(f1, "vs.", f2, "alphabetical comparison")
+        os.system("wm \"{:s}\" \"{:s}\"".format(a1, a2))
+    return cmp(a1, a2)
 
 def file_char_size(fname):
     len = 0
