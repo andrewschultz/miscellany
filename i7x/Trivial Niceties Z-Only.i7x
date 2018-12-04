@@ -70,7 +70,7 @@ ignore-wait is a truth state that varies.
 to wfak:
 	if ignore-wait is false:
 		if waited-yet is false:
-			say "[i][bracket]NOTE: when the prompt does not appear, it means to push any key to continue[close bracket][r]";
+			say "[i][bracket]NOTE: when the prompt does not appear, it means you need to push any key to continue[close bracket][r]";
 			now waited-yet is true;
 			wait for any key;
 			say "[paragraph break]";

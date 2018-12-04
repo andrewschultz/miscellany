@@ -24,6 +24,8 @@ Opt("WinTitleMatchMode", -2)
 
 Local $cmdCount = 0
 
+ReadProjectHash()
+
 While $cmdCount <= $CmdLine[0]
   if $CmdLine[$cmdCount] == '0' Then
     Local $cmdStr = ""
