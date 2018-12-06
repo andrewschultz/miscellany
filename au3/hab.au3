@@ -56,6 +56,8 @@ Local $attr_pulldown_delta = 30
 
 Local $delay = 3000
 
+Local $quick_click_delay = 800
+
 Local $preDelay = 0
 
 Local $testDontClick = False, $didAnything = False
@@ -178,7 +180,7 @@ While $cmdCount <= $CmdLine[0]
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f.")
+	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be")
 	  Exit
     EndIf
 	FishItmBossDmg($nextNum, $myCmd == 'ft', not $myCmd == 'ff')
@@ -248,7 +250,7 @@ While $cmdCount <= $CmdLine[0]
 	for $i = 1 to $clicks
       MouseMove($xxx[0] - 136, 136)
 	  MouseClick("left")
-	  sleep($delay)
+	  sleep($quick_click_delay)
     Next
 	WinClose($hWnd)
 	Exit
@@ -320,7 +322,7 @@ Func Usage($questionmark, $badCmd = "")
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
-  "-f fishes for items X times", _
+  "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
   "-i = intelligence gear,", _
   "-iw = initial wait,", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
