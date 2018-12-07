@@ -12,7 +12,7 @@
 ; m/w = magic/wizard skills
 ; o = only click to tasks
 ; p = perception outfit
-; q = quick-click upper right side
+; q = quick-click upper right side (qd = quick delay)
 ; r = repeatedly access habit (needs #)
 ; t = Tools of the Trade clicks (needs #, optional delay)
 ; te = test
@@ -94,6 +94,8 @@ while $cmdCount <= $CmdLine[0]
   ElseIf $myCmd == 'fc' Then
     OpenHabiticaURL(True)
 	$focused = 1
+  ElseIf $myCmd == 'qd' Then
+    $quick_click_delay = 100 * $nextNum
   ElseIf $myCmd == 'om' Then
     $onlyTrackMp = 1
   ElseIf $myCmd == 'ca' Then
@@ -562,7 +564,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc' ]
+  Local $metas[8] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'qd' ]
   Local $um = UBound($metas) - 1
 
   For $x = 0 to $um
