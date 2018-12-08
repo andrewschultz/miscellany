@@ -27,6 +27,7 @@ f_l = "c:/writing/dict/lasts.txt"
 prt = "c:/games/inform/prt"
 prt_temp = os.path.join(prt, "temp")
 i7_cfg_file = "c:/writing/scripts/i7p.txt"
+triz_dir = "c:\\games\\inform\\triz\\mine"
 
 table_row_count = defaultdict(int)
 
@@ -228,8 +229,9 @@ def test_file(x):
 tefi = test_file
 
 def triz(x):
+    x2 = proj_exp(x)
     u = { "shuffling": "shuffling-around" }
-    return "c:\\games\\inform\\triz\\mine\\{:s}.trizbort".format(x if x not in u.keys() else u[x])
+    return os.path.join(triz_dir, "{:s}.trizbort".format(x2 if x2 not in u.keys() else u[x2]))
 
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()

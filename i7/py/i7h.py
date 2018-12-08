@@ -2,6 +2,7 @@
 # i7h.py
 #
 # opens (existing) header file in inform 7\inform 7\extensions\andrew schultz\
+# (or a trizbort file)
 #
 # called by i7h.bat
 
@@ -10,7 +11,7 @@ import os
 import sys
 import i7
 
-usage_str = "You need a header file or abbreviation, or you need a project/header file combination."
+usage_str = "You need a header file or abbreviation, or you need a project/header file combination. You can also specify a trizbort file with TR."
 
 my_stuff = sys.argv[1:]
 
@@ -37,7 +38,17 @@ else:
     sys.exit(usage_str)
 
 if not i7.proj_exp(my_stuff[0], False): sys.exit("{:s} is not a valid project or abbreviation.".format(my_stuff[0]))
-to_open = i7.src_file(my_stuff[0], my_stuff[1])
+
+if 'tr' in my_stuff:
+    to_open = i7.triz(my_stuff[0])
+    if to_open:
+        while os.path.islink(to_open):
+            to_open = os.readlink(to_open)
+        print("Opening", to_open)
+        os.system(to_open)
+        exit()
+else:
+    to_open = i7.src_file(my_stuff[0], my_stuff[1])
 
 if not to_open: sys.exit("{:s} is not a valid header file name or abbreviation.".format(my_stuff[1]))
 
