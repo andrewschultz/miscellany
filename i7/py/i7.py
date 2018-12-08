@@ -28,6 +28,7 @@ prt = "c:/games/inform/prt"
 prt_temp = os.path.join(prt, "temp")
 i7_cfg_file = "c:/writing/scripts/i7p.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
+gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 
 table_row_count = defaultdict(int)
 
@@ -173,6 +174,10 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
+def gh_src(x):
+    temp = proj_exp(x, to_github = True)
+    return os.path.normpath(os.path.join(gh_dir, temp, "story.ni"))
+
 def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
@@ -242,7 +247,10 @@ def hf_exp(x, return_nonblank = True):
 th_exp = hf_exp
 
 def proj_exp(x, return_nonblank = True, to_github = False):
-    if to_github and x in i7gx.keys(): return i7gx[x]
+    if to_github:
+        temp = x
+        if temp in i7xr.keys(): temp = i7xr[temp]
+        if temp in i7gx.keys(): return i7gx[temp]
     if x in i7xr.keys(): return x
     elif x in i7x.keys(): return i7x[x]
     return (x if return_nonblank else '')
