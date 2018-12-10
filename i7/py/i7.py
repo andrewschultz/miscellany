@@ -178,6 +178,32 @@ def gh_src(x):
     temp = proj_exp(x, to_github = True)
     return os.path.normpath(os.path.join(gh_dir, temp, "story.ni"))
 
+def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
+    if force_copy_to_github and force_copy_from_github:
+        print("Whoah there little dude! You can't force copying to and from {:s}!".format(sys._getframe().f_code.co_name))
+        return
+    temp = main_src(x)
+    t2 = gh_src(x)
+    if os.path.islink(temp):
+        tlink = os.readlink(temp)
+        if tlink == t2:
+            print(temp, "and", t2, "both match up.")
+        else:
+            sys.exit("Bad link {:s} points to {:s} but should point to {:s}.".format(temp, tlink, t2))
+    if not os.path.exists(temp):
+        print("No file", temp, "for project", x)
+        return
+    if force_copy_to_github:
+        print("Copying over", temp, "to", t2)
+        copy(temp, t2)
+    elif force_copy_from_github:
+        print("Copying over", t2, "to", temp)
+        copy(t2, temp)
+    else:
+        print("Comparing", temp, "and", t2)
+        print("... set force_copy to True in", sys._getframe().f_code.co_name, "to force copy")
+        wm(temp, t2)
+
 def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
