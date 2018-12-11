@@ -3,6 +3,8 @@
 # sorts notes from google keep and modifies them a bit if necessary
 #
 
+# todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
+
 import os
 import re
 import sys
@@ -20,6 +22,10 @@ cmds['palindromes'] = "ni no ai"
 cmds['anagrams'] = "ni an"
 cmds['vvff'] = "ni no vv"
 cmds['spoonerisms'] = "np spopal"
+
+comment_sortable = { 'vf': 'vvff', 'spoon': 'spoonerisms', 'ai': 'palindromes', 'pal': 'palindromes' }
+cs_rx = '|'.join(comment_sortable)
+cs_rx_val = '|'.join([comment_sortable[x] for x in comment_sortable])
 
 specials = defaultdict(list)
 
@@ -64,6 +70,12 @@ def touch_up_ideas(): # this is for converting stuff to multi line that would ot
         for q in limid: f2.write(q + "\n")
     close(f2)
     os.system(kfilef)
+
+def sortable_comments(my_l):
+    if re.search(r'#{:s}\b'.format(cs_rx), my_l): return re.sub(r'#{:s}'.format(cs_rx), lambda x: comment_sortable[x.group(1)], my_l)
+    if re.search(r'#{:s}\b'.format(cs_rx_val), my_l): return re.sub(r'#{:s}'.format(cs_rx_val), lambda x: x.group(1), my_l)
+    if re.search(r'#{:s}'.format(cs_rx), my_l): return re.sub(r'#{:s}'.format(cs_rx), lambda x: comment_sortable[x.group(1)], my_l)
+    if re.search(r'#{:s}'.format(cs_rx_val), my_l): return re.sub(r'#{:s}'.format(cs_rx_val), lambda x: x.group(1), my_l)
 
 def new_line_embedded(x):
     if re.search("\b(uline|new line|newline)\b", x):
@@ -158,9 +170,12 @@ if check_header and not header_yet:
 # here we sort specific cases
 for z in y2:
     z_raw = z if z.startswith("#") else re.sub(" *#.*", "", z)
-    z_comments = re.sub("^ *?#", "", z)
+    z_comments = re.sub("^ *?#", "", z) if '#' in z else ""
+    z_c_s = sortable_comments(z_comments)
     if z_raw.startswith('===='): continue
     elif re.search("[0-9]+ total sorted ideas", z_raw): continue
+    elif z_c_s: dict_append(specials, z_c_s, z)
+    elif sortable_comments(z_comments):
     elif is_palindrome(z_raw): dict_append(specials, 'palindromes', z)
     elif is_onetwo(z_raw): dict_append(specials, 'onetwos', z)
     elif ' / ' in z_raw or ',,' in z_raw: dict_append(specials, 'vvff', z)
@@ -169,7 +184,8 @@ for z in y2:
     elif ' ' not in z_raw or "\t" in z_raw: dict_append(specials, 'possible names', z)
     elif 'what a story' in z_raw.lower(): dict_append(specials, 'what a story', z)
     elif is_anagrammy(z_raw): dict_append(specials, 'anagrams', z)
-    else: finals.append(z)
+    else:
+        finals.append(z)
 
 k = open(out_file, "w")
 
