@@ -23,7 +23,8 @@ cmds['anagrams'] = "ni an"
 cmds['vvff'] = "ni no vv"
 cmds['spoonerisms'] = "np spopal"
 
-comment_sortable = { 'vf': 'vvff', 'spoon': 'spoonerisms', 'ai': 'palindromes', 'pal': 'palindromes' }
+comment_sortable = defaultdict(str)
+
 cs_rx = '|'.join(comment_sortable)
 cs_rx_val = '|'.join([comment_sortable[x] for x in comment_sortable])
 
@@ -47,6 +48,18 @@ y2 = []
 finals = []
 strips = 0
 strip_length = 0
+
+def read_comment_sortable():
+    with open(comment_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            if '=' not in line:
+                print("WARNING cfg file", comment_cfg, "needs = to split from/to sections.")
+                continue
+            a = line.lower().split("=")
+            b = a.split(",")
+            for q in b: comment_sortable[q] = a[1]
 
 def touch_up_ideas(): # this is for converting stuff to multi line that would otherwise get garbled
     a1 = kfile2.readlines()
