@@ -17,6 +17,8 @@ kfile = "c:/writing/temp/to_keep.txt"
 kfile2 = "c:/writing/temp/to_keep_2.txt"
 kfilef = "c:/writing/temp/to_keep_final.txt"
 
+comment_cfg = "c:/writing/scripts.kesotxt"
+
 cmds = defaultdict(str)
 cmds['palindromes'] = "ni no ai"
 cmds['anagrams'] = "ni an"
