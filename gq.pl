@@ -560,7 +560,7 @@ sub processOneFile {
       }
     }
     $line++;
-    if ( ( $a =~ /^table of / ) && ( $currentTable !~ /megachatter/ ) ) {
+    if ( ( $a =~ /^table of / ) && ($currentTable) ) {
       $idx          = -1;
       $currentTable = $a;
       $currentTable =~ s/ *\[.*//g;
@@ -568,7 +568,7 @@ sub processOneFile {
       chomp($currentTable);
       $inTable = 1;
     }
-    if ( $a !~ /[a-z]/i ) {
+    if ( ( $a !~ /[a-z]/i ) || ( $a =~ /^\[/ ) ) {
       $currentTable = "";
       $inTable      = 0;
       if ( !$alwaysImportant ) { $inImportant = 0; $thisImportant = ""; }
