@@ -77,7 +77,7 @@ my $inQuotes          = 0;
 
 my %foundCount;
 
-@runs = ( toProj($pwd) ) if toProj($pwd);
+my $pwd_runs = toProj($pwd);
 
 while ( $count <= $#ARGV ) {
   $a = $ARGV[$count];
@@ -221,7 +221,7 @@ while ( $count <= $#ARGV ) {
       && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^-?tb1$/
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-    /^[\\0-9a-z'\.][\\0-9a-z'\.-]+$/i && do {
+    /^[\\0-9a-z'\.\/ ][\\0-9a-z'\.-\/ ]+$/i && do {
       $a =~ s/-$//;    # another way to avoid, say, as instead of AS
       if ( defined( $map{$a} ) ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
@@ -236,6 +236,8 @@ while ( $count <= $#ARGV ) {
         }
 
         # print "$a into word array.\n";
+        $a =~ s/\// /g
+          ; # we can transform forward slashes into spaces so we don't have to use quotes
         push( @thisAry, $a );
       }
       $count++;
@@ -247,6 +249,10 @@ while ( $count <= $#ARGV ) {
 
 }
 
+if ( $pwd_runs && !( scalar @runs ) ) {
+  @runs = ($pwd_runs);
+  print("Going with default current directory $pwd_runs.\n");
+}
 readLastRun() if ( !( scalar @runs ) );
 
 if ( ( !$thisAry[0] ) && ( !$getClipboard ) ) {
@@ -560,7 +566,8 @@ sub processOneFile {
       }
     }
     $line++;
-    if ( ( $a =~ /^table of / ) && ($currentTable) ) {
+    print "$. $currentTable\n" if ( $_[0] =~ /tables/i );
+    if ( ( $a =~ /^table of / ) && ( !$currentTable ) ) {
       $idx          = -1;
       $currentTable = $a;
       $currentTable =~ s/ *\[.*//g;
@@ -657,120 +664,6 @@ sub cromu {
   return 1;
 }
 
-sub processStory {
-  my $fileName;
-  my $tabrow;
-
-  if ( $_[0] =~ /trizbort/i ) {
-    $fileName = $_[0];
-  }
-  else {
-    $shortName = $_[0];
-    if ( $_[1] == 1 ) {
-      $fileName =
-"c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/$_[0] Random Text.i7x";
-    }
-    else { $fileName = "c:/games/inform/$_[0].inform/Source/story.ni"; }
-  }
-  open( A, "$fileName" ) || die("No $fileName.");
-  $foundSomething = 0;
-  $count          = 0;
-  while ( $a = <A> ) {
-    chomp($a);
-    if ( ( $a =~ /^[a-z].*: *$/i ) || ( $a =~ /^table of / ) ) {
-      $myHeader = $a;
-      $tabrow   = 0;
-      $blurby   = 0;
-    }
-    if ( $a =~ /^blurb/ ) { $blurby = 1; }
-    $count++;
-    $tabrow++;
-    if ( $a =~ /`/ ) { print "WARNING: Line $count has back-quote!\n$a"; }
-    if ( $a =~ /^table of /i ) {
-      $a =~ s/ *\[[^\]]*\].*//g;
-      $thisTable = "($a) ";
-    }
-    elsif ( $a !~ /[a-z]/i ) { $thisTable = ""; }
-    my $tmp = cromu( $a, $fileName );
-    if ($tmp) {
-      if ( $a =~ /list of text variable/i ) { processList($a); }
-      else {
-        if ($showHeaders) {
-          if ( $myHeader ne $lastHeader ) {
-            print "======================$myHeader\n";
-            $lastHeader = $myHeader;
-          }
-        }
-        if ( isPrintable() ) {
-          if ( !$foundSomething ) { print "In $fileName:\n"; }
-          print "$shortName L$count ";
-          $totalFind++;
-          if ($thisTable) { my $tr2 = $tabrow - 2; print "/$tr2"; }
-          if ($showHeaders) { print ": $a\n"; }
-          else {
-            print ": $thisTable$a";
-            if ( $tmp == 2 ) { print "****PLURAL****"; }
-            print "\n";
-          }
-          if ( $maxOverallFind == $totalFind ) {
-            print "Hit the limit.\n";
-            last();
-          }
-          $foundSomething = 1;
-        }
-      }
-    }
-  }
-
-  close(A);
-  if ( !$foundSomething ) { print "Nothing in $fileName.\n"; }
-
-}
-
-sub isPrintable {
-  if ( ($maxOverallFind) && ( $maxOverallFind <= $totalFind ) ) { return 0; }
-  if ( !$onlyTables ) { return 1; }
-  if ( ($thisTable) && ($blurby) && tabCheck($a) ) {
-    return 1 if $onlyRand;
-    return 0 if $ignoreRand;
-  }
-  if ( tabCheck($a) && ($thisTable) && ( !$onlyRand ) ) { return 1; }
-  return 0;
-}
-
-sub tabCheck {
-  if ( ( $_[0] =~ /^\t/ ) && ($printUntabbed) ) { return 1; }
-  if ( ( $_[0] !~ /^\t/ ) && ($printTabbed) )   { return 1; }
-  return 0;
-}
-
-sub processList {
-  my $listName = $a;
-  $listName =~ s/.is a list of.*//gi;
-  my $yep = 0;
-  if ( $a =~ /\{/ ) {
-    $a =~ s/^[^\"]*.//g;
-    $a =~ s/\" *\}.*//g;
-    my @b = split( /\", \"/, $a );
-    for (@b) {
-      my $temp = cromu( $_, "" )
-        ;    # lists will never occur in a test file, so we can skip this
-      if ($temp) {
-        $yep            = 1;
-        $foundSomething = 1;
-        print "$listName (L$count): $_";
-        if ( $temp == 2 ) { print " (PLURAL)"; }
-        print "\n";
-      }
-    }
-    return;
-  }
-  print "$a\n";
-  if ( !$yep ) {
-    print "$shortName had $ARGV[0]/$ARGV[1] but not in same entry.\n";
-  }
-}
-
 sub newDefault {
   my @array;
   open( A, "$gqfile" );
@@ -856,8 +749,11 @@ sub readLastRun {
 
   while ( $a = <A> ) {
     chomp($a);
+    next unless ( $a =~ /,/ );
     @runs = split( /,/, $a );
     print "For reference: last run was $gqlast: $a\n";
+    close(A);
+    return;
   }
 }
 
@@ -906,6 +802,7 @@ sub toProj {
   ( my $cproj = $pwd ) =~ s/\.inform.*//;
   $cproj =~ s/.*[\\\/]//;
   return $cproj if ( -f "story.ni" );
+  return "";
 }
 
 sub use_cases {
@@ -914,6 +811,7 @@ DETAILED USE CASES:
 ga, gq and gr are batch files for quick use: they correspond to gq.pl as (args), gq.pl (args), gq.pl sts (args).
 gr r1 intro will look for "intro" only in Shuffling Around's files. r2 is only roiling.
 ga as14 stuff will look for "stuff" only in Problems Compound and Seeker Status and not Slicker City/Buck the Past.
+gq wonk/no will look for "wonk no"
 EOT
   exit;
 }
