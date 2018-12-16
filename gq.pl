@@ -1,14 +1,17 @@
-#gq.pl: stands for "grep quick"
-#this shows where certain text I may've already used pops up in Roiling or Shuffling. It pegs them both as Shuffling << Roiling.
-#-tb1 = table random, start with that word
-#-tb = table random
-#-t = table only
-#usage
-#gq.pl -tb rosco coors (matches both)
-#gq.pl -tb rosco (matches one)
-#gq.pl -tb1 rosco (matches starting with rosco)
-#gq.pl -m 10 yes (matches 1st 10 yes's)
+# gq.pl: stands for "grep quick"
+# this shows where certain text I may've already used pops up in a project.
+# useful if I want to wipe a project of certain objects/names.
+# originally for roiling/shuffling but expanded to other projects and project-groups.
 #
+# (old)
+# -tb1 = table random, start with that word
+# -tb = table random
+# -t = table only
+# usage
+# gq.pl -tb rosco coors (matches both)
+# gq.pl -tb rosco (matches one)
+# gq.pl -tb1 rosco (matches starting with rosco)
+# gq.pl -m 10 yes (matches 1st 10 yes's)
 #
 # todo: quick check for if in quotes
 #
@@ -221,8 +224,10 @@ while ( $count <= $#ARGV ) {
       && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^-?tb1$/
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-    /^[\\0-9a-z'\.\/ ][\\0-9a-z'\.-\/ ]+$/i && do {
-      $a =~ s/-$//;    # another way to avoid, say, as instead of AS
+    /^=?[\\0-9a-z'\.\/ ][\\0-9a-z'\.-\/ ]+$/i && do {
+      $a =~ s/^=//
+        ;   # starting with = is one way to avoid a word clashing with an option
+      $a =~ s/-$//;    # ending with - is another
       if ( defined( $map{$a} ) ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
         push( @thisAry, $map{$a} );
@@ -566,7 +571,6 @@ sub processOneFile {
       }
     }
     $line++;
-    print "$. $currentTable\n" if ( $_[0] =~ /tables/i );
     if ( ( $a =~ /^table of / ) && ( !$currentTable ) ) {
       $idx          = -1;
       $currentTable = $a;
@@ -580,7 +584,8 @@ sub processOneFile {
       $inTable      = 0;
       if ( !$alwaysImportant ) { $inImportant = 0; $thisImportant = ""; }
     }
-    my $crom = cromu( $a, $_[0] );
+    ( my $a2 = $a ) =~ s/[!\.\?:; -]+/ /g;
+    my $crom = cromu( $a2, $_[0] );
     if ( $inImportant && $crom && ( !$inTable || !$ignoreRand ) ) {
       my $tempString = "";
       my $sbl        = shouldBeLast($a);
@@ -811,7 +816,8 @@ DETAILED USE CASES:
 ga, gq and gr are batch files for quick use: they correspond to gq.pl as (args), gq.pl (args), gq.pl sts (args).
 gr r1 intro will look for "intro" only in Shuffling Around's files. r2 is only roiling.
 ga as14 stuff will look for "stuff" only in Problems Compound and Seeker Status and not Slicker City/Buck the Past.
-gq wonk/no will look for "wonk no"
+gq wonk/no will look for "wonk no" with spaces
+gq as- or gq =as will look for as instead of going to the Alec Smart suite
 EOT
   exit;
 }
