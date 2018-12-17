@@ -261,8 +261,7 @@ tefi = test_file
 
 def triz(x):
     x2 = proj_exp(x)
-    u = { "shuffling": "shuffling-around" }
-    return os.path.join(triz_dir, "{:s}.trizbort".format(x2 if x2 not in u.keys() else u[x2]))
+    return os.path.join(triz_dir, "{:s}.trizbort".format(i7triz[x2] if x2 in i7triz.keys() else x2))
 
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()
@@ -400,6 +399,7 @@ i7hfx = {} # header mappings e.g. ta to tables
 i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
+i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -431,6 +431,9 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("release:"):
             i7rn[lla[0]] = lla[1]
+            continue
+        if ll.startswith("trizbort:"):
+            i7triz[lla[0]] = lla[1]
             continue
         if ll.startswith("combo:"):
             i7com[lla[0]] = lla[1]

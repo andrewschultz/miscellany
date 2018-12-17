@@ -25,6 +25,7 @@ our @i7gh = ();
 our @i7bb = ();
 our %i7com = ();
 our %i7ghp = ();
+our %i7triz = ();
 our %i7nonhdr = (); # shortcuts for nonheader files like story.ni, walkthrough.txt, notes.txt
 our %i7pf = ();
 our %i7rn = (); # release names
@@ -82,6 +83,12 @@ while ($i7p_line = <A>)
   elsif ($i7p_line =~ /^CURDEF:/i)
   {
     $curDef = $temp;
+    next;
+  }
+  elsif ($i7p_line =~ /^TRIZBORT:/i)
+  {
+    my @tempAry = split(/=/, $temp);
+    $i7triz{$tempAry[0]} = $tempAry[1];
     next;
   }
   elsif ($i7p_line =~ /^HEADERS:/i)
