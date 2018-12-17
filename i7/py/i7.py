@@ -395,6 +395,7 @@ i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most
 i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
 i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
 i7com = {} # combos e.g. opo = 3d and 4d
+i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
 i7hfx = {} # header mappings e.g. ta to tables
 i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
@@ -433,6 +434,9 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("combo:"):
             i7com[lla[0]] = lla[1]
+            subproj = lla[1].split(",")
+            for x in range(0, len(subproj)):
+                i7comord[lla[0]][subproj[x]] = x + 1
             continue
         if ll.startswith("ghproj:"):
             i7gx[lla[1]] = lla[0]
