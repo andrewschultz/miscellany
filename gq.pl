@@ -224,10 +224,11 @@ while ( $count <= $#ARGV ) {
       && do { $onlyTables = 1; $onlyRand = 1; $count++; next; }; #not perfect, -h + -t = conflict
     /^-?tb1$/
       && do { $onlyTables = 1; $onlyRand = 1; $firstStart = 1; $count++; next; }; #not perfect, -h + -t = conflict
-    /^=?[\\0-9a-z'\.\/ ][\\0-9a-z'\.-\/ ]+$/i && do {
+
+    /^(=?)[\\0-9a-z'\.\/ ][\\0-9a-z'\.-\/ ]*([-=])?$/i && do {
       $a =~ s/^=//
         ;   # starting with = is one way to avoid a word clashing with an option
-      $a =~ s/-$//;    # ending with - is another
+      $a =~ s/[-=]$//;    # ending with - is another
       if ( defined( $map{$a} ) ) {
         print "$a -> $map{$a}, use upper case to avoid\n";
         push( @thisAry, $map{$a} );
@@ -404,7 +405,7 @@ sub addSaveFile {
     print A "$_\n";
   }
   close(A);
-  print "Wrote to $saveFile.\n";
+  print "Wrote $_[0] to $saveFile.\n";
 }
 
 sub processListFile {

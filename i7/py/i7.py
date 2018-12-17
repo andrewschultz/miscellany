@@ -238,6 +238,12 @@ def hdr(x, y):
 
 hfile = hdr
 
+def invis_file(x, warning=False):
+    try_1 = "c:/writing/scripts/invis/{:s}.txt".format(i7xr[x] if x in i7xr.keys() else x)
+    if os.path.exists(try_1): return try_1
+    if warning: print("WARNING no invisiclues file for", x)
+    return ""
+
 def notes_file(x):
     return sdir(x) + "/" + "notes.txt"
 
@@ -262,6 +268,8 @@ tefi = test_file
 def triz(x):
     x2 = proj_exp(x)
     return os.path.join(triz_dir, "{:s}.trizbort".format(i7triz[x2] if x2 in i7triz.keys() else x2))
+
+triz_file = triz
 
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()
