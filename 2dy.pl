@@ -7,16 +7,18 @@
 # creates a new daily file if one hasn't been created for a week
 #
 
+use lib "c:\\writing\\scripts";
+use i7;
 use strict;
 use warnings;
 
 my $maxback = 7;
 
-my $printInitSections = 0;    # -ps prints sections and dies
+my $printInitSections = 0;    # -ps prints sections on file creation and dies
 
 my $theMinus = 0;
 
-if ( $ARGV[0] =~ /^-?ps/i ) {
+if ( $ARGV[0] =~ /^(-lf)?-?ps/i ) {
   $printInitSections = 1;
 }
 elsif ( defined( $ARGV[0] ) ) {
@@ -99,7 +101,30 @@ if ( ( !-f $fileName ) || ( -s $fileName == 0 ) || $printInitSections ) {
 }
 else { print "$fileName is there. Opening with Notepad++.\n"; }
 
-`"$fileName"`;
+my $section = "q";
+
+`"$fileName"` if !$section;
+
+my $lineNum = 0;
+
+open( A, $fileName );
+
+while ( $a = <A> ) {
+  if ( $a =~ /\\$section/ ) {
+    $lineNum = $.;
+    last;
+  }
+}
+
+if ( !$lineNum ) {
+  print("Warning no section $section found. Opening the start.");
+}
+else {
+  print("Opening line $lineNum of $fileName.");
+}
+
+`$npo $fileName -n$lineNum`;
+
 exit;
 
 #`"C:/Program Files/Windows NT/Accessories/wordpad.exe" "$fileName"`;
