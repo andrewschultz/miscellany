@@ -3,6 +3,7 @@
 # no usage necessary
 # quick check of all README.MD in my github dirs
 #
+# usage qch.py ai or qch.py ?
 
 import i7
 import sys
@@ -34,6 +35,10 @@ print_string = ""
 topdir_ignore = defaultdict(bool)
 alldir_ignore = defaultdict(bool)
 
+def readme_usage():
+    print(" * (other) is used to ignore a 3rd party script/executable used for the local repo.")
+    exit()
+
 def usage():
     print("                    USAGE")
     print("=" * 50)
@@ -44,7 +49,12 @@ def usage():
     print("=         = only look in current GitHub repo mirror")
     print(".         = look in current directory")
     print("?         = this")
+    print("??        = how to write readmes")
     exit()
+
+def is_ignorable(q):
+    if "* (other" in q: return True
+    return False
 
 def read_config():
     with open(config_file) as file:
@@ -60,7 +70,7 @@ def read_config():
                 for q in lary:
                     topdir_ignore[q] = True
                     q2 = os.path.join(root_dir, q)
-                    if not os.path.exists(q2): print("WARNING:", q2, "is no longer a valid path. Delete from", config_file)
+                    if not os.path.exists(q2): print("WARNING:", q2, "is no longer a valid path. You can delete it from TOPDIR in ", config_file, "line", line_count)
                 continue
             if ll.startswith('alldir'):
                 for q in lary: alldir_ignore[q] = True
@@ -68,7 +78,6 @@ def read_config():
             print("Unknown array command = at line", line_count, re.sub("=.*", "", ll))
 
 def readme_process(readme, files_to_see):
-    if 'puzzle' not in readme: return
     global files_need_label
     global files_have_extra
     global total_labels
@@ -80,9 +89,11 @@ def readme_process(readme, files_to_see):
         f2c[q] = True
     with open(readme) as file:
         for line in file:
-            q = re.findall(r"([a-z0-9-]+\.p[ly])", line)
+            q = re.findall(r"([a-z0-9-]+\.p[ly])[^\)]", line)
             if q:
-                for j in q: fir[j] = True
+                if not is_ignorable(line):
+                    # for j in q: fir[j] = True
+                    fir[q[0]] = True # this is debatable. There might be a couple we can use or try.
     extra_files = list(set(fir.keys()) - set(f2c.keys()))
     missed_files = list(set(f2c.keys()) - set(fir.keys()))
     if len(extra_files):
@@ -151,6 +162,7 @@ while count < len(sys.argv):
                 root_dir = rd2
         if not rd2: sys.exit("= needs you to be in a github project.")
     elif arg == '?': usage()
+    elif arg == '??': readme_usage()
     else:
         if rd2: sys.exit("Attempted to define two directories. Bailing.")
         rd2 = os.path.join(root_dir, i7.proj_exp(sys.argv[1], True, True))
