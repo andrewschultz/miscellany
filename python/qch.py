@@ -10,10 +10,11 @@ import sys
 import re
 import os
 from collections import defaultdict
+import __main__ as main
 
 qch_out = "c:/writing/scripts/qch-out.htm"
 config_file = "c:/writing/scripts/qch.txt"
-root_dir = "c:/users/andrew/documents/github"
+root_dir_init = root_dir = "c:/users/andrew/documents/github"
 
 need_readme = 0
 need_readme_child = 0
@@ -31,6 +32,7 @@ html_output = False
 html_launch = False
 ignore_success = True
 print_string = ""
+edit_util_readme = edit_readme = False
 
 topdir_ignore = defaultdict(bool)
 alldir_ignore = defaultdict(bool)
@@ -44,6 +46,8 @@ def usage():
     print("=" * 50)
     print("h         = html output, no launch")
     print("hl, lh, l = html output with launch")
+    print("er/eu = edit readme or utils readme")
+    print("e/es = edit code, ec = edit config file {:s}".format(config_file))
     print("i, is, si = ignore success reporting")
     print("s, sy, ys = show success reporting. Default = success reports {:s}.".format(i7.oo[not ignore_success]))
     print("=         = only look in current GitHub repo mirror")
@@ -147,6 +151,16 @@ while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
     if arg == 'h': html_output = True
+    elif arg == 'e' or arg == 'ec':
+        print("Editing config file")
+        os.system(config_file)
+        exit()
+    elif arg == 'es':
+        print("Editing source")
+        i7.npo(main.__file__)
+        exit()
+    elif arg == 'er': edit_readme = True
+    elif arg == 'eu': edit_util_readme = True
     elif arg == 'hl' or arg == 'lh' or arg == 'l': html_output = html_launch = True
     elif arg == 'i' or arg == 'is' or arg == 'si': ignore_success = True
     elif arg == 's' or arg == 'ys' or arg == 'sy': ignore_success = False
@@ -175,6 +189,21 @@ list_dirs(root_dir, 0)
 print_string += "README files needed: {:d} ({:d} root, {:d} child) with {:d} perl and {:d} python files.\n".format(need_readme, need_readme_top, need_readme_child, perl_global_count, python_global_count)
 print_string += "README files that need to label more files: {:d}, total files that need labeling: {:d}.\n".format(files_need_label, total_labels)
 print_string += "README files that mistakenly label extra files: {:d}, total files that need labeling: {:d}.\n".format(files_have_extra, total_extras)
+
+if edit_util_readme or edit_readme:
+    if edit_readme:
+        my_fi = os.path.join(root_dir, "readme.MD")
+        if not os.path.exists(my_fi):
+            sys.exit("Can't find README {:s}, bailing.".format(my_fi))
+        print("Opening README", my_fi)
+        os.system(my_fi)
+    if edit_util_readme:
+        my_fi = os.path.join(root_dir, "utils", "readme.MD")
+        if not os.path.exists(my_fi):
+            sys.exit("Can't find utils README {:s}, bailing.".format(my_fi))
+        print("Opening utils README", my_fi)
+        os.system(my_fi)
+    exit()
 
 if html_output:
     f = open(qch_out, "w")
