@@ -12,48 +12,62 @@ use i7;
 use strict;
 use warnings;
 
-my $maxback = 7;
+my $section = "";
+
+my $absBack = 0;
+my $maxBack = 7;
 
 my $printInitSections = 0;    # -ps prints sections on file creation and dies
 
-my $theMinus = 0;
+my $theMinus = 0;             # this is how many days precisely to go back
 
-if ( $ARGV[0] =~ /^(-lf)?-?ps/i ) {
-  $printInitSections = 1;
-}
-elsif ( defined( $ARGV[0] ) ) {
-  my $arg = lc( $ARGV[0] );
+my $count     = 0;
+my $filesBack = 1;
+my $backSoFar = 0;
+
+while ( $count <= $#ARGV ) {
+  my $arg = lc( $ARGV[$count] );
   $arg =~ s/^-//;
-  if ( $ARGV[0] =~ /^[0-9]+$/ ) {
-    $theMinus = $ARGV[0];
+  if    ( $arg =~ /ps/ )       { $printInitSections = 1; }
+  elsif ( $arg =~ /^[0-9]+$/ ) { $filesBack         = $arg; }
+  elsif ( $arg =~ /^-+[0-9]+$/ ) { $theMinus = $arg; $theMinus =~ s/^.//; }
+  elsif ( $arg =~ /^m[0-9]+$/ ) { $maxBack = $arg; $maxBack =~ s/^.//; }
+  elsif ( $arg =~ /^a[0-9]+$/ ) { $absBack = $arg; $absBack =~ s/^.//; }
+  elsif ( $arg =~ /^[a-z]+$/ )  { $section = $arg; }
+  else                          { print("Bad input $arg"); exit(); }
+  print "$arg\n";
+  $count++;
+}
+
+my $dailyToOpen = "";
+
+if ($theMinus) {
+  my $fileName = "c:/writing/daily/" . daysAgo($theMinus);
+  if ( !-f $fileName ) {
+    die("No file $fileName. We will not create it by force.");
   }
-  elsif ( $ARGV[0] =~ /l/ ) {
-    my $filesBack = 1;
-    my $backSoFar = 0;
-    if ( $ARGV[0] =~ /[0-9]$/ ) {
-      $filesBack = $ARGV[0];
-      $filesBack =~ s/.*[^0-9]//gi;
-      $maxback = 100;
-    }
-    for ( 0 .. $maxback - 1 ) {
-      if ( -f "c:/writing/daily/" . daysAgo($_) ) {
-        $backSoFar++;
-        if ( $backSoFar == $filesBack ) {
-          $theMinus = $_;
-          print( "Going back $theMinus days to get to " . daysAgo($_) . ".\n" );
-          last;
-        }
-      }
-      if ( -f "c:/writing/daily/done/" . daysAgo($_) ) {
-        die("Everything is done. Use -lf to write a new file.")
-          if ( $ARGV[0] !~ /f/ );
-        $theMinus = 0;
-        print "All done, opening today-ish.\n";
+}
+elsif ($filesBack) {
+  for ( 0 .. $maxBack - 1 ) {
+    my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
+    if ( -f $dailyCandidate ) {
+      $backSoFar++;
+      if ( $backSoFar == $filesBack ) {
+        $theMinus    = $_;
+        $dailyToOpen = $dailyCandidate;
+        print("Going back $theMinus days to get to $dailyCandidate.\n");
+        openFileSection( $dailyToOpen, $section );
+        last;
       }
     }
-    die("Can only go $filesBack files back.")
-      if ( $backSoFar < $filesBack ) && ( $backSoFar > 1 );
   }
+  print(
+"Could not go $filesBack files back. Only went $backSoFar. Last file was $dailyToOpen. Expand maxBack from $maxBack to see more.\n"
+  );
+  exit;
+}
+else {
+  die("I couldn't find anything to do just now.");
 }
 
 my (
@@ -74,12 +88,14 @@ my $fileDoneName = sprintf(
   $month + 1, $dayOfMonth
 );
 
+print("Looking up $fileName.\n");
 if ( -f $fileDoneName ) {
   print(
     "You already threw that file ($fileDoneName) in a Done folder. Exiting.");
   exit;
 }
 
+# here we create the file if it is not there
 if ( ( !-f $fileName ) || ( -s $fileName == 0 ) || $printInitSections ) {
   open( A, "c:/writing/scripts/2dy.txt" );
   my @subjArray = ();
@@ -99,35 +115,45 @@ if ( ( !-f $fileName ) || ( -s $fileName == 0 ) || $printInitSections ) {
 
   #`touch $fileName`;
 }
-else { print "$fileName is there. Opening with Notepad++.\n"; }
-
-my $section = "q";
-
-`"$fileName"` if !$section;
-
-my $lineNum = 0;
-
-open( A, $fileName );
-
-while ( $a = <A> ) {
-  if ( $a =~ /\\$section/ ) {
-    $lineNum = $.;
-    last;
-  }
-}
-
-if ( !$lineNum ) {
-  print("Warning no section $section found. Opening the start.");
-}
 else {
-  print("Opening line $lineNum of $fileName.");
+  print "$fileName is there. Opening (section $section) with Notepad++.\n";
+  openFileSection( $fileName, $section );
 }
 
-`$npo $fileName -n$lineNum`;
+# subroutines
 
-exit;
+sub openFileSection {
+  my $fileName = $_[0];
+  my $section  = $_[1];
 
-#`"C:/Program Files/Windows NT/Accessories/wordpad.exe" "$fileName"`;
+  if ( !$section ) {
+    `"$fileName"`;
+    exit();
+  }
+
+  my $lineNum = 0;
+
+  open( A, $fileName );
+
+  while ( $a = <A> ) {
+    if ( $a =~ /\\$section/ ) {
+      $lineNum = $.;
+      last;
+    }
+  }
+
+  if ( !$lineNum ) {
+    print("Warning no section $section found. Opening the start.");
+  }
+  else {
+    print("Opening line $lineNum of $fileName.");
+  }
+
+  `$npo $fileName -n$lineNum`;
+
+  exit;
+
+}
 
 sub daysAgo {
   (
