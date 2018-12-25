@@ -5,6 +5,7 @@
 # run from the command line not from the git shell
 #
 
+import re
 import os
 import sys
 import time
@@ -15,9 +16,16 @@ def usage(arg = ""):
     if arg: print("Invalid command", arg)
     else: print("USAGE")
     print("=" * 50)
-    print("r or x executes the command, l at the end runs git log too")
-    print("a number specifies the days back to look.")
+    print("r or x executes the command")
+    print("l at the end runs git log too")
+    print("m# specifies minutes before midnight")
+    print("s# specifies seconds before midnight in addition to minutes")
+    print("so# specifies *only* seconds before midnight, setting minutes to 0")
+    print("a number specifies the days back to look. If it is before midnight, nothing happens.")
 
+
+min_before = 3
+sec_before = 0
 
 days = 0
 count = 1
@@ -34,9 +42,24 @@ while count < len(sys.argv):
         if cmd_counts == 0: print("WARNING an L without an R or X means nothing.")
         elif cmd_counts > 1: print("WARNING extra r/x in the argument to run the command mean nothing.")
     elif arg.isdigit(): days = int(arg)
+    elif arg == '!': rand_diff = int(random.random()) * 600 + 1
+    elif arg[0] == 'm':
+        if arg[1:].isdigit(): min_before = int(arg[1:])
+        else: sys.exit("-m must take a positive integer after!")
+    elif arg[:2] == 'so':
+        if arg[2:].isdigit():
+            sec_before = int(arg[2:])
+            min_before = 0
+        else: sys.exit("-so must take a positive integer after!")
+    elif arg[0] == 's':
+        if arg[1:].isdigit(): sec_before = int(arg[1:])
+        else: sys.exit("-s must take a positive integer after!")
     elif arg == '?': usage()
     else: usage()
     count += 1
+
+if sec_before > 60 and min_before > 0: sys.exit("Seconds + minutes may be confusing. Use -so to remove this.")
+if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
 
 x = time.localtime().tm_isdst
 y = time.localtime()
@@ -49,10 +72,8 @@ z0 = (int(z/86400) - days) * 86400
 
 z2 = time.localtime(z0)
 
-if z2.tm_isdst:
-    z1 = (int(z/86400) - days) * 86400 + 17820
-else:
-    z1 = (int(z/86400) - days) * 86400 + 21420
+z1 = (int(z/86400) - days) * 86400 + 21600 - min_before * 60 - sec_before
+z1 += z2.tm_isdst * 3600 # daylight savings adjustment
 
 if z1 > z00:
     sys.exit("No need to shift anything yet.")
