@@ -26,6 +26,7 @@ my $check2 = "c:\\writing\\scripts\\hrcheckp.txt";
 my $code   = "c:\\writing\\scripts\\hrcheck.pl";
 
 my $bailFile   = "c:\\writing\\scripts\\hrcheck-bailfile.txt";
+my $forgotFile = "c:\\writing\\scripts\\hrcheck-forgotfile.txt";
 my $xtraFile   = "c:\\writing\\scripts\\hrcheckx.txt";
 my $anyExtra   = 0;
 my @extraFiles = ();
@@ -82,6 +83,23 @@ while ( $count <= $#ARGV ) {
   }
   if ( defined( $ARGV[$count] ) ) { $b = $ARGV[ $count + 1 ]; }
   for ($a) {
+    /^ff$/ && do {
+      open( A, "$forgotFile" );
+      while ( $a = <A> ) {
+        chomp($a);
+        my (
+          $second,     $minute,    $hour,
+          $dayOfMonth, $month,     $yearOffset,
+          $dayOfWeek,  $dayOfYear, $daylightSavings
+        ) = split( / /, $a );
+        print("Processing forgot-file line $a...\n");
+        hrcheck($check);
+        hrcheck($check2);
+      }
+      close(A);
+      open( B, ">$forgotFile" );
+      exit();
+    };
     /^[0-9]+:[0-9]+/ && do {
       my @time = split( /:/, $a );
       if ( $time[0] > 24 or $time[0] < 0 ) {
@@ -163,9 +181,19 @@ while ( $count <= $#ARGV ) {
   $last = $count;
 }
 
+my (
+  $second,     $minute,    $hour,
+  $dayOfMonth, $month,     $yearOffset,
+  $dayOfWeek,  $dayOfYear, $daylightSavings
+) = localtime( time + $adjust * 60 );
+
 open( A, $bailFile ) || die("No $bailFile");
 while ( $a = <A> ) {
   if ( $a =~ /bail/ ) {
+    open( B, ">>$forgotFile" );
+    print B
+"$second $minute $hour $dayOfMonth $month $yearOffset $dayOfWeek $dayOfYear $daylightSavings";
+    close(B);
     my $rem = time() % 86400;
     if ( $rem > 18000 && $rem < 19800 ) {
       Win32::MsgBox("You may wish to edit $bailFile.");
@@ -176,12 +204,6 @@ while ( $a = <A> ) {
     exit();
   }
 }
-
-my (
-  $second,     $minute,    $hour,
-  $dayOfMonth, $month,     $yearOffset,
-  $dayOfWeek,  $dayOfYear, $daylightSavings
-) = localtime( time + $adjust * 60 );
 
 if ($gotTime) {
   $hour   = $hourTemp;
