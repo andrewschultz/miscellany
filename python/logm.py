@@ -2,9 +2,11 @@
 # logm.py
 # modifies the log date
 #
-# run from the command line not from the git shell
-#
+# no arguments needed ... 3 minutes before midnight is the default
+# ! = random, so = seconds, max of 1 hour before
+# daylight savings time is accounted for
 
+import random
 import re
 import os
 import sys
@@ -21,6 +23,7 @@ def usage(arg = ""):
     print("m# specifies minutes before midnight")
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
+    print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d}.".format(min_before * 60 + sec_before))
     print("a number specifies the days back to look. If it is before midnight, nothing happens.")
 
 
@@ -42,7 +45,10 @@ while count < len(sys.argv):
         if cmd_counts == 0: print("WARNING an L without an R or X means nothing.")
         elif cmd_counts > 1: print("WARNING extra r/x in the argument to run the command mean nothing.")
     elif arg.isdigit(): days = int(arg)
-    elif arg == '!': rand_diff = int(random.random()) * 600 + 1
+    elif arg == '!':
+        min_before = 0
+        sec_before = int(random.random()) * 600 + 1
+        print("Random seconds before =", sec_before)
     elif arg[0] == 'm':
         if arg[1:].isdigit(): min_before = int(arg[1:])
         else: sys.exit("-m must take a positive integer after!")
@@ -58,7 +64,7 @@ while count < len(sys.argv):
     else: usage()
     count += 1
 
-if sec_before > 60 and min_before > 0: sys.exit("Seconds + minutes may be confusing. Use -so to remove this.")
+if sec_before > 60 and min_before > 0: sys.exit(">60 seconds + minutes may be confusing. Use -so to remove this.")
 if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
 
 x = time.localtime().tm_isdst
