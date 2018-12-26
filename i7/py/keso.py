@@ -97,15 +97,20 @@ def new_line_embedded(x):
         return re.split(" *\b(uline|new line|newline)\b *", x)
     return []
 
-def is_palindrome(x):
-    x = re.sub("[^a-zA-Z]", "", x.lower())
-    return x == x[::-1]
-
-def is_onetwo(x):
+def guess_section(x):
+    y = re.sub("[^a-zA-Z]", "", x.lower())
+    if y == y[::-1]: return "palindrome"
     x2 = x.strip().lower()
     if x2.startswith("1") or x2.startswith("one"):
-        if "2" in x2 or re.search("\b(two|to)\b", x2): return True
-    return False
+        if re.search("\b(two|to|2)\b", x2): return "onetwos"
+    if '==' in x2: return "btp"
+    if '*' in x2 or re.search("( [0-9=]{2}|[0-9=]{2} )", x2): return "spoonerisms"
+    if ' ' not in x2 or "\t" in x2: return "possible_names"
+    if x.startswith("Actor") or x.startswith("Ektor"): return "aa"
+    if 'what a story' in x2.lower(): return "what a story"
+    if ' / ' in z_raw or ',,' in z_raw: return "vvff"
+    if is_anagrammy(z_raw): return "anagrams"
+    return ""
 
 def is_anagrammy(x):
     if x.lower().startswith("anagram"): return True
@@ -187,20 +192,12 @@ for z in y2:
     z_raw = z if z.startswith("#") else re.sub(" *#.*", "", z)
     z_comments = re.sub("^ *?#", "", z) if '#' in z else ""
     z_c_s = sortable_comments(z_comments)
+    i_s = guess_section(z_raw)
     if z_raw.startswith('===='): continue
     elif re.search("[0-9]+ total sorted ideas", z_raw): continue
     elif z_c_s: dict_append(specials, z_c_s, z)
-    elif sortable_comments(z_comments):
-    elif is_palindrome(z_raw): dict_append(specials, 'palindromes', z)
-    elif is_onetwo(z_raw): dict_append(specials, 'onetwos', z)
-    elif ' / ' in z_raw or ',,' in z_raw: dict_append(specials, 'vvff', z)
-    elif '==' in z_raw: dict_append(specials, 'btp', z)
-    elif '*' in z_raw or re.search("( [0-9=]{2}|[0-9=]{2} )", z_raw): dict_append(specials, 'spoonerisms', z)
-    elif ' ' not in z_raw or "\t" in z_raw: dict_append(specials, 'possible names', z)
-    elif 'what a story' in z_raw.lower(): dict_append(specials, 'what a story', z)
-    elif is_anagrammy(z_raw): dict_append(specials, 'anagrams', z)
-    else:
-        finals.append(z)
+    elif i_s: dict_append(specials, i_s, z)
+    else: finals.append(z)
 
 k = open(out_file, "w")
 
