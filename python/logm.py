@@ -14,6 +14,9 @@ import time
 from time import mktime
 from datetime import datetime
 
+def my_time(t):
+    return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
+
 def usage(arg = ""):
     if arg: print("Invalid command", arg)
     else: print("USAGE")
@@ -24,6 +27,9 @@ def usage(arg = ""):
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
     print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d}.".format(min_before * 60 + sec_before))
+    print()
+    print("Standard usage is probably logm.py rl (!) (3)")
+    print()
     print("a number specifies the days back to look. If it is before midnight, nothing happens.")
 
 
@@ -81,12 +87,15 @@ z2 = time.localtime(z0)
 z1 = (int(z/86400) - days) * 86400 + 21600 - min_before * 60 - sec_before
 z1 += z2.tm_isdst * 3600 # daylight savings adjustment
 
-if z1 > z00:
-    sys.exit("No need to shift anything yet.")
+zadj = z0 + (5-x) * 3600
 
-z2 = time.localtime(z1)
+print("Here is the current time:", my_time(z))
+print("Here is the cutoff time:", my_time(zadj))
 
-out_string = "git commit --amend --date=\"{:s} -0{:d}00\"".format(time.strftime("%a %b %d %H:%M:%S", z2), 6 - x)
+if z1 < zadj:
+    sys.exit("Current time is {:s} so you don't need to shift anything today. I try for yesterday until {:s}.\nYou can use a number on the command line to specify days back.".format(my_time(z), time.strftime("%H:%M:%S", time.localtime(zadj))))
+
+out_string = "git commit --amend --date=\"{:s} -0{:d}00\"".format(time.strftime(my_time(z1)), 6 - x)
 
 print(out_string)
 
