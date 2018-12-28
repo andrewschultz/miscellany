@@ -318,6 +318,11 @@ def dir2proj(x = os.getcwd()):
         x2 = re.sub(".*[\\\/]", "", x2)
         if "\\" in x2 or "/" in x2: return ""
         return x2
+    if re.search("Documents.GitHub", x):
+        x2 = re.sub(".*Documents.GitHub.", "", x)
+        x2 = re.sub("[\\\/].*", "", x2)
+        if re.search("[a-z]", x2): return x2
+        return
     return ""
 
 sproj = d2p = dir2proj

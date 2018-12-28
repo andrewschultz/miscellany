@@ -125,5 +125,8 @@ read_format_strings()
 table_hack(i7.src(this_project))
 table_hack(i7.tafi(this_project))
 
-print(dupes, "total duplicates.")
-if dupe_without_spaces: print(dupe_without_spaces, "dupes without spaces e.g. Not On vs No Ton.")
+if dupes: print(dupes, "total duplicates to fix.")
+else: print("DUPLICATE TESTING PASSED")
+
+if dupe_without_spaces: print(dupe_without_spaces, "duplicates without spaces to fix e.g. Not On vs No Ton.")
+else: print("DUPLICATE TESTING WITHOUT SPACES PASSED")
