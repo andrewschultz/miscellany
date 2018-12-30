@@ -185,7 +185,7 @@ While $cmdCount <= $CmdLine[0]
 	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', not $myCmd == 'ff')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -630,8 +630,8 @@ EndFunc
 Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True)
   if $adjustMouse Then
     ToHab()
-    $mouseX = 680
-    $mouseY = 276
+    $mouseX = 670
+    $mouseY = 300
   Else
     Local $aPos = MouseGetPos()
 	$mouseX = $aPos[0]
@@ -647,6 +647,7 @@ Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True)
 	MouseClick("left", $mouseX, $mouseY, 1)
 	MouseMove($mouseX + 20, $mouseY) ;
   EndIf
+  Beep(700, 700)
 EndFunc
 
 Func OpenHabiticaURL($closeWindow)
