@@ -48,8 +48,10 @@ if ($theMinus) {
   }
 }
 elsif ($filesBack) {
+  my $lastDailyDone = "";
   for ( 0 .. $maxBack - 1 ) {
     my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
+    my $dailyDone      = "c:/writing/daily/done/" . daysAgo($_);
     if ( -f $dailyCandidate ) {
       $backSoFar++;
       if ( $backSoFar == $filesBack ) {
@@ -60,11 +62,18 @@ elsif ($filesBack) {
         last;
       }
     }
+    $lastDailyDone = $dailyCandidate
+      if ( -f $dailyDone ) && ( !$lastDailyDone );
   }
-  print(
-"Could not go $filesBack files back. Only went $backSoFar. Last file was $dailyToOpen. Expand maxBack from $maxBack to see more.\n"
-  );
-  exit;
+  if ($lastDailyDone) {
+    print(
+"Could not go $filesBack files back and could not create new file. Only went $backSoFar. Last done file was $lastDailyDone. Expand maxBack from $maxBack to see more.\n"
+    );
+    exit;
+  }
+  else {
+    print("Found nothing. I'm going to create and open a new daily file.\n");
+  }
 }
 else {
   die("I couldn't find anything to do just now.");
@@ -110,8 +119,8 @@ if ( ( !-f $fileName ) || ( -s $fileName == 0 ) || $printInitSections ) {
   }
   open( A, ">>$fileName" );
   for (@subjArray) { print A "\n\\$_\n"; }
-  close($fileName);
-  if ( open( A, "c://nothing.txt" ) ) { close(A); }
+  close(A);
+  system($fileName);
 
   #`touch $fileName`;
 }
