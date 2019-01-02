@@ -25,19 +25,17 @@ my $count     = 0;
 my $filesBack = 1;
 my $backSoFar = 0;
 
-my $verbose = 0;
-
 while ( $count <= $#ARGV ) {
   my $arg = lc( $ARGV[$count] );
   $arg =~ s/^-//;
   if    ( $arg =~ /ps/ )       { $printInitSections = 1; }
-  elsif ( $arg =~ /^[0-9]+$/ ) { $filesBack         = $arg; $maxBack = 365 if ($maxBack == 7); }
+  elsif ( $arg =~ /^[0-9]+$/ ) { $filesBack         = $arg; }
   elsif ( $arg =~ /^-+[0-9]+$/ ) { $theMinus = $arg; $theMinus =~ s/^.//; }
   elsif ( $arg =~ /^m[0-9]+$/ ) { $maxBack = $arg; $maxBack =~ s/^.//; }
   elsif ( $arg =~ /^a[0-9]+$/ ) { $absBack = $arg; $absBack =~ s/^.//; }
-  elsif ( $arg =~ /^[0-9]+v/) { $verbose = $arg; $verbose =~ s/v//g; }
   elsif ( $arg =~ /^[a-z]+$/ )  { $section = $arg; }
   else                          { print("Bad input $arg"); exit(); }
+  print "$arg\n";
   $count++;
 }
 
@@ -52,7 +50,6 @@ if ($theMinus) {
 elsif ($filesBack) {
   my $lastDailyDone = "";
   for ( 0 .. $maxBack - 1 ) {
-    print "back $_ " . daysAgo($_) . "\n" if $verbose >= 2;
     my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
     my $dailyDone      = "c:/writing/daily/done/" . daysAgo($_);
     if ( -f $dailyCandidate ) {
@@ -64,7 +61,6 @@ elsif ($filesBack) {
         openFileSection( $dailyToOpen, $section );
         last;
       }
-	  print "Found daily file $backSoFar = $dailyCandidate" if $verbose >= 1;
     }
     $lastDailyDone = $dailyCandidate
       if ( -f $dailyDone ) && ( !$lastDailyDone );
@@ -77,7 +73,6 @@ elsif ($filesBack) {
   }
   else {
     print("Found nothing. I'm going to create and open a new daily file.\n");
-	exit();
   }
 }
 else {

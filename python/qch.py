@@ -178,8 +178,10 @@ while count < len(sys.argv):
     elif arg == '?': usage()
     elif arg == '??': readme_usage()
     else:
-        if rd2: sys.exit("Attempted to define two directories. Bailing.")
-        rd2 = os.path.join(root_dir, i7.proj_exp(sys.argv[1], True, True))
+        rd2 = os.path.join(root_dir, i7.proj_exp(arg, True, True))
+        if rd2 and root_dir != root_dir_init:
+            if rd2 != root_dir: sys.exit("Attempted to define two directories: {:s} (now) vs {:s} (prev) with arg {:s}. Bailing.".format(rd2, root_dir, arg))
+            print("We are already looking for", rd2, "as the root directory so the command line defines it again. This probably isn't a big deal at all.")
         if not os.path.exists(rd2): sys.exit(rd2 + " is not a valid directory. Try something else.")
         root_dir = rd2
     count += 1
