@@ -152,8 +152,7 @@ While $cmdCount <= $CmdLine[0]
 
   $didAnything = True
   If StringIsDigit($myCmd) Then
-    ToHab()
-	ToTasks()
+	ToTasks(True)
     if $negative == 0 Then
 	  justClick($myCmd)
     Else
@@ -167,7 +166,7 @@ While $cmdCount <= $CmdLine[0]
     $MousePos = MouseGetPos()
     CheckIfOnTask()
     for $i = 1 to $clicks
-      clickSkill($BREATH_OF_FIRE, 1, 10)
+      clickSkill($BREATH_OF_FIRE, 1, 10, True)
       sleep($delay/2)
       MouseMove($MousePos[0], $MousePos[1])
       MouseClick("left")
@@ -203,38 +202,38 @@ While $cmdCount <= $CmdLine[0]
 	_ArraySort($spellOrd)
 	ToHab()
 	ToTasks()
-	clickSkill($spellOrd[0], $EARTHQUAKE, 35)
+	clickSkill($spellOrd[0], $EARTHQUAKE, 35, True)
 	if not $onlyTrackMp Then
 	  sleep(12000)
     EndIf
-	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30)
+	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, True)
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
 	ExitLoop
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
-    ToHab()
-	ToTasks()
+	ToTasks(True)
 	$old_delay = $delay
 	$delay = 15000 ; adjust_delay($delay)
     $clicks = $nextNum
     CheckClicks()
 	for $i = 1 to $nextNum
-      clickSkill(2, $ETHEREAL_SURGE, 30, True)
-      clickSkill(1, $EARTHQUAKE, 35)
+      clickSkill(2, $ETHEREAL_SURGE, 30, True, True)
+      clickSkill(1, $EARTHQUAKE, 35, True)
 	  if $i < $nextNum Then
         sleep($delay)
       EndIf
 	Next
 	$delay = $old_delay
-  ElseIf $myCmd == 'm' Then ; todo: error checking for if anything case
+  ElseIf $myCmd == 'm' or $myCmd == 'w' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
     Endif
     if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
       $clicks2 = $cmdLine[3]
     Endif
+	ToTasks(True)
     CheckClicks()
-    clickSkill($clicks, $ETHEREAL_SURGE, 30)
-    clickSkill($clicks2, $EARTHQUAKE, 35)
+    clickSkill($clicks, $ETHEREAL_SURGE, 30, True)
+    clickSkill($clicks2, $EARTHQUAKE, 35, True)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -318,7 +317,7 @@ EndIf
 ; function(s) below
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[16] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
+  Local $usgAry[17] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
@@ -368,6 +367,15 @@ Func GoEquip()
   sleep(2000)
 EndFunc
 
+Func ToTasks($hab_too = True)
+  if $hab_too then
+    ToHab()
+  endif
+  sleep(1000)
+  MouseClick ( "left", 160, 90)
+  sleep(1000)
+EndFunc
+
 Func ToHab()
   WinActivate("Habitica - Gamify Your Life - Mozilla Firefox")
   WinWaitActive("Habitica - Gamify Your Life - Mozilla Firefox")
@@ -381,7 +389,8 @@ Func PickAttr($y)
     sleep(2000)
 EndFunc
 
-Func clickSkill($clicks, $x, $cost, $delayLast = False)
+Func clickSkill($clicks, $x, $cost, $isMage, $delayLast = False)
+  ToHab()
   $MPloss = $MPloss + $cost * $clicks
   if $onlyTrackMp Then
     Return
@@ -394,7 +403,7 @@ Func clickSkill($clicks, $x, $cost, $delayLast = False)
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks or $delayLast Then
       MouseMove ( $xi + $xd * $x, $yi - 60 )
-      sleep($delay)
+      sleep($delay * (1 + $isMage))
     Endif
   Next
   ToTasks()
@@ -502,7 +511,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
   ToHab()
   ToTasks()
 
-  clickSkill($times, 2, 25)
+  clickSkill($times, 2, 25, False)
 
   if $unequipPer == True Then
     DoInt()
@@ -515,12 +524,6 @@ Func CheckClicks() ; this is not perfect but it does the job for now
     MOK("Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
     exit
   Endif
-EndFunc
-
-Func ToTasks()
-  sleep(1000)
-  MouseClick ( "left", 160, 90)
-  sleep(1000)
 EndFunc
 
 Func CheckIfOnTask()
