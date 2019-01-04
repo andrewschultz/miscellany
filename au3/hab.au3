@@ -179,12 +179,12 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'fc'Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be")
+	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc', $myCmd <> 'fc')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -630,7 +630,11 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
-Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True)
+Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fishToggle = True)
+  local $multiplier = 1
+  if $fishToggle Then
+    $multiplier += 1
+  endif
   if $adjustMouse Then
     ToHab()
     $mouseX = 670
@@ -640,7 +644,7 @@ Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True)
 	$mouseX = $aPos[0]
 	$mouseY = $aPos[1]
   EndIf
-  for $i = 1 to $fishTimes * 2
+  for $i = 1 to $fishTimes * $multiplier
     sleep(1000)
 	MouseClick("left", $mouseX, $mouseY, 1) ; click it on *and* off
 	MouseMove($mouseX + 20, $mouseY) ; click it on *and* off
