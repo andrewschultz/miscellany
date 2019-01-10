@@ -30,6 +30,11 @@
 #include <MsgBoxConstants.au3>
 #include <Math.au3>
 #include <Array.au3>
+#include <File.au3>
+
+$file = "c:\scripts\hab.txt"
+
+read_hab_cfg($file)
 
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0
@@ -711,4 +716,20 @@ Func open_for_cron($hours_after, $auto_close_after = True, $auto_visit_after = F
 
   Exit()
 
+EndFunc
+
+Func read_hab_cfg($x)
+  $file = FileOpen($x, 0)
+  While 1
+    $line = FileReadLine($file)
+	If StringLeft($line, 1) == '#' Then
+	  ContinueLoop
+	ElseIf StringLeft($line, 1) == ';' Then
+	  ExitLoop
+    EndIf
+	$vars = StringSplit($line, ",")
+	; MOK("This", $vars[1] & @CRLF & $line)
+  WEnd
+  FileClose($file)
+  Exit
 EndFunc
