@@ -50,13 +50,13 @@ Local $focused = 0
 
 ; constants for clicking around. Depending on your browser magnification/monitor size, you may wish to change thses.
 Local $item_popup_h = 814
-Local $item_popup_v = 510
+Local $item_popup_v = 540
 Local $horiz_delta = 95
 Local $vert_delta = 160
 Local $h_init_page_1 = 250
 Local $v_init_page_1 = 430
-Local $attr_pulldown_h = 1450
-Local $attr_pulldown_init = 330
+Local $attr_pulldown_h_init = 1450
+Local $attr_pulldown_v_init = 330
 Local $attr_pulldown_delta = 30
 
 Local $delay = 3000
@@ -388,9 +388,9 @@ Func ToHab()
 EndFunc
 
 Func PickAttr($y)
-    MouseClick ( "left", $attr_pulldown_h, $attr_pulldown_init, 1)
+    MouseClick ( "left", $attr_pulldown_h_init, $attr_pulldown_v_init, 1)
     sleep(1000)
-    MouseClick ( "left", $attr_pulldown_h, $attr_pulldown_init + $attr_pulldown_delta * ($y + 1), 1)
+    MouseClick ( "left", $attr_pulldown_h_init, $attr_pulldown_v_init + $attr_pulldown_delta * ($y + 1), 1)
     sleep(2000)
 EndFunc
 
@@ -720,7 +720,9 @@ EndFunc
 
 Func read_hab_cfg($x)
   $file = FileOpen($x, 0)
+  Local $cfg_count = 0
   While 1
+    $cfg_count += 1
     $line = FileReadLine($file)
 	If StringLeft($line, 1) == '#' Then
 	  ContinueLoop
@@ -728,8 +730,38 @@ Func read_hab_cfg($x)
 	  ExitLoop
     EndIf
 	$vars = StringSplit($line, ",")
+	If verify_first_entry($vars, 'ItemPop', 3) Then
+	  $item_popup_h = $vars[2]
+	  $item_popup_v = $vars[3]
+    Elseif verify_first_entry($vars, 'DeltaHV', 3) Then
+	  $horiz_delta = $vars[2]
+	  $vert_delta = $vars[3]
+    Elseif verify_first_entry($vars, 'InitHV', 3) Then
+	  $h_init_page_1 = $vars[2]
+	  $v_init_page_1 = $vars[3]
+    Elseif verify_first_entry($vars, 'PullInitDelt', 4) Then
+	  $attr_pulldown_h_init = $vars[2]
+	  $attr_pulldown_v_init = $vars[3]
+	  $attr_pulldown_delta = $vars[4]
+    Elseif not StringIsDigit($line) Then
+	  MOK("Bad cfg line" & $cfg_count, $line)
+	EndIf
 	; MOK("This", $vars[1] & @CRLF & $line)
   WEnd
   FileClose($file)
-  Exit
+EndFunc
+
+Func verify_first_entry($var_array, $first_entry, $how_many_entries)
+  if $var_array[1] <> $first_entry Then
+    return False
+  EndIf
+  if $var_array[0] > $how_many_entries Then
+    MOK("Cutting off extraneous entries", $first_entry & " has " & $var_array[0] & " needs " & $how_many_entries)
+	return True
+  EndIf
+  if $var_array[0] < $how_many_entries Then
+    MOK("Too few entries, bailing.", $first_entry & " has " & $var_array[0] & " needs " & $how_many_entries)
+	Exit
+  EndIf
+  return True
 EndFunc
