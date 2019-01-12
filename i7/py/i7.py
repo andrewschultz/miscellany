@@ -30,6 +30,8 @@ i7_cfg_file = "c:/writing/scripts/i7p.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 
+i7fi = { 'f': f_f, 'l': f_l, 'w': f_dic, 'b': f_dic }
+
 table_row_count = defaultdict(int)
 
 outline_val_hash = { 'volume': 5, 'book': 4, 'part': 3, 'chapter': 2, 'section': 1 }
@@ -46,6 +48,10 @@ smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
 extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
+
+def qfi(x, base_only = True):
+    if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
+    return x
 
 def ph(eqs, opt_text = ""):
     print('=' * eqs + opt_text)
