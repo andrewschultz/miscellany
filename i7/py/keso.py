@@ -17,7 +17,7 @@ kfile = "c:/writing/temp/to_keep.txt"
 kfile2 = "c:/writing/temp/to_keep_2.txt"
 kfilef = "c:/writing/temp/to_keep_final.txt"
 
-comment_cfg = "c:/writing/scripts.kesotxt"
+comment_cfg = "c:/writing/scripts/keso.txt"
 
 cmds = defaultdict(str)
 cmds['palindromes'] = "ni no ai"
@@ -26,9 +26,6 @@ cmds['vvff'] = "ni no vv"
 cmds['spoonerisms'] = "np spopal"
 
 comment_sortable = defaultdict(str)
-
-cs_rx = '|'.join(comment_sortable)
-cs_rx_val = '|'.join([comment_sortable[x] for x in comment_sortable])
 
 specials = defaultdict(list)
 
@@ -101,8 +98,8 @@ def guess_section(x):
     y = re.sub("[^a-zA-Z]", "", x.lower())
     if y == y[::-1]: return "palindrome"
     x2 = x.strip().lower()
-    if x2.startswith("1") or x2.startswith("one"):
-        if re.search("\b(two|to|2)\b", x2): return "onetwos"
+    if re.search("^(one|1|01)", x2):
+        if re.search("\b(two|to|2|02)\b", x2): return "onetwos"
     if '==' in x2: return "btp"
     if '*' in x2 or re.search("( [0-9=]{2}|[0-9=]{2} )", x2): return "spoonerisms"
     if ' ' not in x2 or "\t" in x2: return "possible_names"
@@ -158,6 +155,10 @@ while count < len(sys.argv):
         os.system(kfile2)
         exit()
     count += 1
+
+read_comment_sortable()
+cs_rx = '|'.join(comment_sortable)
+cs_rx_val = '|'.join([comment_sortable[x] for x in comment_sortable])
 
 if touch_up: touch_up_ideas()
 
