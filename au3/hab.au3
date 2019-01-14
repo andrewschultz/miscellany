@@ -22,19 +22,17 @@
 ; in case I ever want to change default constants
 ; hab-h.au3 is what to change instead of hab.au3, so I don't keep tripping source control for every small choice
 ; the big one is changing classes
-#include <hab-h.au3>
 #include <date.au3>
-#include "c:\\scripts\\andrew.au3"
 #include "c:\\scripts\\ini.au3"
 
 #include <MsgBoxConstants.au3>
 #include <Math.au3>
 #include <Array.au3>
 #include <File.au3>
+#include "c:\\scripts\\andrew.au3"
+#include <hab-h.au3>
 
 $file = "c:\scripts\hab.txt"
-
-read_hab_cfg($file)
 
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0
@@ -73,6 +71,12 @@ If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
 	justClick($cmdLine[1])
 	Exit
 EndIf
+
+; read the config file first
+
+; MOK($horiz_delta & " " & $h_init_page_1 & " " & $vert_delta & " " & $v_init_page_1, $item_popup_h & " " & $item_popup_v)
+read_hab_cfg($file)
+; MOK($horiz_delta & " " & $h_init_page_1 & " " & $vert_delta & " " & $v_init_page_1, $item_popup_h & " " & $item_popup_v)
 
 ; process meta commands first
 
@@ -216,18 +220,16 @@ While $cmdCount <= $CmdLine[0]
 	ExitLoop
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
 	ToTasks(True)
-	$old_delay = $delay
-	$delay = 15000 ; adjust_delay($delay)
     $clicks = $nextNum
     CheckClicks()
 	for $i = 1 to $nextNum
       clickSkill(2, $ETHEREAL_SURGE, 30, True, True)
+	  sleep($delay)
       clickSkill(1, $EARTHQUAKE, 35, True)
 	  if $i < $nextNum Then
         sleep($delay)
       EndIf
 	Next
-	$delay = $old_delay
   ElseIf $myCmd == 'm' or $myCmd == 'w' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
@@ -404,11 +406,12 @@ Func clickSkill($clicks, $x, $cost, $isMage, $delayLast = False)
     MOK("Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
     exit
   EndIf
+	  MOK($delay, $delay)
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks or $delayLast Then
       MouseMove ( $xi + $xd * $x, $yi - 60 )
-      sleep($delay * (1 + $isMage))
+      sleep($delay)
     Endif
   Next
   ToTasks()
@@ -460,7 +463,7 @@ EndFunc
 
 Func ClickEquipItem($vert_delt)
   sleep(1000)
-  MouseClick("left", 814, $item_popup_c + $vert_delt, 1)
+  MouseClick("left", 814, $item_popup_v + $vert_delt, 1)
   sleep(1000)
 EndFunc
 
@@ -733,6 +736,20 @@ Func read_hab_cfg($x)
 	If verify_first_entry($vars, 'ItemPop', 3) Then
 	  $item_popup_h = $vars[2]
 	  $item_popup_v = $vars[3]
+	ElseIf verify_first_entry($vars, 'Delay', 2) Then
+	  $delay = $vars[2]
+	  if $delay < 100 Then
+	    $delay *= 1000
+	  EndIf
+    Elseif verify_first_entry($vars, 'Class', 2) Then
+	  $my_class = StringLower($vars[2])
+	  if $classHash.Exists($my_class) Then
+	    $my_class = $classHash.Item($my_class)
+	  EndIf
+	  if $my_class < 1 or $my_class > 4 Then
+	    MOK("Oops!", $vars[2] & " needs to be 1-4 or a class name (case insensitive) e.g. " & $allClasses)
+		Exit
+	  EndIf
     Elseif verify_first_entry($vars, 'DeltaHV', 3) Then
 	  $horiz_delta = $vars[2]
 	  $vert_delta = $vars[3]
@@ -749,6 +766,9 @@ Func read_hab_cfg($x)
 	; MOK("This", $vars[1] & @CRLF & $line)
   WEnd
   FileClose($file)
+  if $my_class == $CLASS_UNDEF Then
+    MOK("No class defined in hab.txt", "You may wish to define a class in hab.txt.")
+  EndIf
 EndFunc
 
 Func verify_first_entry($var_array, $first_entry, $how_many_entries)
