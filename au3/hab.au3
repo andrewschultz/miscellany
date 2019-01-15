@@ -32,7 +32,8 @@
 #include "c:\\scripts\\andrew.au3"
 #include <hab-h.au3>
 
-$file = "c:\scripts\hab.txt"
+$vars_file = "c:\scripts\hab.txt"
+$equip_file = "c:\scripts\hab-e.txt"
 
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0
@@ -56,6 +57,8 @@ Local $v_init_page_1 = 430
 Local $attr_pulldown_h_init = 1450
 Local $attr_pulldown_v_init = 330
 Local $attr_pulldown_delta = 30
+Local $page_down_adjust = 760
+Local $last_row_after_end = 580
 
 Local $delay = 3000
 
@@ -75,7 +78,7 @@ EndIf
 ; read the config file first
 
 ; MOK($horiz_delta & " " & $h_init_page_1 & " " & $vert_delta & " " & $v_init_page_1, $item_popup_h & " " & $item_popup_v)
-read_hab_cfg($file)
+read_hab_cfg($vars_file)
 ; MOK($horiz_delta & " " & $h_init_page_1 & " " & $vert_delta & " " & $v_init_page_1, $item_popup_h & " " & $item_popup_v)
 
 ; process meta commands first
@@ -722,11 +725,11 @@ Func open_for_cron($hours_after, $auto_close_after = True, $auto_visit_after = F
 EndFunc
 
 Func read_hab_cfg($x)
-  $file = FileOpen($x, 0)
+  $vars_file = FileOpen($x, 0)
   Local $cfg_count = 0
   While 1
     $cfg_count += 1
-    $line = FileReadLine($file)
+    $line = FileReadLine($vars_file)
 	If StringLeft($line, 1) == '#' Then
 	  ContinueLoop
 	ElseIf StringLeft($line, 1) == ';' Then
@@ -760,12 +763,16 @@ Func read_hab_cfg($x)
 	  $attr_pulldown_h_init = $vars[2]
 	  $attr_pulldown_v_init = $vars[3]
 	  $attr_pulldown_delta = $vars[4]
+    Elseif verify_first_entry($vars, 'PgDownAdjust', 2) Then
+	  $page_down_adjust = $vars[2]
+    Elseif verify_first_entry($vars, 'EndHV', 2) Then
+	  $last_row_after_end = $vars[2]
     Elseif not StringIsDigit($line) Then
 	  MOK("Bad cfg line" & $cfg_count, $line)
 	EndIf
 	; MOK("This", $vars[1] & @CRLF & $line)
   WEnd
-  FileClose($file)
+  FileClose($vars_file)
   if $my_class == $CLASS_UNDEF Then
     MOK("No class defined in hab.txt", "You may wish to define a class in hab.txt.")
   EndIf
