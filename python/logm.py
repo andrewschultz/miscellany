@@ -14,6 +14,8 @@ import time
 from time import mktime
 from datetime import datetime
 
+base_dir_needed = "c:\\users\\andrew\\documents\\github"
+
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
 
@@ -69,6 +71,9 @@ while count < len(sys.argv):
     elif arg == '?': usage()
     else: usage()
     count += 1
+
+if base_dir_needed not in os.getcwd().lower():
+    sys.exit("You need to go to {:s} or a child directory to edit a git log meaningfully.".format(base_dir_needed))
 
 if sec_before > 60 and min_before > 0: sys.exit(">60 seconds + minutes may be confusing. Use -so to remove this.")
 if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
