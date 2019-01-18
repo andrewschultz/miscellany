@@ -11,6 +11,7 @@ import re
 import os
 import sys
 import time
+import i7
 from time import mktime
 from datetime import datetime
 
@@ -24,6 +25,7 @@ def usage(arg = ""):
     else: print("USAGE")
     print("=" * 50)
     print("r or x executes the command")
+    print("p(project name) specifies the project name e.g. pmisc")
     print("l at the end runs git log too")
     print("m# specifies minutes before midnight")
     print("s# specifies seconds before midnight in addition to minutes")
@@ -42,6 +44,7 @@ days = 0
 count = 1
 run_cmd = False
 run_log = False
+proj_shift_yet = ""
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -53,10 +56,23 @@ while count < len(sys.argv):
         if cmd_counts == 0: print("WARNING an L without an R or X means nothing.")
         elif cmd_counts > 1: print("WARNING extra r/x in the argument to run the command mean nothing.")
     elif arg.isdigit(): days = int(arg)
+    elif i7.proj_exp(arg):
+        if proj_shift_yet:
+            print("WARNING shifting from project", proj_shift_yet)
+        proj_shift_yet = i7.proj_exp(arg)
+        if not proj_shift_yet:
+            sys.exit("No such project or abbreviation {:s}".format(arg))
+        print("Found project for {:s} but -p is extra-super-proper usage.".format(arg))
     elif arg == '!':
         min_before = 0
         sec_before = int(random.random()) * 600 + 1
         print("Random seconds before =", sec_before)
+    elif arg[0] == 'p':
+        if proj_shift_yet:
+            print("WARNING shifting from project", proj_shift_yet)
+        proj_shift_yet = i7.proj_exp(arg[1:])
+        if not proj_shift_yet:
+            sys.exit("No such project or abbreviation {:s}".format(arg[1:]))
     elif arg[0] == 'm':
         if arg[1:].isdigit(): min_before = int(arg[1:])
         else: sys.exit("-m must take a positive integer after!")
@@ -71,6 +87,11 @@ while count < len(sys.argv):
     elif arg == '?': usage()
     else: usage()
     count += 1
+
+if proj_shift_yet:
+    ghdir = os.path.join(base_dir_needed, proj_shift_yet if proj_shift_yet not in i7.i7gx.keys() else i7.i7gx[proj_shift_yet])
+    print("Forcing to", ghdir)
+    os.chdir(ghdir)
 
 if base_dir_needed not in os.getcwd().lower():
     sys.exit("You need to go to {:s} or a child directory to edit a git log meaningfully.".format(base_dir_needed))
