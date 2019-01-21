@@ -4,13 +4,15 @@
 ; note: it would make sense if the attributes were in the same order as the classes, but they aren't. So we need to re-define them. (con=healer str=warrior int=mage)
 Global $attrHash = ObjCreate("Scripting.Dictionary")
 
-$classHash.add("constitution", 1)
-$classHash.add("perception", 2)
-$classHash.add("strength", 3)
-$classHash.add("intelligence", 4)
+$attrHash.add("none", 0)
+$attrHash.add("constitution", 1)
+$attrHash.add("perception", 2)
+$attrHash.add("strength", 3)
+$attrHash.add("intelligence", 4)
 
 Global $classHash = ObjCreate("Scripting.Dictionary")
 
+$classHash.add("none", 0)
 $classHash.add("warrior", 1)
 $classHash.add("wizard", 2)
 $classHash.add("mage", 2)

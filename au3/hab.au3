@@ -47,6 +47,7 @@ Local $onlyTrackMP = 0
 Local $closeAfter = 0
 Local $focused = 0
 
+Local $win_size = 1024
 ; constants for clicking around. Depending on your browser magnification/monitor size, you may wish to change thses.
 Local $item_popup_h = 814
 Local $item_popup_v = 540
@@ -57,7 +58,7 @@ Local $v_init_page_1 = 430
 Local $attr_pulldown_h_init = 1450
 Local $attr_pulldown_v_init = 330
 Local $attr_pulldown_delta = 30
-Local $page_down_adjust = 760
+Local $page_down_adjust = 740
 Local $last_row_after_end = 580
 
 Local $delay = 3000
@@ -83,6 +84,7 @@ read_hab_cfg($vars_file)
 
 ; process meta commands first
 
+MaxAttr(4)
 while $cmdCount <= $CmdLine[0]
   $myCmd = StringLower($CmdLine[$cmdCount])
   $nextCmd = $cmdCount + 1
@@ -389,6 +391,9 @@ EndFunc
 Func ToHab()
   WinActivate("Habitica - Gamify Your Life - Mozilla Firefox")
   WinWaitActive("Habitica - Gamify Your Life - Mozilla Firefox")
+  if $win_size == 0 Then
+    $win_size = WinGetClientSize("Habitica - Gamify Your Life - Mozilla Firefox")
+  EndIf
   ToHome()
 EndFunc
 
@@ -418,6 +423,85 @@ Func clickSkill($clicks, $x, $cost, $isMage, $delayLast = False)
     Endif
   Next
   ToTasks()
+EndFunc
+
+Func MaxAttr($attr_to_max)
+  ToHab()
+  $equip_file_handle = FileOpen($equip_file, 0)
+  Local $equip_count = 0
+  Local $lastPagesDown = 0
+  Local $this_line_attr = 0
+  While 1
+    $equip_count += 1
+    $line = FileReadLine($equip_file_handle)
+	If StringLeft($line, 1) == '#' Then
+	  ContinueLoop
+	ElseIf StringLeft($line, 1) == ';' or StringLen($line) == 0 Then
+	  ExitLoop
+    EndIf
+	$vars = StringSplit($line, ",")
+	if $vars < 7 Then
+	  MOK("Too short line " & $equip_count, $line & " needs 7 CSVs and only has " & $vars)
+	  Exit
+	EndIf
+	if $vars < 7 Then
+	  MOK("WARNING too long line " & $equip_count, $line & " needs 7 CSVs and has " & $vars)
+	EndIf
+	$classAdj = dict_or_actual($vars[2], $classHash)
+	if $classAdj <> $my_class and $classAdj <> 0 Then
+	  ContinueLoop
+    EndIf
+	$line_max_attr = dict_or_actual($vars[1], $attrHash)
+	if $line_max_attr <> $attr_to_max Then
+	  ContinueLoop
+    EndIf
+	$line_adj_attr = dict_or_actual($vars[3], $attrHash)
+	$mainOrExtra = $vars[4]
+	$flipToEnd = $vars[5]
+	$column = $vars[6]
+	$row = $vars[7]
+	if $line_adj_attr <> $this_line_attr Then
+	  SendWait("{HOME}")
+	  PickAttr($line_adj_attr)
+	  $this_line_attr = $line_adj_attr
+	  $lastPagesDown = 0
+	EndIf
+	$the_x = $h_init_page_1 + $horiz_delta * $column
+	$the_y = $v_init_page_1 + $vert_delta * $row
+	$thisPagesDown = _Max(0, Int(($the_y + $page_down_adjust - $win_size) / $page_down_adjust))
+	if $thisPagesDown > $lastPagesDown Then
+	  For $i = $lastPagesDown to $thisPagesDown - 1
+		MOK($i, $i)
+	    SendWait("{PGDN}")
+	  Next
+	  $lastPagesDown = $thisPagesDown
+    EndIf
+	if $thisPagesDown < $lastPagesDown Then
+	  For $i = $thisPagesDown to $lastPagesDown - 1
+	    SendWait("{PGUP}")
+	  Next
+	  $lastPagesDown = $thisPagesDown
+    EndIf
+    $the_y -= $thisPagesDown * $page_down_adjust
+	dance_around($the_x, $the_y)
+	; MOK("Where to click " & $column & " " & $row & " " & $equip_count, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
+  WEnd
+  FileClose($equip_file_handle)
+  Exit
+EndFunc
+
+Func dance_around($x, $y)
+  MouseMove($x - 50, $y)
+  MouseMove($x, $y - 50)
+  MouseMove($x + 50, $y)
+  MouseMove($x, $y + 50)
+EndFunc
+
+Func dict_or_actual($val, $dic)
+  if $dic.Exists($val) Then
+    return $dic($val)
+  EndIf
+  return $val
 EndFunc
 
 Func DoInt()
@@ -725,14 +809,14 @@ Func open_for_cron($hours_after, $auto_close_after = True, $auto_visit_after = F
 EndFunc
 
 Func read_hab_cfg($x)
-  $vars_file = FileOpen($x, 0)
+  $vars_file_handle = FileOpen($x, 0)
   Local $cfg_count = 0
   While 1
     $cfg_count += 1
-    $line = FileReadLine($vars_file)
+    $line = FileReadLine($vars_file_handle)
 	If StringLeft($line, 1) == '#' Then
 	  ContinueLoop
-	ElseIf StringLeft($line, 1) == ';' Then
+	ElseIf StringLeft($line, 1) == ';' or StringLen($line) == 0 Then
 	  ExitLoop
     EndIf
 	$vars = StringSplit($line, ",")
