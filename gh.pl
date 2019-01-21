@@ -47,8 +47,10 @@ my $ghl   = "c:\\writing\\scripts\\gh-last.txt";
 my $ght   = "c:\\writing\\scripts\\gh.txt";
 my $ghp   = "c:\\writing\\scripts\\gh-private.txt";
 my $ghs   = "c:\\writing\\scripts\\gh.pl";
-my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
 my $npSes = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
+
+# this helps with regular expressions to replace e.g. id = uuid.txt file
+my $ghreg = "c:\\writing\\scripts\\gh-reg.txt";
 
 ###########################
 #hashes
@@ -114,25 +116,32 @@ while ( $count <= $#ARGV ) {
     };
     /^-?e?r$/ && do {
       print
-"Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n";
+"Opening regex file, -e opens external .txt file, -c opens code file, -p opens private file, -s shows shortcuts.\n";
       system("start \"\" $np $ghreg");
       exit;
     };
     /^-?e?p$/ && do {
       print
-"Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file.\n";
+"Opening private file, -e opens external .txt file, -c opens code file, -r opens regex file, -s shows shortcuts.\n";
       system("start \"\" $np $ghp");
+      exit;
+    };
+    /^-?es$/ && do {
+      readReplace();
+      print "Editing shortcuts listed below:\n";
+      for my $q ( sort keys %repls ) { print "$q -> $repls{$q}\n"; }
+
       exit;
     };
     /^-?e$/ && do {
       print
-"Opening external file, -c opens code, -p opens private file, -r opens regex file.\n";
+"Opening external file, -c opens code, -p opens private file, -r opens regex file, -s shows shortcuts.\n";
       system("start \"\" $np $ght");
       exit;
     };
     /^-?c$/ && do {
       print
-"Opening code, -e opens external .txt file, -p opens private file, -r opens regex file.\n";
+"Opening code, -e opens external .txt file, -p opens private file, -r opens regex file, -s shows shortcuts.\n";
       system("start \"\" $np $ghs");
       exit;
     };
