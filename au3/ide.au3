@@ -15,19 +15,21 @@
 
 Local $project = EnvGet("PROJ")
 Local $stuff = 1;
-Local $build = 1;
 Local $walkthrough = 0;
+Local $force_build = 0;
 
 Global $projHash
 
 Opt("WinTitleMatchMode", -2)
 
-Local $cmdCount = 0
+Local $cmdCount = 1
 
 ReadProjectHash()
 
 While $cmdCount <= $CmdLine[0]
-  if $CmdLine[$cmdCount] == '0' Then
+  ; MOK($cmdCount, $CmdLine[$cmdCount])
+  $arg = $CmdLine[$cmdCount]
+  if $arg == '0' Then
     Local $cmdStr = ""
 	Local $count = 0
     For $key In $projHash
@@ -45,6 +47,10 @@ While $cmdCount <= $CmdLine[0]
 	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
     MOK("List of projects", $cmdStr)
     Exit
+  Elseif $arg == 'f' Then
+    $force_build = 1
+  Elseif $arg == 'nf' or $arg == 'fn' Then
+    $force_build = -1
   Endif
   $cmd = StringLower($CmdLine[$cmdCount])
   if $cmd == 'w' or $cmd == '-w' Then
@@ -127,7 +133,7 @@ Func OpenIDE($project)
 	Local $nowTime = _NowCalc()
 	Local $dd = _DateDiff('h', $fileTime, $nowTime)
 
-	if $dd >= 23 and not $walkthrough Then
+	if $dd >= 23 and not $walkthrough and $force_build != -1 Then
       ; MOK($dd & " hours since last change, not building", "Blah")
 	  ; only activate this
       WinActivate($toCheck);
@@ -154,7 +160,7 @@ Func OpenIDE($project)
 
   Endif
 
-  if $build == 1 Then
+  if $force_build != -1 Then
     sleep(1000);
     WinWaitActive($project & ".inform - Inform");
     sleep(1000);
