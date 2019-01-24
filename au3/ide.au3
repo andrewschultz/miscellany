@@ -66,6 +66,8 @@ While $cmdCount <= $CmdLine[0]
   $cmdCount = $CmdCount + 1
 WEnd
 
+FindProjHeaderFiles($project)
+
 if $walkthrough Then
   if not $wthruHash.Exists($project) Then
     MOK("Need wthruhash entry", "Define wthruhash entry for " & $project & " in ide-h.au3.")
@@ -124,6 +126,11 @@ Func ReadProjectHash()
 
 EndFunc
 
+Func FindProjHeaderFiles($p)
+MOK($p, $p)
+Exit
+EndFunc
+
 Func OpenIDE($project)
   $toCheck = "[REGEXPTITLE:$project" & ".inform\*? - Inform]"
   $pwin = $project & ".inform - Inform"
@@ -133,7 +140,7 @@ Func OpenIDE($project)
 	Local $nowTime = _NowCalc()
 	Local $dd = _DateDiff('h', $fileTime, $nowTime)
 
-	if $dd >= 23 and not $walkthrough and $force_build != -1 Then
+	if $dd >= 23 and not $walkthrough and $force_build <> -1 Then
       ; MOK($dd & " hours since last change, not building", "Blah")
 	  ; only activate this
       WinActivate($toCheck);
@@ -160,7 +167,7 @@ Func OpenIDE($project)
 
   Endif
 
-  if $force_build != -1 Then
+  if $force_build <> -1 Then
     sleep(1000);
     WinWaitActive($project & ".inform - Inform");
     sleep(1000);
