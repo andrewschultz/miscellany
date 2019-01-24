@@ -17,6 +17,8 @@ Local $project = EnvGet("PROJ")
 Local $stuff = 1;
 Local $walkthrough = 0;
 Local $force_build = 0;
+Local $i7p = "c:/writing/scripts/i7p.txt"
+Local $hdr_array = []
 
 Global $projHash
 
@@ -101,7 +103,7 @@ OpenIDE($project)
 Func ReadProjectHash()
 
   Local $aInput
-  $file = "c:/writing/scripts/i7p.txt"
+  $file = $i7p
   _FileReadToArray($file, $aInput)
   $projHash = ObjCreate("Scripting.Dictionary")
 
@@ -127,8 +129,36 @@ Func ReadProjectHash()
 EndFunc
 
 Func FindProjHeaderFiles($p)
-MOK($p, $p)
-Exit
+  $auxil_file_handle = FileOpen($i7p)
+  $head_dir = "c:\Program Files (x86)\Inform 7\Inform7\Extensions\Andrew Schultz"
+  While $line
+    $line = FileReadLine($auxil_file_handle)
+	If StringLeft($line, 1) == '#' Then
+	  ContinueLoop
+	ElseIf StringLeft($line, 1) == ';' or StringLen($line) == 0 Then
+	  ExitLoop
+    EndIf
+	if StringRegExp($line, "^HEADER(S)?:") Then
+	  $l2 = StringRegExpReplace($line, "^[A-Z]+:", "")
+      $vars = StringSplit($l2, "=")
+	  if $vars[1] <> $p Then
+	    ContinueLoop
+	  EndIf
+	  if $vars[0] < 2 Then
+	    MOK("WARNING BAD LINE", $line)
+	  ElseIf $vars[0] > 2 Then
+	    MOK("WARNING TOO MANY VARS", $line)
+	  EndIf
+	  $hdrs = StringSplit($vars[2], ",")
+	  For $i = 1 to $hdrs[0]
+	    $temp = $head_dir & "\" & $vars[1] & " " & $hdrs[$i] & ".i7x"
+		_ArrayAdd($hdr_array, $temp)
+		MOK("!", $temp)
+	  Next
+    EndIf
+  WEnd
+  FileClose($auxil_file_handle)
+  ; _ArrayDisplay($hdr_array, "!")
 EndFunc
 
 Func OpenIDE($project)
