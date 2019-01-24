@@ -62,6 +62,8 @@ Local $page_down_adjust = 740
 Local $last_row_after_end = 580
 
 Local $delay = 3000
+Local $mage_delay = $delay
+Local $rogue_delay = $delay * 2
 
 Local $quick_click_delay = 800
 
@@ -84,7 +86,6 @@ read_hab_cfg($vars_file)
 
 ; process meta commands first
 
-MaxAttr(4)
 while $cmdCount <= $CmdLine[0]
   $myCmd = StringLower($CmdLine[$cmdCount])
   $nextCmd = $cmdCount + 1
@@ -180,7 +181,7 @@ While $cmdCount <= $CmdLine[0]
     $MousePos = MouseGetPos()
     CheckIfOnTask()
     for $i = 1 to $clicks
-      clickSkill($BREATH_OF_FIRE, 1, 10, True)
+      clickSkill($BREATH_OF_FIRE, 1, 10, $mage_delay)
       sleep($delay/2)
       MouseMove($MousePos[0], $MousePos[1])
       MouseClick("left")
@@ -193,12 +194,12 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'fc'Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'fc' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class")
+	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "fs = fish slow (only 1 click, for casting spells)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc', $myCmd <> 'fc')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'fs', $myCmd <> 'fc', $myCmd == 'fs')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -216,11 +217,11 @@ While $cmdCount <= $CmdLine[0]
 	_ArraySort($spellOrd)
 	ToHab()
 	ToTasks()
-	clickSkill($spellOrd[0], $EARTHQUAKE, 35, True)
+	clickSkill($spellOrd[0], $EARTHQUAKE, 35, $mage_delay)
 	if not $onlyTrackMp Then
 	  sleep(12000)
     EndIf
-	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, True)
+	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, $mage_delay)
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
 	ExitLoop
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
@@ -228,9 +229,9 @@ While $cmdCount <= $CmdLine[0]
     $clicks = $nextNum
     CheckClicks()
 	for $i = 1 to $nextNum
-      clickSkill(2, $ETHEREAL_SURGE, 30, True, True)
+      clickSkill(2, $ETHEREAL_SURGE, 30, True, $mage_delay)
 	  sleep($delay)
-      clickSkill(1, $EARTHQUAKE, 35, True)
+      clickSkill(1, $EARTHQUAKE, 35, $mage_delay)
 	  if $i < $nextNum Then
         sleep($delay)
       EndIf
@@ -244,8 +245,8 @@ While $cmdCount <= $CmdLine[0]
     Endif
 	ToTasks(True)
     CheckClicks()
-    clickSkill($clicks, $ETHEREAL_SURGE, 30, True)
-    clickSkill($clicks2, $EARTHQUAKE, 35, True)
+    clickSkill($clicks, $ETHEREAL_SURGE, 30, $mage_delay)
+    clickSkill($clicks2, $EARTHQUAKE, 35, $mage_delay)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -404,7 +405,7 @@ Func PickAttr($y)
     sleep(2000)
 EndFunc
 
-Func clickSkill($clicks, $x, $cost, $isMage, $delayLast = False)
+Func clickSkill($clicks, $x, $cost, $my_delay, $delayLast = False)
   ToHab()
   $MPloss = $MPloss + $cost * $clicks
   if $onlyTrackMp Then
@@ -414,12 +415,11 @@ Func clickSkill($clicks, $x, $cost, $isMage, $delayLast = False)
     MOK("Verifying clicking works", "In non-test mode you would have clicked " & $clicks & " times.")
     exit
   EndIf
-	  MOK($delay, $delay)
   for $i = 1 to $clicks
     MouseClick ( "left", $xi + $xd * $x, $yi, 1 )
     if $i < $clicks or $delayLast Then
       MouseMove ( $xi + $xd * $x, $yi - 60 )
-      sleep($delay)
+      sleep($my_delay)
     Endif
   Next
   ToTasks()
@@ -606,7 +606,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
   ToHab()
   ToTasks()
 
-  clickSkill($times, 2, 25, False)
+  clickSkill($times, 2, 25, $delay)
 
   if $unequipPer == True Then
     DoInt()
@@ -725,11 +725,15 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
-Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fishToggle = True)
+Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fishToggle = True, $fishSlow = False)
   local $multiplier = 1
-  if $fishToggle Then
+  if $fishToggle and not $fishSlow Then
     $multiplier += 1
   endif
+  local $locDelay = 1000
+  if $fishSlow Then
+    $locDelay = $delay
+  EndIf
   if $adjustMouse Then
     ToHab()
     $mouseX = 670
@@ -740,12 +744,12 @@ Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fi
 	$mouseY = $aPos[1]
   EndIf
   for $i = 1 to $fishTimes * $multiplier
-    sleep(1000)
+    sleep($locDelay)
 	MouseClick("left", $mouseX, $mouseY, 1) ; click it on *and* off
 	MouseMove($mouseX + 20, $mouseY) ; click it on *and* off
   Next
   if $toggle_at_end == True Then
-    sleep(1000)
+    sleep($locDelay)
 	MouseClick("left", $mouseX, $mouseY, 1)
 	MouseMove($mouseX + 20, $mouseY) ;
   EndIf
