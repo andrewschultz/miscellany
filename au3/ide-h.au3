@@ -43,7 +43,7 @@ If not $any_error Then
 	  EndIf
     EndIf
   WEnd
-  Exit
+  FileClose($auxil_file_handle)
 EndIf
 
 ; $wthruHash.Add ("ailihphilia", "rollup")

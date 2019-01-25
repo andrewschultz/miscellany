@@ -18,7 +18,9 @@ Local $stuff = 1;
 Local $walkthrough = 0;
 Local $force_build = 0;
 Local $i7p = "c:/writing/scripts/i7p.txt"
-Local $hdr_array = []
+Local $hdr_array[0]
+
+Local $hours = 23
 
 Global $projHash
 
@@ -31,6 +33,7 @@ ReadProjectHash()
 While $cmdCount <= $CmdLine[0]
   ; MOK($cmdCount, $CmdLine[$cmdCount])
   $arg = $CmdLine[$cmdCount]
+  $cmdCount = $CmdCount + 1
   if $arg == '0' Then
     Local $cmdStr = ""
 	Local $count = 0
@@ -51,21 +54,21 @@ While $cmdCount <= $CmdLine[0]
     Exit
   Elseif $arg == 'f' Then
     $force_build = 1
-  Elseif $arg == 'nf' or $arg == 'fn' Then
+	ContinueLoop
+  Elseif $arg == 'nf' or $arg == 'fn' or $arg == 'n' Then
     $force_build = -1
+	ContinueLoop
   Endif
-  $cmd = StringLower($CmdLine[$cmdCount])
-  if $cmd == 'w' or $cmd == '-w' Then
+  if $arg == 'w' or $arg == '-w' Then
     $walkthrough = 1
 	$cmdCount = $cmdCount + 1
 	ContinueLoop
   Else
-    $project = $CmdLine[$cmdCount]
+    $project = $arg
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
     Endif
   EndIf
-  $cmdCount = $CmdCount + 1
 WEnd
 
 FindProjHeaderFiles($project)
@@ -153,24 +156,31 @@ Func FindProjHeaderFiles($p)
 	  For $i = 1 to $hdrs[0]
 	    $temp = $head_dir & "\" & $vars[1] & " " & $hdrs[$i] & ".i7x"
 		_ArrayAdd($hdr_array, $temp)
-		MOK("!", $temp)
 	  Next
     EndIf
   WEnd
+  MOK(UBound($hdr_array), "!!")
   FileClose($auxil_file_handle)
   ; _ArrayDisplay($hdr_array, "!")
+EndFunc
+
+Func see_time_diff($x, $h)
+    Local $fileTimeA = FileGetTime($x, $FT_MODIFIED, $FT_ARRAY)
+	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
+	Local $nowTime = _NowCalc()
+	Local $dd = _DateDiff('h', $fileTime, $nowTime)
+	return $dd < $h
 EndFunc
 
 Func OpenIDE($project)
   $toCheck = "[REGEXPTITLE:$project" & ".inform\*? - Inform]"
   $pwin = $project & ".inform - Inform"
+  $any_today = see_time_diff($dirToCheck & "\\source\\story.ni", $hours)
+  for $i = 0 to UBound($hdr_array) - 1
+	$any_today &= see_time_diff($hdr_array[$i], $hours)
+  Next
   if (WinExists($toCheck)) Then
-    Local $fileTimeA = FileGetTime($dirToCheck & "\\source\\story.ni", $FT_MODIFIED, $FT_ARRAY)
-	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
-	Local $nowTime = _NowCalc()
-	Local $dd = _DateDiff('h', $fileTime, $nowTime)
-
-	if $dd >= 23 and not $walkthrough and $force_build <> -1 Then
+	if not $any_today and not $walkthrough and $force_build <> -1 Then
       ; MOK($dd & " hours since last change, not building", "Blah")
 	  ; only activate this
       WinActivate($toCheck);
