@@ -70,12 +70,14 @@ While $cmdCount <= $CmdLine[0]
   Elseif $arg == 'w' or $arg == '-w' Then
     $walkthrough = 1
 	$cmdCount = $cmdCount + 1
+  Elseif $arg == '?' Then
+    Usage(1, "")
   Else
     $project = $arg
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
     Else
-	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
+	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff." & @CRLF & "? shows usage.")
     EndIf
   EndIf
   $cmdCount = $CmdCount + 1
@@ -232,4 +234,25 @@ Func OpenIDE($project)
 	Send("test " & $wthruHash.item($project) & @CRLF)
   EndIf
 
+EndFunc
+
+Func Usage($questionmark, $badCmd = "")
+  Local $usgAry[5] = [ "-d, -f, -fn, -nf, -h", _
+  "-d specifies days back changes are ok", _
+  "-h specifies hours back changes are ok", _
+  "-f forces a build", _
+  "-fn/nf forces no build" _
+  ]
+  Local $header = "Bad/missing parameter(s)"
+
+  if $questionmark Then
+    $header = "IDE.AU3 command line argument usage popup box"
+  EndIf
+
+  if $badCmd Then
+    $header = $header & " " & $badCmd
+  EndIf
+
+  MOK($header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
+  Exit
 EndFunc
