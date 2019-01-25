@@ -33,7 +33,7 @@ ReadProjectHash()
 While $cmdCount <= $CmdLine[0]
   ; MOK($cmdCount, $CmdLine[$cmdCount])
   $arg = $CmdLine[$cmdCount]
-  $cmdCount = $CmdCount + 1
+  $a1 = StringLeft($arg, 1)
   if $arg == '0' Then
     Local $cmdStr = ""
 	Local $count = 0
@@ -52,23 +52,33 @@ While $cmdCount <= $CmdLine[0]
 	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
     MOK("List of projects", $cmdStr)
     Exit
+  Elseif $a1 == 'd' or $a1 == 'h' Then
+    $num = StringMid($cmd, 2)
+	if not StringIsDigit($num) Then
+	  MOK("Need number right after d/h", "d20 or h20 is ok, d 20 or h 20 is not")
+	  Exit
+    EndIf
+	$hours = $num
+	if StringLeft($arg, 1) == 'h' Then
+	  $hours *= 24
+    EndIf
+    $hours -= 1
   Elseif $arg == 'f' Then
     $force_build = 1
-	ContinueLoop
   Elseif $arg == 'nf' or $arg == 'fn' or $arg == 'n' Then
     $force_build = -1
-	ContinueLoop
-  Endif
-  if $arg == 'w' or $arg == '-w' Then
+  Elseif $arg == 'w' or $arg == '-w' Then
     $walkthrough = 1
 	$cmdCount = $cmdCount + 1
-	ContinueLoop
   Else
     $project = $arg
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
-    Endif
+    Else
+	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff.")
+    EndIf
   EndIf
+  $cmdCount = $CmdCount + 1
 WEnd
 
 FindProjHeaderFiles($project)
@@ -159,7 +169,6 @@ Func FindProjHeaderFiles($p)
 	  Next
     EndIf
   WEnd
-  MOK(UBound($hdr_array), "!!")
   FileClose($auxil_file_handle)
   ; _ArrayDisplay($hdr_array, "!")
 EndFunc
