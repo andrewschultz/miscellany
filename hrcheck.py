@@ -45,6 +45,12 @@ show_warnings = False
 
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
+def is_time(t):
+    x = t.count(":")
+    if x != 1: sys.exit("Time must have 1 colon")
+    y = t.split(":")
+    return y[0].isdigit() and y[1].isdigit()
+
 def last_day_of_month(date):
     if date.month == 12:
         return date.replace(day=31)
@@ -88,12 +94,12 @@ def make_time_array(j, k):
     if len(monthday_array):
         for m in monthday_array:
             for h in hour_array:
-                print("Month/hour adding", m, h)
+                # print("Month/hour adding", m, h)
                 of_month[h][m] += kn
     if len(weekday_array):
         for w in weekday_array:
             for h in hour_array:
-                print("Week/hour adding", w, h)
+                # print("Week/hour adding", w, h)
                 of_week[h][w] += kn
     if not len(monthday_array) and not len(weekday_array):
         for h in hour_array:
@@ -116,7 +122,7 @@ def read_hourly_check(a):
             line = line.lower().strip()
             if line[0] == '"':
                 line = old_cmd + line[1:]
-                print("Line {:d} copies previous line and is {:s}.".format(line_count, line.strip()))
+                print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, a, line.strip()))
             a1 = line.split("|")
             if len(a1) > 2:
                 if show_warnings: print("WARNING too many variables, can't yet parse line {:d}:\n    {:s}".format(line_count, line))
@@ -131,6 +137,7 @@ def carve_up(q, msg):
     ary = q.strip().split("\n")
     for x in ary:
         if not x: continue
+        if x.startswith("http"): x = "start " + x
         if print_cmd: print("***running", msg, x)
         if run_cmd: os.system(x)
         retval += 1
@@ -174,7 +181,7 @@ def run_queue_file():
             l0 = line.lower().strip()
             if l0 in already_done.keys(): continue
             already_done[l0] = True
-            my_list = l0.split(",")
+            my_list = [int(x) for x in l0.split(",")]
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
@@ -189,6 +196,10 @@ count = 1
 half_hour = False
 run_cmd = True
 print_cmd = True
+time_array = []
+minute_delta = 0
+mday = -1
+wkday = -1
 
 while count < len(sys.argv):
     arg = sys.argv[count]
@@ -208,7 +219,12 @@ while count < len(sys.argv):
     elif arg == 'q':
         unlock_lock_file()
         queue_run = 1
-        exit()
+    elif is_time(arg):
+        time_array = [int(q) for q in arg.split(":")]
+    elif arg[0] == 'm':
+        mday = int(arg[1:])
+    elif arg[0] == 'w':
+        wkday = int(arg[1:])
     elif arg == '?':
         usage()
         exit()
@@ -218,20 +234,23 @@ while count < len(sys.argv):
         exit()
     count += 1
 
-minute_delta = 0
-n = datetime.datetime.now()-datetime.timedelta(minutes=minute_delta)
-if minute_delta: print("WARNING shifting", minute_delta, "back")
-time_index = n.hour * 4 + (n.minute * hour_parts) // 60
+n = datetime.datetime.now()
 
-wkday = n.weekday()
-mday = n.day
+if len(time_array):
+    time_index = time_array[0] * hour_parts + (time_array[1] * hour_parts) // 60
+else:
+    n -= datetime.timedelta(minutes=minute_delta)
+    if minute_delta: print("WARNING shifting", minute_delta, "back" if minute_delta < 0 else "forward")
+    time_index = n.hour * 4 + (n.minute * hour_parts) // 60
+
+if mday != -1: mday = n.day
+if wkday != -1: wkday = n.weekday()
 
 if file_lock():
     f = open(queue_file, "a")
     string_to_write = "{:d},{:d},{:d}".format(time_index,wkday,mday)
     f.write(string_to_write + "\n")
     print("Wrote", string_to_write, "to", queue_file, "since it is locked.")
-    exit()
 
 read_hourly_check(check_file)
 read_hourly_check(check_private)
