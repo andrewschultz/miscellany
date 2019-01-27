@@ -14,6 +14,7 @@
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
 
+import sys
 import os
 import datetime
 import re
@@ -22,13 +23,16 @@ from collections import defaultdict
 
 hour_parts = 4
 
-of_week = defaultdict(bool)
-of_day = defaultdict(lambda: defaultdict(bool))
-of_month = defaultdict(lambda: defaultdict(bool))
+of_day = defaultdict(str)
+of_week = defaultdict(lambda: defaultdict(str))
+of_month = defaultdict(lambda: defaultdict(str))
 
 check_file  = "c:\\writing\\scripts\\hrcheck.txt";
 check_private = "c:\\writing\\scripts\\hrcheckp.txt";
 xtra_file   = "c:\\writing\\scripts\\hrcheckx.txt";
+
+lock_file   = "c:\\writing\\scripts\\hrchecklock.txt";
+queue_file   = "c:\\writing\\scripts\\hrcheckqueue.txt";
 
 code   = "c:\\writing\\scripts\\hrcheck.py";
 
@@ -50,30 +54,48 @@ def garbage_collect(x):
     y = re.sub("^\\\\", "", x) # stuff that needs to go first or last
     return y
 
+def my_time(x):
+    hr = { 'h': 2, 'p': 3, 'b': 1, 't': 0 }
+    for q in hr:
+        if x[-1] == q:
+            return int(x[:-1]) * 4 + hr[q]
+    return int(x) * 4
+
 def make_time_array(j, k):
     quarter_hour = 0
     my_weekday = 0
     my_monthday = 0
+    monthday_array = []
+    weekday_array = []
+    day_array = []
     j = garbage_collect(j)
-    if j[-1] == 'h':
-        j = j[:-1]
-        quarter_hour = 2
-    elif j[-1] == 'p':
-        j = j[:-1]
-        quarter_hour = 3
-    elif j[-1] == 'b':
-        j = j[:-1]
-        quarter_hour = 1
-    elif j[-1] == 't':
-        j = j[:-1]
-        quarter_hour = 0
-    j2 = int(j) * 4 + quarter_hour
-    print("Adding to", j2)
-    q = len(of_day[j2].keys())
-    of_day[j2][k] = q + 1
+    slash_array = j.split("/")
+    kn = k + "\n"
+    for q in slash_array:
+        if q.startswith("m="):
+            monthday_array = q[2:].split(",")
+        elif q.startswith("d="):
+            weekday_array = q[2:].split(",")
+        else:
+            hour_array = [my_time(x) for x in q.split(",")]
+    if len(monthday_array):
+        for m in monthday_array:
+            for h in hour_array:
+                print("Month/hour adding", m, h)
+                of_month[h][m] += kn
+    if len(weekday_array):
+        for w in weekday_array:
+            for h in hour_array:
+                print("Week/hour adding", w, h)
+                of_week[h][w] += kn
+    if not len(monthday_array) and not len(weekday_array):
+        for h in hour_array:
+            of_day[h] += kn
     return
 
 def read_hourly_check(a):
+    old_line = ""
+    old_cmd = ""
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
@@ -92,29 +114,98 @@ def read_hourly_check(a):
             if len(a1) > 2:
                 if show_warnings: print("WARNING too many variables, can't yet parse line {:d}:\n    {:s}".format(line_count, line))
                 continue
-            a2 = a1[0].split(",")
-            a3 = a1[-1].split("\t")
-            for x in a2:
-                for y in a3:
-                    make_time_array(x, y)
+            a3 = re.sub("\t", "\n", a1[-1])
+            make_time_array(a1[0], a3)
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
-old_line = ""
-old_cmd = ""
+def carve_up(q, msg):
+    ary = q.strip().split("\n")
+    for x in ary:
+        if not x: continue
+        print(msg, x)
+        # os.system(x)
 
-n = datetime.datetime.now() # -datetime.timedelta(minutes=-16)
+def see_what_to_run(ti, wd, md):
+    carve_up(of_day[ti], "daily run on")
+    carve_up(of_week[ti][wd], "weekly run on")
+    carve_up(of_month[ti][md], "monthly run on")
+
+def file_lock():
+    if not os.path.exists(lock_file): return False
+    with open(lock_file) as file:
+        for line in file:
+            if line.startswith("locked"): return True
+    return False
+
+def write_lock_file():
+    f = open(lock_file, "w")
+    f.write("locked")
+    f.close()
+
+def unlock_lock_file():
+    f = open(lock_file, "w")
+    f.write("unlocked")
+    f.close()
+
+def run_queue_file():
+    already_done = defaultdict(bool)
+    f = open(queue_file, "r")
+    with open(queue_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
+            l0 = line.lower().strip()
+            if l0 in already_done.keys(): continue
+            already_done[l0] = True
+            my_list = l0.split(",")
+            if len(my_list) != 3:
+                print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
+                continue
+            see_what_to_run(my_list[0], my_list[1], my_list[2])
+    f.close()
+    f = open(queue_file, "w")
+    f.write("#queue file format = (time index),(day of week),(day of month)\n")
+    f.close()
+
+queue_run = 0
+count = 1
+
+while count < len(sys.argv):
+    arg = sys.argv[count]
+    if arg == 'l':
+        write_lock_file()
+        exit()
+    elif arg == 'u':
+        unlock_lock_file()
+        exit()
+    elif arg == 'q':
+        unlock_lock_file()
+        queue_run = 1
+        exit()
+    else:
+        print("Bad argument", count, arg)
+        exit()
+    count += 1
+
+n = datetime.datetime.now()-datetime.timedelta(minutes=25)
 time_index = n.hour * 4 + (n.minute * hour_parts) // 60
 wkday = n.weekday()
 mday = n.day
 
-print("Time index: {:d} of {:d} Weekday: {:d} Monthday: {:d}".format(time_index,24 * hour_parts,wkday,mday))
+if file_lock():
+    f = open(queue_file, "a")
+    string_to_write = "{:d},{:d},{:d}".format(time_index,wkday,mday)
+    f.write(string_to_write + "\n")
+    print("Wrote", string_to_write, "to", queue_file, "since it is locked.")
+    exit()
 
 read_hourly_check(check_file)
 read_hourly_check(check_private)
 read_hourly_check(xtra_file)
 
-print("Running", time_index)
-for x in of_day[time_index].keys():
-    print(x)
-    os.system(x)
+if queue_run == 1:
+    run_queue_file()
+else:
+    print("Running", time_index)
+    see_what_to_run(time_index, wkday, mday)
