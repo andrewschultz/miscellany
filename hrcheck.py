@@ -50,6 +50,13 @@ def last_day_of_month(date):
         return date.replace(day=31)
     return date.replace(month=date.month+1, day=1) - datetime.timedelta(days=1)
 
+def usage():
+    print("=" * 50)
+    print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
+    print("rp/p/r decides whether to print or run current commands")
+    print("l = lock the lockfile, u = unlock the lockfile, q = run the queue file")
+    exit()
+
 def garbage_collect(x):
     y = re.sub("^\\\\", "", x) # stuff that needs to go first or last
     return y
@@ -120,16 +127,25 @@ def read_hourly_check(a):
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
 def carve_up(q, msg):
+    retval = 0
     ary = q.strip().split("\n")
     for x in ary:
         if not x: continue
-        print(msg, x)
-        # os.system(x)
+        if print_cmd: print("***running", msg, x)
+        if run_cmd: os.system(x)
+        retval += 1
+    return retval
 
-def see_what_to_run(ti, wd, md):
-    carve_up(of_day[ti], "daily run on")
-    carve_up(of_week[ti][wd], "weekly run on")
-    carve_up(of_month[ti][md], "monthly run on")
+def see_what_to_run(ti, wd, md, hh):
+    totals = 0
+    totals += carve_up(of_day[ti], "daily run on")
+    totals += carve_up(of_week[ti][wd], "weekly run on")
+    totals += carve_up(of_month[ti][md], "monthly run on")
+    if hh:
+        totals += carve_up(of_day[ti ^ 1], "daily run on")
+        totals += carve_up(of_week[ti ^ 1][wd], "weekly run on")
+        totals += carve_up(of_month[ti ^ 1][md], "monthly run on")
+    print("Ran", totals, "scripts for {:d}h/{:d}w/{:d}m".format(ti,wd,md))
 
 def file_lock():
     if not os.path.exists(lock_file): return False
@@ -138,7 +154,7 @@ def file_lock():
             if line.startswith("locked"): return True
     return False
 
-def write_lock_file():
+def lock_lock_file():
     f = open(lock_file, "w")
     f.write("locked")
     f.close()
@@ -162,7 +178,7 @@ def run_queue_file():
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
-            see_what_to_run(my_list[0], my_list[1], my_list[2])
+            see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
     f.close()
     f = open(queue_file, "w")
     f.write("#queue file format = (time index),(day of week),(day of month)\n")
@@ -170,11 +186,21 @@ def run_queue_file():
 
 queue_run = 0
 count = 1
+half_hour = False
+run_cmd = True
+print_cmd = True
 
 while count < len(sys.argv):
     arg = sys.argv[count]
-    if arg == 'l':
-        write_lock_file()
+    if arg == 'hh':
+        half_hour = True
+    elif arg == 'nh' or arg == 'hn':
+        half_hour = False
+    elif re.search("^[pr]+$", arg):
+        run_cmd = 'r' in arg
+        print_cmd = 'p' in arg
+    elif arg == 'l':
+        lock_lock_file()
         exit()
     elif arg == 'u':
         unlock_lock_file()
@@ -183,13 +209,20 @@ while count < len(sys.argv):
         unlock_lock_file()
         queue_run = 1
         exit()
+    elif arg == '?':
+        usage()
+        exit()
     else:
         print("Bad argument", count, arg)
+        usage()
         exit()
     count += 1
 
-n = datetime.datetime.now()-datetime.timedelta(minutes=25)
+minute_delta = 0
+n = datetime.datetime.now()-datetime.timedelta(minutes=minute_delta)
+if minute_delta: print("WARNING shifting", minute_delta, "back")
 time_index = n.hour * 4 + (n.minute * hour_parts) // 60
+
 wkday = n.weekday()
 mday = n.day
 
@@ -208,4 +241,4 @@ if queue_run == 1:
     run_queue_file()
 else:
     print("Running", time_index)
-    see_what_to_run(time_index, wkday, mday)
+    see_what_to_run(time_index, wkday, mday, half_hour)
