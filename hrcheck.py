@@ -54,7 +54,7 @@ def is_time(t):
 def last_day_of_month(date):
     if date.month == 12:
         return date.replace(day=31)
-    return date.replace(month=date.month+1, day=1) - datetime.timedelta(days=1)
+    return (date.replace(month=date.month+1, day=1) - datetime.timedelta(days=1)).day
 
 def usage():
     print("=" * 50)
@@ -133,6 +133,7 @@ def read_hourly_check(a):
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
 def carve_up(q, msg):
+    if not q: return 0
     retval = 0
     ary = q.strip().split("\n")
     for x in ary:
@@ -148,10 +149,12 @@ def see_what_to_run(ti, wd, md, hh):
     totals += carve_up(of_day[ti], "daily run on")
     totals += carve_up(of_week[ti][wd], "weekly run on")
     totals += carve_up(of_month[ti][md], "monthly run on")
+    totals += carve_up(of_month[ti][md-last_of_month+1], "monthly run on")
     if hh:
         totals += carve_up(of_day[ti ^ 1], "daily run on")
         totals += carve_up(of_week[ti ^ 1][wd], "weekly run on")
         totals += carve_up(of_month[ti ^ 1][md], "monthly run on")
+        totals += carve_up(of_month[ti ^ 1][md-last_of_month+1], "monthly run on")
     print("Ran", totals, "scripts for {:d}h/{:d}w/{:d}m".format(ti,wd,md))
 
 def file_lock():
@@ -243,8 +246,10 @@ else:
     if minute_delta: print("WARNING shifting", minute_delta, "back" if minute_delta < 0 else "forward")
     time_index = n.hour * 4 + (n.minute * hour_parts) // 60
 
-if mday != -1: mday = n.day
-if wkday != -1: wkday = n.weekday()
+if mday == -1: mday = n.day
+if wkday == -1: wkday = n.weekday()
+
+last_of_month = last_day_of_month(n)
 
 if file_lock():
     f = open(queue_file, "a")
