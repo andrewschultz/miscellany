@@ -45,9 +45,11 @@ show_warnings = False
 
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
-def is_time(t):
+def is_time(t, bail = False):
     x = t.count(":")
-    if x != 1: sys.exit("Time must have 1 colon")
+    if x != 1:
+        if bail: sys.exit("Time must have 1 colon")
+        return False
     y = t.split(":")
     return y[0].isdigit() and y[1].isdigit()
 
@@ -94,16 +96,16 @@ def make_time_array(j, k):
     if len(monthday_array):
         for m in monthday_array:
             for h in hour_array:
-                # print("Month/hour adding", m, h)
-                of_month[h][m] += kn
+                #print("Monthday/hour adding", m, h)
+                of_month[int(h)][int(m)] += kn
     if len(weekday_array):
         for w in weekday_array:
             for h in hour_array:
-                # print("Week/hour adding", w, h)
-                of_week[h][w] += kn
+                # print("Weekday/hour adding", w, h)
+                of_week[int(h)][int(w)] += kn
     if not len(monthday_array) and not len(weekday_array):
         for h in hour_array:
-            of_day[h] += kn
+            of_day[int(h)] += kn
     return
 
 def read_hourly_check(a):
@@ -145,6 +147,7 @@ def carve_up(q, msg):
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
+    print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
     totals = 0
     totals += carve_up(of_day[ti], "daily run on")
     totals += carve_up(of_week[ti][wd], "weekly run on")
@@ -206,6 +209,8 @@ wkday = -1
 
 while count < len(sys.argv):
     arg = sys.argv[count]
+    if arg[0] == '-' and not arg[1:].isdigit():
+        arg = arg[1:]
     if arg == 'hh':
         half_hour = True
     elif arg == 'nh' or arg == 'hn':
@@ -222,12 +227,12 @@ while count < len(sys.argv):
     elif arg == 'q':
         unlock_lock_file()
         queue_run = 1
-    elif is_time(arg):
-        time_array = [int(q) for q in arg.split(":")]
     elif arg[0] == 'm':
         mday = int(arg[1:])
     elif arg[0] == 'w':
         wkday = int(arg[1:])
+    elif is_time(arg):
+        time_array = [int(q) for q in arg.split(":")]
     elif arg == '?':
         usage()
         exit()
