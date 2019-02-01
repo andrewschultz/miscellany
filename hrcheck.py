@@ -6,10 +6,13 @@
 #
 #example of one line:
 #
-#11|FFX "http://www.thefreedictionary.com"
+#11|http://www.thefreedictionary.com
 #
-#Weekly thing
-#5|8|FFX "http://btpowerhouse.com"
+#Twice-weekly thing, half past noon
+#d2,5/12h|http://www.ebay.com
+#
+#Twice-monthly thing
+#m2,17/12|http://www.discovercard.com
 #
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
@@ -24,6 +27,7 @@ from collections import defaultdict
 hour_parts = 4
 
 of_day = defaultdict(str)
+of_neg_day = defaultdict(str)
 of_week = defaultdict(lambda: defaultdict(str))
 of_month = defaultdict(lambda: defaultdict(str))
 
@@ -70,6 +74,7 @@ def garbage_collect(x):
     return y
 
 def my_time(x):
+    if x[0] == '-': return int(x)
     hr = { 'h': 2, 'p': 3, 'b': 1, 't': 0 }
     for q in hr:
         if x[-1] == q:
@@ -105,7 +110,9 @@ def make_time_array(j, k):
                 of_week[int(h)][int(w)] += kn
     if not len(monthday_array) and not len(weekday_array):
         for h in hour_array:
-            of_day[int(h)] += kn
+            hi = int(h)
+            if hi >= 0: of_day[int(h)] += kn
+            else: of_neg_day[-hi] += kn
     return
 
 def read_hourly_check(a):
@@ -121,7 +128,7 @@ def read_hourly_check(a):
             if "|" not in line:
                 if show_warnings: print("WARNING odd line {:d}:\n    {:s}".format(line_count, line.lower().strip()))
                 continue
-            line = line.lower().strip()
+            line = line.strip()
             if line[0] == '"':
                 line = old_cmd + line[1:]
                 print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, a, line.strip()))
@@ -130,25 +137,38 @@ def read_hourly_check(a):
                 if show_warnings: print("WARNING too many variables, can't yet parse line {:d}:\n    {:s}".format(line_count, line))
                 continue
             a3 = re.sub("\t", "\n", a1[-1])
-            make_time_array(a1[0], a3)
+            make_time_array(a1[0].lower(), a3)
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
+
+def check_print_run(x, msg):
+    if not x: return 0
+    if x.startswith("http"): x = "start " + x
+    if print_cmd: print("***running", msg, x)
+    if run_cmd: os.system(x)
+    return 1
 
 def carve_up(q, msg):
     if not q: return 0
     retval = 0
     ary = q.strip().split("\n")
     for x in ary:
-        if not x: continue
-        if x.startswith("http"): x = "start " + x
-        if print_cmd: print("***running", msg, x)
-        if run_cmd: os.system(x)
-        retval += 1
+        retval += check_print_run(x, msg)
+    return retval
+
+def carve_neg(ti):
+    retval = 0
+    for q in of_neg_day.keys():
+        if ti % q == 0:
+            negary = of_neg_day[q].split("\n")
+            for q2 in negary:
+                retval += check_print_run(q2, "every-x-hours {:d} units".format(ti))
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
-    print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
+    # print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
     totals = 0
+    totals += carve_neg(ti)
     totals += carve_up(of_day[ti], "daily run on")
     totals += carve_up(of_week[ti][wd], "weekly run on")
     totals += carve_up(of_month[ti][md], "monthly run on")
