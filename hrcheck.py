@@ -188,14 +188,28 @@ def file_lock():
     return False
 
 def lock_lock_file():
+    if os.path.exists(lock_file):
+        with open(lock_file) as file:
+            for line in file:
+                if line.strip().lower() == 'locked':
+                    print(lock_file, "already locked")
+                    return
     f = open(lock_file, "w")
     f.write("locked")
     f.close()
+    print("Locked", lock_file)
 
 def unlock_lock_file():
+    if os.path.exists(lock_file):
+        with open(lock_file) as file:
+            for line in file:
+                if line.strip().lower() == 'unlocked':
+                    print(lock_file, "already unlocked")
+                    return
     f = open(lock_file, "w")
     f.write("unlocked")
     f.close()
+    print("Unlocked", lock_file)
 
 def run_queue_file():
     already_done = defaultdict(bool)
@@ -241,7 +255,7 @@ while count < len(sys.argv):
     elif arg == 'l':
         lock_lock_file()
         exit()
-    elif arg == 'u':
+    elif arg == 'u' or arg == 'ul' or arg == 'lu':
         unlock_lock_file()
         exit()
     elif arg == 'q':
