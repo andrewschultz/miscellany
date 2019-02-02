@@ -162,7 +162,7 @@ def carve_neg(ti):
         if ti % q == 0:
             negary = of_neg_day[q].split("\n")
             for q2 in negary:
-                retval += check_print_run(q2, "every-x-hours {:d} units".format(ti))
+                retval += check_print_run(q2, "every-x-hours {:d} {:d}-per-hour units".format(q, hour_parts))
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
