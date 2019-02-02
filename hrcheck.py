@@ -21,6 +21,9 @@ import sys
 import os
 import datetime
 import re
+import calendar
+
+dupes = ['', 's']
 
 from collections import defaultdict
 
@@ -66,7 +69,7 @@ def usage():
     print("=" * 50)
     print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
     print("rp/p/r decides whether to print or run current commands")
-    print("l = lock the lockfile, u = unlock the lockfile, q = run the queue file")
+    print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue")
     exit()
 
 def garbage_collect(x):
@@ -180,6 +183,30 @@ def see_what_to_run(ti, wd, md, hh):
         totals += carve_up(of_month[ti ^ 1][md-last_of_month+1], "monthly run on")
     print("Ran", totals, "scripts for {:d}h/{:d}w/{:d}m".format(ti,wd,md))
 
+def list_queue():
+    already_done = defaultdict(bool)
+    got_any = False
+    total_dupes = 0
+    with open(queue_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            l = line.strip()
+            if l in already_done:
+                total_dupes += 1
+                continue
+            already_done[l] = True
+            if l.startswith(";"): break
+            if l.startswith("#"): continue
+            try:
+                l0 = [int(q) for q in l.split(",")]
+                print("Time={:d}:{:02d} Day of week={:s} Day of month={:d}".format(l0[0]//4, 15*(l0[0] % 4), calendar.day_name[l0[1]], l0[2]))
+                got_any = True
+            except:
+                print("Bad line", line_count, "needs #,#,#, has", l)
+    if not got_any: print("Nothing in the queue.")
+    if total_dupes:
+        print(len(already_done), "duplicate time" + dupes[not len(already_done)], total_dupes, "total duplicate line" + dupes[not total_dupes])
+    exit()
+
 def file_lock():
     if not os.path.exists(lock_file): return False
     with open(lock_file) as file:
@@ -187,8 +214,8 @@ def file_lock():
             if line.startswith("locked"): return True
     return False
 
-def lock_lock_file():
-    if os.path.exists(lock_file):
+def lock_lock_file(print_warning = True):
+    if os.path.exists(lock_file) and print_warning:
         with open(lock_file) as file:
             for line in file:
                 if line.strip().lower() == 'locked':
@@ -199,8 +226,8 @@ def lock_lock_file():
     f.close()
     print("Locked", lock_file)
 
-def unlock_lock_file():
-    if os.path.exists(lock_file):
+def unlock_lock_file(print_warning = True):
+    if os.path.exists(lock_file and print_warning):
         with open(lock_file) as file:
             for line in file:
                 if line.strip().lower() == 'unlocked':
@@ -259,8 +286,11 @@ while count < len(sys.argv):
         unlock_lock_file()
         exit()
     elif arg == 'q':
-        unlock_lock_file()
+        unlock_lock_file(False)
         queue_run = 1
+    elif arg == 'ql' or arg == 'lq':
+        list_queue()
+        exit()
     elif arg[0] == 'm':
         mday = int(arg[1:])
     elif arg[0] == 'w':
@@ -295,6 +325,7 @@ if file_lock():
     string_to_write = "{:d},{:d},{:d}".format(time_index,wkday,mday)
     f.write(string_to_write + "\n")
     print("Wrote", string_to_write, "to", queue_file, "since it is locked.")
+    exit()
 
 read_hourly_check(check_file)
 read_hourly_check(check_private)
