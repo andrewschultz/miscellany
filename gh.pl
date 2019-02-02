@@ -128,7 +128,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?es$/ && do {
       readReplace();
-      print "Editing shortcuts listed below:\n";
+      print "Editing shortcuts listed below (from $ghreg, launch with -er):\n";
       for my $q ( sort keys %repls ) { print "$q -> $repls{$q}\n"; }
 
       exit;
@@ -695,6 +695,7 @@ sub processTerms {
                       `wm \"$fromFile\" \"$fileTo\"`;
                     }
                     else {
+                      print("(identical) ") if compare( $fromFile, $fileTo );
                       print(
 "$fromFile is before $fileTo, skipping. Use -it to overlook this, -tr to reverse copy, -bkc to compare.\n"
                       );
@@ -1157,7 +1158,7 @@ sub rehash {
   for my $repl ( sort keys %repls ) {
 
     #print "$repl $repls{$repl}\n";
-    $temp =~ s/\$$repl/$repls{$repl}/g;
+    $temp =~ s/\$$repl\b/$repls{$repl}/g;
   }
   for my $repl ( sort keys %repl2 ) {
 

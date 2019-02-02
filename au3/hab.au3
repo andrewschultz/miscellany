@@ -196,7 +196,7 @@ While $cmdCount <= $CmdLine[0]
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'fc' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "Specify a positive number after -f(*)." & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "fs = fish slow (only 1 click, for casting spells)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class")
+	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "fs = fish slow (only 1 click, for casting spells)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
 	  Exit
     EndIf
 	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'fs', $myCmd <> 'fc', $myCmd == 'fs')
@@ -337,12 +337,12 @@ Func Usage($questionmark, $badCmd = "")
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
-  "-i = intelligence gear,", _
-  "-iw = initial wait,", _
+  "-i = intelligence gear", _
+  "-iw = initial wait", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
-  "-q = quick click in upper right", _
+  "-q = quick click in upper right (to get rid of gain reports)", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-s or -= = gives starting MP so you can see final MP as well", _
   "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _

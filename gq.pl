@@ -273,6 +273,8 @@ if ( ( $#runs == -1 ) && ( $#ARGV > 1 ) ) {
 die("Must print either tabbed or untabbed.")
   if ( !$printTabbed && !$printUntabbed );
 
+print "List of project (abbreviation) runs: @runs\n" if ( scalar @runs ) > 0;
+
 processListFile();
 
 my $myrun;
