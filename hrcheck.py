@@ -204,7 +204,7 @@ def list_queue():
                 print("Bad line", line_count, "needs #,#,#, has", l)
     if not got_any: print("Nothing in the queue.")
     if total_dupes:
-        print(len(already_done), "duplicate time" + dupes[not len(already_done)], total_dupes, "total duplicate line" + dupes[not total_dupes])
+        print(len(already_done), "duplicate time" + dupes[not len(already_done)], total_dupes, "additional duplicate line" + dupes[not total_dupes])
     exit()
 
 def file_lock():

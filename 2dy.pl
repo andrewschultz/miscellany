@@ -15,7 +15,8 @@ use warnings;
 my $section = "";
 
 my $absBack = 0;
-my $maxBack = 7;
+my $maxBackToOpen = 100;
+my $maxBackToCreate = 7;
 
 my $printInitSections = 0;    # -ps prints sections on file creation and dies
 
@@ -24,18 +25,22 @@ my $theMinus = 0;             # this is how many days precisely to go back
 my $count     = 0;
 my $filesBack = 1;
 my $backSoFar = 0;
+my $from_batch = 0;
 
 while ( $count <= $#ARGV ) {
   my $arg = lc( $ARGV[$count] );
   $arg =~ s/^-//;
   if    ( $arg =~ /ps/ )       { $printInitSections = 1; }
+  elsif ( $arg eq "frombat" ) { $from_batch = 1; }
   elsif ( $arg =~ /^[0-9]+$/ ) { $filesBack         = $arg; }
   elsif ( $arg =~ /^-+[0-9]+$/ ) { $theMinus = $arg; $theMinus =~ s/^.//; }
-  elsif ( $arg =~ /^m[0-9]+$/ ) { $maxBack = $arg; $maxBack =~ s/^.//; }
+  elsif ( $arg =~ /^m[0-9]+$/ ) { $arg =~ s/^.//; $maxBackToOpen = $maxBackToCreate = $arg; }
+  elsif ( $arg =~ /^mo[0-9]+$/ ) { $arg =~ s/^.//; $maxBackToOpen = $arg; }
+  elsif ( $arg =~ /^mc[0-9]+$/ ) { $arg =~ s/^.//; $maxBackToCreate = $arg; }
   elsif ( $arg =~ /^a[0-9]+$/ ) { $absBack = $arg; $absBack =~ s/^.//; }
   elsif ( $arg =~ /^[a-z]+$/ )  { $section = $arg; }
-  else                          { print("Bad input $arg"); exit(); }
-  print "$arg\n";
+  elsif ( $arg =~ /^(-)?\?$/ )  { usage(); exit(); }
+  else                          { print("Bad input $arg"); usage(); exit(); }
   $count++;
 }
 
@@ -49,9 +54,13 @@ if ($theMinus) {
 }
 elsif ($filesBack) {
   my $lastDailyDone = "";
-  for ( 0 .. $maxBack - 1 ) {
+  for ( 0 .. $maxBackToOpen - 1 ) {
     my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
     my $dailyDone      = "c:/writing/daily/done/" . daysAgo($_);
+	if (($_ == $maxBackToCreate) && (!$backSoFar) && ($filesBack == 1))
+	{
+	  last;
+	}
     if ( -f $dailyCandidate ) {
       $backSoFar++;
       if ( $backSoFar == $filesBack ) {
@@ -67,12 +76,12 @@ elsif ($filesBack) {
   }
   if ($lastDailyDone) {
     print(
-"Could not go $filesBack files back and could not create new file. Only went $backSoFar. Last done file was $lastDailyDone. Expand maxBack from $maxBack to see more.\n"
+"Could not go $filesBack files back and could not create new file. Only went $backSoFar. Last done file was $lastDailyDone. Expand maxBack from $maxBackToOpen to see more.\n"
     );
     exit;
   }
   else {
-    print("Found nothing. I'm going to create and open a new daily file.\n");
+    print("I found nothing $filesBack files back within $maxBackToOpen days. There was no done file in the last $maxBackToOpen days, either.\n");
   }
 }
 else {
@@ -172,4 +181,13 @@ sub daysAgo {
   ) = localtime( time - 86400 * $_[0] );
   return
     sprintf( "%d%02d%02d.txt", $yearOffset + 1900, $month + 1, $dayOfMonth );
+}
+
+sub usage
+{
+  print("USAGE FOR " . ( $from_batch ? "l.bat" : "2dy.pl") . "\n");
+  print("=" x 50 . "\n");
+  print("What you probably want to use is (l) to go back to the most recent daily file or create a new one.\n");
+  print("The next most likely thing is to use (l 2) to go back to the 2nd most recent thing.\n");
+  exit();
 }
