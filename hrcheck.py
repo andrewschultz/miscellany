@@ -22,11 +22,13 @@ import os
 import datetime
 import re
 import calendar
+import time
 
 dupes = ['', 's']
 
 from collections import defaultdict
 
+init_delay = 0
 hour_parts = 4
 
 of_day = defaultdict(str)
@@ -69,7 +71,8 @@ def usage():
     print("=" * 50)
     print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
     print("rp/p/r decides whether to print or run current commands")
-    print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue")
+    print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file")
+    print("id specifies initial delay")
     exit()
 
 def garbage_collect(x):
@@ -169,7 +172,7 @@ def carve_neg(ti):
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
-    # print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
+    print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
     totals = 0
     totals += carve_neg(ti)
     totals += carve_up(of_day[ti], "daily run on")
@@ -239,6 +242,7 @@ def unlock_lock_file(print_warning = True):
     print("Unlocked", lock_file)
 
 def run_queue_file():
+    got_one = False
     already_done = defaultdict(bool)
     f = open(queue_file, "r")
     with open(queue_file) as file:
@@ -252,13 +256,20 @@ def run_queue_file():
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
+            got_one = True
             see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
     f.close()
-    f = open(queue_file, "w")
-    f.write("#queue file format = (time index),(day of week),(day of month)\n")
-    f.close()
+    if not got_one:
+        print("Didn't find anything to run.")
+        return got_one
+    if not queue_keep:
+        f = open(queue_file, "w")
+        f.write("#queue file format = (time index),(day of week),(day of month)\n")
+        f.close()
+    return got_one
 
 queue_run = 0
+queue_keep = False
 count = 1
 half_hour = False
 run_cmd = True
@@ -288,9 +299,18 @@ while count < len(sys.argv):
     elif arg == 'q':
         unlock_lock_file(False)
         queue_run = 1
+    elif arg == 'qk' or arg == 'kq':
+        unlock_lock_file(False)
+        queue_run = 1
+        queue_keep = True
     elif arg == 'ql' or arg == 'lq':
         list_queue()
         exit()
+    elif arg == 'qe':
+        os.system(queue_file)
+        exit()
+    elif arg[:2] == 'id':
+        init_delay = int(arg[2:])
     elif arg[0] == 'm':
         mday = int(arg[1:])
     elif arg[0] == 'w':
@@ -330,6 +350,8 @@ if file_lock():
 read_hourly_check(check_file)
 read_hourly_check(check_private)
 read_hourly_check(xtra_file)
+
+if init_delay: time.sleep(init_delay)
 
 if queue_run == 1:
     run_queue_file()

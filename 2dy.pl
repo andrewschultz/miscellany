@@ -74,7 +74,7 @@ elsif ($filesBack) {
     $lastDailyDone = $dailyCandidate
       if ( -f $dailyDone ) && ( !$lastDailyDone );
   }
-  if ($lastDailyDone) {
+  if ($lastDailyDone && ($filesBack > 1)) {
     print(
 "Could not go $filesBack files back and could not create new file. Only went $backSoFar. Last done file was $lastDailyDone. Expand maxBack from $maxBackToOpen to see more.\n"
     );
