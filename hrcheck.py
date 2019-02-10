@@ -71,7 +71,7 @@ def usage():
     print("=" * 50)
     print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
     print("rp/p/r decides whether to print or run current commands")
-    print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file")
+    print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file, qm = max to run in queue")
     print("id specifies initial delay")
     exit()
 
@@ -244,6 +244,7 @@ def unlock_lock_file(print_warning = True):
 def run_queue_file():
     got_one = False
     already_done = defaultdict(bool)
+    still_in_queue = defaultdict(bool)
     f = open(queue_file, "r")
     with open(queue_file) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -251,11 +252,14 @@ def run_queue_file():
             if line.startswith(";"): break
             l0 = line.lower().strip()
             if l0 in already_done.keys(): continue
-            already_done[l0] = True
-            my_list = [int(x) for x in l0.split(",")]
+            if queue_max and len(already_done) >= queue_max:
+                still_in_queue[l0] = True
+                continue
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
+            already_done[l0] = True
+            my_list = [int(x) for x in l0.split(",")]
             got_one = True
             see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
     f.close()
@@ -265,6 +269,8 @@ def run_queue_file():
     if not queue_keep:
         f = open(queue_file, "w")
         f.write("#queue file format = (time index),(day of week),(day of month)\n")
+        for j in still_in_queue.sorted():
+            f.write("{:s}\n".format(j))
         f.close()
     return got_one
 
@@ -279,6 +285,8 @@ time_array = []
 minute_delta = 0
 mday = -1
 wkday = -1
+
+queue_max = 0
 
 while count < len(sys.argv):
     arg = sys.argv[count]
@@ -300,6 +308,8 @@ while count < len(sys.argv):
     elif arg == 'q':
         unlock_lock_file(False)
         queue_run = 1
+    elif arg[:2] == 'mq' or arg[:2] == 'qm':
+        queue_max = int(arg[2:])
     elif arg == 'qk' or arg == 'kq':
         unlock_lock_file(False)
         queue_run = 1
