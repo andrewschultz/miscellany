@@ -4,10 +4,13 @@
 #
 # usage: ytc (id) (s/e/es/es)
 
+import ytkey
 import re
 import sys
 import os
 from youtube_transcript_api import YouTubeTranscriptApi
+
+DEVELOPER_KEY = ytkey.my_dev_key()
 
 video_id = "https://www.youtube.com/watch?v=gcH6tFugYfo"
 
@@ -54,12 +57,24 @@ while count < len(sys.argv):
 
 video_id = re.sub(".*=", "", video_id)
 
-q = YouTubeTranscriptApi.get_transcript(video_id)
+from apiclient.discovery import build
+
+youtube = build('youtube', 'v3', developerKey=DEVELOPER_KEY)
+
+ids = video_id
+results = youtube.videos().list(id=ids, part='snippet').execute()
+
+title = ""
+
+for result in results.get('items', []):
+    title = "Title: " + result['snippet']['title']
 
 if not video_id: sys.exit("Specify video id.")
 if not (print_output or write_output): sys.exit("Need to specify print or write output on. To launch, just use -jl.")
 
-line_string = "Transcript for YouTube video at https://www.youtube.com/watch?v={:s}\n\n".format(video_id)
+q = YouTubeTranscriptApi.get_transcript(video_id)
+
+line_string = "Transcript for YouTube video at https://www.youtube.com/watch?v={:s}\n\n{:s}\n\n".format(video_id, title)
 
 for q0 in q:
     a = q0['text']
