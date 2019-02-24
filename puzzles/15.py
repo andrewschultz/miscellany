@@ -13,6 +13,9 @@ class peg_hole:
         self.is_full = is_full
         self.reset_val = is_full
 
+def valid_distance(board, p1, p2):
+    return True
+
 def read_15_file():
     board = []
     with open(read_file) as file:
@@ -20,6 +23,13 @@ def read_15_file():
             l0 = line.strip().split(",")
             board.append(peg_hole(int(l0[0]), int(l0[1]), int(l0[2]), l0[3] == 'y'))
     return board
+
+def midpoint(board, p1, p2):
+    x = (board[p1].x + board[p2].x) / 2
+    y = (board[p1].y + board[p2].y) / 2
+    for q in range(0, len(board)):
+        if board[q].x == x and board[q].y == y: return q
+    return -1
 
 def print_board(board):
     last_row = -1
@@ -42,7 +52,7 @@ def print_board(board):
 
 def reset_board(board, reprint_board = False):
     for x in range(0, len(board)):
-        x.is_full = x.reset_val
+        board[x].is_full = board[x].reset_val
     if reprint_board: print_board(board)
     return board
 
@@ -54,7 +64,7 @@ while True:
     my_move = input("Your move:")
     if my_move == 'q': exit()
     if my_move == 'r':
-        board = reset_board(board, reprint=True)
+        board = reset_board(board, reprint_board=True)
         continue
     j = my_move.split(",")
     if len(j) < 2:
@@ -65,32 +75,38 @@ while True:
         continue
     if not j[0].isdigit() or not j[1].isdigit():
         print("Each argument must be a digit.")
+    js = int(j[0])
+    je = int(j[1])
     any_fatal = False
     mr = len(board)
     for q in range (0, 2):
-        if j(q) < 1:
-            print(q, j[q], "must be between 1 and", mr)
+        if js < 1 or je < 1:
+            print(q, js, je, "must be between 1 and", mr)
             any_fatal = True
             break
-        if j(q) > mr:
-            print(q, j[q], "must be between 1 and", mr)
+        if js > mr or je > mr:
+            print(q, js, je, "must be between 1 and", mr)
             any_fatal = True
             break
     if any_fatal: continue
-    if not valid_distance(board, j[0], j[1]):
-        print("No valid distance between", j[0], "and", j[1])
+    if not valid_distance(board, js-1, je-1):
+        print("No valid distance between", js, "and", je)
         continue
-    if not board[j[0]-1].is_full:
-        print("Tried to move from empty peg", j[0])
+    if not board[js-1].is_full:
+        print("Tried to move from empty peg", js)
         continue
-    if board[j[0]-1].is_full:
-        print("Tried to move to full peg", j[0])
+    if board[je-1].is_full:
+        print("Tried to move to full peg", je)
         continue
-    mp = midpoint(board, j[0], j[1])
+    mp = midpoint(board, js-1, je-1)
+    if mp == -1:
+        print("No clear midpoint between", js, "and", je)
+        continue
     if not board[mp].is_full:
-        print("Tried to jump over empty peg", j[0])
+        print("Tried to jump over empty peg", js)
         continue
     print("Yay valid move")
-    board[j[0]-1].is_full = False
-    board[j[1]-1].is_full = True
-    board[mp] = False
+    board[js-1].is_full = False
+    board[je-1].is_full = True
+    board[mp].is_full = False
+    print_board(board)
