@@ -51,10 +51,14 @@ def print_board(board):
     return
 
 def reset_board(board, reprint_board = False):
+    global moves
+    moves = []
     for x in range(0, len(board)):
         board[x].is_full = board[x].reset_val
     if reprint_board: print_board(board)
     return board
+
+moves = []
 
 board = read_15_file()
 
@@ -66,12 +70,18 @@ while True:
     if my_move == 'r':
         board = reset_board(board, reprint_board=True)
         continue
+    if my_move == 'm':
+        if length(moves): print("Moves:", ' / '.join(moves))
+        else: print("No moves yet.")
+        continue
+    if my_move == '?':
+        print("q=exit r=reset board m=move list #,#=move")
     j = my_move.split(",")
     if len(j) < 2:
-        print("Need from and to")
+        print("Need from and to. ? for commands.")
         continue
     if len(j) > 2:
-        print("Need only two numbers")
+        print("Need only two numbers. ? for commands.")
         continue
     if not j[0].isdigit() or not j[1].isdigit():
         print("Each argument must be a digit.")
@@ -109,4 +119,6 @@ while True:
     board[js-1].is_full = False
     board[je-1].is_full = True
     board[mp].is_full = False
+    moves.append(j)
     print_board(board)
+    if len(moves) == 14: print("YOU WIN! YAY!")
