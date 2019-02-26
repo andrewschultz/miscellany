@@ -20,6 +20,8 @@ def read_15_file():
     board = []
     with open(read_file) as file:
         for line in file:
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
             l0 = line.strip().split(",")
             board.append(peg_hole(int(l0[0]), int(l0[1]), int(l0[2]), l0[3] == 'y'))
     return board
@@ -58,6 +60,46 @@ def reset_board(board, reprint_board = False):
     if reprint_board: print_board(board)
     return board
 
+def valid_range(x, y):
+    x1 = int(x)
+    return x1 >= 1 and x1 <= len(board)
+
+def to_move(my_move):
+    j = my_move.split(",")
+    ret_ary = []
+    err_msg = ""
+    if len(j) < 2:
+        if my_move.isdigit() and len(my_move) == 2: # this is a bit hacky. We could do better by trying all splits of an array. But this is what we have.
+            ret_ary = [ int(my_move[0]), int(my_move[1]) ]
+        elif my_move.isdigit() and len(my_move) == 3:
+            q = valid_range(my_move[0:1]) and valid_range(my_move[2])
+            r = valid_range(my_move[0]) and valid_range(my_move[1:2])
+            if q and r:
+                err_msg = "Ambiguous 3-digit command."
+            elif q:
+                ret_ary = [int(my_move[0:1]), int(my_move[2])]
+            elif r:
+                ret_ary = [int(my_move[0]), int(my_move[1:2])]
+            else:
+                err_msg = "Neither possibility (xx-y or x-yy) corresponds to a valid move."
+        elif my_move.isdigit() and len(my_move) == 4:
+            q = valid_range(my_move[0:1]) and valid_range(my_move[2:3])
+            if q:
+                ret_ary = [int(my_move[0:1]), int(my_move[2:3])]
+            else:
+                err_msg = "No xx-yy corresponds to a valid move."
+        elif my_move.isdigit():
+            print("Number commands are acceptable without commas, but I found nothing I could deal with.")
+        else:
+            err_msg = "Need from and to. ? for commands."
+    elif len(j) > 2:
+        err_msg = "Need only two numbers. ? for commands."
+    elif not j[0].isdigit() or not j[1].isdigit():
+        err_msg = "Each argument must be a digit."
+    else:
+        ret_ary = j
+    return(ret_ary, err_msg)
+
 moves = []
 
 board = read_15_file()
@@ -75,16 +117,15 @@ while True:
         else: print("No moves yet.")
         continue
     if my_move == '?':
-        print("q=exit r=reset board m=move list #,#=move")
-    j = my_move.split(",")
-    if len(j) < 2:
-        print("Need from and to. ? for commands.")
+        print("q=quit")
+        print("r=reset board")
+        print("m=move list")
+        print("#,#=move ... ## is possible as well but less reliable.")
         continue
-    if len(j) > 2:
-        print("Need only two numbers. ? for commands.")
+    (j, err_msg) = to_move(my_move)
+    if len(j) == 0:
+        print("ERROR:", err_msg)
         continue
-    if not j[0].isdigit() or not j[1].isdigit():
-        print("Each argument must be a digit.")
     js = int(j[0])
     je = int(j[1])
     any_fatal = False
