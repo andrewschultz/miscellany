@@ -14,7 +14,17 @@ class peg_hole:
         self.reset_val = is_full
 
 def valid_distance(board, p1, p2):
-    return True
+    keep_going = False
+    x_delta = abs(board[p1].x - board[p2].x)
+    y_delta = abs(board[p1].y - board[p2].y)
+    if x_delta == 2 and y_delta == 2: keep_going = True
+    if x_delta == 4 and y_delta == 0: keep_going = False
+    if not keep_going: return False
+    x_avg = (board[p1].x + board[p2].x) / 2
+    y_avg = (board[p1].y + board[p2].y) / 2
+    for q in range(0, len(board)):
+        if board[q].x == x_avg and board[q].y == y_avg: return True
+    return False
 
 def read_15_file():
     board = []
