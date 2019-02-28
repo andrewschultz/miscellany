@@ -3,20 +3,20 @@
 ; clicks the mouse for Habitica for Tools of the Trade
 ; or switches outfits
 ;
-; a = opens armoire (needs #)
-; b = fiery blast (needs position and number)
-; c = open for cron
-; d = adjust delay
-; f = fish for items at end
-; i = intelligence outfit (default for adventuring)
-; m/w = magic/wizard skills
-; o = only click to tasks
-; p = perception outfit
-; q = quick-click upper right side (qd = quick delay)
-; r = repeatedly access habit (needs #)
-; t = Tools of the Trade clicks (needs #, optional delay)
-; te = test
-; x = express (e = equip only, r = reequip only, q = no nag)
+; a    = opens armoire (needs #)
+; b    = fiery blast (needs position and number)
+; c    = open for cron
+; d    = adjust delay
+; f    = fish for items at end
+; i    = intelligence outfit (default for adventuring)
+; m/w  = magic/wizard skills
+; o    = only click to tasks
+; p    = perception outfit
+; q    = quick-click upper right side (qd = quick delay)
+; r    = repeatedly access habit (needs #)
+; t/tt = Tools of the Trade clicks (needs #, optional delay)
+; te   = test
+; x    = express (e = equip only, r = reequip only, q = no nag)
 ;
 
 ; in case I ever want to change default constants
@@ -275,7 +275,7 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay)
     Next
-  Elseif $myCmd == 't' Then ; cast Tools of the Trade X times
+  Elseif $myCmd == 't' or $myCmd == 'tt' Then ; cast Tools of the Trade X times
     $clicks = $nextNum
     ToolsTrade($clicks, False, False)
   ElseIf StringLeft($myCmd, 1) == 'x' Then
@@ -345,7 +345,7 @@ Func Usage($questionmark, $badCmd = "")
   "-q = quick click in upper right (to get rid of gain reports)", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-s or -= = gives starting MP so you can see final MP as well", _
-  "-t (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
+  "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
   "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
   ]
   Local $header = "Bad/missing parameter(s)"

@@ -40,7 +40,7 @@ count = 1
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-': arg = arg[1:]
-    if arg.lower().startswith('http') or re.search(r'[0-9a-zA-Z]{6}', arg): video_id = re.sub("=", "", arg)
+    if arg.lower().startswith('http') or re.search(r'[0-9a-zA-Z]{6}', arg): video_id = re.sub(".*=", "", arg)
     elif arg == 'se' or arg == 'es': flag_start = flag_end = True
     elif arg == 's': flag_start = True
     elif arg == 'e': flag_end = True

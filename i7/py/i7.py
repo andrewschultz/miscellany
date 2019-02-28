@@ -21,6 +21,7 @@ from shutil import copy
 import __main__ as main
 
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
