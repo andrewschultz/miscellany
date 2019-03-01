@@ -97,15 +97,15 @@ carry out montying:
 
 table of monties
 montopic (topic)	on-off	test-title (text)	test-action	topic-as-text (text)
-"exits"	false	"LISTING EXITS"	try-exits rule	"exits"
-"i/inventory"	false	"INVENTORY"	try-inventory rule	"i/inventory"
-"s/smell"	false	"SMELLING"	try-smelling rule	"s/smell"
-"l/listen"	false	"LISTENING"	try-listening rule	"l/listen"
-"sc/score"	false	"SCORING"	try-scoring rule	"sc/score"
-"dir/noway"	false	"GOING NOWHERE"	try-wid rule	"dir/noway"
-"dirs"	false	"GOING BASIC DIRS"	try-dirs rule	"dirs"
-"think"	false	"THINK tracking"	try-think rule	"think"
-"sleep"	false	"SLEEP tracking"	try-sleep rule	"sleep"
+"exit/exits"	false	"LISTING EXITS"	try-exits rule	"exit/exits"
+"i/inv/inventory"	false	"INVENTORY"	try-inventory rule	"i/inv/inventory"
+"s/sm/smell"	false	"SMELLING"	try-smelling rule	"s/sm/smell"
+"l/li/listen"	false	"LISTENING"	try-listening rule	"l/li/listen"
+"sc/sco/score"	false	"SCORING"	try-scoring rule	"sc/sco/score"
+"nodir/noway"	false	"GOING NOWHERE"	try-wid rule	"nodir/noway"
+"dir/dirs"	false	"GOING BASIC DIRS"	try-dirs rule	"dir/dirs"
+"th/think"	false	"THINK tracking"	try-think rule	"th/think"
+"sl/zz/sleep"	false	"SLEEP tracking"	try-sleep rule	"sl/zz/sleep"
 
 hide-headers is a truth state that varies.
 
