@@ -194,12 +194,12 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'fc' or $myCmd == 'fs' Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'fc' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is)" & @CRLF & "fs = fish slow (only 1 click, for casting spells)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
+	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'fs', $myCmd <> 'fc', $myCmd == 'fs')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'fs', $myCmd <> 'fc' and $myCmd <> 'ffs', $myCmd == 'fs')
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -328,39 +328,6 @@ EndIf
 
 ; end main
 ; function(s) below
-
-Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[17] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
-  "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
-  "-b does fiery blast, needs # and positioning", _
-  "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
-  "-ca closes the tab after", _
-  "-d adjusts delay, though it needs to come before other commands", _
-  "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
-  "-i = intelligence gear", _
-  "-iw = initial wait", _
-  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
-  "-o = only click tasks: test option", _
-  "-p = perception gear", _
-  "-q = quick click in upper right (to get rid of gain reports)", _
-  "-r = repeated habit on the left column, needs # and positioning", _
-  "-s or -= = gives starting MP so you can see final MP as well", _
-  "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
-  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
-  ]
-  Local $header = "Bad/missing parameter(s)"
-
-  if $questionmark Then
-    $header = "HAB.AU3 command line argument usage popup box"
-  EndIf
-
-  if $badCmd Then
-    $header = $header & " " & $badCmd
-  EndIf
-
-  MOK($header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
-  Exit
-EndFunc
 
 Func PickItem($x, $y)
   ; this varies based on screen size
@@ -879,4 +846,37 @@ Func verify_first_entry($var_array, $first_entry, $how_many_entries)
 	Exit
   EndIf
   return True
+EndFunc
+
+Func Usage($questionmark, $badCmd = "")
+  Local $usgAry[17] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
+  "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
+  "-b does fiery blast, needs # and positioning", _
+  "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
+  "-ca closes the tab after", _
+  "-d adjusts delay, though it needs to come before other commands", _
+  "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
+  "-i = intelligence gear", _
+  "-iw = initial wait", _
+  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
+  "-o = only click tasks: test option", _
+  "-p = perception gear", _
+  "-q = quick click in upper right (to get rid of gain reports)", _
+  "-r = repeated habit on the left column, needs # and positioning", _
+  "-s or -= = gives starting MP so you can see final MP as well", _
+  "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
+  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
+  ]
+  Local $header = "Bad/missing parameter(s)"
+
+  if $questionmark Then
+    $header = "HAB.AU3 command line argument usage popup box"
+  EndIf
+
+  if $badCmd Then
+    $header = $header & " " & $badCmd
+  EndIf
+
+  MOK($header,  _ArrayToString($usgAry, @CRLF, 0, UBound($usgAry)-1))
+  Exit
 EndFunc
