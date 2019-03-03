@@ -255,11 +255,11 @@ def run_queue_file():
             if queue_max and len(already_done) >= queue_max:
                 still_in_queue[l0] = True
                 continue
+            already_done[l0] = True
+            my_list = [int(x) for x in l0.split(",")]
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
-            already_done[l0] = True
-            my_list = [int(x) for x in l0.split(",")]
             got_one = True
             see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
     f.close()
@@ -308,7 +308,11 @@ while count < len(sys.argv):
     elif arg == 'q':
         unlock_lock_file(False)
         queue_run = 1
+    elif arg[0] == 'q' and arg[1:].isdigit():
+        queue_run = 1
+        queue_max = int(arg[1:])
     elif arg[:2] == 'mq' or arg[:2] == 'qm':
+        queue_run = 1
         queue_max = int(arg[2:])
     elif arg == 'qk' or arg == 'kq':
         unlock_lock_file(False)
