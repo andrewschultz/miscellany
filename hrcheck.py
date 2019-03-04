@@ -171,32 +171,32 @@ def carve_neg(ti):
                 retval += check_print_run(q2, "every-x-hours {:d} {:d}-per-hour units".format(q, hour_parts))
     return retval
 
+def add_to_queue(this_dict, new_cmds):
+    for k in new_cmds.split("\n"):
+        if k not in this:dict: this_dict[k] = True
+    return
+
 def see_what_to_run(ti, wd, md, hh):
     print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
     totals = 0
-    totals += carve_neg(ti)
-    totals += carve_up(of_day[ti], "daily run on")
-    totals += carve_up(of_week[ti][wd], "weekly run on")
-    totals += carve_up(of_month[ti][md], "monthly run on")
-    totals += carve_up(of_month[ti][md-last_of_month+1], "monthly run on")
-    if hh:
-        totals += carve_up(of_day[ti ^ 1], "daily run on")
-        totals += carve_up(of_week[ti ^ 1][wd], "weekly run on")
-        totals += carve_up(of_month[ti ^ 1][md], "monthly run on")
-        totals += carve_up(of_month[ti ^ 1][md-last_of_month+1], "monthly run on")
+    totals += carve_neg(ti ^ hh)
+    totals += carve_up(of_day[ti ^ hh], "daily run on")
+    totals += carve_up(of_week[ti ^ hh][wd], "weekly run on")
+    totals += carve_up(of_month[ti ^ hh][md], "monthly run on")
+    totals += carve_up(of_month[ti ^ hh][md-last_of_month+1], "monthly run on")
     print("Ran", totals, "scripts for {:d}h/{:d}w/{:d}m".format(ti,wd,md))
 
 def list_queue():
-    already_done = defaultdict(bool)
+    hours_processed = defaultdict(bool)
     got_any = False
     total_dupes = 0
     with open(queue_file) as file:
         for (line_count, line) in enumerate(file, 1):
             l = line.strip()
-            if l in already_done:
+            if l in hours_processed:
                 total_dupes += 1
                 continue
-            already_done[l] = True
+            hours_processed[l] = True
             if l.startswith(";"): break
             if l.startswith("#"): continue
             try:
@@ -207,7 +207,7 @@ def list_queue():
                 print("Bad line", line_count, "needs #,#,#, has", l)
     if not got_any: print("Nothing in the queue.")
     if total_dupes:
-        print(len(already_done), "duplicate time" + dupes[not len(already_done)], total_dupes, "additional duplicate line" + dupes[not total_dupes])
+        print(len(hours_processed), "duplicate time" + dupes[not len(hours_processed)], total_dupes, "additional duplicate line" + dupes[not total_dupes])
     exit()
 
 def file_lock():
@@ -243,33 +243,36 @@ def unlock_lock_file(print_warning = True):
 
 def run_queue_file():
     got_one = False
-    already_done = defaultdict(bool)
-    still_in_queue = defaultdict(bool)
+    hours_processed = defaultdict(bool)
+    triples_for_later = defaultdict(bool)
     f = open(queue_file, "r")
     with open(queue_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
             l0 = line.lower().strip()
-            if l0 in already_done.keys(): continue
-            if queue_max and len(already_done) >= queue_max:
-                still_in_queue[l0] = True
+            lhr = l0.split(",")[0]
+            if lhr in hours_processed.keys(): continue
+            if queue_max and len(hours_processed) >= queue_max:
+                triples_for_later[l0] = True
                 continue
-            already_done[l0] = True
+            hours_processed[lhr] = True
             my_list = [int(x) for x in l0.split(",")]
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
-            got_one = True
             see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
+            got_one = True
     f.close()
     if not got_one:
         print("Didn't find anything to run.")
         return got_one
+    tfl = sorted(triples_for_later, key=lambda x: [int(y) for y in x.split(",")])
+    sys.exit(tfl)
     if not queue_keep:
         f = open(queue_file, "w")
         f.write("#queue file format = (time index),(day of week),(day of month)\n")
-        for j in still_in_queue.sorted():
+        for j in tfl:
             f.write("{:s}\n".format(j))
         f.close()
     return got_one

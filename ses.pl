@@ -11,8 +11,7 @@ use warnings;
 
 #######################constant(s)
 my $sourceFile = __FILE__;
-my $outputFile = $sourceFile;
-$outputFile =~ s/pl$/txt/i;
+my $outputFile = "c:\\writing\\scripts\\ses.txt";
 my $ses    = "c:\\writing\\scripts\\ses.htm";
 my $npSes  = "C:\\Users\\Andrew\\AppData\\Roaming\\Notepad++\\session.xml";
 my $tabMax = 25;
