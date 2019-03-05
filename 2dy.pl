@@ -12,6 +12,12 @@ use i7;
 use strict;
 use warnings;
 
+my (
+    $my_second,     $my_minute,    $my_hour,
+    $my_dayOfMonth, $my_month,     $my_yearOffset,
+    $my_dayOfWeek,  $my_dayOfYear, $my_daylightSavings
+  ) = localtime( time );
+
 my $section = "";
 
 my $absBack = 0;
@@ -57,6 +63,7 @@ elsif ($filesBack) {
   for ( 0 .. $maxBackToOpen - 1 ) {
     my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
     my $dailyDone      = "c:/writing/daily/done/" . daysAgo($_);
+	print($_ . " " . $maxBackToOpen . " " . daysAgo($_) . "\n");
 	if (($_ == $maxBackToCreate) && (!$backSoFar) && ($filesBack == 1))
 	{
 	  last;
@@ -179,6 +186,14 @@ sub daysAgo {
     $dayOfMonth, $month,     $yearOffset,
     $dayOfWeek,  $dayOfYear, $daylightSavings
   ) = localtime( time - 86400 * $_[0] );
+  if ($my_daylightSavings != $daylightSavings) {
+  (
+    $second,     $minute,    $hour,
+    $dayOfMonth, $month,     $yearOffset,
+    $dayOfWeek,  $dayOfYear, $daylightSavings
+  ) = localtime( time - 86400 * $_[0] + 3600 * ($my_daylightSavings - $daylightSavings));
+  }
+  print "$daylightSavings\n";
   return
     sprintf( "%d%02d%02d.txt", $yearOffset + 1900, $month + 1, $dayOfMonth );
 }
