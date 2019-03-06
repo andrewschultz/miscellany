@@ -147,7 +147,7 @@ def read_hourly_check(a):
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
-def check_print_run(x, msg):
+def check_print_run(x, msg="(no message)"):
     if not x: return 0
     if x.startswith("http"): x = "start " + x
     if print_cmd: print("***running", msg, x)
@@ -170,11 +170,6 @@ def carve_neg(ti):
             for q2 in negary:
                 retval += check_print_run(q2, "every-x-hours {:d} {:d}-per-hour units".format(q, hour_parts))
     return retval
-
-def add_to_queue(this_dict, new_cmds):
-    for k in new_cmds.split("\n"):
-        if k not in this:dict: this_dict[k] = True
-    return
 
 def see_what_to_run(ti, wd, md, hh):
     print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
@@ -245,7 +240,7 @@ def run_queue_file():
     got_one = False
     hours_processed = defaultdict(bool)
     triples_for_later = defaultdict(bool)
-    f = open(queue_file, "r")
+    cmd_array = []
     with open(queue_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
@@ -261,14 +256,20 @@ def run_queue_file():
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
                 continue
-            see_what_to_run(my_list[0], my_list[1], my_list[2], half_hour)
+            print("Going with", '/'.join([str(x) for x in my_list]))
+            if of_day[my_list[0]]: cmd_array += of_day[my_list[0]].strip().split("\n")
+            if of_week[my_list[0]][my_list[1]]: cmd_array += of_week[my_list[0]][my_list[1]].strip().split("\n")
+            if of_week[my_list[0]][my_list[1]]: cmd_array += of_week[my_list[0]][my_list[1]].strip().split("\n")
+            if of_month[my_list[0]][my_list[2]]: cmd_array += of_month[my_list[0]][my_list[2]].strip().split("\n")
             got_one = True
-    f.close()
+    if len(cmd_array):
+        cmd_array = [x for i, x in enumerate(cmd_array) if cmd_array.index(x) == i]
+        for c in cmd_array:
+            check_print_run(c)
     if not got_one:
         print("Didn't find anything to run.")
         return got_one
     tfl = sorted(triples_for_later, key=lambda x: [int(y) for y in x.split(",")])
-    sys.exit(tfl)
     if not queue_keep:
         f = open(queue_file, "w")
         f.write("#queue file format = (time index),(day of week),(day of month)\n")
