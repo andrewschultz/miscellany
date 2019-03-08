@@ -58,7 +58,7 @@ Local $v_init_page_1 = 430
 Local $attr_pulldown_h_init = 1450
 Local $attr_pulldown_v_init = 330
 Local $attr_pulldown_delta = 30
-Local $page_down_adjust = 740
+Local $page_down_adjust = 880
 Local $last_row_after_end = 580
 
 Local $delay = 3000
@@ -398,6 +398,7 @@ Func MaxAttr($attr_to_max)
   Local $equip_count = 0
   Local $lastPagesDown = 0
   Local $this_line_attr = 0
+  Local $columns = 8
   While 1
     $equip_count += 1
     $line = FileReadLine($equip_file_handle)
@@ -407,12 +408,12 @@ Func MaxAttr($attr_to_max)
 	  ExitLoop
     EndIf
 	$vars = StringSplit($line, ",")
-	if $vars < 7 Then
-	  MOK("Too short line " & $equip_count, $line & " needs 7 CSVs and only has " & $vars)
+	if $vars[0] < 8 Then
+	  MOK("WARNING too short line " & $equip_count, $line & " needs " & $columns & " CSVs and only has " & $vars[0])
 	  Exit
 	EndIf
-	if $vars < 7 Then
-	  MOK("WARNING too long line " & $equip_count, $line & " needs 7 CSVs and has " & $vars)
+	if $vars[0] > 8 Then
+	  MOK("WARNING too long line " & $equip_count, $line & " needs " & $columns & " CSVs and has " & $vars[0])
 	EndIf
 	$classAdj = dict_or_actual($vars[2], $classHash)
 	if $classAdj <> $my_class and $classAdj <> 0 Then
@@ -427,6 +428,7 @@ Func MaxAttr($attr_to_max)
 	$flipToEnd = $vars[5]
 	$column = $vars[6]
 	$row = $vars[7]
+    $vert_equip_delta = $vars[8]
 	if $line_adj_attr <> $this_line_attr Then
 	  SendWait("{HOME}")
 	  PickAttr($line_adj_attr)
@@ -438,7 +440,6 @@ Func MaxAttr($attr_to_max)
 	$thisPagesDown = _Max(0, Int(($the_y + $page_down_adjust - $win_size) / $page_down_adjust))
 	if $thisPagesDown > $lastPagesDown Then
 	  For $i = $lastPagesDown to $thisPagesDown - 1
-		MOK($i, $i)
 	    SendWait("{PGDN}")
 	  Next
 	  $lastPagesDown = $thisPagesDown
@@ -450,11 +451,16 @@ Func MaxAttr($attr_to_max)
 	  $lastPagesDown = $thisPagesDown
     EndIf
     $the_y -= $thisPagesDown * $page_down_adjust
-	dance_around($the_x, $the_y)
+    Sleep(500)
+	MouseMove($the_x, $the_y)
+	MouseClick("left")
+    Sleep(500)
+	MouseMove($item_popup_h, $item_popup_v + $vert_equip_delta)
+	MouseClick("left")
+
 	; MOK("Where to click " & $column & " " & $row & " " & $equip_count, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
   WEnd
   FileClose($equip_file_handle)
-  Exit
 EndFunc
 
 Func dance_around($x, $y)
@@ -476,28 +482,8 @@ Func DoInt()
   ToHab()
   GoEquip()
 
-  PickAttr(4)
+  MaxAttr(4)
 
-  ; here we don't go with the best weapon, because it is two-handed.
-  ; We pick the first one-handed item, which gives slightly more benefits from the off-hand (Nomad's scimitar, formerly wand of hearts before CRON rewards)
-  ; 16 + 16 > 27 (18 + class bonus of 9). We miss out on 15 perception, but 5 intelligence is more important.
-  ; also, intelligence is sorted differently if you are a wizard or if you are not.
-  ;
-  ; also, we can do better than use hard coding and magic numbers to equip the nomad's scimitar below, but this program's not there yet.
-  ; the quick and dirty way would be to have, say 0, 1, CLASS_WIZARD, 9 / 1, 0 / 2, 0 / 3, 0
-  ;
-  if $my_class = $CLASS_WIZARD Then
-	PickItem(9, 0)
-  else
-	PickItem(1, 0)
-  endif
-  PickItem(0, 1)
-  PickItem(0, 2)
-  PickItem(0, 3)
-  ClickEyewearAndAccessory(True)
-
-  Send("{PGUP}")
-  ToTasks()
 EndFunc
 
 Func DoPer()
@@ -505,13 +491,7 @@ Func DoPer()
   ToHab()
   GoEquip()
 
-  PickAttr(2)
-
-  PickItem(0, 0)
-  PickItem(0, 1)
-  PickItem(0, 2)
-  PickItem(0, 3)
-  ClickEyewearAndAccessory(False)
+  MaxAttr(2)
 
 EndFunc
 
