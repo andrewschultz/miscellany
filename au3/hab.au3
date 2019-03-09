@@ -61,6 +61,10 @@ Local $attr_pulldown_delta = 30
 Local $page_down_adjust = 880
 Local $last_row_after_end = 580
 
+Local $init_equip = 0
+Local $end_equip = 0
+Local $max_equip = 6
+
 Local $delay = 3000
 Local $mage_delay = $delay
 Local $rogue_delay = $delay * 2
@@ -94,6 +98,17 @@ while $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
 
+  If StringRegExp($myCmd, "^[0-9]+-[0-9]+$") Then
+    $temp = StringSplit($myCmd, "-")
+    $init_equip = $temp[1]
+    $end_equip = $temp[2]
+    if $init_equip > $end_equip Then MOK("Error!", "You need initial equip line to be less than end equip line." & @CRLF & @CRLF & $init_equip & " > " & $end_equip, True)
+    if $init_equip > $max_equip Then MOK("Error!", "You need initial equip line to be less than max equip line. This is zero indexed." & @CRLF & @CRLF & $init_equip & " > " & $max_equip, True)
+	if $end_equip > $max_equip Then MOK("WARNING! End_equip > Max_equip" "Adjusting " & $end_equip & " down to " & $max_equip, True)
+    $cmdCount += 1
+	ContinueLoop
+  EndIf
+
   $nextNum = digit_part($myCmd)
   $myCmd = string_part($myCmd, True)
 
@@ -119,7 +134,7 @@ while $cmdCount <= $CmdLine[0]
     $startMP = $nextNum
 	; MOK("Starting MP", "Starting MP = " & $startMP)
   Else
-    MOK("unrecognized", $myCmd & " is not a recognized metacommand, even though it passed the meta_cmd test. Bailing.")
+    MOK("Unrecognized meta-command", $myCmd & " is not a recognized meta-command, even though it passed the meta_cmd test. Bailing.")
 	Exit
   EndIf
   $cmdCount = $nextCmd
@@ -428,6 +443,8 @@ Func MaxAttr($attr_to_max)
 	$flipToEnd = $vars[5]
 	$column = $vars[6]
 	$row = $vars[7]
+    if $init_equip and ($row < $init_equip) Then ContinueLoop
+    if $end_equip and ($row > $end_equip) Then ContinueLoop
     $vert_equip_delta = $vars[8]
 	if $line_adj_attr <> $this_line_attr Then
 	  SendWait("{HOME}")
@@ -617,6 +634,8 @@ Func meta_cmd($param)
 	  Return True
     EndIf
   Next
+
+  if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
 
   Return False
 EndFunc
