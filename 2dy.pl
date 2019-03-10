@@ -63,7 +63,7 @@ elsif ($filesBack) {
   for ( 0 .. $maxBackToOpen - 1 ) {
     my $dailyCandidate = "c:/writing/daily/" . daysAgo($_);
     my $dailyDone      = "c:/writing/daily/done/" . daysAgo($_);
-	print($_ . " " . $maxBackToOpen . " " . daysAgo($_) . "\n");
+	# print($_ . " " . $maxBackToOpen . " " . daysAgo($_) . "\n");
 	if (($_ == $maxBackToCreate) && (!$backSoFar) && ($filesBack == 1))
 	{
 	  last;
@@ -193,7 +193,6 @@ sub daysAgo {
     $dayOfWeek,  $dayOfYear, $daylightSavings
   ) = localtime( time - 86400 * $_[0] + 3600 * ($my_daylightSavings - $daylightSavings));
   }
-  print "$daylightSavings\n";
   return
     sprintf( "%d%02d%02d.txt", $yearOffset + 1900, $month + 1, $dayOfMonth );
 }

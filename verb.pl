@@ -25,6 +25,10 @@ my $oow;
 
 for $v (@verbs) {
 
+  if ( $v =~ / / ) {
+    print "In *$v* spaces should be hyphens. It's easier that way.\n";
+    $v =~ s/ /-/;
+  }
   my $applyTo = "";
   my $inBrax  = "";
   my $vo      = $v;
@@ -113,5 +117,7 @@ $clip->Set($code);
 #subroutines
 
 sub usage {
+  print
+"The main thing to remember here is that dashes convert to spaces, e.g. full-feast -> \"full feast\" command and fullfeasting.\n";
   exit();
 }

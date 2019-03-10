@@ -247,7 +247,6 @@ sub readZupFile {
         }
       }
     }
-    last if $a =~ /^;/;
     next if !$zipUp;
     next if $a =~ /^#/;
 
@@ -520,12 +519,15 @@ sub readZupFile {
       };
       /^;/ && do {
         if ($outFile) {
-          print("Warning: outfile defined but no ! at the end.");
+          print(
+"Warning: outfile defined but no ! at the end. Forcing end-of-zip-build.\n"
+          );
           goto FIPRO;
         }
         last;
       };
     }
+    last if $a =~ /^;/;
 
     #print "Cur cmd $cmd\n";
   }
