@@ -29,7 +29,8 @@ my $debug     = 0;
 my $showLog   = 1;
 my $popup     = 0;
 my $unchAfter = 0;
-my $hours     = 0;
+my $hours_before     = 0;
+my $hours_after     = 0;
 
 #######################variables
 my $count  = 0;
@@ -54,7 +55,25 @@ while ( $count <= $#ARGV ) {
       exit();
     };
     /^-?d$/ && do { $debug = 1; $count++; next; };
-    /^-?h(-)?[0-9]+$/ && do { ( $hours = $arg ) =~ s/^-?h//; $count++; next; };
+    /^-?h(-)?[0-9]+$/ && do {
+( $hours_before = $arg ) =~ s/^-?h//;
+$hours_before = hr_norm($hours_before);
+$hours_after = $hours_before;
+$count++;
+next;
+};
+    /^-?ha(-)?[0-9]+$/ && do {
+( $hours_after = $arg ) =~ s/^-?h//;
+$hours_after = hr_norm($hours_before);
+$count++;
+next;
+};
+    /^-?hb(-)?[0-9]+$/ && do {
+( $hours_before = $arg ) =~ s/^-?h//;
+$hours_before = hr_norm($hours_before);
+$count++;
+next;
+};
     /^-?sl$/   && do { $showLog             = 1; $count++; next; };
     /^-?nsl?$/ && do { $showLog             = 0; $count++; next; };
     /^-nmw$/   && do { $masterBranchWarning = 0; $count++; next; };
@@ -114,8 +133,8 @@ my $cmdBase = "git log";
 my $since =
   $daysAgo
   ? sprintf( "--since=\"%d days ago %02d:00\" --until=\"%d days ago %02d:00\"",
-  $daysAgo, $hours, $daysAgo - 1, $hours )
-  : "--since=\"12 am\"";    #yes, git log accepts "1 days ago" which is nice
+  $daysAgo, $hours_before, $daysAgo - 1, $hours_after )
+  : sprintf("--since=\"%02d:00:00\"", $hours_before);    #yes, git log accepts "1 days ago" which is nice
 
 print "Running on all dirs: $cmdBase ... $since\n";
 print "-ns to remove logs\n" if $showLog && !$debug;
@@ -228,6 +247,11 @@ sub cutDown {
   return $retVal;
 }
 
+sub hrnorm {
+  die("Need something between -23 and 23. You have $_[0].") if ($_[0] > 23) || ($_[0] < -23);
+  return ($_[0] + 24) % 24;
+}
+
 sub usage {
   print <<EOT;
 ==========basic usage==========
@@ -237,7 +261,7 @@ sub usage {
 -d debug (or detail, to see log details)
 -sl show only log details default=$showLog, -ns/-nsl = don't show
 -p pop up results
--h# = number of the hour to tweak
+-h# = number of the hour to tweak, ha/hb=after/before norms
 -[es] open site file
 -u run unch.pl afterwards
 -v verbose (shows commands etc.)
