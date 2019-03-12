@@ -35,6 +35,19 @@ for $v (@verbs) {
   $v =~ s/^[a-zA-Z0-9#]{1,2}-//gi;
   $v =~ s/\./ /g;
 
+  if ( $vo =~ /^rf-/ ) {
+    print("Adding fail rule $v.\n");
+    $code =
+      sprintf( "%sthis is the %s rule:\n\tthe rule fails.\n\n", $code, $v );
+    next;
+  }
+  elsif ( $vo =~ /^rs-/ ) {
+    print("Adding success rule $v.\n");
+    $code =
+      sprintf( "%sthis is the %s rule:\n\tthe rule succeeds.\n\n", $code, $v );
+    next;
+  }
+
   ( my $vn = $v ) =~ s/-/ /;
   $v =~ s/-//;
 
