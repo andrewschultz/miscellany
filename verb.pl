@@ -47,6 +47,12 @@ for $v (@verbs) {
       sprintf( "%sthis is the %s rule:\n\tthe rule succeeds.\n\n", $code, $v );
     next;
   }
+  elsif ( $vo =~ /^rn-/ ) {
+    print("Adding no-result $v.\n");
+    $code =
+      sprintf( "%sthis is the %s rule:\n\tmake no decision.\n\n", $code, $v );
+    next;
+  }
 
   ( my $vn = $v ) =~ s/-/ /;
   $v =~ s/-//;
@@ -132,5 +138,11 @@ $clip->Set($code);
 sub usage {
   print
 "The main thing to remember here is that dashes convert to spaces, e.g. full-feast -> \"full feast\" command and fullfeasting.\n";
+  print "-rf/-rn/-rs = fail/no/succeed rules\n";
+  print "-a = instead rule\n";
+  print "-r = room, -rm = blocked room ('instead of going to X')\n";
+  print "-a = instead rule\n";
+  print "-ts/-t = truth state\n";
+  print "o ov p # w = one, one visible, person, number, out of world\n";
   exit();
 }
