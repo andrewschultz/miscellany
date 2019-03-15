@@ -50,6 +50,12 @@ proj = ""
 
 show_singletons = False
 
+def is_equals_header(x):
+    x = x.strip()
+    if x.startswith('===') and x.endswith('==='):
+        if len(re.findall("[a-zA-Z]", x)): return True
+    return False
+
 def should_be_nudge(x):
     if not x.startswith('#'): return False
     if x.startswith('##'): return False
@@ -317,13 +323,14 @@ def get_file(fname):
                     sys.exit("Line", line_count, "needs exactly 1 : ... ", ll)
                 branch_classes[class_array[0]] = class_array[1]
             if line.startswith("==="):
-                if not line[3].isnumeric() and line[3] != '!': sys.exit("extra = in header {:s} line {:d}: {:s}".format(fname, line_count, line.strip()))
-                ll = re.sub("^=+", "", line.lower().strip()).split(',')
-                actives = [False] * len(file_array)
-                for x in ll:
-                    if x.isdigit(): actives[int(x)] = True
-                continue
-            if line.startswith("=="):
+                if not is_equals_header(line):
+                    if not line[3].isnumeric() and line[3] != '!': sys.exit("extra = in header {:s} line {:d}: {:s}".format(fname, line_count, line.strip()))
+                    ll = re.sub("^=+", "", line.lower().strip()).split(',')
+                    actives = [False] * len(file_array)
+                    for x in ll:
+                        if x.isdigit(): actives[int(x)] = True
+                    continue
+            if line.startswith("==") and not is_equals_header(line):
                 print("Uh oh line", line_count, "may be a bad command.")
                 warns += 1
             if debug and line.startswith(">"): print(act(actives), line.strip())
