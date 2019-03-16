@@ -61,6 +61,8 @@ Local $attr_pulldown_delta = 30
 Local $page_down_adjust = 880
 Local $last_row_after_end = 580
 
+Local $equip_wait = 750
+
 Local $init_equip = 0
 Local $end_equip = 0
 Local $max_equip = 6
@@ -468,10 +470,10 @@ Func MaxAttr($attr_to_max)
 	  $lastPagesDown = $thisPagesDown
     EndIf
     $the_y -= $thisPagesDown * $page_down_adjust
-    Sleep(500)
+    Sleep($equip_wait)
 	MouseMove($the_x, $the_y)
 	MouseClick("left")
-    Sleep(500)
+    Sleep($equip_wait)
 	MouseMove($item_popup_h, $item_popup_v + $vert_equip_delta)
 	MouseClick("left")
 
@@ -564,7 +566,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
 
   if $equipPer == True Then
     DoPer()
-	Sleep(500)
+	Sleep($equip_wait)
   EndIf
 
   ToHab()
@@ -821,6 +823,8 @@ Func read_hab_cfg($x)
 	  $page_down_adjust = $vars[2]
     Elseif verify_first_entry($vars, 'EndHV', 2) Then
 	  $last_row_after_end = $vars[2]
+    Elseif verify_first_entry($vars, 'EquipWait', 2) Then
+	  $equip_wait = $vars[2]
     Elseif not StringIsDigit($line) Then
 	  MOK("Bad cfg line" & $cfg_count, $line)
 	EndIf
