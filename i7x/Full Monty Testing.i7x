@@ -58,6 +58,17 @@ this is the try-think rule:
 this is the try-sleep rule:
 	try sleeping;
 
+chapter exitsing
+
+exitsing is an action out of world.
+
+montydirs is a list of directions variable. montydirs is { north, west, south, east }
+
+carry out exitsing:
+	repeat with Q running through montydirs:
+		let Q2 be the room Q of location of player;
+		if Q2 is not nowhere, say "[Q2] is [Q] of [location of player].";
+
 chapter main monty verb
 
 understand the command "monty" as something new.
