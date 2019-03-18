@@ -247,11 +247,10 @@ def run_queue_file():
             if line.startswith(";"): break
             l0 = line.lower().strip()
             lhr = l0.split(",")[0]
-            if lhr in hours_processed.keys(): continue
-            if queue_max and len(hours_processed) >= queue_max:
+            hours_processed[lhr] = True
+            if queue_max and len(hours_processed) > queue_max:
                 triples_for_later[l0] = True
                 continue
-            hours_processed[lhr] = True
             my_list = [int(x) for x in l0.split(",")]
             if len(my_list) != 3:
                 print("WARNING line {:d} needs time index, day of week, day of month in {:s}: {:s}".format(line_count, queue_file, line.strip()))
@@ -290,7 +289,7 @@ minute_delta = 0
 mday = -1
 wkday = -1
 
-queue_max = 0
+queue_max = 4
 
 while count < len(sys.argv):
     arg = sys.argv[count]
@@ -313,6 +312,7 @@ while count < len(sys.argv):
         unlock_lock_file(False)
         queue_run = 1
     elif arg[0] == 'q' and arg[1:].isdigit():
+        unlock_lock_file(False)
         queue_run = 1
         queue_max = int(arg[1:])
     elif arg[:2] == 'mq' or arg[:2] == 'qm':

@@ -188,7 +188,8 @@ Func OpenIDE($project)
   $pwin = $project & ".inform - Inform"
   $any_today = see_time_diff($dirToCheck & "\\source\\story.ni", $hours)
   for $i = 0 to UBound($hdr_array) - 1
-	$any_today &= see_time_diff($hdr_array[$i], $hours)
+    $temp = StringRegExpReplace($hdr_array[$i], "-", " ")
+	$any_today &= see_time_diff($temp, $hours)
   Next
   if (WinExists($toCheck)) Then
 	if not $any_today and not $walkthrough and $force_build <> -1 Then

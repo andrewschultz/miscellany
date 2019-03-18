@@ -26,7 +26,7 @@ my $oow;
 for $v (@verbs) {
 
   if ( $v =~ / / ) {
-    print "In *$v* spaces should be hyphens. It's easier that way.\n";
+    print "In *$v* spaces should be hyphens. It's easier that way. No need for quotes.\n";
     $v =~ s/ /-/;
   }
   my $applyTo = "";
@@ -35,19 +35,19 @@ for $v (@verbs) {
   $v =~ s/^[a-zA-Z0-9#]{1,2}-//gi;
   $v =~ s/\./ /g;
 
-  if ( $vo =~ /^rf-/ ) {
+  if ( $vo =~ /\brf-/ ) {
     print("Adding fail rule $v.\n");
     $code =
       sprintf( "%sthis is the %s rule:\n\tthe rule fails.\n\n", $code, $v );
     next;
   }
-  elsif ( $vo =~ /^rs-/ ) {
+  elsif ( $vo =~ /\brs-/ ) {
     print("Adding success rule $v.\n");
     $code =
       sprintf( "%sthis is the %s rule:\n\tthe rule succeeds.\n\n", $code, $v );
     next;
   }
-  elsif ( $vo =~ /^rn-/ ) {
+  elsif ( $vo =~ /\brn-/ ) {
     print("Adding no-result $v.\n");
     $code =
       sprintf( "%sthis is the %s rule:\n\tmake no decision.\n\n", $code, $v );
@@ -57,30 +57,30 @@ for $v (@verbs) {
   ( my $vn = $v ) =~ s/-/ /;
   $v =~ s/-//;
 
-  if ( $vo =~ /w-/ ) { $applyTo = "out of world"; }
-  elsif ( $vo =~ /a-/ ) {
+  if ( $vo =~ /\bw-/ ) { $applyTo = "out of world"; }
+  elsif ( $vo =~ /\ba-/ ) {
     print "Defining instead rule for $v.\n";
     $code = sprintf(
 "%sinstead of doing something with $v:\n\tif action is procedural:\n\t\tcontinue the action;\n\tsay \"[fill-in-here\]\";\n\n",
       $code );
   }
-  elsif ( $vo =~ /^d-/ ) {
+  elsif ( $vo =~ /\bd-/ ) {
     $applyTo = "applying to one direction";
     $inBrax  = "[any thing]";
   }
-  elsif ( $vo =~ /^o-/ ) {
+  elsif ( $vo =~ /\bo-/ ) {
     $applyTo = "applying to one thing";
     $inBrax  = " [thing]";
   }
-  elsif ( $vo =~ /^ov-/ ) {
+  elsif ( $vo =~ /\bov-/ ) {
     $applyTo = "applying to one visible thing";
     $inBrax  = " [any thing]";
   }
-  elsif ( $vo =~ /^p-/ ) {
+  elsif ( $vo =~ /\bp-/ ) {
     $applyTo = "applying to one person";
     $inBrax  = " [person]";
   }
-  elsif ( $vo =~ /^#-/ ) {
+  elsif ( $vo =~ /\b#-/ ) {
     $applyTo = "applying to one number";
     $inBrax  = " [number]";
   }
