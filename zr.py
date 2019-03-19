@@ -23,6 +23,9 @@ only_test = False
 source_only = False
 quick_quote_reject = True
 
+line_to_open = 0
+open_post = False
+
 always_adj = defaultdict(bool)
 cap_search = defaultdict(bool)
 regex_detail = defaultdict(str)
@@ -37,6 +40,7 @@ def usage():
     print("Currently you can specify the project to change to, with a shortcut or full name.")
     print("c edits the source, though you can just type np zr.py instead.")
     print("e edits the text, though you can just type zr.txt instead.")
+    print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
     print("t only tests things. It doesn't copy back over.")
 
@@ -83,6 +87,7 @@ def check_source(a):
                         ll = re.sub(t, text_change[t], ll, 0, re.IGNORECASE)
                         print("Replacing", t, "with", text_change[t], "at line", line_count)
                         difs += 1
+                this_line_yet = False
                 for x in cs:
                     if x.lower() in line.lower():
                         ll_old = ll
@@ -94,7 +99,8 @@ def check_source(a):
                           lambda match: title_unless_caps(match.group(0), x), ll, 0, re.IGNORECASE)
                         if ll != ll_old:
                             difs += 1
-                            print("Line", line_count, "of", short, "miscapitalized", x)
+                            print("Line", line_count, "of", short, "miscapitalized", x, "" if this_line_yet else "==={:s}".format(line.strip()))
+                            this_line_yet = True
             fout.write(ll)
     fout.close()
     if not cmp(a, b):
@@ -143,6 +149,8 @@ while count < len(sys.argv):
     elif myarg == 's': source_only = True
     elif myarg == 't': only_test = True
     elif myarg == 'q': quick_quote_reject = True
+    elif myarg == 'o': open_post = True
+    elif myarg == 'no' or myarg == 'on': open_post = False
     elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
     elif myarg in i7.i7x.keys():
         newdir = "c:/games/inform/{:s}.inform/source".format(i7.i7x[sys.argv[count]])
@@ -183,6 +191,8 @@ with open(zr_data) as file:
             ary = line.strip().split(">")
             if len(ary) > 2:
                 print("Too many >'s at line", line_count, "in zr.txt:", line.strip())
+                if not line_to_open: line_to_open = line_count
+                if open_file: i7.npo(zr_data, line_count)
                 exit()
             text_change[ary[0].lower()] = ary[1]
         always = False
@@ -195,13 +205,16 @@ with open(zr_data) as file:
             regex_detail[line_ary[0]] = line_ary[1]
             continue
         q = re.split(", *", line.strip())
-        for q1 in q:
-            if q1 in cap_search: print("WARNING", q1, "already accounted for, probably a duplicate.")
-            cap_search[q1] = True
+        for q1 in range(0, len(q)):
+            temp = q[q1]
+            if temp in cap_search:
+                print("WARNING line {:d}:".format(line_count), "entry", q1, "=", temp, "already accounted for, probably a duplicate.")
+                if not line_to_open: line_to_open = line_count
+            cap_search[temp] = True
             if always:
-                always_adj[q1] = True
+                always_adj[temp] = True
 
-if not got_proj: sys.exit("Couldn't find anything in {:s} for {:s}.".format(zr_data, proj))
+if not got_proj: sys.exit("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
 
 cs = cap_search.keys()
 
@@ -210,3 +223,6 @@ for x in i7.i7f[proj]:
     if source_only and 'story.ni' not in x.lower(): continue
     check_source(x)
 
+if line_to_open:
+    if not open_post: sys.exit("Use -o to open the config file at the line that threw a warning.")
+    i7.npo(zr_data, line_to_open)
