@@ -12,18 +12,21 @@ default_sect = ""
 my_sect = ""
 
 mapping = defaultdict(str)
+regex_to = defaultdict(str)
 
 def send_mapping(sect_name, file_name):
     dgtemp = "c:/writing/temp/dgrab-temp.txt"
-    sect_alt = "\\" + sect_name
+    my_reg = regex_to[sect_name]
     found_sect_name = False
     in_sect = False
     file_remain_text = ""
     sect_text = ""
+    x = r'^\\(vvff)'
     if sect_name not in mapping: sys.exit("No section name {:s}, bailing on file {:s}.".format(sect_name, file_name))
+    print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.startswith(sect_alt):
+            if re.search(my_reg, line):
                 print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
                 found_sect_name = True
                 in_sect = True
@@ -38,6 +41,7 @@ def send_mapping(sect_name, file_name):
                 file_remain_text += line
     if not found_sect_name: return False
     print("Found", sect_name, "in", file_name, "appending to", mapping[sect_name])
+    sys.exit()
     f = open(dgtemp, "w")
     f.write(file_remain_text)
     f.close()
@@ -56,7 +60,11 @@ with open("dgrab.txt") as file:
         if line.startswith(";"): continue
         l0 = re.sub("^.*?=", "", line.strip())
         lary = l0.split(",")
-        if line.startswith("MAPPING="): mapping[lary[0]] = lary[1]
+        if line.startswith("MAPPING="):
+            my_regex = r'^\\({:s})'.format(lary[0])
+            for q in lary[0].split("|"):
+                mapping[q] = lary[1]
+                regex_to[q] = my_regex
         elif line.startswith("DEFAULT="): default_sect = lary[0]
         else: print("Unrecognized command line", line_count, line.strip())
 
