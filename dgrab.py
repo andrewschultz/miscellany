@@ -14,6 +14,12 @@ my_sect = ""
 mapping = defaultdict(str)
 regex_to = defaultdict(str)
 
+def usage(header="GENERAL USAGE"):
+    print(header)
+    print('=' * 50)
+    print("# = maximum number of files to process")
+    exit()
+
 def send_mapping(sect_name, file_name):
     dgtemp = "c:/writing/temp/dgrab-temp.txt"
     my_reg = regex_to[sect_name]
@@ -28,6 +34,7 @@ def send_mapping(sect_name, file_name):
         for (line_count, line) in enumerate(file, 1):
             if re.search(my_reg, line):
                 print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
+                if not line.startswith("\\" + sect_name): print("    NOTE: alternate section name from {:s} is {:s}".format(sect_name, line.strip()))
                 found_sect_name = True
                 in_sect = True
                 continue
@@ -41,7 +48,6 @@ def send_mapping(sect_name, file_name):
                 file_remain_text += line
     if not found_sect_name: return False
     print("Found", sect_name, "in", file_name, "appending to", mapping[sect_name])
-    sys.exit()
     f = open(dgtemp, "w")
     f.write(file_remain_text)
     f.close()
@@ -51,6 +57,18 @@ def send_mapping(sect_name, file_name):
     f = open(mapping[sect_name], "a")
     f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
     return True
+
+#
+# start main program
+#
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count].lower()
+    if arg[0] == '-': arg = arg[1:]
+    if arg.isdigit(): max_process = arg
+    elif arg == '?': usage()
+    else: usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
 
 os.chdir("c:/writing/scripts")
 
