@@ -7,6 +7,7 @@ import glob
 import re
 import os
 import sys
+import time
 
 default_sect = ""
 my_sect = ""
@@ -14,13 +15,21 @@ my_sect = ""
 mapping = defaultdict(str)
 regex_to = defaultdict(str)
 
+days_before_ignore = 7
+
 def usage(header="GENERAL USAGE"):
     print(header)
     print('=' * 50)
     print("# = maximum number of files to process")
+    print("d/db(#) = days before to ignore")
     exit()
 
 def send_mapping(sect_name, file_name):
+    temp_time = os.stat(file_name)
+    time_delta = time.time() - temp_time.st_ctime
+    if time_delta < days_before_ignore * 86400:
+        print("Time delta not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
+        return 0
     dgtemp = "c:/writing/temp/dgrab-temp.txt"
     my_reg = regex_to[sect_name]
     found_sect_name = False
@@ -29,7 +38,7 @@ def send_mapping(sect_name, file_name):
     sect_text = ""
     x = r'^\\(vvff)'
     if sect_name not in mapping: sys.exit("No section name {:s}, bailing on file {:s}.".format(sect_name, file_name))
-    print(sect_name, "looking for", my_reg, "in", file_name)
+    # print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
             if re.search(my_reg, line):
@@ -67,8 +76,13 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
     if arg[0] == '-': arg = arg[1:]
     if arg.isdigit(): max_process = arg
+    elif re.search("^d(b)?[0-9]+$", arg):
+        temp = re.sub("^d(b)?", "", arg)
+        days_before_ignore = int(temp)
+    elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == '?': usage()
     else: usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
+    cmd_count += 1
 
 os.chdir("c:/writing/scripts")
 
