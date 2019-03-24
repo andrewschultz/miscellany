@@ -14,16 +14,28 @@ my_sect = ""
 
 mapping = defaultdict(str)
 regex_to = defaultdict(str)
+notes_to_open = defaultdict(int)
 
+max_process = 1
+open_notes = 0
 days_before_ignore = 7
+
+open_notes_after = True
 
 def usage(header="GENERAL USAGE"):
     print(header)
     print('=' * 50)
     print("# = maximum number of files to process")
     print("d/db(#) = days before to ignore")
+    print("o = open notes after, no/on = don't")
     exit()
 
+def file_len(fname):
+    with open(fname) as f:
+        for (i, l) in enumerate(f, 1):
+            pass
+    return i
+    
 def send_mapping(sect_name, file_name):
     temp_time = os.stat(file_name)
     time_delta = time.time() - temp_time.st_ctime
@@ -56,15 +68,19 @@ def send_mapping(sect_name, file_name):
             else:
                 file_remain_text += line
     if not found_sect_name: return False
-    print("Found", sect_name, "in", file_name, "appending to", mapping[sect_name])
+    nfi = mapping[sect_name]
+    print("Found", sect_name, "in", file_name, "appending to", )
+    if nfi not in notes_to_open:
+        notes_to_open[nfi] = file_len(nfi)
+    f = open(nfi, "a")
+    f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
+    f.close()
     f = open(dgtemp, "w")
     f.write(file_remain_text)
     f.close()
     i7.wm(file_name, dgtemp)
     copy(dgtemp, file_name)
     os.remove(dgtemp)
-    f = open(mapping[sect_name], "a")
-    f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
     return True
 
 #
@@ -80,6 +96,8 @@ while cmd_count < len(sys.argv):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
+    elif arg == 'o': open_notes_after = True
+    elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == '?': usage()
     else: usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
@@ -102,12 +120,17 @@ with open("dgrab.txt") as file:
 
 x = glob.glob("c:/writing/daily/20*.txt")
 
-my_sect = default_sect
+if not my_sect:
+    print("Going with default section {:s}.".format(default_sect))
+    my_sect = default_sect
+
 processed = 0
-max_process = 1
 
 for q in x:
     processed += send_mapping(my_sect, q)
     if processed == max_process: sys.exit("Stopped at file " + q)
 
-if max_process > 0: sys.exit("Got {:d} of {:d} files.".format(processed, max_process))
+if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
+
+if open_notes_after:
+    for q in notes_to_open: i7.npo(q, notes_to_open[q], False, False)
