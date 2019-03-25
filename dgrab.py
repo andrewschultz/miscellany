@@ -20,7 +20,9 @@ max_process = 1
 open_notes = 0
 days_before_ignore = 7
 
+verbose = False
 open_notes_after = True
+change_list = []
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -35,9 +37,10 @@ def file_len(fname):
         for (i, l) in enumerate(f, 1):
             pass
     return i
-    
-def send_mapping(sect_name, file_name):
+
+def send_mapping(sect_name, file_name, change_files = False):
     temp_time = os.stat(file_name)
+    fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_ctime
     if time_delta < days_before_ignore * 86400:
         print("Time delta not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
@@ -54,7 +57,7 @@ def send_mapping(sect_name, file_name):
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
             if re.search(my_reg, line):
-                print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
+                if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
                 if not line.startswith("\\" + sect_name): print("    NOTE: alternate section name from {:s} is {:s}".format(sect_name, line.strip()))
                 found_sect_name = True
                 in_sect = True
@@ -68,6 +71,10 @@ def send_mapping(sect_name, file_name):
             else:
                 file_remain_text += line
     if not found_sect_name: return False
+    if not change_files:
+        global change_list
+        change_list.append(fn)
+        return False
     nfi = mapping[sect_name]
     print("Found", sect_name, "in", file_name, "appending to", )
     if nfi not in notes_to_open:
@@ -126,10 +133,15 @@ if not my_sect:
 
 processed = 0
 
+max_warning = False
 for q in x:
-    processed += send_mapping(my_sect, q)
-    if processed == max_process: sys.exit("Stopped at file " + q)
+    processed += send_mapping(my_sect, q, processed < max_process)
+    if processed == max_process and not max_warning:
+        max_warning = True
+        print("Reached maximum. Stopped at file " + q)
 
+if len(change_list):
+    print("Files still to process:", ', '.join(change_list))
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
 if open_notes_after:
