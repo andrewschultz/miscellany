@@ -11,12 +11,13 @@ import time
 
 default_sect = ""
 my_sect = ""
+default_by_dir = i7.dir2proj(to_abbrev = True)
 
 mapping = defaultdict(str)
 regex_to = defaultdict(str)
 notes_to_open = defaultdict(int)
 
-max_process = 1
+max_process = 0
 open_notes = 0
 days_before_ignore = 7
 
@@ -103,6 +104,7 @@ while cmd_count < len(sys.argv):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
+    elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'o': open_notes_after = True
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == '?': usage()
@@ -128,17 +130,22 @@ with open("dgrab.txt") as file:
 x = glob.glob("c:/writing/daily/20*.txt")
 
 if not my_sect:
-    print("Going with default section {:s}.".format(default_sect))
-    my_sect = default_sect
+    if not default_by_dir or default_by_dir not in mapping:
+        print("Going with default section defined in dgrab.txt: {:s}.".format(default_sect))
+        my_sect = default_sect
+    else:
+        print("Going with default section defined by directory you're in {:s}.".format(default_by_dir))
 
 processed = 0
 
 max_warning = False
+if max_process == -1: print("Running test to cull all eligible files.")
+
 for q in x:
     processed += send_mapping(my_sect, q, processed < max_process)
-    if processed == max_process and not max_warning:
+    if max_process and processed == max_process and not max_warning:
         max_warning = True
-        print("Reached maximum. Stopped at file " + q)
+        if max_process > 1: print("Reached maximum. Stopped at file " + q)
 
 if len(change_list):
     print("Files still to process:", ', '.join(change_list))
