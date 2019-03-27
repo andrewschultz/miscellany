@@ -43,9 +43,6 @@ def send_mapping(sect_name, file_name, change_files = False):
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_ctime
-    if time_delta < days_before_ignore * 86400:
-        print("Time delta not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
-        return 0
     dgtemp = "c:/writing/temp/dgrab-temp.txt"
     my_reg = regex_to[sect_name]
     found_sect_name = False
@@ -71,6 +68,9 @@ def send_mapping(sect_name, file_name, change_files = False):
                 sect_text += line
             else:
                 file_remain_text += line
+    if time_delta < days_before_ignore * 86400 and found_sect_name:
+        print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
+        return 0
     if not found_sect_name: return False
     if not change_files:
         global change_list
@@ -116,7 +116,7 @@ os.chdir("c:/writing/scripts")
 with open("dgrab.txt") as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("#"): continue
-        if line.startswith(";"): continue
+        if line.startswith(";"): break
         l0 = re.sub("^.*?=", "", line.strip())
         lary = l0.split(",")
         if line.startswith("MAPPING="):
@@ -131,10 +131,11 @@ x = glob.glob("c:/writing/daily/20*.txt")
 
 if not my_sect:
     if not default_by_dir or default_by_dir not in mapping:
-        print("Going with default section defined in dgrab.txt: {:s}.".format(default_sect))
+        print("Going with default section defined in dgrab.txt: {:s}.{:s}".format(default_sect, " {:s} is defined by the PWD but is not in the dgrab.txt mapping.".format(default_by_dir) if default_by_dir else ""))
         my_sect = default_sect
     else:
         print("Going with default section defined by directory you're in {:s}.".format(default_by_dir))
+        my_sect = default_by_dir
 
 processed = 0
 
@@ -142,10 +143,12 @@ max_warning = False
 if max_process == -1: print("Running test to cull all eligible files.")
 
 for q in x:
-    processed += send_mapping(my_sect, q, processed < max_process)
+    processed += send_mapping(my_sect, q, processed < max_process or max_process == 0)
     if max_process and processed == max_process and not max_warning:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
+
+if processed == 0 and max_process >= 0: print("Could not find anything to process for {:s}.".format(my_sect))
 
 if len(change_list):
     print("Files still to process:", ', '.join(change_list))
