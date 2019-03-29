@@ -319,18 +319,22 @@ def go_proj(x):
 
 go_p = proj_dir = to_proj = go_proj
 
-def dir2proj(x = os.getcwd()):
+def dir2proj(x = os.getcwd(), to_abbrev = False):
     if os.path.exists(x + "\\story.ni") or ".inform" in x:
         x2 = re.sub("\.inform.*", "", x)
         x2 = re.sub(".*[\\\/]", "", x2)
         if "\\" in x2 or "/" in x2: return ""
+        if to_abbrev and x2 in i7xr: return i7xr[x2]
         return x2
-    if re.search("Documents.GitHub", x):
+    elif re.search("Documents.GitHub", x):
         x2 = re.sub(".*Documents.GitHub.", "", x)
         x2 = re.sub("[\\\/].*", "", x2)
-        if re.search("[a-z]", x2): return x2
-        return
-    return ""
+        if re.search("[a-z]", x2):
+            if to_abbrev and x2 in i7xr: return i7xr[x2]
+            return x2
+        return ""
+    else:
+        return ""
 
 sproj = d2p = dir2proj
 
