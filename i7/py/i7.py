@@ -12,6 +12,7 @@
 #
 
 from collections import defaultdict
+import mytools as mt
 import sys
 import re
 import os
@@ -498,7 +499,7 @@ def _valid_i7m_arg(x):
     x = re.sub("\?", "", x)
     return re.search("^[rv]*$", x)
 
-if "i7.py" in main.__file__:
+if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
         if sys.argv[1] == '?': i7_usage()
         if sys.argv[1] == 'e': oc()
