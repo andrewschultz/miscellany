@@ -19,7 +19,8 @@ dg_temp = "c:/writing/temp/dgrab-temp.txt"
 flat_temp = os.path.basename(dg_temp)
 
 mapping = defaultdict(str)
-regex_to = defaultdict(str)
+regex_sect = defaultdict(str)
+regex_comment = defaultdict(str)
 notes_to_open = defaultdict(int)
 
 max_process = 0
@@ -49,16 +50,17 @@ def send_mapping(sect_name, file_name, change_files = False):
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_ctime
-    my_reg = regex_to[sect_name]
+    my_reg = regex_sect[sect_name]
+    my_reg_comment = regex_comment[sect_name]
     found_sect_name = False
     in_sect = False
     file_remain_text = ""
     sect_text = ""
-    x = r'^\\(vvff)'
     if sect_name not in mapping: sys.exit("No section name {:s}, bailing on file {:s}.".format(sect_name, file_name))
     # print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
+            lls = line.lower().strip()
             if re.search(my_reg, line):
                 if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
                 if not line.startswith("\\" + sect_name): print("    NOTE: alternate section name from {:s} is {:s}".format(sect_name, line.strip()))
@@ -71,12 +73,14 @@ def send_mapping(sect_name, file_name, change_files = False):
                     in_sect = False
                     continue
                 sect_text += line
+            elif re.search(my_reg_comment, lls):
+                sect_text += line
             else:
                 file_remain_text += line
     if time_delta < days_before_ignore * 86400 and found_sect_name:
         print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
         return 0
-    if not found_sect_name: return False
+    if not sect_text: return False
     if not change_files:
         global change_list
         change_list.append(fn)
@@ -88,12 +92,12 @@ def send_mapping(sect_name, file_name, change_files = False):
     f = open(nfi, "a")
     f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
     f.close()
-    f = open(dgtemp, "w")
+    f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
-    i7.wm(file_name, dgtemp)
-    copy(dgtemp, file_name)
-    os.remove(dgtemp)
+    i7.wm(file_name, dg_temp)
+    copy(dg_temp, file_name)
+    os.remove(dg_temp)
     return True
 
 #
@@ -113,10 +117,12 @@ with open(dg_cfg) as file:
         l0 = re.sub("^.*?=", "", line.strip())
         lary = l0.split(",")
         if line.startswith("MAPPING="):
-            my_regex = r'^\\({:s})'.format(lary[0])
+            my_regex_1 = r'^\\({:s})'.format(lary[0])
+            my_regex_2 = r' *#({:s})\b'.format(lary[0])
             for q in lary[0].split("|"):
                 mapping[q] = lary[1]
-                regex_to[q] = my_regex
+                regex_sect[q] = my_regex_1
+                regex_comment[q] = my_regex_2
         elif line.startswith("DEFAULT="): default_sect = lary[0]
         elif line.startswith("OPENONWARN="):
             open_on_warn = int(lary[0])
