@@ -27,6 +27,7 @@ max_process = 0
 open_notes = 0
 days_before_ignore = 7
 
+do_diff = True
 verbose = False
 open_notes_after = True
 change_list = []
@@ -38,6 +39,7 @@ def usage(header="GENERAL USAGE"):
     print("d/db(#) = days before to ignore")
     print("o = open notes after, no/on = don't")
     print("e = edit cfg file")
+    print("di = do windiff, ndi/din/nd/dn = don't do windiff")
     exit()
 
 def file_len(fname):
@@ -95,7 +97,7 @@ def send_mapping(sect_name, file_name, change_files = False):
     f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
-    i7.wm(file_name, dg_temp)
+    if do_diff: i7.wm(file_name, dg_temp)
     copy(dg_temp, file_name)
     os.remove(dg_temp)
     return True
@@ -126,6 +128,7 @@ with open(dg_cfg) as file:
         elif line.startswith("DEFAULT="): default_sect = lary[0]
         elif line.startswith("OPENONWARN="):
             open_on_warn = int(lary[0])
+        elif line.startswith("SHOWDIFF="): do_diff = (lary[0] != '0' or lary[0] != 'false')
         elif line.startswith("MAXPROC="):
             try:
                 max_process = int(lary[0])
@@ -160,6 +163,8 @@ while cmd_count < len(sys.argv):
         os.system(dg_cfg)
         exit()
     elif arg == 'o': open_notes_after = True
+    elif arg == 'di': do_diff = True
+    elif arg == 'ndi' or arg == 'din' or arg == 'dn' or arg == 'nd': do_diff = False
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == '?': usage()
     else:
