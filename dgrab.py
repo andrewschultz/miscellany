@@ -1,4 +1,11 @@
+# dgrab.py
+#
+# daily grab file: grab section from daily files (or other) and pipe it directly to notes files
+#
+# usage: dgrab.py (section) or just dgrab.py in the relevant directory
+#
 # question: search for starting tabs in non-.ni files. What script for that?
+#
 
 from shutil import copy
 from collections import defaultdict
@@ -9,6 +16,7 @@ import os
 import sys
 import time
 
+glob_default = "da"
 default_sect = ""
 my_sect = ""
 default_by_dir = i7.dir2proj(to_abbrev = True)
@@ -21,16 +29,20 @@ flat_temp = os.path.basename(dg_temp)
 mapping = defaultdict(str)
 regex_sect = defaultdict(str)
 regex_comment = defaultdict(str)
+file_regex = defaultdict(str)
 notes_to_open = defaultdict(int)
+globs = defaultdict(str)
 
 max_process = 0
 open_notes = 0
 days_before_ignore = 7
 
+open_on_warn = False
 do_diff = True
 verbose = False
 open_notes_after = True
 change_list = []
+print_ignores = False
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -118,14 +130,31 @@ with open(dg_cfg) as file:
         if line.startswith(";"): break
         l0 = re.sub("^.*?=", "", line.strip())
         lary = l0.split(",")
+        my_args = lary[0].split("|")
         if line.startswith("MAPPING="):
             my_regex_1 = r'^\\({:s})'.format(lary[0])
             my_regex_2 = r' *#({:s})\b'.format(lary[0])
-            for q in lary[0].split("|"):
+            for q in my_args:
                 mapping[q] = lary[1]
                 regex_sect[q] = my_regex_1
                 regex_comment[q] = my_regex_2
         elif line.startswith("DEFAULT="): default_sect = lary[0]
+        elif line.startswith("GLOBDEF="): glob_default = lary[0]
+        elif line.startswith("GLOB="):
+            for q in my_args:
+                if len(lary) > 2: file_regex[q] = lary[2]
+                else: file_regex[q] = '.'
+                globs[q] = lary[1]
+                temp = glob.glob(globs[q])
+                temp1 = [u for u in temp if re.search(file_regex[q], u)]
+                if len(temp) == 0:
+                    print("WARNING: glob pattern {:s}/{:s} at line {:d} does not turn up any files.".format(q, globs[q], line_count))
+                    cfg_edit_line = line_count
+                elif len(temp1) == 0:
+                    print("WARNING: glob pattern {:s}/{:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
+                    cfg_edit_line = line_count
+                if print_ignores and len(temp) != len(temp1):
+                    print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
         elif line.startswith("OPENONWARN="):
             open_on_warn = int(lary[0])
         elif line.startswith("SHOWDIFF="): do_diff = (lary[0] != '0' or lary[0] != 'false')
@@ -147,7 +176,7 @@ if cfg_edit_line:
         for q in sys.argv:
             if q == 'e' or q == '-e': open_on_warn = True
     if open_on_warn: i7.npo(dg_cfg, cfg_edit_line)
-    else: print("Put in an OPENONWARN in {:s} to open the CFG file, or type e/-e on the command line.")
+    else: print("Put in an OPENONWARN in {:s} to open the CFG file, or type e/-e on the command line.".format(dg_cfg))
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
@@ -159,6 +188,7 @@ while cmd_count < len(sys.argv):
         days_before_ignore = int(temp)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
+    elif arg[:2] == 'g=': my_globs = arg[2:].split(",")
     elif arg == 'e':
         os.system(dg_cfg)
         exit()
@@ -171,7 +201,17 @@ while cmd_count < len(sys.argv):
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
 
-x = glob.glob("c:/writing/daily/20*.txt")
+x = []
+globbed_yet = defaultdict(bool)
+
+if len(my_globs) == 0:
+    print("Going with default glob.")
+    x.append(glob_default)
+
+for q in my_globs:
+    if globbed_yet[globs[q]]: continue
+    x = x + [u for u in glob.glob(globs[q]) if re.search(file_regex[q], u)]
+    globbed_yet[globs[q]] = True
 
 if not my_sect:
     if not default_by_dir or default_by_dir not in mapping:
