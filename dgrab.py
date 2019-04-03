@@ -42,7 +42,7 @@ do_diff = True
 verbose = False
 open_notes_after = True
 change_list = []
-print_ignores = False
+print_ignored_filess = False
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -52,7 +52,12 @@ def usage(header="GENERAL USAGE"):
     print("o = open notes after, no/on = don't")
     print("e = edit cfg file")
     print("di = do windiff, ndi/din/nd/dn = don't do windiff")
+    print("pi = print ignore, npi/pin = don't print ignore")
     exit()
+
+def is_true_string(x):
+    if x == '0' or x == 'false': return False
+    return True
 
 def file_len(fname):
     with open(fname) as f:
@@ -140,6 +145,7 @@ with open(dg_cfg) as file:
                 regex_comment[q] = my_regex_2
         elif line.startswith("DEFAULT="): default_sect = lary[0]
         elif line.startswith("GLOBDEF="): glob_default = lary[0]
+        elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])
         elif line.startswith("GLOB="):
             for q in my_args:
                 if len(lary) > 2: file_regex[q] = lary[2]
@@ -153,11 +159,11 @@ with open(dg_cfg) as file:
                 elif len(temp1) == 0:
                     print("WARNING: glob pattern {:s}/{:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
                     cfg_edit_line = line_count
-                if print_ignores and len(temp) != len(temp1):
+                if print_ignored_filess and len(temp) != len(temp1):
                     print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
         elif line.startswith("OPENONWARN="):
             open_on_warn = int(lary[0])
-        elif line.startswith("SHOWDIFF="): do_diff = (lary[0] != '0' or lary[0] != 'false')
+        elif line.startswith("SHOWDIFF="): do_diff = is_true_string(lary[0])
         elif line.startswith("MAXPROC="):
             try:
                 max_process = int(lary[0])
@@ -194,6 +200,8 @@ while cmd_count < len(sys.argv):
         exit()
     elif arg == 'o': open_notes_after = True
     elif arg == 'di': do_diff = True
+    elif arg == 'pi': print_ignored_files = True
+    elif arg == 'npi' or arg == 'pin': print_ignored_files = False
     elif arg == 'ndi' or arg == 'din' or arg == 'dn' or arg == 'nd': do_diff = False
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == '?': usage()
