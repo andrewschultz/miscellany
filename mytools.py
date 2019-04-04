@@ -5,3 +5,7 @@ def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML 
 	f.write("<html>\n<title>{:s}</title>\n<body><\n><pre>\n{:s}\n</pre>\n</body>\n</html>\n".format(title, text_str))
 	f.close()
 	if launch: os.system(out_file)
+
+def nohy(x):
+    if x[0] == '-': x = x[1:]
+    return x.lower()
