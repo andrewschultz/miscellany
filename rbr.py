@@ -200,6 +200,8 @@ def get_file(fname):
     if not quiet: print("Poking at", fname)
     actives = []
     old_actives = []
+    preproc_commands = []
+    postproc_commands = []
     generic_bracket_error.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -215,7 +217,20 @@ def get_file(fname):
                 if len(eq_array) != 3: sys.exit("Bad equivalence array at line {:d} of file {:s}: needs exactly two tabs.".format(line_count, fname))
                 to_match[eq_array[1]] = eq_array[2]
                 continue
+            if line.startswith("preproc="):
+                if len(file_array) > 0:
+                    print("WARNING Line {:d} has preproc that should be before files.".format(line_count))
+                    continue
+                temp = re.sub("^.*?=", "", line.strip()).split(",")
+                preproc_commands += temp
+            if line.startswith("postproc="):
+                if len(file_array) > 0:
+                    print("WARNING Line {:d} has preproc that should be before files.".format(line_count))
+                    continue
+                temp = re.sub("^.*?=", "", line.strip()).split(",")
+                postproc_commands += temp
             if line.startswith("files="):
+                for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
                 file_array = [os.path.join(i7.prt_temp, f) for f in file_array_base]
                 actives = [True] * len(file_array)
@@ -392,6 +407,9 @@ def get_file(fname):
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
         if not quiet: print("Nothing changed.")
     elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
+    for cmd in postproc_commands:
+        print("Postproc: running", cmd, "for", fname)
+        os.system(cmd)
     post_copy(file_array_base)
 
 cur_proj = ""
