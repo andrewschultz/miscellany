@@ -226,3 +226,4 @@ for x in i7.i7f[proj]:
 if line_to_open:
     if not open_post: sys.exit("Use -o to open the config file at the line that threw a warning.")
     i7.npo(zr_data, line_to_open)
+else if open_post: sys.exit("No errors/inconsistencies found in " + zr_data)

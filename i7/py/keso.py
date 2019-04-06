@@ -12,6 +12,7 @@ import pyperclip
 from collections import defaultdict
 from fractions import gcd
 from functools import reduce
+import mytools as mt
 
 kfile = "c:/writing/temp/to_keep.txt"
 kfile2 = "c:/writing/temp/to_keep_2.txt"
@@ -66,9 +67,8 @@ def touch_up_ideas(): # this is for converting stuff to multi line that would ot
     limericks = []
     limid = []
     for x in a1:
-        if x.count("/") == 4 and len(x) > 120 and len(x) < 240:
-            temp = re.sub(" *\/ ", "\n", x)
-            limericks.append("====\n" + x)
+        if mt.is_limerick(x):
+            limericks.append(mt.slash_to_lim(x))
             continue
         if x.startswith("lid:"):
             limid.append(x[4:])

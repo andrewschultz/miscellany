@@ -9,3 +9,12 @@ def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML 
 def nohy(x):
     if x[0] == '-': x = x[1:]
     return x.lower()
+
+def is_limerick(x):
+    if x.count != 4: return False
+    temp = re.sub(".* #", "", x)
+    if len(temp) > 120 and len(temp) < 240: return True
+
+def slash_to_limerick(x):
+    temp = re.sub(" *\/ ", "\n", x)
+    return ("====\n" + temp)
