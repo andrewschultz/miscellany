@@ -9,6 +9,7 @@ import re
 import os
 import sys
 import i7
+from collections import defaultdict
 
 def usage():
     print("-a = search all files.")
@@ -21,14 +22,10 @@ def usage():
     print("-o = bail once over # lines (no space)")
     exit()
 
-def my_proj(x):
-    y = re.split("[\\\/]", x)
-    for z in y:
-        if z.endswith('.inform'):
-            j = re.sub("\.inform.*", "", z, 0, re.IGNORECASE)
-            return j
-    print("Couldn't get valid inform directory from", x)
-    exit()
+def found_todo_text(l):
+    if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll): return True
+    if re.search("too-generic", ll) and "\t" not in ll: return True
+    return False
 
 def file_hunt(x):
     # print("HUNTING TODOS in", x)
@@ -39,7 +36,7 @@ def file_hunt(x):
         for line in file:
             line_num += 1
             ll = line.lower()
-            if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll):
+            if found_todo_text(ll):
                 if line_num > min_line:
                     if html_exp and not any_yet:
                         fhtml.write("<font size=+3 color=red>TODO RESULTS IN {:s}</font><br />\n".format(x))
@@ -64,7 +61,7 @@ def file_hunt(x):
     return len(bad_lines) > 0 # If we got a ??, return true
 
 def todo_hunt(x):
-    x2 = "c:\\games\\inform\\{:s}.inform\\source\\story.ni".format(x)
+    x2 = i7.main_src(x)
     if x not in i7.i7f.keys():
         print("WARNING i7.py doesn't define a file list for", x, "so I'm just going with story.ni.")
         return file_hunt(x2) and bail_on_first
@@ -151,7 +148,9 @@ if search_all_qs:
         todo_hunt(x)
 elif len(searchables) == 0:
     if os.path.exists("story.ni"):
-        todo_hunt(my_proj(os.getcwd()))
+        todo_hunt(i7.dir2proj(os.getcwd()))
+    else:
+        sys.exit("Didn't find any story.ni to process. Bailing.")
 else:
     for x in sorted(searchables):
         todo_hunt(x)
