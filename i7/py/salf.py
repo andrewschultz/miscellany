@@ -53,22 +53,24 @@ with open("salf.txt") as file:
         sort_start[ll[0]] = ll[1]
         sort_end[ll[1]] = ll[0]
 
-line_num = 0
 in_sort = False
 sort_name = ''
 sort_string = ''
+alf_next_chunk = False
+alf_next_blank = False
+
+sort_array = []
 
 with open(f1) as file:
-    for line in file:
-        line_num += 1
+    for (line_count, line) in enumerate(file, 1):
         do_more = True
         for x in sort_start.keys():
             if x in line:
                 if in_sort:
-                    print("BAILING: line", line_num, "has", x, "but already in sort area", x)
+                    print("BAILING: line", line_count, "has", x, "but already in sort area", x)
                 in_sort = True
                 sort_name = x
-                if verbose: print("Starting", x, "line", line_num)
+                if verbose: print("Starting", x, "line", line_count)
                 fout.write(line)
                 sort_string = ''
                 do_more = False
@@ -82,8 +84,25 @@ with open(f1) as file:
                 in_sort = False
                 fout.write(line)
                 do_more = False
-                if verbose: print("stopped writing", line_num)
+                if verbose: print("stopped writing", line_count)
                 continue
+        if alf_next_chunk:
+            sort_array = []
+            if not alf_next_blank and line.strip():
+                alf_next_blank = True
+                alf_next_chunk = False
+                sort_array.append(line)
+                continue
+        if alf_next_blank:
+            if not line.strip():
+                sort_array = sorted(sort_array, key=lambda x:x.lower())
+                for q in sort_array: fout.write(q)
+                alf_next_blank = False
+            else:
+                sort_array.append(line)
+                continue
+        if "[postalf]" in line:
+            alf_next_chunk = True
         if do_more:
             if in_sort:
                 sort_string = sort_string + line
