@@ -12,6 +12,7 @@ import os
 import sys
 import i7
 from filecmp import cmp
+from mytools import nohy
 
 copy_over = True
 show_dif = False
@@ -24,6 +25,14 @@ f2 = 'story.ni2'
 sort_start = defaultdict(str)
 sort_end = defaultdict(str)
 
+def usage(header="USAGE FOR SALF.PY"):
+    print(header)
+    print("=" * 50)
+    print("-d = show differences if something goes wrong")
+    print("-f = force copy-over on different sizes")
+    print("-v = verbose")
+    exit()
+
 def do_one_sort(sort_string, out_file):
     divs = sort_string.split("\n\n")
     ow = "\n\n".join(sorted(divs, key=lambda x: x.lower()))
@@ -32,8 +41,16 @@ def do_one_sort(sort_string, out_file):
 
 # start main
 
-if len(sys.argv) > 1:
-    i7.go_proj(sys.argv[1])
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = nohy(sys.argv[cmd_count])
+    if arg == 'd': show_dif = True
+    elif arg == 'f': force_copy = True
+    elif arg == 'v': verbose = True
+    elif arg == '?': usage()
+    elif arg in i7x: i7.go_proj(sys.argv[1])
+    else:
+        usage("Invalid parameter " + arg)
 else:
     print("Using current directory.")
 
@@ -112,10 +129,8 @@ with open(f1) as file:
 fout.close()
 
 if show_dif:
-    if cmp(f1, f2):
-        print(f1, "and", f2, "are identical. Not showing.")
-    else:
-        os.system("wm {:s} {:s}".format(f1, f2))
+    if cmp(f1, f2): print(f1, "and", f2, "are identical. Not showing.")
+    else: i7.wm(f1, f2)
 else:
     print("Not showing differences.")
 
@@ -128,9 +143,10 @@ if copy_over:
         os.remove(f2)
         exit()
     elif s1 != s2 and not force_copy:
-        print("Sizes unequal. Use -f to copy over. Saved", f2, "for inspection.")
+        print("Sizes unequal. Use -f to force copy over. Saved", f2, "for inspection.{:s}".format("" if show_dif else " -d shows differences."))
         print(f1, s1)
         print(f2, s2)
+        if show_dif: i7.wm(f1, f2)
         exit()
     print("Changes found, copying back.")
     copy(f2, f1)
