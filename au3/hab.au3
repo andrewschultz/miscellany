@@ -171,12 +171,9 @@ While $cmdCount <= $CmdLine[0]
   EndIf
   $nextCmd = $cmdCount + 1
   $nextNum = -1
-  if StringIsDigit(StringMid($myCmd, 2)) Then
-    $nextNum = StringMid($myCmd, 2)
-	$myCmd = StringLeft($myCmd, 1)
-  ElseIf StringIsDigit(StringMid($myCmd, 3)) Then ; this is not great code. Ideally we'd define a regex
-    $nextNum = StringMid($myCmd, 3)
-	$myCmd = StringLeft($myCmd, 2)
+  if StringRegExp($myCmd, '^[a-z]*[0-9]*$', "") Then
+    $nextNum = StringRegExpReplace($myCmd, "^[a-z]+", "")
+	$myCmd = StringRegExpReplace($myCmd, "[0-9]+$", "")
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
 	$skipNextArg = 1
@@ -211,12 +208,14 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'fc' or $myCmd == 'fs' Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'cf' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-fc = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
+	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-cf = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'fs', $myCmd <> 'fc' and $myCmd <> 'ffs', $myCmd == 'fs')
+	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'cf' and $myCmd <> 'fs', $myCmd <> 'cf' and $myCmd <> 'ffs', $myCmd == 'fs')
+	;              $fishTimes, $toggle_at_end = False, $adjustMouse = True,                        $fishToggle = True,                 $fishSlow = False
+	;              times to fish / toggle at end?      Do we move the mouse away after a click?    Click twice (true) or once (false)  delay 1 sec each click?
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
