@@ -111,19 +111,19 @@ while $cmdCount <= $CmdLine[0]
 	ContinueLoop
   EndIf
 
-  $nextNum = digit_part($myCmd)
-  $myCmd = string_part($myCmd, True)
-
   if not meta_cmd($myCmd) Then
     $cmdCount = $nextCmd
     ContinueLoop
   EndIf
+  
+  $nextNum = digit_part($myCmd)
+  $myCmd = string_part($myCmd, True)
 
   If $myCmd == 'te' Then
     $testDontClick = True
   ElseIf $myCmd == 'fo' Then
 	OpenHabiticaURL(False)
-  ElseIf $myCmd == 'fc' Then
+  ElseIf $myCmd == 'fc' and not StringIsDigit($nextNum) Then
     OpenHabiticaURL(True)
 	$focused = 1
   ElseIf $myCmd == 'qd' Then
@@ -165,13 +165,13 @@ While $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if meta_cmd($myCmd) Then
-    ; MOK("ignored meta command", $myCmd)
+    MOK("ignored meta command", $myCmd)
     $cmdCount += 1
 	ContinueLoop
   EndIf
   $nextCmd = $cmdCount + 1
   $nextNum = -1
-  if StringRegExp($myCmd, '^[a-z]*[0-9]*$', "") Then
+  if StringRegExp($myCmd, '^[a-z]+[0-9]+$', "") Then
     $nextNum = StringRegExpReplace($myCmd, "^[a-z]+", "")
 	$myCmd = StringRegExpReplace($myCmd, "[0-9]+$", "")
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
@@ -208,14 +208,15 @@ While $cmdCount <= $CmdLine[0]
     open_for_cron($nextNum, $myCmd == 'c', $myCmd == 'cv')
   ElseIf $myCmd == 'd' Then
     $delay = 1000 * $nextNum
-  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'cf' or $myCmd == 'fs' Then
+  ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'fc' or $myCmd == 'cf' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
 	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-cf = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
 	  Exit
     EndIf
-	FishItmBossDmg($nextNum, $myCmd == 'ft', $myCmd <> 'ff' and $myCmd <> 'cf' and $myCmd <> 'fs', $myCmd <> 'cf' and $myCmd <> 'ffs', $myCmd == 'fs')
-	;              $fishTimes, $toggle_at_end = False, $adjustMouse = True,                        $fishToggle = True,                 $fishSlow = False
-	;              times to fish / toggle at end?      Do we move the mouse away after a click?    Click twice (true) or once (false)  delay 1 sec each click?
+	$loc_toggle_at_end = $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'cf' and $myCmd <> 'fs'
+	$loc_fish_toggle = $myCmd <> 'fc' and $myCmd <> 'cf' and $myCmd <> 'ffs'
+	FishItmBossDmg($nextNum,     $myCmd == 'ft', $loc_toggle_at_end,     $loc_fish_toggle,         $myCmd == 'fs')
+	;              times to fish toggle at end?  Move mouse after click? Click 2x(true)/1x(false)  delay 1 sec each click?
   ElseIf $myCmd == 'i' Then
     DoInt()
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
@@ -627,16 +628,26 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[8] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'qd' ]
+  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc']
   Local $um = UBound($metas) - 1
 
+  if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
+
   For $x = 0 to $um
-    if StringLeft($param, StringLen($metas[$x])) == $metas[$x] Then
-	  Return True
-    EndIf
+    if $param == $metas[$x] Then Return True
   Next
 
-  if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
+  if not StringRegExp($param, "[0-9]+$") Then Return False
+
+  Local $metas_need_num[1] = [ 'qd' ]
+  Local $umn = UBound($metas_need_num) - 1
+
+  $nextNum = StringRegExpReplace($param, "^[a-z]+", "")
+  Local $myCmd = StringRegExpReplace($param, "[0-9]+$", "")
+
+  For $x = 0 to $umn
+    if $myCmd == $x Then Return True
+  Next
 
   Return False
 EndFunc
