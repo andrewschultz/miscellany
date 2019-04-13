@@ -215,7 +215,9 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	$loc_toggle_at_end = $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'cf' and $myCmd <> 'fs'
 	$loc_fish_toggle = $myCmd <> 'fc' and $myCmd <> 'cf' and $myCmd <> 'ffs'
-	FishItmBossDmg($nextNum,     $myCmd == 'ft', $loc_toggle_at_end,     $loc_fish_toggle,         $myCmd == 'fs')
+	$loc_move_mouse = $myCmd <> 'fc' and $myCmd <> 'cf'
+	$loc_need_delay = $myCmd <> 'fc' and $myCmd <> 'cf'
+	FishItmBossDmg($nextNum,     $myCmd == 'ft', $loc_toggle_at_end,     $loc_fish_toggle,         $myCmd == 'fs' , $loc_move_mouse, $loc_need_delay)
 	;              times to fish toggle at end?  Move mouse after click? Click 2x(true)/1x(false)  delay 1 sec each click?
   ElseIf $myCmd == 'i' Then
     DoInt()
@@ -703,15 +705,12 @@ Func justClick($clicksToDo)
   Next
 EndFunc
 
-Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fishToggle = True, $fishSlow = False)
+Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fishToggle = True, $fishSlow = False, $everMouseMove = True, $anyDelay = True)
   local $multiplier = 1
-  if $fishToggle and not $fishSlow Then
-    $multiplier += 1
-  endif
+  if $fishToggle and not $fishSlow Then $multiplier += 1
   local $locDelay = 1000
-  if $fishSlow Then
-    $locDelay = $delay
-  EndIf
+  if $fishSlow Then $locDelay = $delay
+  if not $anyDelay Then $locDelay = 0
   if $adjustMouse Then
     ToHab()
     $mouseX = 670
@@ -724,7 +723,7 @@ Func FishItmBossDmg($fishTimes, $toggle_at_end = False, $adjustMouse = True, $fi
   for $i = 1 to $fishTimes * $multiplier
     sleep($locDelay)
 	MouseClick("left", $mouseX, $mouseY, 1) ; click it on *and* off
-	MouseMove($mouseX + 20, $mouseY) ; click it on *and* off
+	if $everMouseMove Then MouseMove($mouseX + 20, $mouseY) ; click it on *and* off
   Next
   if $toggle_at_end == True Then
     sleep($locDelay)
