@@ -1080,7 +1080,6 @@ sub checkWarnings {
     if ($doPerlTidy) {
       if ( -s $_[0] == 0 ) {
         print("$_[0] may be a symlink. Skipping.\n");
-        continue;
       }
       print "Tidying $_[0]... to $_[0].tdy\n";
       system("perltidy.bat -i=2 $_[0]");

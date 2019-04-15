@@ -66,8 +66,7 @@ def check_source(a):
     short2 = os.path.basename(b)
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
     with open(a) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             ll = line
             if 'use1 entry on' in ll.lower():
                 print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
@@ -99,7 +98,7 @@ def check_source(a):
                           lambda match: title_unless_caps(match.group(0), x), ll, 0, re.IGNORECASE)
                         if ll != ll_old:
                             difs += 1
-                            print("Line", line_count, "of", short, "miscapitalized", x, "" if this_line_yet else "==={:s}".format(line.strip()))
+                            print("                    also miscapitalized" if this_line_yet else "Line {:d} of {:s} miscapitalized".format(line_count, short), x, "" if this_line_yet else "==={:s}".format(line.strip()))
                             this_line_yet = True
             fout.write(ll)
     fout.close()
@@ -142,7 +141,8 @@ while count < len(sys.argv):
     if (myarg[0] == '-'):
         myarg = myarg[1:]
     if myarg == 'e':
-        os.system("zr.txt")
+        if os.path.exists("zr.txt") and os.pwdir() != "c:/writing/scripts": print("WARNING superfluous zr.txt in current directory. They should all be migated to", zr_data)
+        os.system(zr_data)
         exit()
     elif myarg == 'c':
         i7.open_source()
@@ -226,4 +226,4 @@ for x in i7.i7f[proj]:
 if line_to_open:
     if not open_post: sys.exit("Use -o to open the config file at the line that threw a warning.")
     i7.npo(zr_data, line_to_open)
-else if open_post: sys.exit("No errors/inconsistencies found in " + zr_data)
+elif open_post: sys.exit("No errors/inconsistencies found in " + zr_data)

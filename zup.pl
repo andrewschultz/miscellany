@@ -339,6 +339,10 @@ sub readZupFile {
       };
       /^out=/i && do {
         $a =~ s/^out=//gi;
+        if ( $a !~ /\.zip$/i ) {
+          print "Tacking on .zip to the end of $a.\n";
+          $a .= ".zip";
+        }
         $outFile = $a;
         my $outLong = "c:/games/inform/zip/$outFile";
         $lastFile = $outLong;

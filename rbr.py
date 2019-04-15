@@ -507,6 +507,7 @@ while count < len(sys.argv):
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
     elif os.path.exists(arg): in_file = arg
+    elif os.path.exists(arg + ".txt"): in_file = arg + ".txt"
     elif arg == 'si': show_singletons = True
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
