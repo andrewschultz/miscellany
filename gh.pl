@@ -97,6 +97,9 @@ my $cmdYet   = 0;
 my $warnYet  = 0;
 my $zeroOkay = 0;
 
+my $links_found = 0;
+my $links_needed = 0;
+
 my $reverse = 0;
 
 my $count        = 0;
@@ -561,11 +564,17 @@ sub processTerms {
           my $s2 = stat($outName);
           if ( ( $s1->size == 0 ) && ( $s2->size != 0 ) ) {
             print "$fromFile is linked to $outName.\n" if $verbose;
+			$links_found++;
           }
           else {
+		    if ($fromFile =~ /story.ni/) {
+			print "Skipping $fromFile, since linking doesn't work with it.\n"; }
+			else {
             print "$fromFile is not linked to $outName.\n";
             print "erase $fromFile\n";
             print "mklink $fromFile $outName\n";
+			$links_needed++;
+			}
           }
           next;
         }
@@ -753,6 +762,10 @@ sub processTerms {
     if ( $#procAry == -1 ) { print "Nothing found for $q.\n"; exit(); }
   }
   else {
+  if ($linkTest) {
+    print("Links found = $links_found Links needed (?) = $links_needed.\n");
+	return $didOne;
+  }
     print
 "Copied $copies file(s), $wildcards/$wildSwipes wild cards, $unchanged unchanged, $totalNewFiles new files, $badFileCount bad files, $uncop uncopied files.\n";
     print "Also, "
