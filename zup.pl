@@ -54,6 +54,7 @@ my $bailOnFileSize    = 1;
 my $deleteBefore      = 1;
 my $maxTimeDelay      = 1800;
 my $verbose           = 0;
+my $buildBefore = 0;
 
 ##################variables
 my $count = 0;
@@ -139,6 +140,12 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+	/^-?b$/ && do {
+	  print "Running rebuild before zipping up.\n";
+	  $buildBefore = 1;
+	  $count++;
+	  next;
+	};
     /^-?ea$/ && do { $extractAfter = 1; $count++; next; };
     /^-?la$/ && do { $extractAfter = $launchAfter = 1; $count++; next; };
     /^-?e$/ && do { print "Opening commands file $zupt.\n"; `$zupt`; exit; };
@@ -337,6 +344,18 @@ sub readZupFile {
         }
         return;
       };
+	  /^build=/ && do {
+	  if ($buildBefore) {
+
+	    (my $temp = $a) =~ s/.*=//;
+	    my @buildInfo = split(/,/, $temp);
+	    my $cmd = sprintf("icl.pl -j%s %s", $buildInfo[0], $buildInfo[1]);
+		print("Running build command $cmd\n");
+		my $stuff = `$cmd`;
+		print($stuff);
+		}
+		next;
+	  };
       /^out=/i && do {
         $a =~ s/^out=//gi;
         if ( $a !~ /\.zip$/i ) {
@@ -589,10 +608,11 @@ USAGE: zupt.pl (project)
 -p print command execution results
 -v view output zip file if already there
 -x execute optional commands (x+ forces things in the file)
+-b builds before zipping
 -nx execute nothing (overrides -x)
 -a = -x -db -dc -dl(without bailing). -[ol] open after used to be part of this but no longer is.
 -?f = show example of formats
-EXAMPLE: zup.pl -dq -x 17
+EXAMPLE: zup.pl -dq -x -b 17
 EXAMPLE: zup.pl -eo 17
 EOT
   exit;
@@ -607,6 +627,7 @@ v=(version)
 dl=(dropbox link)
 x: or >>(executable command)
 out=out file name (% = release number)
+build=kind of build (b/beta or r/release)
 min:=minimum acceptable size
 max:=maximum acceptable size (to make sure debug builds don't get through)
 ?:file1<file2 = make sure files are in order
