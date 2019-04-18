@@ -237,6 +237,19 @@ sub readZupFile {
 
     #print "$a: ";
 
+	if ($a =~ /^mistakes=/) {
+	  $a =~ s/^mistakes=//gi;
+	  my @b = split(/,/, $a);
+	  my $bail = 0;
+	  for my $c (@b) {
+	    if ( defined( $here{$c} ) && ( $here{$c} == 1 ) ) {
+		  $bail++;
+		  print("WARNING project $c in mistakes. Maybe you meant to add a t to run the test build?\n");
+		}
+	  }
+	  die("Fix mistakes and try again.");
+	}
+
     if ( $a =~ /^name=/i ) {
       if ($needExclam) {
         die("$_[0] line $. needs exclamation mark before $a");
