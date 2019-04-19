@@ -38,37 +38,6 @@ def do_one_sort(sort_string, fout, zap_prefix = False):
     fout.write("\n" + ow + "\n\n")
     return
 
-# start main
-
-cmd_count = 1
-while cmd_count < len(sys.argv):
-    arg = nohy(sys.argv[cmd_count])
-    if arg == 'd': show_dif = True
-    elif arg == 'f': force_copy = True
-    elif arg == 'vv': very_verbose = verbose = True
-    elif arg == 'v': verbose = True
-    elif arg == '?': usage()
-    elif arg in i7x: i7.go_proj(sys.argv[1])
-    else:
-        usage("Invalid parameter " + arg)
-else:
-    print("Using current directory.")
-
-if not os.path.exists('story.ni'):
-    print("No story.ni in path. Please check and try again.")
-    exit()
-
-
-if not os.path.exists("salf.txt"): sys.exit("Need salf.txt in path to do anything.")
-
-with open("salf.txt") as file:
-    for line in file:
-        if line.startswith(';'): break
-        if line.startswith('#'): continue
-        ll = line.strip().lower().split("\t")
-        sort_start[ll[0]] = ll[1]
-        sort_end[ll[1]] = ll[0]
-
 def main_sect_alf(my_file):
     my_bak = my_file + ".bak"
     fout = open(my_bak, "w", newline="\n")
@@ -150,7 +119,43 @@ def main_sect_alf(my_file):
     else:
         print("Use -c to copy over.")
     os.remove(my_bak)
-    
-main_sect_alf("story.ni")
-if "very" in os.getcwd():
-    main_sect_alf(i7.tafi("vvff"))
+
+# start main
+
+my_default_proj = i7.dir2proj()
+story_file_only = False
+cmd_defined_proj = ""
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = nohy(sys.argv[cmd_count])
+    if arg == 'd': show_dif = True
+    elif arg in i7.i7x: cmd_defined_proj = arg
+    elif arg == 'f': force_copy = True
+    elif arg == 'xv' or arg == 'vx': very_verbose = verbose = True
+    elif arg == 'v': verbose = True
+    elif arg == 'so': story_only = True
+    elif arg == 'all' or arg == 'a': story_only = False
+    elif arg == '?': usage()
+    elif arg in i7x: i7.go_proj(sys.argv[1])
+    else:
+        usage("Invalid parameter " + arg)
+else:
+    print("Using current directory.")
+
+with open("c:/writing/scripts/salf.txt") as file:
+    for line in file:
+        if line.startswith(';'): break
+        if line.startswith('#'): continue
+        ll = line.strip().lower().split("\t")
+        sort_start[ll[0]] = ll[1]
+        sort_end[ll[1]] = ll[0]
+
+if not cmd_defined_proj:
+    cmd_defined_proj = my_default_proj
+    if not cmd_defined_proj: sys.exit("Need to be in a project directory or request one on the command line.")
+
+if story_file_only:
+    main_sect_alf("story.ni")
+else:
+    for x in i7.i7f[cmd_defined_proj]: main_sect_alf(x)
