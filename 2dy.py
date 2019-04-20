@@ -34,18 +34,19 @@ def get_init_sections():
             ary = line.lower().strip().split(",")
             for q in ary:
                 ary2 = q.split('=')
-                sect_ary += ary2[0]
+                sect_ary.append(ary2[0])
                 # init_sect[ary2[0]] = ary2[1]
 
 def see_back(d, my_dir, days_back):
     my_file = d.subtract(days=days_back).format('YYYYMMDD') + ".txt"
     return os.path.join(my_dir, my_file)
 
-def create_new_file(my_file):
-    f = open(my_file)
-    f.write("\n")
-    f.write("\n\n".join(sect_ary))
+def create_new_file(my_file, launch = True):
+    print("Creating new daily file", my_file)
+    f = open(my_file, "w")
+    for s in sect_ary: f.write("\n\\{:s}\n".format(s))
     f.close()
+    if launch: os.system(my_file)
 
 #
 # main coding block
@@ -57,6 +58,7 @@ os.chdir("c:/writing/scripts")
 get_init_sections()
 
 if create_or_open:
+    found_done_file = False
     for x in range(0, max_days_new):
         day_file = see_back(d, daily, x)
         day_done_file = see_back(d, daily_done, x)
@@ -66,8 +68,9 @@ if create_or_open:
             exit()
         if os.path.exists(day_done_file): found_done_file = day_done_file
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
-    print("Looking back", max_days_new, "days, daily file not found. Creating new one.")
+    print("Looking back", max_days_new, "days, daily file not found.")
     create_new_file(see_back(d, daily, 0))
+    exit()
 
 files_back_in_dir = 0
 for x in range(0, max_days_back):
@@ -78,4 +81,5 @@ for x in range(0, max_days_back):
     if files_back_in_dir == files_back_wanted:
         print("Got daily file", day_file, files_back_wanted, "files back.")
         os.system(day_file)
+        exit()
 
