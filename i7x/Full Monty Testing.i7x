@@ -15,7 +15,7 @@ widdershins is a direction. turnwise is a direction. the opposite of widdershins
 chapter main monty table
 
 this is the try-exits rule:
-	try exitsing;
+	try monty-exitsing;
 
 this is the try-inventory rule:
 	try taking inventory;
@@ -58,13 +58,13 @@ this is the try-think rule:
 this is the try-sleep rule:
 	try sleeping;
 
-chapter exitsing
+chapter monty-exitsing
 
-exitsing is an action out of world.
+monty-exitsing is an action out of world.
 
 montydirs is a list of directions variable. montydirs is { north, west, south, east }
 
-carry out exitsing:
+carry out monty-exitsing:
 	repeat with Q running through montydirs:
 		let Q2 be the room Q of location of player;
 		if Q2 is not nowhere, say "[Q2] is [Q] of [location of player].";

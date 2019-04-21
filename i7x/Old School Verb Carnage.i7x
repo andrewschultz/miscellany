@@ -44,8 +44,9 @@ os2ing is an action applying to one topic.
 
 carry out os2ing: try oldschooling instead;
 
-[carry out oldschooling:
-	say "An old school verb like [word number 1 in the player's command] isn't strictly necessary in this game. See [b]V/VERB/VERBS[r] for what is used/useful." instead;]
+[a "check oldschooling" rule is probably the way to go here.]
+carry out oldschooling (this is the generic old school verb rule):
+	say "An old school verb like [word number 1 in the player's command] isn't strictly necessary in this game. See [b]V/VERB/VERBS[r] for what is used/useful." instead;
 
 Old School Verb Carnage ends here.
 

@@ -247,7 +247,7 @@ sub readZupFile {
 		  print("WARNING project $c in mistakes. Maybe you meant to add a t to run the test build?\n");
 		}
 	  }
-	  die("Fix mistakes and try again.");
+	  die("Fix mistakes and try again.") if $bail;
 	}
 
     if ( $a =~ /^name=/i ) {
