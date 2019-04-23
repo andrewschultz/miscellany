@@ -96,8 +96,11 @@ while ( $count <= $#ARGV ) {
     /^-?[lr]+$/
       && do
     { # this must be after the filename check since RL = roiling logic. Unfortunately, things clashed.
-      $launchAfter = ( $a =~ /l/ );
-      $launchRaw   = ( $a =~ /r/ );
+      $launchAfter = () = $a =~ /l/g;
+      $launchRaw   = () = $a =~ /r/g;
+      die(
+        "The -lr feature can't have more than one or two L's or R's. Bailing.")
+        if ( $launchAfter > 1 or $launchRaw > 1 );
       $count++;
       print
 "NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that.\n"
@@ -117,6 +120,8 @@ while ( $count <= $#ARGV ) {
     exit();
   }
 }
+
+exit();
 
 if ( ( !-f "$filename" ) && ( !$createTextFile ) ) {
   print "No valid filename $filename, going to usage.\n";
