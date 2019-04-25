@@ -12,8 +12,7 @@ import os
 import sys
 import time
 import i7
-from time import mktime
-from datetime import datetime
+import pendulum
 
 base_dir_needed = "c:\\users\\andrew\\documents\\github"
 
@@ -36,6 +35,8 @@ def usage(arg = ""):
     print()
     print("a number specifies the days back to look. If it is before midnight, nothing happens.")
 
+
+time_zone = 5
 
 min_before = 3
 sec_before = 0
@@ -99,31 +100,18 @@ if base_dir_needed not in os.getcwd().lower():
 if sec_before > 60 and min_before > 0: sys.exit(">60 seconds + minutes may be confusing. Use -so to remove this.")
 if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
 
-x = time.localtime().tm_isdst
-y = time.localtime()
+my_time = pendulum.today()
 
-z = int(time.time())
+mod_date = my_time.subtract(days=days-1)
 
-z00 = (int(z/86400)) * 86400
+sec_before += 60 * min_before
+mod_date = mod_date.subtract(seconds=sec_before)
 
-z0 = (int(z/86400) - days) * 86400
+date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
-z2 = time.localtime(z0)
+out_string = "git commit --amend --date=\"{:s}\"".format(date_string, time_zone)
 
-z1 = (int(z/86400) - days) * 86400 + 21600 - min_before * 60 - sec_before
-z1 += z2.tm_isdst * 3600 # daylight savings adjustment
-
-zadj = z0 + (5-x) * 3600
-
-print("Here is the current time:", my_time(z))
-print("Here is the cutoff time:", my_time(zadj))
-
-if z1 < zadj:
-    sys.exit("Current time is {:s} so you don't need to shift anything today. I try for yesterday until {:s}.\nYou can use a number on the command line to specify days back.".format(my_time(z), time.strftime("%H:%M:%S", time.localtime(zadj))))
-
-out_string = "git commit --amend --date=\"{:s} -0{:d}00\"".format(time.strftime(my_time(z1)), 6 - x)
-
-print(out_string)
+print("Command to run ==========", out_string)
 
 if run_cmd:
     os.system(out_string)
