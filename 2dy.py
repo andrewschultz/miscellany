@@ -2,9 +2,11 @@
 # 2dy.py: replacement for perl script that went X daily files back.
 #
 
+import sys
 import pendulum
 import os
 from collections import defaultdict
+import mytools as mt
 
 #init_sect = defaultdict(str)
 
@@ -24,6 +26,12 @@ sect_ary = []
 
 files_back_wanted = 1
 verbose = False
+
+def usage(param = 'Cmd line usage'):
+    print(param)
+    print('=' * 50)
+    print("(-?)f (#) = # files back")
+    exit()
 
 def get_init_sections():
     global sect_ary
@@ -55,9 +63,19 @@ def create_new_file(my_file, launch = True):
 
 os.chdir("c:/writing/scripts")
 
-get_init_sections()
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg[0] == 'f' and arg[1:].isdigit():
+        files_back_wanted = int(arg[1:])
+        create_or_open = False
+    elif arg == '?': usage()
+    else: usage("Bad parameter {:s}".format(arg))
+    cmd_count += 1
 
 if create_or_open:
+    get_init_sections()
     found_done_file = False
     for x in range(0, max_days_new):
         day_file = see_back(d, daily, x)
@@ -77,8 +95,8 @@ for x in range(0, max_days_back):
     day_file = see_back(d, daily, x)
     if os.path.exists(day_file):
         files_back_in_dir += 1
-        if verbose and files_back_in_dir < files_back_wanted: print("Skipping", day_file)
-    if files_back_in_dir == files_back_wanted:
+        if verbose and files_back_in_dir <= files_back_wanted: print("Skipping", day_file)
+    if files_back_in_dir > files_back_wanted:
         print("Got daily file", day_file, files_back_wanted, "files back.")
         os.system(day_file)
         exit()
