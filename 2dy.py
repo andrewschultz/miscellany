@@ -17,7 +17,7 @@ max_days_new = 7
 max_days_back = 1000
 
 os.chdir("c:/writing/daily")
-create_or_open = True
+latest_daily = True
 
 daily = "c:/writing/daily/"
 daily_done = "c:/writing/daily/done/"
@@ -31,6 +31,10 @@ def usage(param = 'Cmd line usage'):
     print(param)
     print('=' * 50)
     print("(-?)f (#) = # files back")
+    print("(-?)m (#) = # max days back")
+    print("(-?)mn/n/nm (#) = # max new days back")
+    print("(-?)l or ln/nl = latest-daily (or not)")
+    print("(-?)v or vn/nv = toggle verbosity")
     exit()
 
 def get_init_sections():
@@ -69,12 +73,22 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'f' and arg[1:].isdigit():
         files_back_wanted = int(arg[1:])
-        create_or_open = False
+        latest_daily = False
+    elif arg[0] == 'm' and arg[1:].isdigit():
+        max_days_back = int(arg[1:])
+        latest_daily = False
+    elif (arg[:2] == 'mn' or arg[:2] == 'nm') and arg[2:].isdigit():
+        max_days_new = int(arg[2:])
+        latest_daily = False
+    elif arg == 'l': latest_daily = True
+    elif arg == 'nl' or arg == 'ln': latest_daily = False
+    elif arg == 'v': verbose = True
+    elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
 
-if create_or_open:
+if latest_daily:
     get_init_sections()
     found_done_file = False
     for x in range(0, max_days_new):
