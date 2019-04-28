@@ -21,8 +21,12 @@ force_copy = False
 verbose = False
 very_verbose = False
 
-sort_start = defaultdict(str)
-sort_end = defaultdict(str)
+sort_start = defaultdict(lambda: defaultdict(int))
+sort_end = defaultdict(lambda: defaultdict(int))
+got_start_yet = defaultdict(bool)
+got_end_yet = defaultdict(bool)
+
+alf_file = "c:/writing/scripts/salf.txt"
 
 def usage(header="USAGE FOR SALF.PY"):
     print(header)
@@ -38,7 +42,7 @@ def do_one_sort(sort_string, fout, zap_prefix = False):
     fout.write("\n" + ow + "\n\n")
     return
 
-def main_sect_alf(my_file):
+def main_sect_alf(my_proj, my_file):
     my_bak = my_file + ".bak"
     fout = open(my_bak, "w", newline="\n")
     print("Alphabetizing sections in", my_file, "...")
@@ -51,27 +55,28 @@ def main_sect_alf(my_file):
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             do_more = True
-            for x in sort_start.keys():
+            for x in sort_start[my_proj].keys():
                 if x in line:
                     if in_sort:
-                        print("BAILING: line", line_count, "has", x, "but already in sort area", x)
+                        print("BAILING: line", line_count, "has", x, "but already in sort area", sort_name)
                     in_sort = True
                     sort_name = x
                     if verbose: print("Starting", x, "line", line_count)
                     fout.write(line)
                     sort_string = ''
                     do_more = False
+                    got_start_yet[x] = True
                     continue
-            for x in sort_end.keys():
+            for x in sort_end[my_proj].keys():
                 if x in line:
-                    if sort_end[x] != sort_name:
-                        print("Conflict:", x, start_of[x], "line", )
-                        exit()
+                    if not in_sort:
+                        print("BAILING: line", line_count, "has", x, "but is not in any sorting area.")
                     do_one_sort(sort_string.strip(), fout, 'i7x' in my_file)
                     in_sort = False
                     fout.write(line)
                     do_more = False
-                    if verbose: print("stopped writing", line_count)
+                    if verbose: print("stopped writing", line_count, x)
+                    got_end_yet[x] = True
                     continue
             if alf_next_chunk:
                 sort_array = []
@@ -137,25 +142,43 @@ while cmd_count < len(sys.argv):
     elif arg == 'so': story_only = True
     elif arg == 'all' or arg == 'a': story_only = False
     elif arg == '?': usage()
-    elif arg in i7x: i7.go_proj(sys.argv[1])
+    elif arg in i7x:
+        if cmd_defined_proj: sys.exit("Redefined project from {:s} to {:s}.".format(cmd_defined_proj, i7.proj_exp(arg)))
+        i7.go_proj(arg)
+        cmd_defined_proj = i7.proj_exp(arg)
     else:
         usage("Invalid parameter " + arg)
-else:
-    print("Using current directory.")
+    cmd_count += 1
 
-with open("c:/writing/scripts/salf.txt") as file:
-    for line in file:
+current_project = ""
+
+with open(alf_file) as file:
+    for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.strip().lower().split("\t")
-        sort_start[ll[0]] = ll[1]
-        sort_end[ll[1]] = ll[0]
+        print(line_count)
+        if ll[0].lower().startswith("project="):
+            temp = re.sub("^.*?=", "", ll[0])
+            current_project = i7.proj_exp(temp)
+            continue
+        sort_start[current_project][ll[0]] = -1
+        sort_end[current_project][ll[1]] = -1
 
 if not cmd_defined_proj:
-    cmd_defined_proj = my_default_proj
+    cmd_defined_proj = i7.proj_exp(my_default_proj)
     if not cmd_defined_proj: sys.exit("Need to be in a project directory or request one on the command line.")
 
+if cmd_defined_proj not in sort_start: sys.exit("Could not find {:s} in projects for {:s}".format(cmd_defined_proj, alf_file))
+
+for x in sort_start[cmd_defined_proj]: got_start_yet[x] = False
+for x in sort_end[cmd_defined_proj]: got_end_yet[x] = False
+
 if story_file_only:
-    main_sect_alf("story.ni")
+    main_sect_alf(cmd_defined_proj, i7.main_src(cmd_defined_proj))
 else:
-    for x in i7.i7f[cmd_defined_proj]: main_sect_alf(x)
+    for x in i7.i7f[cmd_defined_proj]: main_sect_alf(cmd_defined_proj, x)
+    un_start = [x for x in got_start_yet if got_start_yet[x] == False]
+    if len(un_start): print("Start tokens missed:", ', '.join(un_start))
+    un_end = [x for x in got_end_yet if got_end_yet[x] == False]
+    if len(un_end): print("End tokens missed:", ', '.join(un_end))
