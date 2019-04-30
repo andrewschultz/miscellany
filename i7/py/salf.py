@@ -21,6 +21,8 @@ force_copy = False
 verbose = False
 very_verbose = False
 
+include_dict = defaultdict(list)
+exclude_dict = defaultdict(list)
 sort_start = defaultdict(lambda: defaultdict(int))
 sort_end = defaultdict(lambda: defaultdict(int))
 got_start_yet = defaultdict(bool)
@@ -35,6 +37,12 @@ def usage(header="USAGE FOR SALF.PY"):
     print("-f = force copy-over on different sizes")
     print("-v = verbose")
     exit()
+
+def longhand(proj,sh):
+    if sh == 's': return i7.main_src(proj)
+    temp = sh.split("-")
+    if temp[0] == 'h': return i7.src_file(proj, temp[1])
+    sys.exit("Undefined longhand for {:s}/{:s} project/shorthand.".format(proj, sh))
 
 def do_one_sort(sort_string, fout, zap_prefix = False):
     divs = sort_string.split("\n\n")
@@ -104,8 +112,7 @@ def main_sect_alf(my_proj, my_file):
     if show_dif:
         if cmp(my_file, my_bak): print(my_file, "and", my_bak, "are identical. Not showing.")
         else: i7.wm(my_file, my_bak)
-    else:
-        print("Not showing differences.")
+    elif not cmp(my_file, my_bak): print("Not showing differences.")
     s1 = os.stat(my_file).st_size
     s2 = os.stat(my_bak).st_size
     if copy_over:
@@ -157,10 +164,17 @@ with open(alf_file) as file:
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.strip().lower().split("\t")
-        print(line_count)
         if ll[0].lower().startswith("project="):
             temp = re.sub("^.*?=", "", ll[0])
             current_project = i7.proj_exp(temp)
+            continue
+        if ll[0].lower().startswith("include="):
+            temp = re.sub("^.*?=", "", ll[0])
+            include_dict[current_project] = [longhand(current_project, x) for x in temp.split(',')]
+            continue
+        if ll[0].lower().startswith("exclude="):
+            temp = re.sub("^.*?=", "", ll[0])
+            exclude_dict[current_project] = [longhand(current_project, x) for x in temp.split(',')]
             continue
         sort_start[current_project][ll[0]] = -1
         sort_end[current_project][ll[1]] = -1
@@ -177,7 +191,14 @@ for x in sort_end[cmd_defined_proj]: got_end_yet[x] = False
 if story_file_only:
     main_sect_alf(cmd_defined_proj, i7.main_src(cmd_defined_proj))
 else:
-    for x in i7.i7f[cmd_defined_proj]: main_sect_alf(cmd_defined_proj, x)
+    if cmd_defined_proj in include_dict:
+        print("Going with include-dict of", ', '.join([os.path.basename(x) for x in include_dict[cmd_defined_proj]]), "for", cmd_defined_proj)
+        my_files_ary = include_dict[cmd_defined_proj]
+    elif cmd_defined_proj in exclude_dict:
+        print("Going with exclude-dict of", ', '.join([os.path.basename(x) for x in exclude_dict[cmd_defined_proj]]), "for", cmd_defined_proj)
+        my_files_ary = exclude_dict[cmd_defined_proj]
+    else: my_files_ary = i7.i7f[cmd_defined_proj]
+    for x in my_files_ary: main_sect_alf(cmd_defined_proj, x)
     un_start = [x for x in got_start_yet if got_start_yet[x] == False]
     if len(un_start): print("Start tokens missed:", ', '.join(un_start))
     un_end = [x for x in got_end_yet if got_end_yet[x] == False]
