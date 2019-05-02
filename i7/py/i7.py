@@ -215,7 +215,7 @@ def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
 def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
-src = main_src
+proj_src = src = main_src
 
 def src_file(x, y):
     if y in i7nonhdr.keys():

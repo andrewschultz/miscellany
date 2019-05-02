@@ -544,6 +544,7 @@ sub processOneFile {
   open( A, "$_[0]" ) || die("No $_[0]. Create it or remove it from gq.txt.");
   while ( $a = <A> ) {
     my $temp = $a;
+    next if !$printTabbed && ( $a =~ /^\t/ );
     if ( $inQuotes && ( $a =~ /\"/ ) ) {
       my $temp = $a;
       @quoteAry = split( "\"", $a );
@@ -573,7 +574,6 @@ sub processOneFile {
         chomp($thisImportant);
       }
     }
-    $line++;
     if ( ( $a =~ /^table of / ) && ( !$currentTable ) ) {
       $idx          = -1;
       $currentTable = $a;
@@ -597,7 +597,7 @@ sub processOneFile {
       $foundOne++;
       $foundTotal++;
       ( my $a2 = $a ) =~ s/^\t+/\|\| /g;
-      $tempString = "$modFile($line";
+      $tempString = "$modFile($.";
       $tempString .= ",$currentTable"        if $currentTable;
       $tempString .= ",$thisImportant,L$idx" if $thisImportant;
       $tempString .= "): $a2";

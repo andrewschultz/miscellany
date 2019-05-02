@@ -30,6 +30,7 @@ my $verbose         = 0;
 my $questionLast    = 0;
 my $ghAfter         = 0;
 my $launchPost      = "";
+my $github_recommended = 1;
 
 my $questionsThisTime = 0;
 my $answersThisTime   = 0;
@@ -88,6 +89,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?\?$/ && do { usage(); exit; };
     /^-?gh$/ && do { $ghAfter = 1; $count++; next; };
+    /^-?(gn|ng)$/ && do { $github_recommended = 0; $count++; next; };
     /^-?a$/  && do { printAllFiles(0); exit; };
     /^-?la$/ && do { listAllOutput();  exit; };
     /^-?d$/ && do { $debug           = 1; $count++; next; };
@@ -120,8 +122,6 @@ while ( $count <= $#ARGV ) {
     exit();
   }
 }
-
-exit();
 
 if ( ( !-f "$filename" ) && ( !$createTextFile ) ) {
   print "No valid filename $filename, going to usage.\n";
@@ -191,6 +191,7 @@ while ( $a = <A> ) {
     $a =~ s/^out=//i;
     chomp($a);
     $outname = "$invDir\\$a";
+	print("WARNING: OUTNAME of $invDir goesn't have/avoid github as it should.\n") if ($outname =~ /github/) != ($github_recommended);
     next;
   }
 

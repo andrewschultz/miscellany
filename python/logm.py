@@ -22,6 +22,8 @@ def my_time(t):
 def usage(arg = ""):
     if arg: print("Invalid command", arg)
     else: print("USAGE")
+    my_time = pendulum.today().subtract(seconds=min_before * 60 + sec_before)
+    time_str = my_time.format("HH:mm:ss ZZ")
     print("=" * 50)
     print("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc")
@@ -29,12 +31,12 @@ def usage(arg = ""):
     print("m# specifies minutes before midnight")
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
-    print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d}.".format(min_before * 60 + sec_before))
+    print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d} for a time of {:s}.".format(min_before * 60 + sec_before, time_str))
     print()
     print("Standard usage is probably logm.py rl (!) (3)")
     print()
     print("a number specifies the days back to look. If it is before midnight, nothing happens.")
-
+    exit()
 
 time_zone = 5
 
@@ -57,13 +59,13 @@ while count < len(sys.argv):
         if cmd_counts == 0: print("WARNING an L without an R or X means nothing.")
         elif cmd_counts > 1: print("WARNING extra r/x in the argument to run the command mean nothing.")
     elif arg.isdigit(): days = int(arg)
-    elif i7.proj_exp(arg):
+    elif i7.proj_exp(arg, False):
         if proj_shift_yet:
             print("WARNING shifting from project", proj_shift_yet)
-        proj_shift_yet = i7.proj_exp(arg)
+        proj_shift_yet = i7.proj_exp(arg, False)
         if not proj_shift_yet:
             sys.exit("No such project or abbreviation {:s}".format(arg))
-        print("Found project for {:s} but -p is extra-super-proper usage.".format(arg))
+        print("Found project for {:s} as {:s} but -p is extra-super-proper usage.".format(arg, proj_shift_yet))
     elif arg == '!':
         min_before = 0
         sec_before = int(random.random()) * 600 + 1
