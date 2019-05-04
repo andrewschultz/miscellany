@@ -20,6 +20,7 @@ glob_default = "da"
 default_sect = ""
 my_sect = ""
 default_by_dir = i7.dir2proj(to_abbrev = True)
+my_globs = []
 
 dg_cfg = "c:/writing/scripts/dgrab.txt"
 flat_cfg = os.path.basename(dg_cfg)
@@ -33,6 +34,9 @@ file_regex = defaultdict(str)
 notes_to_open = defaultdict(int)
 globs = defaultdict(str)
 
+file_list = defaultdict(list)
+sect_lines = defaultdict(int)
+
 max_process = 0
 open_notes = 0
 days_before_ignore = 7
@@ -43,6 +47,7 @@ verbose = False
 open_notes_after = True
 change_list = []
 print_ignored_filess = False
+list_it = False
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -54,6 +59,22 @@ def usage(header="GENERAL USAGE"):
     print("di = do windiff, ndi/din/nd/dn = don't do windiff")
     print("pi = print ignore, npi/pin = don't print ignore")
     exit()
+
+def get_list_data(this_fi):
+    bn = os.path.basename(this_fi)
+    in_sect = False
+    my_section = ""
+    with open(this_fi) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("\\"):
+                if in_sect: sys.exit("Died reading \\ inside \\ at line {:d}, starting line {:d}, file {:s}.".format(line_count, sect_start, bn))
+                my_section = re.sub("^.", "", line.lower().strip())
+                file_list[my_section].append(bn)
+                sect_start = line_count
+                in_sect = True
+            if in_sect and not line.strip():
+                sect_lines[my_section] += line_count - sect_start
+                in_sect = False
 
 def is_true_string(x):
     if x == '0' or x == 'false': return False
@@ -194,6 +215,7 @@ while cmd_count < len(sys.argv):
         days_before_ignore = int(temp)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
+    elif arg == 'l': list_it = True
     elif arg[:2] == 'g=': my_globs = arg[2:].split(",")
     elif arg == 'e':
         os.system(dg_cfg)
@@ -209,16 +231,17 @@ while cmd_count < len(sys.argv):
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
 
-x = []
 globbed_yet = defaultdict(bool)
+
+my_file_list = []
 
 if len(my_globs) == 0:
     print("Going with default glob.")
-    x.append(glob_default)
+    my_globs.append(glob_default)
 
 for q in my_globs:
     if globbed_yet[globs[q]]: continue
-    x = x + [u for u in glob.glob(globs[q]) if re.search(file_regex[q], u)]
+    my_file_list = my_file_list + [u for u in glob.glob(globs[q]) if re.search(file_regex[q], u)]
     globbed_yet[globs[q]] = True
 
 if not my_sect:
@@ -234,11 +257,19 @@ processed = 0
 max_warning = False
 if max_process == -1: print("Running test to cull all eligible files.")
 
-for q in x:
+for q in my_file_list:
+    if list_it:
+        get_list_data(q)
+        continue
     processed += send_mapping(my_sect, q, processed < max_process or max_process == 0)
     if max_process and processed == max_process and not max_warning:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
+
+if list_it:
+    print(file_list)
+    print(sect_lines)
+    exit()
 
 if processed == 0 and max_process >= 0: print("Could not find anything to process for {:s}.".format(my_sect))
 
