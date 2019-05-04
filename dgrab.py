@@ -40,6 +40,7 @@ sect_lines = defaultdict(int)
 max_process = 0
 open_notes = 0
 days_before_ignore = 7
+min_for_list = 0
 
 open_on_warn = False
 do_diff = True
@@ -58,6 +59,7 @@ def usage(header="GENERAL USAGE"):
     print("e = edit cfg file")
     print("di = do windiff, ndi/din/nd/dn = don't do windiff")
     print("pi = print ignore, npi/pin = don't print ignore")
+    print("l = list headers, l# = list headers with # or more entries")
     exit()
 
 def get_list_data(this_fi):
@@ -67,7 +69,9 @@ def get_list_data(this_fi):
     with open(this_fi) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("\\"):
-                if in_sect: sys.exit("Died reading \\ inside \\ at line {:d}, starting line {:d}, file {:s}.".format(line_count, sect_start, bn))
+                if in_sect:
+                    print("Died reading \\ inside \\ at line {:d}, starting line {:d}, file {:s}.".format(line_count, sect_start, bn))
+                    i7.npo(this_fi, line_count)
                 my_section = re.sub("^.", "", line.lower().strip())
                 file_list[my_section].append(bn)
                 sect_start = line_count
@@ -216,6 +220,9 @@ while cmd_count < len(sys.argv):
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'l': list_it = True
+    elif arg[0] == 'l' and arg[1:].isdigit():
+        list_it = True
+        min_for_list = int(arg[1:])
     elif arg[:2] == 'g=': my_globs = arg[2:].split(",")
     elif arg == 'e':
         os.system(dg_cfg)
@@ -267,8 +274,15 @@ for q in my_file_list:
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
 
 if list_it:
-    print(file_list)
-    print(sect_lines)
+    mins_ignored = 0
+    for x in sorted(file_list, key=lambda y: len(file_list[y]), reverse=True):
+        if len(file_list[x]) < min_for_list:
+            mins_ignored += 1
+            continue
+        fl2 = [re.sub(".txt", "", x0) for x0 in file_list[x]]
+        print("{:s} ({:d}) = {:s}".format(x, len(file_list[x]), ", ".join(fl2)))
+    if mins_ignored: print(mins_ignored, "list entries below minimum ignored.")
+    print(", ".join("{:s}={:d}".format(x, sect_lines[x]) for x in sorted(sect_lines, key=sect_lines.get, reverse=True)))
     exit()
 
 if processed == 0 and max_process >= 0: print("Could not find anything to process for {:s}.".format(my_sect))
