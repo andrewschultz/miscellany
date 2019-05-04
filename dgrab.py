@@ -15,6 +15,7 @@ import re
 import os
 import sys
 import time
+import filecmp
 
 glob_default = "da"
 default_sect = ""
@@ -25,6 +26,7 @@ my_globs = []
 dg_cfg = "c:/writing/scripts/dgrab.txt"
 flat_cfg = os.path.basename(dg_cfg)
 dg_temp = "c:/writing/temp/dgrab-temp.txt"
+dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 flat_temp = os.path.basename(dg_temp)
 
 mapping = defaultdict(str)
@@ -34,6 +36,7 @@ file_regex = defaultdict(str)
 notes_to_open = defaultdict(int)
 globs = defaultdict(str)
 
+where_to_insert = defaultdict(str)
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
 
@@ -47,7 +50,7 @@ do_diff = True
 verbose = False
 open_notes_after = True
 change_list = []
-print_ignored_filess = False
+print_ignored_files = False
 list_it = False
 
 def usage(header="GENERAL USAGE"):
@@ -60,6 +63,7 @@ def usage(header="GENERAL USAGE"):
     print("di = do windiff, ndi/din/nd/dn = don't do windiff")
     print("pi = print ignore, npi/pin = don't print ignore")
     print("l = list headers, l# = list headers with # or more entries")
+    print("s= = section to look for")
     exit()
 
 def get_list_data(this_fi):
@@ -100,7 +104,7 @@ def send_mapping(sect_name, file_name, change_files = False):
     in_sect = False
     file_remain_text = ""
     sect_text = ""
-    if sect_name not in mapping: sys.exit("No section name {:s}, bailing on file {:s}.".format(sect_name, file_name))
+    if sect_name not in mapping: sys.exit("No section name {:s} in the general mappings. Bailing on file {:s} before even running. Run with (-)e to open config.".format(sect_name, file_name))
     # print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -129,19 +133,52 @@ def send_mapping(sect_name, file_name, change_files = False):
         global change_list
         change_list.append(fn)
         return False
-    nfi = mapping[sect_name]
-    print("Found", sect_name, "in", file_name, "appending to", )
-    if nfi not in notes_to_open:
-        notes_to_open[nfi] = file_len(nfi)
-    f = open(nfi, "a")
-    f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
-    f.close()
     f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
-    if do_diff: i7.wm(file_name, dg_temp)
-    copy(dg_temp, file_name)
+    nfi = mapping[sect_name]
+    print("Found", sect_name, "in", file_name, "to add to", nfi)
+    if nfi not in notes_to_open:
+        notes_to_open[nfi] = file_len(nfi)
+    if where_to_insert[sect_name]:
+        print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, nfi))
+        write_next_blank = False
+        w2i = where_to_insert[sect_name]
+        f = open(dg_temp_2, "w")
+        with open(nfi) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if line.lower().strip() == w2i:
+                    f.write(line)
+                    if write_next_blank and not line.strip():
+                        f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
+                        remain_written = True
+                    elif line.startswith("\\"):
+                        write_next_blank = True
+                    else:
+                        f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
+                        write_next_blank = False
+                        remain_written = True
+                else: f.write(line)
+        if write_next_blank:
+            print("Need CR at end of section for {:s}. Writing at end of file anyway.".format(sect_name))
+            f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
+            f.write(sect_text)
+            remain_written = True
+        if not remain_written: sys.exit("Text chunk for {:s}/{:s} not written to {:s}. Bailing".format(sect_name, w2i, nif))
+        f.close()
+    else:
+        print("Appending to", nfi)
+        f = open(nfi, "a")
+        f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
+        f.close()
+    if do_diff:
+        i7.wm(nfi, dg_temp_2)
+        i7.wm(file_name, dg_temp)
+    sys.exit()
+    if not filecmp.cmp(dg_temp, file_name): copy(dg_temp, file_name)
+    if not filecmp.cmp(dg_temp_2, nfi): copy(dg_temp_2, nfi)
     os.remove(dg_temp)
+    os.remove(dg_temp_2)
     return True
 
 #
@@ -164,10 +201,14 @@ with open(dg_cfg) as file:
         if line.startswith("MAPPING="):
             my_regex_1 = r'^\\({:s})'.format(lary[0])
             my_regex_2 = r' *#({:s})\b'.format(lary[0])
+            if len(lary) < 3:
+                print("You need to have 3 arguments in a MAPPING: headers, file, and headers-in-file to insert after (empty is ok).")
+                i7.npo(dg_cfg, line_count)
             for q in my_args:
                 mapping[q] = lary[1]
                 regex_sect[q] = my_regex_1
                 regex_comment[q] = my_regex_2
+                where_to_insert[q] = lary[2]
         elif line.startswith("DEFAULT="): default_sect = lary[0]
         elif line.startswith("GLOBDEF="): glob_default = lary[0]
         elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])
@@ -184,7 +225,7 @@ with open(dg_cfg) as file:
                 elif len(temp1) == 0:
                     print("WARNING: glob pattern {:s}/{:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
                     cfg_edit_line = line_count
-                if print_ignored_filess and len(temp) != len(temp1):
+                if print_ignored_files and len(temp) != len(temp1):
                     print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
         elif line.startswith("OPENONWARN="):
             open_on_warn = int(lary[0])
@@ -220,6 +261,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'l': list_it = True
+    elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
         min_for_list = int(arg[1:])
