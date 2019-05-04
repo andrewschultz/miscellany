@@ -482,6 +482,8 @@ Func MaxAttr($attr_to_max)
 	; MOK("Where to click " & $column & " " & $row & " " & $equip_count, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
   WEnd
   FileClose($equip_file_handle)
+  if $thisPagesDown > 0 Then Send("{PGUP}")
+  ToTasks(False)
 EndFunc
 
 Func dance_around($x, $y)

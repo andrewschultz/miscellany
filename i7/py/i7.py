@@ -172,7 +172,10 @@ def to_prt(include_glob = "reg-*", exclude_glob = ""):
 def plur(a):
     return '' if a == 1 else 's'
 
-def wm(x1, x2):
+def wm(x1, x2, ignore_if_identical = True):
+    if ignore_if_identical and cmp(x1, x2):
+        print("Not comparing identical files", x1, "and", x2)
+        return
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
 def remove_quotes(x):
