@@ -26,6 +26,7 @@ def usage():
     print("all = print all adjusts and exit.")
     print("You can use a project abbreviation to go there, too.")
     print("e = edit {:s}, es = edit {:s}".format(irp_file, main.__file__))
+    print("You can also have IRP ignore an instead rule by specifying no-irp in a comment.")
     exit()
 
 def get_potential_adjusts():
@@ -44,7 +45,7 @@ def find_instead(q):
     global rule_count_global
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.lower().startswith(instead_str):
+            if line.lower().startswith(instead_str) and not "[no-irp]" in line.lower():
                 insteads += 1
                 rule_count_global += 1
                 out_string += "({:d}/{:d} L{:d}) ".format(insteads, rule_count_global, line_count) + line
@@ -82,6 +83,9 @@ while cmd_count < len(sys.argv):
     else:
         usage()
     cmd_count += 1
+
+print("====Results from running", " ".join(sys.argv))
+print()
 
 default_project = "ailihphilia"
 my_project = i7.dir2proj(os.getcwd())
