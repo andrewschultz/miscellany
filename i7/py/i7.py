@@ -21,6 +21,8 @@ from filecmp import cmp
 from shutil import copy
 import __main__ as main
 
+nice = nz = nicez = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Trivial Niceties Z-Only.i7x"
+niceg = ng = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Trivial Niceties.i7x"
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
