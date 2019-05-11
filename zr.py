@@ -1,10 +1,12 @@
 # zr.py
 #
-# trivial capitalizations fixer
+# trivial capitalizations and room name expansion
 #
-# can/should be generalized
+# e.g. "Bile Libe" converts all bile libe to Bile Libe, in libe>in Bile Libe converts "in libe" to "in bile libe"
 #
-# named zr.py because ZeroRez was the original until changed to DevReserved.
+# named zr.py because ZeroRez was the original in Ailihphilia until changed to DevReserved.
+#
+# zr.txt or 'e' on cmd line brings up cfg file
 #
 
 from collections import defaultdict
@@ -67,6 +69,7 @@ def check_source(a):
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith("test") and "with" in line: continue
             ll = line
             if 'use1 entry on' in ll.lower():
                 print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
@@ -179,7 +182,6 @@ with open(zr_data) as file:
         if line.startswith("PROJ"):
             if not line.startswith("PROJ="): sys.exit("You need to start line {:d} with PROJ= not {:s}.".format(line_count, line[:5]))
             cur_proj = i7.proj_exp(line.lower().strip()[5:])
-            print(cur_proj)
             if cur_proj == proj:
                 got_proj = True
                 in_proj = True
@@ -187,14 +189,12 @@ with open(zr_data) as file:
                 in_proj = False
             continue
         if not in_proj: continue
-        if '>' in line: # this could get hairy later if I use backchecks in regexes
-            ary = line.strip().split(">")
-            if len(ary) > 2:
-                print("Too many >'s at line", line_count, "in zr.txt:", line.strip())
-                if not line_to_open: line_to_open = line_count
-                if open_file: i7.npo(zr_data, line_count)
-                exit()
-            text_change[ary[0].lower()] = ary[1]
+        if ',' in line: line = re.sub(" *#.*$", "", line)
+        if '>' in line and "\t" not in line: # this could get hairy later if I use forward-checks in regexes
+            ary = line.strip().split(">") #this is converting one text to another e.g. in bile>in libe>in Bile Libe
+            last_one = ary[len(ary) - 1].strip()
+            for x in range(0, len(ary) - 1):
+                text_change[ary[x].lower().strip()] = last_one
         always = False
         if line.startswith('a:'):
             line = re.sub('a:', '', line)
