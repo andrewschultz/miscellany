@@ -19,7 +19,9 @@ import i7
 
 zr_data = "c:/writing/scripts/zr.txt"
 
+default_proj = ""
 proj = i7.dir2proj(os.getcwd())
+if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
 only_test = False
 source_only = False
@@ -31,6 +33,7 @@ open_post = False
 always_adj = defaultdict(bool)
 cap_search = defaultdict(bool)
 regex_detail = defaultdict(str)
+in_expand = defaultdict(str)
 
 text_change = defaultdict(str)
 
@@ -45,6 +48,15 @@ def usage():
     print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
     print("t only tests things. It doesn't copy back over.")
+
+def check_superfluous_zr(my_dir):
+    oj = os.path.join(my_dir, "zr.txt")
+    if os.path.exists(oj) and os.getcwd() != "c:/writing/scripts":
+        print("WARNING superfluous zr.txt in " + my_dir + ". They should all be migrated to", zr_data + ". I am opening the local and regular zr.txt.")
+        os.system(zr_data)
+        os.system(oj)
+        print("erase", oj)
+        exit()
 
 def title_unless_caps(a, b):
     if a.startswith('"') and a.endswith('"'): return a
@@ -61,34 +73,37 @@ def with_quotes(a, b):
     return False
 
 def check_source(a):
-    line_count = 0
-    difs = 0
+    noncaps_difs = 0
+    caps_difs = 0
     b = a + "2"
     short = os.path.basename(a)
     short2 = os.path.basename(b)
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.startswith("test") and "with" in line: continue
+            if line.startswith("test") and "with" in line:
+                fout.write(line)
+                continue
             ll = line
             if 'use1 entry on' in ll.lower():
-                print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
+                print("NOTE replacing use1 entry on with use1 entry with at line", line_count)
                 ll = re.sub("use1 entry on", "use1 entry with", ll)
-                difs += 1
+                noncaps_difs += 1
             if 'useoning noun on' in ll.lower():
-                print("WARNING replacing use1 entry on with use1 entry with at line", line_count)
+                print("NOTE replacing use1 entry on with use1 entry with at line", line_count)
                 ll = re.sub("useoning noun on", "useoning noun with", ll)
-                difs += 1
+                noncaps_difs += 1
             if ll.startswith('understand') and 'when' not in ll:
                 fout.write(ll)
                 continue
             if '[ic]' not in ll: # ignore changes/cases
                 for t in text_change.keys():
                     if t.lower() in ll.lower():
-                        print("WARNING replacing", t, "with", text_change[t], "at line", line_count)
-                        ll = re.sub(t, text_change[t], ll, 0, re.IGNORECASE)
-                        print("Replacing", t, "with", text_change[t], "at line", line_count)
-                        difs += 1
+                        ll_old = ll
+                        ll = re.sub(r'\b{:s}\b'.format(t), text_change[t], ll, 0, re.IGNORECASE)
+                        if ll_old != ll:
+                            print("NOTE non-caps-replacing {:s} with {:s} at line {:d}".format(t, text_change[t], line_count))
+                            noncaps_difs += 1
                 this_line_yet = False
                 for x in cs:
                     if x.lower() in line.lower():
@@ -100,16 +115,18 @@ def check_source(a):
                         # ll = re.sub(r'\b{:s}\b'.format(regex_detail[x] if x in regex_detail.keys() else x),
                           lambda match: title_unless_caps(match.group(0), x), ll, 0, re.IGNORECASE)
                         if ll != ll_old:
-                            difs += 1
-                            print("                    also miscapitalized" if this_line_yet else "Line {:d} of {:s} miscapitalized".format(line_count, short), x, "" if this_line_yet else "==={:s}".format(line.strip()))
+                            err = "capitalized" if len(ll) == len(ll_old) else "represented"
+                            caps_difs += 1
+                            print("                    also mis{:s}".format(err) if this_line_yet else "Line {:d} of {:s} mis{:s}".format(line_count, short, err), x, "" if this_line_yet else "==={:s}".format(line.strip()))
                             this_line_yet = True
             fout.write(ll)
     fout.close()
+    difs = noncaps_difs + caps_difs
     if not cmp(a, b):
         if difs == 0:
             print("There are no flagged differences, but", short, "is not", short2 + ". This should not happen. Bailing.")
             exit()
-        print(difs, "differences, copying back over")
+        print(difs, "differences", noncaps_difs, "noncaps", caps_difs, "caps differences, copying", short, "back over")
         if only_test:
             print("Testing differences, so, not copying back over.")
             os.system("wm \"{:s}\" \"{:s}\"".format(a, b))
@@ -126,7 +143,7 @@ def check_source(a):
                 exit()
     else:
         if difs:
-            print("Oops! I should be copying", short, "back over, but I'm not. This is a bug. Sorry.")
+            print("Oops! I flagged differences in", short, "but the changed file is the same as the old one. This means there is a bug but not a lethal one. Check the changed line candidates.")
             # os.system("wm \"{:s}\" \"{:s}\"".format(a, b))
         else:
             print("No differences in", short + ", no copying back over" + (", so not running diff" if only_test else "") + ".")
@@ -144,9 +161,7 @@ while count < len(sys.argv):
     if (myarg[0] == '-'):
         myarg = myarg[1:]
     if myarg == 'e':
-        if os.path.exists("zr.txt") and os.pwdir() != "c:/writing/scripts": print("WARNING superfluous zr.txt in current directory. They should all be migated to", zr_data)
-        os.system(zr_data)
-        exit()
+        check_superfluous_zr(os.getcwd())
     elif myarg == 'c':
         i7.open_source()
     elif myarg == 's': source_only = True
@@ -156,29 +171,35 @@ while count < len(sys.argv):
     elif myarg == 'no' or myarg == 'on': open_post = False
     elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
     elif myarg in i7.i7x.keys():
-        newdir = "c:/games/inform/{:s}.inform/source".format(i7.i7x[sys.argv[count]])
-        os.chdir(newdir)
-        print("Changing to", newdir)
-    elif os.path.exists("c:/games/inform/{:s}.inform/source".format(myarg)):
-        newdir = "c:/games/inform/{:s}.inform/source".format(myarg)
-        os.chdir(newdir)
-        print("Changing to", newdir)
+        proj = i7.i7x[myarg]
+        print("Changing project to", proj)
     else:
         print("Bad argument", sys.argv[count])
         usage()
     count += 1
 
-if not proj:
-    proj = "ailihphilia"
-    print("Going with default project", proj)
+with open(zr_data) as file: #ugh. I hate reading stuff in twice, but it's this or defining a double-array dictionary.
+    for (line_count, line) in enumerate(file, 1):
+        if line.startswith("DEFAULTPROJ="):
+            temp = line[12:].strip().lower()
+            default_proj = i7.proj_exp(temp)
+            break
+
+if not default_proj:
+    if not proj: sys.exit("You need to define a default project or be in a directory where I can determine your project.")
+    else: print("WARNING: you did not have a default project in zr.txt.")
+
+if proj: check_superfluous_zr(i7.proj2dir(proj))
 
 got_proj = False
 in_proj = False
 
+rxd = []
 with open(zr_data) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith('#'): continue
         if line.startswith(';'): break
+        if line.startswith("DEFAULTPROJ"): continue
         if line.startswith("PROJ"):
             if not line.startswith("PROJ="): sys.exit("You need to start line {:d} with PROJ= not {:s}.".format(line_count, line[:5]))
             cur_proj = i7.proj_exp(line.lower().strip()[5:])
@@ -189,7 +210,11 @@ with open(zr_data) as file:
                 in_proj = False
             continue
         if not in_proj: continue
-        if ',' in line: line = re.sub(" *#.*$", "", line)
+        add_first_loc_word = False
+        if line.startswith("2:"):
+            line = line[2:]
+            add_first_loc_word = True
+        if ',' in line: line = re.sub(" *#.*$", "", line) #remove comments at the end
         if '>' in line and "\t" not in line: # this could get hairy later if I use forward-checks in regexes
             ary = line.strip().split(">") #this is converting one text to another e.g. in bile>in libe>in Bile Libe
             last_one = ary[len(ary) - 1].strip()
@@ -204,7 +229,7 @@ with open(zr_data) as file:
             line_ary = line.strip().split("\t")
             regex_detail[line_ary[0]] = line_ary[1]
             continue
-        q = re.split(", *", line.strip())
+        q = re.split(" *, *", line.strip())
         for q1 in range(0, len(q)):
             temp = q[q1]
             if temp in cap_search:
@@ -213,10 +238,18 @@ with open(zr_data) as file:
             cap_search[temp] = True
             if always:
                 always_adj[temp] = True
+            if add_first_loc_word:
+                ary = q[q1].split(" ")
+                if len(ary) == 2:
+                    first = r"in {:s}".format(ary[1].lower())
+                    second = r"in {:s} (!>?){:s}" .format(ary[0].lower(), ary[1].lower())
+                    third = r"in {:s}".format(q[q1])
+                    text_change[first] = third
+                    text_change[second] = third
 
 if not got_proj: sys.exit("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
 
-cs = cap_search.keys()
+cs = sorted(list(cap_search))
 
 for x in i7.i7f[proj]:
     if 'tests' in x.lower(): continue
