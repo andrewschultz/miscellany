@@ -21,6 +21,7 @@ zr_data = "c:/writing/scripts/zr.txt"
 
 default_proj = ""
 proj = i7.dir2proj(os.getcwd())
+print(proj)
 if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
 only_test = False
@@ -29,6 +30,10 @@ quick_quote_reject = True
 
 line_to_open = 0
 open_post = False
+
+max_total_errs = 0
+max_errs_left = 0
+max_errs_per_file = 0
 
 always_adj = defaultdict(bool)
 cap_search = defaultdict(bool)
@@ -48,6 +53,7 @@ def usage():
     print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
     print("t only tests things. It doesn't copy back over.")
+    print("e# = max errs per file, t# = max total errors")
 
 def check_superfluous_zr(my_dir):
     oj = os.path.join(my_dir, "zr.txt")
@@ -79,9 +85,14 @@ def check_source(a):
     short = os.path.basename(a)
     short2 = os.path.basename(b)
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
+    global max_total_errs
+    global max_errs_left
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("test") and "with" in line:
+                fout.write(line)
+                continue
+            if (max_errs_per_file and (noncaps_difs + caps_difs >= max_errs_per_file)) or (max_total_errs and (noncaps_difs + caps_difs >= max_errs_left)):
                 fout.write(line)
                 continue
             ll = line
@@ -122,6 +133,9 @@ def check_source(a):
             fout.write(ll)
     fout.close()
     difs = noncaps_difs + caps_difs
+    max_errs_left -= difs
+    if (max_errs_per_file and (noncaps_difs + caps_difs >= max_errs_per_file)) or (max_total_errs and (noncaps_difs + caps_difs >= max_errs_left)):
+        print(short, "hit the maximum number of errors and may or may not have overrun. You may wish to rerun.")
     if not cmp(a, b):
         if difs == 0:
             print("There are no flagged differences, but", short, "is not", short2 + ". This should not happen. Bailing.")
@@ -166,6 +180,8 @@ while count < len(sys.argv):
         i7.open_source()
     elif myarg == 's': source_only = True
     elif myarg == 't': only_test = True
+    elif myarg[0] == 'e' and myarg[1:].isdigit: errs_per_file = int(myarg[1:])
+    elif (myarg[0] == 'te' or myarg[0] == 'et') and myarg[2:].isdigit: max_total_errs = int(myarg[2:])
     elif myarg == 'q': quick_quote_reject = True
     elif myarg == 'o': open_post = True
     elif myarg == 'no' or myarg == 'on': open_post = False
@@ -247,7 +263,10 @@ with open(zr_data) as file:
                     text_change[first] = third
                     text_change[second] = third
 
-if not got_proj: sys.exit("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
+if not got_proj:
+    print("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
+    if proj == 'stale-tales-slate': print("The Stale Tales Slate is too general. You need to choose Roiling or Shuffling.")
+    sys.exit()
 
 cs = sorted(list(cap_search))
 
