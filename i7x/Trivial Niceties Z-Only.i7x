@@ -59,6 +59,8 @@ book I figured this out! Yay!
 
 [this is useful if we have a problem that occurs before we make a single move]
 
+to force-rules: (- debug_Rules = 1; -)
+
 to force-all-rules: (- debug_Rules = 2; -)
 
 book waiting stubs
@@ -79,7 +81,7 @@ to wfak:
 
 any-key-yet is a truth state that varies.
 
-to say wfak-d:
+to say wfak:
 	if any-key-yet is false, say " (when text pauses like this, it means press any key to continue)";
 	now any-key-yet is true;
 	if debug-state is false, wfak;
@@ -124,7 +126,9 @@ to say equal-banner of (nu - a number):
 	repeat with nu3 running from 1 to nu2:
 		say "=";
 
-to say srsp: if screenread is true, say " ";
+to say sp: if screenread is true, say " ";
+
+to say srsp: say "[sp]"
 
 screenread is a truth state that varies.
 
@@ -161,6 +165,7 @@ understand the command "banish" as something new.
 understand "banish [any thing]" as banishing.
 
 carry out banishing:
+	if noun is off-stage, say "But [the noun] is already off-stage!" instead;
 	now noun is off-stage;
 	say "Now [the noun] is off-stage.";
 	the rule succeeds;
@@ -218,7 +223,7 @@ understand the command "bkl" as something new.
 understand "bkl" as bkling.
 
 carry out bkling:
-	say "List of scenery:[line break]";
+	say "List of backdrops:[line break]";
 	repeat with QQ running through visible backdrops:
 		say "--[QQ][line break]";
 	the rule succeeds;
@@ -301,7 +306,7 @@ chapter auing
 
 [* this lets the user switch how the debug version auto-responds to yes/no prompts *]
 
-auing is an action applying to one number.
+auing is an action out of world applying to one number.
 
 understand the command "au" as something new.
 
