@@ -24,6 +24,7 @@ proj = i7.dir2proj(os.getcwd())
 print(proj)
 if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
+bail_first_diff_file = False
 only_test = False
 source_only = False
 quick_quote_reject = True
@@ -53,8 +54,9 @@ def usage():
     print("e edits the text, though you can just type zr.txt instead.")
     print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
-    print("t only tests things. It doesn't copy back over.")
+    print("t only tests things. It doesn't copy back over. t0 = unlimited test difference, t1 = only one.")
     print("e# = max errs per file, t# = max total errors")
+    exit()
 
 def check_superfluous_zr(my_dir):
     oj = os.path.join(my_dir, "zr.txt")
@@ -114,7 +116,7 @@ def check_source(a):
                         ll_old = ll
                         ll = re.sub(r'\b{:s}\b'.format(t), text_change[t], ll, 0, re.IGNORECASE)
                         if ll_old != ll:
-                            print('NOTE {:s} line {:d} non-caps-replacing "{:s}" with "{:s}"'.format(short, line_count, text_raw[t], text_change[t]))
+                            print('NOTE {:s} line {:d} non-caps-replacing "{:s}" with "{:s}" ... {:s}'.format(short, line_count, text_raw[t], text_change[t]), ll.strip())
                             noncaps_difs += 1
                 this_line_yet = False
                 for x in cs:
@@ -144,7 +146,8 @@ def check_source(a):
         print(difs, "differences", noncaps_difs, "noncaps", caps_difs, "caps differences, copying", short, "back over")
         if only_test:
             print("Testing differences, so, not copying back over.")
-            os.system("wm \"{:s}\" \"{:s}\"".format(a, b))
+            i7.wm(a, b)
+            if bail_first_diff_file: sys.exit()
         else:
             try:
                 copy(b, a)
@@ -181,11 +184,18 @@ while count < len(sys.argv):
         i7.open_source()
     elif myarg == 's': source_only = True
     elif myarg == 't': only_test = True
+    elif myarg == 't0':
+        only_test = True
+        bail_first_diff_file = False
+    elif myarg == 't1':
+        only_test = True
+        bail_first_diff_file = True
     elif myarg[0] == 'e' and myarg[1:].isdigit: errs_per_file = int(myarg[1:])
     elif (myarg[0] == 'te' or myarg[0] == 'et') and myarg[2:].isdigit: max_total_errs = int(myarg[2:])
     elif myarg == 'q': quick_quote_reject = True
     elif myarg == 'o': open_post = True
     elif myarg == 'no' or myarg == 'on': open_post = False
+    elif myarg == 'no' or myarg == 'on': test_diff = True
     elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
     elif myarg in i7.i7x.keys():
         proj = i7.i7x[myarg]
@@ -265,9 +275,10 @@ with open(zr_data) as file:
                 al = len(ary)
                 from_last_word = r'(if|in) {:s}([^-])'.format(ary[al-1].lower())
                 from_first_word = r'(if|in) {:s}(!>? {:s})' .format(ary[0].lower(), ary[1].lower())
-                to_phrase = r'\1 {:s}'.format(temp)
-                text_change[from_last_word] = to_phrase
-                text_change[from_first_word] = to_phrase + r'\2'
+                to_last_word = r'\1 {:s}\2'.format(temp)
+                to_first_word = r'\1 {:s}'.format(temp)
+                text_change[from_last_word] = to_last_word
+                text_change[from_first_word] = to_first_word
                 #print(from_last_word, "&", from_first_word, "->", to_phrase)
 
 for q in text_change:
