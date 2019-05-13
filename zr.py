@@ -41,6 +41,7 @@ regex_detail = defaultdict(str)
 in_expand = defaultdict(str)
 
 text_change = defaultdict(str)
+text_raw = defaultdict(str)
 
 count = 1
 
@@ -109,11 +110,11 @@ def check_source(a):
                 continue
             if '[ic]' not in ll: # ignore changes/cases
                 for t in text_change.keys():
-                    if t.lower() in ll.lower():
+                    if text_raw[t] in ll.lower():
                         ll_old = ll
                         ll = re.sub(r'\b{:s}\b'.format(t), text_change[t], ll, 0, re.IGNORECASE)
                         if ll_old != ll:
-                            print("NOTE non-caps-replacing {:s} with {:s} at line {:d}".format(t, text_change[t], line_count))
+                            print('NOTE {:s} line {:d} non-caps-replacing "{:s}" with "{:s}"'.format(short, line_count, text_raw[t], text_change[t]))
                             noncaps_difs += 1
                 this_line_yet = False
                 for x in cs:
@@ -227,8 +228,8 @@ with open(zr_data) as file:
             continue
         if not in_proj: continue
         add_first_loc_word = False
-        if line.startswith("2:"):
-            line = line[2:]
+        if line.startswith("in:"):
+            line = line[3:]
             add_first_loc_word = True
         if ',' in line: line = re.sub(" *#.*$", "", line) #remove comments at the end
         if '>' in line and "\t" not in line: # this could get hairy later if I use forward-checks in regexes
@@ -247,6 +248,7 @@ with open(zr_data) as file:
             continue
         q = re.split(" *, *", line.strip())
         for q1 in range(0, len(q)):
+            if not q[q1].strip(): continue
             temp = q[q1]
             if temp in cap_search:
                 print("WARNING line {:d}:".format(line_count), "entry", q1, "=", temp, "already accounted for, probably a duplicate.")
@@ -255,13 +257,21 @@ with open(zr_data) as file:
             if always:
                 always_adj[temp] = True
             if add_first_loc_word:
-                ary = q[q1].split(" ")
-                if len(ary) == 2:
-                    first = r"in {:s}".format(ary[1].lower())
-                    second = r"in {:s} (!>?){:s}" .format(ary[0].lower(), ary[1].lower())
-                    third = r"in {:s}".format(q[q1])
-                    text_change[first] = third
-                    text_change[second] = third
+                ary = temp.split(" ")
+                if len(ary) == 1:
+                    print("WARNING room name {:s} has no spaces. Skipping.".format(temp))
+                    sys.exit()
+                    continue
+                al = len(ary)
+                from_last_word = r'(if|in) {:s}([^-])'.format(ary[al-1].lower())
+                from_first_word = r'(if|in) {:s}(!>? {:s})' .format(ary[0].lower(), ary[1].lower())
+                to_phrase = r'\1 {:s}'.format(temp)
+                text_change[from_last_word] = to_phrase
+                text_change[from_first_word] = to_phrase + r'\2'
+                #print(from_last_word, "&", from_first_word, "->", to_phrase)
+
+for q in text_change:
+    text_raw[q] = re.sub(" *[\[\(].*", "", q)
 
 if not got_proj:
     print("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
