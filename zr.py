@@ -25,6 +25,7 @@ print(proj)
 if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
 bail_first_diff_file = False
+bail_text_keys = False
 only_test = False
 source_only = False
 quick_quote_reject = True
@@ -43,6 +44,7 @@ in_expand = defaultdict(str)
 
 text_change = defaultdict(str)
 text_raw = defaultdict(str)
+bail_lines = defaultdict(str)
 
 count = 1
 
@@ -54,7 +56,7 @@ def usage():
     print("e edits the text, though you can just type zr.txt instead.")
     print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
-    print("t only tests things. It doesn't copy back over. t0 = unlimited test difference, t1 = only one.")
+    print("t only tests things. It doesn't copy back over. t0 = unlimited test difference, t1 = only one. tb = text key bail.")
     print("e# = max errs per file, t# = max total errors")
     exit()
 
@@ -88,6 +90,7 @@ def check_source(a):
     short = os.path.basename(a)
     short2 = os.path.basename(b)
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
+    bail_from_now = False
     global max_total_errs
     global max_errs_left
     with open(a) as file:
@@ -96,6 +99,13 @@ def check_source(a):
                 fout.write(line)
                 continue
             if (max_errs_per_file and (noncaps_difs + caps_difs >= max_errs_per_file)) or (max_total_errs and (noncaps_difs + caps_difs >= max_errs_left)):
+                fout.write(line)
+                continue
+            if not bail_from_now:
+                for q in bail_lines:
+                    if line.lower().startswith(q):
+                        bail_from_now = True
+            if bail_from_now:
                 fout.write(line)
                 continue
             ll = line
@@ -111,13 +121,18 @@ def check_source(a):
                 fout.write(ll)
                 continue
             if '[ic]' not in ll: # ignore changes/cases
+                ll_orig = ll
                 for t in text_change.keys():
                     if text_raw[t] in ll.lower():
+                        if text_raw[t] + '-' in ll.lower(): continue #Not quite right. I want re.search(r'\b{:s}='.format(t), ll, re.IGNORECASE): continue
                         ll_old = ll
                         ll = re.sub(r'\b{:s}\b'.format(t), text_change[t], ll, 0, re.IGNORECASE)
                         if ll_old != ll:
-                            print('NOTE {:s} line {:d} non-caps-replacing "{:s}" with "{:s}" ... {:s}'.format(short, line_count, text_raw[t], text_change[t]), ll.strip())
                             noncaps_difs += 1
+                if ll_orig != ll:
+                    print('NOTE {:s} line {:d} non-caps-replacement:'.format(short, line_count))
+                    print("   --", ll.strip())
+                    print("   --", ll_orig.strip())                    
                 this_line_yet = False
                 for x in cs:
                     if x.lower() in line.lower():
@@ -190,6 +205,7 @@ while count < len(sys.argv):
     elif myarg == 't1':
         only_test = True
         bail_first_diff_file = True
+    elif myarg == 'tb': bail_text_keys = True
     elif myarg[0] == 'e' and myarg[1:].isdigit: errs_per_file = int(myarg[1:])
     elif (myarg[0] == 'te' or myarg[0] == 'et') and myarg[2:].isdigit: max_total_errs = int(myarg[2:])
     elif myarg == 'q': quick_quote_reject = True
@@ -238,9 +254,13 @@ with open(zr_data) as file:
             continue
         if not in_proj: continue
         add_first_loc_word = False
-        if line.startswith("in:"):
+        ll = line.lower()
+        if ll.startswith("in:"):
             line = line[3:]
             add_first_loc_word = True
+        if ll.startswith("bail:"):
+            line = line[5:].lower().strip()
+            bail_lines[line] = True
         if ',' in line: line = re.sub(" *#.*$", "", line) #remove comments at the end
         if '>' in line and "\t" not in line: # this could get hairy later if I use forward-checks in regexes
             ary = line.strip().split(">") #this is converting one text to another e.g. in bile>in libe>in Bile Libe
@@ -273,16 +293,24 @@ with open(zr_data) as file:
                     sys.exit()
                     continue
                 al = len(ary)
-                from_last_word = r'(if|in) {:s}([^-])'.format(ary[al-1].lower())
-                from_first_word = r'(if|in) {:s}(!>? {:s})' .format(ary[0].lower(), ary[1].lower())
-                to_last_word = r'\1 {:s}\2'.format(temp)
-                to_first_word = r'\1 {:s}'.format(temp)
+                from_last_word = r'(\t|if |in ){:s}'.format(ary[al-1].lower())
+                from_first_word = r'(\t|if |in ){:s}(!>? {:s})' .format(ary[0].lower(), ary[1].lower())
+                to_last_word = r'\1{:s}'.format(temp)
+                to_first_word = r'\1{:s}'.format(temp)
                 text_change[from_last_word] = to_last_word
                 text_change[from_first_word] = to_first_word
                 #print(from_last_word, "&", from_first_word, "->", to_phrase)
 
 for q in text_change:
-    text_raw[q] = re.sub(" *[\[\(].*", "", q)
+    temp = re.sub("\([^\(]*\)$", "", q)
+    if q.startswith("("):
+        text_raw[q] = re.sub("^\([^\)]*\)", "", temp)
+    else:
+        text_raw[q] = temp
+
+if bail_text_keys:
+    print(text_raw)
+    sys.exit(text_change)
 
 if not got_proj:
     print("Couldn't find anything in the data file {:s} for project {:s}.".format(zr_data, proj))
