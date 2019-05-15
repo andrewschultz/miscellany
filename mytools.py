@@ -18,3 +18,15 @@ def is_limerick(x):
 def slash_to_limerick(x):
     temp = re.sub(" *\/ ", "\n", x)
     return ("====\n" + temp)
+
+def cfgary(x, delimiter="\t"):
+    if ':' not in x:
+        print("WARNING, cfgary called on line without starting colon")
+        return []
+    temp = re.sub("^[^:]*:", "", x)
+    return temp.split(delimiter)
+
+if os.path.basename(main.__file__) == "mytools.py":
+    print("mytools.py is a header file. It should not be run on its own.")
+    print("Try running something else with the line import i7, instead, or ? to run a test.")
+    exit()
