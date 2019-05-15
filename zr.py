@@ -131,8 +131,8 @@ def check_source(a):
                             noncaps_difs += 1
                 if ll_orig != ll:
                     print('NOTE {:s} line {:d} non-caps-replacement:'.format(short, line_count))
-                    print("   --", ll.strip())
-                    print("   --", ll_orig.strip())                    
+                    print("   --af: ", ll_orig.strip())
+                    print("   --b4: ", ll.strip())
                 this_line_yet = False
                 for x in cs:
                     if x.lower() in line.lower():
@@ -272,10 +272,16 @@ with open(zr_data) as file:
             line = re.sub('a:', '', line)
             always = True
         if not line.strip(): continue
-        if "\t" in line:
-            line_ary = line.strip().split("\t")
+        if line.startswith("det:"):
+            line_ary = line[4:].strip().split("\t")
+            if len(line_ary) != 2: sys.exit("Wrong number of tabs at line {:d}: {:s}. Have {:d} need 2.".format(line_cout, line.strip(), len(line_ary)))
             regex_detail[line_ary[0]] = line_ary[1]
             continue
+        if line.startswith("rx:"):
+            line_ary = line[3:].strip().split("\t")
+            if len(line_ary) != 3: sys.exit("Wrong number of tabs at line {:d}: {:s}. Have {:d} need 2.".format(line_cout, line.strip(), len(line_ary)))
+            text_change[line_ary[0]] = line_ary[1]
+            text_raw[line_ary[0]] = line_ary[2]
         q = re.split(" *, *", line.strip())
         for q1 in range(0, len(q)):
             if not q[q1].strip(): continue
