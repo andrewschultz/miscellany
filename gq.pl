@@ -242,8 +242,10 @@ while ( $count <= $#ARGV ) {
         }
 
         # print "$a into word array.\n";
-        $a =~ s/\// /g
-          ; # we can transform forward slashes into spaces so we don't have to use quotes
+        $a =~ s/\// /g;
+		# we can transform forward slashes into spaces so we don't have to use quotes
+		  $a =~ s/-/ /g;
+		#more controversially, we can get rid of dashes to match up with when the source gets rid of dashes. This isn't perfect, but I can't rewrite this big script in Python.
         push( @thisAry, $a );
       }
       $count++;
@@ -475,7 +477,6 @@ sub processFiles {
   }
 
   #for my $q (sort keys %cmds) { print "$q...$cmds{$q}\n"; } return;
-
   foreach my $cmd (@x) {
     if ( $foundTotal == $maxOverallFind ) { print "Skipping $cmd\n"; next; }
     my @fileAndMarkers = split( /\t/, $cmd );
