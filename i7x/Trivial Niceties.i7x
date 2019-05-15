@@ -28,6 +28,8 @@ to dn:
 	increment debug-count;
 	say "[debug-count]";
 
+to ital-txt (x - indexed text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]".
+
 volume intro/restore/skip
 
 read-intro is a truth state that varies.

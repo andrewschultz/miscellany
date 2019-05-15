@@ -172,8 +172,7 @@ carry out banishing:
 
 book footnotes on the fly
 
-to ital-say (x - text):
-	say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]";
+to ital-say (x - text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]"; [NOTE: if we find an error here, try ital-txt instead]
 
 to score-now:
 	increment the score;
@@ -248,9 +247,11 @@ chapter dtoging - not for release
 
 dtoging is an action out of world.
 
-understand the command "dtog" as something new.
+understand the command "dtog/debug/db" as something new.
 
 understand "dtog" as dtoging.
+understand "debug" as dtoging.
+understand "db" as dtoging.
 
 carry out dtoging:
 	now debug-state is whether or not debug-state is false;
@@ -265,7 +266,10 @@ to drop-player-at (myrm - a room):
 
 chapter basic consents
 
-to decide whether the player test-consents:
+[ "if the player direct-consents" is useful for when I am running a regex script and want to test full yes/no behavior, especially if I need to undo.
+  "if the player switch-consents" is useful for when I want to say no automatically. ]
+
+to decide whether the player direct-consents:
 	if debug-state is true:
 		say "[line break]> ";
 	if the player consents, decide yes;
