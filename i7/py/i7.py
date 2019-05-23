@@ -21,8 +21,10 @@ from filecmp import cmp
 from shutil import copy
 import __main__ as main
 
-nice = nz = nicez = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Trivial Niceties Z-Only.i7x"
-niceg = ng = "c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\Trivial Niceties.i7x"
+auth = "Andrew Schultz"
+extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
+nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
+niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
@@ -43,15 +45,12 @@ ovh = outline_val_hash
 outline_val = sorted(outline_val_hash, key=outline_val_hash.get)
 ov = outline_val
 
-auth = "Andrew Schultz"
 
 on_off = [ 'off', 'on' ]
 oo = on_off
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
-
-extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
@@ -187,9 +186,11 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
-def gh_src(x):
+def gh_src(x, give_source = True):
     temp = proj_exp(x, to_github = True)
-    return os.path.normpath(os.path.join(gh_dir, temp, "story.ni"))
+    retval = os.path.join(gh_dir, temp)
+    if give_source: retval = os.path.join(retval, "story.ni")
+    return os.path.normpath(retval)
 
 def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
     if force_copy_to_github and force_copy_from_github:
@@ -247,7 +248,7 @@ def build_log_open(x):
 blo = bl_o = build_log_open
 
 def hdr(x, y):
-    return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), y.title())
+    return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
 
 hfile = hdr
 
@@ -299,6 +300,7 @@ def proj_exp(x, return_nonblank = True, to_github = False):
         if temp in i7gx.keys(): return i7gx[temp]
     if x in i7xr.keys(): return x
     elif x in i7x.keys(): return i7x[x]
+    if x.lower() == 'sts': return x
     return (x if return_nonblank else '')
 
 pex = proj_exp
