@@ -23,6 +23,7 @@ default_proj = ""
 proj = i7.dir2proj(os.getcwd())
 if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
+verbose = False
 bail_first_diff_file = False
 bail_text_keys = False
 only_test = False
@@ -93,6 +94,7 @@ def check_source(a):
     short2 = os.path.basename(b)
     fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
     bail_from_now = False
+    if verbose: print("Looking at", a)
     global max_total_errs
     global max_errs_left
     with open(a) as file:
@@ -214,6 +216,8 @@ while count < len(sys.argv):
     elif (myarg[0] == 'te' or myarg[0] == 'et') and myarg[2:].isdigit: max_total_errs = int(myarg[2:])
     elif myarg == 'q': quick_quote_reject = True
     elif myarg == 'o': open_post = True
+    elif myarg == 'v': verbose = True
+    elif myarg == 'nv' or myarg == 'vn': verbose = False
     elif myarg == 'no' or myarg == 'on': open_post = False
     elif myarg == 'no' or myarg == 'on': test_diff = True
     elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
@@ -318,7 +322,6 @@ with open(zr_data) as file:
                 #print(from_last_word, "&", from_first_word, "->", to_phrase)
 
 if firstword_warn and bail_on_firstword_warn: sys.exit("You need to either fix the firstword overlap or suppress this warning with fwn/nfw.")
-sys.exit()
 
 for q in text_change:
     temp = re.sub("\([^\(]*\)$", "", q)
