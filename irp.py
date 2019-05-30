@@ -15,7 +15,10 @@ import __main__ as main
 
 adjusts = defaultdict(str)
 
+max_lines = 0
+min_lines = 0
 rule_count_global = 0
+insteads_ignored_global = 0
 
 irp_file = "c:/writing/scripts/irp.txt"
 instead_str = "instead of"
@@ -27,6 +30,7 @@ def usage():
     print("You can use a project abbreviation to go there, too.")
     print("e = edit {:s}, es = edit {:s}".format(irp_file, main.__file__))
     print("You can also have IRP ignore an instead rule by specifying no-irp in a comment.")
+    print("You can also specify a maximum number of lines to print. mi=prefix for min.")
     exit()
 
 def get_potential_adjusts():
@@ -42,24 +46,40 @@ def find_instead(q):
     in_instead = False
     out_string = ""
     insteads = 0
+    insteads_ignored_local = 0
+    insteads_ignored_global = 0
+    temp_out_string = ""
     global rule_count_global
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.lower().startswith(instead_str) and not "[no-irp]" in line.lower():
-                insteads += 1
-                rule_count_global += 1
-                out_string += "({:d}/{:d} L{:d}) ".format(insteads, rule_count_global, line_count) + line
+                start_line_count = line_count
                 in_instead = True
+                temp_out_string = line
                 continue
             if in_instead:
-                out_string += line
-                if not line.strip(): in_instead = False
+                temp_out_string += line
+                if not line.strip():
+                    in_instead = False
+                    if max_lines != 0 and temp_out_string.count("\n") > max_lines:
+                        insteads_ignored_local += 1
+                        insteads_ignored_global += 1
+                        continue
+                    if min_lines != 0 and temp_out_string.count("\n") <= min_lines:
+                        insteads_ignored_local += 1
+                        insteads_ignored_global += 1
+                        continue
+                    insteads += 1
+                    rule_count_global += 1
+                    temp_out_string = "({:d}/{:d} L{:d}) ".format(insteads, rule_count_global, line_count) + temp_out_string
+                    out_string += temp_out_string
                 continue
     if out_string:
         print("====", q, "====")
         print(out_string)
         print(insteads, "total <{:s}> string for".format(instead_str.upper()), q)
     else: print("No <{:s}> string for".format(instead_str.upper()), q)
+    if insteads_ignored_local: print("Insteads ignored:", insteads_ignored_local)
 
 cmd_proj = ""
 
@@ -80,6 +100,13 @@ while cmd_count < len(sys.argv):
     elif arg == "all":
         for x in sorted(adjusts): print(x, "->", adjusts[x])
         exit()
+    elif arg.isdigit():
+        max_lines = int(arg)
+    elif arg[:2] == 'mi':
+        if arg[2:].isdigit():
+            min_lines = int(arg)
+        else:
+            sys.exit(arg + " needs a number at the end to specify min_lines.")
     else:
         usage()
     cmd_count += 1
@@ -105,3 +132,5 @@ for j in i7.i7nonhdr.values():
 
 for k in i7.i7f[my_project]:
     find_instead(k)
+
+if insteads_ignored_global: print(insteads_ignored_global, "insteads ignored globally.")
