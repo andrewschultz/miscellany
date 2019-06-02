@@ -7,6 +7,7 @@
 #
 
 from collections import defaultdict
+import re
 import os
 import i7
 import sys
@@ -22,12 +23,14 @@ insteads_ignored_global = 0
 
 irp_file = "c:/writing/scripts/irp.txt"
 instead_str = "instead of"
+print_before_scen = False
 
 def usage():
     print("USAGE")
     print("=" * 50)
     print("all = print all adjusts and exit.")
     print("You can use a project abbreviation to go there, too.")
+    print("pbs=print boringscen/thing text (for STS)")
     print("e = edit {:s}, es = edit {:s}".format(irp_file, main.__file__))
     print("You can also have IRP ignore an instead rule by specifying no-irp in a comment.")
     print("You can also specify a maximum number of lines to print. mi=prefix for min.")
@@ -71,8 +74,27 @@ def find_instead(q):
                         continue
                     insteads += 1
                     rule_count_global += 1
-                    temp_out_string = "({:d}/{:d} L{:d}) ".format(insteads, rule_count_global, line_count) + temp_out_string
+                    excess_string = ""
+                    tary = re.split("\n", temp_out_string)
+                    temp_out_string = "\n({:d}/{:d} L{:d})\n".format(insteads, rule_count_global, start_line_count) + temp_out_string
                     out_string += temp_out_string
+                    if print_before_scen and tary[0].lower().startswith("instead of doing something with"):
+                        what_to_say = re.sub("^\t*say *", "", tary[len(tary)-3])
+                        what_to_say = re.sub(" instead([;\.])?", "", what_to_say)
+                        what_to_say = re.sub(";$", "", what_to_say)
+                        excess_string = re.sub(".* with +", "", tary[0])
+                        excess_string = re.sub(":.*", "", excess_string)
+                        hyphen_stuff = "bore-" + re.sub(" ", "-", excess_string.lower())
+                        hyphen_stuff = re.sub("-(a|an|the)-", "-", hyphen_stuff)
+                        excess_string = excess_string + " is a boringscen/boringthing.\nbore-text of {:s} is {:s}".format(excess_string, what_to_say)
+                        out_string += excess_string
+                        if len(tary) > 5:
+                            rule_string = ". bore-check is the {:s} rule.\n\nthis is the {:s} rule:\n".format(hyphen_stuff, hyphen_stuff)
+                            tary2 = [re.sub(" instead;", ";\n\t\tthe rule succeeds;", x) for x in tary if x.strip() and 'action is procedural' not in x and not x.strip().startswith('continue the action')]
+                            if tary2[-1].strip().startswith('say'): tary2 = tary2[:-1]
+                            rule_string += "\n".join(tary2[1:]) + "\n"
+                            rule_string += "\tabide by the bore-exam rule;\n"
+                            out_string += rule_string
                 continue
     if out_string:
         print("====", q, "====")
@@ -94,8 +116,9 @@ while cmd_count < len(sys.argv):
         cmd_proj = i7.proj_exp(arg)
     elif arg == 'e': i7.npo(irp_file)
     elif arg == 'es': i7.npo(main.__file__)
+    elif arg == 'pbs': print_before_scen = True
     elif arg in adjusts:
-        if arg[0] == "+": instead_str += " " + adjusts[arg]
+        if arg[0] == "+" or arg[-1] == '+': instead_str += " " + adjusts[arg]
         else: instead_str = adjusts[arg]
     elif arg == "all":
         for x in sorted(adjusts): print(x, "->", adjusts[x])
