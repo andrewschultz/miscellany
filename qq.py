@@ -17,12 +17,13 @@ def usage():
     print("-v = verbose")
     print("-b = bail on first")
     print("-l = open last line")
-    print("-m = minimum line to open (no space)")
+    print("-m = minimum line to open (no space) (no need for number)")
+    print("-x = maXimum line to open (no space)")
     print("-nl = no launch")
     print("-o = bail once over # lines (no space)")
     exit()
 
-def found_todo_text(l):
+def found_todo_text(ll):
     if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll): return True
     if re.search("too-generic", ll) and "\t" not in ll: return True
     return False
@@ -32,21 +33,22 @@ def file_hunt(x):
     bad_lines = []
     any_yet = False
     with open(x) as file:
-        line_num = 0
-        for line in file:
-            line_num += 1
+        for (line_count, line) in enumerate(file, 1):
             ll = line.lower()
             if found_todo_text(ll):
-                if line_num > min_line:
+                if line_count < max_line:
+                    print("Found something beyond", max_line, "at line", line_count)
+                    break
+                if line_count > min_line:
                     if html_exp and not any_yet:
                         fhtml.write("<font size=+3 color=red>TODO RESULTS IN {:s}</font><br />\n".format(x))
                         any_yet = True
-                    bad_lines.append(line_num)
-                    verbose_detail = "Line {:d}, instance {:d}, -- {:s}".format(line_num, len(bad_lines), line.strip())
+                    bad_lines.append(line_count)
+                    verbose_detail = "Line {:d}, instance {:d}, -- {:s}".format(line_count, len(bad_lines), line.strip())
                     if verbose: print(verbose_detail)
                     if html_exp:
                         fhtml.write(verbose_detail + "<br />\n")
-                elif verbose: print("Ignoring match below line", min_line, "at line", line_num, ":", line.strip())
+                elif verbose: print("Ignoring match below line", min_line, "at line", line_count, ":", line.strip())
     if any_yet == False and html_exp: fhtml.write("<font size=+3 color=green>NOTHING FOUND {:s}</font><br />\n".format(x))
     if len(bad_lines) == 0:
         print("Nothing found for", x)
@@ -83,6 +85,7 @@ search_all_qs = False
 verbose = False
 bail_num = 0
 min_line = 0
+max_line = 0
 html_exp = False
 
 # variables
@@ -119,9 +122,15 @@ if len(sys.argv) > 1:
         elif ll == '?':
             usage()
             exit()
+        elif ll.isdigit(): min_line = int(ll)
         elif ll.startswith('m'):
             try:
                 min_line = int(ll[1:])
+            except:
+                print("The m (minimum line) option requires a number right after: no spaces.")
+        elif ll.startswith('m'):
+            try:
+                max_line = int(ll[1:])
             except:
                 print("The m (minimum line) option requires a number right after: no spaces.")
         elif ll.startswith('o'):
