@@ -46,6 +46,7 @@ def get_potential_adjusts():
             adjusts[ll[0]] = ll[1]
 
 def find_instead(q):
+    instead_dict = defaultdict(int)
     in_instead = False
     out_string = ""
     insteads = 0
@@ -59,6 +60,9 @@ def find_instead(q):
                 start_line_count = line_count
                 in_instead = True
                 temp_out_string = line
+                my_note = line[len(instead_str):].strip()
+                my_note = re.sub(":? .*", "", my_note)
+                instead_dict[my_note] += 1
                 continue
             if in_instead:
                 temp_out_string += line
@@ -100,6 +104,7 @@ def find_instead(q):
         print("====", q, "====")
         print(out_string)
         print(insteads, "total <{:s}> string for".format(instead_str.upper()), q)
+        for q in sorted(instead_dict, key=instead_dict.get): print(q.upper(), "==== seen", instead_dict[q], "times")
     else: print("No <{:s}> string for".format(instead_str.upper()), q)
     if insteads_ignored_local: print("Insteads ignored:", insteads_ignored_local)
 
