@@ -1,3 +1,9 @@
+#
+# i7m.py: this reorganizes things so that you can collapse tabs
+#
+#
+#
+
 from collections import defaultdict
 from shutil import copyfile
 import os
@@ -12,6 +18,7 @@ went_over = False
 else_next_bad = False
 
 file_name = "story.ni"
+ignore_file_name = "i7mi.txt"
 
 copy_over = False
 save_copy = False
@@ -129,29 +136,24 @@ if args.copy_save is True:
     copy_save = True
     copy_over = True
 
-if args.copy_save and args.copy_over:
+if args.copy_save and (args.copy_over or args.save_after):
     print("Conflicting options -c and -cs. -cs overrides.")
-
-if args.copy_save and args.save_after:
-    print("Conflicting options -s and -cs. -cs overrides.")
-
-count = 0
 
 in_i6 = False
 func_begun = False
 func_ended = False
+warnings = 0
 
 with open(file_name) as file:
-    for line in file:
-        count += 1
+    for (line_count, line) in enumerate(file, 1):
         if next_break_over and not re.search("[a-z]", line, re.IGNORECASE):
-            last_num = count - 1
+            last_num = line_count - 1
             went_over = True
             next_break_over = False
         if func_name:
             if func_ended or not func_begun:
                 if line.startswith(func_name):
-                    print("Started reading function", func_name, "at", count)
+                    print("Started reading function", func_name, "at", line_count)
                     func_begun = True
                 else:
                     big_string = big_string + line
@@ -165,13 +167,13 @@ with open(file_name) as file:
         if re.search("-\)", line):
             in_i6 = False
         if trivial_punctuation and not in_i6 and re.search("^[a-z].*;$", line, re.IGNORECASE):
-            # print(count," trivial punctuation change:", line)
+            # print(line_count," trivial punctuation change:", line)
             line = re.sub(";$", ".", line)
             trivial_punctuation += 1
-        if count < min_fix_line:
+        if line_count < min_fix_line:
             big_string = big_string + line
             continue
-        if max_fix_line > 0 and count > max_fix_line and not iffy:
+        if max_fix_line > 0 and line_count > max_fix_line and not iffy:
             big_string = big_string + line
             continue
         if went_over:
@@ -180,7 +182,8 @@ with open(file_name) as file:
         if else_next_bad and re.search("else:", line):
             cur_tabs = leading_tabs(line)
             if cur_tabs == this_tabs - 1:
-                print("WARNING line", count, " (would be {:d})".format(count - cur_changes), "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
+                print("WARNING line", line_count, " (would be {:d})".format(line_count - cur_changes), "has extraneous else, tab compare this", cur_tabs, "that", this_tabs)
+                warnings += 1
         else_next_bad = False
         if iffy:
             this_tabs = leading_tabs(line)
@@ -212,7 +215,7 @@ with open(file_name) as file:
                 last_tabs = leading_tabs(line)
                 continue
             elif cur_changes >= max_changes:
-                last_num = count
+                last_num = line_count
         big_string = big_string + line
 
 if func_begun is False and func_name:
@@ -254,7 +257,7 @@ if unix_endings:
     big_string.replace("\r\n", "\n")
 
 if went_over is True:
-    print(cur_changes, "total cur_changes, ended at line", last_num, "of", count)
+    print(cur_changes, "total cur_changes, ended at line", last_num, "of", line_count)
 
 if max_changes == cur_changes:
     print("You may wish to run again.")
@@ -269,6 +272,9 @@ file_name_bak = file_name + ".cpy"
 f = open(file_name_bak, "w", newline="\n")
 f.write(big_string)
 f.close()
+
+if warnings > 0: print(warnings, "total warnings over superfluous elses.")
+else: print("Hooray, no warnings over superfluous elses!")
 
 if launch_win_diff:
     if cur_changes == 0:
