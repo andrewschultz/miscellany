@@ -34,7 +34,7 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def compare_shuffled_lines(f1, f2, bail = False):
+def compare_shuffled_lines(f1, f2, bail = False, max = 0):
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -48,15 +48,22 @@ def compare_shuffled_lines(f1, f2, bail = False):
     difs = [x for x in freq if freq[x]]
     left = 0
     right = 0
+    totals = 0
     if len(difs):
         for j in difs:
             if freq[j] > 0 : left += 1
             else: right += 1
-            print('Extra', j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
+            totals += 1
+            if not max or totals <= max:
+                print('Extra', j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
+            elif max and totals == max + 1:
+                print("Went over maximum of", max)
         print(os.path.basename(f1), "has", left, "but", os.path.basename(f2), "has", right)
     else:
         print("No shuffle-diffs")
-    if bail: sys.exit()
+    if bail and len(difs):
+        print("Compare shuffled lines is bailing on difference.")
+        sys.exit()
 
 csl = cs = compare_shuffled_lines
 

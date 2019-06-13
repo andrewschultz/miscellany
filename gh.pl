@@ -1094,6 +1094,8 @@ sub checkWarnings {
       if ( -s $_[0] == 0 ) {
         print("$_[0] may be a symlink. Skipping.\n");
       }
+	  else
+	  {
       print "Tidying $_[0]... to $_[0].tdy\n";
       system("perltidy.bat -i=2 $_[0]");
       if ( ( -f "$_[0].tdy" )
@@ -1111,6 +1113,7 @@ sub checkWarnings {
         print "PERLTIDY failed. Bailing.\n";
         die();
       }
+	  }
     }
     if ( !$gotStrict && $gotWarnings ) {
       print "Need strict in $_[0] ($numLines), project $thisProj\n";
@@ -1184,6 +1187,7 @@ sub rehash {
   if ( $temp =~ /\$/ ) {
     print "WARNING $_[0] -> $temp still has \$ in it.\n";
   }
+  # print("Rehash remap: $_[0] -> $temp\n") if $_[0] != $temp;
   return $temp;
 }
 

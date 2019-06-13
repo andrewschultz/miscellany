@@ -114,6 +114,7 @@ while cmd_count < len(sys.argv):
     if i7.proj_exp(arg, False):
         if cmd_proj: sys.exit("Defined two command line projects. Bailing.")
         cmd_proj = i7.proj_exp(arg)
+        print("Specified command line project", cmd_proj)
     elif arg == 'e': i7.npo(irp_file)
     elif arg == 'es': i7.npo(main.__file__)
     elif arg == 'pbs': print_before_scen = True

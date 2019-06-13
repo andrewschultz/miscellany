@@ -190,8 +190,8 @@ while ( $a = <A> ) {
   if ( $a =~ /^out=/i ) {
     $a =~ s/^out=//i;
     chomp($a);
-    $outname = "$invDir\\$a";
-	print("WARNING: OUTNAME of $invDir goesn't have/avoid github as it should.\n") if ($outname =~ /github/) != ($github_recommended);
+    $outname = "$theDir\\$a";
+	print("WARNING: OUTNAME of $a doesn't have/avoid github as it should.\n") if ($outname =~ /github/i) != ($github_recommended);
     next;
   }
 
