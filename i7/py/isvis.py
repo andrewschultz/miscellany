@@ -24,6 +24,13 @@ def usage():
 def viscap(x):
     return re.sub(r'\bvisible\b', "VISIBLE", x)
 
+def num_valid_visibles(l):
+    q = ' '.join(re.findall(r'\[[^\]]*\]', l))
+    syn = ' '.join(l.split('"')[::2])
+    print(q, q.count('visible'), "quotes")
+    print(syn, syn.count('visible'), "syntax")
+    return q.count('visible') + syn.count('visible')
+
 def ignore_vis(l):
     if "[v]" in l: return True
     if "[v:]" in l: return True #I can do this manually
@@ -36,8 +43,9 @@ def find_vis(proj_name):
     count_idx = 0
     ignored = 0
     x = i7.main_src(proj_name)
-    if not x:
+    if not os.path.exists(x):
         print("Bad project name/abbreviation", proj_name)
+        if by_default: print("You may wish to specify an argument or change the directory.")
         return
     print("===================Hunting visibles for", proj_name, "at", x)
     with open(x) as file:
@@ -48,8 +56,9 @@ def find_vis(proj_name):
                 if ignore_vis(ll):
                     ignored += 1
                     continue
-                x = re.findall(r'\bvisible\b', ll, re.IGNORECASE)
-                tv = len(x)
+                tv = num_valid_visibles(ll)
+                if not tv: continue
+                # OLD: tv = len(re.findall(r'\bvisible\b', ll, re.IGNORECASE))
                 visibles += tv
                 count_idx += 1
                 print("Line", line_count, "Incidence", count_idx)
@@ -62,14 +71,28 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg[0] == 'm' and arg[1:].isdigit(): max_vis = int(arg[1:])
     elif i7.proj_exp(arg, return_nonblank = False):
-        ary.append(i7.proj_exp(arg))
+        if i7.proj_exp(arg, return_nonblank = False) in ary:
+            print("Duplicate entry", arg, "at position", cmd_count)
+        else:
+            ary.append(i7.proj_exp(arg))
     else:
         usage()
     cmd_count += 1
 
-if i7.dir2proj(os.getcwd()) and not len(ary):
-    ary = [ i7.dir2proj(os.getcwd()) ]
+by_default = False
+cwp = i7.dir2proj(os.getcwd())
 
-if not len(ary): sys.exit("Need to be in a source directory or specify a project.")
+if cwp and not len(ary):
+    by_default = True
+    if os.path.exists(os.path.join(cwp, "story.ni")):
+        ary = [ i7.dir2proj(os.getcwd()) ]
+    else:
+        sys.exit("You're in a potentially valid default project directory, but its games/inform directory has no story.ni. Bailing.")
+
+for x in ary:
+    if not os.path.exists(os.path.join(x, "story.ni")):
+        print("Ignoring project", x, "as it does not have a story.ni.")
+
+if not len(ary): sys.exit("You need to be in a valid github source directory or specify a project.")
 
 for q in ary: find_vis(q)
