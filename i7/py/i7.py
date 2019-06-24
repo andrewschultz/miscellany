@@ -44,6 +44,7 @@ outline_val_hash = { 'volume': 5, 'book': 4, 'part': 3, 'chapter': 2, 'section':
 ovh = outline_val_hash
 outline_val = sorted(outline_val_hash, key=outline_val_hash.get)
 ov = outline_val
+outline_re = r'^({:s})'.format('|'.join(outline_val_hash))
 
 
 on_off = [ 'off', 'on' ]
@@ -51,6 +52,11 @@ oo = on_off
 
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
+
+def is_outline_start(x, case_insensitive = True):
+    return re.sub(outline_re, x)
+
+oline = is_outline_start
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
@@ -250,7 +256,7 @@ blo = bl_o = build_log_open
 def hdr(x, y):
     return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
 
-hfile = hdr
+hdrfile = hfile = hdr
 
 def invis_file(x, warning=False):
     try_1 = "c:/writing/scripts/invis/{:s}.txt".format(i7xr[x] if x in i7xr.keys() else x)
@@ -396,6 +402,15 @@ def revproj(a):
                 exit()
             return_val = b
     return return_val
+
+def i7fa(p):
+    if p in i7x: p = i7x[p]
+    retary = i7f[p]
+    for q in set(i7nonhdr.values()):
+        if q == 'story.ni': continue
+        temp = os.path.join(main_src(p), q)
+        if os.path.exists(temp): retary.append(temp)
+    return retary
 
 def all_proj_fi(x, bail = True):
     xp = i7xr[x] if x in i7xr.keys() else x
