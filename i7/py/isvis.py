@@ -18,11 +18,15 @@ max_vis = 0
 
 ary = []
 
+open_last = False
 check_rigorous = True
 all_proj_files = True
 open_bugs_after = True
 
 open_after = defaultdict(int)
+vis_lines = defaultdict(int)
+vis_total = defaultdict(int)
+ignore_dict = defaultdict(list)
 
 def usage():
     print("USAGE:")
@@ -31,6 +35,7 @@ def usage():
     print("nr/rn turns it off")
     print("Or write in a project.")
     print("so = story file only, ap/af = all project files.")
+    print("ol/lo and of/fo = open last/first.")
     exit()
 
 def viscap(x):
@@ -50,7 +55,10 @@ def ignore_vis(l):
     if l.startswith("["): return True
     if l.endswith("]"):
         if not "[" in l: return True
-        ls = re.sub(r'( *\[([^\]])*\])+', '', l.strip())
+        if l.startswith('"'):
+            ls = re.sub("\"[^\"]*$", "", l.strip())
+        else:
+            ls = re.sub(r'( *\[([^\]])*\])+', '', l.strip())
         if 'visible' not in ls: return True
     if 'applying to' in l and (('one visible thing' in l) or ('two visible things' in l)): return True #actions definitions are okay
 
@@ -67,7 +75,7 @@ def find_vis(this_file):
     print("===================Hunting visibles for", abbr)
     with open(this_file) as file:
         for (line_count, line) in enumerate(file, 1):
-            if not line.startswith("\t"): last_rule = line.strip()
+            if not line.startswith("\t") and not line.startswith('"'): last_rule = line.strip()
             ll = line.lower().strip()
             if 'visible' in ll and re.search(r'\bvisible\b', ll, re.IGNORECASE):
                 if ignore_vis(ll):
@@ -82,7 +90,12 @@ def find_vis(this_file):
                 count_idx += 1
                 print("Line", line_count, "Incidence", count_idx, abbr)
                 print('    l{:s}'.format("" if tv == 1 else " +{:d}".format(tv)), visibles, 'tot', last_rule if line.startswith("\t") else "", viscap(line.lower().strip())) #ask codereview about a better way to do this?
-                open_after[this_file] = line_count
+                if open_last or this_file not in open_after: open_after[this_file] = line_count
+    if visibles:
+        vis_lines[this_file] = count_idx
+        vis_total[this_file] = visibles
+    if len(ignored):
+        ignore_dict[this_file] = list(ignored)
     if not count_idx:
         print('HOORAY! No instances of "visible" to check.' + '' if check_rigorous else ' Use -nr for nonrigorous to pick up more bugs')
     else:
@@ -103,6 +116,10 @@ while cmd_count < len(sys.argv):
         open_bugs_after = False
     elif arg == 'so':
         all_project_files = False
+    elif arg == 'ol' or arg == 'lo':
+        open_last = True
+    elif arg == 'of' or arg == 'fo':
+        open_first = True
     elif arg == 'ap' or arg == 'af':
         all_project_files = True
     elif arg[0] == 'm' and arg[1:].isdigit(): max_vis = int(arg[1:])
@@ -138,6 +155,13 @@ for q in ary:
         for f in i7.i7f[q]:
             find_vis(f)
     else: find_vis(i7.main_src(q))
+
+for x in vis_lines:
+    print(x, vis_lines[x], "lines", vis_total[x], "total")
+    if x in ignore_dict: print(x, ", ".join([str(x) for x in ignore_dict[x]]))
+
+for x in ignore_dict:
+    if x not in vis_lines: print(x, "only has ignored lines:", ", ".join([str(x) for x in ignore_dict[x]]))
 
 if open_bugs_after:
     for z in open_after:
