@@ -12,12 +12,17 @@ import re
 import os
 import i7
 import sys
+from collections import defaultdict
 
 max_vis = 0
 
 ary = []
 
 check_rigorous = True
+all_proj_files = True
+open_bugs_after = True
+
+open_after = defaultdict(int)
 
 def usage():
     print("USAGE:")
@@ -25,6 +30,7 @@ def usage():
     print("rc/cr/r/ry/yr turns on rigor check, currently", i7.oo[check_rigorous])
     print("nr/rn turns it off")
     print("Or write in a project.")
+    print("so = story file only, ap/af = all project files.")
     exit()
 
 def viscap(x):
@@ -48,17 +54,18 @@ def ignore_vis(l):
         if 'visible' not in ls: return True
     if 'applying to' in l and (('one visible thing' in l) or ('two visible things' in l)): return True #actions definitions are okay
 
-def find_vis(proj_name):
+def find_vis(this_file):
     visibles = 0
     count_idx = 0
     ignored = []
-    x = i7.main_src(proj_name)
-    if not os.path.exists(x):
-        print("Bad project name/abbreviation", proj_name)
+    open_line = 0
+    if not os.path.exists(this_file):
+        print("Bad file name", this_file)
         if by_default: print("You may wish to specify an argument or change the directory.")
         return
-    print("===================Hunting visibles for", proj_name, "at", x)
-    with open(x) as file:
+    abbr = os.path.basename(this_file)
+    print("===================Hunting visibles for", abbr)
+    with open(this_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if not line.startswith("\t"): last_rule = line.strip()
             ll = line.lower().strip()
@@ -73,13 +80,15 @@ def find_vis(proj_name):
                 if not tv: continue
                 visibles += tv
                 count_idx += 1
-                print("Line", line_count, "Incidence", count_idx)
+                print("Line", line_count, "Incidence", count_idx, abbr)
                 print('    l{:s}'.format("" if tv == 1 else " +{:d}".format(tv)), visibles, 'tot', last_rule if line.startswith("\t") else "", viscap(line.lower().strip())) #ask codereview about a better way to do this?
+                open_after[this_file] = line_count
     if not count_idx:
         print('HOORAY! No instances of "visible" to check.' + '' if check_rigorous else ' Use -nr for nonrigorous to pick up more bugs')
     else:
-        print(count_idx, "total instance{:s} of visible for story.ni in project".format(i7.plur(count_idx)), proj_name)
-    if len(ignored): print(len(ignored), "instance{:s} of VISIBLE ignored in project".format(i7.plur(ignored)), proj_name, ", ".join([str(x) for x in ignored]))
+        print(count_idx, "total instance{:s} of visible for".format(i7.plur(count_idx)), abbr)
+    if len(ignored): print(len(ignored), "instance{:s} of VISIBLE ignored in ", abbr, ", ".join([str(x) for x in ignored]))
+    if open_line: open_after[this_file] = open_line
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
@@ -88,6 +97,14 @@ while cmd_count < len(sys.argv):
         check_rigorous = True
     elif arg == 'rn' or arg == 'nr' or arg == 'n':
         check_rigorous = False
+    elif arg == 'oa':
+        open_bugs_after = True
+    elif arg == 'no':
+        open_bugs_after = False
+    elif arg == 'so':
+        all_project_files = False
+    elif arg == 'ap' or arg == 'af':
+        all_project_files = True
     elif arg[0] == 'm' and arg[1:].isdigit(): max_vis = int(arg[1:])
     elif i7.proj_exp(arg, return_nonblank = False):
         if i7.proj_exp(arg, return_nonblank = False) in ary:
@@ -116,4 +133,12 @@ for x in ary:
 
 if not len(ary): sys.exit("You need to be in a valid github source directory or specify a project.")
 
-for q in ary: find_vis(q)
+for q in ary:
+    if all_proj_files:
+        for f in i7.i7f[q]:
+            find_vis(f)
+    else: find_vis(i7.main_src(q))
+
+if open_bugs_after:
+    for z in open_after:
+        i7.npo(z, open_after[z], bail = False)
