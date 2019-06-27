@@ -9,6 +9,7 @@ from shutil import copyfile
 import os
 import re
 import argparse
+import sys
 
 big_string = ""
 iffy = False
@@ -143,6 +144,8 @@ in_i6 = False
 func_begun = False
 func_ended = False
 warnings = 0
+
+if not os.path.exists(file_name): sys.exit("No " + file_name)
 
 with open(file_name) as file:
     for (line_count, line) in enumerate(file, 1):

@@ -6,7 +6,13 @@ volume stuff I've used multiple games
 
 debug-state is a truth state that varies.
 
+in-beta is a truth state that varies.
+
 to say fill-in-here: say "!!!!" [This is something that should never be in a game's release. At times I want to be able to compile the game but still reliably note when something needs to be implemented. I track this with a script elsewhere.]
+
+definition: a thing (called qvc) is qv:
+	if qvc is enclosed by location of player, yes;
+	no;
 
 book screen effects [I always do something silly with the status line, or try a creative wait for any key, because that's fun]
 
@@ -241,6 +247,10 @@ definition: a direction (called thedir) is planar:
 	if thedir is cardinal or thedir is diagonal, decide yes;
 	decide no;
 
+definition: a direction (called thedir) is vertical:
+	if thedir is up or thedir is down, yes;
+	no;
+
 chapter dtoging - not for release
 
 [ * toggles debug state ]
@@ -340,6 +350,53 @@ understand "win" as wining.
 carry out wining:
 	end the story finally;
 	the rule succeeds;
+
+volume debug printing (for Glulx only)
+
+to d (myt - indexed text):
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
+
+to dl (myt - indexed text): [this is for stuff you really want to delete]
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
+
+to dn (myt - indexed text):
+	if debug-state is true:
+		say "[myt]";
+
+debug-count is a number that varies;
+
+to d1:
+	now debug-count is 1;
+	say "[debug-count].";
+
+to dn:
+	increment debug-count;
+	say "[debug-count]";
+
+to ital-txt (x - indexed text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]".
+
+volume intro/restore/skip (for Glulx only)
+
+read-intro is a truth state that varies.
+
+to intro-restore-skip:
+	now read-intro is true;
+	if debug-state is false:
+		let got-good-key be false;
+		while got-good-key is false:
+			let Q be the chosen letter;
+			if Q is 70 or Q is 73 or Q is 102 or Q is 105:
+				now read-intro is true;
+				now got-good-key is true;
+			else if Q is 82 or Q is 114:
+				say "Restoring...";
+				try restoring the game;
+			else if Q is 83 or Q is 115:
+				now read-intro is false;
+				now got-good-key is true;
+			if got-good-key is false, say "[line break][if q is 82 or q is 114]Restore failed. Let's try again[else]I didn't recognize that[end if]. Would you like to see the full introduction (F or I), restore a previous game (R), or skip the introduction (S)?";
 
 Trivial Niceties Z-Only ends here.
 
