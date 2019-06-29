@@ -47,6 +47,7 @@ my $shortName      = "";
 my $totalFind      = 0;
 my $lastHeader     = "";
 my $othersToo      = 0;
+my $foundLines     = 0;
 my $foundTotal     = 0;
 my $stringAtEnd    = "";
 my $skippedAny     = 0;
@@ -255,6 +256,11 @@ while ( $count <= $#ARGV ) {
     usage();
   }
 
+}
+
+if ($maxOverallFind < $maxFileFind) {
+  print "MaxOverallFind is less than MaxFileFind, so I'm upping it from $maxOverallFind to $maxFileFind.\n";
+  $maxOverallFind = $maxFileFind;
 }
 
 if ( $pwd_runs && !( scalar @runs ) ) {
@@ -478,7 +484,7 @@ sub processFiles {
 
   #for my $q (sort keys %cmds) { print "$q...$cmds{$q}\n"; } return;
   foreach my $cmd (@x) {
-    if ( $foundTotal == $maxOverallFind ) { print "Skipping $cmd\n"; next; }
+    if ( $foundLines == $maxOverallFind ) { print "Skipping $cmd\n"; next; }
     my @fileAndMarkers = split( /\t/, $cmd );
     processOneFile(@fileAndMarkers);
   }
@@ -504,8 +510,8 @@ sub processFiles {
     }
     print "FILES WITH MATCHES ("
       . ( scalar @gots )
-      . "/$foundTotal): "
-      . join( ", ", map { "$_=$foundCount{$_}" } @gots ) . "\n";
+      . "/$foundLines lines/$foundTotal total):\n"
+      . join( "\n", map { "    $_=$foundCount{$_}" . ($foundCount{$_} == $maxFileFind ? "***" : "") } @gots ) . "\n";
   }
   if ( $errStuff[0] ) {
     print "TEST RESULTS: $_[0],0,"
@@ -542,7 +548,7 @@ sub processOneFile {
   if ( $modFile =~ /\.i7x/ )      { $modFile =~ s/.*[\\\/]/EXT /g; }
 
   # print "$_[0] => $modFile\n"; return;
-  open( A, "$_[0]" ) || die("No $_[0]. Create it or remove it from gq.txt.");
+  open( A, "$_[0]" ) || die(getcwd() . "\n" . "No $_[0]. Create it or remove it from gq.txt.");
   while ( $a = <A> ) {
     my $temp = $a;
     next if !$printTabbed && ( $a =~ /^\t/ );
@@ -596,8 +602,19 @@ sub processOneFile {
       chomp($a);
       if ($dontWant) { push( @errStuff, "$modFile L$idx" ); }
       $foundOne++;
-      $foundTotal++;
+      $foundLines++;
+	  my $number;
       ( my $a2 = $a ) =~ s/^\t+/\|\| /g;
+	  ( my $a3 = $a2) =~ s/-/ /g;
+	  if ($#thisAry)
+	  {
+	  $number = () = $a3 =~ /\b($thisAry[0] ?$thisAry[1]|$thisAry[1] ?$thisAry[0])s?\b/gi;
+	  }
+	  else
+	  {
+	  $number = () = $a3 =~ /\b$thisAry[0](s)?\b/gi;
+	  }
+	  $foundTotal += $number;
       $tempString = "$modFile($.";
       $tempString .= ",$currentTable"        if $currentTable;
       $tempString .= ",$thisImportant,L$idx" if $thisImportant;
@@ -614,7 +631,7 @@ sub processOneFile {
 "----------Max $maxFileFind matches found per file. Use -mf to increase.\n";
         last;
       }
-      if ( $maxOverallFind && ( $foundTotal == $maxOverallFind ) ) {
+      if ( $maxOverallFind && ( $foundLines == $maxOverallFind ) ) {
         print
 "----------Max $maxOverallFind total matches found. Use -mo to increase.\n";
         last;
