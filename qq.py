@@ -32,13 +32,15 @@ def file_hunt(x):
     # print("HUNTING TODOS in", x)
     bad_lines = []
     any_yet = False
+    ignored = []
     with open(x) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower()
             if found_todo_text(ll):
-                if line_count < max_line:
-                    print("Found something beyond", max_line, "at line", line_count)
-                    break
+                if max_line and line_count > max_line:
+                    if verbose: print("Ignoring match above line", max_line, "at line", line_count, ":", line.strip())
+                    ignored.append(line_count)
+                    continue
                 if line_count > min_line:
                     if html_exp and not any_yet:
                         fhtml.write("<font size=+3 color=red>TODO RESULTS IN {:s}</font><br />\n".format(x))
@@ -48,7 +50,9 @@ def file_hunt(x):
                     if verbose: print(verbose_detail)
                     if html_exp:
                         fhtml.write(verbose_detail + "<br />\n")
-                elif verbose: print("Ignoring match below line", min_line, "at line", line_count, ":", line.strip())
+                else:
+                    if verbose: print("Ignoring match below line", min_line, "at line", line_count, ":", line.strip())
+                    ignored.append(line_count)
     if any_yet == False and html_exp: fhtml.write("<font size=+3 color=green>NOTHING FOUND {:s}</font><br />\n".format(x))
     if len(bad_lines) == 0:
         print("Nothing found for", x)
@@ -60,6 +64,7 @@ def file_hunt(x):
         cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(i7.np, x, bad_lines[local_bail])
         os.system(cmd)
     print()
+    if len(ignored): print("Ignored lines:", ', '.join([str(x) for x in ignored]))
     return len(bad_lines) > 0 # If we got a ??, return true
 
 def todo_hunt(x):
@@ -128,7 +133,7 @@ if len(sys.argv) > 1:
                 min_line = int(ll[1:])
             except:
                 print("The m (minimum line) option requires a number right after: no spaces.")
-        elif ll.startswith('m'):
+        elif ll.startswith('x'):
             try:
                 max_line = int(ll[1:])
             except:
@@ -145,6 +150,8 @@ if len(sys.argv) > 1:
         else:
             print("WARNING!", ll, "is not in i7x.keys.")
         count += 1
+
+if min_line and max_line and max_line < min_line: sys.exit("Maximum line must be greater than minimum line. You've defined min={:d} max={:d}.".format(min_line, max_line))
 
 html_file = "c:/games/inform/qq.htm"
 

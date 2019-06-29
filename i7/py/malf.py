@@ -76,7 +76,9 @@ def read_cfg_file():
                 print("Line", line_count, "does not have = to split the project and what should be sorted.")
                 continue
             la = ll.split("=")
-            sort_level[la[0]] = la[1]
+            if la[1] not in all_alpha and not la[1].isdigit(): sys.exit("Bad header in {:s} line {:d}: {:s}.".format(malf_cfg, line_count, line.strip()))
+            if la[0].lower() == 'default': alpha_level = int(la[1])
+            else: sort_level[la[0]] = la[1]
 
 def breakdowns(e):
     any_slashes = False
@@ -154,7 +156,7 @@ def sort_mistake(pr):
                 if q:
                     if q == sort_level[pr]:
                         if ll < last_sorted_header:
-                            print("Chapter alphabetizing: line", line_count, ll.upper(), "behind last sorted header", last_sorted_header.upper())
+                            print(pr, "alphabetizing: line", line_count, ll.upper(), "behind last sorted header", last_sorted_header.upper())
                             if not post_open_line: post_open_line = line_count
                         last_sorted_header = ll
                         last_sorted_line = line_count
