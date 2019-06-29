@@ -46,7 +46,6 @@ outline_val = sorted(outline_val_hash, key=outline_val_hash.get)
 ov = outline_val
 outline_re = r'^({:s})'.format('|'.join(outline_val_hash))
 
-
 on_off = [ 'off', 'on' ]
 oo = on_off
 
@@ -321,6 +320,12 @@ def lpro(x, spaces=False):
     retval = proj_exp(x, False)
     if spaces: retval = re.sub("-", " ", retval)
     return retval
+
+def has_ni(x):
+    if os.path.exists(os.path.join(x, "story.ni")): return True
+    my_proj = proj2dir(i7.dir2proj(x))
+    if os.path.exists(os.path.join(my_proj, "story.ni")): return True
+    return False
 
 def proj2dir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))

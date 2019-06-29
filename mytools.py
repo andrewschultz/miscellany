@@ -3,10 +3,18 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import re
+import pyperclip
 import sys
 import os
 import __main__ as main
 from collections import defaultdict
+
+def bail_if_not(f, file_desc = ""):
+    if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
+
+def plur(a):
+    return '' if a == 1 else 's'
 
 def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML generated from text", launch = True):
 	f = open(out_file, "w")
@@ -18,14 +26,27 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
     return x.lower()
 
+nohyp = noh = nohy
+
 def is_limerick(x): # quick and dirty limerick checker
     if x.count('/') != 4: return False
     temp = re.sub(".* #", "", x)
     if len(temp) > 120 and len(temp) < 240: return True
 
+def clipboard_slash_to_limerick(print_it = False):
+    x = slash_to_limerick(pyperclip.paste())
+    if print_it: print(x)
+    pyperclip.copy(x)
+    return "!"
+
 def slash_to_limerick(x): # limerick converter
-    temp = re.sub(" *\/ ", "\n", x)
-    return ("====\n" + temp)
+    retval = ""
+    print(x.split("\n"))
+    for x0 in x.split("\n"):
+        if "/" in x0:
+            retval += "====\n" + re.sub(" *\/ ", "\n", x0) + "\n"
+        else: retval += x0 + "\n"
+    return retval
 
 def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     if ':' not in x:
