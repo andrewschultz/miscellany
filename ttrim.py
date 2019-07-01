@@ -3,6 +3,11 @@
 #
 # we can have a set of files or a directory or just one file 
 #
+# we can also specify a glob
+#
+# bad_extensions and good_extensions are the main files to tinker with
+#   (with which to tinker)
+#
 
 from collections import defaultdict
 from shutil import copy
@@ -18,6 +23,7 @@ quiet_mode = False
 win_merge_show = False
 verbose = False
 copy_back = False
+flag_neutral = True
 
 if len(sys.argv) == 1: sys.exit("You need an argument -- directory or file.")
 
@@ -25,8 +31,17 @@ exclude = [ '.git' ]
 tabtemp = "c:/users/andrew/documents/github/tabtemp.txt"
 
 bad_extensions = [ "pdf", "blorb", "png", "odt", "jpg" ]
+good_extensions = [ "txt", "ni", "i7x", "py", "pl" ]
 
 total_changes = 0
+
+def usage():
+    print("c = copy back, nc/cn = don't copy back")
+    print("nw/wn = no win merge show, w shows")
+    print("q = quiet mode")
+    print("f flags neutral file extensions, nfn/fn/nf does not.")
+    print("* puts in a glob argument.")
+    exit()
 
 def is_unix(f):
     with open(f) as file:
@@ -37,6 +52,11 @@ def is_unix(f):
 def is_okay(f):
     for q in bad_extensions:
         if f.endswith(q): return False
+    if flag_neutral:
+        for q in good_extensions:
+            if f.endswith(q): return True
+        return False
+        print("Flagged neutral file", q)
     return True
 
 def check_file(my_f):
@@ -86,7 +106,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'w': win_merge_show = True
     elif arg == 'nw' or arg == 'wn': win_merge_show = False
     elif arg == 'q': quiet_mode = True
+    elif arg == 'f': flag_neutral = True
+    elif arg == 'nfn' or arg == 'fn' or arg == 'nf': flag_neutral = False
     elif '*' in arg: to_edit += glob(arg)
+    elif arg == '?': usage()
     else: to_edit.append(arg)
     cmd_count += 1
 
