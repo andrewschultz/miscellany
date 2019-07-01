@@ -1,7 +1,7 @@
 #
 # ttrim.py: this trims ending tabs from a script
 #
-# we can have a set of files or a directory or just one file 
+# we can have a set of files or a directory or just one file
 #
 # we can also specify a glob
 #
@@ -24,8 +24,6 @@ win_merge_show = False
 verbose = False
 copy_back = False
 flag_neutral = True
-
-if len(sys.argv) == 1: sys.exit("You need an argument -- directory or file.")
 
 exclude = [ '.git' ]
 tabtemp = "c:/users/andrew/documents/github/tabtemp.txt"
@@ -67,23 +65,22 @@ def check_file(my_f):
     lines_stripped = 0
     with open(tabtemp, "w") as out_file:
         with open(my_f, "U") as in_file:
-            text = in_file.read()
-            if re.search("[\t ]$", text):
-                # print(text.endswith(" "), text.endswith("\t"), text.endswith(")"), "!" + text[-1] + "!")
-                text = re.sub("[ \t]+$", "", text)
-                lines_stripped += 1
-            out_file.write(text)
+            for line in in_file:
+                if re.search("[\t ]$", line):
+                    # print(text.endswith(" "), text.endswith("\t"), text.endswith(")"), "!" + text[-1] + "!")
+                    line = re.sub("[ \t]+$", "", line)
+                    lines_stripped += 1
+                out_file.write(line)
     # print(my_f, os.path.getsize(my_f), tabtemp, os.path.getsize(tabtemp))
     if win_merge_show: i7.wm(my_f, tabtemp)
     if lines_stripped:
         print("Rstripping/copying" if copy_back else "flagging (use -c to copy back)", my_f, "of", lines_stripped, "rstrips")
         if copy_back: copy(tabtemp, my_f)
-        sys.exit()
         return (1, 1)
     else:
         if verbose: print("Nothing to strip in", my_f)
         return (0, 1)
-        
+
 
 def check_directory(my_dir):
     total_changes = 0
@@ -112,6 +109,8 @@ while cmd_count < len(sys.argv):
     elif arg == '?': usage()
     else: to_edit.append(arg)
     cmd_count += 1
+
+if len(to_edit) == 0: sys.exit("You need an argument -- directory, file or glob -- to trim.")
 
 done_yet = defaultdict(bool)
 
