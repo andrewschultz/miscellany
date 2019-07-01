@@ -147,8 +147,7 @@ if ($launchTextFile) {
   exit();
 }
 
-my $outname = "$invDir\\invis-$filename";
-$outname =~ s/txt$/htm/gi;
+my $outname = "";
 
 ( my $fileShort = $filename ) =~ s/.*[\\\/]//;
 
@@ -187,9 +186,18 @@ while ( $a = <A> ) {
     next;
   }
 
+  if ($a =~ /^outfile=/i) {
+    $a =~ s/^outfile=//i;
+    chomp($a);
+	if ($outname) { print "Warning: redefinition of outfile from $outname at line $. of $filename.\n"; }
+    $outname = $a;
+	print("WARNING: OUTNAME of $a doesn't have/avoid github as it should.\n") if ($outname =~ /github/i) != ($github_recommended);
+
+  }
   if ( $a =~ /^out=/i ) {
     $a =~ s/^out=//i;
     chomp($a);
+	if ($outname) { print "Warning: redefinition of outfile at line $. of $filename.\n"; }
     $outname = "$theDir\\$a";
 	print("WARNING: OUTNAME of $a doesn't have/avoid github as it should.\n") if ($outname =~ /github/i) != ($github_recommended);
     next;
@@ -201,6 +209,11 @@ while ( $a = <A> ) {
     $rawFile = "$invDir\\$a";
     next;
   }
+}
+
+if ($outname eq "") {
+  $outname = "$invDir\\invis-$filename";
+  $outname =~ s/txt$/htm/gi;
 }
 
 if ( $updateOnly && defined( -M $outname ) ) {
@@ -401,6 +414,7 @@ sub listAllOutput {
   my @dfi = sort( readdir DIR );
   my $dname;
   my $fname;
+  my $full_name;
 
   for my $fi (@dfi) {
     $dname = "(default)";
@@ -409,6 +423,7 @@ sub listAllOutput {
     if ( $fi !~ /txt$/i )     { next; }
     open( A, "$invDir\\$fi" );
     while ( $a = <A> ) {
+	  if ($a =~ /^outfile=/) { $full_name = $a; $full_name =~ s/^outfile=//; chomp($full_name); last; }
       if ( $a =~ /^out=/ ) { $fname = $a; $fname =~ s/^out=//; chomp($fname); }
       if ( $a =~ /^->/ ) {
         $dname = $a;
@@ -418,7 +433,8 @@ sub listAllOutput {
       }
     }
     close(A);
-    print "$invDir\\$fi: $dname\\$fname\n";
+	if (!$full_name) { $full_name = "$dname\\$fname"; }
+    print "$invDir\\$fi: $full_name\n";
   }
 }
 
