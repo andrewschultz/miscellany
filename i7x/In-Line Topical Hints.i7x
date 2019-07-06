@@ -913,7 +913,7 @@ Example: ** Fetch Quest - A minimal game with hints, rule-dependent and not
 		now the silver coin is in Silver Room;
 		activate silvery; [you can deactivate bronzy here if you want, but I deliberately avoided this to show topic disambiguation]
 		continue the action;
-		
+
 	after taking the silver coin:
 		now the gold coin is in Gold Room;
 		activate goldy; [you can deactivate silvery here if you want, but I deliberately avoided this to show topic disambiguation]
@@ -991,7 +991,7 @@ Example: ** Fetch Quest - A minimal game with hints, rule-dependent and not
 	test hintchange with "n/get all/s/hint/n/topic 1/topic 2"
 
 	test block with "hint block/hint/hint all/h/t/topic/topic 1/t 1/t1/1/hint block/hint all/hint review/hint one/hint recent/hint on/hint off/"
-	
+
 	[end example]
 
 Example: *** Gems - a small game with strictly rule-based hints
@@ -1077,7 +1077,7 @@ Example: *** Gems - a small game with strictly rule-based hints
 		if second noun is gaudy hatch:
 			if noun is onyx:
 				say "There's only one hole left, so...";
-				try inserting onyx into black hole instead;	
+				try inserting onyx into black hole instead;
 			say "You may want to specify which hole." instead;
 		if second noun is not in-item of noun:
 			say "The [noun] doesn't fit there." instead;
@@ -1269,5 +1269,5 @@ Example: *** Gems - a small game with strictly rule-based hints
 	test win-sa with "put sapphire in blue/n/get amethyst/s/put amethyst in yellow/ne/get diamond/sw/put diamond in white/e/get ruby/w/put ruby in red/w/get emerald/e/put emerald in green/nw/get onyx/se/put onyx in hatch/s"
 
 	test win-1 with "i/test win-di/test win-ru/test win-am/test win-em/test win-sa"
-	
+
 	[end example]

@@ -79,7 +79,7 @@ to print-current-map:
 			say " [no line break]"; [reserved for diagonal later]
 		say "[line break]";
 	say "[variable letter spacing]";
-	
+
 to decide what number is xmin:
 	let temp be -1;
 	repeat through table of map coordinates:

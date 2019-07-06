@@ -586,7 +586,7 @@ include (-
 
 -) instead of "Long Texts" in "Language.i6t"
 
-To decide whether the current action is no-timely: 
+To decide whether the current action is no-timely:
 	 (- meta -) [this is a trick to flag out of world actions, if you want to]
 
 to decide whether the action is instantaneous:
@@ -596,7 +596,7 @@ to decide whether the action is instantaneous:
 	if taking inventory, yes;
 	no;
 	[Note: this is largely redundant if you keep what's above. Still, it can't hurt, and it's more logically laid out. For instance, if you're able to take something quickly, you might want to put it here.]
-	
+
 room 1 is a room.
 
 the trinket is a thing in room 1.
