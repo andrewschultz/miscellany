@@ -52,6 +52,9 @@ oo = on_off
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+def to_table(x):
+    return re.sub(" *\[.*", "", line.lower().strip())
+
 def is_outline_start(x, case_insensitive = True):
     return re.sub(outline_re, x)
 

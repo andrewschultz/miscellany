@@ -126,8 +126,13 @@ def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = b
         if zap_apostrophes: r = re.sub("('|\['\])", "", r, 0, re.IGNORECASE)
         else: r = re.sub("^('|\['\])", "", r, 0, re.IGNORECASE)
         r = re.sub("^(the|a|an|\() ", "", r, 0, re.IGNORECASE)
-        r = re.sub("^\['\]", "", r, 0, re.IGNORECASE)
+        r = re.sub("\['\]", "", r, 0, re.IGNORECASE)
+        r = re.sub("-", " ", r, 0, re.IGNORECASE)
         r = re.sub("\".*", "", r, 0, re.IGNORECASE)
+        r = re.sub(",", "", r, 0, re.IGNORECASE)
+        r = re.sub("[\(\)!\?\.:]", " ", r, 0, re.IGNORECASE)
+        r = re.sub("  +", " ", r, 0, re.IGNORECASE)
+        r = re.sub("^ +", "", r, 0, re.IGNORECASE)
         return r
     return ary[b]
 
@@ -307,7 +312,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                         ignored_tables = ignored_tables + "{:s} Line {:d} (DIRECTED): {:s}".format(fs, line_count, line)
                         print("Ignoring {:s} file default for {:s}{:s}.".format(os.path.basename(f), cur_table, ("/ " + line.strip() if cur_table != line else "")))
                         # print("Zapping", x, "from", os.path.basename(f))
-                        need_to_catch[f].pop(cur_table)
+                        if "(continued)" not in line:
+                            need_to_catch[f].pop(cur_table)
                         continue
                     what_to_split = default_sort[f]
                     what_to_sort = what_to_split.split(',')
