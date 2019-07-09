@@ -9,6 +9,8 @@ import sys
 import os
 import __main__ as main
 from collections import defaultdict
+from fractions import gcd
+from functools import reduce
 
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
@@ -28,10 +30,18 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
-def is_limerick(x): # quick and dirty limerick checker
+def is_anagrammy(x):
+    q = defaultdict(int)
+    y = re.sub("[^a-z]", "", x.lower())
+    for j in y: q[j] += 1
+    gc = reduce(gcd, q.values())
+    return gc > 1
+
+def is_limerick(x, accept_comments = False): # quick and dirty limerick checker
+    if accept_comments and '#lim' in x: return True
     if x.count('/') != 4: return False
     temp = re.sub(".* #", "", x)
-    if len(temp) > 120 and len(temp) < 240: return True
+    if len(x) > 120 and len(x) < 240: return True
 
 def clipboard_slash_to_limerick(print_it = False):
     x = slash_to_limerick(pyperclip.paste())
@@ -46,7 +56,7 @@ def slash_to_limerick(x): # limerick converter
         if "/" in x0:
             retval += "====\n" + re.sub(" *\/ ", "\n", x0) + "\n"
         else: retval += x0 + "\n"
-    return retval
+    return retval.rstrip() + "\n"
 
 def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     if ':' not in x:
