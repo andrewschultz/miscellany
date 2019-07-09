@@ -29,6 +29,18 @@ cmds['spo'] = "np spopal"
 
 comment_sortable = defaultdict(str)
 
+def my_section(l):
+    if '\t' in l or l.count('  ') > 2: return 'nam'
+    if mt.is_palindrome(l): return 'pal'
+    if mt.is_anagram(l): return 'ana'
+    if mt.is_limerick(l, accept_comments = True): return 'lim'
+    if re.search(r'([0-9\*])\1+', l): return 'spo'
+    if ' / ' in l: return 'vvff'
+    if "#q" in l: return 'qui'
+    if '==' in l: return 'btp'
+    if not re.search("[^a-z]", l): return 'nam'
+    return ""
+
 def sort_priority(x):
     prio_num = 0
     if x == 'nam': prio_num = 20
@@ -61,35 +73,15 @@ def sort_raw(x):
                 continue
             ll = line.strip().lower()
             if not ll: continue
-            if '\t' in ll or ll.count('  ') > 2:
-                sections['nam'] += line
-                continue
-            if mt.is_palindrome(line):
-                sections['pal'] += line
-                continue
-            if mt.is_anagram(line):
-                sections['ana'] += line
-                continue
-            if mt.is_limerick(line, accept_comments = True):
-                sections['lim'] += mt.slash_to_limerick(line)
-                continue
-            if re.search(r'([0-9\*])\1+', line):
-                sections['spo'] += line
-                continue
-            if ' / ' in line:
-                sections['vvff'] += line
-                continue
-            if "#q" in line:
-                sections['qui'] += line
-            if '==' in line:
-                sections['btp'] += line
-                continue
             if line.startswith('IMPORTANT'):
                 important = True
                 continue
-            if not re.search("[^a-z]", ll):
-                print("Adding", line)
-                sections['nam'] += line
+            temp = my_section(line)
+            if temp:
+                if temp == 'lim':
+                    sections[temp] += mt.slash_to_limerick(line)
+                else:
+                    sections[temp] += line
                 continue
             sections['sh'] += line
     if 'nam' in sections:
