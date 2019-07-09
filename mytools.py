@@ -30,18 +30,29 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
-def is_anagrammy(x):
+def is_anagram(x):
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
     for j in y: q[j] += 1
     gc = reduce(gcd, q.values())
     return gc > 1
 
+is_anagramy = is_anagrammy = is_anagram
+
 def is_limerick(x, accept_comments = False): # quick and dirty limerick checker
     if accept_comments and '#lim' in x: return True
     if x.count('/') != 4: return False
     temp = re.sub(".* #", "", x)
     if len(x) > 120 and len(x) < 240: return True
+
+is_limericky = is_limerick
+
+def is_palindrome(x, accept_comments = False):
+    if accept_comments and "#pal" in x: return True
+    let_only = re.sub("[^a-z]", "", x.lower())
+    return let_only == let_only[::-1]
+
+is_palindromey = is_palindromy = is_palindrome
 
 def clipboard_slash_to_limerick(print_it = False):
     x = slash_to_limerick(pyperclip.paste())
@@ -51,7 +62,6 @@ def clipboard_slash_to_limerick(print_it = False):
 
 def slash_to_limerick(x): # limerick converter
     retval = ""
-    print(x.split("\n"))
     for x0 in x.split("\n"):
         if "/" in x0:
             retval += "====\n" + re.sub(" *\/ ", "\n", x0) + "\n"
