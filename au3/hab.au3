@@ -61,6 +61,13 @@ Local $attr_pulldown_delta = 30
 Local $page_down_adjust = 880
 Local $last_row_after_end = 580
 
+Local $pet_feed_init_x = 246
+Local $pet_feed_init_y = 528
+Local $pet_feed_delta = 94
+Local $pet_food_init_x = 690
+Local $pet_food_init_y = 960
+Local $pet_food_delta = 100
+
 Local $equip_wait = 750
 
 Local $init_equip = 0
@@ -243,6 +250,42 @@ While $cmdCount <= $CmdLine[0]
 	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, $mage_delay)
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
 	ExitLoop
+  ElseIf $myCmd == 'fe' Then
+    ToStable()
+    $times_to_click = int($nextNum / 100)
+	if $times_to_click == 0 Then $times_to_click = 9
+	if $times_to_click < 0 or $times_to_click > 9 Then
+	  MOK("Oops!", "The hundreds digit needs to be between 0 (goes to 9) and 9, for the number of times to feed a pet.", True)
+	EndIf
+    $top_to_click = Int(Mod($nextNum, 100) / 10)
+	$bottom_to_click = Mod($nextNum, 10)
+	if $top_to_click > 9 or $top_to_click < 0 Then
+	  MOK("Oops!", "Need a number between 00-90 for pet to feed/click on.", True)
+    EndIf
+	if $bottom_to_click > 9 or $bottom_to_click < 0 Then
+	  MOK("Oops!", "Need a number with ones digit between 0 and 5 for the sort of food to feed your pet.", True)
+    EndIf
+	if $bottom_to_click > 5 Then
+      MouseMove($pet_food_next_x, $pet_food_init_y)
+	  for $i = 6 to $bottom_to_click
+		MouseClick(left)
+		Sleep(300)
+	  Next
+	  $bottom_to_click = 5
+	  Exit
+    EndIf
+	$pet_x = $pet_feed_init_x + $pet_feed_delta * $top_to_click
+	$pet_y = $pet_feed_init_y
+	$food_x = $pet_food_init_x + $pet_food_delta * $bottom_to_click
+	$food_y = $pet_food_init_y
+	for $i = 1 to $times_to_click
+	  MouseMove($food_x, $food_y)
+	  Sleep($delay/5)
+	  MouseClick("left")
+	  MouseMove($pet_x, $pet_y)
+	  Sleep($delay/5)
+	  MouseClick("left")
+    Next
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
 	ToTasks(True)
     $clicks = $nextNum
@@ -364,6 +407,13 @@ Func GoEquip()
   sleep(1000)
   MouseClick ( "left", 250, 165, 1 )
   sleep(2000)
+EndFunc
+
+Func ToStable()
+  MouseMove(225, 100)
+  sleep(1200)
+  MouseMove(225, 200)
+  MouseClick("left")
 EndFunc
 
 Func ToTasks($hab_too = True)
@@ -823,6 +873,15 @@ Func read_hab_cfg($x)
     Elseif verify_first_entry($vars, 'DeltaHV', 3) Then
 	  $horiz_delta = $vars[2]
 	  $vert_delta = $vars[3]
+    Elseif verify_first_entry($vars, 'PetFeedDelta', 4) Then
+	  $pet_feed_init_x = $vars[2]
+	  $pet_feed_init_y = $vars[3]
+	  $pet_feed_delta = $vars[4]
+    Elseif verify_first_entry($vars, 'PetFoodDelta', 5) Then
+	  $pet_food_init_x = $vars[2]
+	  $pet_food_init_y = $vars[3]
+	  $pet_food_delta = $vars[4]
+	  $pet_food_next_x = $vars[5]
     Elseif verify_first_entry($vars, 'InitHV', 3) Then
 	  $h_init_page_1 = $vars[2]
 	  $v_init_page_1 = $vars[3]
