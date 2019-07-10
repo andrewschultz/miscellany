@@ -18,6 +18,7 @@ from glob import glob
 raw_dir = "c:/coding/perl/proj/from_drive"
 done_dir = "c:/coding/perl/proj/from_drive/drive_mod"
 raw_glob = "raw-*.txt"
+important_file = "{0}/important.txt".format(raw_dir)
 
 comment_cfg = "c:/writing/scripts/keso.txt"
 
@@ -28,6 +29,12 @@ cmds['vvff'] = "ni no vv"
 cmds['spo'] = "np spopal"
 
 comment_sortable = defaultdict(str)
+
+def in_important_file(x, y):
+    with open(y) as file:
+        for line in file:
+            if x in line.lower(): return True
+    return False
 
 def my_section(l):
     if '\t' in l or l.count('  ') > 2: return 'nam'
@@ -87,6 +94,15 @@ def sort_raw(x):
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam']
+    if 'important' in sections:
+        if in_important_file(x, important_file):
+            print("Not dumping text to", important_file, "as it's already in there.")
+        else:
+            fout = open(important_file, "w")
+            fout.write("From {0}:\n".format(x))
+            fout.write(sections['important'])
+            fout.close()
+        sections.pop('important')
     out_file = "{0}/{1}".format(done_dir, daily_file)
     fout = open(out_file, "w")
     for x in sorted(sections, key=lambda x:sort_priority(x)):
@@ -114,6 +130,7 @@ while cmd_count < len(sys.argv):
 if not len(file_list):
     file_list = glob("{0}/{1}".format(raw_dir, raw_glob))
     for fi in file_list:
+        if '6-26' not in fi: continue
         sort_raw(fi)
         files_done += 1
         if files_done == max_files: break
