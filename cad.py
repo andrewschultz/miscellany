@@ -24,16 +24,19 @@ def see_if_days_match(dy):
     print('should have', days, 'days in a row', 'extra seconds', rem, 'of 86400')
     print("Current streak =", dy, "days")
     if days > dy: launch_html_note("Need something today", 500, 1500)
-    elif days == dy: launch_html_note("All square", 1000, 500)
+    elif days == dy and auto_launch: launch_html_note("All square", 1000, 500)
     else: launch_html_note("Oops! You did too much, somehow", 2000, 500)
     exit()
 
+auto_launch = False
 ignore_download = False
 cmd_count = 0
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
     if arg == 'i':
         ignore_download = True
+    elif arg == 'a':
+        auto_launch = True
     cmd_count += 1
 
 doc_file = 'c:\coding\perl\proj\doc.html'
