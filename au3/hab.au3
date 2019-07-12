@@ -368,17 +368,9 @@ While $cmdCount <= $CmdLine[0]
         exit
       EndIf
     EndIf
-    if StringInStr($additional, 'r') Then
-      ToolsTrade($clicks, False, True)
-      if StringInStr($additional, 'e') Then
-        MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both.")
-        exit
-      EndIf
-    ElseIf StringInStr($additional, 'e') Then
-      ToolsTrade($clicks, True, False)
-    Else
-      ToolsTrade($clicks, True, True)
-    EndIf
+	; if r is in the string, we only reequip. If r is in the string, we only equip. We always check Max MP.
+    if StringInStr($additional, 'r') and StringInStr($additional, 'e') Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
+	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), $checkMaxMP = not StringInStr($additional, 'e'))
 	MarkBuffsDone()
   ElseIf $myCmd == '?' Then
     Usage(1)
@@ -625,7 +617,7 @@ Func ClickEyewearAndAccessory($to_int)
   SendWait("{PGUP}")
 EndFunc
 
-Func ToolsTrade($times, $equipPer, $unequipPer)
+Func ToolsTrade($times, $equipPer, $unequipPer, $checkMaxMp = False)
   ; number of times to cast Tools
 
   CheckClicks()
@@ -636,6 +628,13 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
   ; Endif
 
   ; MOK("debug popup", " " & $clicks & " clicks and delay = " & $delay)
+
+  local $mp_start
+  local $my_end
+
+  if $checkMaxMP Then
+    $mp_start = find_player_stat()
+  EndIf
 
   if $equipPer == True Then
     DoPer()
@@ -651,6 +650,41 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
     DoInt($delays=2)
   EndIf
 
+  if $checkMaxMP Then
+    $mp_end = find_player_stat()
+	if $mp_end <> $mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
+	if $mp_end == 0 or $mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
+  EndIf
+
+EndFunc
+
+Func find_player_stat($whichStat = 3, $find_max = True)
+  local $stat_number = 0
+  ;_ArrayDisplay($ary)
+
+  MOK("!", "!!")
+  Send("^a")
+  sleep(500)
+  Send("^c")
+  sleep(500)
+  $clip_in = ClipGet()
+  Send("^f;")
+  sleep(500)
+  Send("{ESC}")
+
+  local $ary = StringSplit($clip_in, @CR & @LF, $STR_ENTIRESPLIT)
+
+  for $q = 1 to $ary[0]
+    $line = $ary[$q]
+    if StringInStr($ary[$q], " / ") Then
+	  $stat_number += 1
+      if $stat_number == 3 Then
+	    $statData = StringSplit($line, "/")
+	    return Number($statData[2])
+      EndIf
+	EndIf
+  Next
+  return 0
 EndFunc
 
 Func CheckClicks() ; this is not perfect but it does the job for now
