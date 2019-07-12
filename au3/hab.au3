@@ -9,7 +9,7 @@
 ; d    = adjust delay
 ; f    = fish for items at end
 ; i    = intelligence outfit (default for adventuring)
-; m/w  = magic/wizard skills
+; m/w  = mage/wizard skills
 ; o    = only click to tasks
 ; p    = perception outfit
 ; q    = quick-click upper right side (qd = quick delay)
@@ -34,6 +34,7 @@
 
 $vars_file = "c:\scripts\hab.txt"
 $equip_file = "c:\scripts\hab-e.txt"
+$time_file = "c:\scripts\hab-t.txt"
 
 ; constants for click frequency
 Local $clicks = 0, $clicks2 = 0
@@ -249,6 +250,7 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, $mage_delay)
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
+	MarkBuffsDone()
 	ExitLoop
   ElseIf $myCmd == 'fe' Then
     ToStable()
@@ -287,6 +289,7 @@ While $cmdCount <= $CmdLine[0]
 	  MouseClick("left")
     Next
   ElseIf $myCmd == 'e' Then ; todo: error checking for if anything case
+    checkClass($CLASS_MAGE)
 	ToTasks(True)
     $clicks = $nextNum
     CheckClicks()
@@ -298,6 +301,7 @@ While $cmdCount <= $CmdLine[0]
         sleep($delay)
       EndIf
 	Next
+	MarkBuffsDone()
   ElseIf $myCmd == 'm' or $myCmd == 'w' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
@@ -309,6 +313,9 @@ While $cmdCount <= $CmdLine[0]
     CheckClicks()
     clickSkill($clicks, $ETHEREAL_SURGE, 30, $mage_delay)
     clickSkill($clicks2, $EARTHQUAKE, 35, $mage_delay)
+  ElseIf $myCmd == 'em' or $myCmd == 'mm' or $myCmd == 'wm' Then
+    checkClass($CLASS_MAGE)
+	MarkBuffsDone($bail = True)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -338,9 +345,15 @@ While $cmdCount <= $CmdLine[0]
       sleep($delay)
     Next
   Elseif $myCmd == 't' or $myCmd == 'tt' Then ; cast Tools of the Trade X times
+	checkClass($CLASS_ROGUE)
     $clicks = $nextNum
     ToolsTrade($clicks, False, False)
+	MarkBuffsDone()
+  Elseif $myCmd == 'tm' or $myCmd == 'ttm' Then
+    MarkBuffsDone()
   ElseIf StringLeft($myCmd, 1) == 'x' Then
+	checkClass($CLASS_ROGUE)
+	if $myCmd == "xm" Then MarkBuffsDone($bail = True)
     $additional = StringMid($myCmd, 2)
     $clicks = $nextNum
     if not StringInStr($additional, 'q') Then
@@ -364,6 +377,7 @@ While $cmdCount <= $CmdLine[0]
     Else
       ToolsTrade($clicks, True, True)
     EndIf
+	MarkBuffsDone()
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -863,9 +877,7 @@ Func read_hab_cfg($x)
 	  EndIf
     Elseif verify_first_entry($vars, 'Class', 2) Then
 	  $my_class = StringLower($vars[2])
-	  if $classHash.Exists($my_class) Then
-	    $my_class = $classHash.Item($my_class)
-	  EndIf
+	  if $classHash.Exists($my_class) Then $my_class = $classHash.Item($my_class)
 	  if $my_class < 1 or $my_class > 4 Then
 	    MOK("Oops!", $vars[2] & " needs to be 1-4 or a class name (case insensitive) e.g. " & $allClasses)
 		Exit
@@ -921,6 +933,31 @@ Func verify_first_entry($var_array, $first_entry, $how_many_entries)
   return True
 EndFunc
 
+Func MarkBuffsDone($bail = False)
+  $time_file_handle = FileOpen($time_file, 0)
+  if $time_file_handle == -1 Then MOK("Run -idf", "Can't open " & $time_file, True)
+  $time_back = "c:\scripts\hab-t-back.txt"
+  $time_back_handle = FileOpen($time_back, 2)
+  While 1
+    $line = FileReadLine($time_file_handle)
+    If StringLen($line) == 0 Then ExitLoop
+    if StringInStr($line, '=') Then
+      FileWriteLine($time_back_handle, 0 & '=' & _NowCalcDate() & " " & _NowTime(5))
+      $gotOne = True
+      ContinueLoop
+	EndIf
+	FileWriteLine($time_back_handle, $line)
+  WEnd
+  FileClose($time_back_handle)
+  FileClose($time_file_handle)
+  if $gotOne Then FileCopy($time_back, $time_file, 1)
+  if $bail Then Exit()
+EndFunc
+
+Func CheckClass($desired_class)
+   if $desired_class <> $my_class Then MOK("Oops!", "You shouldn't be running " & $my_class == $CLASS_ROGUE : "Tools of the Trade when not a rogue.", "Earthquake/Ethereal Surge when not a mage", True)
+EndFunc
+
 Func Usage($questionmark, $badCmd = "")
   Local $usgAry[17] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
@@ -931,14 +968,14 @@ Func Usage($questionmark, $badCmd = "")
   "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
   "-i = intelligence gear", _
   "-iw = initial wait", _
-  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #", _
+  "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #. -mm, -wm, -em mark mage buffs as done for the day.", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
   "-q = quick click in upper right (to get rid of gain reports)", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-s or -= = gives starting MP so you can see final MP as well", _
   "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
-  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips." _
+  "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips. -xm/-tm/-ttm marks tools of the trade as run for the day." _
   ]
   Local $header = "Bad/missing parameter(s)"
 
