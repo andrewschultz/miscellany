@@ -229,6 +229,8 @@ While $cmdCount <= $CmdLine[0]
 	;              times to fish toggle at end?  Move mouse after click? Click 2x(true)/1x(false)  delay 1 sec each click?
   ElseIf $myCmd == 'i' Then
     DoInt()
+  ElseIf $myCmd == 'id' Then ; this is a test for delay
+    DoInt(2)
   ElseIf StringLeft($myCmd, 2) == 'iw' Then
     if $myCmd == 'iw' Then
 	  $preDelay = $nextNum
@@ -475,15 +477,16 @@ Func clickSkill($clicks, $x, $cost, $my_delay, $delayLast = False)
   ToTasks()
 EndFunc
 
-Func MaxAttr($attr_to_max)
+Func MaxAttr($attr_to_max, $delays = 0)
   ToHab()
   $equip_file_handle = FileOpen($equip_file, 0)
+  Local $equip_line = 0
   Local $equip_count = 0
   Local $lastPagesDown = 0
   Local $this_line_attr = 0
   Local $columns = 8
   While 1
-    $equip_count += 1
+    $equip_line += 1
     $line = FileReadLine($equip_file_handle)
 	If StringLeft($line, 1) == '#' Then
 	  ContinueLoop
@@ -492,11 +495,11 @@ Func MaxAttr($attr_to_max)
     EndIf
 	$vars = StringSplit($line, ",")
 	if $vars[0] < 8 Then
-	  MOK("WARNING too short line " & $equip_count, $line & " needs " & $columns & " CSVs and only has " & $vars[0])
+	  MOK("WARNING too short line " & $equip_line, $line & " needs " & $columns & " CSVs and only has " & $vars[0])
 	  Exit
 	EndIf
 	if $vars[0] > 8 Then
-	  MOK("WARNING too long line " & $equip_count, $line & " needs " & $columns & " CSVs and has " & $vars[0])
+	  MOK("WARNING too long line " & $equip_line, $line & " needs " & $columns & " CSVs and has " & $vars[0])
 	EndIf
 	$classAdj = dict_or_actual($vars[2], $classHash)
 	if $classAdj <> $my_class and $classAdj <> 0 Then
@@ -535,15 +538,17 @@ Func MaxAttr($attr_to_max)
 	  Next
 	  $lastPagesDown = $thisPagesDown
     EndIf
+	$equip_count += 1
     $the_y -= $thisPagesDown * $page_down_adjust
+	$equip_mult = 1 + ($equip_count <= $delays)
     Sleep($equip_wait)
 	MouseMove($the_x, $the_y)
 	MouseClick("left")
-    Sleep($equip_wait)
+    Sleep($equip_wait * $equip_mult)
 	MouseMove($item_popup_h, $item_popup_v + $vert_equip_delta)
 	MouseClick("left")
 
-	; MOK("Where to click " & $column & " " & $row & " " & $equip_count, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
+	; MOK("Where to click " & $column & " " & $row & " " & $equip_line, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
   WEnd
   FileClose($equip_file_handle)
   if $thisPagesDown > 0 Then Send("{PGUP}")
@@ -564,12 +569,12 @@ Func dict_or_actual($val, $dic)
   return $val
 EndFunc
 
-Func DoInt()
+Func DoInt($delays=0)
   ; intelligence
   ToHab()
   GoEquip()
 
-  MaxAttr(4)
+  MaxAttr(4, $delays)
 
 EndFunc
 
@@ -643,7 +648,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer)
   clickSkill($times, 2, 25, $delay)
 
   if $unequipPer == True Then
-    DoInt()
+    DoInt($delays=2)
   EndIf
 
 EndFunc
