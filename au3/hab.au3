@@ -15,7 +15,8 @@
 ; q    = quick-click upper right side (qd = quick delay)
 ; r    = repeatedly access habit (needs #)
 ; t/tt = Tools of the Trade clicks (needs #, optional delay)
-; te   = test
+; te   = test don't click
+; tr   = test run
 ; x    = express (e = equip only, r = reequip only, q = no nag)
 ;
 
@@ -83,6 +84,9 @@ Local $quick_click_delay = 800
 
 Local $preDelay = 0
 
+Local $testRun = 0
+Local $debug = False
+
 Local $testDontClick = False, $didAnything = False
 
 ; put this along with 'a' into its own function.
@@ -129,6 +133,8 @@ while $cmdCount <= $CmdLine[0]
 
   If $myCmd == 'te' Then
     $testDontClick = True
+  ElseIf $myCmd == 'tr' Then
+    $testRun = True
   ElseIf $myCmd == 'fo' Then
 	OpenHabiticaURL(False)
   ElseIf $myCmd == 'fc' and not StringIsDigit($nextNum) Then
@@ -173,7 +179,7 @@ While $cmdCount <= $CmdLine[0]
     $myCmd = StringMid($myCmd, 2)
   EndIf
   if meta_cmd($myCmd) Then
-    MOK("ignored meta command", $myCmd)
+    if $debug Then MOK("ignored meta command", $myCmd)
     $cmdCount += 1
 	ContinueLoop
   EndIf
@@ -252,7 +258,7 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	clickSkill($spellOrd[1], $ETHEREAL_SURGE, 30, $mage_delay)
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
-	MarkBuffsDone()
+	MarkBuffsDone($CLASS_WIZARD)
 	ExitLoop
   ElseIf $myCmd == 'fe' Then
     ToStable()
@@ -303,7 +309,7 @@ While $cmdCount <= $CmdLine[0]
         sleep($delay)
       EndIf
 	Next
-	MarkBuffsDone()
+	MarkBuffsDone($CLASS_WIZARD)
   ElseIf $myCmd == 'm' or $myCmd == 'w' Then ; todo: error checking for if anything case
     if $cmdLine[0] >= $cmdCount+1 and $cmdLine[$cmdCount+1] > 0 Then
       $clicks = $nextNum
@@ -316,8 +322,8 @@ While $cmdCount <= $CmdLine[0]
     clickSkill($clicks, $ETHEREAL_SURGE, 30, $mage_delay)
     clickSkill($clicks2, $EARTHQUAKE, 35, $mage_delay)
   ElseIf $myCmd == 'em' or $myCmd == 'mm' or $myCmd == 'wm' Then
-    checkClass($CLASS_MAGE)
-	MarkBuffsDone($bail = True)
+    checkClass($CLASS_WIZARD)
+	MarkBuffsDone($CLASS_WIZARD, $bail = True)
   ElseIf $myCmd == 'o' Then
     ToHab()
     MouseClick ( "left", 200, 100, 1 )
@@ -350,12 +356,12 @@ While $cmdCount <= $CmdLine[0]
 	checkClass($CLASS_ROGUE)
     $clicks = $nextNum
     ToolsTrade($clicks, False, False)
-	MarkBuffsDone()
+	MarkBuffsDone($CLASS_ROGUE)
   Elseif $myCmd == 'tm' or $myCmd == 'ttm' Then
-    MarkBuffsDone()
+    MarkBuffsDone($CLASS_ROGUE)
   ElseIf StringLeft($myCmd, 1) == 'x' Then
 	checkClass($CLASS_ROGUE)
-	if $myCmd == "xm" Then MarkBuffsDone($bail = True)
+	if $myCmd == "xm" Then MarkBuffsDone($CLASS_ROGUE, $bail = True)
     $additional = StringMid($myCmd, 2)
     $clicks = $nextNum
     if not StringInStr($additional, 'q') Then
@@ -369,9 +375,9 @@ While $cmdCount <= $CmdLine[0]
       EndIf
     EndIf
 	; if r is in the string, we only reequip. If r is in the string, we only equip. We always check Max MP.
-    if StringInStr($additional, 'r') and StringInStr($additional, 'e') Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
-	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), $checkMaxMP = not StringInStr($additional, 'e'))
-	MarkBuffsDone()
+    if StringInStr($additional, 'r') and StringInStr($additional, 'e') and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
+	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), not StringInStr($additional, 'e'))
+	MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -617,7 +623,7 @@ Func ClickEyewearAndAccessory($to_int)
   SendWait("{PGUP}")
 EndFunc
 
-Func ToolsTrade($times, $equipPer, $unequipPer, $checkMaxMp = False)
+Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False)
   ; number of times to cast Tools
 
   CheckClicks()
@@ -632,7 +638,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $checkMaxMp = False)
   local $mp_start
   local $my_end
 
-  if $checkMaxMP Then
+  if $check_max_mp Then
     $mp_start = find_player_stat()
   EndIf
 
@@ -647,10 +653,10 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $checkMaxMp = False)
   clickSkill($times, 2, 25, $delay)
 
   if $unequipPer == True Then
-    DoInt($delays=2)
+    DoInt(2)
   EndIf
 
-  if $checkMaxMP Then
+  if $check_max_mp Then
     $mp_end = find_player_stat()
 	if $mp_end <> $mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
 	if $mp_end == 0 or $mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
@@ -662,7 +668,7 @@ Func find_player_stat($whichStat = 3, $find_max = True)
   local $stat_number = 0
   ;_ArrayDisplay($ary)
 
-  MOK("!", "!!")
+  ToHab()
   Send("^a")
   sleep(500)
   Send("^c")
@@ -689,8 +695,11 @@ EndFunc
 
 Func CheckClicks() ; this is not perfect but it does the job for now
   if $clicks < 1 and $clicks2 < 1 Then
-    MOK("Oops!", "Must specify positive number of clicks after " & $cmdLine[0] & ".")
-    exit
+	if $testRun Then
+	  MOK("Just checking", "You are running 0 times for a test.")
+    else
+      MOK("Oops!", "Must specify -tr for test run or positive number of clicks after " & $cmdLine[0] & ".", True)
+    EndIf
   Endif
 EndFunc
 
@@ -735,7 +744,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[7] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc']
+  Local $metas[8] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'tr']
   Local $um = UBound($metas) - 1
 
   if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
@@ -972,7 +981,7 @@ Func verify_first_entry($var_array, $first_entry, $how_many_entries)
   return True
 EndFunc
 
-Func MarkBuffsDone($bail = False)
+Func MarkBuffsDone($which_stat = $CLASS_ROGUE, $bail = False)
   $time_file_handle = FileOpen($time_file, 0)
   if $time_file_handle == -1 Then MOK("Run -idf", "Can't open " & $time_file, True)
   $time_back = "c:\scripts\hab-t-back.txt"
@@ -980,8 +989,8 @@ Func MarkBuffsDone($bail = False)
   While 1
     $line = FileReadLine($time_file_handle)
     If StringLen($line) == 0 Then ExitLoop
-    if StringInStr($line, '=') Then
-      FileWriteLine($time_back_handle, 0 & '=' & _NowCalcDate() & " " & _NowTime(5))
+    if StringInStr($line, $which_stat & '=') Then
+      FileWriteLine($time_back_handle, $which_stat & '=' & _NowCalcDate() & " " & _NowTime(5))
       $gotOne = True
       ContinueLoop
 	EndIf
@@ -990,6 +999,7 @@ Func MarkBuffsDone($bail = False)
   FileClose($time_back_handle)
   FileClose($time_file_handle)
   if $gotOne Then FileCopy($time_back, $time_file, 1)
+  RunWait("py c:\writing\scripts\dailies.py -rw hab")
   if $bail Then Exit()
 EndFunc
 
