@@ -197,6 +197,9 @@ While $cmdCount <= $CmdLine[0]
   If StringIsDigit($myCmd) Then
 	ToTasks(True)
     if $negative == 0 Then
+	  if in_url("habitica.com/") Then
+	    MOK("Error", "You need to be on the front page for this to work. Or use a negative number to click at the current mouse point.", True)
+	EndIf
 	  justClick($myCmd)
     Else
 	  justClick(0 - $myCmd)
@@ -261,7 +264,9 @@ While $cmdCount <= $CmdLine[0]
 	MarkBuffsDone($CLASS_WIZARD)
 	ExitLoop
   ElseIf $myCmd == 'fe' Then
-    ToStable()
+    ToHab()
+    if not in_url("stable") Then MOK("Oops!", "You are not on the stable page.", True)
+	; ToStable()
     $times_to_click = int($nextNum / 100)
 	if $times_to_click == 0 Then $times_to_click = 9
 	if $times_to_click < 0 or $times_to_click > 9 Then
@@ -376,7 +381,7 @@ While $cmdCount <= $CmdLine[0]
     EndIf
 	; if r is in the string, we only reequip. If r is in the string, we only equip. We always check Max MP.
     if StringInStr($additional, 'r') and StringInStr($additional, 'e') and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
-	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), not StringInStr($additional, 'e'))
+	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), not StringInStr($additional, 'e') and not StringInStr($additional, 'r'))
 	MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == '?' Then
     Usage(1)
@@ -814,7 +819,7 @@ Func justClick($clicksToDo)
     MouseClick ( "left", $xi, $yi, 1 )
     MouseMove(_Max(0, $xi - 50), _Max(0, $yi - 50))
     if $i < $clicksToDo Then
-      sleep(2000)
+      sleep($delay/2)
     Endif
   Next
 EndFunc
