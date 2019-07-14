@@ -380,8 +380,10 @@ While $cmdCount <= $CmdLine[0]
       EndIf
     EndIf
 	; if r is in the string, we only reequip. If r is in the string, we only equip. We always check Max MP.
-    if StringInStr($additional, 'r') and StringInStr($additional, 'e') and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
-	ToolsTrade($clicks, not StringInStr($additional, 'r'), not StringInStr($additional, 'e'), not StringInStr($additional, 'e') and not StringInStr($additional, 'r'))
+	$equip_p_only = not StringInStr($additional, 'r')
+	$reequip_i_only = not StringInStr($additional, 'e')
+    if $equip_p_only and $reequip_i_only and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
+	ToolsTrade($clicks, $equip_p_only, $reequip_i_only, not $equip_p_only and not $reequip_i_only))
 	MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == '?' Then
     Usage(1)
