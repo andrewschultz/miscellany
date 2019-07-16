@@ -15,17 +15,25 @@ import sys
 create_new_file = True
 
 x = pendulum.today()
-dest_title = "Transcription Notes " + x.format("M/D/YYYY")
+dest_title = "Transcription notes " + x.format("M/D/YYYY")
 folder_id = "" # '0BxbuUXtrs7adSFFYMG0zS3VZNFE'
 source_id = "1mkbVFs_911fx4qA0NYm1PL4ignwEn6-I4yoJG2oJsTI"
 
 auto_credentials = True
 
-if sys.argv[1] == 'o':
-    create_new_file = False
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count]
+    if arg == 'o':
+        create_new_file = False
+    else:
+        usage()
+    cmd_count += 1
 
-def open_in_browser(x):
-    os.system("start https://docs.google.com/document/d/{0}/edit".format(x))
+def open_in_browser(x, file_desc = "google doc"):
+    my_url = "https://docs.google.com/document/d/{0}/edit".format(x)
+    print("Opening {0} in browser: {1}".format(file_desc, my_url))
+    os.system("start {0}".format(my_url))
 
 def get_drive_handle():
     gauth = GoogleAuth()
@@ -51,7 +59,7 @@ def copy_file(service, source_id, dest_title):
     f = service.files().copy(fileId=source_id, body=copied_file).execute()
     return f['id']
                             
-def creste_if_not_there(lister, drive):
+def create_if_not_there(lister, drive):
     for item in lister:
         if item['title'] == dest_title:
             sys.exit("We already have a file named " + dest_title + ". Bailing.")
@@ -99,7 +107,7 @@ def open_latest_transcript(lister, drive):
     mdy_sorted = sorted(months, key=lambda x:(years[x], months[x], days[x]), reverse=True)
     print("Top 5 of", len(mdy_sorted))
     for x in range(0, 5): print(x+1, mdy_sorted[x], title_of[mdy_sorted[x]], years[mdy_sorted[x]], months[mdy_sorted[x]], days[mdy_sorted[x]])
-    open_in_browser(mdy_sorted[x])
+    open_in_browser(mdy_sorted[0], title_of[mdy_sorted[0]])
 
 def main():
     os.chdir("c:/writing/scripts")
