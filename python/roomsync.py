@@ -36,20 +36,15 @@ def if_rename(x):
         return room_renamer[x]
     return x
 
-my_proj_dir = i7.dir2proj(os.getcwd())
-if not my_proj_dir: sys.exit("Need to be in a valid project directory.")
-read_this = True
-
 def read_ignore_file():
     line_count = 0
     with open(ignore_file) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
             if line.startswith('#'): continue
             if line.startswith('project:'):
                 ll = re.sub("^project:", "", line.strip().lower())
-                if not ll or i7.proj_exp(ll) == my_proj_dir: read_this = True
+                if not ll or i7.proj_exp(ll) == project: read_this = True
                 else: read_this = False
             if not read_this: continue
             if line.startswith('ignore:'):
@@ -72,6 +67,13 @@ def read_ignore_file():
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
                 if verbose: print("INVIS Renaming", ary[0], "to", ary[1])
                 invis_renamer[ary[0]] = ary[1]
+            elif line.startswith("invis-region-rename"):
+                ll = re.sub("^invis-region-rename:", "", line.strip().lower())
+                ary = ll.split("~")
+                if len(ary) != 2:
+                    print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
+                if verbose: print("INVIS Renaming", ary[0], "to", ary[1])
+                invis_region_rename[ary[0]] = ary[1]
             elif line.startswith("triz-rename:"):
                 ll = re.sub("^triz-rename:", "", line.strip().lower())
                 ary = ll.split("~")
@@ -79,8 +81,15 @@ def read_ignore_file():
                     print("Misformed RENAME (needs before/after) at line", line_count, ":", ll)
                 triz_renamer[ary[0]] = ary[1]
 
+def region_mismatch(a):
+    ir = invis_region[a]
+    s = source[a]
+    if ir in invis_region_rename: ir = invis_region_rename[ir]
+    if s in invis_region_rename: s = invis_region_rename[s]
+    return ir != s
+
 def match_source_invisiclues():
-    invis_region = defaultdict(str)
+    invis_region.clear()
     line_dict = defaultdict(int)
     region_level = 1
     room_level = 2
@@ -151,7 +160,7 @@ def match_source_invisiclues():
         elif a not in invis_region.keys():
             warnings_invis += 1
             print("WARNING: invis({:d}) {:s} (source={:s}) does not have a region in the invisiclues.".format(warnings_invis, a, source[a]))
-        elif invis_region[a] != source[a]:
+        elif region_mismatch(a):
             print("WARNING: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(a, line_dict[a], source[a], invis_region[a]))
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
@@ -192,6 +201,8 @@ ignore = defaultdict(bool) # specific rooms to ignore
 room_renamer = defaultdict(str)
 invis_renamer = defaultdict(str)
 triz_renamer = defaultdict(str)
+invis_region = defaultdict(str)
+invis_region_rename = defaultdict(str)
 
 region_ignore = defaultdict(bool)
 
@@ -226,6 +237,11 @@ while cmd_count < len(sys.argv):
     else:
         usage()
     cmd_count += 1
+
+my_proj_dir = i7.dir2proj(os.getcwd())
+read_this = True
+if not my_proj_dir and not project: sys.exit("Need to be in a valid project directory or define a project on the command line.")
+if not project: project = my_proj_dir
 
 trizfile = i7.triz(project)
 source_file = i7.src(project)
