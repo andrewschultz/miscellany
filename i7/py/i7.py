@@ -524,6 +524,25 @@ with open(i7_cfg_file) as file:
         if i7x[q] in i7com.keys():
             i7com[q] = i7com[i7x[q]]
 
+def triz_rooms(file_name):
+    try:
+        e = ET.parse(file_name)
+    except:
+        print("Couldn't find", file_name)
+        exit()
+    root = e.getroot()
+    for elem in e.iter('room'):
+        if elem.get('name'):
+            x = str(elem.get('name')).lower()
+            x = re.sub(" *\(.*\)", "", x) # get rid of parenthetical/alternate name
+            x = re.sub(",", "", x) # get rid of commas Inform source doesn't like
+            stuf_ary = re.split(" */ *", x) # optional for if a room name changes
+            for q in stuf_ary:
+                triz[q] = str(elem.get('region')).lower()
+        # print (x,triz[x])
+        # triz[atype.get('name')] = 1;
+    return triz
+
 def _valid_i7m_arg(x):
     if x[0] == '-': x = x[1:];
     if '?' not in x: return False

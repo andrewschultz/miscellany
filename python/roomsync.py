@@ -4,7 +4,7 @@
 # compares map text from trizbort to source text from an Inform story.ni file
 # also, if invisiclues file is there, compares source text from an Inform story.ni file to invisiclues file
 #
-# verified so far on Ailiphilia, Buck the Past and Tragic Mix
+# verified so far on Ailiphilia, Buck the Past and Tragic Mix. Roiling still has minor bugs.
 #
 # also rooms that map *from* a map *to* a
 #
