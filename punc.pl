@@ -47,10 +47,10 @@ my $altfiles              = 0;
 ######################counters
 my $errsYet        = 0;
 my $errs           = 0;
-my $allLines       = 0;
 my $matchQuotes    = 0;
 my $totalSuccesses = 0;
 my $head           = "";
+my $current_table  = "";
 my $noerr;
 my $anyerr;
 my $default;
@@ -133,6 +133,7 @@ $map{"sts"} = "shuffling,roiling";
 $map{"pc"}  = "compound";
 $map{"sc"}  = "slicker-city";
 $map{"btp"} = "buck-the-past";
+$map{"ai"} = "ailihphilia";
 $map{"as"}  = "compound,slicker-city,buck-the-past";
 
 my @projs = ();
@@ -303,8 +304,6 @@ sub storyTables {
 
     open( A, $fileToRead ) || die("Can't open $fileToRead.");
 
-    $allLines = 0;
-
     print "Table parsing for $fileToRead:\n";
 
     my $inTable = 0;
@@ -312,9 +311,9 @@ sub storyTables {
     my %alreadyWarn;
 
     my $quo;
+	$lineNum = 0;
 
     while ( $a = <A> ) {
-      $allLines++;
       if ( $inTable == 1 || $checkQuotesEverywhere ) {
         $quo = () = $a =~ /\"/g;
         if ( $quo % 2 ) {
@@ -324,8 +323,18 @@ sub storyTables {
           next;
         }
       }
+	  if ($inTable && $ignore{$current_table})
+	  {
+	    if ($a !~ /[a-z0-9]/i)
+		{
+		  $inTable = 0;
+		  $current_table = "";
+	    }
+		next;
+	  }
       if ( ( $a =~ /^table of / ) && ( $inTable == 0 ) ) {
         chomp($a);
+	    # print "$. $a...\n";
         if ( $a =~ /\[force=/ ) {
           $head = $a;
           $head =~ s/.*\[force=//;
@@ -337,40 +346,43 @@ sub storyTables {
           $head =~ s/^table of //g;
           $head =~ s/[ \t]*\[.*//g;
         }
+		$current_table = $head;
+		chomp($current_table);
         <A>;
-        $allLines++;
         $errsYet = 0;
         $errs    = 0;
-        if ( !$searches{$head} ) {
-          if ( !$ignore{$head} && !$alreadyWarn{$head} ) {
-            print "Warning, no entry in punc.txt for $head at line $..\n"
+            $inTable = 1;
+        if ( !$searches{$current_table} ) {
+          if ( !$ignore{$current_table} && !$alreadyWarn{$current_table} ) {
+            print "Warning, no entry in punc.txt for $current_table at line $..\n"
               if !$altfiles;
             $tableWarnings++;
-            $alreadyWarn{$head} = $.;
+            $alreadyWarn{$current_table} = $.;
           }
         }
         else {
-          if ( !$ignore{$head} ) {
-            $got{$head} = 1;
-            $inTable = 1;
-            my $currentParsing = $searches{$head};
+          if ( !$ignore{$current_table} ) {
+            $got{$current_table} = 1;
+            my $currentParsing = $searches{$current_table};
             @parseAry = split( /\t/, $currentParsing );
 
 #if ($#parseAry < 3) { die("Bad # of arguments ($#parseAry) in cluster $currentParsing, line $allLines."); }
 #print "Changing $head to @parseAry\n";
 #print "Starting $head.\n";
           }
-          next;
+
         }
+          next;
+
       }
       if ( $inTable == 1 ) {
         if ( $a =~ /\t\t/ ) { print "Warning: double tabs at line $..\n"; }
         if ( ( $a !~ /\t\"/ ) && ( $a !~ /^\"/ ) ) {
           if ($errs) {
-            print "===============Finished $head. $errs errors.\n";
+            print "===============Finished $current_table. $errs errors.\n";
             $totalErrors += $errs;
           }
-          else { $noerr .= " $head"; }
+          else { $noerr .= " $current_table"; }
           $errsYet = 0;
           $errs    = 0;
           $inTable = 0;
@@ -389,7 +401,7 @@ sub storyTables {
           $myIndex = $parseAry[0];
           $myIndex =~ s/[tf]//g;
           if ( $entryArray[$myIndex] !~ /(true|false)/i ) {
-            print "True/False goof in line $. in $head.\n";
+            print "True/False goof in line $. in $current_table.\n";
           }
         }
         for my $thisParse (@parseAry) {
@@ -398,7 +410,7 @@ sub storyTables {
           if ( $#tempParse == 1 && $tempParse[1] eq "b" ) {
             if ( $entryArray[ $tempParse[0] ] eq '--' ) {
               print
-"Bad blank at column $tempParse[0], line $lineNum/$. of $head.\n";
+"Bad blank at column $tempParse[0], line $lineNum/$. of $current_table.\n";
             }
             next;
           }
@@ -407,7 +419,7 @@ sub storyTables {
               && $entryArray[ $tempParse[0] ] ne 'false' )
             {
               print
-"Need true/false at column $tempParse[0], line $lineNum/$. of $head.\n";
+"Need true/false at column $tempParse[0], line $lineNum/$. of $current_table.\n";
             }
             next;
           }
@@ -418,7 +430,7 @@ sub storyTables {
           if ( $myIndex > $#entryArray ) {
             if ($printWarnings) {
               print
-                "No element $myIndex at line $lineNum of $head, $#entryArray\n";
+                "No element $myIndex at line $lineNum of $current_table, $#entryArray\n";
             }
             next;
           }
@@ -440,13 +452,13 @@ sub storyTables {
           }
 
           #print "Looking up $a\n";
-          if ( $head =~ /ad slogans/ ) {
+          if ( $current_table =~ /ad slogans/ ) {
             if ( $a =~ /!\"/ ) {
               if ( ( !defined( $entryArray[1] ) )
                 || ( $entryArray[1] !~ /true/ ) )
               {
                   err ();
-                print "$allLines($lineNum): $a needs TRUE after tab.\n";
+                print "$.($lineNum): $a needs TRUE after tab.\n";
               }
               $capCheck = 1;
               if ( lookUp($main) ) {
@@ -485,7 +497,7 @@ sub storyTables {
   print
     "TEST RESULTS:$_[0] punctuation,0,$totalErrors,$totalSuccesses,$listOut\n";
 
-  print("We need to flag $tableWarnings tables.\n")
+  print("We need to fix $totalErrors capitalizations in $tableWarnings tables.\n")
     if $tableWarnings && !$altfiles;
 
   close(A);
@@ -527,13 +539,13 @@ sub lookUp {
   $temp =~ s/^\[[^\]]+\]/X /;
   $temp =~ s/\[[^\]]+\]$//g;
 
-  my $errorPoint = "$allLines($lineNum)";
+  my $errorPoint = "$.($lineNum)";
   if ($altfiles) {
     $errorPoint = $_[0];
     $errorPoint =~ s/.*\(([0-9]+)\).*/SORTFILE $1/;
   }
 
-  if ( $head =~ /(random books|biopics)/ ) {
+  if ( $current_table =~ /(random books|biopics)/ ) {
     if ( $_[0] !~ /\[r\]/ ) {
         err ();
       print "$errorPoint: $_[0] needs [r].\n";
@@ -570,7 +582,8 @@ sub lookUp {
   }
   if ( ( $capCheck == 2 ) && ( $adNotTitle == 0 ) && ( !titleCase($temp) ) ) {
       err ();
-    print "$errorPoint: $temp needs to be Title Case, change $wrongString.\n";
+	my $sugg = toTitleCase($temp);
+    print "$errorPoint: (suggested = $sugg) $temp needs to be Title Case, change $wrongString.\n";
     return -1;
   }
   if ( ( $capCheck == 1 ) && ( $temp =~ /^[a-z]/ ) ) {
@@ -653,7 +666,7 @@ sub lookUp {
     }
   }
   if ( ( $temp =~ /^'/ ) && ( $temp =~ /'$/ ) ) { $temp =~ s/'//g; }
-  if ( ( $temp =~ /^ / ) && ( $head ne "map coordinates" ) ) {
+  if ( ( $temp =~ /^ / ) && ( $current_table ne "map coordinates" ) ) {
       err ();
     print "$errorPoint: $temp leading space.\n";
   }
@@ -667,16 +680,21 @@ sub lookUp {
 
 sub err {
   if ( !$errsYet ) {
-    print "ERRORS IN $head:=================================\n";
+    print "ERRORS IN $current_table:=================================\n";
   }
   $errs++;
   $errsYet = 1;
   $anyerr  = 1;
-  push( @lineList, $allLines );
+  push( @lineList, $. );
 }
 
 sub addTitles {
   for my $x (@titleWords) { $titleLC{$x} = 1; }
+}
+
+sub toTitleCase {
+  (my $temp = $_[0]) =~ s/([\w']+)/\u\L$1/g;
+  return $temp;
 }
 
 sub titleCase {
