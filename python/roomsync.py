@@ -17,7 +17,6 @@ import i7
 import sys
 import re
 import __main__ as main
-import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 def usage():
@@ -250,26 +249,10 @@ if not os.path.exists(source_file):
     print(source_file, "does not exist, and there is no expansion for it. Bailing.")
     exit()
 
-try:
-    e = ET.parse(trizfile)
-except:
-    print("Couldn't find", trizfile)
-    exit()
+triz = i7.get_trizbort_rooms(trizfile)
 
 read_ignore_file()
 
-root = e.getroot()
-
-for elem in e.iter('room'):
-    if elem.get('name'):
-        x = str(elem.get('name')).lower()
-        x = re.sub(" *\(.*\)", "", x) # get rid of parenthetical/alternate name
-        x = re.sub(",", "", x) # get rid of commas Inform source doesn't like
-        stuf_ary = re.split(" */ *", x) # optional for if a room name changes
-        for q in stuf_ary:
-            triz[q] = str(elem.get('region')).lower()
-    # print (x,triz[x])
-    # triz[atype.get('name')] = 1;
 
 def region_name(li):
     li2 = re.sub("\".*?\"", "", li)

@@ -11,6 +11,7 @@
 # todo: erase i7c and see where i7c pops up in other Python files in the whole tree.
 #
 
+import xml.etree.ElementTree as ET
 from collections import defaultdict
 import mytools as mt
 import sys
@@ -525,6 +526,7 @@ with open(i7_cfg_file) as file:
             i7com[q] = i7com[i7x[q]]
 
 def triz_rooms(file_name):
+    triz = defaultdict(str)
     try:
         e = ET.parse(file_name)
     except:
