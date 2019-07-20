@@ -127,7 +127,7 @@ while $cmdCount <= $CmdLine[0]
     $cmdCount = $nextCmd
     ContinueLoop
   EndIf
-  
+
   $nextNum = digit_part($myCmd)
   $myCmd = string_part($myCmd, True)
 
@@ -379,11 +379,12 @@ While $cmdCount <= $CmdLine[0]
         exit
       EndIf
     EndIf
-	; if r is in the string, we only reequip. If r is in the string, we only equip. We always check Max MP.
-	$equip_p_only = not StringInStr($additional, 'r')
-	$reequip_i_only = not StringInStr($additional, 'e')
-    if $equip_p_only and $reequip_i_only and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
-	ToolsTrade($clicks, $equip_p_only, $reequip_i_only, not $equip_p_only and not $reequip_i_only))
+	; if r is in the string, we only reequip. If e is in the string, we only equip. We only check Max MP equal on 'x' ... when we equip and re-equip.
+	$avoid_equip_p = StringInStr($additional, 'r')
+	$avoid_reequip_i = StringInStr($additional, 'e')
+    if $avoid_equip_p and $avoid_reequip_i and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
+	; # of clicks, equip personality gear, reequip intelligence gear, detect MP before/after
+	ToolsTrade($clicks, not $avoid_equip_p, not $avoid_reequip_i, not $avoid_equip_p and not $avoid_reequip_i)
 	MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == '?' Then
     Usage(1)
@@ -464,6 +465,7 @@ EndFunc
 
 Func clickSkill($clicks, $x, $cost, $my_delay, $delayLast = False)
   ToHab()
+  Send("{ESC}") ; this is so I get rid of a search box, which disrupted me before
   $MPloss = $MPloss + $cost * $clicks
   if $onlyTrackMp Then
     Return
@@ -630,7 +632,7 @@ Func ClickEyewearAndAccessory($to_int)
   SendWait("{PGUP}")
 EndFunc
 
-Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False)
+Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cur_mp = True)
   ; number of times to cast Tools
 
   CheckClicks()
@@ -645,8 +647,10 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False)
   local $mp_start
   local $my_end
 
-  if $check_max_mp Then
-    $mp_start = find_player_stat()
+  if $check_max_mp Then $max_mp_start = find_player_stat($STAT_MP, True, True)
+  if $check_cur_mp Then
+	$cur_mp_start = find_player_stat($STAT_MP, False, True)
+	$cur_mp_exp = $cur_mp_start - 25 * $times
   EndIf
 
   if $equipPer == True Then
@@ -664,14 +668,22 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False)
   EndIf
 
   if $check_max_mp Then
-    $mp_end = find_player_stat()
-	if $mp_end <> $mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
-	if $mp_end == 0 or $mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
+    $max_mp_end = find_player_stat($STAT_MP, True, True)
+	if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
+	if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
+  EndIf
+
+  if $check_cur_mp Then
+    $cur_mp_end = find_player_stat($STAT_MP, False, True)
+	if $cur_mp_exp <> $cur_mp_end Then
+	  $trade_casts = ($cur_mp_start - $cur_mp_end) / 25
+	  MOK("CurMP discrepancy before/after", $cur_mp_exp & " expected, " & $cur_mp_end & " actual." & @CRLF & "Check # of times you cast Tools. Wanted " & $times & " but it looks like only " & $trade_casts, True)
+    EndIf
   EndIf
 
 EndFunc
 
-Func find_player_stat($whichStat = 3, $find_max = True)
+Func find_player_stat($whichStat = $STAT_MP, $find_max = True, $copy_new_in = True)
   local $stat_number = 0
   ;_ArrayDisplay($ary)
 

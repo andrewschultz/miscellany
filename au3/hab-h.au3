@@ -31,6 +31,9 @@ Const $CLASS_UNDEF = 0, $CLASS_WARRIOR = 1, $CLASS_WIZARD = 2, $CLASS_HEALER = 3
 ; constants for mage skill names, which are the ones I'm most likely to use variably
 Const $BURST_OF_FLAME = 0, $ETHEREAL_SURGE = 1, $EARTHQUAKE = 2, $CHILLING_FROST = 3
 
+; constants for stats to track with find_player_stat. $STAT_MP is most worth tracking.
+Const $STAT_HP = 1, $STAT_EXP = 2, $STAT_MP = 3
+
 ; constants for where to click on a skill
 Local $xi = 540, $yi = 980, $xd = 190
 Local $delay = 6000
