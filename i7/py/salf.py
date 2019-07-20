@@ -142,14 +142,13 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = nohy(sys.argv[cmd_count])
     if arg == 'd': show_dif = True
-    elif arg in i7.i7x: cmd_defined_proj = arg
     elif arg == 'f': force_copy = True
     elif arg == 'xv' or arg == 'vx': very_verbose = verbose = True
     elif arg == 'v': verbose = True
     elif arg == 'so': story_only = True
     elif arg == 'all' or arg == 'a': story_only = False
     elif arg == '?': usage()
-    elif arg in i7x:
+    elif arg in i7.i7x:
         if cmd_defined_proj: sys.exit("Redefined project from {:s} to {:s}.".format(cmd_defined_proj, i7.proj_exp(arg)))
         i7.go_proj(arg)
         cmd_defined_proj = i7.proj_exp(arg)

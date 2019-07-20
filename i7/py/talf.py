@@ -291,7 +291,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     temp_out.write(line)
                     in_table = False
                     continue
-            if not in_table and line.startswith('table'):
+            if not in_table and line.startswith('table of '):
                 in_table = True
                 cur_table = got_match(line, table_sort[f])
                 if cur_table:
