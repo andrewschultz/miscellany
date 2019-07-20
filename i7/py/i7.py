@@ -26,6 +26,7 @@ auth = "Andrew Schultz"
 extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
 niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
+tmp_hdr = temp_hdr = tmp_header = temp_header = os.path.join(extdir, "temp.i7x")
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
@@ -152,16 +153,16 @@ def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = 
 
 get_trc = get_table_row_count
 
-def open_source():
+def open_source(bail = True):
     npo(main.__file__)
-    exit()
+    if bail: exit()
 
 # can't use os as it is, well, an imported package
 o_s = open_source
 
-def open_source_config():
+def open_source_config(bail = True):
     npo(re.sub("py$", "txt", main.__file__))
-    exit()
+    if bail: exit()
 
 oc = o_c = open_config = open_source_config
 
