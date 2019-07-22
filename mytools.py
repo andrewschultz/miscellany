@@ -14,6 +14,7 @@ from functools import reduce
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
+file_post_list = defaultdict(int)
 
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
@@ -110,6 +111,31 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0):
         sys.exit()
 
 csl = cs = compare_shuffled_lines
+
+def add_postopen_file_line(file_name, file_line, rewrite = False):
+    if rewrite or file_name not in file_post_list:
+        file_post_list[file_name] = line_count
+
+addpost = add_postopen_file_line
+
+def postopen_files(bail_after = True):
+    for x in file_post_list: npo(x, file_post_list[x], bail = False)
+    if bail_after: sys.exit()
+
+def open_source(bail = True):
+    npo(main.__file__)
+    if bail: exit()
+
+# can't use os as it is, well, an imported package
+o_s = open_source
+
+def open_source_config(bail = True):
+    npo(re.sub("py$", "txt", main.__file__))
+    if bail: exit()
+
+oc = o_c = open_config = open_source_config
+
+#####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
     print("mytools.py is a header file. It should not be run on its own.")

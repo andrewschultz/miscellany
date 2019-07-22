@@ -153,18 +153,9 @@ def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = 
 
 get_trc = get_table_row_count
 
-def open_source(bail = True):
-    npo(main.__file__)
-    if bail: exit()
+o_s = open_source = mt.open_source
 
-# can't use os as it is, well, an imported package
-o_s = open_source
-
-def open_source_config(bail = True):
-    npo(re.sub("py$", "txt", main.__file__))
-    if bail: exit()
-
-oc = o_c = open_config = open_source_config
+oc = o_c = open_config = open_source_config = mt.open_source_config
 
 # to python regression test
 def to_prt(include_glob = "reg-*", exclude_glob = ""):
