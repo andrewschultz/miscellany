@@ -5,6 +5,9 @@
 #
 # todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
 
+TODO: Note if there were any changes if file already exists e.g. rewriting from raw to 2019333
+also todo: -keep- files have special notes (?) / notifications. Is this in ld2?
+
 import codecs
 import os
 import re
@@ -44,6 +47,8 @@ def my_section(l):
     if re.search(r'([0-9\*])\1+', l): return 'spo'
     if ' / ' in l: return 'vvff'
     if "#q" in l: return 'qui'
+    if "#pc" in l: return 'pc'
+    if "#wh" in l: return 'whau'
     if '==' in l: return 'btp'
     if not re.search("[^a-z]", l): return 'nam'
     return ""
@@ -103,15 +108,20 @@ def sort_raw(x):
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
-    out_file = "{0}/{1}".format(done_dir, daily_file)
-    fout = open(out_file, "w")
+    final_out_file = "{0}/{1}".format(done_dir, daily_file)
+    temp_out_file = "c:/writing/temp/drive-temp.txt"
+    fout = open(temp_out_file, "w")
     for x in sorted(sections, key=lambda x:sort_priority(x)):
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
         if x != 'nam': fout.write("\n\n")
+    if os.exists(final_out_file) and cmp(final_out_file, temp_out_file):
+        print(final_out_file, "was not changed since last run.")
+    else:
+        copy(temp_out_file, final_out_file)
     fout.close()
-    os.system(out_file)
+    os.system(final_out_file)
 
 files_done = 0
 file_list = []

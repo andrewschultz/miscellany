@@ -12,7 +12,7 @@
 #d2,5/12h|http://www.ebay.com
 #
 #Twice-monthly thing
-#m2,17/12|http://www.discovercard.com
+#m=2,17/12|http://www.discovercard.com
 #
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
@@ -73,6 +73,7 @@ def usage():
     print("rp/p/r decides whether to print or run current commands")
     print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file, qm = max to run in queue")
     print("id specifies initial delay")
+    print("e=edit main file, ea=edit all ex=edit extra ep=edit private")
     exit()
 
 def garbage_collect(x):
@@ -336,6 +337,20 @@ while count < len(sys.argv):
         wkday = int(arg[1:])
     elif is_time(arg):
         time_array = [int(q) for q in arg.split(":")]
+    elif arg == 'e':
+        os.system(check_file)
+        exit()
+    elif arg == 'ep':
+        os.system(check_private)
+        exit()
+    elif arg == 'ex':
+        os.system(xtra_file)
+        exit()
+    elif arg == 'ea':
+        os.system(check_file)
+        os.system(check_private)
+        os.system(xtra_file)
+        exit()
     elif arg == '?':
         usage()
         exit()

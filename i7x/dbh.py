@@ -10,6 +10,7 @@
 # for instance, to make sure there are exactly 5 elements in a loop
 #
 
+import os
 import i7
 import re
 import filecmp
@@ -20,7 +21,7 @@ from collections import defaultdict
 
 dbh = "c:/writing/scripts/dbh.txt"
 
-temp_write = i7.i7xd + "dbh-temp.i7x"
+temp_write = i7.extdir + "dbh-temp.i7x"
 
 my_project = "ai"
 
@@ -37,8 +38,8 @@ def process_operators(infile, tempfile, outfile):
     in_noxt = re.sub("\.[^\.]*$", "", in_mod)
     out_noxt = re.sub("\.[^\.]*$", "", out_mod)
     if 'i7x' in in_mod and 'i7x' in out_mod:
-        in_mod = i7.i7xd + in_mod
-        out_mod = i7.i7xd + out_mod
+        in_mod = os.path.join(i7.extdir, in_mod)
+        out_mod = os.path.join(i7.extdir, out_mod)
     to_go = 0
     at_end = 0
     in_table = False
@@ -150,3 +151,4 @@ with open(dbh) as file:
             write_file = x[1]
             print("Sending" ,x[0], "to", x[1])
             reading_operators = True
+
