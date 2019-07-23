@@ -646,11 +646,13 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 
   local $mp_start
   local $my_end
+  
 
-  if $check_max_mp Then $max_mp_start = find_player_stat($STAT_MP, True, True)
-  if $check_cur_mp Then
-	$cur_mp_start = find_player_stat($STAT_MP, False, True)
+  if $check_max_mp or $check_cur_mp Then
+    $start_stat_array = find_player_stat($STAT_MP, True, True)
+	$cur_mp_start = $start_stat_array[0]
 	$cur_mp_exp = $cur_mp_start - 25 * $times
+	$max_mp_start = $start_stat_array[1]
   EndIf
 
   if $equipPer == True Then
@@ -667,15 +669,15 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
     DoInt(2)
   EndIf
 
-  if $check_max_mp Then
-    $max_mp_end = find_player_stat($STAT_MP, True, True)
-	if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
-	if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
-  EndIf
-
-  if $check_cur_mp Then
-    $cur_mp_end = find_player_stat($STAT_MP, False, True)
-	if $cur_mp_exp <> $cur_mp_end Then
+  if $check_max_mp or $check_cur_mp Then
+    $end_stat_array = find_player_stat($STAT_MP, True, True)
+	$cur_mp_end = $start_stat_array[0]
+	$max_mp_end = $start_stat_array[1]
+	if $check_max_mp Then
+	  if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
+	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
+    EndIf
+	if $check_cur_mp and ($cur_mp_exp <> $cur_mp_end) Then
 	  $trade_casts = ($cur_mp_start - $cur_mp_end) / 25
 	  MOK("CurMP discrepancy before/after", $cur_mp_exp & " expected, " & $cur_mp_end & " actual." & @CRLF & "Check # of times you cast Tools. Wanted " & $times & " but it looks like only " & $trade_casts, True)
     EndIf
@@ -705,7 +707,10 @@ Func find_player_stat($whichStat = $STAT_MP, $find_max = True, $copy_new_in = Tr
 	  $stat_number += 1
       if $stat_number == 3 Then
 	    $statData = StringSplit($line, "/")
-	    return Number($statData[2])
+		Local $retVal[2]
+		$retVal[0] = Number($statData[1])
+		$retVal[1] = Number($statData[2])
+	    return $retVal
       EndIf
 	EndIf
   Next
