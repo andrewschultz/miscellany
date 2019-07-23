@@ -20,6 +20,10 @@ ignores = defaultdict(list)
 file_list = defaultdict(list)
 rubrics = defaultdict(lambda:defaultdict(str))
 
+def word_to_title(this_word):
+    if this_word in title_words: return this_word
+    return this_word.title()
+
 def okay_title(w, force_first_letter):
     if "'" in w:
         w = re.sub("'.*", "", w)
@@ -44,7 +48,7 @@ def good_rules(my_line, table_rubric, line_count):
         capitalize_type = ary[1]
         punc_needed = ary[2]
         quotes_needed = ary[3]
-        text_to_check = line_divs[col_num].strip()
+        orig_to_check = text_to_check = line_divs[col_num].strip()
         if "[p]" in my_line: continue
         ignore_punc = "[p]" in my_line.lower()
         if not text_to_check.startswith("\""):
@@ -81,22 +85,33 @@ def good_rules(my_line, table_rubric, line_count):
             if text_to_check.upper() != text_to_check:
                 print("Need ALL UPPER for {0}".format(text_to_check))
                 errs += 1
+                line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".upper(), line_divs[col_num])
+                modified_string = "\t".join(line_divs).strip() + "\n"
         elif capitalize_type == 2:
             word_ary = re.split("[ -]", text_to_check)
             for w in range(0, len(word_ary)):
                 if not okay_title(word_ary[w], w == 0):
+                    errs += 1
                     print("Need TITLE CASE for {0}->{1} in {2}".format(word_ary[w], word_ary[w].title(), text_to_check))
+                    line_divs[col_num] = re.sub("([A-Za-z']+)", lambda x: word_to_title(x.group()), line_divs[col_num]).strip()
+                    print("New entry:", line_divs[col_num])
+                    modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
         elif capitalize_type == 1:
             t2 = re.sub("^[a-zA-Z]*", "", text_to_check)
             if t2[0] != t2[0].upper():
+                errs += 1
                 print("Need STARTING UPPER for {0}".format(text_to_check))
+                line_divs[col_num] = re.sub("^\"(a|an|the )?([a-z])+", "\1" + "\2".upper(), line_divs[col_num])
+                modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
         elif capitalize_type == -1:
             if text_to_check.lower() != text_to_check:
                 print("Need ALL LOWER for {0}".format(text_to_check))
                 errs += 1
+                line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".lower(), line_divs[col_num])
+                modified_string = "\t".join(line_divs).strip() + "\n"
         if errs:
             return_string = modified_string
-    return (errs, modified_string)
+    return (errs, return_string)
 
 def process_file_punc(my_proj, this_file):
     err_lines = 0
@@ -140,6 +155,8 @@ def process_file_punc(my_proj, this_file):
                 (this_errs, to_write) = good_rules(line, current_rubric, line_count)
                 err_lines += (this_errs > 0)
                 total_errs += this_errs
+                out_file.write(to_write)
+                continue
             out_file.write(line)
     out_file.close()
     if err_lines:
