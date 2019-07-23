@@ -2,7 +2,14 @@
 # dsort.py
 # python extension of former perl dsort updater
 #
+# the "done" directory is an original copy of things
+# the actual directory may be modified
+#
+# lc = outline check (e.g. update what backslashes point where)
+#
+# use dgrab to grab a specific sort of section
 
+import daily
 import i7
 import sys
 import re
@@ -10,6 +17,14 @@ import os
 from collections import defaultdict
 from shutil import copy
 import datetime
+
+# the lower and upper bounds may be changed for testing etc.
+lower_bound = "20190511.txt"
+upper_bound = "20190515.txt"
+days_back_start = 0
+days_back_end = 0
+total_files = 0
+dir_to_proc = ""
 
 now = datetime.datetime.now()
 
@@ -30,8 +45,6 @@ default_section_name = "ide"
 
 #def sort_backslash_sections()
 base_dir = "c:/writing"
-daily_dir = "c:/writing/daily"
-done_dir = "c:/writing/daily/done"
 temp_dir = "c:/writing/temp"
 backup_dir = "c:/writing/backup"
 idea_hash = "c:/writing/idea-tab.txt"
@@ -276,17 +289,20 @@ def get_stuff_from_one_file(x):
     daily_done_with[x] = True
     print("Got stuff from", x)
 
-lower_bound = "20170101.txt"
-days_back_start = 0
-days_back_end = 0
-upper_bound = "20170909.txt"
-count = 1
-total_files = 0
+##############################main program
 
+daily_dir = "c:/writing/daily"
+daily_done = daily.done_of(daily_dir)
+gdrive_dir = "c:/coding/perl/proj/from_drive"
+gdrive_done = daily.done_of(gdrive_dir)
+
+count = 1
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg.startswith("-"): arg = arg[1:]
     if arg == 'wm': wm_diff = True
+    elif arg == 'd': dir_to_proc = daily_dir
+    elif arg == 'g': dir_to_proc = gdrive_dir
     elif arg.startswith("fl") or arg.startswith("fl"):
         start_latest = True
         if len(arg) > 2 and arg[2:].isdigit:
@@ -326,12 +342,21 @@ while count < len(sys.argv):
         usage()
     count += 1
 
+if not dir_to_proc:
+    x = os.getcwd()
+    if daily.slashy_equals(x, [gdrive_dir, daily_dir]):
+        print("Using current directory", x)
+        dir_to_proc = x
+    else:
+        print("Need to specify a directory with -g or -d or be in that directory.")
+        sys.exit("{0} / {1} / {2}".format(x, gdrive_dir, daily_dir))
+
 if days_back_start or days_back_end:
     upper_bound = go_back(days_back_end)
     lower_bound = go_back(days_back_start) if days_back_start else '20170000'
     print("Days back overrides in effect: upper bound={:s}, lower bound={:s}".format(upper_bound, lower_bound))
 
-if lower_bound > upper_bound: sys.exit("Lower bound > upper bound")
+if lower_bound > upper_bound: sys.exit("Lower bound {0} > upper bound {1}. Fix this before continuing.".format(lower_bound, upper_bound))
 
 my_files = read_hash_file()
 
@@ -342,17 +367,17 @@ if blank_counter:
     for mf in my_files: search_for_spaces(mf)
     exit()
 
-os.chdir(daily_dir)
-readdir = [x for x in os.listdir(daily_dir) if os.path.isfile(x)]
-if start_latest: readdir = reverse(readdir)
+os.chdir(dir_to_proc)
+list_of_dailies = [x for x in os.listdir(dir_to_proc) if os.path.isfile(x) and x.lower().endswith(".txt")]
+if start_latest: list_of_dailies = reverse(list_of_dailies)
 
 daily_files_processed = 0
 
-for file in readdir:
+for file in list_of_dailies:
     if max_files and daily_files_processed > 1:
         print("Stopping at", file)
         break
-    if not re.search("^20[0-9]{6}\.txt$", file.lower()): continue
+    if not valid_file(file, dir_to_proc): continue
     fb = file[:8] # strip the .txt ending
     if fb < lower_bound:
         warn_print("Skipping {:s} too low".format(fb))
@@ -436,6 +461,6 @@ if copy_over: # maybe we should put this into a function
             os.remove(the_temp)
         for j in daily_done_with.keys():
             j1 = to_full(j, daily_dir)
-            j2 = to_full(j, done_dir)
+            j2 = to_full(j, daily_done)
             print("Move", j1, j2)
             # os.move(j1, j2)
