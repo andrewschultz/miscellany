@@ -15,18 +15,35 @@ display_changes = False
 copy_to_old = True
 copy_smart = True
 
-def unique_header(a, b):
+def unique_header(a, b, f):
     for x in b:
         if a == x: return x
         if 'xx' + a == x: return x
     temp_ret = ""
+    cur_full_name = ""
     for x in b:
         if x.startswith(a) or x.startswith('xx' + a):
             if temp_ret:
-                print("Uh oh, {0} is ambiguous. It could be {1} or {2}.".format(a, x, temp_ret))
-                return ""
+                if f[x] != cur_full_name:
+                    print("Uh oh, {0} is ambiguous. It could be {1} or {2}.".format(a, x, temp_ret))
+                    return ""
             temp_ret = x
+            cur_full_name = f[x]
     return temp_ret
+
+def show_nonblanks(file_name):
+    froms = total = comments = comments_to_shift = blanks = ideas = ready_to = 0
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#!"): continue # this is pure commentary e.g. file description
+            total += 1
+            if line.startswith("##"): comments_to_shift += 1
+            elif line.startswith("#"): comments += 1
+            elif line.startswith("<from"): froms += 1
+            elif re.search("^[a-z0-9]+:[a-z]", line, re.IGNORECASE): ready_to += 1
+            elif not line.strip(): blanks += 1
+            else: ideas += 1
+    print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blanks:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
 
 def copy_smart_ideas(pro, hdr_type = "ta"):
     notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
@@ -34,6 +51,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
     hdr_tmp = os.path.join(i7.extdir, "temp.i7x")
     hdr_to_change = i7.hdr(pro, hdr_type)
     markers = defaultdict(int)
+    full_name = defaultdict(str)
     bail = False
     to_insert = defaultdict(str)
     with open(hdr_to_change) as file:
@@ -47,6 +65,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                         print("Uh oh double definition of {0}, lines {1} and {2}.".format(y, markers[y], line_count))
                     else:
                         markers[y] = line_count
+                        full_name[y] = re.sub(" *\[.*", "", line.lower().strip())
     if bail: sys.exit()
     msort = sorted(markers)
     for y in range(0, len(msort)):
@@ -64,7 +83,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
             print_this_line = True
             if re.search("^[a-zA-Z0-9]+:", line):
                 left_bit = re.sub(":.*", "", line.lower().strip())
-                uh = unique_header(left_bit, markers)
+                uh = unique_header(left_bit, markers, full_name)
                 if uh:
                     new_text = re.sub("^[a-zA-Z0-9]+:", "", line.rstrip()).strip()
                     if not new_text.startswith("\""): new_text = "\"" + new_text
@@ -123,12 +142,15 @@ def move_old_ideas(pro):
     nt = open(notes_temp, "w")
     got_one = 0
     blanks = 0
+    blank_zap = 0
     last_blank = False
     with open(notes_in) as file:
         for (line_count, line) in enumerate(file, 1):
             if not line.strip():
                 blanks += 1
-                if last_blank: continue
+                if last_blank:
+                    blank_zap += 1
+                    continue
             last_blank = not line.strip()
             if line.startswith("##"):
                 got_one += 1
@@ -137,9 +159,10 @@ def move_old_ideas(pro):
     print(blanks, "of", line_count, "total blank lines.")
     no.close()
     nt.close()
-    if got_one:
+    if got_one or blank_zap:
         if display_changes: i7.wm(notes_in, notes_temp)
         else:
+            if blank_zap: print(blank_zap, "double-blank lines zapped.")
             print(got_one, "lines zapped from notes.")
             copy(notes_temp, notes_in)
     else:
@@ -152,21 +175,21 @@ default_proj = i7.dir2proj()
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = nohy(sys.argv[len])
-    if i7.proj_exp(arg):
+    arg = nohy(sys.argv[cmd_count])
+    if i7.proj_exp(arg, return_nonblank = False):
         if cmd_proj:
             sys.exit("Redefined command project on the command line.")
         cmd_proj = i7.proj_exp(arg)
-    elif l == 'co':
+    elif arg == 'co':
         copy_to_old = True
-    elif l == 'cs' or l == 'sc':
+    elif arg == 'cs' or arg == 'sc':
         copy_smart = True
-    elif l == 'ca' or l == 'ac' or l == 'bc' or l == 'cb':
+    elif arg == 'ca' or arg == 'ac' or arg == 'bc' or arg == 'cb':
         copy_smart = True
         copy_to_old = True
-    elif l == 'dc':
+    elif arg == 'dc':
         display_changes = True
-    elif l == 'dcn' or l == 'ndc' or l == 'nc' or l == 'nd':
+    elif arg == 'dcn' or arg == 'ndc' or arg == 'nc' or arg == 'nd':
         display_changes = False
     cmd_count += 1
 
@@ -179,7 +202,6 @@ if not cmd_proj:
 else: my_proj = cmd_proj
 
 if copy_smart or copy_to_old:
-    print(copy_smart, copy_to_old)
     if copy_smart: copy_smart_ideas(my_proj)
     if copy_to_old: move_old_ideas(my_proj)
     show_nonblanks(os.path.join(i7.proj2dir(my_proj), "notes.txt"))
