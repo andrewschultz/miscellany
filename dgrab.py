@@ -2,7 +2,9 @@
 #
 # daily grab file: grab section from daily files (or other) and pipe it directly to notes files
 #
-# usage: dgrab.py (section) or just dgrab.py in the relevant directory
+# for instand #whau would go to welp-haunted file
+#
+# usage: dgrab.py s=wh
 #
 # question: search for starting tabs in non-.ni files. What script for that?
 #
@@ -16,6 +18,7 @@ import os
 import sys
 import time
 import filecmp
+import daily
 
 glob_default = "da"
 default_sect = ""
@@ -45,6 +48,7 @@ open_notes = 0
 days_before_ignore = 7
 min_for_list = 0
 
+bail_without_copying = False
 open_on_warn = False
 do_diff = True
 verbose = False
@@ -52,6 +56,11 @@ open_notes_after = True
 change_list = []
 print_ignored_files = False
 list_it = False
+
+daily_dir = "c:/writing/daily"
+daily_done = daily.done_of(daily_dir)
+gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
+gdrive_done = daily.done_of(gdrive_dir)
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -172,13 +181,18 @@ def send_mapping(sect_name, file_name, change_files = False):
         f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
         f.close()
     if do_diff:
-        i7.wm(nfi, dg_temp_2)
+        if os.path.exists(dg_temp_2): i7.wm(nfi, dg_temp_2)
         i7.wm(file_name, dg_temp)
-    sys.exit()
+    if bail_without_copying:
+        print("Bailing before copying back over")
+        print(dg_temp, file_name)
+        print(dg_temp_2, nfi)
+        sys.exit()
     if not filecmp.cmp(dg_temp, file_name): copy(dg_temp, file_name)
-    if not filecmp.cmp(dg_temp_2, nfi): copy(dg_temp_2, nfi)
-    os.remove(dg_temp)
-    os.remove(dg_temp_2)
+    if os.path.exists(dg_temp_2) and not filecmp.cmp(dg_temp_2, nfi):
+        copy(dg_temp_2, nfi)
+        os.remove(dg_temp_2)
+    if os.path.exists(dg_temp): os.remove(dg_temp)
     return True
 
 #
@@ -250,6 +264,9 @@ if cfg_edit_line:
     if open_on_warn: i7.npo(dg_cfg, cfg_edit_line)
     else: print("Put in an OPENONWARN in {:s} to open the CFG file, or type e/-e on the command line.".format(dg_cfg))
 
+daily.read_main_daily_config()
+dir_to_proc = ""
+
 cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
@@ -265,7 +282,10 @@ while cmd_count < len(sys.argv):
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
         min_for_list = int(arg[1:])
-    elif arg[:2] == 'g=': my_globs = arg[2:].split(",")
+    elif arg == 'da': dir_to_proc = daily_dir
+    elif arg == 'dr': dir_to_proc = gdrive_dir
+    elif arg[:3] == 's20': daily.lower_bound = arg[1:]
+    elif arg[:3] == 'e20': daily.upper_bound = arg[1:]
     elif arg == 'e':
         os.system(dg_cfg)
         exit()
@@ -280,18 +300,20 @@ while cmd_count < len(sys.argv):
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
 
-globbed_yet = defaultdict(bool)
+if not dir_to_proc:
+    my_cwd = os.getcwd()
+    temp = daily.slashy_equals(my_cwd, [daily_dir, gdrive_dir])
+    print(gdrive_dir)
+    if temp:
+        print("Trying current directory", my_cwd)
+        dir_to_proc = my_cwd
+    else:
+        sys.exit("Need to specify a directory with -da or -dr or go to either writing-daily or google drive dir.")
 
-my_file_list = []
+os.chdir(dir_to_proc)
 
-if len(my_globs) == 0:
-    print("Going with default glob.")
-    my_globs.append(glob_default)
-
-for q in my_globs:
-    if globbed_yet[globs[q]]: continue
-    my_file_list = my_file_list + [u for u in glob.glob(globs[q]) if re.search(file_regex[q], u)]
-    globbed_yet[globs[q]] = True
+the_glob = glob.glob(dir_to_proc + "/20*.txt")
+my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
 
 if not my_sect:
     if not default_by_dir or default_by_dir not in mapping:
@@ -307,6 +329,12 @@ max_warning = False
 if max_process == -1: print("Running test to cull all eligible files.")
 
 for q in my_file_list:
+    if not daily.valid_file(q, dir_to_proc): continue
+    qbase = os.path.basename(q)
+    if qbase < daily.lower_bound: continue
+    if qbase > daily.upper_bound: continue
+    print(q)
+    daily.copy_to_done(qbase, dir_to_proc)
     if list_it:
         get_list_data(q)
         continue

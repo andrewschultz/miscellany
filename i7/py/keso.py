@@ -50,6 +50,7 @@ def my_section(l):
     if "#pc" in l: return 'pc'
     if "#wh" in l: return 'whau'
     if '==' in l: return 'btp'
+    if "~" in l: return 'pl'
     if not re.search("[^a-z]", l): return 'nam'
     return ""
 
