@@ -19,11 +19,6 @@ from shutil import copy
 import datetime
 
 # the lower and upper bounds may be changed for testing etc.
-lower_bound = "20190511.txt"
-upper_bound = "20190515.txt"
-days_back_start = 0
-days_back_end = 0
-total_files = 0
 dir_to_proc = ""
 
 now = datetime.datetime.now()
@@ -291,9 +286,15 @@ def get_stuff_from_one_file(x):
 
 ##############################main program
 
+daily.read_main_daily_config()
+days_back_start = daily.days_back_start
+days_back_end = daily.days_back_end
+lower_bound = daily.lower_bound
+upper_bound = daily.upper_bound
+
 daily_dir = "c:/writing/daily"
 daily_done = daily.done_of(daily_dir)
-gdrive_dir = "c:/coding/perl/proj/from_drive"
+gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
 gdrive_done = daily.done_of(gdrive_dir)
 
 count = 1
@@ -377,7 +378,7 @@ for file in list_of_dailies:
     if max_files and daily_files_processed > 1:
         print("Stopping at", file)
         break
-    if not valid_file(file, dir_to_proc): continue
+    if not daily.valid_file(file, dir_to_proc): continue
     fb = file[:8] # strip the .txt ending
     if fb < lower_bound:
         warn_print("Skipping {:s} too low".format(fb))
