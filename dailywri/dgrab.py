@@ -9,6 +9,7 @@
 # question: search for starting tabs in non-.ni files. What script for that?
 #
 
+import datetime
 from shutil import copy
 from collections import defaultdict
 import i7
@@ -73,6 +74,58 @@ def usage(header="GENERAL USAGE"):
     print("pi = print ignore, npi/pin = don't print ignore")
     print("l = list headers, l# = list headers with # or more entries")
     print("s= = section to look for")
+    exit()
+
+def append_one_important(my_file):
+    important_file = os.path.join(gdrive_dir, "important.txt")
+    my_file_back = os.path.join(gdrive_dir, "my-file-backup.txt")
+    if not os.path.exists(important_file):
+        print("Create", important_file, "before continuing.")
+        sys.exit()
+    important_string = "\n\nIMPORTANT STRING FOR FILE {0} at {1}====\n".format(os.path.basename(my_file), datetime.datetime.now())
+    in_important = False
+    important_start = 0
+    fb = os.path.basename(my_file)
+    f = open(my_file_back, "w")
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            write_main = True
+            if in_important:
+                important_string += line
+                write_main = False
+                if not line.strip():
+                    in_important = False
+                    continue
+            if line.startswith("\\important"):
+                write_main = False
+                if important_start:
+                    print("Uh oh, extra important start at line", line_count, "after", important_start)
+                    continue
+                print("Started important section in {0} at line {1}".format(fb, line_count))
+                important_start = line_count
+                in_important = True
+                continue
+            if write_main: f.write(line)
+    f.close()
+    if important_start:
+        copy(my_file_back, my_file)
+        f = open(important_file, "a")
+        f.write(important_string)
+        f.close()
+    else:
+        print("Nothing important for", fb)
+    os.remove(my_file_back)
+    return important_start > 0
+
+def append_all_important():
+    os.chdir(gdrive_dir)
+    appended = 0
+    for a in glob.glob(gdrive_dir + "/20*"):
+        ap = re.sub("\..*", "", os.path.basename(a))
+        if ap < daily.lower_bound: continue
+        if ap > daily.upper_bound: continue
+        appended += append_one_important(a)
+    print(appended, "total important sections appended")
     exit()
 
 def get_list_data(this_fi):
@@ -277,6 +330,9 @@ while cmd_count < len(sys.argv):
         days_before_ignore = int(temp)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
+    elif arg == 'i':
+        append_all_important()
+        exit()
     elif arg == 'l': list_it = True
     elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
