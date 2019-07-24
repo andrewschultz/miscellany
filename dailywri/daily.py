@@ -7,9 +7,12 @@
 from shutil import copy
 import re
 import os
+import pendulum
+
+today_file = pendulum.now().format("YYYYMMDD") + ".txt"
 
 lower_bound = "20170101.txt"
-upper_bound = "20900101.txt"
+upper_bound = today_file
 days_back_start = days_back_end = total_files = 0
 
 def read_main_daily_config():
