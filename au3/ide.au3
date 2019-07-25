@@ -69,7 +69,6 @@ While $cmdCount <= $CmdLine[0]
     $force_build = -1
   Elseif $arg == 'w' or $arg == '-w' Then
     $walkthrough = 1
-	$cmdCount = $cmdCount + 1
   Elseif $arg == '?' Then
     Usage(1, "")
   Else
@@ -77,7 +76,7 @@ While $cmdCount <= $CmdLine[0]
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
     Else
-	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff." & @CRLF & "? shows usage.")
+	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff." & @CRLF & "? shows usage.", True)
     EndIf
   EndIf
   $cmdCount = $CmdCount + 1

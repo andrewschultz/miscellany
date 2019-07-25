@@ -671,8 +671,8 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 
   if $check_max_mp or $check_cur_mp Then
     $end_stat_array = find_player_stat($STAT_MP, True, True)
-	$cur_mp_end = $start_stat_array[0]
-	$max_mp_end = $start_stat_array[1]
+	$cur_mp_end = $end_stat_array[0]
+	$max_mp_end = $end_stat_array[1]
 	if $check_max_mp Then
 	  if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
 	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
