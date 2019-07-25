@@ -12,6 +12,7 @@ from collections import defaultdict
 from fractions import gcd
 from functools import reduce
 
+np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
 file_post_list = defaultdict(int)
@@ -112,9 +113,15 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0):
 
 csl = cs = compare_shuffled_lines
 
+def npo(my_file, my_line = 1, print_cmd = True, bail = True):
+    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
+    if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
+    os.system(cmd)
+    if bail: exit()
+
 def add_postopen_file_line(file_name, file_line, rewrite = False):
     if rewrite or file_name not in file_post_list:
-        file_post_list[file_name] = line_count
+        file_post_list[file_name] = file_line
 
 addpost = add_postopen_file_line
 

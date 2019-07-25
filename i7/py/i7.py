@@ -27,7 +27,7 @@ extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
 nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
 niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
 tmp_hdr = temp_hdr = tmp_header = temp_header = os.path.join(extdir, "temp.i7x")
-np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+np = mt.np
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
@@ -354,11 +354,7 @@ def dir2proj(x = os.getcwd(), to_abbrev = False):
 
 sproj = d2p = dir2proj
 
-def npo(my_file, my_line = 1, print_cmd = True, bail = True):
-    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
-    if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
-    os.system(cmd)
-    if bail: exit()
+npo = mt.npo
 
 def see_uniq_and_vers(args):
     if args[0] == '-': args = args[1:]
