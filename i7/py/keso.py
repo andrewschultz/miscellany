@@ -82,6 +82,7 @@ def sort_raw(x):
     with open(x, mode='r', encoding='utf-8-sig') as file:
         for (line_count, line) in enumerate(file, 1):
             if important:
+                if not line.strip: line = "blank line ---\n"
                 sections['important'] += line
                 continue
             ll = line.strip().lower()
@@ -96,7 +97,8 @@ def sort_raw(x):
                 else:
                     sections[temp] += line
                 continue
-            sections['sh'] += line
+            else:
+                sections['sh'] += line
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam']

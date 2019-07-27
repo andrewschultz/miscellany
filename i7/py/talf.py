@@ -167,8 +167,7 @@ def read_table_and_default_file():
     line_count = 0
     prev_def = defaultdict(int)
     with open(table_default_file) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             ll = line.lower().strip()
             if not ll: continue
             if line.startswith('#'): continue
@@ -205,7 +204,7 @@ def read_table_and_default_file():
                         print("WARNING defined default with no cur_file at line", line_count)
                         continue
                     if cur_file in default_sort.keys():
-                        print("WARNING: ignoring redefined default sort for", cur_file," at line", line_count, "previous line", prev_def[cur_line])
+                        print("WARNING: ignoring redefined default sort for", cur_file," at line", line_count, "previous line", prev_def[line_count])
                         continue
                     default_sort[cur_file] = right_side_fwd
                     prev_def[cur_file] = line_count
@@ -432,6 +431,9 @@ if diff > 0:
 read_table_and_default_file()
 
 for x in projects:
+    if x not in i7.i7f:
+        print("Uh oh. You need to define which tables are in project", x, "in i7p.txt.")
+        continue
     for y in i7.i7f[x]:
         table_alf_one_file(y.lower(), launch_dif, copy_over)
 

@@ -15,7 +15,8 @@ display_changes = False
 copy_to_old = True
 copy_smart = True
 
-def unique_header(a, b, f):
+def unique_header(a, b, f, l):
+    if a.startswith("="): return l
     for x in b:
         if a == x: return x
         if 'xx' + a == x: return x
@@ -40,7 +41,7 @@ def show_nonblanks(file_name):
             if line.startswith("##"): comments_to_shift += 1
             elif line.startswith("#"): comments += 1
             elif line.startswith("<from"): froms += 1
-            elif re.search("^[a-z0-9]+:[a-z]", line, re.IGNORECASE): ready_to += 1
+            elif re.search("^([a-z0-9]+:|=:|=;)[a-z]", line, re.IGNORECASE): ready_to += 1
             elif not line.strip(): blanks += 1
             else: ideas += 1
     print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blanks:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
@@ -78,19 +79,21 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
     if bail: sys.exit()
     out_stream = open(notes_out, "w")
     uniques = 0
+    last_header = ""
     with open(notes_in) as file:
         for (line_count, line) in enumerate(file, 1):
             print_this_line = True
-            if re.search("^[a-zA-Z0-9]+:", line):
-                left_bit = re.sub(":.*", "", line.lower().strip())
-                uh = unique_header(left_bit, markers, full_name)
+            if re.search("^([a-z0-9]+:|=:|=;)", line):
+                left_bit = re.sub("[:;].*", "", line.lower().strip())
+                uh = unique_header(left_bit, markers, full_name, last_header)
                 if uh:
-                    new_text = re.sub("^[a-zA-Z0-9]+:", "", line.rstrip()).strip()
+                    new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip()).strip()
                     if not new_text.startswith("\""): new_text = "\"" + new_text
                     if not new_text.endswith("\""): new_text = new_text + "\""
                     print_this_line = False
                     to_insert[uh] += new_text + "\n"
                     uniques += 1
+                    last_header = uh
                 else:
                     if "#idea" not in line.lower():
                         print("Unrecognized colon starting with", left_bit, "at line", line_count, "full(er) text", line.strip()[:50])
