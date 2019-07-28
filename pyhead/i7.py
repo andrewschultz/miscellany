@@ -539,6 +539,13 @@ def _valid_i7m_arg(x):
     x = re.sub("\?", "", x)
     return re.search("^[rv]*$", x)
 
+def rmbrax(my_str, spaces_too = True, end_only = False):
+    regex_str = "\[[^\]]*\]"
+    if spaces_too: regex_str = " *" + regex_str + " *"
+    if end_only: regex_str += "$"
+    my_str = re.sub(" *\[[^\]]*\] *", "", my_str)
+    return my_str
+
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
         if sys.argv[1] == '?': i7_usage()
