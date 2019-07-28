@@ -69,6 +69,7 @@ Local $pet_feed_delta = 94
 Local $pet_food_init_x = 690
 Local $pet_food_init_y = 960
 Local $pet_food_delta = 100
+Local $int_per_delta = 184
 
 Local $equip_wait = 750
 
@@ -632,7 +633,7 @@ Func ClickEyewearAndAccessory($to_int)
   SendWait("{PGUP}")
 EndFunc
 
-Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cur_mp = True)
+Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cur_mp = True, $check_eq_adj = True)
   ; number of times to cast Tools
 
   CheckClicks()
@@ -647,8 +648,9 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
   local $mp_start
   local $my_end
   
+  $check_any = $check_max_mp or $check_cur_mp or $check_eq_adj
 
-  if $check_max_mp or $check_cur_mp Then
+  if $check_any Then
     $start_stat_array = find_player_stat($STAT_MP, True, True)
 	$cur_mp_start = $start_stat_array[0]
 	$cur_mp_exp = $cur_mp_start - 25 * $times
@@ -658,6 +660,15 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
   if $equipPer == True Then
     DoPer()
 	Sleep($equip_wait)
+  EndIf
+  
+  if $equipPer and $check_eq_adj Then
+    $equip_recheck_array = find_player_stat($STAT_MP, True, True)
+	$max_mp_post_equip = $equip_recheck_array[1]
+	$exp_per_equip = $max_mp_start - $int_per_delta
+	if $max_mp_start - $int_per_delta <> $max_mp_post_equip Then
+	  MOK("Potential equipment failure", $max_mp_post_equip & " is what we should have, but " & $exp_per_quip & " is what we got.")
+    EndIf
   EndIf
 
   ToHab()
@@ -690,14 +701,18 @@ Func find_player_stat($whichStat = $STAT_MP, $find_max = True, $copy_new_in = Tr
   ;_ArrayDisplay($ary)
 
   ToHab()
-  Send("^a")
-  sleep(500)
-  Send("^c")
-  sleep(500)
-  $clip_in = ClipGet()
-  Send("^f;")
-  sleep(500)
-  Send("{ESC}")
+  if $copy_new_in Then
+    Send("^a")
+    sleep(500)
+    Send("^c")
+    sleep(500)
+    $clip_in = ClipGet()
+    Send("^f;")
+    sleep(500)
+    Send("{ESC}")
+  Else
+    $clip_in = ClipGet()
+  EndIf
 
   local $ary = StringSplit($clip_in, @CR & @LF, $STR_ENTIRESPLIT)
 
@@ -966,6 +981,8 @@ Func read_hab_cfg($x)
 	  $pet_food_init_y = $vars[3]
 	  $pet_food_delta = $vars[4]
 	  $pet_food_next_x = $vars[5]
+    Elseif verify_first_entry($vars, 'IntPerDelta', 2) Then
+	  $int_per_delta = $vars[2]
     Elseif verify_first_entry($vars, 'InitHV', 3) Then
 	  $h_init_page_1 = $vars[2]
 	  $v_init_page_1 = $vars[3]
