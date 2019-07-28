@@ -11,8 +11,9 @@ import os
 import re
 import pendulum
 import sys
+from mytools import nohy
 
-create_new_file = True
+look_for_last = False
 
 x = pendulum.today()
 dest_title = "Transcription notes " + x.format("M/D/YYYY")
@@ -21,14 +22,11 @@ source_id = "1mkbVFs_911fx4qA0NYm1PL4ignwEn6-I4yoJG2oJsTI"
 
 auto_credentials = True
 
-cmd_count = 1
-while cmd_count < len(sys.argv):
-    arg = sys.argv[cmd_count]
-    if arg == 'o':
-        create_new_file = False
-    else:
-        usage()
-    cmd_count += 1
+def usage():
+    print("Not many commands to use.")
+    print("-c = create today's file")
+    print("-l/o/ol/lo = look for most recently created file")
+    exit()
 
 def open_in_browser(x, file_desc = "google doc"):
     my_url = "https://docs.google.com/document/d/{0}/edit".format(x)
@@ -95,7 +93,7 @@ def open_latest_transcript(lister, drive):
         except:
             print(temp_title, "is not of the numerical form MM/DD/(YYYY)")
             continue
-        print(temp_id)
+        # print(temp_id)
         months[temp_id] = mdy2[0]
         days[temp_id] = mdy2[1]
         if len(mdy2) == 2:
@@ -107,6 +105,7 @@ def open_latest_transcript(lister, drive):
     mdy_sorted = sorted(months, key=lambda x:(years[x], months[x], days[x]), reverse=True)
     print("Top 5 of", len(mdy_sorted))
     for x in range(0, 5): print(x+1, mdy_sorted[x], title_of[mdy_sorted[x]], years[mdy_sorted[x]], months[mdy_sorted[x]], days[mdy_sorted[x]])
+    
     open_in_browser(mdy_sorted[0], title_of[mdy_sorted[0]])
 
 def main():
@@ -118,10 +117,24 @@ def main():
 
     lister = drive.ListFile().GetList()
 
-    if create_new_file:
-        create_if_not_there(lister, drive)
-    else:
+    if look_for_last:
         open_latest_transcript(lister, drive)
+    else:
+        create_if_not_there(lister, drive)
     
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = nohy(sys.argv[cmd_count])
+    if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
+        look_for_last = True
+    elif arg == 'c':
+        look_for_last = False
+    elif arg == '?':
+        usage()
+    else:
+        print("Bad parameter", arg)
+        usage()
+    cmd_count += 1
+
 if __name__ == '__main__':
     main()
