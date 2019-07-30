@@ -26,6 +26,9 @@ ignores = defaultdict(list)
 file_list = defaultdict(list)
 rubrics = defaultdict(lambda:defaultdict(str))
 
+ignored_yet = defaultdict(bool)
+rubric_yet = defaultdict(bool)
+
 cfg_synonyms = defaultdict(str)
 
 def usage():
@@ -162,6 +165,7 @@ def process_file_punc(my_proj, this_file):
                 current_table = re.sub(" *\[.*", "", line.lower().strip())
                 current_table = re.sub(" \(continued\)", "", current_table)
                 if current_table in ignores[my_proj]:
+                    ignored_yet[current_table] = True
                     #print("IGNORING", current_table, "in", my_proj, "line", line_count)
                     ignore_table = True
                     out_file.write(line)
@@ -171,6 +175,7 @@ def process_file_punc(my_proj, this_file):
                     ignore_table = True
                     out_file.write(line)
                     continue
+                rubric_yet[current_table] = True
                 current_rubric = rubrics[my_proj][current_table]
                 header_next = True
                 out_file.write(line)
@@ -211,6 +216,12 @@ def process_project(my_proj):
     for x in file_list[my_proj]:
         print("Processing file", x)
         process_file_punc(my_proj, x)
+    for x in rubrics[my_proj]:
+        if x not in rubric_yet:
+            print(x, "had a rubric but wasn't found in the {0} project.".format(my_proj))
+    for x in ignores[my_proj]:
+        if x not in ignored_yet:
+            print(x, "had an ignore flag but wasn't found in the {0} project.".format(my_proj))
 
 def process_punc_cfg(punc_file):
     proj_reading = ""
