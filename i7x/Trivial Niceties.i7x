@@ -1,4 +1,4 @@
-Version 1/140928 of Trivial Niceties Z-Only by Andrew Schultz begins here.
+Version 1/140928 of Trivial Niceties by Andrew Schultz begins here.
 
 "This puts in stubs I've used often and probably will again. The non-Z-only in Trivial Niceties includes these and also has functions that takes up more memory e.g. indexed text."
 
@@ -377,7 +377,7 @@ to dn:
 
 to ital-txt (x - indexed text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]".
 
-volume intro/restore/skip (for Glulx only)
+volume intro/restore/skip
 
 read-intro is a truth state that varies.
 
@@ -398,6 +398,6 @@ to intro-restore-skip:
 				now got-good-key is true;
 			if got-good-key is false, say "[line break][if q is 82 or q is 114]Restore failed. Let's try again[else]I didn't recognize that[end if]. Would you like to see the full introduction (F or I), restore a previous game (R), or skip the introduction (S)?";
 
-Trivial Niceties Z-Only ends here.
+Trivial Niceties ends here.
 
 ---- DOCUMENTATION ----
