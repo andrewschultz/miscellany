@@ -8,6 +8,7 @@ import os
 
 from filecmp import cmp
 from collections import defaultdict
+import mytools
 from mytools import title_words
 
 cur_proj = ""
@@ -20,9 +21,10 @@ ignores = defaultdict(list)
 file_list = defaultdict(list)
 rubrics = defaultdict(lambda:defaultdict(str))
 
-def word_to_title(this_word):
-    if this_word in title_words: return this_word
-    return this_word.title()
+def word_to_title(this_word, force=False):
+    if this_word in title_words and force == False: return this_word
+    if this_word == this_word.lower() and force == False: return this_word.title()
+    return this_word[0].upper() + this_word[1:]
 
 def okay_title(w, force_first_letter):
     if "'" in w:
@@ -40,7 +42,7 @@ def good_rules(my_line, table_rubric, line_count):
     errs = 0
     return_string = my_line
     line_divs = my_line.split("\t")
-    modified_string = return_string
+    orig_string = modified_string = return_string
     for x in table_rubric:
         errs_this_time = 0
         ary = [int(q) for q in x.split(",")]
@@ -75,7 +77,7 @@ def good_rules(my_line, table_rubric, line_count):
         ends_with_punc = re.search("[\?!\.]'?$", text_to_check)
         if not ignore_punc:
             if punc_needed == 1 and not ends_with_punc:
-                print("Punctuation needed to end {0}".format(text_to_check))
+                print("{0} Punctuation needed to end {1}".format(line_count, text_to_check))
                 errs += 1
             elif punc_needed == -1 and ends_with_punc:
                 print("Extraneous punctuation with {0}".format(text_to_check))
@@ -90,10 +92,11 @@ def good_rules(my_line, table_rubric, line_count):
         elif capitalize_type == 2:
             word_ary = re.split("[ -]", text_to_check)
             for w in range(0, len(word_ary)):
-                if not okay_title(word_ary[w], w == 0):
+                first_last = (not w or w == len(word_ary) - 1)
+                if not okay_title(word_ary[w], first_last):
                     errs += 1
-                    print("Need TITLE CASE for {0}->{1} in {2}".format(word_ary[w], word_ary[w].title(), text_to_check))
-                    line_divs[col_num] = re.sub("([A-Za-z']+)", lambda x: word_to_title(x.group()), line_divs[col_num]).strip()
+                    print(line_count, "Need TITLE CASE for {0}->{1} in {2}".format(word_ary[w], word_ary[w].title(), text_to_check))
+                    line_divs[col_num] = re.sub("([A-Za-z']+)", lambda x: word_to_title(x.group(), force=first_last), line_divs[col_num].strip())
                     print("New entry:", line_divs[col_num])
                     modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
         elif capitalize_type == 1:
@@ -107,15 +110,14 @@ def good_rules(my_line, table_rubric, line_count):
             if text_to_check.lower() != text_to_check:
                 print("Need ALL LOWER for {0}".format(text_to_check))
                 errs += 1
-                line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".lower(), line_divs[col_num])
+                line_divs[col_num] = re.sub("^(\"[^\"]*\")", lambda x: x.group().lower(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n"
-        if errs:
-            return_string = modified_string
-    return (errs, return_string)
+    return (errs, return_string, orig_string != return_string)
 
 def process_file_punc(my_proj, this_file):
     err_lines = 0
     total_errs = 0
+    diffable_lines = 0
     out_file = open(temp_table_file, "w")
     header_next = False
     current_table = ""
@@ -151,19 +153,24 @@ def process_file_punc(my_proj, this_file):
                     ignore_table = False
                     out_file.write(line)
                     continue
+                if ignore_table:
+                    out_file.write(line)
+                    continue
                 #print("Rubric for {0}/{1} is {2}".format(my_proj, current_table, current_rubric))
-                (this_errs, to_write) = good_rules(line, current_rubric, line_count)
+                (this_errs, to_write, sugg_change) = good_rules(line, current_rubric, line_count)
+                diffable_lines += sugg_change
                 err_lines += (this_errs > 0)
                 total_errs += this_errs
                 out_file.write(to_write)
+                if this_errs: mytools.add_postopen_file_line(this_file, line_count)
                 continue
             out_file.write(line)
     out_file.close()
-    if err_lines:
-        if not cmp(this_file, temp_table_file):
-            i7.wm(this_file, temp_table_file)
-        else:
-            print("Errors found, but there are no suggested edits, so not comparing with WinMerge.")
+    if diffable_lines:
+        print(diffable_lines, "Diffable lines.")
+        i7.wm(this_file, temp_table_file)
+    elif err_lines:
+        print("Errors found, but there are no suggested edits, so not comparing with WinMerge.")
     os.remove(temp_table_file)
     print(err_lines, "line errors", total_errs, "total errors")
 
@@ -212,3 +219,5 @@ if not cur_proj:
     cur_proj = default_proj
 
 process_project(cur_proj)
+
+mytools.postopen_files()
