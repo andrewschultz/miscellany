@@ -1,5 +1,10 @@
-#punc.py
-#replaces punc.pl
+#
+# punc.py
+#
+# replaces punc.pl
+#
+# usage: so far only projects on the command line
+#
 
 import i7
 import re
@@ -20,6 +25,11 @@ title_words_to_ignore = defaultdict(bool)
 ignores = defaultdict(list)
 file_list = defaultdict(list)
 rubrics = defaultdict(lambda:defaultdict(str))
+
+def usage():
+    print("So far we only can allow one project at a time defined on the command line.")
+    print("If nothing is defined, we look at the current directory, then look in punc.txt for the default project.")
+    exit()
 
 def word_to_title(this_word, force=False):
     if this_word in title_words and force == False: return this_word
@@ -115,6 +125,9 @@ def good_rules(my_line, table_rubric, line_count):
     return (errs, return_string, orig_string != return_string)
 
 def process_file_punc(my_proj, this_file):
+    if not os.path.exists(this_file):
+        print("Uh oh, {0} does not exist.".format(this_file))
+        return
     err_lines = 0
     total_errs = 0
     diffable_lines = 0
@@ -175,7 +188,12 @@ def process_file_punc(my_proj, this_file):
     print(err_lines, "line errors", total_errs, "total errors")
 
 def process_project(my_proj):
+    if my_proj not in file_list:
+        table_file = i7.hdr(my_proj, 'ta')
+        print("No FILES= line defined for {0} in {1}. Going with just {2}.".format(my_proj, punc_file, table_file))
+        file_list[my_proj] = [ table_file ]
     for x in file_list[my_proj]:
+        print("Processing file", x)
         process_file_punc(my_proj, x)
 
 def process_punc_cfg(punc_file):
@@ -197,8 +215,10 @@ def process_punc_cfg(punc_file):
                 file_list[proj_reading].append(ltemp)
                 continue
             if line.startswith("-"):
-                table_name = tack_on_table(ll[1:])
-                ignores[proj_reading].append(table_name)
+                ary = line[1:].strip().split(",")
+                for itm in ary:
+                    table_name = tack_on_table(itm)
+                    ignores[proj_reading].append(table_name)
                 #print("Ignoring", ll[1:])
                 continue
             if "\t" in line:
@@ -210,6 +230,18 @@ def process_punc_cfg(punc_file):
             if ll: print("CFG file has ignored line", line_count, ll)
 
 punc_file = "c:/writing/dict/punc.txt"
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = mytools.nohy(sys.argv[cmd_count])
+    if arg in i7.i7x:
+        if cur_proj:
+            sys.exit("Can't define 2 projects on the command line.")
+        cur_proj = i7.i7x[arg]
+    else:
+        print("Bad command line parameter", arg)
+        usage()
+    cmd_count += 1
 
 process_punc_cfg(punc_file)
 
