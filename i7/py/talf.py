@@ -43,6 +43,7 @@ ignored_tables = ""
 def usage():
     print("-l/-nl decides whether or not to launch, default is", onoff[launch_dif])
     print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
+    print("-co/-oc/-lo/-ol = only copy or launch")
     print("-os overrides size differences")
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
@@ -391,6 +392,12 @@ while count < len(sys.argv):
     elif arg == 'p': popup_err = True
     elif arg == 'np': popup_err = False
     elif arg == 'c': copy_over = True
+    elif arg == 'co' or arg == 'oc':
+        copy_over = True
+        launch_dif = False
+    elif arg == 'lo' or arg == 'ol':
+        copy_over = False
+        launch_dif = True
     elif arg == 'ec': open_source()
     elif arg == 'e': os.system(table_default_file)
     elif arg == 'os': override_source_size_differences = True
