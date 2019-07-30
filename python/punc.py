@@ -26,10 +26,26 @@ ignores = defaultdict(list)
 file_list = defaultdict(list)
 rubrics = defaultdict(lambda:defaultdict(str))
 
+cfg_synonyms = defaultdict(str)
+
 def usage():
     print("So far we only can allow one project at a time defined on the command line.")
     print("If nothing is defined, we look at the current directory, then look in punc.txt for the default project.")
     exit()
+
+def cfg_expand(x):
+    if re.search("^[0-9,-]+$", x): return x
+    if x in cfg_synonyms: return cfg_synonyms[x]
+    if re.search("^[0-9]+,[a-z]$", x): return x
+    my_num = "0"
+    x0 = x
+    if x[0].isdigit():
+        x0 = re.sub("^[0-9]+", "", x)
+        my_num = re.search("^[0-9]+", x).group()
+    if x0 not in cfg_synonyms:
+        sys.exit("Unrecognized CFG file shortcut {0} {1}".format(x, x0))
+    retval = re.sub("^[0-9]+", my_num, x[0] + cfg_synonyms[x0])
+    return retval
 
 def word_to_title(this_word, force=False):
     if this_word in title_words and force == False: return this_word
@@ -221,10 +237,14 @@ def process_punc_cfg(punc_file):
                     ignores[proj_reading].append(table_name)
                 #print("Ignoring", ll[1:])
                 continue
+            if "~" in line:
+                lary = ll.split("~")
+                cfg_synonyms[lary[0]] = lary[1]
+                continue
             if "\t" in line:
                 lary = ll.split("\t")
                 table_name = tack_on_table(lary[0])
-                rubrics[proj_reading][table_name] = lary[1:]
+                rubrics[proj_reading][table_name] = [cfg_expand(x) for x in lary[1:]]
                 #print("Adding proj {0} rubric {1}".format(proj_reading, lary[0]))
                 continue
             if ll: print("CFG file has ignored line", line_count, ll)
