@@ -546,6 +546,12 @@ def rmbrax(my_str, spaces_too = True, end_only = False):
     my_str = re.sub(" *\[[^\]]*\] *", "", my_str)
     return my_str
 
+def get_defined_region(l): # we assume that a region is defined in the first sentence.
+    l = re.sub("\..*", "", l)
+    if l.startswith("there is"):
+        return re.sub("there is a region called ", "", l, 0, re.IGNORECASE)
+    return re.sub(" is a region.*", "", l, 0, re.IGNORECASE)
+
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
         if sys.argv[1] == '?': i7_usage()
