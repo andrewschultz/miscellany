@@ -439,13 +439,17 @@ Func ToStable()
   MouseClick("left")
 EndFunc
 
-Func ToTasks($hab_too = True)
+Func ClickTasks()
+  MouseClick ( "left", 160, 90)
+EndFunc
+
+Func ToTasks($hab_too = True, $loc_delay=1000)
   if $hab_too then
     ToHab()
   endif
-  sleep(1000)
-  MouseClick ( "left", 160, 90)
-  sleep(1000)
+  sleep($loc_delay)
+  ClickTasks()
+  sleep($loc_delay)
 EndFunc
 
 Func ToHab()
@@ -651,6 +655,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
   $check_any = $check_max_mp or $check_cur_mp or $check_eq_adj
 
   if $check_any Then
+    ClickTasks()
     $start_stat_array = find_player_stat($STAT_MP, True, True)
 	$cur_mp_start = $start_stat_array[0]
 	$cur_mp_exp = $cur_mp_start - 25 * $times

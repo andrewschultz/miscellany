@@ -2,7 +2,7 @@ Version 1/161019 of Full Monty Testing by Andrew Schultz begins here.
 
 "Runs tests on a game according to what the player asks for"
 
-include Trivial Niceties Z-Only by Andrew Schultz
+include Trivial Niceties by Andrew Schultz.
 
 volume montying
 
