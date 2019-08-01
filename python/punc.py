@@ -46,7 +46,8 @@ def cfg_expand(x):
         x0 = re.sub("^[0-9]+", "", x)
         my_num = re.search("^[0-9]+", x).group()
     if x0 not in cfg_synonyms:
-        sys.exit("Unrecognized CFG file shortcut {0} {1}".format(x, x0))
+        print("Unrecognized CFG file shortcut {0}.".format(x))
+        return "!!!"
     retval = re.sub("^[0-9]+", my_num, x[0] + cfg_synonyms[x0])
     return retval
 
@@ -250,12 +251,20 @@ def process_punc_cfg(punc_file):
                 continue
             if "~" in line:
                 lary = ll.split("~")
-                cfg_synonyms[lary[0]] = lary[1]
+                left_ary = lary[0].split(",")
+                for l in left_ary:
+                    if l in cfg_synonyms:
+                        print("Redefining CFG synonym <{0}> at line {1} in {2}.".format(l.upper(), line_count, punc_file))
+                        mytools.npo(punc_file, line_count)
+                    cfg_synonyms[l] = lary[1]
                 continue
             if "\t" in line:
                 lary = ll.split("\t")
                 table_name = tack_on_table(lary[0])
                 rubrics[proj_reading][table_name] = [cfg_expand(x) for x in lary[1:]]
+                if "!!!" in rubrics[proj_reading][table_name]:
+                    print("Uh oh, bad CFG values at {0} line {1}.".format(punc_file, line_count))
+                    mytools.npo(punc_file, line_count)
                 #print("Adding proj {0} rubric {1}".format(proj_reading, lary[0]))
                 continue
             if ll: print("CFG file has ignored line", line_count, ll)
