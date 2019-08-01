@@ -16,6 +16,8 @@
 #
 #tphb = quarter hours
 #:(0-5) = 0 past, 10 past, etc.
+#
+#0 = monday
 
 import sys
 import os
@@ -74,6 +76,7 @@ def usage():
     print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file, qm = max to run in queue")
     print("id specifies initial delay")
     print("e=edit main file, ea=edit all ex=edit extra ep=edit private")
+    print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     exit()
 
 def garbage_collect(x):
@@ -88,7 +91,7 @@ def my_time(x):
             return int(x[:-1]) * 4 + hr[q]
     return int(x) * 4
 
-def make_time_array(j, k):
+def make_time_array(j, k, line_count):
     quarter_hour = 0
     my_weekday = 0
     my_monthday = 0
@@ -103,6 +106,9 @@ def make_time_array(j, k):
             monthday_array = q[2:].split(",")
         elif q.startswith("d="):
             weekday_array = q[2:].split(",")
+        elif q.startswith("m") or q.startswith("d"):
+            print("Uh oh, line {0} has time starting with m/d and not m=/d=. Fix this.".format(line_count), j, q)
+            return
         else:
             hour_array = [my_time(x) for x in q.split(",")]
     if len(monthday_array):
@@ -141,10 +147,10 @@ def read_hourly_check(a):
                 print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, a, line.strip()))
             a1 = line.split("|")
             if len(a1) > 2:
-                if show_warnings: print("WARNING too many variables, can't yet parse line {:d}:\n    {:s}".format(line_count, line))
+                if show_warnings: print("WARNING too many variables, can't yet parse {0} line {1} (maybe you want a forward slahsh instead of |):\n    {:2}".format(bn, line_count, line))
                 continue
             a3 = re.sub("\t", "\n", a1[-1])
-            make_time_array(a1[0].lower(), a3)
+            make_time_array(a1[0].lower(), a3, line_count)
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
