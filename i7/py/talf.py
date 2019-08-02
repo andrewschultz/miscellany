@@ -15,6 +15,7 @@ import sys
 import i7
 import re
 import ctypes
+import mytools as mt
 
 ignore_sort = defaultdict(lambda:defaultdict(str))
 table_sort = defaultdict(lambda:defaultdict(str))
@@ -37,8 +38,11 @@ show_ignored = False
 zap_apostrophes = False
 verbose = False
 story_only = table_only = story_and_tables = False
+check_shifts = False
 
 ignored_tables = ""
+
+force_lower = True
 
 def usage():
     print("-l/-nl decides whether or not to launch, default is", onoff[launch_dif])
@@ -55,7 +59,33 @@ def usage():
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
-force_lower = True
+def get_line_dict(file_name):
+    lines_dict = defaultdict(int)
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if '"' not in line: continue
+            ll = line.lower().strip()
+            if ll in lines_dict:
+                print("WARNING line {0} <{1}> already defined.".format(line_count, line[:40]))
+            else:
+                lines_dict[ll] = line_count
+    return lines_dict
+
+def crude_check_line_shifts(f1, f2):
+    f1_lines = get_line_dict(f1)
+    f2_lines = get_line_dict(f2)
+    f1b = os.path.basename(f1)
+    f2b = os.path.basename(f2)
+    total_diff = 0
+    line_diff = 0
+    for x in f1_lines:
+        if f1_lines[x] != f2_lines[x]:
+            total_diff += 1
+            line_diff += abs(f1_lines[x] - f2_lines[x])
+    if not total_diff:
+        print("Oops, line shift checking turned up nothing. This is a bug. Bailing so you can see what happened before the file is copied over. You can run without line shifting checks to copy over.")
+        sys.exit()
+    print("Differences between {0} and {1}: {2} shifts, {3} total lines.".format(f1b, f2b, total_diff, line_diff))
 
 def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
     # print(a, b, c, zap_apostrophes)
@@ -137,10 +167,27 @@ def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = b
         return r
     return ary[b]
 
+def note_deltas(my_ary):
+    # from https://www.geeksforgeeks.org/minimum-insertions-sort-array/
+    l_ary = len(my_ary)
+    lis = [1] * l_ary
+    for i in range(1, l_ary):
+        for j in range(i):
+            if (my_ary[i] >= my_ary[j] and
+                lis[i] < lis[j] + 1):
+                lis[i] = lis[j] + 1
+    max = 0
+    for i in range(l_ary):
+        if (max < lis[i]):
+            max = lis[i]
+    return (l_ary - max)
+
 def process_table_array(sort_orders, table_rows, file_stream):
     # print(sort_orders)
     # print(type(sort_orders), sort_orders)
     # print(type(table_rows), table_rows)
+    ret_val = 0
+    tr_before = defaultdict(int)
     for q in sort_orders:
         ary = q.split('/')
         my_type = ''
@@ -158,10 +205,20 @@ def process_table_array(sort_orders, table_rows, file_stream):
         # print("Before:")
         #print(q, sort_orders, my_col, my_type)
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
+        count = 0
+        for x in table_rows:
+            tr_before[x] = count
+            count += 1
         table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type, zap_apostrophes), reverse=reverse_order)
+        tr = []
+        for x in table_rows:
+            tr.append(tr_before[x])
+        if check_shifts:
+            ret_val = note_deltas(tr)
         # print("After:")
         # print('\n'.join(table_rows) + '\n')
     file_stream.write('\n'.join(table_rows) + '\n')
+    return ret_val
 
 def read_table_and_default_file():
     cur_file = ""
@@ -230,6 +287,8 @@ def got_match(full_table_line, target_dict):
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
+    total_shifts = 0
+    total_tables = 0
     if story_and_tables:
         if 'story' not in f.lower() and 'table' not in f.lower(): return
     elif story_only and 'story' not in f.lower(): return
@@ -273,7 +332,11 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     print("Final table needs space before indicating header file ends.")
                     i7.npo(f, line_count)
                 if line.startswith("[") or not line.strip():
-                    process_table_array(what_to_sort, row_array, temp_out)
+                    temp = process_table_array(what_to_sort, row_array, temp_out)
+                    if temp:
+                        total_tables += 1
+                        total_shifts += temp
+                        print(cur_table, "had {0} shift{1}".format(temp, mt.plur(temp)))
                     # print("Wrote", cur_table)
                     in_sortable_table = False
                     in_table = False
@@ -331,7 +394,11 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     if in_sortable_table:
         # if line.startswith("["): print(line)
         if line.startswith("\[") or not line.strip():
-            process_table_array(table_sort[f][cur_table], row_array, temp_out)
+            temp = process_table_array(table_sort[f][cur_table], row_array, temp_out)
+            if temp:
+                total_tables += 1
+                total_shifts += temp
+                print(cur_table, "had", temp, "shift{0}".format(mt.plur(temp)))
             in_sortable_table = False
             temp_out.write(line)
     temp_out.close()
@@ -341,7 +408,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("NO DIFFERENCE, NOT LAUNCHING DIFFERENCE")
         else:
             print("LAUNCHING DIFFERENCE:")
-            os.system("wm \"{:s}\" \"{:s}\"".format(f, f2))
+            mt.wm(f, f2)
     forgot_to_catch = False
     for x in files_read.keys():
         if len(need_to_catch[x]) > 0:
@@ -369,6 +436,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("NO DIFFERENCES FOUND. Not copying over.")
         else:
             print("DIFFERENCES FOUND. Copying over.")
+            if check_shifts:
+                print("Total tables shifted: {0}. Total insertion shifts: {1}.".format(total_tables, total_shifts))
+                crude_check_line_shifts(f2, f)
             copy(f2, f)
         os.remove(f2)
     elif not cmp(f, f2):
@@ -398,6 +468,7 @@ while count < len(sys.argv):
     elif arg == 'lo' or arg == 'ol':
         copy_over = False
         launch_dif = True
+    elif arg == 'cs': check_shifts = True
     elif arg == 'ec': open_source()
     elif arg == 'e': os.system(table_default_file)
     elif arg == 'os': override_source_size_differences = True
