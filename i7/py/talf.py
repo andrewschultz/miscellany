@@ -188,6 +188,10 @@ def process_table_array(sort_orders, table_rows, file_stream):
     # print(type(table_rows), table_rows)
     ret_val = 0
     tr_before = defaultdict(int)
+    count = 0
+    for x in table_rows:
+        tr_before[x] = count
+        count += 1
     for q in sort_orders:
         ary = q.split('/')
         my_type = ''
@@ -200,21 +204,15 @@ def process_table_array(sort_orders, table_rows, file_stream):
             my_type = ary[1]
         reverse_order = len(ary) > 2 and ary[2] == 'r'
         count = 0
-        for y in table_rows:
-            count += 1
         # print("Before:")
         #print(q, sort_orders, my_col, my_type)
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
-        count = 0
-        for x in table_rows:
-            tr_before[x] = count
-            count += 1
         table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type, zap_apostrophes), reverse=reverse_order)
         tr = []
-        for x in table_rows:
-            tr.append(tr_before[x])
-        if check_shifts:
-            ret_val = note_deltas(tr)
+    for x in table_rows:
+        tr.append(tr_before[x])
+    if check_shifts:
+        ret_val = note_deltas(tr)
         # print("After:")
         # print('\n'.join(table_rows) + '\n')
     file_stream.write('\n'.join(table_rows) + '\n')
@@ -297,6 +295,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     fs = os.path.basename(f)
     files_read[f] = True
     cur_table = ''
+    match_table = ''
     if f not in default_sort.keys() and len(ignore_sort[f].keys()) > 0:
         print("WARNING you have ignored tables but no default value. Wiping out ignored tables.")
         for x in ignore_sort[f].keys():
@@ -336,7 +335,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     if temp:
                         total_tables += 1
                         total_shifts += temp
-                        print(cur_table, "had {0} shift{1}".format(temp, mt.plur(temp)))
+                        print(fs, match_table, "had {0} shift{1}".format(temp, mt.plur(temp)))
                     # print("Wrote", cur_table)
                     in_sortable_table = False
                     in_table = False
@@ -357,6 +356,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             if not in_table and line.startswith('table of '):
                 in_table = True
                 cur_table = got_match(line, table_sort[f])
+                match_table = re.sub(" *\[.*", "", line.lower().strip())
                 if cur_table:
                     need_to_catch[f].pop(cur_table)
                     # print("Zapping", cur_table, "from", f)
@@ -398,7 +398,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             if temp:
                 total_tables += 1
                 total_shifts += temp
-                print(cur_table, "had", temp, "shift{0}".format(mt.plur(temp)))
+                print(fs, match_table, "had", temp, "shift{0}".format(mt.plur(temp)))
             in_sortable_table = False
             temp_out.write(line)
     temp_out.close()
@@ -422,6 +422,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         else:
             print("You need to sort out the unaccessed tables in talf.txt before I copy back over.")
             exit()
+    if total_tables:
+        print("{0} table{1} shifted, {2} line{3} shifted in {4}.".format(total_tables, mt.plur(total_tables), total_shifts, mt.plur(total_shifts), fs))
     if copy_over:
         if os.path.getsize(f) != os.path.getsize(f2):
             if override_source_size_differences:
