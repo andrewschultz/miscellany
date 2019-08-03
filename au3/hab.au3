@@ -672,7 +672,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 	$max_mp_post_equip = $equip_recheck_array[1]
 	$exp_per_equip = $max_mp_start - $int_per_delta
 	if $max_mp_start - $int_per_delta <> $max_mp_post_equip Then
-	  MOK("Potential equipment failure", $max_mp_post_equip & " is what we should have, but " & $exp_per_quip & " is what we got.")
+	  MOK("Potential equipment failure", $max_mp_post_equip & " is what we should have, but " & $exp_per_equip & " is what we got.")
     EndIf
   EndIf
 

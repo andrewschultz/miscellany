@@ -60,6 +60,7 @@ while ( $count <= $#ARGV ) {
     /^-?e$/ && do { `$outputFile`; exit(); };
     /^-?h$/ && do { $htmlGen = 1; $count++; next; };
     /^-?l$/ && do { $launch  = 1; $count++; next; };
+    /^-?(q|ahl|alh|hal|hla|lah|lha)$/ && do { $analyze = $htmlGen = $launch = 1; $count++; next; };
     /^-?p$/ && do { `$ses`; exit(); };
     /^-?n$/ && do { $printNewFiles = 1; $count++; next; };
     /^-?o$/ && do { $toOutput      = 1; $count++; next; };
@@ -169,6 +170,7 @@ if ($analyze) {
       print B
         "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
       print B join( ", ", @newFiles ) . "<br />\n" if ($newFiles);
+	  print B "<font size=+3>BCO.PY for unsaved files</font><br />\n";
       if ( scalar @newFiles > 5 ) {
         print B "Smallest: " . smallest() . "<br />\n";
         print B "Largest: " . largest() . "<br />\n";
@@ -238,6 +240,7 @@ sub usage {
 -n = show all new files
 -o = output to stat file
 -p = show previous launched file
+-q = -alh (-ahl -lah etc work too)
 -x = edit XML tabs file
 EOT
   exit;
