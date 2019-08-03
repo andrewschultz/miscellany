@@ -6,7 +6,7 @@ import filecmp
 from shutil import copy
 import re
 from collections import defaultdict
-from mytools import nohy
+import mytools as mt
 import os
 import i7
 import sys
@@ -20,6 +20,10 @@ def usage():
     print("Default commands are probably what you want.")
     print("-al/-alf alphabetizes the tables after.")
     exit()
+
+def invalid_text(pro, line):
+    if pro == 'under-they-thunder' and '~' in line: return True
+    return False
 
 def unique_header(a, b, f, l):
     if a.startswith("="): return l
@@ -93,6 +97,9 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                 left_bit = re.sub("[:;].*", "", line.lower().strip())
                 uh = unique_header(left_bit, markers, full_name, last_header)
                 if uh:
+                    if invalid_text(pro, line):
+                        print("WARNING invalid text at notes.txt line {0}: {1}".format(line_count, line.lower.strip()[:40]))
+                        mt.add_postopen_file_line(file, line_count)
                     new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip()).strip()
                     if not new_text.startswith("\""): new_text = "\"" + new_text
                     if not new_text.endswith("\""): new_text = new_text + "\""
@@ -185,7 +192,7 @@ default_proj = i7.dir2proj()
 cmd_count = 1
 while cmd_count < len(sys.argv):
     a1 = sys.argv[cmd_count].lower()
-    arg = nohy(sys.argv[cmd_count])
+    arg = mt.nohy(sys.argv[cmd_count])
     if i7.proj_exp(a1, return_nonblank = False):
         if cmd_proj:
             sys.exit("Redefined command project on the command line.")
@@ -237,4 +244,4 @@ elif alphabetize_after_force:
     print("Force-alphabetizing afterwards even without any changes...")
     os.system("talf.py {0} co cs".format(my_proj))
 
-
+mt.postopen_files()
