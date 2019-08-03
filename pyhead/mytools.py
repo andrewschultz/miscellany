@@ -8,6 +8,7 @@ import pyperclip
 import sys
 import os
 import __main__ as main
+from filecmp import cmp
 from collections import defaultdict
 from fractions import gcd
 from functools import reduce
@@ -141,6 +142,12 @@ def open_source_config(bail = True):
     if bail: exit()
 
 oc = o_c = open_config = open_source_config
+
+def wm(x1, x2, ignore_if_identical = True):
+    if ignore_if_identical and cmp(x1, x2):
+        print("Not comparing identical files", x1, "and", x2)
+        return
+    os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
 #####################################################basic main-program checking stuff
 
