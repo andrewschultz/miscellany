@@ -14,6 +14,12 @@ import sys
 display_changes = False
 copy_to_old = True
 copy_smart = True
+alphabetize_after = False
+
+def usage():
+    print("Default commands are probably what you want.")
+    print("-al/-alf alphabetizes the tables after.")
+    exit()
 
 def unique_header(a, b, f, l):
     if a.startswith("="): return l
@@ -178,11 +184,12 @@ default_proj = i7.dir2proj()
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
+    a1 = sys.argv[cmd_count].lower()
     arg = nohy(sys.argv[cmd_count])
-    if i7.proj_exp(arg, return_nonblank = False):
+    if i7.proj_exp(a1, return_nonblank = False):
         if cmd_proj:
             sys.exit("Redefined command project on the command line.")
-        cmd_proj = i7.proj_exp(arg)
+        cmd_proj = i7.proj_exp(a1, return_nonblank = False)
     elif arg == 'co':
         copy_to_old = True
     elif arg == 'cs' or arg == 'sc':
@@ -192,8 +199,20 @@ while cmd_count < len(sys.argv):
         copy_to_old = True
     elif arg == 'dc':
         display_changes = True
+    elif arg == 'al':
+        alphabetize_after = True
+    elif arg == 'alf':
+        alphabetize_after = True
+        alphabetize_after_force = True
+    elif arg == 'nal' or arg == 'nalf':
+        alphabetize_after = False
     elif arg == 'dcn' or arg == 'ndc' or arg == 'nc' or arg == 'nd':
         display_changes = False
+    elif arg == '?':
+        usage()
+    else:
+        print("Bad command", arg)
+        usage()
     cmd_count += 1
 
 if not cmd_proj:
@@ -202,11 +221,20 @@ if not cmd_proj:
         my_proj = default_proj
     else:
         sys.exit("I couldn't find a project in the directory path or on the command line. Bailing.")
+    if not i7.proj_exp(my_proj, return_nonblank = False):
+        sys.exit("Uh oh. Default project {0} turned up nothing. Bailing.".format(my_proj))
 else: my_proj = cmd_proj
 
 if copy_smart or copy_to_old:
     if copy_smart: copy_smart_ideas(my_proj)
     if copy_to_old: move_old_ideas(my_proj)
     show_nonblanks(os.path.join(i7.proj2dir(my_proj), "notes.txt"))
+    if alphabetize_after:
+        print("Alphabetizing afterwards...")
+        os.system("talf.py {0} co cs".format(my_proj))
     sys.exit()
+elif alphabetize_after_force:
+    print("Force-alphabetizing afterwards even without any changes...")
+    os.system("talf.py {0} co cs".format(my_proj))
+
 
