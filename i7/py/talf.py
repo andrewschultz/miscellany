@@ -29,6 +29,7 @@ onoff = ['off', 'on']
 
 table_default_file = "c:/writing/scripts/talf.txt"
 
+force_dupe_check = False
 popup_err = False
 copy_over = False
 launch_dif = True
@@ -48,6 +49,7 @@ def usage():
     print("-l/-nl decides whether or not to launch, default is", onoff[launch_dif])
     print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
     print("-co/-oc/-lo/-ol = only copy or launch")
+    print("-cs = check # of shifts e.g. 123406785 has 2.")
     print("-os overrides size differences")
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
@@ -59,21 +61,23 @@ def usage():
     print("You can use a list of projects or an individual project abbreviation.")
     exit()
 
-def get_line_dict(file_name):
+def get_line_dict(file_name, flag_dupes = False):
     lines_dict = defaultdict(int)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
             if '"' not in line: continue
             ll = line.lower().strip()
             if ll in lines_dict:
-                print("WARNING line {0} <{1}> already defined.".format(line_count, line[:40]))
+                if flag_dupes:
+                    print("WARNING line {0} <{1}> already defined.".format(line_count, line[:40].strip()))
+                    mt.add_postopen_file_line(file_name, line_count)
             else:
                 lines_dict[ll] = line_count
     return lines_dict
 
 def crude_check_line_shifts(f1, f2):
-    f1_lines = get_line_dict(f1)
-    f2_lines = get_line_dict(f2)
+    f1_lines = get_line_dict(f1, flag_dupes = False)
+    f2_lines = get_line_dict(f2, flag_dupes = True)
     f1b = os.path.basename(f1)
     f2b = os.path.basename(f2)
     total_diff = 0
@@ -82,7 +86,7 @@ def crude_check_line_shifts(f1, f2):
         if f1_lines[x] != f2_lines[x]:
             total_diff += 1
             line_diff += abs(f1_lines[x] - f2_lines[x])
-    if not total_diff:
+    if not total_diff and not force_dupe_check:
         print("Oops, line shift checking turned up nothing. This is a bug. Bailing so you can see what happened before the file is copied over. You can run without line shifting checks to copy over.")
         sys.exit()
     print("Differences between {0} and {1}: {2} shifts, {3} total lines.".format(f1b, f2b, total_diff, line_diff))
@@ -293,7 +297,6 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     elif table_only and 'table' not in f.lower(): return
     global ignored_tables
     fs = os.path.basename(f)
-    files_read[f] = True
     cur_table = ''
     match_table = ''
     if f not in default_sort.keys() and len(ignore_sort[f].keys()) > 0:
@@ -302,10 +305,11 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             need_to_catch[f].pop(x)
         ignore_sort[f].clear()
     if f not in table_sort.keys() and f not in default_sort.keys():
-        print(f, "has no table sort keys or default sorts. Returning. You may wish to check for slash directions.")
-        if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys():
+        print("WARNING: no table sort keys/default sorts for {0}. Returning. If you are looking for something in this file, you may wish to check for slash directions.".format(fs.upper()))
+        if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys(): #?? this can be fixed
             print("NOTE: brief check shows", f, "very likely has slashes normalized badly.")
         return
+    files_read[f] = True
     f2 = f + "2"
     row_array = []
     need_head = False
@@ -436,6 +440,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 exit()
         if cmp(f, f2):
             print("NO DIFFERENCES FOUND. Not copying over.")
+            if force_dupe_check:
+                crude_check_line_shifts(f2, f)
         else:
             print("DIFFERENCES FOUND. Copying over.")
             if check_shifts:
@@ -446,20 +452,19 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     elif not cmp(f, f2):
         print("DIFFERENCES FOUND. Temp file not deleted. Run with -c to copy back over or -l to launch differences.")
 
-count = 1
+cmd_count = 1
 projects = []
-while count < len(sys.argv):
-    arg = sys.argv[count].lower()
-    if arg in i7.i7c.keys():
+
+while cmd_count < len(sys.argv):
+    a1 = sys.argv[cmd_count].lower()
+    arg = mt.nohy(sys.argv[cmd_count].lower())
+    if a1 in i7.i7c.keys():
         projects = projects + i7.i7c[arg]
-        count += 1
-        continue
-    elif arg in i7.i7x.keys():
+    elif a1 in i7.i7x.keys():
         projects.append(i7.i7x[arg])
-        count += 1
-        continue
-    if arg.startswith('-'): arg = arg[1:]
-    if arg == 'l': launch_dif = True
+    elif a1 in i7.i7xr.keys():
+        projects.append(arg)
+    elif arg == 'l': launch_dif = True
     elif arg == 'nl': launch_dif = False
     elif arg == 'p': popup_err = True
     elif arg == 'np': popup_err = False
@@ -484,11 +489,12 @@ while count < len(sys.argv):
     elif arg == 'za': zap_apostrophes = True
     elif arg == 'fl' or arg == 'lf': force_lower = True
     elif arg == 'fn' or arg == 'nf': force_lower = False
+    elif arg == 'fd': force_dupe_check = True
     elif arg == '?': usage()
     else:
         print(arg, "is an invalid parameter.")
         usage()
-    count += 1
+    cmd_count += 1
 
 if story_only + table_only + story_and_tables: sys.exit("Options crossed -so, -to, -ts/-st ... can only have one.")
 
@@ -523,3 +529,5 @@ if show_ignored:
         print(ignored_tables.strip())
     else:
         print("=====================NO IGNORED TABLES")
+
+mt.postopen_files()
