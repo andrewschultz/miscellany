@@ -5,8 +5,8 @@
 #
 # todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
 
-TODO: Note if there were any changes if file already exists e.g. rewriting from raw to 2019333
-also todo: -keep- files have special notes (?) / notifications. Is this in ld2?
+#TODO: Note if there were any changes if file already exists e.g. rewriting from raw to 2019333
+#also todo: -keep- files have special notes (?) / notifications. Is this in ld2?
 
 import codecs
 import os
@@ -17,6 +17,8 @@ from fractions import gcd
 from functools import reduce
 import mytools as mt
 from glob import glob
+from filecmp import cmp
+from shutil import copy
 
 raw_dir = "c:/coding/perl/proj/from_drive"
 done_dir = "c:/coding/perl/proj/from_drive/drive_mod"
@@ -38,6 +40,12 @@ def in_important_file(x, y):
         for line in file:
             if x in line.lower(): return True
     return False
+
+def special_colon_value(l):
+    if l.startswith("btp:"): return "btp"
+    if l.startswith("mov:") or l.startswith("movie:"): return "mov"
+    if l.startswith("song:") or l.startswith("song:"): return "mov"
+    return ""
 
 def my_section(l):
     if '\t' in l or l.count('  ') > 2: return 'nam'
@@ -86,9 +94,16 @@ def sort_raw(x):
                 sections['important'] += line
                 continue
             ll = line.strip().lower()
+            if ll.startswith("\\"):
+                mt.npo(x, line_count)
+                print("Uh oh. You can't start with a backslash. Change to something else. {0} line {1}".format(os.path.basename(x), line_count))
             if not ll: continue
             if line.startswith('IMPORTANT'):
                 important = True
+                continue
+            temp = special_colon_value(ll)
+            if temp:
+                sections[temp] += line
                 continue
             temp = my_section(line)
             if temp:
@@ -119,11 +134,12 @@ def sort_raw(x):
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
         if x != 'nam': fout.write("\n\n")
-    if os.exists(final_out_file) and cmp(final_out_file, temp_out_file):
+    fout.close()
+    if os.path.exists(final_out_file) and cmp(final_out_file, temp_out_file):
         print(final_out_file, "was not changed since last run.")
     else:
         copy(temp_out_file, final_out_file)
-    fout.close()
+    sys.exit()
     os.system(final_out_file)
 
 files_done = 0
@@ -131,19 +147,24 @@ file_list = []
 cmd_count = 1
 max_files = 1
 
+os.chdir(raw_dir)
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'f' and arg[1:].isdigit():
         max_files = int(arg[1:])
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
-    else: file_list.append(arg)
-    count += 1
+    else:
+        if not os.path.exists(arg) and not os.path.exists(os.path.join(raw_dir, arg)):
+            print("WARNING", arg, "is not a valid file")
+        else:
+            file_list.append(arg)
+    cmd_count += 1
 
 if not len(file_list):
     file_list = glob("{0}/{1}".format(raw_dir, raw_glob))
     for fi in file_list:
-        if '6-26' not in fi: continue
         sort_raw(fi)
         files_done += 1
         if files_done == max_files: break
