@@ -29,6 +29,8 @@ def usage():
     print("Not many commands to use.")
     print("-c = create today's file")
     print("-l/o/ol/lo = look for most recently created file")
+    print("dft.py downloads finished transcripts from Google Drive")
+    print("keso.py sorts the files by idea type")
     exit()
 
 def open_in_browser(x, file_desc = "google doc"):

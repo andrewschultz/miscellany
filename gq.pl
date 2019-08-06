@@ -825,6 +825,7 @@ sub toProj {
   elsif ( $_[0] =~ /ailihphilia/i )                   { return "ai"; }
   elsif ( $_[0] =~ /(roiling|shuffling)/i )           { return "sts"; }
   elsif ( $_[0] =~ /(tragic|vvff|vf|vv|very-vile)/i ) { return "tm"; }
+  elsif ( $_[0] =~ /(under-they-thunder)/i ) { return "ut"; }
   ( my $cproj = $pwd ) =~ s/\.inform.*//;
   $cproj =~ s/.*[\\\/]//;
   return $cproj if ( -f "story.ni" );

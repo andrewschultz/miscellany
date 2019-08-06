@@ -261,6 +261,8 @@ def notes_file(x):
 def walkthrough_file(x):
     return sdir(x) + "/" + "walkthrough.txt"
 
+wthru = walkthrough_file
+
 def mistake_file(x):
     return '{:s}\{:s} Mistakes.i7x'.format(extdir, lpro(x, True).title())
 
