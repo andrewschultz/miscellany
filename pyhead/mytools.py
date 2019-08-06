@@ -149,6 +149,9 @@ def wm(x1, x2, ignore_if_identical = True):
         return
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
+def abbrev(my_str, my_len):
+    return my_str[:my_len] + "..." if len(my_str) > my_len else my_str
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
