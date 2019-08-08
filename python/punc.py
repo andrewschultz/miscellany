@@ -16,6 +16,8 @@ from collections import defaultdict
 import mytools
 from mytools import title_words
 
+title_words.append("y")
+
 cur_proj = ""
 default_proj = ""
 
@@ -34,6 +36,7 @@ cfg_synonyms = defaultdict(str)
 def usage():
     print("So far we only can allow one project at a time defined on the command line.")
     print("If nothing is defined, we look at the current directory, then look in punc.txt for the default project.")
+    print("-nae/-ae disables/enables extraneous apostrophe suggestions")
     exit()
 
 def cfg_expand(x):
@@ -68,6 +71,12 @@ def tack_on_table(x):
         return "table of " + x
     return x
 
+def apostrophe_imbalance(my_txt):
+    left_apos = len(re.findall(r'\b\'', my_txt))
+    right_apos = len(re.findall(r'\'\b', my_txt))
+    if left_apos - right_apos: print(my_txt, left_apos, right_apos)
+    return left_apos - right_apos
+
 def good_rules(my_line, table_rubric, line_count):
     errs = 0
     return_string = my_line
@@ -87,6 +96,10 @@ def good_rules(my_line, table_rubric, line_count):
             print("Column", col_num, "failed to start with a quote")
             errs += 1
             continue
+        this_apost = apostrophe_imbalance(text_to_check)
+        if this_apost:
+            print("Apostrophe imbalance line", line_count, text_to_check)
+            errs += 1
         num_quotes = text_to_check.count('"')
         if not num_quotes == 2:
             print("Bad # of quotes ({0}) in {1}.", num_quotes, text_to_check)
@@ -142,7 +155,9 @@ def good_rules(my_line, table_rubric, line_count):
                 errs += 1
                 line_divs[col_num] = re.sub("^(\"[^\"]*\")", lambda x: x.group().lower(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n"
-    return (errs, return_string, orig_string != return_string)
+        if this_apost and modified_string == orig_string and suggest_apostrophes:
+            modified_string = "'" + modified_string
+    return (errs, modified_string, orig_string != modified_string)
 
 def process_file_punc(my_proj, this_file):
     if not os.path.exists(this_file):
@@ -171,6 +186,7 @@ def process_file_punc(my_proj, this_file):
                     ignore_table = True
                     out_file.write(line)
                     continue
+                print('b', line_count, line.strip())
                 if current_table not in rubrics[my_proj]:
                     print("WARNING: no rubric for", current_table, "in", my_proj)
                     ignore_table = True
@@ -192,12 +208,13 @@ def process_file_punc(my_proj, this_file):
                     out_file.write(line)
                     continue
                 #print("Rubric for {0}/{1} is {2}".format(my_proj, current_table, current_rubric))
-                (this_errs, to_write, sugg_change) = good_rules(line, current_rubric, line_count)
-                diffable_lines += sugg_change
-                err_lines += (this_errs > 0)
-                total_errs += this_errs
-                out_file.write(to_write)
-                if this_errs: mytools.add_postopen_file_line(this_file, line_count)
+                if current_rubric:
+                    (this_errs, to_write, sugg_change) = good_rules(line, current_rubric, line_count)
+                    diffable_lines += sugg_change
+                    err_lines += (this_errs > 0)
+                    total_errs += this_errs
+                    out_file.write(to_write)
+                    if this_errs: mytools.add_postopen_file_line(this_file, line_count)
                 continue
             out_file.write(line)
     out_file.close()
@@ -271,6 +288,8 @@ def process_punc_cfg(punc_file):
 
 punc_file = "c:/writing/dict/punc.txt"
 
+suggest_apostrophes = True
+
 cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = mytools.nohy(sys.argv[cmd_count])
@@ -278,6 +297,8 @@ while cmd_count < len(sys.argv):
         if cur_proj:
             sys.exit("Can't define 2 projects on the command line.")
         cur_proj = i7.i7x[arg]
+    elif arg == 'ae': suggest_apostrophes = True
+    elif arg == 'nae': suggest_apostrophes = False
     else:
         print("Bad command line parameter", arg)
         usage()
