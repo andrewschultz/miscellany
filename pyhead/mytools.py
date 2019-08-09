@@ -152,6 +152,29 @@ def wm(x1, x2, ignore_if_identical = True):
 def abbrev(my_str, my_len):
     return my_str[:my_len] + "..." if len(my_str) > my_len else my_str
 
+mult_diff_tracker = defaultdict(list)
+
+def create_mult_diffs(orig_file, line_list, sort_it = True, bail=False):
+    out_temp = "c:/writing/temp/multdelt.txt"
+    new_list = sorted(line_list)
+    out_temp_stream = open(out_temp, "w")
+    with open(orig_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            while len(new_list) and line_count == new_list[0]:
+                print("Modifying line", line_count)
+                new_list.pop(0)
+                line = "++++" + line
+            out_temp_stream.write(line)
+    out_temp_stream.close()
+    wm(orig_file, out_temp)
+    os.remove(out_temp)
+    if bail: sys.exit()
+
+def many_mult_diffs(file_list, bail=True):
+    for f in file_list:
+        create_mult_diffs(f, mult_diff_tracker[f])
+    if bail: sys.exit()
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
