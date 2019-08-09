@@ -1,9 +1,13 @@
 import re
 import i7
 from collections import defaultdict
+import sys
 
 boundings = defaultdict(list)
 bound_lines = defaultdict(int)
+
+while cmd_count < len(sys.argv):
+    
 
 triz_rms = i7.triz_rooms("c:/games/inform/triz/mine/roiling.trizbort")
 

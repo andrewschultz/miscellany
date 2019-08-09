@@ -306,9 +306,17 @@ while cmd_count < len(sys.argv):
 
 process_punc_cfg(punc_file)
 
+dir_default = i7.dir2proj()
+
 if not cur_proj:
-    if not default_proj: sys.exit("You need to specify a default project in the cfg file.")
-    print("Setting current project to default project", default_proj)
+    if not default_proj and not dir_default: sys.exit("You need to specify a default project in the cfg file.")
+    if dir_default:
+        print("Setting current project to project defined by path", dir_default)
+    elif default_proj:
+        print("Setting current project to default project", default_proj)
+    else:
+        print("This should never happen, but I couldn't guess what project you wanted to run. Bailing.")
+        sys.exit()
     cur_proj = default_proj
 
 process_project(cur_proj)

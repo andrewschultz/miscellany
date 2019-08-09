@@ -89,7 +89,7 @@ def crude_check_line_shifts(f1, f2):
     if not total_diff and not force_dupe_check:
         print("Oops, line shift checking turned up nothing. This is a bug. Bailing so you can see what happened before the file is copied over. You can run without line shifting checks to copy over.")
         sys.exit()
-    print("Differences between {0} and {1}: {2} shifts, {3} total lines.".format(f1b, f2b, total_diff, line_diff))
+    print("Crude differences between {0} and {1}: {2} shifts, {3} total line-delta.".format(f1b, f2b, total_diff, line_diff))
 
 def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
     # print(a, b, c, zap_apostrophes)

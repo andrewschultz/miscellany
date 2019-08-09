@@ -98,8 +98,9 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                 uh = unique_header(left_bit, markers, full_name, last_header)
                 if uh:
                     if invalid_text(pro, line):
-                        print("WARNING invalid text at notes.txt line {0}: {1}".format(line_count, line.lower.strip()[:40]))
+                        print("WARNING invalid text at notes.txt line {0}: {1}".format(line_count, line.lower().strip()[:40]))
                         mt.add_postopen_file_line(file, line_count)
+                        continue
                     new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip()).strip()
                     if not new_text.startswith("\""): new_text = "\"" + new_text
                     if not new_text.endswith("\""): new_text = new_text + "\""
