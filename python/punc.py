@@ -72,10 +72,16 @@ def tack_on_table(x):
     return x
 
 def apostrophe_imbalance(my_txt):
-    left_apos = len(re.findall(r'\b\'', my_txt))
-    right_apos = len(re.findall(r'\'\b', my_txt))
-    if left_apos - right_apos: print(my_txt, left_apos, right_apos)
-    return left_apos - right_apos
+    la = re.findall(r'[^a-zA-Z\.\?!]\'', my_txt)
+    left_of_apos = len(la)
+    ra = re.findall(r'\'[^a-zA-Z]', my_txt)
+    right_of_apos = len(ra)
+    lr = left_of_apos - right_of_apos
+    if debug and lr:
+        print(my_txt, "nontext to left", left_of_apos, "nontext to right", right_of_apos)
+    if not lr: return ""
+    if lr < 0: return "{0}R".format(-lr)
+    return "{0}L".format(lr)
 
 def good_rules(my_line, table_rubric, line_count):
     errs = 0
@@ -156,7 +162,7 @@ def good_rules(my_line, table_rubric, line_count):
                 line_divs[col_num] = re.sub("^(\"[^\"]*\")", lambda x: x.group().lower(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n"
         if this_apost and modified_string == orig_string and suggest_apostrophes:
-            modified_string = "'" + modified_string
+            modified_string = this_apost + modified_string
     return (errs, modified_string, orig_string != modified_string)
 
 def process_file_punc(my_proj, this_file):
