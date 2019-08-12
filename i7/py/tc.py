@@ -12,6 +12,7 @@ import glob
 import os
 import sys
 import re
+from collections import defaultdict
 
 launch_after = False
 write_edit_files = False
@@ -22,11 +23,15 @@ launch_html = False
 max_files = 1
 cur_launched = 0
 tran_fi = "transcripts.htm"
+track_quotes = True
+
+quote_tracker = defaultdict(int)
 
 def usage():
     print("l = launch HTML file, l# = maximum files to launch (1=default)")
     print("w = write edit-* files, wo = write over edit files")
     print("h = make HTML, hl = launch HTML--can be run without any files input")
+    print("q = quote tracking, nq/qn = no quote tracking")
     print("* gives a wildcard for files. Otherwise, tc.py just processes files.")
     exit()
 
@@ -48,6 +53,9 @@ def to_output(f_i, f_o):
     so_far = ""
     with open(f_i) as file:
         for (lc, line) in enumerate(file, 1):
+            if line.count('"') % 2 == 0:
+                if line not in quote_tracker:
+                    quote_tracker[line.strip()] = lc
             if line.startswith('>'):
                 if re.search("^> *[\*;]", line):
                     f2.write("=" * 50 + "Line " + str(lc) + "\n")
@@ -64,6 +72,12 @@ def to_output(f_i, f_o):
     if so_far != "":
         f2.write("ENDING TEXT")
         f2.write(so_far)
+    if track_quotes:
+        if len(quote_tracker):
+            for x in sorted(quote_tracker, key=quote_tracker.get):
+                print("Odd # of quotes at line {0}: {1}".format(quote_tracker[x], x))
+        else:
+            print("No lines found with odd # of quotes.")
     if comments:
         comwri = "{:d} total comments found ({:s}).".format(comments, ', '.join(map(str, lines)))
         print(comwri)
@@ -93,6 +107,8 @@ while count < len(sys.argv):
     elif arg == 'h': make_html = True
     elif arg == 'hl': launch_html = make_html = True
     elif arg == 'wo': write_over = write_edit_files = True
+    elif arg == 'q': track_quotes = True
+    elif arg == 'nq' or arg == 'qn': track_quotes = False
     elif arg == '?': usage()
     else:
         my_files.append(arg)
