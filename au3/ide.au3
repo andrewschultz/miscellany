@@ -75,7 +75,7 @@ While $cmdCount <= $CmdLine[0]
     $project = $arg
     if $projHash.Exists($project) Then
       $project = $projHash.Item($project)
-    Else
+    ElseIf not FileExists("c:\\games\\inform\\" & $project & ".inform") Then
 	  MOK("No project for " & $project, "ide.au3 0 shows all projects and mappings." & @CRLF & "ide-h.au3 is where to add stuff." & @CRLF & "? shows usage.", True)
     EndIf
   EndIf
