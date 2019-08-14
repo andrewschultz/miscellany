@@ -16,12 +16,17 @@ copy_to_old = True
 copy_smart = True
 alphabetize_after = False
 
-def usage():
+def usage(my_text="USAGE PRINTOUT"):
+    print(my_text)
+    print("=" * 60)
     print("Default commands are probably what you want.")
-    print("-al/-alf alphabetizes the tables after.")
+    print("co = copy to old, cs = copy smart, ca = co+cs. You probably want ca, but it's the default.")
+    print("dc = display changes, ndc/dcn = don't.")
+    print("-al/-alf alphabetizes the tables after, nalf = don't. Alphabetization is off by default.")
     exit()
 
 def invalid_text(pro, line):
+    """this checks if certain projects have bad / extra text"""
     if pro == 'under-they-thunder' and '~' in line: return True
     return False
 
@@ -219,8 +224,7 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     else:
-        print("Bad command", arg)
-        usage()
+        usage("Bad command: {}".format(arg))
     cmd_count += 1
 
 if not cmd_proj:
