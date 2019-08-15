@@ -15,6 +15,7 @@ display_changes = False
 copy_to_old = True
 copy_smart = True
 alphabetize_after = False
+extract_table_subs = True
 
 def usage(my_text="USAGE PRINTOUT"):
     print(my_text)
@@ -23,6 +24,17 @@ def usage(my_text="USAGE PRINTOUT"):
     print("co = copy to old, cs = copy smart, ca = co+cs. You probably want ca, but it's the default.")
     print("dc = display changes, ndc/dcn = don't.")
     print("-al/-alf alphabetizes the tables after, nalf = don't. Alphabetization is off by default.")
+    exit()
+
+def extract_table_from_file(pro, hdr_type = 'ta'):
+    my_tfile = i7.hdr(pro, hdr_type)
+    with open(my_tfile) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("table"):
+                x = re.findall("\[xx(.*?)\]", line)
+                if len(x):
+                    y = re.sub(" *\[.*", "", line.lower().strip())
+                    print(y, '==', '/'.join(x))
     exit()
 
 def invalid_text(pro, line):
@@ -203,6 +215,8 @@ while cmd_count < len(sys.argv):
         if cmd_proj:
             sys.exit("Redefined command project on the command line.")
         cmd_proj = i7.proj_exp(a1, return_nonblank = False)
+    elif arg == 'x':
+        extract_table_subs = True
     elif arg == 'co':
         copy_to_old = True
     elif arg == 'cs' or arg == 'sc':
@@ -236,6 +250,10 @@ if not cmd_proj:
     if not i7.proj_exp(my_proj, return_nonblank = False):
         sys.exit("Uh oh. Default project {0} turned up nothing. Bailing.".format(my_proj))
 else: my_proj = cmd_proj
+
+if extract_table_subs:
+    extract_table_from_file(my_proj)
+    exit()
 
 if copy_smart or copy_to_old:
     if copy_smart: copy_smart_ideas(my_proj)
