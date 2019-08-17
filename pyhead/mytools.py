@@ -175,6 +175,9 @@ def many_mult_diffs(file_list, bail=True):
         create_mult_diffs(f, mult_diff_tracker[f])
     if bail: sys.exit()
 
+def unshift_num(x):
+    return x.replace('!', '1').replace('@', '2').replace('#', '3').replace('$', '4').replace('%', '5').replace('^', '6').replace('&', '7').replace('*', '8').replace('(', '9').replace(')', '0')
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
