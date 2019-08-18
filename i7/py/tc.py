@@ -53,7 +53,7 @@ def to_output(f_i, f_o):
     so_far = ""
     with open(f_i) as file:
         for (lc, line) in enumerate(file, 1):
-            if line.count('"') % 2 == 0:
+            if line.count('"') % 2:
                 if line not in quote_tracker:
                     quote_tracker[line.strip()] = lc
             if line.startswith('>'):
@@ -66,7 +66,10 @@ def to_output(f_i, f_o):
                     comments = comments + 1
                 else:
                     so_far = "(prev) " + line
-                    if line != line.lower() and '>Start of a transcript of' not in line: print(f_i, lc, line.strip(), "may be a comment.")
+                    if line != line.lower() and '>Start of a transcript of' not in line:
+                        if line.startswith(">>"):
+                            continue
+                        print(f_i, lc, line.strip(), "may be a comment.")
                 continue
             so_far = so_far + line
     if so_far != "":
