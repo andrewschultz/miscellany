@@ -3,6 +3,7 @@ import sys
 import i7
 from mytools import nohy
 from pathlib import Path
+import subprocess
 
 to_add = []
 
@@ -35,8 +36,8 @@ for x in to_add:
 		x = Path(tf).resolve()
 		if u == tf:
 			sys.exit("Looping symlink {0}, bailing.".format(tf))
-		print("Opening", u)
-		os.system(str(x))
+		print("Opening symlink", tf, "to", u)
+		subprocess.Popen(["c:/tech/trizbort/trizbort.exe", u], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	else:
-		print("Launching", i7.triz)
-		os.system(i7.triz)
+		print("Launching file", tf)
+		subprocess.Popen(["c:/tech/trizbort/trizbort.exe", tf])
