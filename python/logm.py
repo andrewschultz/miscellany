@@ -15,6 +15,9 @@ import i7
 import pendulum
 
 base_dir_needed = "c:\\users\\andrew\\documents\\github"
+set_author = True
+set_commit = True
+commit_message = ''
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -29,9 +32,12 @@ def usage(arg = ""):
     print("p(project name) specifies the project name e.g. pmisc")
     print("l at the end runs git log too")
     print("m# specifies minutes before midnight")
+    print("nc/na sets no author or commit change, and am amends manually.")
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
-    print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d} for a time of {:s}.".format(min_before * 60 + sec_before, time_str))
+    print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d} for a time of {:s}.".format(min_before * 60 + sec_before,
+ time_str))
+    print("A commit message can be put in quotes, and it needs a space.")
     print()
     print("Standard usage is probably logm.py rl (!) (3)")
     print()
@@ -52,7 +58,10 @@ proj_shift_yet = ""
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
-    if re.search("^[rxl]+", arg):
+    if ' ' in arg:
+        commit_message = sys.argv[count]
+        print("Commit message:", commit_message)
+    elif re.search("^[rxl]+", arg):
         run_cmd = 'r' in arg or 'x' in arg
         cmd_counts = arg.count('r') + arg.count('x')
         run_log = 'l' in arg
@@ -87,6 +96,15 @@ while count < len(sys.argv):
     elif arg[0] == 's':
         if arg[1:].isdigit(): sec_before = int(arg[1:])
         else: sys.exit("-s must take a positive integer after!")
+    elif arg == 'na':
+        set_author = False
+        set_commit = True
+    elif arg == 'nc':
+        set_author = False
+        set_commit = True
+    elif arg == 'am':
+        set_author = False
+        set_commit = False
     elif arg == '?': usage()
     else: usage()
     count += 1
@@ -111,14 +129,23 @@ mod_date = mod_date.subtract(seconds=sec_before)
 
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
-out_string = "git commit --amend --date=\"{:s}\"".format(date_string, time_zone)
-
-print("Command to run ==========", out_string)
-
 if run_cmd:
-    os.system(out_string)
+    if set_author:
+        print("set GIT_AUTHOR_DATE=\"{}\"".format(date_string))
+        os.environ["GIT_AUTHOR_DATE"] = date_string
+    if set_commit:
+        print("set GIT_COMMITTER_DATE=\"{}\"".format(date_string))
+        os.environ["GIT_COMMITTER_DATE"] = date_string
+    if set_author or set_commit:
+        if not commit_message:
+            sys.exit("You need either a commit message (something with spaces, in quotes) or to set -am to amend manually!")
+        os.system("git commit -m \"{}\"".format(commit_message))
+    if not (set_author or set_commit):
+        print("Amending date via command line:", date_string)
+        os.system("git commit --amend --date=\"{} {}\"".format(date_string, time_zone))
     if run_log:
         time.sleep(4)
         os.system("git log")
 else:
+    print("The date-string things will be sent to is", date_string)
     print("Use -r to run.")
