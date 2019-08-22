@@ -45,8 +45,15 @@ def longhand(proj,sh):
     sys.exit("Undefined longhand for {:s}/{:s} project/shorthand.".format(proj, sh))
 
 def do_one_sort(sort_string, fout, zap_prefix = False):
-    divs = sort_string.split("\n\n")
-    ow = "\n\n".join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", "", x.lower()) if zap_prefix else x.lower())))
+    if "\n\n" in sort_string:
+        if verbose: print("Double-cr sorting rules.")
+        divs = sort_string.split("\n\n")
+        ow = "\n\n".join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", "", x.lower()) if zap_prefix else x.lower())))
+    else:
+        if verbose: print("Single-cr sorting definitions.")
+        print("! bailing and showing sortable below")
+        divs = sort_string.split("\n")
+        ow = "\n".join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", "", x.lower()) if zap_prefix else x.lower())))
     fout.write("\n" + ow + "\n\n")
     return
 
@@ -87,6 +94,8 @@ def main_sect_alf(my_proj, my_file):
                     got_end_yet[x] = True
                     continue
             if alf_next_chunk:
+                if line.startswith("["):
+                    print("WARNING [postalf] does not need or want [xx/yy/whatever] to sort what is next at line {}.".format(line_count))
                 sort_array = []
                 if not alf_next_blank and line.strip():
                     alf_next_blank = True
@@ -95,6 +104,7 @@ def main_sect_alf(my_proj, my_file):
                     continue
             if alf_next_blank:
                 if not line.strip():
+                    if verbose: print("Sorting postalf at line", line_count)
                     sort_array = sorted(sort_array, key=lambda x:x.lower())
                     for q in sort_array: fout.write(q)
                     alf_next_blank = False
@@ -117,16 +127,15 @@ def main_sect_alf(my_proj, my_file):
     s2 = os.stat(my_bak).st_size
     if copy_over:
         if cmp(my_file, my_bak):
-            print("Sorting the rules changed nothing. Not copying.")
+            print("Sorting the rules changed nothing. Not copying {}.".format(os.path.basename(my_file)))
             os.remove(my_bak)
             return
         elif s1 != s2 and not force_copy:
-            print("Sizes unequal. Use -f to force copy over. Saved", my_bak, "for inspection.{:s}".format("" if show_dif else " -d shows differences."))
+            print("Sizes unequal for {}. Use -f to force copy over. Saved".format(os.path.basename(my_file)), my_bak, "for inspection.{:s}".format("" if show_dif else " -d shows differences."))
             print(my_file, s1)
             print(my_bak, s2)
-            if show_dif: i7.wm(my_file, my_bak)
             return
-        print("Changes found, copying back.")
+        print("Changes found, copying back {}.".format(os.path.basename(my_file)))
         copy(my_bak, my_file)
     else:
         print("Use -c to copy over.")
