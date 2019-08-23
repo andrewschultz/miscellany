@@ -44,16 +44,22 @@ def longhand(proj,sh):
     if temp[0] == 'h': return i7.src_file(proj, temp[1])
     sys.exit("Undefined longhand for {:s}/{:s} project/shorthand.".format(proj, sh))
 
-def do_one_sort(sort_string, fout, zap_prefix = False):
+def firstline(q):
+    return q.partition('\n')[0].lower()
+
+def do_one_sort(sort_string, fout, prefix_second = False):
+    split_string = ""
     if "\n\n" in sort_string:
         if verbose: print("Double-cr sorting rules.")
         divs = sort_string.split("\n\n")
-        ow = "\n\n".join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", "", x.lower()) if zap_prefix else x.lower())))
+        split_string = "\n\n"
     else:
         if verbose: print("Single-cr sorting definitions.")
         print("! bailing and showing sortable below")
-        divs = sort_string.split("\n")
-        ow = "\n".join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", "", x.lower()) if zap_prefix else x.lower())))
+        split_string = "\n"
+    if not split_string: sys.exit("Oops failed to get split_string.")
+    divs = sort_string.split(split_string)
+    ow = split_string.join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", " ", firstline(x)), re.sub("-.*", "", firstline(x))) if prefix_second else x.lower()))
     fout.write("\n" + ow + "\n\n")
     return
 
@@ -113,6 +119,7 @@ def main_sect_alf(my_proj, my_file):
                     continue
             if "[postalf]" in line:
                 alf_next_chunk = True
+                if verbose: print("Starting postalf at line", line_count)
             if do_more:
                 if in_sort:
                     sort_string = sort_string + line
