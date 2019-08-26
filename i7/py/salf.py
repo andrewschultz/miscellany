@@ -27,6 +27,7 @@ sort_start = defaultdict(lambda: defaultdict(int))
 sort_end = defaultdict(lambda: defaultdict(int))
 got_start_yet = defaultdict(bool)
 got_end_yet = defaultdict(bool)
+sort_prefix_second = defaultdict(lambda: defaultdict(bool))
 
 alf_file = "c:/writing/scripts/salf.txt"
 
@@ -73,6 +74,7 @@ def main_sect_alf(my_proj, my_file):
     alf_next_chunk = False
     alf_next_blank = False
     sort_array = []
+    prefix_second = False
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             do_more = True
@@ -87,12 +89,13 @@ def main_sect_alf(my_proj, my_file):
                     sort_string = ''
                     do_more = False
                     got_start_yet[x] = True
+                    prefix_second = x in sort_prefix_second[my_proj]
                     continue
             for x in sort_end[my_proj].keys():
                 if x in line:
                     if not in_sort:
                         print("BAILING: line", line_count, "has", x, "but is not in any sorting area.")
-                    do_one_sort(sort_string.strip(), fout, 'i7x' in my_file)
+                    do_one_sort(sort_string.strip(), fout, prefix_second)
                     in_sort = False
                     fout.write(line)
                     do_more = False
@@ -179,6 +182,10 @@ with open(alf_file) as file:
         if line.startswith(';'): break
         if line.startswith('#'): continue
         ll = line.strip().lower().split("\t")
+        index_second = False
+        if ll[0].lower().startswith("i2:"):
+            index_second = True
+            ll[0] = ll[0][3:]
         if ll[0].lower().startswith("project="):
             temp = re.sub("^.*?=", "", ll[0])
             current_project = i7.proj_exp(temp)
@@ -192,6 +199,8 @@ with open(alf_file) as file:
             exclude_dict[current_project] = [longhand(current_project, x) for x in temp.split(',')]
             continue
         sort_start[current_project][ll[0]] = -1
+        if index_second:
+            sort_prefix_second[current_project][ll[0]] = True
         sort_end[current_project][ll[1]] = -1
 
 if not cmd_defined_proj:
