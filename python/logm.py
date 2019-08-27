@@ -13,11 +13,13 @@ import sys
 import time
 import i7
 import pendulum
+import subprocess
 
 base_dir_needed = "c:\\users\\andrew\\documents\\github"
 set_author = True
 set_commit = True
 commit_message = ''
+auto_date = False
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -28,6 +30,7 @@ def usage(arg = ""):
     my_time = pendulum.today().subtract(seconds=min_before * 60 + sec_before)
     time_str = my_time.format("HH:mm:ss ZZ")
     print("=" * 50)
+    print("a tries for auto date")
     print("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc")
     print("l at the end runs git log too")
@@ -96,6 +99,8 @@ while count < len(sys.argv):
     elif arg[0] == 's':
         if arg[1:].isdigit(): sec_before = int(arg[1:])
         else: sys.exit("-s must take a positive integer after!")
+    elif arg == 'a':
+        auto_date = True
     elif arg == 'na':
         set_author = False
         set_commit = True
@@ -109,6 +114,25 @@ while count < len(sys.argv):
     else: usage()
     count += 1
 
+my_time = pendulum.today()
+
+if auto_date:
+    result=subprocess.run(["git", "show", "--summary"], stdout=subprocess.PIPE)
+    lines = re.split("[\r\n]+", result.stdout.decode('utf-8'))
+    for l in lines:
+        if "Date:" in l:
+            l = re.sub("Date: *", "", l)
+            x = pendulum.parse(l, strict=False)
+            day_diff = x.diff(my_time).in_days()
+            if day_diff < 1:
+                sys.exit("LOGM has no use--you already have a commit for today!")
+            elif day_diff == 1:
+                print("You don't need logm--you can commit with the current time to keep your streak going!")
+            else:
+                days = day_diff - 1
+                print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
+            break
+
 if proj_shift_yet:
     ghdir = os.path.join(base_dir_needed, proj_shift_yet if proj_shift_yet not in i7.i7gx.keys() else i7.i7gx[proj_shift_yet])
     print("Forcing to", ghdir)
@@ -119,8 +143,6 @@ if base_dir_needed not in os.getcwd().lower():
 
 if sec_before > 60 and min_before > 0: sys.exit(">60 seconds + minutes may be confusing. Use -so to remove this.")
 if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
-
-my_time = pendulum.today()
 
 mod_date = my_time.subtract(days=days-1)
 
@@ -149,3 +171,4 @@ if run_cmd:
 else:
     print("The date-string things will be sent to is", date_string)
     print("Use -r to run.")
+    if not commit_message: print("Also, remember to set a commit message. Anything with a space counts as a commit message.")
