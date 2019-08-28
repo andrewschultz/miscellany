@@ -20,6 +20,7 @@ set_author = True
 set_commit = True
 commit_message = ''
 auto_date = False
+auto_today_ok = False
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -30,7 +31,7 @@ def usage(arg = ""):
     my_time = pendulum.today().subtract(seconds=min_before * 60 + sec_before)
     time_str = my_time.format("HH:mm:ss ZZ")
     print("=" * 50)
-    print("a tries for auto date")
+    print("a tries for auto date, ao says today is okay")
     print("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc")
     print("l at the end runs git log too")
@@ -101,6 +102,8 @@ while count < len(sys.argv):
         else: sys.exit("-s must take a positive integer after!")
     elif arg == 'a':
         auto_date = True
+    elif arg == 'ao':
+        auto_today_ok = True
     elif arg == 'na':
         set_author = False
         set_commit = True
@@ -126,10 +129,12 @@ if auto_date:
             day_diff = x.diff(my_time).in_days()
             if day_diff < 1:
                 sys.exit("LOGM has no use--you already have a commit for today!")
-            elif day_diff == 1:
+            days = day_diff - 1
+            if days == 0:
                 print("You don't need logm--you can commit with the current time to keep your streak going!")
+                if auto_today_ok: continue
+                sys.exit("Set -ao to say auto-today is okay.")
             else:
-                days = day_diff - 1
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
             break
 
