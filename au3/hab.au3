@@ -651,7 +651,7 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 
   local $mp_start
   local $my_end
-  
+
   $check_any = $check_max_mp or $check_cur_mp or $check_eq_adj
 
   if $check_any Then
@@ -666,13 +666,13 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
     DoPer(2)
 	Sleep($equip_wait)
   EndIf
-  
+
   if $equipPer and $check_eq_adj Then
     $equip_recheck_array = find_player_stat($STAT_MP, True, True)
 	$max_mp_post_equip = $equip_recheck_array[1]
 	$exp_per_equip = $max_mp_start - $int_per_delta
 	if $max_mp_start - $int_per_delta <> $max_mp_post_equip Then
-	  MOK("Potential failure equipping Personality", $exp_per_equip & " is what we should have, but " & $max_mp_post_equip & " is what we got.")
+	  MOKC("Potential failure equipping Personality", $exp_per_equip & " is what we should have, but " & $max_mp_post_equip & " is what we got.")
     EndIf
   EndIf
 
@@ -706,6 +706,11 @@ Func find_player_stat($whichStat = $STAT_MP, $find_max = True, $copy_new_in = Tr
   ;_ArrayDisplay($ary)
 
   ToHab()
+  local $got_data = False
+  local $loop_count = 0
+
+  while not $got_data and $loop_count < 10
+  $loop_count += 1
   if $copy_new_in Then
     Send("^a")
     sleep(500)
@@ -734,7 +739,15 @@ Func find_player_stat($whichStat = $STAT_MP, $find_max = True, $copy_new_in = Tr
       EndIf
 	EndIf
   Next
-  return 0
+
+  if not $copy_new_in Then ExitLoop ; if we aren't looking at the webpage, it doesn't make sense to wait for it to reload
+
+  sleep(1000)
+
+  WEnd
+
+  MOK("Cut/paste error", $copy_new_in ? "Current clipboard data is bad." : "Could not get meaningful data from webpage", True)
+
 EndFunc
 
 Func CheckClicks() ; this is not perfect but it does the job for now

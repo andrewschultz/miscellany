@@ -29,6 +29,7 @@ new_files = defaultdict(bool)
 changed_files = defaultdict(bool)
 unchanged_files = defaultdict(bool)
 
+github_okay = False
 flag_all_brackets = False
 edit_individual_files = False
 verify_nudges = False
@@ -511,6 +512,7 @@ while count < len(sys.argv):
     elif arg == 'si': show_singletons = True
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
+    elif arg == 'gh': github_okay = True
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':
@@ -523,6 +525,11 @@ while count < len(sys.argv):
         usage()
         exit()
     count += 1
+
+my_dir = os.getcwd()
+if 'github' in my_dir.lower():
+    if not github_okay:
+        sys.exit("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory.")
 
 if in_file:
     if not os.path.isfile(in_file): sys.exit(in_file + " not found.")

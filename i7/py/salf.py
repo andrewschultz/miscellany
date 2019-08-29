@@ -46,7 +46,7 @@ def longhand(proj,sh):
     sys.exit("Undefined longhand for {:s}/{:s} project/shorthand.".format(proj, sh))
 
 def firstline(q):
-    return q.partition('\n')[0].lower()
+    return re.sub(":.*", "", q.partition('\n')[0].lower())
 
 def do_one_sort(sort_string, fout, prefix_second = False):
     split_string = ""
