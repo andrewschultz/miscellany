@@ -8,7 +8,6 @@
 #
 
 # todo: keep postproc commands ordered
-# todo: postproc "all but"
 # todo: postproc globs inside file_array
 
 import sys
@@ -57,7 +56,7 @@ proj = ""
 show_singletons = False
 
 def prt_temp_loc(x):
-    return os.path.join(i7.prt_temp, x)
+    return os.path.normpath(os.path.join(i7.prt_temp, x))
 
 def is_equals_header(x):
     x = x.strip()
@@ -237,6 +236,10 @@ def get_file(fname):
                     sys.exit("BAILING. RBR.PY requires postproc= to be after files=, because postproc may depend on certain files.")
                 line_no_com = re.sub(" #.*", "", line.strip())
                 line_no_com = re.sub("^.*=", "", line_no_com)
+                exclude = False
+                if line_no_com[0] == '-':
+                    line_no_com = line_no_com[1:]
+                    exclude = True
                 if "/" in line_no_com:
                     temp_array_1 = line_no_com.split("/")
                     temp_file_array = temp_array_1[0].split(",")
@@ -244,6 +247,8 @@ def get_file(fname):
                     for x in temp_file_array:
                         if x not in file_array_base:
                             sys.exit("FATAL ERROR: {} is not in the original file array {}.".format(x, file_array_base))
+                    if exclude:
+                        temp_file_array = [x for x in file_array_base if x not in temp_file_array]
                 else:
                     temp_file_array = file_array
                     cmd_to_run = re.sub("^.*?=", "", line_no_com).split(",")
@@ -429,7 +434,6 @@ def get_file(fname):
         if not quiet: print("Nothing changed.")
     elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
     lnc = len(new_files.keys()) + len(changed_files.keys()) > 0
-    print(postproc_if_changed)
     if lnc or force_postproc:
         run_postproc = defaultdict(bool)
         if not lnc: print("Forcing postproc even though nothing changed.")
