@@ -29,6 +29,7 @@ new_files = defaultdict(bool)
 changed_files = defaultdict(bool)
 unchanged_files = defaultdict(bool)
 
+force_postproc = False
 github_okay = False
 flag_all_brackets = False
 edit_individual_files = False
@@ -408,9 +409,14 @@ def get_file(fname):
     if len(new_files.keys()) + len(changed_files.keys()) == 0:
         if not quiet: print("Nothing changed.")
     elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
-    for cmd in postproc_commands:
-        print("Postproc: running", cmd, "for", fname)
-        os.system(cmd)
+    lnc = len(new_files.keys()) + len(changed_files.keys()) > 0
+    if lnc or force_postproc:
+        if not lnc: print("Nothing changed, but forcing postproc anyway.")
+        for cmd in postproc_commands:
+            print("Postproc: running", cmd, "for", fname)
+            os.system(cmd)
+    else:
+        print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
     post_copy(file_array_base)
 
 cur_proj = ""
@@ -513,6 +519,7 @@ while count < len(sys.argv):
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
+    elif arg == 'fp': force_postproc = True
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':

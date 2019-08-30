@@ -103,6 +103,7 @@ while count < len(sys.argv):
     elif arg == 'a':
         auto_date = True
     elif arg == 'ao':
+        auto_date = True
         auto_today_ok = True
     elif arg == 'na':
         set_author = False
@@ -132,7 +133,10 @@ if auto_date:
             days = day_diff - 1
             if days == 0:
                 print("You don't need logm--you can commit with the current time to keep your streak going!")
-                if auto_today_ok: continue
+                if auto_today_ok:
+                    set_author = False
+                    set_commit = False
+                    continue
                 sys.exit("Set -ao to say auto-today is okay.")
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
@@ -157,23 +161,30 @@ mod_date = mod_date.subtract(seconds=sec_before)
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
 if run_cmd:
-    if set_author:
-        print("set GIT_AUTHOR_DATE=\"{}\"".format(date_string))
-        os.environ["GIT_AUTHOR_DATE"] = date_string
-    if set_commit:
-        print("set GIT_COMMITTER_DATE=\"{}\"".format(date_string))
-        os.environ["GIT_COMMITTER_DATE"] = date_string
-    if set_author or set_commit:
-        if not commit_message:
-            sys.exit("You need either a commit message (something with spaces, in quotes) or to set -am to amend manually!")
+    if auto_date and days == 0:
+        print("Forcing message-only commit since auto_date is on and day_delta is zero.")
         os.system("git commit -m \"{}\"".format(commit_message))
-    if not (set_author or set_commit):
-        print("Amending date via command line:", date_string)
-        os.system("git commit --amend --date=\"{} {}\"".format(date_string, time_zone))
+    else:
+        if set_author:
+            print("set GIT_AUTHOR_DATE=\"{}\"".format(date_string))
+            os.environ["GIT_AUTHOR_DATE"] = date_string
+        if set_commit:
+            print("set GIT_COMMITTER_DATE=\"{}\"".format(date_string))
+            os.environ["GIT_COMMITTER_DATE"] = date_string
+        if set_author or set_commit:
+            if not commit_message:
+                sys.exit("You need either a commit message (something with spaces, in quotes) or to set -am to amend manually!")
+            os.system("git commit -m \"{}\"".format(commit_message))
+        if not (set_author or set_commit):
+            print("Amending date via command line:", date_string)
+            os.system("git commit --amend --date=\"{} {}\"".format(date_string, time_zone))
     if run_log:
         time.sleep(4)
         os.system("git log")
 else:
-    print("The date-string things will be sent to is", date_string)
+    if auto_date and days == 0:
+        print("No date adjustment will be necessary.")
+    else:
+        print("The date-string things will be sent to is", date_string)
     print("Use -r to run.")
     if not commit_message: print("Also, remember to set a commit message. Anything with a space counts as a commit message.")
