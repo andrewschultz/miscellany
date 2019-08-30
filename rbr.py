@@ -6,7 +6,10 @@
 #
 # or you can run it from a project source directory
 #
-# ?? how to detect dupe file change?
+
+# todo: keep postproc commands ordered
+# todo: postproc "all but"
+# todo: postproc globs inside file_array
 
 import sys
 import re
@@ -17,6 +20,7 @@ import subprocess
 from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
+from mytools import nohy
 
 to_match = defaultdict(str)
 monty_detail = defaultdict(str)
@@ -51,6 +55,9 @@ in_dir = os.getcwd()
 proj = ""
 
 show_singletons = False
+
+def prt_temp_loc(x):
+    return os.path.join(i7.prt_temp, x)
 
 def is_equals_header(x):
     x = x.strip()
@@ -168,8 +175,8 @@ def write_monty_file(fname, testnum):
     mytest = monty_detail[testnum]
     new_file_name = re.sub("^reg", "rmo", fname)
     new_file_name = re.sub("\.", "-{:s}-{:s}.".format(testnum, mytest), new_file_name)
-    from_file = os.path.join(i7.prt_temp, fname)
-    to_file = os.path.join(i7.prt_temp, new_file_name)
+    from_file = prt_temp_loc(fname)
+    to_file = prt_temp_loc(new_file_name)
     cmd_yet = False
     f = open(new_file_name, "w", newline="\n")
     with open(fname) as file:
@@ -203,7 +210,7 @@ def get_file(fname):
     actives = []
     old_actives = []
     preproc_commands = []
-    postproc_commands = []
+    postproc_if_changed = defaultdict(list)
     generic_bracket_error.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -226,15 +233,27 @@ def get_file(fname):
                 temp = re.sub("^.*?=", "", line.strip()).split(",")
                 preproc_commands += temp
             if line.startswith("postproc="):
-                if len(file_array) > 0:
-                    print("WARNING Line {:d} has preproc that should be before files.".format(line_count))
-                    continue
-                temp = re.sub("^.*?=", "", line.strip()).split(",")
-                postproc_commands += temp
+                if len(file_array) == 0:
+                    sys.exit("BAILING. RBR.PY requires postproc= to be after files=, because postproc may depend on certain files.")
+                line_no_com = re.sub(" #.*", "", line.strip())
+                line_no_com = re.sub("^.*=", "", line_no_com)
+                if "/" in line_no_com:
+                    temp_array_1 = line_no_com.split("/")
+                    temp_file_array = temp_array_1[0].split(",")
+                    cmd_to_run = temp_array_1[1].split(",")
+                    for x in temp_file_array:
+                        if x not in file_array_base:
+                            sys.exit("FATAL ERROR: {} is not in the original file array {}.".format(x, file_array_base))
+                else:
+                    temp_file_array = file_array
+                    cmd_to_run = re.sub("^.*?=", "", line_no_com).split(",")
+                for tf in temp_file_array:
+                    postproc_if_changed[prt_temp_loc(tf)] += cmd_to_run
+                continue
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
-                file_array = [os.path.join(i7.prt_temp, f) for f in file_array_base]
+                file_array = [prt_temp_loc(f) for f in file_array_base]
                 actives = [True] * len(file_array)
                 last_cr = [False] * len(file_array)
                 for x in file_array:
@@ -410,13 +429,21 @@ def get_file(fname):
         if not quiet: print("Nothing changed.")
     elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
     lnc = len(new_files.keys()) + len(changed_files.keys()) > 0
+    print(postproc_if_changed)
     if lnc or force_postproc:
-        if not lnc: print("Nothing changed, but forcing postproc anyway.")
-        for cmd in postproc_commands:
+        run_postproc = defaultdict(bool)
+        if not lnc: print("Forcing postproc even though nothing changed.")
+        to_proc = list(new_files.keys()) + list(changed_files.keys())
+        if force_postproc: to_proc += list(unchanged_files.keys())
+        for fi in to_proc:
+            for cmd in postproc_if_changed[prt_temp_loc(fi)]:
+                run_postproc[cmd] = True
+        for cmd in run_postproc:
             print("Postproc: running", cmd, "for", fname)
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
+    sys.exit()
     post_copy(file_array_base)
 
 cur_proj = ""
@@ -489,8 +516,7 @@ poss_abbrev = []
 my_file_list = []
 
 while count < len(sys.argv):
-    arg = sys.argv[count].lower()
-    if arg[0] == '-': arg = arg[1:]
+    arg = nohy(sys.argv[count].lower())
     if arg == 'c':
         i7.open_source()
         exit()
@@ -509,7 +535,8 @@ while count < len(sys.argv):
     elif arg == 'nq' or arg == 'qn': quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
-    elif arg == 'pf' or arg == 'fp': copy_over_post = force_all_regs = True
+    elif arg == 'fp': force_postproc = True
+    elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
@@ -519,7 +546,6 @@ while count < len(sys.argv):
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
-    elif arg == 'fp': force_postproc = True
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':
