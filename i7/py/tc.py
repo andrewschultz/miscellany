@@ -154,7 +154,10 @@ for mf in my_files:
                     print("Overwriting", ona)
                 file_to_launch = ona
             to_output(mf, ona)
-        if launch_after and file_to_launch:
+        if launch_after:
+            if not file_to_launch:
+                print("WARNING launch flag on but no file to launch", mf)
+                continue
             if len(my_files) > cur_launched:
                 print("Launching", file_to_launch)
                 os.system(file_to_launch)

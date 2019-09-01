@@ -264,9 +264,9 @@ While $cmdCount <= $CmdLine[0]
 	MOK("Mage/Wizard spells", $spellOrd[0] & " earthquake" & @CRLF & $spellOrd[1] & " surge")
 	MarkBuffsDone($CLASS_WIZARD)
 	ExitLoop
-  ElseIf $myCmd == 'fe' Then
+  ElseIf $myCmd == 'fe' or $myCmd == 'ffe' or $myCmd == 'fef' Then
     ToHab()
-    if not in_url("stable") Then MOK("Oops!", "You are not on the stable page.", True)
+    if $myCmd == 'fe' and not in_url("stable") Then MOK("Oops!", "You are not on the stable page.", True)
 	; ToStable()
     $times_to_click = int($nextNum / 100)
 	if $times_to_click == 0 Then $times_to_click = 9
@@ -1067,13 +1067,14 @@ Func CheckClass($desired_class)
 EndFunc
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[17] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the options.", _
+  Local $usgAry[18] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the main options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
   "-ca closes the tab after", _
   "-d adjusts delay, though it needs to come before other commands", _
   "-f fishes for items X times by double-clicking daily tasks (-fi). -ff = fixed XY where cursor is, -ft = toggle daily task status at end", _
+  "-fe = feeds pet #X Y times (feXY). ffe or fef (force feed) skips checking if you're on the stable page.", _
   "-i = intelligence gear", _
   "-iw = initial wait", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #. -mm, -wm, -em mark mage buffs as done for the day.", _
