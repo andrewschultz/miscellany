@@ -126,8 +126,11 @@ def add_postopen_file_line(file_name, file_line, rewrite = False):
 
 addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True):
-    for x in file_post_list: npo(x, file_post_list[x], bail = False)
+def postopen_files(bail_after = True, acknowledge_blank = False):
+    if len(file_post_list):
+        for x in file_post_list: npo(x, file_post_list[x], bail = False)
+    elif acknowledge_blank:
+        print("There weren't any files slated for opening/editing.")
     if bail_after: sys.exit()
 
 def open_source(bail = True):
