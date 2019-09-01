@@ -58,13 +58,14 @@ count = 1
 run_cmd = False
 run_log = False
 proj_shift_yet = ""
+bare_commit = False
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
     if ' ' in arg:
         commit_message = sys.argv[count]
-        print("Commit message:", commit_message)
+        print("Commit message from cmd line:", commit_message)
     elif re.search("^[rxl]+", arg):
         run_cmd = 'r' in arg or 'x' in arg
         cmd_counts = arg.count('r') + arg.count('x')
@@ -114,11 +115,15 @@ while count < len(sys.argv):
     elif arg == 'am':
         set_author = False
         set_commit = False
+    elif arg == 'bc':
+        bare_commit = True
     elif arg == '?': usage()
     else: usage()
     count += 1
 
 my_time = pendulum.today()
+
+bare_commit_cmd = "git commit -m \"{}\"".format(commit_message)
 
 if auto_date:
     result=subprocess.run(["git", "show", "--summary"], stdout=subprocess.PIPE)
@@ -129,7 +134,12 @@ if auto_date:
             x = pendulum.parse(l, strict=False)
             day_diff = x.diff(my_time).in_days()
             if day_diff < 1:
-                sys.exit("LOGM has no use--you already have a commit for today!")
+                if bare_commit:
+                    print("Just committing.")
+                    print(bare_commit_cmd)
+                    os.system(bare_commit_cmd)
+                    sys.exit()
+                sys.exit("LOGM has no use, since you already have a commit for today!\n    You can do a bare commit with -bc, no need for -r.\n    I'm making it a bit tricky for a reason, so you don't do so accidentally.")
             days = day_diff - 1
             if days == 0:
                 print("You don't need logm--you can commit with the current time to keep your streak going!")
@@ -163,7 +173,7 @@ date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 if run_cmd:
     if auto_date and days == 0:
         print("Forcing message-only commit since auto_date is on and day_delta is zero.")
-        os.system("git commit -m \"{}\"".format(commit_message))
+        os.system(bare_commit_cmd)
     else:
         if set_author:
             print("set GIT_AUTHOR_DATE=\"{}\"".format(date_string))
