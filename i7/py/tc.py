@@ -132,29 +132,32 @@ for mf in my_files:
         print(mf, "does not exist, skipping.")
         if the_glob: print("Not sure what happened, since this was from a glob.")
     else:
+        file_to_launch = ""
         if write_edit_files:
             ef = edit_name(mf)
             if ef:
                 if os.path.exists(ef) and not write_over:
                     print(ef, "exists. Use (-)wo to write over.")
                     continue
-                print(mf, 'to', ef)
+                print("Edits:", mf, 'to', ef)
                 copy(mf, ef)
                 os.system("attrib -r " + ef)
+                file_to_launch = ef
         else:
             ona = out_name(mf)
-            print(os.path.basename(mf), "to", os.path.basename(ona))
+            print("Comments:", os.path.basename(mf), "to", os.path.basename(ona))
             if os.path.exists(ona):
                 if write_over == False:
                     print(ona, "exists. Use -wo to write over.")
                     continue
                 else:
                     print("Overwriting", ona)
+                file_to_launch = ona
             to_output(mf, ona)
-        if launch_after:
+        if launch_after and file_to_launch:
             if len(my_files) > cur_launched:
-                print("Launching", ona)
-                os.system(ona)
+                print("Launching", file_to_launch)
+                os.system(file_to_launch)
                 cur_launched += 1
             else: warn_too_many = True
 
