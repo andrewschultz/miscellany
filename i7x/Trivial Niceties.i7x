@@ -98,11 +98,15 @@ to say plur of (n - a number): if n is not 1, say "s"
 
 to say this-these of (nu - a number): say "th[if nu is 1]is[else]ese[end if]"
 
-book basic math
+book basic math-ish stuff
 
 to decide what number is abs of (n - a number):
 	if n < 0, decide on 0 - n;
 	decide on n;
+
+to decide which number is boolval of (ts - a truth state): [boolval of x + boolval of y simplifies "to decide what number is quests-solved"]
+	if ts is true, decide on 1;
+	decide on 0;
 
 book style abbreviations
 
