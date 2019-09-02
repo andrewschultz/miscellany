@@ -690,8 +690,8 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 	$cur_mp_end = $end_stat_array[0]
 	$max_mp_end = $end_stat_array[1]
 	if $check_max_mp Then
-	  if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $my_end & " lower than " & $my_start, True)
-	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $mp_start & " end MP = " & $mp_end, True)
+	  if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $max_mp_end & " " & ($max_mp_end > $max_mp_start ? "greater" : "lower") & " than " & $max_mp_start, True)
+	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $max_mp_start & " end MP = " & $max_mp_end, True)
     EndIf
 	if $check_cur_mp and ($cur_mp_exp <> $cur_mp_end) Then
 	  $trade_casts = ($cur_mp_start - $cur_mp_end) / 25

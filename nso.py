@@ -15,7 +15,7 @@ display_changes = False
 copy_to_old = True
 copy_smart = True
 alphabetize_after = False
-extract_table_subs = True
+extract_table_subs = False
 
 def usage(my_text="USAGE PRINTOUT"):
     print(my_text)
@@ -24,6 +24,7 @@ def usage(my_text="USAGE PRINTOUT"):
     print("co = copy to old, cs = copy smart, ca = co+cs. You probably want ca, but it's the default.")
     print("dc = display changes, ndc/dcn = don't.")
     print("-al/-alf alphabetizes the tables after, nalf = don't. Alphabetization is off by default.")
+    print("x = extract table substitution strings")
     exit()
 
 def extract_table_from_file(pro, hdr_type = 'ta'):
