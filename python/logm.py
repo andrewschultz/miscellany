@@ -43,9 +43,10 @@ def usage(arg = ""):
  time_str))
     print("A commit message can be put in quotes, and it needs a space.")
     print()
-    print("Standard usage is probably logm.py rl (!) (3)")
+    print("Previous standard usage is probably logm.py r(l) (!) (3)")
+    print("Standard usage now is probably logm.py r(l) a \"commit-message\"")
     print()
-    print("a number specifies the days back to look. If it is before midnight, nothing happens.")
+    print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
 
 time_zone = 5
@@ -63,8 +64,8 @@ bare_commit = False
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
-    if ' ' in arg:
-        commit_message = sys.argv[count]
+    if ' ' in arg or len(arg) > 10:
+        commit_message = sys.argv[count].strip()
         print("Commit message from cmd line:", commit_message)
     elif re.search("^[rxl]+", arg):
         run_cmd = 'r' in arg or 'x' in arg
