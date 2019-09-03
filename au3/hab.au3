@@ -97,6 +97,8 @@ If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
 	Exit
 EndIf
 
+Global $note_daily_force = @CRLF & @CRLF & "NOTE: -md marks today's tasks done."
+
 ; read the config file first
 
 ; MOK($horiz_delta & " " & $h_init_page_1 & " " & $vert_delta & " " & $v_init_page_1, $item_popup_h & " " & $item_popup_v)
@@ -365,6 +367,8 @@ While $cmdCount <= $CmdLine[0]
 	MarkBuffsDone($CLASS_ROGUE)
   Elseif $myCmd == 'tm' or $myCmd == 'ttm' Then
     MarkBuffsDone($CLASS_ROGUE)
+  ElseIf $myCmd == 'md' Then
+    MarkBuffsDone($my_class)
   ElseIf StringLeft($myCmd, 1) == 'x' Then
 	checkClass($CLASS_ROGUE)
 	if $myCmd == "xm" Then MarkBuffsDone($CLASS_ROGUE, $bail = True)
@@ -559,6 +563,8 @@ Func MaxAttr($attr_to_max, $delays = 0)
     Sleep($equip_wait * $equip_mult)
 	MouseMove($item_popup_h, $item_popup_v + $vert_equip_delta)
 	MouseClick("left")
+	Sleep(100)
+	Send("{ESC}")
 
 	; MOK("Where to click " & $column & " " & $row & " " & $equip_line, " x " & $the_x & " Y " & $the_y & " p " & $thisPagesDown & @CRLF & $line)
   WEnd
@@ -690,12 +696,12 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 	$cur_mp_end = $end_stat_array[0]
 	$max_mp_end = $end_stat_array[1]
 	if $check_max_mp Then
-	  if $max_mp_end <> $max_mp_start Then MOK("MaxMP discrepancy before/after", $max_mp_end & " " & ($max_mp_end > $max_mp_start ? "greater" : "lower") & " than " & $max_mp_start, True)
-	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOK("Uh oh, bad/no reading", "start MP = " & $max_mp_start & " end MP = " & $max_mp_end, True)
+	  if $max_mp_end <> $max_mp_start Then MOKC("WARNING MaxMP discrepancy before/after", $max_mp_end & " " & ($max_mp_end > $max_mp_start ? "greater" : "lower") & " than " & $max_mp_start)
+	  if $max_mp_end == 0 or $max_mp_start == 0 Then MOKC("Uh oh, bad/no reading", "start MP = " & $max_mp_start & " end MP = " & $max_mp_end & $note_daily_force)
     EndIf
 	if $check_cur_mp and ($cur_mp_exp <> $cur_mp_end) Then
 	  $trade_casts = ($cur_mp_start - $cur_mp_end) / 25
-	  MOK("CurMP discrepancy before/after", $cur_mp_exp & " expected, " & $cur_mp_end & " actual." & @CRLF & "Check # of times you cast Tools. Wanted " & $times & " but it looks like only " & $trade_casts, True)
+	  MOKC("CurMP discrepancy before/after", $cur_mp_exp & " expected, " & $cur_mp_end & " actual." & @CRLF & "Check # of times you cast Tools. Wanted " & $times & " but it looks like only " & $trade_casts)
     EndIf
   EndIf
 
@@ -1067,7 +1073,7 @@ Func CheckClass($desired_class)
 EndFunc
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[18] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the main options.", _
+  Local $usgAry[19] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the main options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
   "-b does fiery blast, needs # and positioning", _
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
@@ -1078,6 +1084,7 @@ Func Usage($questionmark, $badCmd = "")
   "-i = intelligence gear", _
   "-iw = initial wait", _
   "-m / -w = mage skills, 1st # = ethereal surge, 2nd # = earthquake, -e does 2 surge 1 earthquake per #. -mm, -wm, -em mark mage buffs as done for the day.", _
+  "-md = mark buffs done in case a script terminated and I got to do what I wanted anyway", _
   "-o = only click tasks: test option", _
   "-p = perception gear", _
   "-q = quick click in upper right (to get rid of gain reports)", _
