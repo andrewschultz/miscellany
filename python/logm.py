@@ -49,6 +49,19 @@ def usage(arg = ""):
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
 
+def add_my_files(files_to_add):
+    if not files_to_add: return
+    my_cmd = "git add {}".format(files_to_add)
+    os.system(my_cmd)
+
+def check_bare_commit(bare_commit, files_to_add, bail=False):
+    if not bare_commit: return
+    add_my_files(files_to_add)
+    print("Just committing with -bc/bare commit flag.")
+    print(bare_commit_cmd)
+    os.system(bare_commit_cmd)
+    if bail: sys.exit()
+
 time_zone = 5
 
 min_before = 3
@@ -60,11 +73,15 @@ run_cmd = False
 run_log = False
 proj_shift_yet = ""
 bare_commit = False
+files_to_add = ""
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
-    if ' ' in arg or len(arg) > 10:
+    if arg.startswith("f:") or arg.startswith("a:"):
+        files_to_add = arg[2:]
+        print("Files to add:", arg[2:])
+    elif ' ' in arg or len(arg) > 10:
         commit_message = sys.argv[count].strip()
         print("Commit message from cmd line:", commit_message)
     elif re.search("^[rxl]+", arg):
@@ -135,11 +152,7 @@ if auto_date:
             x = pendulum.parse(l, strict=False)
             day_diff = x.diff(my_time).in_days()
             if day_diff < 1:
-                if bare_commit:
-                    print("Just committing.")
-                    print(bare_commit_cmd)
-                    os.system(bare_commit_cmd)
-                    sys.exit()
+                check_bare_commit(bare_commit, files_to_add, bail=True)
                 sys.exit("LOGM has no use, since you already have a commit for today!\n    You can do a bare commit with -bc, no need for -r.\n    I'm making it a bit tricky for a reason, so you don't do so accidentally.")
             days = day_diff - 1
             if days == 0:
@@ -172,6 +185,7 @@ mod_date = mod_date.subtract(seconds=sec_before)
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
 if run_cmd:
+    add_my_files(files_to_add)
     if auto_date and days == 0:
         print("Forcing message-only commit since auto_date is on and day_delta is zero.")
         os.system(bare_commit_cmd)
