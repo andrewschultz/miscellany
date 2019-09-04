@@ -595,7 +595,7 @@ if verify_nudges:
         if 'nudmis' in q1: continue
         if 'nudges' in q1: continue
         if 'roi-' in q1: continue
-        print("Checking nudges for", q1)
+        print("Checking nudges (generally valid for Stale Tales Slate only) for", q1)
         nudge_this = 0
         with open(q1) as file:
             for (line_count, line) in enumerate(file, 1):
@@ -617,9 +617,16 @@ if edit_individual_files:
     for mf in my_file_list: os.system(mf)
     exit()
 
-if not len(my_file_list): my_file_list = list(branch_list[proj])
+if not len(my_file_list):
+    my_file_list = list(branch_list[proj])
+    if len(my_file_list) == 0:
+        sys.exit("No valid files specified, could not find default.")
+    else:
+        print("No valid files, going with default", ', '.join(branch_list[proj]))
+
 
 i7.go_proj(proj)
+
 for x in my_file_list:
     get_file(x)
 
