@@ -531,7 +531,7 @@ while count < len(sys.argv):
         edit_individual_files = True
     elif arg == 'er': edit_main_branch = True
     elif arg[:2] == 's4': search_for(arg[2:])
-    elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg[:1] == 'v': verify_nudges = True
+    elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg == 'v': verify_nudges = True
     elif arg == 'd': debug = True
     elif arg == 'nf' or arg == 'fn': flag_all_brackets = False
     elif arg == 'm': monty_process = True
@@ -544,8 +544,7 @@ while count < len(sys.argv):
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
-    elif os.path.exists(arg): in_file = arg
-    elif os.path.exists(arg + ".txt"): in_file = arg + ".txt"
+    elif can_make_rbr(arg): in_file = can_make_rbr(arg)
     elif arg == 'si': show_singletons = True
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
@@ -620,13 +619,23 @@ if edit_individual_files:
 if not len(my_file_list):
     my_file_list = list(branch_list[proj])
     if len(my_file_list) == 0:
-        sys.exit("No valid files specified, could not find default.")
+        sys.exit("No valid files specified, could not find default. Bailing")
     else:
         print("No valid files, going with default", ', '.join(branch_list[proj]))
 
 
 i7.go_proj(proj)
 
-for x in my_file_list:
+my_file_list_valid = []
+
+for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
+    if os.path.exists(x): my_file_list_valid.append(x)
+    else:
+        print("Ignoring bad file", x)
+
+if len(my_file_list_valid) == 0:
+    sys.exit("Uh oh, no valid files left after initial check. Bailing.")
+
+for x in my_file_list_valid:
     get_file(x)
 
