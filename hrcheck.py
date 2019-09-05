@@ -38,6 +38,8 @@ of_neg_day = defaultdict(str)
 of_week = defaultdict(lambda: defaultdict(str))
 of_month = defaultdict(lambda: defaultdict(str))
 
+bookmark_dict = defaultdict(list)
+
 check_file  = "c:\\writing\\scripts\\hrcheck.txt";
 check_private = "c:\\writing\\scripts\\hrcheckp.txt";
 xtra_file   = "c:\\writing\\scripts\\hrcheckx.txt";
@@ -131,12 +133,21 @@ def make_time_array(j, k, line_count):
 def read_hourly_check(a):
     old_line = ""
     old_cmd = ""
+    one_line_only = False
+    bookmark_string = ""
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
             if line.startswith("="):
-                if show_warnings: print("WARNING line {:d} =bookmarks not supported (yet).".format(line_count))
+                bookmark_string = re.sub("^=*", "", line.lower().strip())
+                if not bookmark_string: continue
+                if bookmark_string.startswith(">"):
+                    one_line_only = True
+                    bookmark_string = bookmark_string[1:]
+                if bookmark_string in bookmark_dict:
+                    if show_warnings: print("WARNING line {} bookmark {} redefined".format(line_count, bookmark_string))
+                    continue
                 continue
             if "|" not in line:
                 if show_warnings: print("WARNING odd line {:d}:\n    {:s}".format(line_count, line.lower().strip()))
@@ -151,6 +162,11 @@ def read_hourly_check(a):
                 continue
             a3 = re.sub("\t", "\n", a1[-1])
             make_time_array(a1[0].lower(), a3, line_count)
+            if bookmark_string:
+                bookmark_dict[bookmark_string].append(a1[-1])
+                if one_line_only:
+                    bookmark_string = ""
+                    one_line_only = False
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
 
@@ -298,6 +314,8 @@ wkday = -1
 
 queue_max = 4
 
+my_bookmarks = []
+
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-' and not arg[1:].isdigit():
@@ -357,6 +375,8 @@ while count < len(sys.argv):
         os.system(check_private)
         os.system(xtra_file)
         exit()
+    elif arg.startswith("b="):
+        my_bookmarks += arg[2:].split(",")
     elif arg == '?':
         usage()
         exit()
@@ -367,6 +387,23 @@ while count < len(sys.argv):
     count += 1
 
 n = datetime.datetime.now()
+
+read_hourly_check(check_file)
+read_hourly_check(check_private)
+read_hourly_check(xtra_file)
+
+if len(my_bookmarks):
+    ran_any = False
+    for x in my_bookmarks:
+        if x not in bookmark_dict:
+            print("No bookmark named {}, not running anything.".format(x))
+            continue
+        for y in bookmark_dict[x]:
+            check_print_run(y)
+            ran_any = True
+    if not ran_any:
+        sys.exit("Failed to run any bookmarks from command line.")
+    sys.exit()
 
 if len(time_array):
     time_index = time_array[0] * hour_parts + (time_array[1] * hour_parts) // 60
@@ -386,10 +423,6 @@ if file_lock():
     f.write(string_to_write + "\n")
     print("Wrote", string_to_write, "to", queue_file, "since it is locked.")
     exit()
-
-read_hourly_check(check_file)
-read_hourly_check(check_private)
-read_hourly_check(xtra_file)
 
 if init_delay: time.sleep(init_delay)
 
