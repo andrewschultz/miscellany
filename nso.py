@@ -72,7 +72,7 @@ def show_nonblanks(file_name):
             elif re.search("^([a-z0-9]+:|=:|=;)[a-z]", line, re.IGNORECASE): ready_to += 1
             elif not line.strip(): blanks += 1
             else: ideas += 1
-    print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blanks:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
+    print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blank lines:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
 
 def copy_smart_ideas(pro, hdr_type = "ta"):
     notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
@@ -111,7 +111,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
     with open(notes_in) as file:
         for (line_count, line) in enumerate(file, 1):
             print_this_line = True
-            if re.search("^([a-z0-9]+:|=:|=;)", line):
+            if re.search("^([a-z0-9]+:|=:|=;)", line, re.IGNORECASE):
                 left_bit = re.sub("[:;].*", "", line.lower().strip())
                 uh = unique_header(left_bit, markers, full_name, last_header)
                 if uh:
@@ -264,8 +264,12 @@ if copy_smart or copy_to_old:
         print("Alphabetizing afterwards...")
         os.system("talf.py {0} co cs".format(my_proj))
     sys.exit()
-elif alphabetize_after_force:
-    print("Force-alphabetizing afterwards even without any changes...")
-    os.system("talf.py {0} co cs".format(my_proj))
+else:
+    if comments_to_shift and ready_to: print("co will shift comments and marked ideas.")
+    elif ready_to: print("ca/cs will shift stuff ready to insert into the table file.")
+    elif comments_to_shift: print("ca/co will shift double-comments into the \"old\" file.")
+    if alphabetize_after_force:
+        print("Force-alphabetizing afterwards even without any changes...")
+        os.system("talf.py {0} co cs".format(my_proj))
 
 mt.postopen_files()
