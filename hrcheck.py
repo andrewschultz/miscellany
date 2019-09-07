@@ -39,6 +39,7 @@ of_week = defaultdict(lambda: defaultdict(str))
 of_month = defaultdict(lambda: defaultdict(str))
 
 bookmark_dict = defaultdict(list)
+bookmark_file = defaultdict(list)
 
 check_file  = "c:\\writing\\scripts\\hrcheck.txt";
 check_private = "c:\\writing\\scripts\\hrcheckp.txt";
@@ -78,8 +79,14 @@ def usage():
     print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file, qm = max to run in queue")
     print("id specifies initial delay")
     print("e=edit main file, ea=edit all ex=edit extra ep=edit private")
+    print("b= = bookmarks to run, bp prints bookmarks")
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     exit()
+
+def print_all_bookmarks():
+    for x in sorted(bookmark_file):
+        print("    ===={} in {} ({} cmds): {}\n".format(x, os.path.basename(bookmark_file[x]), len(bookmark_dict[x]), ', '.join(bookmark_dict[x])))
+    sys.exit()
 
 def garbage_collect(x):
     y = re.sub("^\\\\", "", x) # stuff that needs to go first or last
@@ -163,7 +170,8 @@ def read_hourly_check(a):
             a3 = re.sub("\t", "\n", a1[-1])
             make_time_array(a1[0].lower(), a3, line_count)
             if bookmark_string:
-                bookmark_dict[bookmark_string].append(a1[-1])
+                bookmark_file[bookmark_string] = a
+                bookmark_dict[bookmark_string] += a1[-1].split("\t")
                 if one_line_only:
                     bookmark_string = ""
                     one_line_only = False
@@ -377,6 +385,8 @@ while count < len(sys.argv):
         exit()
     elif arg.startswith("b="):
         my_bookmarks += arg[2:].split(",")
+    elif arg == "bp":
+        print_bookmarks = True
     elif arg == '?':
         usage()
         exit()
@@ -403,6 +413,10 @@ if len(my_bookmarks):
             ran_any = True
     if not ran_any:
         sys.exit("Failed to run any bookmarks from command line.")
+    sys.exit()
+
+if print_bookmarks == True:
+    print_all_bookmarks()
     sys.exit()
 
 if len(time_array):
