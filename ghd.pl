@@ -25,6 +25,7 @@ my %doubleCheck;
 my %hasBranch;
 
 ################options
+my $today_yday = 0;
 my $debug     = 0;
 my $showLog   = 1;
 my $popup     = 0;
@@ -79,6 +80,7 @@ next;
     /^-nmw$/   && do { $masterBranchWarning = 0; $count++; next; };
     /^-mw$/    && do { $masterBranchWarning = 1; $count++; next; };
     /^-?p$/    && do { $popup               = 1; $count++; next; };
+    /^-?ty$/    && do { $today_yday           = 1; $count++; next; };
     /^-?u$/    && do { $unchAfter           = 1; $count++; next; };
     /^-?[es]$/ && do { `$siteFile`; exit(); };
     /^-?\d+$/ && do {
@@ -93,9 +95,6 @@ next;
     usage();
   }
 }
-
-$popupText = strftime "Results for %m/%d/%Y\n",
-  localtime( time() - 86400 * $daysAgo );
 
 open( A, "$siteFile" ) || die("Could not find $siteFile, bailing.");
 while ( $a = <A> ) {
@@ -126,6 +125,22 @@ my @repos = ();
 for ( sort keys %siteArray ) {
   @repos = ( @repos, @{ $siteArray{$_} } );
 }
+
+if ($today_yday)
+{
+  getOneDay(0);
+  getOneDay(1);
+}
+else
+{
+  getOneDay($daysAgo);
+}
+
+sub getOneDay {
+
+my $daysAgo = $_[0];
+$popupText = strftime "Results for %m/%d/%Y\n",
+  localtime( time() - 86400 * $daysAgo );
 
 my $r;
 my $thisLog = "";
@@ -214,6 +229,8 @@ else {
 
 if ($unchAfter) {
   `unch.pl -h`;
+}
+
 }
 
 #######################################
