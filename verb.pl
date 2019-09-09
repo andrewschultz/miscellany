@@ -12,8 +12,24 @@ use Win32::Clipboard;
 my $clip = Win32::Clipboard::new();
 my @verbs;
 
+my $chapSec = "chapter";
+
 if ( !defined( $ARGV[0] ) ) { usage(); }
 if ( $ARGV[0] =~ /\?/ )     { usage(); }
+if ( $ARGV[0] =~ /^s-/) {
+  $ARGV[0] =~ s/^..//;
+  $chapSec = "section";
+}
+elsif ( $ARGV[0] =~ /^p-/) {
+  $ARGV[0] =~ s/^..//;
+  $chapSec = "part";
+}
+
+elsif ( $ARGV[0] =~ /^b-/) {
+  $ARGV[0] =~ s/^..//;
+  $chapSec = "book";
+}
+
 if ( $ARGV[0] =~ /,/ ) { @verbs = split( /,/, lc( $ARGV[0] ) ); }
 else {
   @verbs = map { lc($_) } @ARGV;
@@ -95,7 +111,7 @@ for $v (@verbs) {
 
   if ($applyTo) {
     $code = sprintf(
-      "%schapter %sing\n\n%sing is an action %s.
+      "%s%s %sing\n\n%sing is an action %s.
 
 understand the command \"%s\" as something new.
 
@@ -104,7 +120,7 @@ understand \"%s%s\" as %sing.
 carry out %sing:
 	the rule succeeds.
 
-", $code, $v, $v, $applyTo, $vn, $vn, $inBrax, $v, $v
+", $code, $chapSec, $v, $v, $applyTo, $vn, $vn, $inBrax, $v, $v
     );
   }
   elsif ( ( $vo =~ /^ts-/ ) || ( $vo =~ /^t-/ ) ) {
@@ -115,14 +131,14 @@ carry out %sing:
   elsif ( $vo =~ /^rm-/ ) {
     print "Defining blocked room $v.\n";
     $code = sprintf(
-"%schapter %s\n\n%s is a room. \"DESCRIPTION PLEASE\".\n\ncheck going in %s:\n\tcontinue the action;\n\n",
-      $code, $v, $v, $v );
+"%s%s %s\n\n%s is a room. \"DESCRIPTION PLEASE\".\n\ncheck going in %s:\n\tcontinue the action;\n\n",
+      $code, $chapSec, $v, $v, $v );
   }
   elsif ( $vo =~ /^r-/ ) {
     print "Defining room $v.\n";
     $code = sprintf(
-"%schapter %s\n\n%s is a room. %s is DIR of ??.\n\n %s is in region ??.\n\n",
-      $code, $v, $v, $v, $v );
+"%s%s %s\n\n%s is a room. %s is DIR of ??.\n\n %s is in region ??.\n\n",
+      $code, $chapSec, $v, $v, $v, $v );
   }
   else {
     print("Couldn't find anything to do.\n");
