@@ -108,6 +108,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
     out_stream = open(notes_out, "w")
     uniques = 0
     last_header = ""
+    prefix_bail = 0
     with open(notes_in) as file:
         for (line_count, line) in enumerate(file, 1):
             print_this_line = True
@@ -119,7 +120,10 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                         print("WARNING invalid text at notes.txt line {0}: {1}".format(line_count, line.lower().strip()[:40]))
                         mt.add_postopen_file_line(file, line_count)
                         continue
-                    new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip()).strip()
+                    new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip(), 0, re.IGNORECASE).strip()
+                    if new_text == line.rstrip():
+                        prefix_bail += 1
+                        print("{} line {} did not get prefix {} removed: >>{}<<.".format(os.path.basename(notes_in), line_count, prefix_bail, new_text))
                     if not new_text.startswith("\""): new_text = "\"" + new_text
                     if not new_text.endswith("\""): new_text = new_text + "\""
                     print_this_line = False
@@ -132,6 +136,8 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                 # print("Looking for uniques in {0}({1}): {2}".format(line.strip(), uh, print_this_line))
             if print_this_line: out_stream.write(line)
     out_stream.close()
+    if prefix_bail:
+        sys.exit("Bailing before copying over so you can fix failed prefix removals.")
     print(uniques, "uniques found to send to header.")
     if uniques:
         print_after_next = False
@@ -225,6 +231,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'ca' or arg == 'ac' or arg == 'bc' or arg == 'cb':
         copy_smart = True
         copy_to_old = True
+    elif arg == 'f' or arg == 'all':
+        copy_smart = True
+        copy_to_old = True
+        alphabetize_after = True
     elif arg == 'dc':
         display_changes = True
     elif arg == 'al':
