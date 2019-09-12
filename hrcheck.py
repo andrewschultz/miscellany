@@ -40,6 +40,8 @@ of_month = defaultdict(lambda: defaultdict(str))
 
 bookmark_dict = defaultdict(list)
 bookmark_file = defaultdict(list)
+extra_bookmark = defaultdict(list)
+backbkmk = defaultdict(str)
 
 check_file  = "c:\\writing\\scripts\\hrcheck.txt";
 check_private = "c:\\writing\\scripts\\hrcheckp.txt";
@@ -84,8 +86,8 @@ def usage():
     exit()
 
 def print_all_bookmarks():
-    for x in sorted(bookmark_file):
-        print("    ===={} in {} ({} cmds): {}\n".format(x, os.path.basename(bookmark_file[x]), len(bookmark_dict[x]), ', '.join(bookmark_dict[x])))
+    for x in sorted(extra_bookmark):
+        print("    ===={}{} in {} ({} cmds): {}\n".format(x, "({})".format('/'.join(extra_bookmark[x])) if extra_bookmark[x] else "", os.path.basename(bookmark_file[x]), len(bookmark_dict[x]), ', '.join(bookmark_dict[x])))
     sys.exit()
 
 def garbage_collect(x):
@@ -142,19 +144,38 @@ def read_hourly_check(a):
     old_cmd = ""
     one_line_only = False
     bookmark_string = ""
+    bookmark_last_line = 0
+    ab = os.path.basename(a)
+    if show_warnings > -1: print("reading", ab)
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
             if line.startswith("="):
+                bookmark_past = bookmark_string
                 bookmark_string = re.sub("^=*", "", line.lower().strip())
+                bookmark_string = re.sub(" *#[^#]$", "", bookmark_string)
+                if bookmark_past and bookmark_string:
+                    print("WARNING bookmark {} opened at line {} file {} was not closed before opening new bookmark {} at line {}.".format(bookmark_past, bookmark_last_line, ab, bookmark_string, line_count))
+                bookmark_last_line = line_count
                 if not bookmark_string: continue
                 if bookmark_string.startswith(">"):
                     one_line_only = True
                     bookmark_string = bookmark_string[1:]
-                if bookmark_string in bookmark_dict:
-                    if show_warnings: print("WARNING line {} bookmark {} redefined".format(line_count, bookmark_string))
-                    continue
+                temp_bookmark_ary = bookmark_string.split(",")
+                bookmark_ary = []
+                for b in temp_bookmark_ary:
+                    if b in bookmark_dict:
+                        if show_warnings: print("WARNING line {} bookmark {} redefined".format(line_count, bookmark_string))
+                    else:
+                        bookmark_ary.append(b)
+                if len(bookmark_ary) > 1:
+                    bookmark_string = re.sub(",.*", "", bookmark_string)
+                    print(bookmark_ary[0])
+                    print(bookmark_ary[1:])
+                    extra_bookmark[bookmark_ary[0]] = bookmark_ary[1:]
+                    for u in bookmark_ary[1:]:
+                        backbkmk[u] = bookmark_ary[0]
                 continue
             if "|" not in line:
                 if show_warnings: print("WARNING odd line {:d}:\n    {:s}".format(line_count, line.lower().strip()))
@@ -177,6 +198,8 @@ def read_hourly_check(a):
                     one_line_only = False
             old_line = line
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
+    if bookmark_string:
+        print("WARNING file {} ends with bookmark string {} invoked at line {}.".format(a, bookmark_string, bookmark_line))
 
 def check_print_run(x, msg="(no message)"):
     if not x: return 0
@@ -323,6 +346,7 @@ wkday = -1
 queue_max = 4
 
 my_bookmarks = []
+print_bookmarks = False
 
 while count < len(sys.argv):
     arg = sys.argv[count]
@@ -405,10 +429,13 @@ read_hourly_check(xtra_file)
 if len(my_bookmarks):
     ran_any = False
     for x in my_bookmarks:
+        x0 = x
         if x not in bookmark_dict:
-            print("No bookmark named {}, not running anything.".format(x))
-            continue
-        for y in bookmark_dict[x]:
+            if x not in backbkmk:
+                print("No bookmark named {}, not running anything.".format(x))
+                continue
+            x0 = backbkmk[x0]
+        for y in bookmark_dict[x0]:
             check_print_run(y)
             ran_any = True
     if not ran_any:
