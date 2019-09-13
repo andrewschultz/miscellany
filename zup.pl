@@ -115,10 +115,18 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?d[qs]$/ && do {
-      print "Quick/simple copying to Dropbox afterwards.\n";
+      print "Quick/simple copying to Dropbox afterwards. To overwrite, -do.\n";
       $dropboxSimpleCopy = 1;
       $noExecute         = 1;
       $deleteBefore      = 0;
+      $count++;
+      next;
+    };
+    /^-?do$/ && do {
+      print "Quick/simple copying to Dropbox afterwards, with overwrite. To avoid this, -dq.\n";
+      $dropboxSimpleCopy = 0;
+      $noExecute         = 1;
+      $deleteBefore      = 1;
       $count++;
       next;
     };
@@ -612,6 +620,7 @@ USAGE: zupt.pl (project)
 -dc copies EVERYTHING over to Dropbox after
 -dl get dropbox link if available (overrides creating a zip)
 -dq/ds does a quick dropbox copy
+-do overwrites and does a quick dropbox copy
 -[ol] open after
 -eo extract only
 -fi/if = ignore bail on bad file size
