@@ -55,6 +55,14 @@ proj = ""
 
 show_singletons = False
 
+default_rbrs = defaultdict(str)
+
+def can_make_rbr(x):
+    x = nohy(x)
+    if x in default_rbrs:
+        return default_rbrs[x]
+    return ""
+
 def prt_temp_loc(x):
     return os.path.normpath(os.path.join(i7.prt_temp, x))
 
@@ -475,6 +483,9 @@ with open('c:/writing/scripts/rbr.txt') as file:
                 t2 = t.split('=')
                 if len(t2) != 2: sys.exit(t + " needs exactly one = at line" + str(lc))
                 abbrevs[t2[0]][cur_proj] = t2[1]
+            continue
+        if ll.startswith('branchmain'):
+            default_rbrs[cur_proj] = vars
             continue
         if ll.startswith('branchfiles'):
             branch_list[cur_proj] = vars.split(",")
