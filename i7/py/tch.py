@@ -5,6 +5,7 @@
 # makes sure tabs are consistent
 #
 
+import os
 import sys
 import re
 import i7
@@ -20,7 +21,8 @@ def tab_sort(q):
     get_tabs = False
     columns = 0
     err_count = 0
-    print("Tab sorting", q)
+    qb = os.path.basename(q)
+    print("Tab sorting", qb)
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
             if columns and "\t\t" in line.strip():
@@ -36,6 +38,8 @@ def tab_sort(q):
                 columns = len(re.split("\t+", l2))
             if not line.strip():
                 columns = 0
+            if line.count('"') % 2:
+                print("ODD NUMBER OF QUOTES {} line {}:\n    {}".format(qb, line_count, re.sub("\t", " <TAB> ", line.strip())))
             if columns:
                 l2 = re.sub("\t+ *\[.*", "", line.strip())
                 ll = len(re.split("\t+", l2))
