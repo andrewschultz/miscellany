@@ -24,16 +24,25 @@ def tab_sort(q):
     qb = os.path.basename(q)
     print("Tab sorting", qb)
     rolling_bracket_count = 0
+    rolling_brace_count = 0
     negative_brackets_yet = False
+    negative_braces_yet = False
     latest_bracket_even = 0
+    latest_brace_even = 0
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
             rolling_bracket_count += line.count("[") - line.count("]")
             if not rolling_bracket_count:
                 latest_bracket_even = line_count
             elif not negative_brackets_yet and rolling_bracket_count < 0:
-                print("Negative bracket count at {} line {}. Bailing.\n    {}".format(qb, line_count,line.rstrip()))
+                print("Negative bracket count at {} line {}. Only counting one per file.\n    {}".format(qb, line_count,line.rstrip()))
                 negative_brackets_yet = True
+            rolling_brace_count += line.count("{") - line.count("}")
+            if not rolling_brace_count:
+                latest_brace_even = line_count
+            elif not negative_braces_yet and rolling_brace_count < 0:
+                print("Negative brace count at {} line {}. Only counting one per file.\n    {}".format(qb, line_count,line.rstrip()))
+                negative_braces_yet = True
             if columns and "\t\t" in line.strip():
                 print("Double tabs in", q, line_count)
                 continue
@@ -68,6 +77,8 @@ def tab_sort(q):
                     mt.add_postopen_file_line(q, line_count)
     if rolling_bracket_count:
         print("*************uneven brackets in {}. Last OK at line {}.".format(qb, latest_bracket_even))
+    if rolling_brace_count:
+        print("*************uneven braces in {}. Last OK at line {}.".format(qb, latest_brace_even))
 
 cmd_count = 1
 
