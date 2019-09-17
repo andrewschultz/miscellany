@@ -10,6 +10,9 @@ import os
 from stat import S_IREAD, S_IRGRP, S_IROTH, S_IWUSR
 from filecmp import cmp
 import re
+import mytools
+
+hbl_block_data = "c:/scripts/hbl.txt"
 
 allow_write = False
 see_diffs = False
@@ -25,6 +28,28 @@ def usage():
     print("-e = edit sites file")
     print("-h = edit hosts file")
     print("To restore access -f -w -h")
+    exit()
+
+def brute_force_uncomment(my_data_file):
+    ht = open(hosts_temp, "w")
+    with open(my_data_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#"):
+                l = re.sub(".*[ \t]", "", line.lower().strip())
+                if l in blockables:
+                    print("Brute forcing", l, "to read-only")
+                    l2 = re.sub("^#+", "", line)
+                    ht.write(l2)
+                    continue
+            ht.write(line)
+    ht.close()
+    if cmp(hosts, hosts_temp):
+        print("No brute force changes.")
+    else:
+        # mytools.wm(hosts, hosts_temp)
+        os.chmod(hosts, S_IWUSR|S_IREAD)
+        copy(hosts_temp, hosts)
+        os.chmod(hosts, S_IREAD|S_IRGRP|S_IROTH)
     exit()
 
 def modify_hosts_data(my_data_file):
@@ -54,14 +79,15 @@ def modify_hosts_data(my_data_file):
         os.chmod(hosts, S_IREAD|S_IRGRP|S_IROTH)
     exit()
 
-def read_hosts_data(my_data_file):
+def read_blockable_cfg(my_data_file):
     with open(my_data_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
             if line.startswith('#'): continue
-            if line.strip():
+            if line.startswith("BLOCK") or line.startswith("#BLOCK"):
                 tary = line.strip().split("\t")
-                blockables[tary[0]] = int(tary[1])
+                if len(tary) != 3: sys.exit("Fix blockable to have 2 tabs at", line_count, line.rstrip())
+                blockables[tary[1]] = int(tary[2])
 
 reset = defaultdict(bool)
 blockables = defaultdict(int)
@@ -103,10 +129,22 @@ while count < len(sys.argv):
         usage()
     count = count + 1
 
+if open_data:
+    os.system(hosts_data)
+    exit()
+
+if open_hosts:
+    if allow_write:
+        os.chmod(hosts, S_IWUSR|S_IREAD)
+    os.system("\"c:\\program files (x86)\\notepad++\\notepad++.exe\" " + hosts)
+    exit()
+
+read_blockable_cfg(hbl_block_data)
+brute_force_uncomment(hosts)
+exit()
+
 if len(comment_out) + len(uncomment):
     modify_hosts_data(hosts)
-
-read_hosts_data(hosts_data)
 
 hostout = open(hosts_temp, "w")
 
@@ -172,6 +210,3 @@ if do_i_copy:
 if not allow_write:
     print("Setting to read only.")
     os.chmod(hosts, S_IREAD|S_IRGRP|S_IROTH)
-
-if open_data: os.system(hosts_data)
-if open_hosts: os.system("\"c:\\program files (x86)\\notepad++\\notepad++.exe\" " + hosts)
