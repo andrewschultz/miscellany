@@ -44,7 +44,9 @@ def tab_sort(q):
                 print("Negative brace count at {} line {}. Only counting one per file.\n    {}".format(qb, line_count,line.rstrip()))
                 negative_braces_yet = True
             if columns and "\t\t" in line.strip():
-                print("Double tabs in", q, line_count)
+                temp = re.sub("\t\t.*", "", line.strip())
+                tabcount = temp.count("\t")
+                print("Double tabs ({} in) in {} {}".format(tabcount, qb, line_count))
                 continue
             if line.startswith('table of'):
                 get_tabs = True
@@ -57,7 +59,13 @@ def tab_sort(q):
             if not line.strip():
                 columns = 0
             if line.count('"') % 2:
-                print("ODD NUMBER OF QUOTES {} line {}:\n    {}".format(qb, line_count, re.sub("\t", " <TAB> ", line.strip())))
+                tary = line.rstrip().split("\t")
+                first_odd_quote = -1
+                for x in range(0, len(tary)):
+                    if tary[x].count('"') % 2:
+                        first_odd_quote = x
+                        break
+                print("ODD NUMBER OF QUOTES {} line {}:\n    entry {} text {}".format(qb, line_count, first_odd_quote, tary[first_odd_quote]))
             if columns:
                 l2 = re.sub("\t+ *\[.*", "", line.strip())
                 ll = len(re.split("\t+", l2))
