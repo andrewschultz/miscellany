@@ -34,6 +34,15 @@ lasts = defaultdict(int)
 default_val = 0
 ignore_dict = defaultdict(bool)
 
+def is_ignorable(x):
+    if x in ignore_dict: return True
+    temp = re.sub("\[.*", "", x).lower().strip()
+    if temp in ignore_dict: return True
+    for f in re.findall("\[(.*?)\]", x):
+        print("Findall", f)
+        if f in ignore_dict: return true
+    return False
+
 def process_operators(infile, tempfile, outfile):
     in_mod = infile
     out_mod = outfile
@@ -82,7 +91,7 @@ def process_operators(infile, tempfile, outfile):
                         end_add = []
                 if in_table == False:
                     ignore_defaults = False
-                    if line.strip() in ignore_dict.keys():
+                    if is_ignorable(line.strip()):
                         ignore_defaults = True
                         to_go = 0
                         print("Ignoring defaults for", line.strip())
