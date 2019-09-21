@@ -3,13 +3,14 @@
 #
 # debug hacker python file
 #
-# this takes a X.i7x file and converts it to X debug.i7x
+# this takes a X.i7x file and converts it to X debug.i7x (or anything. The default recommended is just X debug.i7x)
 #
 # dbh.txt has the data on how to cut tables down
 # this is useful for testing debug statements a bit more easily
 # for instance, to make sure there are exactly 5 elements in a loop
 #
 
+import sys
 import os
 import i7
 import re
@@ -21,9 +22,10 @@ from collections import defaultdict
 
 dbh = "c:/writing/scripts/dbh.txt"
 
-temp_write = i7.extdir + "dbh-temp.i7x"
+temp_write = os.path.join(i7.extdir, "dbh-temp.i7x")
 
-my_project = "ai"
+default_project = ""
+my_project = ""
 
 reading_operators = False
 firsts = defaultdict(int)
@@ -52,8 +54,7 @@ def process_operators(infile, tempfile, outfile):
     got_dbh = False
     ignore_defaults = False
     with open(in_mod) as file:
-        for line in file:
-            line_count += 1
+        for (line_count, line) in enumerate(file, 1):
             if 'dbh.py' in line:
                 got_dbh = True
             if line_count == 1:
@@ -103,23 +104,45 @@ def process_operators(infile, tempfile, outfile):
     fout.close()
     if not got_dbh:
         print("You may wish to put a reference/comment to dbh.py somewhere in", in_mod)
-    if filecmp.cmp(tempfile, out_mod): # note this is the reverse of PERL
+    if not os.path.exists(out_mod):
+        print(outfile, "does not exist, so I will copy over.")
+        copyfile(tempfile, out_mod)
+    elif filecmp.cmp(tempfile, out_mod): # note this is the reverse of PERL
         print(tempfile, "is identical to", outfile,"so I won't copy back over.")
     else:
         print(tempfile, "is different from", outfile, "so I will write over.")
         copyfile(tempfile, out_mod)
     return
 
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count]
+    if i7.proj_exp(arg, False):
+        if my_project:
+            sys.exit("Duplicate projects defined.")
+        my_project = arg
+    else:
+        sys.eit("Unrecognized", arg)
+    cmd_count += 1
+
+if not my_project:
+    if not default_project:
+        sys.exit("No project on command line, no defaultproject in dbh.txt. Bailing.")
+    print("No project defined, going with default {}".format(default_project))
+    my_project = default_project
+
 with open(dbh) as file:
     line_count = 0
-    for line in file:
-        line_count += 1
+    for (line_count, line) in enumerate(file, 1):
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False
                 process_operators(read_file, temp_write, write_file)
                 continue
             t = line.strip().split("\t")
+            if line.startswith("defaultproject"):
+                default_project = t[1]
+                continue
             if line.startswith("default"):
                 default_val = int(t[1])
                 continue
@@ -147,8 +170,7 @@ with open(dbh) as file:
             lasts.clear()
             y = re.sub("^[^:]*:", "", line.strip())
             x = y.split("->")
-            read_file = x[0]
-            write_file = x[1]
+            read_file = x[0].strip()
+            write_file = x[1].strip()
             print("Sending" ,x[0], "to", x[1])
             reading_operators = True
-
