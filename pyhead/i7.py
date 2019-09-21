@@ -54,6 +54,16 @@ oo = on_off
 smart = "c:/writing/smart.otl"
 spoon = "c:/writing/spopal.otl"
 
+def is_main_abb(x):
+    return x == main_abb(x)
+
+def main_abb(x):
+    if x not in i7x: return ""
+    if i7x[x] not in i7xr:
+        print("    **** I7.PY WARNING {}/{} does not have reverse abbreviation.".format(x, i7x[x]))
+        return ""
+    return i7xr[i7x[x]]
+
 def to_table(x):
     return re.sub(" *\[.*", "", line.lower().strip())
 
