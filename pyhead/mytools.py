@@ -181,6 +181,28 @@ def many_mult_diffs(file_list, bail=True):
 def unshift_num(x):
     return x.replace('!', '1').replace('@', '2').replace('#', '3').replace('$', '4').replace('%', '5').replace('^', '6').replace('&', '7').replace('*', '8').replace('(', '9').replace(')', '0')
 
+def print_ranges_of(x, default_thing = "numbers"): # given a list of integers, this prints consecutive integers e.g. 1,2,3,5,7,8 = 1-3 5 7-8
+    x = sorted(x)
+    last_in_range = -1
+    last_range_start = -1
+    the_string = ""
+    num_ranges = 0
+    for y in range(0, len(x)):
+        if x[y] > last_in_range + 1:
+            if last_in_range > last_range_start:
+                the_string += "-{}".format(last_in_range)
+            last_in_range = last_range_start = x[y]
+            if len(the_string): the_string += ","
+            the_string += " {}".format(x[y])
+            num_ranges += 1
+        elif x[y] == last_in_range + 1:
+            last_in_range = x[y]
+        else:
+            sys.exit("Nonincreasing list. Bailing.")
+    if last_in_range > last_range_start:
+        the_string += "-{}".format(last_in_range)
+    print("{} {} in {} ranges:".format(len(x), default_thing, num_ranges), the_string.strip())
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
