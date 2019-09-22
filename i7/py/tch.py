@@ -66,6 +66,7 @@ def tab_sort(q):
                         first_odd_quote = x
                         break
                 print("ODD NUMBER OF QUOTES {} line {}:\n    entry {} text {}".format(qb, line_count, first_odd_quote, tary[first_odd_quote]))
+                mt.add_postopen_file_line(q, line_count)
             if columns:
                 l2 = re.sub("\t+ *\[.*", "", line.strip())
                 ll = len(re.split("\t+", l2))

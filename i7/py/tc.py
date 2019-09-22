@@ -46,6 +46,15 @@ def edit_name(x):
     if x.startswith("edit"): return ''
     return os.path.dirname(x) + "edit-" + os.path.basename(x)
 
+def in_transcript_dir(x):
+    q = os.getcwd()
+    if os.path.exists(os.path.join(q, x)): return True
+    if os.path.exists(os.path.join(q, 'transcripts', x)): return True
+    if os.path.exists(os.path.join(downloads, x)):
+        move_from_downloads(x)
+        return True
+    return False
+
 def move_from_downloads(wild_card):
     print("Looking for wild cards {} extensions .txt, .log".format(wild_card))
     x = os.getcwd()
@@ -62,7 +71,8 @@ def move_from_downloads(wild_card):
     if not len(y):
         sys.exit("No wild cards found for {}.".format(wild_card))
     else:
-        print("Found {} wild cards to copy over: {}".format(', '.join([basename[q] for q in y])))
+        temp = [os.path.basename(q) for q in y]
+        print("Found {} wild cards to copy over: {}".format(len(temp), ', '.join(temp)))
     for f in y:
         outfile = os.path.join(to_dir, os.path.basename(f))
         try:
@@ -143,8 +153,11 @@ while count < len(sys.argv):
     elif arg == 'q': track_quotes = True
     elif arg == 'nq' or arg == 'qn': track_quotes = False
     elif arg == '?': usage()
-    else:
+    elif in_transcript_dir(arg):
         my_files.append(arg)
+    else:
+        print("Bad argument", arg)
+        sys.exit()
     count = count + 1
 
 if the_glob:
