@@ -96,6 +96,8 @@ while cmd_count < len(sys.argv):
         if project: sys.exit("Tried to define 2 projects at once.")
         project = i7.i7x[arg]
         if not project: sys.exit("No such project/shortcut {}.".format(project))
+    else:
+        sys.exit("Ignoring command {}.".format(arg))
     cmd_count += 1
 
 if project in i7.i7x.keys():

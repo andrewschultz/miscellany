@@ -24,6 +24,7 @@ max_files = 1
 cur_launched = 0
 tran_fi = "transcripts.htm"
 track_quotes = True
+downloads = "c:/users/andrew/downloads"
 
 quote_tracker = defaultdict(int)
 
@@ -44,6 +45,32 @@ def out_name(x):
 def edit_name(x):
     if x.startswith("edit"): return ''
     return os.path.dirname(x) + "edit-" + os.path.basename(x)
+
+def move_from_downloads(wild_card):
+    print("Looking for wild cards {} extensions .txt, .log".format(wild_card))
+    x = os.getcwd()
+    cwd = os.getcwd()
+    if 'transcripts' in cwd:
+        to_dir = cwd
+    elif os.path.exists("transcripts"):
+        to_dir = os.path.join(cwd, 'transcripts')
+    else:
+        sys.exit("Must be in directory with TRANSCRIPTS subdirectory or TRANSCRIPTS in its path.")
+    x = glob.glob(os.path.join(downloads, "*.txt"))
+    x.extend(glob.glob(os.path.join(downloads, "*.log")))
+    y = [a for a in x if wild_card in a.lower()]
+    if not len(y):
+        sys.exit("No wild cards found for {}.".format(wild_card))
+    else:
+        print("Found {} wild cards to copy over: {}".format(', '.join([basename[q] for q in y])))
+    for f in y:
+        outfile = os.path.join(to_dir, os.path.basename(f))
+        try:
+            os.rename(f, outfile)
+            print("Successfully renamed", f, "to", outfile)
+        except:
+            print("Failed to rename", f, "to", outfile)
+    sys.exit()
 
 def to_output(f_i, f_o):
     f2 = open(f_o, "w")
@@ -106,6 +133,9 @@ while count < len(sys.argv):
             max_files = int(arg[1])
         except:
             print("Need integer argument l#### for number of files to launch.")
+    elif arg.startswith("d="):
+        wild_card = arg[2:]
+        move_from_downloads(wild_card)
     elif arg == 'w': write_edit_files = True
     elif arg == 'h': make_html = True
     elif arg == 'hl': launch_html = make_html = True
