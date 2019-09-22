@@ -24,6 +24,7 @@ dbh = "c:/writing/scripts/dbh.txt"
 
 temp_write = os.path.join(i7.extdir, "dbh-temp.i7x")
 
+proj_from_cmd = i7.dir2proj(to_abbrev = True)
 default_project = ""
 my_project = ""
 
@@ -134,11 +135,27 @@ while cmd_count < len(sys.argv):
         sys.eit("Unrecognized", arg)
     cmd_count += 1
 
+with open(dbh) as file:
+    line_count = 0
+    for (line_count, line) in enumerate(file, 1):
+        t = line.strip().split("\t")
+        if line.startswith("defaultproject"):
+            default_project = t[1]
+            if not i7.is_main_abb(t[1]):
+                print("WARNING default project {} is not main abbreviation {}".format(t[1], i7.main_abb(t[1])))
+            continue
+
 if not my_project:
-    if not default_project:
+    if proj_from_cmd:
+        print("No project on command line, going with project assumed from directory", proj_from_cmd)
+        my_project = proj_from_cmd
+    elif not default_project:
         sys.exit("No project on command line, no defaultproject in dbh.txt. Bailing.")
-    print("No project defined, going with default {}".format(default_project))
-    my_project = default_project
+    else:
+        print("No project defined, going with default {}".format(default_project))
+        my_project = default_project
+
+got_project = False
 
 with open(dbh) as file:
     line_count = 0
@@ -149,9 +166,6 @@ with open(dbh) as file:
                 process_operators(read_file, temp_write, write_file)
                 continue
             t = line.strip().split("\t")
-            if line.startswith("defaultproject"):
-                default_project = t[1]
-                continue
             if line.startswith("default"):
                 default_val = int(t[1])
                 continue
@@ -174,7 +188,12 @@ with open(dbh) as file:
                     print("At line", line_count, "you need an integer in the second column.")
                     exit()
                 continue
+        if "->" in line:
+            l = re.sub(":.*", "", line.strip().lower())
+            if not i7.is_main_abb(l):
+                print("WARNING {} is not is main abbreviation {}".format(l, i7.main_abb(l)))
         if line.startswith(my_project) and "->" in line:
+            got_project = True
             firsts.clear()
             lasts.clear()
             y = re.sub("^[^:]*:", "", line.strip())
@@ -183,3 +202,5 @@ with open(dbh) as file:
             write_file = x[1].strip()
             print("Sending" ,x[0], "to", x[1])
             reading_operators = True
+
+if not got_project: print("OOPS did not find project {}. Maybe you want a different abbreviation, or maybe nothing is defined in {}.".format(my_project, dbh))
