@@ -531,6 +531,16 @@ sub modifyBeta {
   my $foundDebugGlobalsSection = 0;
 
   while ( $a = <A> ) {
+    if ($a =~ /\[in beta\]/ && ($a =~ /^\[/) && ($a =~ /\]$/))
+	{
+	$a =~ s/^\[//;
+	$a =~ s/\]$//;
+	}
+	elsif ($a =~ /\[no beta\]/ && ($a !~ /^\[/))
+	{
+	$a =~ s/^/\[/;
+	$a =~ s/$/\]/;
+	}
     if ( $a =~ /^volume beta testing/i ) {
       print B "volume beta testing\n";
       $foundBetaLine = 1;
