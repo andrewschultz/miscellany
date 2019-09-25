@@ -32,6 +32,7 @@ my $checkRecentChanges = 0;
 my $ignoreDRBPrefix    = 0;
 my $debugTables        = 0;
 my $forceBuild         = 0;
+my $runAfter = 0;
 
 my $infDir;
 
@@ -160,6 +161,7 @@ while ( $count <= $#ARGV ) {
     /^-?ba$/ && do { $informBase      = $ARGV[ $count + 1 ]; $count++; next; };
     /^-?be$/ && do { $betaDir         = $ARGV[ $count + 1 ]; $count++; next; };
     /^-?np$/ && do { $ignoreDRBPrefix = 1;                   $count++; next; };
+    /^-?ra$/ && do { $runAfter = 1;                   $count++; next; };
     /^-?nr$/ && do { $buildSpecified = 1; $release = 0; $count++; next; };
     /^-?yr$/ && do { $buildSpecified = 1; $release = 1; $count++; next; };
     /^-?nd$/ && do { $buildSpecified = 1; $debug   = 0; $count++; next; };
@@ -424,6 +426,18 @@ sub doOneBuild {
     }
   }
   printTimeDif($startTime);
+  if (($runAfter) ) {
+    if ( -f $outFinal)
+	{
+    my $of = "\"$outFinal\"";
+    print "Running $outFinal\n";
+	`$of`;
+	}
+	else
+	{
+	  print "No output file $outFinal created, so I can't use the runAfter option.\n";
+	}
+	}
   return;
 }
 
@@ -642,6 +656,7 @@ USAGE
 -np = no prefix in export file
 -td/dt = debug tables on, -ndt/ntd off
 -fb = force build even if source file timestamp < binary timestamp
+-ra = run after, if file exists
 EOT
   exit;
 }
