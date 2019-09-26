@@ -9,6 +9,9 @@
 # this is useful for testing debug statements a bit more easily
 # for instance, to make sure there are exactly 5 elements in a loop
 #
+# todo: read in cfg file before doing anything
+#       have file priority dict
+#       have table priority dict which overrides file priority
 
 import sys
 import os
@@ -17,6 +20,7 @@ import re
 import filecmp
 from shutil import copyfile
 from collections import defaultdict
+from mytools import nohy
 
 # i7.i7x
 
@@ -27,20 +31,29 @@ temp_write = os.path.join(i7.extdir, "dbh-temp.i7x")
 proj_from_cmd = i7.dir2proj(to_abbrev = True)
 default_project = ""
 my_project = ""
+found_project = False
 
 reading_operators = False
 firsts = defaultdict(int)
 lasts = defaultdict(int)
 
+copy_level = 1
 default_val = 0
 ignore_dict = defaultdict(bool)
+
+def cfg_level(x):
+    x0 = re.sub(":.*", "", x)
+    x0 = re.sub("^[a-z]+", "", x0, 0, re.IGNORECASE)
+    try:
+        return int(x0)
+    except:
+        sys.exit("Bad test-level for {}.".format(x))
 
 def is_ignorable(x):
     if x in ignore_dict: return True
     temp = re.sub("\[.*", "", x).lower().strip()
     if temp in ignore_dict: return True
     for f in re.findall("\[(.*?)\]", x):
-        print("Findall", f)
         if f in ignore_dict: return true
     return False
 
@@ -126,17 +139,21 @@ def process_operators(infile, tempfile, outfile):
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = sys.argv[cmd_count]
+    arg = nohy(sys.argv[cmd_count])
     if i7.proj_exp(arg, False):
         if my_project:
             sys.exit("Duplicate projects defined.")
         my_project = arg
+    elif re.search("^l[0-9]+", arg):
+        try:
+            copy_level = int(arg[1:])
+        except:
+            sys.exit("Copying level must be an integer.")
     else:
-        sys.eit("Unrecognized", arg)
+        sys.exit("Unrecognized", arg)
     cmd_count += 1
 
 with open(dbh) as file:
-    line_count = 0
     for (line_count, line) in enumerate(file, 1):
         t = line.strip().split("\t")
         if line.startswith("defaultproject"):
@@ -155,11 +172,16 @@ if not my_project:
         print("No project defined, going with default {}".format(default_project))
         my_project = default_project
 
-got_project = False
+ran_project = False
+ignore_til_next_break = False
 
 with open(dbh) as file:
     line_count = 0
     for (line_count, line) in enumerate(file, 1):
+        if ignore_til_next_break:
+            if not line.strip():
+                ignore_til_next_break = False
+            continue
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False
@@ -189,11 +211,20 @@ with open(dbh) as file:
                     exit()
                 continue
         if "->" in line:
-            l = re.sub(":.*", "", line.strip().lower())
+            if re.search("^l[0-9]+:", line, re.IGNORECASE):
+                cl = cfg_level(line)
+                if cl > copy_level:
+                    print("Ignoring copy-level of", cl, "for", line.strip().lower())
+                    ignore_til_next_break = True
+                    continue
+            line = re.sub("^l[0-9]+:", "", line.lower().strip())
+            l = re.sub(":.*", "", line)
             if not i7.is_main_abb(l):
-                print("WARNING {} is not is main abbreviation {}".format(l, i7.main_abb(l)))
+                print("!!!! WARNING {} is not a main abbreviation {}".format(l, i7.main_abb(l)))
+                continue
+            found_project = True
         if line.startswith(my_project) and "->" in line:
-            got_project = True
+            ran_project = True
             firsts.clear()
             lasts.clear()
             y = re.sub("^[^:]*:", "", line.strip())
@@ -203,4 +234,4 @@ with open(dbh) as file:
             print("Sending" ,x[0], "to", x[1])
             reading_operators = True
 
-if not got_project: print("OOPS did not find project {}. Maybe you want a different abbreviation, or maybe nothing is defined in {}.".format(my_project, dbh))
+if found_project and not ran_project: print("OOPS did not try to run anything for project {}. Maybe you want a different abbreviation, or maybe nothing is defined in {}.".format(my_project, dbh))
