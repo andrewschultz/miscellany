@@ -131,6 +131,21 @@ every turn (this is the full monty test rule) :
 	if test-output-yet is true and hide-headers is false:
 		say "========END TESTS[line break]";
 
+chapter montyfing
+
+monty-force is a truth state that varies.
+
+montyfing is an action applying to nothing.
+
+understand the command "montyf" as something new.
+
+understand "montyf" as montyfing.
+
+carry out montyfing:
+	now monty-force is whether or not monty-force is false;
+	say "Monty-force is now [on-off of monty-force]. This means that rules may be processed after non-turns, too.";
+	the rule succeeds.
+
 chapter montyhing
 
 montyhing is an action out of world.
