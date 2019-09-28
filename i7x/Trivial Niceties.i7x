@@ -77,9 +77,9 @@ ignore-wait is a truth state that varies.
 
 to wfak:
 	if ignore-wait is false:
-		if waited-yet is false:
+		if any-key-yet is false:
 			say "[i][bracket]NOTE: when the prompt does not appear, it means you need to push any key to continue[close bracket][r]";
-			now waited-yet is true;
+			now any-key-yet is true;
 			wait for any key;
 			say "[paragraph break]";
 		else:
@@ -95,6 +95,8 @@ to say wfak:
 book plural
 
 to say plur of (n - a number): if n is not 1, say "s"
+
+to say plurnos of (n - a number): if n is 1, say "s"
 
 to say this-these of (nu - a number): say "th[if nu is 1]is[else]ese[end if]"
 
@@ -145,12 +147,12 @@ screenread is a truth state that varies.
 use-custom-screenread is a truth state that varies.
 
 to ask-screenread:
-	if use-custom-screenread is false, say "This game has some support for screen readers, such as eliminating excess punctuation. Are you using one?";
+	if use-custom-screenread is false, say "[line break]This game has some support for screen readers, such as eliminating excess punctuation. Are you using one?";
 	if the player consents:
 		now screenread is true;
 	else:
 		now screenread is false;
-	say "Screen reading support will be [on-off of screenread] for this session. Toggle it with SCREEN or SCR.";
+	say "[line break]Screen reading support will be [on-off of screenread] for this session. Toggle it with SCREEN or SCR.";
 
 chapter screening
 
