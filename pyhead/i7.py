@@ -344,21 +344,20 @@ go_p = proj_dir = to_proj = go_proj
 
 def dir2proj(x = os.getcwd(), to_abbrev = False):
     x0 = x.lower()
+    x2 = ""
     if os.path.exists(x0 + "\\story.ni") or ".inform" in x: # this works whether in the github or inform directory
         x2 = re.sub("\.inform.*", "", x0)
         x2 = re.sub(".*[\\\/]", "", x2)
-        if "\\" in x2 or "/" in x2: return ""
-        if to_abbrev and x2 in i7xr: return i7xr[x2]
-        return x2
+    elif " materials" in x0:
+        x2 = re.sub(" materials.*", "", x0)
+        x2 = re.sub(".*[\\\/]", "", x2)
     elif re.search("documents.github..", x0):
         x2 = re.sub(".*documents.github.", "", x0, 0, re.IGNORECASE)
         x2 = re.sub("[\\\/].*", "", x2)
-        if re.search("[a-z]", x2):
-            if to_abbrev and x2 in i7xr: return i7xr[x2]
-            return x2
-        return ""
-    else:
-        return ""
+        if not re.search("[a-z]", x2): return ""
+    if "\\" in x2 or "/" in x2 or not x2: return ""
+    if to_abbrev and x2 in i7xr: return i7xr[x2]
+    return x2
 
 sproj = d2p = dir2proj
 
