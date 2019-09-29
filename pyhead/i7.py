@@ -314,6 +314,15 @@ def proj_exp(x, return_nonblank = True, to_github = False):
 
 pex = proj_exp
 
+def beta_file(x, bail=False):
+    q = proj_exp(x).replace('-', ' ')
+    beta_dir = "c:/games/inform/beta Materials/Release"
+    for j in ["zblorb", "gblorb", "z8", "z5", "glx" ]:
+        my_fi = os.path.join(beta_dir, "beta-{}.{}".format(q, j))
+        if os.path.exists(my_fi): yield my_fi
+    if bail: sys.exit("Couldn't find beta binary for {}.".format(x))
+    return ""
+
 def hfi_exp(x, return_nonblank = True):
     if x in i7nonhdr.keys(): return i7nonhdr[x]
     if x in i7nonhdr.values(): return x
