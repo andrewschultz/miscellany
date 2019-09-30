@@ -57,10 +57,14 @@ show_singletons = False
 
 default_rbrs = defaultdict(str)
 
-def can_make_rbr(x):
+def can_make_rbr(x, verbose = False):
+    if os.path.exists(x): return x
     x = nohy(x)
     if x in default_rbrs:
         return default_rbrs[x]
+    if os.path.exists(x + ".txt"):
+        if verbose: print(x, "doesn't exist but {}.{} does. Adding extension.".format(x, "txt"))
+        return x + ".txt" # small but real possibility there may be something like vv.txt which would mess things up
     return ""
 
 def prt_temp_loc(x):
@@ -555,7 +559,7 @@ while count < len(sys.argv):
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
-    elif can_make_rbr(arg): in_file = can_make_rbr(arg)
+    elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
     elif arg == 'si': show_singletons = True
     elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
