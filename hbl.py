@@ -21,6 +21,9 @@ force_copy = False
 open_hosts = False
 open_data = False
 
+kill_if_diff = False
+blockables_end_too = True
+
 def usage():
     print("-w = allow write")
     print("-d = see differences")
@@ -29,6 +32,11 @@ def usage():
     print("-h = edit hosts file")
     print("To restore access -f -w -h")
     exit()
+
+def blockable_match(l):
+    for x in blockables:
+        if l.endswith(x): return x
+    return ""
 
 def brute_force_uncomment(my_data_file):
     ht = open(hosts_temp, "w")
@@ -41,6 +49,13 @@ def brute_force_uncomment(my_data_file):
                     l2 = re.sub("^#+", "", line)
                     ht.write(l2)
                     continue
+                if blockables_end_too:
+                    temp = blockable_match(l)
+                    if temp:
+                        print("Brute forcing (end match) {}/{} to read-only".format(l, temp))
+                        l2 = re.sub("^#+", "", line)
+                        ht.write(l2)
+                        continue
             ht.write(line)
     ht.close()
     if cmp(hosts, hosts_temp):
@@ -50,6 +65,8 @@ def brute_force_uncomment(my_data_file):
         os.chmod(hosts, S_IWUSR|S_IREAD)
         copy(hosts_temp, hosts)
         os.chmod(hosts, S_IREAD|S_IRGRP|S_IROTH)
+        if kill_if_diff:
+            os.system("taskkill /IM firefox.exe /F")
     exit()
 
 def modify_hosts_data(my_data_file):
@@ -87,6 +104,9 @@ def read_blockable_cfg(my_data_file):
             if line.startswith("BLOCK") or line.startswith("#BLOCK"):
                 tary = line.strip().split("\t")
                 if len(tary) != 3: sys.exit("Fix blockable to have 2 tabs at", line_count, line.rstrip())
+                if '.' not in tary[1]:
+                    print("Invalid blockable domain {} needs period at line {}.".format(tary[1], line_count))
+                    continue
                 blockables[tary[1]] = int(tary[2])
 
 reset = defaultdict(bool)
