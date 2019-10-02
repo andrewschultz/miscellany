@@ -634,7 +634,12 @@ if edit_individual_files:
 if not len(my_file_list):
     my_file_list = list(branch_list[proj])
     if len(my_file_list) == 0:
-        sys.exit("No valid files specified, could not find default. Bailing")
+        print("No valid files specified. Checking rbr- glob.")
+        my_file_list = glob.glob("rbr-*")
+        if len(my_file_list) == 0: sys.exit("No files found in rbr- glob. Bailing.")
+        elif len(my_file_list) == 1: print("Only one rbr- file found ({}). Going with that.".format(my_file_list[0]))
+        else:
+            sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
         print("No valid files, going with default", ', '.join(branch_list[proj]))
 
