@@ -124,6 +124,9 @@ def main_sect_alf(my_proj, my_file):
                 alf_next_chunk = True
                 if verbose: print("Starting postalf at line", line_count)
             if do_more:
+                ll = line.lower().strip()
+                if ll.startswith("[xx") or ll.startswith("[zz"):
+                    print("WARNING: line {} has potential unrecognized start/end marker {}".format(line_count, ll))
                 if in_sort:
                     sort_string = sort_string + line
                 else:
