@@ -14,6 +14,7 @@ import sys
 import re
 from collections import defaultdict
 
+keyword = ""
 launch_after = False
 write_edit_files = False
 write_over = False
@@ -46,6 +47,18 @@ def edit_name(x):
     if x.startswith("edit"): return ''
     return os.path.dirname(x) + "edit-" + os.path.basename(x)
 
+def copy_to_edit(mf):
+    ef = edit_name(mf)
+    if ef:
+        if os.path.exists(ef) and not write_over:
+            print(ef, "exists. Use (-)wo to write over.")
+            return ''
+        print("Edits:", mf, 'to', ef)
+        copy(mf, ef)
+        os.system("attrib -r " + ef)
+        return ef
+    return ''
+
 def in_transcript_dir(x):
     q = os.getcwd()
     if os.path.exists(os.path.join(q, x)): return True
@@ -69,7 +82,8 @@ def move_from_downloads(wild_card):
     x.extend(glob.glob(os.path.join(downloads, "*.log")))
     y = [a for a in x if wild_card in a.lower()]
     if not len(y):
-        sys.exit("No wild cards found for {}.".format(wild_card))
+        print("No wild cards found for {}.".format(wild_card))
+        return
     else:
         temp = [os.path.basename(q) for q in y]
         print("Found {} wild cards to copy over: {}".format(len(temp), ', '.join(temp)))
@@ -88,11 +102,15 @@ def to_output(f_i, f_o):
     count = comments = lines_in_out_file = 0
     lines = []
     so_far = ""
+    has_this_keyword = True
     with open(f_i) as file:
         for (lc, line) in enumerate(file, 1):
             if line.count('"') % 2:
                 if line not in quote_tracker:
                     quote_tracker[line.strip()] = lc
+            if keyword and keyword in line:
+                print("Keyword", keyword, "found at line", lc)
+                has_this_keyword = True
             if line.startswith('>'):
                 if re.search("^> *[\*;]", line):
                     f2.write("=" * 50 + "Line " + str(lc) + "\n")
@@ -101,12 +119,17 @@ def to_output(f_i, f_o):
                     lines.append(lines_in_out_file)
                     so_far = ""
                     comments = comments + 1
+                elif has_this_keyword:
+                    f2.write("====keyword\n")
+                    f2.write(so_far)
+                    so_far = "(prev) " + line
                 else:
                     so_far = "(prev) " + line
                     if line != line.lower() and '>Start of a transcript of' not in line:
                         if line.startswith(">>"):
                             continue
                         print(f_i, lc, line.strip(), "may be a comment.")
+                has_this_keyword = False
                 continue
             so_far = so_far + line
     if so_far != "":
@@ -132,6 +155,8 @@ count = 1
 
 my_files = []
 
+download_move_ary = []
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg.startswith('-'): arg = arg[1:]
@@ -144,12 +169,19 @@ while count < len(sys.argv):
         except:
             print("Need integer argument l#### for number of files to launch.")
     elif arg.startswith("d="):
-        wild_card = arg[2:]
-        move_from_downloads(wild_card)
+        if len(arg) == 2:
+            sys.exit("Need a wild card to move.")
+        download_move_ary.extend(arg[2:].split(","))
+    elif arg.startswith("k="):
+        if len(arg) == 2:
+            sys.exit("Need a keyword after k=.")
+        if keyword: sys.exit("Redefined keyword.")
+        keyword = arg[2:]
     elif arg == 'w': write_edit_files = True
     elif arg == 'h': make_html = True
     elif arg == 'hl': launch_html = make_html = True
     elif arg == 'wo': write_over = write_edit_files = True
+    elif arg == 'wc': write_over = True
     elif arg == 'q': track_quotes = True
     elif arg == 'nq' or arg == 'qn': track_quotes = False
     elif arg == '?': usage()
@@ -159,6 +191,9 @@ while count < len(sys.argv):
         print("Bad argument", arg)
         sys.exit()
     count = count + 1
+
+for x in download_move_ary:
+    move_from_downloads(x)
 
 if the_glob:
     my_files = my_files + glob.glob(the_glob)
@@ -177,21 +212,15 @@ for mf in my_files:
     else:
         file_to_launch = ""
         if write_edit_files:
-            ef = edit_name(mf)
-            if ef:
-                if os.path.exists(ef) and not write_over:
-                    print(ef, "exists. Use (-)wo to write over.")
-                    continue
-                print("Edits:", mf, 'to', ef)
-                copy(mf, ef)
-                os.system("attrib -r " + ef)
-                file_to_launch = ef
+            temp = copy_to_edit(mf)
+            if temp: file_to_launch = temp
+            continue
         else:
             ona = out_name(mf)
             print("Comments:", os.path.basename(mf), "to", os.path.basename(ona))
             if os.path.exists(ona):
                 if write_over == False:
-                    print(ona, "exists. Use -wo to write over.")
+                    print(ona, "exists. Use -wc to write over.")
                     continue
                 else:
                     print("Overwriting", ona)
