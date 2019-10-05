@@ -55,6 +55,7 @@ my $deleteBefore      = 1;
 my $maxTimeDelay      = 1800;
 my $verbose           = 0;
 my $buildBefore = 0;
+my $copyAfter = 0;
 
 ##################variables
 my $count = 0;
@@ -98,7 +99,7 @@ while ( $count <= $#ARGV ) {
     /^-?dt$/ && do { $dropboxThisCopy = 1; $count++; next; };
     /^-?it$/ && do { $ignoreTimeFlips = 1; $count++; next; };
     /^-?li$/ && do { projOut($zupt); projOut($zupp); exit(); };
-    /^-?[fi|if]$/ && do { $bailOnFileSize = 0; $count++; };
+    /^-?(fi|if|sb)$/ && do { $bailOnFileSize = 0; $count++; };
     /^-?nx$/
       && do { print "Executing no commands.\n"; $noExecute = 1; $count++; next; };
     /^-?eo$/ && do { $extractOnly = 1; $extractAfter = 1; $count++; next; };
@@ -124,7 +125,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?do$/ && do {
       print "Quick/simple copying to Dropbox afterwards, with overwrite. To avoid this, -dq.\n";
-      $dropboxSimpleCopy = 0;
+      $copyAfter = 1;
       $noExecute         = 1;
       $deleteBefore      = 1;
       $count++;
@@ -141,7 +142,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
-    /^-?dl(c)?$/ && do {
+    /^-?(dl|dlc|cb)?$/ && do {
       print "Dropbox link to clipboard.\n";
       $dropLinkClip     = 1;
       $dropLinkClipOnly = 1;
@@ -310,6 +311,11 @@ sub readZupFile {
             unless $zip->writeToFileNamed("c:/games/inform/zip/$outFile") ==
             AZ_OK;
           print "Writing successful.\n";
+		  if ($copyAfter) {
+		     print("Copying to dropbox after.\n");
+             my $cmd = "xcopy /y \"$zipdir\\$outFile\" \"$dbbin\\$outFile\"";
+			 `$cmd`;
+		  }
           if ($openAfter) {
             print "Opening...\n";
             `$zipdir\\$outFile`;
@@ -338,24 +344,25 @@ sub readZupFile {
 "Necessary min size dimension info: $q needs $fileMinSize{$q} < actual size "
               . ( -s "$q" ) . "\n"
               if $verbose;
-            conditional_die( $bailOnFileSize,
-"$q in $outLong smaller than minimum bound $fileMinSize{$q} bytes.\n"
-              )
-              if ( defined( $fileMinSize{$q} ) )
+              if (( defined( $fileMinSize{$q} ) )
               && ( $fileMinSize{$q} )
-              && ( -s "$q" < $fileMinSize{$q} );
+              && ( -s "$q" < $fileMinSize{$q} )) {
+              print "" . ($bailOnFileSize ? "" : "WARNING: ") . "$q in $outLong smaller than minimum bound $fileMinSize{$q} bytes: " . (-s "$q") . ".\n";
+			  die "Deleting $outLong ... skip file size bail with -fi/if/sb\n" if $bailOnFileSize;
           }
+		  }
           for my $q ( sort keys %fileMaxSize ) {
             print
 "Necessary max size dimension info: $q needs $fileMaxSize{$q} > actual size "
               . ( -s "$q" ) . "\n"
               if $verbose;
-            conditional_die( $bailOnFileSize,
-"$q in $outLong larger than maximum bound $fileMaxSize{$q} bytes.\n"
-              )
-              if ( defined( $fileMaxSize{$q} ) )
+              if (( defined( $fileMaxSize{$q} ) )
               && ( $fileMaxSize{$q} )
-              && ( -s "$q" > $fileMaxSize{$q} );
+              && ( -s "$q" > $fileMaxSize{$q} ))
+			  {
+              print "" . ($bailOnFileSize ? "" : "WARNING: ") . "$q in $outLong larger than maximum bound $fileMaxSize{$q} bytes: " . (-s "$q") . ".\n";
+			  die "Deleting $outLong ... skip file size bail with -fi/if/sb\n" if $bailOnFileSize;
+			  }
           }
         }
         if ($dropboxThisCopy) {
