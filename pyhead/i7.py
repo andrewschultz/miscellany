@@ -555,11 +555,13 @@ def _valid_i7m_arg(x):
     x = re.sub("\?", "", x)
     return re.search("^[rv]*$", x)
 
-def rmbrax(my_str, spaces_too = True, end_only = False):
+def rmbrax(my_str, spaces_too = True, end_only = False, replace_string = "", skip_formatting = True):
+    if skip_formatting:
+        my_str = re.sub("\[(b|i|r)\]", "", my_str)
     regex_str = "\[[^\]]*\]"
     if spaces_too: regex_str = " *" + regex_str + " *"
     if end_only: regex_str += "$"
-    my_str = re.sub(" *\[[^\]]*\] *", "", my_str)
+    my_str = re.sub(" *\[[^\]]*\] *", replace_string, my_str)
     return my_str
 
 def get_defined_region(l): # we assume that a region is defined in the first sentence.
