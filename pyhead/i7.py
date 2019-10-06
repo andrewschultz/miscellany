@@ -64,6 +64,15 @@ def main_abb(x):
         return ""
     return i7xr[i7x[x]]
 
+def apostrophe_to_quotes(x):
+    temp = re.sub(" '", ' "', x)
+    temp = re.sub("' ", '" ', temp)
+    return re.sub(r"('$|^')", '"', temp)
+    #temp = re.sub(r'(\b'|'\b|'$|^')', '"', x)
+    return temp
+
+a2q = apostrophe_to_quotes
+
 def to_table(x):
     return re.sub(" *\[.*", "", line.lower().strip())
 
