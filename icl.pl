@@ -319,6 +319,8 @@ sub doOneBuild {
   if ( $_[3] ne "debug" || ( !$ignoreDRBPrefix ) ) {
     $blorbFileShort = "$_[3]-$blorbFileShort";
   }
+  my $binFileShort = $blorbFileShort;
+  $binFileShort =~ s/[a-z0-9]+$/$ex/;
   my $outFinal = "$_[2]\\Release\\$blorbFileShort";
 
   my $lastmod = ( stat($tempSource) )[9];
@@ -384,6 +386,12 @@ sub doOneBuild {
     printTimeDif($startTime);
     return;
   }
+  else
+  {
+    my $cmd = "copy \"$outFile\" \"c:\\games\\inform\\prt\\$binFileShort\"";
+	print "COPYING TO PRT DIRECTORY: $cmd\n";
+    system($cmd);
+  }
 
   ####probably not necessary
   #print "TEST RESULTS:$_[4] $_[3] $_[0] i6->binary succeeded,0,0,0\n";
@@ -397,7 +405,7 @@ sub doOneBuild {
   open( B, ">$betaDir\\Release2.blurb" );
   my $line;
   while ( $line = <A> ) {
-    $line =~ s/output/icl-output/gi if ( $line =~ /storyfile \"/ );
+    $line =~ s/output/icl-output/gi if (( $line =~ /storyfile \"/ ) || ($line =~ /^base64/));
     print B $line;
   }
   close(A);
