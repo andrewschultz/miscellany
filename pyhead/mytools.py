@@ -203,6 +203,12 @@ def print_ranges_of(x, default_thing = "numbers"): # given a list of integers, t
         the_string += "-{}".format(last_in_range)
     print("{} {} in {} ranges:".format(len(x), default_thing, num_ranges), the_string.strip())
 
+def print_and_warn(x):
+    print(x)
+    sys.stderr.write("(STDERR)" + x + "\n")
+
+paw = p_a_w = print_and_warn
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
