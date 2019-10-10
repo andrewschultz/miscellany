@@ -17,6 +17,7 @@ import sys
 import os
 from glob import glob
 from pathlib import Path
+from filecmp import cmp
 import i7
 
 quiet_mode = False
@@ -61,6 +62,12 @@ def is_okay(f):
         print("Flagged neutral file", q)
     return True
 
+def test_type(f):
+    suf = Path(f).suffix.lower()
+    if suf == '.pl' or suf == 'pm': return "perltidy"
+    if suf == '.py': return "python tab strip"
+    return "unknown"
+    
 def check_file(my_f):
     ''' runs the expected test on the file
     the return tuple has (# of files fixed) / (# of files looked at), usually (0/1, 1) '''
@@ -72,11 +79,15 @@ def check_file(my_f):
     if do_perl_tidy:
         tidy_out = "c:/writing/temp/tidy.tdy"
         os.system("perltidy.bat -i=2 {0} -o {1}".format(my_f, tidy_out))
-        temp = not cmp(my_f, tidy_out)
-        if copy_back and temp:
+        temp = cmp(my_f, tidy_out)
+        if copy_back and not temp:
             copy(tidy_out, my_f)
-        os.delete(tidy_out)
-        return (temp, 1)
+        elif not copy_back:
+            print(my_f, "had changes but copy-back was not set. Set -c on the command line.")
+        else:
+            print(my_f, "had no changes after perltidy.")
+        os.remove(tidy_out)
+        return (not temp, 1)
     else:
         with open(tabtemp, "w") as out_file:
             with open(my_f, "U") as in_file:
@@ -113,8 +124,7 @@ def check_directory(my_dir):
             total_files += x[1]
     sys.exit("Total changes = {:d} of {:d}.".format(total_changes, total_files))
 
-do_perl_tidy = False
-test_type = "tab strip"
+do_perl_tidy = True
 
 to_edit = []
 cmd_count = 1
@@ -126,9 +136,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nw' or arg == 'wn': win_merge_show = False
     elif arg == 'q': quiet_mode = True
     elif arg == 'ts': tab_space_search = True
-    elif arg == 'pt':
-        do_perl_tidy = True
-        test_type = "perl tidy"
+    elif arg == 'npt' or arg == 'ptn': do_perl_tidy = False
     elif arg == 'nts' or arg == 'tsn': tab_space_search = False
     elif arg == 'f': flag_neutral = True
     elif arg == 'nfn' or arg == 'fn' or arg == 'nf': flag_neutral = False
@@ -152,11 +160,11 @@ for my_f in to_edit:
     elif os.path.isfile(my_f):
         cf = check_file(my_f)[0]
         if cf:
-            print(my_f, "needed {0}s.".format(test_type))
+            print(my_f, "needed {0}s.".format(test_type(my_f)))
             total_tweaks += 1
         elif not quiet_mode:
-            print(my_f, "needed no {0}s.".format(test_type))
+            print(my_f, "needed no {0}s.".format(test_type(my_f)))
     else:
-        print(my_f, " is neither a directory nor a file.")
+        print(my_f, "is neither a directory nor a file.")
 
 sys.exit(total_tweaks)
