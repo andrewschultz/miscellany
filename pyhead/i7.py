@@ -82,6 +82,25 @@ def is_outline_start(x, case_insensitive = True):
 
 oline = is_outline_start
 
+def zap_end_brax(x):
+    x = x.strip()
+    while x.endswith("]"):
+        x = re.sub(" *\[.*?\]", "", x)
+    return x
+
+def topx2ary(x, div_char = "/"):
+    temp = zap_end_brax(x).replace('"', '')
+    base_array = ['']
+    tary = temp.split(" ")
+    for g in tary:
+        temp_stuff = g.split(div_char)
+        new_base_array = []
+        for t in temp_stuff:
+            for x in base_array:
+                new_base_array.append((x + " " if x else "") + t)
+        base_array = list(new_base_array)
+    return base_array
+
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
     return x
