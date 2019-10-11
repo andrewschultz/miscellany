@@ -69,27 +69,13 @@ if ($projToRead) {
   glob_over("rmo");
   if ( !$ignoreBinary ) {
     print "Looking for build file in $infBase\\Build.\n";
-    if ( -f "$infBase\\Build\\output.ulx" ) {
-      print
-        "Found ULX binary to copy over: output.ulx to debug-$projToRead.ulx.\n";
-      $q = `copy $infBase\\Build\\output.ulx $prt\\debug-$projToRead.ulx`;
-      print $q;
+    my $temp = checkMyExt( "$infBase\\Build", $prt, "debug-$projToRead" );
+    if ( $temp == 0 ) { print "Couldn't find any output binaries.\n"; }
+    elsif ( $temp < 0 ) {
+      print "Couldn't find any binaries that needed copying.\n";
     }
-    elsif ( -f "$infBase\\Build\\output.z8" ) {
-      print
-        "Found Z8 binary to copy over: output.z8 to debug-$projToRead.z8.\n";
-      $q = `copy $infBase\\Build\\output.z8 $prt\\debug-$projToRead.z8`;
-      print $q;
-    }
-    elsif ( -f "$infBase\\Build\\output.z5" ) {
-      print
-        "Found Z5 binary to copy over: output.z5 to debug-$projToRead.z5.\n";
-      $q = `copy $infBase\\Build\\output.z5 $prt\\debug-$projToRead.z5`;
-      print $q;
-    }
-    else { print "Couldn't find any output binaries.\n"; }
   }
-  else { print "Ignoring output binary.\n"; }
+  else { print "Ignoring any possible output binaries.\n"; }
   if ( $fileCopy{$projToRead} ) {
     my @c = split( /,/, $fileCopy{$projToRead} );
     print "Copying over additional specified files.\n";
@@ -102,6 +88,33 @@ if ($projToRead) {
 else { print "No project found.\n"; }
 
 ##########################################################
+
+# from dir, to dir, file main name
+sub checkMyExt {
+  my @ext_ary = ( "ulx", "z8", "z5" );
+  my $skipped = 0;
+  my $copied  = 0;
+  for my $x (@ext_ary) {
+    my $f1 = "$_[0]\\output.$x";
+    my $f2 = "$_[1]\\$_[2].$x";
+    if ( -f "$infBase\\Build\\output.$x" ) {
+      if ( -f $f1 && ( !compare( $f1, $f2 ) ) ) {
+        print "$f1 identical to $f2. Not copying over.\n";
+        $skipped++;
+      }
+      else {
+        my $xu = uc($x);
+        print "Found $xu binary to copy over: $f1 to $f2.\n";
+        my $q = `copy $infBase\\Build\\output.$x $prt\\debug-$projToRead.$x`;
+        print $q;
+        $copied++;
+      }
+    }
+  }
+  return $copied   if $copied > 0;
+  return -$skipped if $skipped > 0;
+  return 0;
+}
 
 sub glob_over {
   my $news = 0;
