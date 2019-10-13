@@ -440,12 +440,15 @@ def get_file(fname):
             if generic_bracket_error[x] > 1 or show_singletons: print("Bracketed text error ({:d} time(s)) line/stuff =".format(generic_bracket_error[x]), x)
             else: singletons += 1
         if singletons: print("Number of singletons (show detail with -si):", singletons)
-    if len(new_files.keys()) > 0: print("New files:", ', '.join(sorted(new_files.keys())), 'from', fname)
-    if len(changed_files.keys()) > 0: print("Changed files:", ', '.join(sorted(changed_files.keys())), 'from', fname)
-    if len(new_files.keys()) + len(changed_files.keys()) == 0:
-        if not quiet: print("Nothing changed.")
-    elif len(unchanged_files.keys()) > 0: print("Unchanged files:", ', '.join(sorted(unchanged_files.keys())), 'from', fname)
+    nfk = len(new_files)
+    if nfk > 0: print("New files ({}):".format(nfk), ', '.join(sorted(new_files)), 'from', fname)
+    cfk = len(changed_files)
+    if cfk: print("Changed files ({}):".format(cfk), ', '.join(sorted(changed_files)), 'from', fname)
+    ufk = len(unchanged_files)
     lnc = len(new_files.keys()) + len(changed_files.keys()) > 0
+    if not lnc:
+        if not quiet: print("Nothing changed.")
+    elif ufk: print("Unchanged files ({}):".format(ufk), ', '.join(sorted(unchanged_files.keys())), 'from', fname)
     if lnc or force_postproc:
         run_postproc = defaultdict(bool)
         if not lnc: print("Forcing postproc even though nothing changed.")
