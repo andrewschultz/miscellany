@@ -203,6 +203,16 @@ def print_ranges_of(x, default_thing = "numbers"): # given a list of integers, t
         the_string += "-{}".format(last_in_range)
     print("{} {} in {} ranges:".format(len(x), default_thing, num_ranges), the_string.strip())
 
+def follow_link(x):
+    temp = x
+    while not os.path.islink(temp):
+        if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
+        temp = os.readlink(temp)
+        count += 1
+    return temp
+
+fl = follow_link
+
 def print_and_warn(x):
     print(x)
     sys.stderr.write("(STDERR)" + x + "\n")
