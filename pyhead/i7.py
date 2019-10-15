@@ -283,8 +283,12 @@ def build_log_open(x):
 
 blo = bl_o = build_log_open
 
-def hdr(x, y):
-    return '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+def hdr(x, y, base=False):
+    if proj_exp(y, False) and x in i7hfx and not proj_exp(x, False): (x, y) = (y, x) # if x is a header and not a project, flip x and y
+    temp = '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+    if base:
+        return os.path.basename(temp)
+    return temp
 
 hdrfile = hfile = hdr
 
