@@ -49,6 +49,17 @@ def usage(arg = ""):
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
 
+def days_since():
+    result=subprocess.run(["git", "log", "-1"], stdout=subprocess.PIPE).stdout.decode("utf-8")
+    ary = result.split('\n')
+    day_start = my_time.start_of('day')
+    for my in ary:
+        if my.lower().startswith("date"):
+            my = re.sub("^date: *", "", my, 0, re.IGNORECASE)
+            x = pendulum.from_format(my, 'ddd MMM DD')
+            return (day_start.diff(x).in_days())
+    sys.exit("Could not differ git log -1 from current datetime.")
+
 def add_my_files(files_to_add):
     if not files_to_add: return
     my_cmd = "git add {}".format(files_to_add)
@@ -74,6 +85,7 @@ run_log = False
 proj_shift_yet = ""
 bare_commit = False
 files_to_add = ""
+get_from_log = False
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -124,6 +136,8 @@ while count < len(sys.argv):
     elif arg == 'ao':
         auto_date = True
         auto_today_ok = True
+    elif arg == 'fl':
+        get_from_log = True
     elif arg == 'na':
         set_author = False
         set_commit = True
@@ -142,6 +156,12 @@ while count < len(sys.argv):
 my_time = pendulum.today()
 
 bare_commit_cmd = "git commit -m \"{}\"".format(commit_message)
+
+if get_from_log:
+    days = days_since()
+    if days == 0: sys.exit("Can't use FL flag since we already have a commit today.")
+    print("Days_since in log is", days, "So next commit will be", days - 1)
+    days -= 1
 
 if auto_date:
     result=subprocess.run(["git", "show", "--summary"], stdout=subprocess.PIPE)
