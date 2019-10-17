@@ -14,6 +14,7 @@ import time
 import i7
 import pendulum
 import subprocess
+import mytools as mt
 
 base_dir_needed = "c:\\users\\andrew\\documents\\github"
 set_author = True
@@ -35,6 +36,7 @@ def usage(arg = ""):
     print("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc")
     print("l at the end runs git log too")
+    print("fl gets the next missing date from the log. For instance, if the last commit is on October 14, it will be October 15.")
     print("m# specifies minutes before midnight")
     print("nc/na sets no author or commit change, and am amends manually.")
     print("s# specifies seconds before midnight in addition to minutes")
@@ -62,7 +64,7 @@ def days_since():
 
 def add_my_files(files_to_add):
     if not files_to_add: return
-    my_cmd = "git add {}".format(files_to_add)
+    my_cmd = "git add {}".format(' '.join([mt.add_quotes_if_space(x) for x in files_to_add]))
     os.system(my_cmd)
 
 def check_bare_commit(bare_commit, files_to_add, bail=False):
@@ -84,19 +86,24 @@ run_cmd = False
 run_log = False
 proj_shift_yet = ""
 bare_commit = False
-files_to_add = ""
+files_to_add = []
 get_from_log = False
+add_commands = []
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
     if arg.startswith("f:") or arg.startswith("a:"):
-        files_to_add = arg[2:]
+        files_to_add.append(arg[2:])
         print("Files to add:", arg[2:])
-    elif ' ' in arg or len(arg) > 10:
+    elif os.path.exists(arg) or '*' in arg:
+        print("Detecting {} as file(s)-to-add.".format(arg))
+        files_to_add.append(arg)
+    elif ' ' in arg:
+        if commit_message: sys.exit("Duplicate commit message {} vs {}".format(sys.argv[count].strip(), commit_message))
         commit_message = sys.argv[count].strip()
         print("Commit message from cmd line:", commit_message)
-    elif re.search("^[rxl]+", arg):
+    elif re.search("^[rxl]+$", arg):
         run_cmd = 'r' in arg or 'x' in arg
         cmd_counts = arg.count('r') + arg.count('x')
         run_log = 'l' in arg
@@ -120,17 +127,16 @@ while count < len(sys.argv):
         proj_shift_yet = i7.proj_exp(arg[1:])
         if not proj_shift_yet:
             sys.exit("No such project or abbreviation {:s}".format(arg[1:]))
-    elif arg[0] == 'm':
-        if arg[1:].isdigit(): min_before = int(arg[1:])
-        else: sys.exit("-m must take a positive integer after!")
-    elif arg[:2] == 'so':
-        if arg[2:].isdigit():
-            sec_before = int(arg[2:])
-            min_before = 0
-        else: sys.exit("-so must take a positive integer after!")
-    elif arg[0] == 's':
-        if arg[1:].isdigit(): sec_before = int(arg[1:])
-        else: sys.exit("-s must take a positive integer after!")
+    elif arg[0] == 'm' and arg[1:].isdigit():
+        min_before = int(arg[1:])
+        #sys.exit("-m (minutes) must take a positive integer after!")
+    elif arg[:2] == 'so' and arg[2:].isdigit():
+        sec_before = int(arg[2:])
+        min_before = 0
+        #sys.exit("-so must take a positive integer after!")
+    elif arg[0] == 's' and arg[1:].isdigit():
+        sec_before = int(arg[1:])
+        #sys.exit("-s (seconds) must take a positive integer after!")
     elif arg == 'a':
         auto_date = True
     elif arg == 'ao':
@@ -150,7 +156,7 @@ while count < len(sys.argv):
     elif arg == 'bc':
         bare_commit = True
     elif arg == '?': usage()
-    else: usage()
+    else: usage(arg)
     count += 1
 
 my_time = pendulum.today()
