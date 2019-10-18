@@ -121,6 +121,8 @@ count = 1
 comment_out = []
 uncomment = []
 
+task_minutes = 0
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     neg = arg[0] == '-'
@@ -139,6 +141,8 @@ while count < len(sys.argv):
         open_data = True
     elif arg == 'h':
         open_hosts = True
+    elif arg.isdigit():
+        task_minutes = int(arg)
     elif "." in arg:
         if neg:
             comment_out.append(arg)
@@ -148,6 +152,16 @@ while count < len(sys.argv):
         print("Invalid flag", sys.argv[count])
         usage()
     count = count + 1
+
+if task_minutes:
+    import pendulum
+    pen_time = pendulum.now().naive().add(minutes=task_minutes)
+    cmd = "schtasks /delete /f /tn resethosts"
+    print("Deleting-if-exists task-scheduler:", cmd)
+    os.system(cmd)
+    cmd = 'schtasks /create /tn resethosts /tr "py c:\\scripts\\hbl.py" /sc once /st {}'.format(pen_time.format("HH:mm"))
+    print("Running task-scheduler:", cmd)
+    os.system(cmd)
 
 if open_data:
     os.system(hosts_data)
@@ -159,8 +173,13 @@ if open_hosts:
     os.system("\"c:\\program files (x86)\\notepad++\\notepad++.exe\" " + hosts)
     exit()
 
+if task_minutes:
+    print("Not running brute-force-clear since we set task_minutes.")
+    sys.exit()
+
 read_blockable_cfg(hbl_block_data)
 brute_force_uncomment(hosts)
+
 exit()
 
 if len(comment_out) + len(uncomment):
