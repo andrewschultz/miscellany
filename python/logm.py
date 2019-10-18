@@ -51,6 +51,15 @@ def usage(arg = ""):
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
 
+def bail_if_not_auto_ok():
+    global set_author
+    global set_commit
+    if auto_today_ok:
+        set_author = False
+        set_commit = False
+        return
+    sys.exit("Set -ao to say auto-today is okay and commit with the current time.")
+
 def days_since():
     result=subprocess.run(["git", "log", "-1"], stdout=subprocess.PIPE).stdout.decode("utf-8")
     ary = result.split('\n')
@@ -59,7 +68,9 @@ def days_since():
         if my.lower().startswith("date"):
             my = re.sub("^date: *", "", my, 0, re.IGNORECASE)
             x = pendulum.from_format(my, 'ddd MMM DD')
-            return (day_start.diff(x).in_days())
+            temp = day_start.diff(x).in_days()
+            bail_if_not_auto_ok()
+            return temp
     sys.exit("Could not differ git log -1 from current datetime.")
 
 def add_my_files(files_to_add):
@@ -183,11 +194,7 @@ if auto_date:
             days = day_diff - 1
             if days == 0:
                 print("You don't need logm--you can commit with the current time to keep your streak going!")
-                if auto_today_ok:
-                    set_author = False
-                    set_commit = False
-                    continue
-                sys.exit("Set -ao to say auto-today is okay.")
+                bail_if_not_auto_ok()
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
             break
