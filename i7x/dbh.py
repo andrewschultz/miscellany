@@ -137,10 +137,15 @@ def process_operators(infile, tempfile, outfile):
         copyfile(tempfile, out_mod)
     return
 
+header_ary_abbr = []
+header_ary = []
+
 cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = nohy(sys.argv[cmd_count])
-    if i7.proj_exp(arg, False):
+    if arg.startswith("h="):
+        header_ary_abbr = arg[2:].split(",")
+    elif i7.proj_exp(arg, False):
         if my_project:
             sys.exit("Duplicate projects defined.")
         my_project = arg
@@ -150,7 +155,7 @@ while cmd_count < len(sys.argv):
         except:
             sys.exit("Copying level must be an integer.")
     else:
-        sys.exit("Unrecognized", arg)
+        sys.exit("Unrecognized argument {}".format(arg))
     cmd_count += 1
 
 with open(dbh) as file:
@@ -175,6 +180,9 @@ if not my_project:
 ran_project = False
 ignore_til_next_break = False
 
+if len(header_ary_abbr):
+    header_ary = [ i7.hdr(my_project, x, base=True).lower() for x in header_ary_abbr ]
+
 with open(dbh) as file:
     line_count = 0
     for (line_count, line) in enumerate(file, 1):
@@ -185,6 +193,11 @@ with open(dbh) as file:
         if reading_operators:
             if not line.strip() or line.startswith(";"):
                 reading_operators = False
+                if len(header_ary_abbr):
+                    if read_file in header_ary: print(read_file, "in user defined header array")
+                    else:
+                        print("Ignoring", read_file, "not in header array", header_ary)
+                        continue
                 process_operators(read_file, temp_write, write_file)
                 continue
             t = line.strip().split("\t")
