@@ -10,9 +10,10 @@ use warnings;
 use File::stat;
 use File::Path;
 
+use lib "c:/writing/scripts";
+use mytools;
+
 use Win32::Clipboard;
-use Win32API::File qw( GetFileAttributes FILE_ATTRIBUTE_REPARSE_POINT );
-use Win32::Symlink;
 
 use Cwd 'abs_path';
 use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
@@ -539,15 +540,7 @@ sub readZupFile {
             );
           }
         }
-        my $is_link = GetFileAttributes($a) & FILE_ATTRIBUTE_REPARSE_POINT;
-        if ($is_link) {
-          ( my $a2 = $a ) =~ s/\//\\/g;
-          my $q = `dir \"$a2\"`;
-          $q =~ s/.*\[//sm;
-          $q =~ s/].*//sm;
-          print "Symlink $a -> $q\n";
-          $a = $q;
-        }
+        $a = follow_symlink($a);
         $zip->addFile( "$a", "$b" );
 
         if ( -f $a ) { $lastFile = $a; }
