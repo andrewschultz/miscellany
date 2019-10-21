@@ -13,6 +13,9 @@ use strict;
 use warnings;
 use POSIX;
 
+use lib 'c:/writing/scripts';
+use mytools;
+
 my @levels = ( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
 my %exp;
@@ -31,6 +34,7 @@ my $questionLast    = 0;
 my $ghAfter         = 0;
 my $launchPost      = "";
 my $github_recommended = 1;
+my $github_set = 0;
 
 my $questionsThisTime = 0;
 my $answersThisTime   = 0;
@@ -89,7 +93,7 @@ while ( $count <= $#ARGV ) {
     };
     /^-?\?$/ && do { usage(); exit; };
     /^-?gh$/ && do { $ghAfter = 1; $count++; next; };
-    /^-?(gn|ng)$/ && do { $github_recommended = 0; $count++; next; };
+    /^-?(gn|ng)$/ && do { $github_recommended = 0; $github_set = 1; $count++; next; };
     /^-?a$/  && do { printAllFiles(0); exit; };
     /^-?la$/ && do { listAllOutput();  exit; };
     /^-?d$/ && do { $debug           = 1; $count++; next; };
@@ -185,22 +189,18 @@ while ( $a = <A> ) {
     $title =~ s/^!//;
     next;
   }
+  
+  if ($a =~ /^no-github/) { $github_recommended = 0; $github_set = 1; next; }
+  if ($a =~ /^yes-github/) { $github_recommended = 1; $github_set = 1; next; }
 
-  if ($a =~ /^outfile=/i) {
-    $a =~ s/^outfile=//i;
-    chomp($a);
+  if ($a =~ /^out(file)?=/i) {
 	if ($outname) { print "Warning: redefinition of outfile from $outname at line $. of $filename.\n"; }
-    $outname = $a;
-	print("WARNING: OUTNAME of $a doesn't have/avoid github as it should.\n") if ($outname =~ /github/i) != ($github_recommended);
-
-  }
-  if ( $a =~ /^out=/i ) {
-    $a =~ s/^out=//i;
+	my $prefix = ($a =~ /^outfile/ ? "c:/writing/scripts/invis//" : "$theDir\\");
+	die("Need to define a directory befoure out=") if (($a =~ /^out/) && (!$theDir));
+    $a =~ s/^out.*?=//i;
     chomp($a);
-	if ($outname) { print "Warning: redefinition of outfile at line $. of $filename.\n"; }
-    $outname = "$theDir\\$a";
-	print("WARNING: OUTNAME of $a doesn't have/avoid github as it should.\n") if ($outname =~ /github/i) != ($github_recommended);
-    next;
+    $outname = "" . $prefix . $a;
+	printf("WARNING: OUTNAME of $outname doesn't %s github as it should.\n", $github_recommended ? "have" : "avoid") if ($outname =~ /github/i) != ($github_recommended);
   }
 
   if ( $a =~ /^raw=/i ) {
@@ -214,26 +214,31 @@ while ( $a = <A> ) {
 if ($outname eq "") {
   $outname = "$invDir\\invis-$filename";
   $outname =~ s/txt$/htm/gi;
+  print "No outname defined. Going with default $outname.\n";
 }
 
-if ( $updateOnly && defined( -M $outname ) ) {
+my $file_link = follow_symlink($filename);
+my $out_link = follow_symlink($outname);
+
+if ( $updateOnly && defined( -M $out_link ) ) {
 
 #if (-M $filename > 1) { print "$filename not modified in the past 24 hours.\n"; exit; }
   if ($debug) {
     print ""
-      . ( ( -M $filename ) . " $filename | $outname " . ( -M $outname ) )
+      . ( ( -M $file_link ) . " $filename | $outname " . ( -M $out_link ) )
       . "\n";
   }
 
 # remember that -M $filename says days since last edit, so it's not a timestamp--then the > would be <
-  if ( ( -M $filename > -M $outname ) && ( !$forceRunThrough ) ) {
-    if ( -M $outname > -M __FILE__ ) {
+  if ( ( -M $file_link > -M $out_link ) && ( !$forceRunThrough ) ) {
+    if ( -M $out_link > -M __FILE__ ) {
       print
 "$outname was modified after $filename, but since the source was updated, we will regenerate it.\n";
     }
     else {
+  my $daydelt = (-M $file_link) - (-M $out_link);
       print
-"$outname is already up to date. Its timestamp is after $filename. Run with -f to force things.\n";
+"$outname is already up to date. Its timestamp is after $filename by " . ($daydelt < 1 ? sprintf("%d seconds", $daydelt * 86400 + .5) : sprintf("%.2f days", $daydelt)) . ". Run with -f to force things.\n";
       launchIt();
       exit;
     }
@@ -363,22 +368,17 @@ while ( $a = <B> ) {
 close(B);
 close(C);
 
+if (!$github_set) { print "WARNING: no-github and yes-github not set. Default is " . $github_recommended ? "have" : "avoid" . ".\n"; }
+
 launchIt();
 
-if ($theDir) {
-  print "Copying to $theDir.\n";
-  my $outshort = $outname;
-  $outshort =~ s/.*[\\\/]//g;
-  $cmd = "copy $outname \"$theDir/$outshort\"";
-  $cmd =~ s/\//\\/g;
-  print "$cmd\n";
-  `$cmd`;
   if ($ghAfter) {
     print "Running gh.pl $launchPost...\n";
     my $q = `gh.pl $launchPost`;
     print $q;
   }
-}
+
+# start subroutines
 
 sub currentOutline {
   my @ary = @{ $_[0] };
