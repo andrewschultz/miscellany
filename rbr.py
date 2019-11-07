@@ -21,6 +21,7 @@ from shutil import copy
 from filecmp import cmp
 from mytools import nohy
 
+branch_variables = defaultdict(list)
 to_match = defaultdict(str)
 monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
@@ -82,6 +83,52 @@ def should_be_nudge(x):
     if re.search("(spechelp|mistake|nudge)", x): return True
     return False
 
+def fill_vars(my_line, file_idx):
+    for q in re.findall("\{[A-Z]+\}", my_line):
+        print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
+        my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
+    return my_line
+
+def branch_variable_adjust(var_line, err_stub, actives):
+    temp = var_line.replace(' ', '')
+    #print("temp", temp)
+    my_var = re.sub("[-=\+].*", "", temp).upper()
+    my_op = re.sub(".*?([-=\+]+).*", r'\1', temp)
+    my_num = re.sub(".*?[-=\+]+", "", temp)
+    if my_num:
+        my_num = int(my_num)
+    else:
+        my_num = 0
+    #print("my_var", my_var)
+    #print("my_op", my_op)
+    #print("my_num", my_num)
+    if my_var not in branch_variables:
+        if my_op != '=':
+            print("WARNING tried to operate on undeclared variable {} {}.".format(my_var, err_stub))
+            return
+        for x in actives:
+            if not x:
+                print("WARNING tried to define a variable {} when not all files were active {}.".format(my_var, err_stub))
+                return
+        branch_variables[my_var] = [my_num] * len(actives)
+    #print("Before:", my_var, branch_variables[my_var])
+    for q in range(0, len(actives)):
+        if not actives[q]: continue
+        if my_op == "++":
+            branch_variables[my_var][q] += 1
+        elif my_op == "--":
+            branch_variables[my_var][q] -= 1
+        elif my_op == "=":
+            branch_variables[my_var][q] = my_num
+        elif my_op == "-=":
+            branch_variables[my_var][q] -= my_num
+        elif my_op == "+=":
+            branch_variables[my_var][q] += my_num
+        else:
+            print("Unknown operator {} {}.".format(my_var, err_stub))
+    #print("After:", my_var, branch_variables[my_var])
+    return
+
 def vet_potential_errors(line, line_count, cur_pot):
     if line.startswith("'") or line.strip().endswith("'"):
         print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
@@ -112,8 +159,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     return False
 
 def replace_mapping(x, my_f, my_l):
-    if x.startswith('@'): y = x[1:]
-    elif x.startswith('`'): y = x[1:]
+    if x.startswith('@') or x.startswith('`'): y = x[1:]
     else:
         y = re.sub("=\{", "", x.strip())
         y = re.sub("\}.*", "", y)
@@ -278,6 +324,11 @@ def get_file(fname):
                     file_list.append(f)
                 continue
             if not len(file_array): continue # allows for comments at the start
+            if line.startswith("}}"):
+                if len(file_array) == 0:
+                    sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
+                branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
+                continue
             if re.search("^(`|=\{|@)", line): line = replace_mapping(line, fname, line_count)
             if line.startswith('#--'): continue
             if temp_diverge and not line.strip():
@@ -394,7 +445,10 @@ def get_file(fname):
                     if last_cr[ct] and (len(line_write.strip()) == 0):
                         pass
                     else:
-                        file_list[ct].write(line_write)
+                        line_write_2 = fill_vars(line_write, ct)
+                        if line_write != line_write_2:
+                            print(line_write, "changed to", line_write_2)
+                        file_list[ct].write(line_write_2)
                     last_cr[ct] = len(line_write.strip()) == 0
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if actives[dupe_val]:
