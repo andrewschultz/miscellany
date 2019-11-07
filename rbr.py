@@ -21,6 +21,7 @@ from shutil import copy
 from filecmp import cmp
 from mytools import nohy
 
+my_strings = defaultdict(str)
 branch_variables = defaultdict(list)
 to_match = defaultdict(str)
 monty_detail = defaultdict(str)
@@ -85,9 +86,19 @@ def should_be_nudge(x):
 
 def fill_vars(my_line, file_idx):
     for q in re.findall("\{[A-Z]+\}", my_line):
-        print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
+        #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
         my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
     return my_line
+
+def string_fill(var_line):
+    temp = var_line
+    for q in re.findall("\{\$[A-Z]+\}", var_line):
+        q0 = q[2:-1]
+        if q0 not in my_strings:
+            print("WARNING unrecognized string {}.".format(q0))
+            continue
+        temp = re.sub("\{\$" + q0 + "\}", my_strings[q0], temp)
+    return temp
 
 def branch_variable_adjust(var_line, err_stub, actives):
     temp = var_line.replace(' ', '')
@@ -324,6 +335,10 @@ def get_file(fname):
                     file_list.append(f)
                 continue
             if not len(file_array): continue # allows for comments at the start
+            if line.startswith("}$"):
+                temp_ary = line[2:].strip().split("=")
+                my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
+                continue
             if line.startswith("}}"):
                 if len(file_array) == 0:
                     sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
@@ -445,6 +460,10 @@ def get_file(fname):
                     if last_cr[ct] and (len(line_write.strip()) == 0):
                         pass
                     else:
+                        if "{$" in line_write:
+                            #print("BEFORE:", line_write.strip())
+                            line_write = string_fill(line_write)
+                            #print("AFTER:", line_write.strip())
                         line_write_2 = fill_vars(line_write, ct)
                         if line_write != line_write_2:
                             print(line_write, "changed to", line_write_2)
