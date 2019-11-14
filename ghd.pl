@@ -239,22 +239,25 @@ if ($unchAfter) {
 sub cutDown {
   my @x      = reverse( split( /\n/, $_[0] ) );
   my $count  = 0;
-  my $c      = 0;
+  my $c      = 1;
   my $retVal = ( $debug || $_[0] ? "======$_[1] summary\n" : "" );
   my $temp;
+  my $need_header = 1;
   while ( $count <= $#x ) {
     if ( $x[$count] =~ /^Date/ ) {
       ( $temp = $x[$count] ) =~ s/^Date/'Date ' . ($c+1)/e;
+	    $c++;
+		$need_header = 1;
 
 # note if we want to include the date we may need serious shuffling. This code is doing nothing at the moment.
 # the 'reverse' put the date after the commit message which makes things tricky
 
       #$retVal .= "$temp\n";
     }
-    elsif ( $x[$count] =~ /^    / ) {
-      $c++;
-      ( $temp = $x[$count] ) =~ s/^ +/'Change ' . $c . ': '/e;
+    elsif ( $x[$count] =~ /^    /  && ($x[$count] =~ /[a-z]/i)) {
+      ( $temp = $x[$count] ) =~ s/^ +/($need_header ? 'Change ' : '       ') . $c . ': '/e;
       $retVal .= "$_[1] $temp\n";
+	  $need_header = 0;
     }
     $count++;
 
