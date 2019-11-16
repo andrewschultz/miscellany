@@ -109,7 +109,7 @@ while ( $count <= $#ARGV ) {
         if ( $launchAfter > 1 or $launchRaw > 1 );
       $count++;
       print
-"NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that.\n"
+"NOTE: if you're trying to run the Roiling invisiclues, you need ROI for that. LR flags are to launch after (l) or launch the raw file (r) or both, combined.\n"
         if ( $a =~ /^-?r$/ );
       next;
     };
@@ -189,18 +189,25 @@ while ( $a = <A> ) {
     $title =~ s/^!//;
     next;
   }
-  
+
   if ($a =~ /^no-github/) { $github_recommended = 0; $github_set = 1; next; }
   if ($a =~ /^yes-github/) { $github_recommended = 1; $github_set = 1; next; }
+
+  if ($a =~ /^outdir=/i) {
+    ($theDir = $a) =~ s/.*=//;
+	chomp($theDir);
+  }
 
   if ($a =~ /^out(file)?=/i) {
 	if ($outname) { print "Warning: redefinition of outfile from $outname at line $. of $filename.\n"; }
 	my $prefix = ($a =~ /^outfile/ ? "c:/writing/scripts/invis//" : "$theDir\\");
-	die("Need to define a directory befoure out=") if (($a =~ /^out/) && (!$theDir));
+	die("Need to define a directory before out=") if (($a =~ /^out/) && (!$theDir));
     $a =~ s/^out.*?=//i;
     chomp($a);
     $outname = "" . $prefix . $a;
-	printf("WARNING: OUTNAME of $outname doesn't %s github as it should.\n", $github_recommended ? "have" : "avoid") if ($outname =~ /github/i) != ($github_recommended);
+	if (($outname =~ /github/i) != ($github_recommended)) {
+	printf("WARNING: OUTNAME of $outname doesn't %s github as it should.\n", $github_recommended ? "have" : "avoid");
+	}
   }
 
   if ( $a =~ /^raw=/i ) {
@@ -277,12 +284,22 @@ my $lastLev           = 0;
 my $temp              = 0;
 my $otl               = 0;
 my $lastWasInvisiclue = 0;
+my $skip_lines = 0;
 
 while ( $a = <A> ) {
   print $a if $verbose;
   chomp($a);
   if ( $a =~ /^\#/ ) { next; }    #comments
   if ( $a =~ /^;/ )  { last; }
+  if ($a =~ /^#skipstart/) {
+    $skip_lines = 1;
+	continue;
+	}
+  if ($a =~ /^#skipend/) {
+    $skip_lines = 0;
+	continue;
+	}
+  continue if $skip_lines;
   $a =~ s/ *##regignore.*//;      # regression ignore, for testing elsewhere
 
   if ( $a !~ /^[\?>]/ ) {
@@ -368,7 +385,7 @@ while ( $a = <B> ) {
 close(B);
 close(C);
 
-if (!$github_set) { print "WARNING: no-github and yes-github not set. Default is " . $github_recommended ? "have" : "avoid" . ".\n"; }
+if (!$github_set) { print "WARNING: no-github and yes-github not set. Default is " . ($github_recommended ? "have" : "avoid") . ".\n"; }
 
 launchIt();
 
