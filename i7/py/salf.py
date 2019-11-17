@@ -5,6 +5,7 @@
 # separate from salf.pl which is the Alec Smart section alphabetizer
 # confusing I know but it needs to be sorted
 #
+# need to also determine if a file is Windows or Unix line breaks, also determine if there is a difference, is it only due to line breaks?
 
 from collections import defaultdict
 from shutil import copy
@@ -12,7 +13,7 @@ import os
 import sys
 import i7
 from filecmp import cmp
-from mytools import nohy
+import mytools as mt
 import re
 
 copy_over = True
@@ -132,21 +133,23 @@ def main_sect_alf(my_proj, my_file):
                 else:
                     fout.write(line)
     fout.close()
+    identical_ignoring_eol = mt.compare_unshuffled_lines(my_file, my_bak)
     if show_dif:
         if cmp(my_file, my_bak): print(my_file, "and", my_bak, "are identical. Not showing.")
+        elif identical_ignoring_eol: print(my_file, "and", my_bak, "are identical except for line breaks. Not showing.")
         else: i7.wm(my_file, my_bak)
-    elif not cmp(my_file, my_bak): print("Not showing differences.")
-    s1 = os.stat(my_file).st_size
-    s2 = os.stat(my_bak).st_size
+    elif not cmp(my_file, my_bak):
+        if identical_ignoring_eol:
+            print(my_file, "and", my_bak, "are identical except for line breaks. Not showing.")
+        else:
+            print("There are differences, but I am not showing them.")
     if copy_over:
-        if cmp(my_file, my_bak):
+        if cmp(my_file, my_bak) or identical_ignoring_eol:
             print("Sorting the rules changed nothing. Not copying {}.".format(os.path.basename(my_file)))
             os.remove(my_bak)
             return
-        elif s1 != s2 and not force_copy:
-            print("Sizes unequal for {}. Use -f to force copy over. Saved".format(os.path.basename(my_file)), my_bak, "for inspection.{:s}".format("" if show_dif else " -d shows differences."))
-            print(my_file, s1)
-            print(my_bak, s2)
+        elif not force_copy and mt.compare_unshuffled_lines(my_file, my_bak):
+            print("Differences were found between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file)), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences."))
             return
         print("Changes found, copying back {}.".format(os.path.basename(my_file)))
         copy(my_bak, my_file)
@@ -162,7 +165,7 @@ cmd_defined_proj = ""
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = nohy(sys.argv[cmd_count])
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'd': show_dif = True
     elif arg == 'f': force_copy = True
     elif arg == 'xv' or arg == 'vx': very_verbose = verbose = True
