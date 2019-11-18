@@ -187,11 +187,17 @@ with open(alf_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
-        ll = line.strip().lower().split("\t")
+        if line.startswith("xz:"): # quick notation for xx(stuff) zz(stuff)
+            marker_suffix = line[3:].strip()
+            for u in marker_suffix.split(","):
+                sort_start[current_project]['xx' + u] = -1
+                sort_end[current_project]['zz' + u] = -1
+            continue
         index_second = False
-        if ll[0].lower().startswith("i2:"):
+        if line.lower().startswith("i2:"):
             index_second = True
-            ll[0] = ll[0][3:]
+            line=line[3:]
+        ll = line.strip().lower().split("\t")
         if ll[0].lower().startswith("project="):
             temp = re.sub("^.*?=", "", ll[0])
             current_project = i7.proj_exp(temp)
