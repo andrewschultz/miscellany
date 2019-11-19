@@ -81,6 +81,15 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
+def compare_unshuffled_lines(fpath1, fpath2):
+    with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
+        for linef1, linef2 in zip(file1, file2):
+            linef1 = linef1.rstrip('\r\n')
+            linef2 = linef2.rstrip('\r\n')
+            if linef1 != linef2:
+                return False
+        return next(file1, None) == None and next(file2, None) == None
+
 def compare_shuffled_lines(f1, f2, bail = False, max = 0):
     freq = defaultdict(int)
     total = defaultdict(int)
@@ -106,8 +115,10 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0):
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         print(os.path.basename(f1), "has", left, "but", os.path.basename(f2), "has", right)
+        return False
     else:
         print("No shuffle-diffs")
+        return True
     if bail and len(difs):
         print("Compare shuffled lines is bailing on difference.")
         sys.exit()
@@ -120,7 +131,8 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     os.system(cmd)
     if bail: exit()
 
-def add_postopen_file_line(file_name, file_line, rewrite = False):
+def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True):
+    if file_line <= 0 and reject_nonpositive_line: return
     if rewrite or file_name not in file_post_list:
         file_post_list[file_name] = file_line
 
@@ -212,6 +224,11 @@ def follow_link(x):
     return temp
 
 fl = follow_link
+
+def add_quotes_if_space(x):
+    if x.startswith('"'): return x
+    if ' ' in x: return '"{}"'.format(x)
+    return x
 
 def print_and_warn(x):
     print(x)
