@@ -90,7 +90,7 @@ def compare_unshuffled_lines(fpath1, fpath2):
                 return False
         return next(file1, None) == None and next(file2, None) == None
 
-def compare_shuffled_lines(f1, f2, bail = False, max = 0):
+def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False):
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -102,6 +102,7 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0):
             freq[line.lower().strip()] -= 1
             total[line.lower().strip()] += 1
     difs = [x for x in freq if freq[x]]
+    if ignore_blanks and '' in difs: difs.remove('')
     left = 0
     right = 0
     totals = 0
@@ -115,13 +116,14 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0):
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         print(os.path.basename(f1), "has", left, "but", os.path.basename(f2), "has", right)
+        if len(difs) == 1 and difs[0] == '':
+            print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
+        if bail:
+            print("Compare shuffled lines is bailing on difference.")
+            sys.exit()
         return False
-    else:
-        print("No shuffle-diffs")
-        return True
-    if bail and len(difs):
-        print("Compare shuffled lines is bailing on difference.")
-        sys.exit()
+    print("No shuffle-diffs")
+    return True
 
 csl = cs = compare_shuffled_lines
 
