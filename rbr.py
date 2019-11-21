@@ -135,6 +135,8 @@ def branch_variable_adjust(var_line, err_stub, actives):
             branch_variables[my_var][q] -= my_num
         elif my_op == "+=":
             branch_variables[my_var][q] += my_num
+        elif my_op == "=":
+            branch_variables[my_var][q] = my_num
         else:
             print("Unknown operator {} {}.".format(my_var, err_stub))
     #print("After:", my_var, branch_variables[my_var])
@@ -172,8 +174,9 @@ def vet_potential_errors(line, line_count, cur_pot):
 def replace_mapping(x, my_f, my_l):
     if x.startswith('@') or x.startswith('`'): y = x[1:]
     else:
-        y = re.sub("=\{", "", x.strip())
+        y = re.sub("=+\{", "", x.strip())
         y = re.sub("\}.*", "", y)
+    y = re.sub(" *#.*", "", y) # strip out comments
     y = y.strip()
     if y not in to_match.keys(): sys.exit("Oops, line {:d} of {:s} has undefined matching-class {:s}.".format(my_l, my_f, y))
     return "==" + to_match[y]
@@ -465,8 +468,7 @@ def get_file(fname):
                             line_write = string_fill(line_write)
                             #print("AFTER:", line_write.strip())
                         line_write_2 = fill_vars(line_write, ct)
-                        if line_write != line_write_2:
-                            print(line_write, "changed to", line_write_2)
+                        #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
                         file_list[ct].write(line_write_2)
                     last_cr[ct] = len(line_write.strip()) == 0
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
