@@ -269,6 +269,7 @@ def write_monty_file(fname, testnum):
     return
 
 def get_file(fname):
+    got_any_test_name = False
     dupe_val = 1
     warns = 0
     last_cmd = ""
@@ -297,6 +298,7 @@ def get_file(fname):
                 if len(eq_array) != 3: sys.exit("Bad equivalence array at line {:d} of file {:s}: needs exactly two tabs.".format(line_count, fname))
                 to_match[eq_array[1]] = eq_array[2]
                 continue
+            if line.startswith("*") and line[1] != '*': got_any_test_name = True
             if line.startswith("preproc="):
                 if len(file_array) > 0:
                     print("WARNING Line {:d} has preproc that should be before files.".format(line_count))
@@ -537,6 +539,9 @@ def get_file(fname):
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
+    if not got_any_test_name:
+        print("Uh oh. You don't have any test name specified with * main-thru")
+        print("Just a warning.")
     sys.exit()
     post_copy(file_array_base)
 
@@ -548,6 +553,8 @@ with open('c:/writing/scripts/rbr.txt') as file:
         ll = line.lower().strip()
         if ll.startswith(';'): break
         if ll.startswith('#'): continue
+        if '>' in ll[1:]:
+            print("WARNING: line", lc, "may need line break before command prompt:", line.strip())
         vars = wipe_first_word(ll)
         if ll.startswith('dupe'):
             ja = vars.split("\t")
@@ -618,6 +625,8 @@ while count < len(sys.argv):
         i7.open_source()
         exit()
     elif arg == 'e':
+        print("Editing the rbr.txt project configuration file.")
+        print("If you meant to edit the main rbr file, you can use -er. But it may be easier to type rbr<TAB>.")
         os.system("rbr.txt")
         exit()
     elif arg[:2] == 'e:':
@@ -737,3 +746,4 @@ if len(my_file_list_valid) == 0:
 for x in my_file_list_valid:
     get_file(x)
 
+print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
