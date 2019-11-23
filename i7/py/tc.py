@@ -157,6 +157,8 @@ my_files = []
 
 download_move_ary = []
 
+create_transcripts_dir = False
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg.startswith('-'): arg = arg[1:]
@@ -184,6 +186,7 @@ while count < len(sys.argv):
     elif arg == 'wc': write_over = True
     elif arg == 'q': track_quotes = True
     elif arg == 'nq' or arg == 'qn': track_quotes = False
+    elif arg == 'cd' or arg == 'dc': create_transcripts_dir = True
     elif arg == '?': usage()
     elif in_transcript_dir(arg):
         my_files.append(arg)
@@ -191,6 +194,14 @@ while count < len(sys.argv):
         print("Bad argument", arg)
         sys.exit()
     count = count + 1
+
+if not os.path.exists("transcripts") and 'transcripts' not in os.getcwd():
+    if create_transcripts_dir:
+        sys.exit("There is no transcript directory in the project, so we can't do much. To create it, use the -cd or -dc flag.")
+    os.mkdir("transcripts")
+    sys.exit("Created transcript directory.")
+
+if create_transcripts_dir: print("WARNING already created transcripts directory.")
 
 for x in download_move_ary:
     move_from_downloads(x)
