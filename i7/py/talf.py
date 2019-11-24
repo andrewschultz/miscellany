@@ -320,6 +320,8 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     has_default = f in default_sort.keys()
     tabs_this_table = 0
     err_line.clear()
+    fb = os.path.basename(f)
+    f2b = os.path.basename(f2)
     with open(f) as file:
         for (line_count, line) in enumerate(file, 1):
             if need_head:
@@ -407,12 +409,6 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             temp_out.write(line)
     temp_out.close()
     if verbose: print("Done writing to", os.path.basename(f2))
-    if launch:
-        if cmp(f, f2):
-            print("NO DIFFERENCE, NOT LAUNCHING DIFFERENCE")
-        else:
-            print("LAUNCHING DIFFERENCE:")
-            mt.wm(f, f2)
     forgot_to_catch = False
     for x in files_read.keys():
         if len(need_to_catch[x]) > 0:
@@ -428,29 +424,50 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             exit()
     if total_tables:
         print("{0} table{1} shifted, {2} line{3} shifted in {4}.".format(total_tables, mt.plur(total_tables), total_shifts, mt.plur(total_shifts), fs))
+    files_identical = cmp(f, f2)
+    identical_ignoring_eol = mt.compare_unshuffled_lines(f, f2)
+    identical_when_shuffled = mt.compare_shuffled_lines(f, f2)
     if copy_over:
-        if os.path.getsize(f) != os.path.getsize(f2):
-            if override_source_size_differences:
-                print("Different sizes, but copying anyway.")
-            else:
-                print(f, '=', os.path.getsize(f), "bytes")
-                print(f2, '=', os.path.getsize(f2), "bytes")
-                print(f2, 'not deleted.')
-                print('Use -os to ignore this size differences, but do verify no information was lost, first.')
-                exit()
         if cmp(f, f2):
             print("NO DIFFERENCES FOUND. Not copying over.")
             if force_dupe_check:
                 crude_check_line_shifts(f2, f)
-        else:
-            print("DIFFERENCES FOUND. Copying over.")
+        elif identical_ignoring_eol:
+            print("Only line break differences found. Not copying over.")
+            if force_dupe_check:
+                crude_check_line_shifts(f2, f)
+        elif identical_when_shuffled(f, f2):
+            print("DIFFERENCES IN ORDER BUT NOT CONTENT FOUND. Copying over.")
             if check_shifts:
                 print("Total tables shifted: {0}. Total insertion shifts: {1}.".format(total_tables, total_shifts))
                 crude_check_line_shifts(f2, f)
             copy(f2, f)
+        elif override_source_size_differences:
+            print("Copying over despite potential information loss.")
+            copy(f2, f)
+        else:
+            print("Potential information loss. Use -os to override this. {} kept for inspection.".format(f2b))
+            return
         os.remove(f2)
-    elif not cmp(f, f2):
-        print("DIFFERENCES FOUND. Temp file not deleted. Run with -c to copy back over or -l to launch differences.")
+    else:
+        if identical_ignoring_eol:
+            print("Only line break differences found. No need to copy over.")
+            os.remove(f2)
+        elif identical_when_shuffled(f, f2):
+            print("MEANINGFUL SORTABLE DIFFERENCES FOUND. Temp file not deleted. Run with -c to copy back over or -l to launch differences.")
+    if launch:
+        if not os.path.exists(f2):
+            print("Not launching differences because there were no differences.")
+        elif cmp(f, f2) or identical_ignoring_eol:
+            print("NO MEANINGFUL DIFFERENCE, NOT LAUNCHING WINDIFF")
+            os.remove(f2)
+        else:
+            if identical_ignoring_eol:
+                print("Oops, minor error, should have deleted", f2)
+                os.remove(f2)
+            else:
+                print("LAUNCHING DIFFERENCE:")
+                mt.wm(f, f2)
 
 cmd_count = 1
 projects = []
