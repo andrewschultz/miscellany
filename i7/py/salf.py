@@ -32,6 +32,12 @@ sort_prefix_second = defaultdict(lambda: defaultdict(bool))
 
 alf_file = "c:/writing/scripts/salf.txt"
 
+def rule_removal(x):
+    if re.search("a [a-z0-9A-Z- ]+ rule *\(", x, re.IGNORECASE):
+        x = re.sub("a [a-z0-9A-Z- ]+ rule *\(", "", x, 0, re.IGNORECASE)
+        x = re.sub("\)", "", x, 1)
+    return x.strip()
+
 def usage(header="USAGE FOR SALF.PY"):
     print(header)
     print("=" * 50)
@@ -61,7 +67,8 @@ def do_one_sort(sort_string, fout, prefix_second = False):
         split_string = "\n"
     if not split_string: sys.exit("Oops failed to get split_string.")
     divs = sort_string.split(split_string)
-    ow = split_string.join(sorted(divs, key=lambda x: (re.sub(" [a-z]+-", " ", firstline(x)), re.sub("-.*", "", firstline(x))) if prefix_second else x.lower()))
+    divs = sorted(divs, key=lambda x: (re.sub(" [a-z\( ]+-", " ", rule_removal(firstline(x))), re.sub("-.*", "", rule_removal(firstline(x)))) if prefix_second else x.lower())
+    ow = split_string.join(divs)
     fout.write("\n" + ow + "\n\n")
     return
 
@@ -115,7 +122,6 @@ def main_sect_alf(my_proj, my_file):
             if alf_next_blank:
                 if not line.strip():
                     if verbose: print("Sorting postalf at line", line_count)
-                    sort_array = sorted(sort_array, key=lambda x:x.lower())
                     for q in sort_array: fout.write(q)
                     alf_next_blank = False
                 else:
@@ -148,14 +154,16 @@ def main_sect_alf(my_proj, my_file):
             print("Sorting the rules changed nothing. Not copying {}.".format(os.path.basename(my_file)))
             os.remove(my_bak)
             return
-        elif not force_copy and mt.compare_unshuffled_lines(my_file, my_bak):
-            print("Differences were found between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file)), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences."))
+        elif not force_copy and not mt.compare_shuffled_lines(my_file, my_bak):
+            print("Content may have been altered between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file)), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences."))
             return
         print("Changes found, copying back {}.".format(os.path.basename(my_file)))
         copy(my_bak, my_file)
+        print("-cn to avoid copying back.")
+        os.remove(my_bak)
     else:
         print("Use -c to copy over.")
-    os.remove(my_bak)
+        print(my_bak, "kept for inspection.")
 
 # start main
 
@@ -171,6 +179,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'xv' or arg == 'vx': very_verbose = verbose = True
     elif arg == 'v': verbose = True
     elif arg == 'so': story_only = True
+    elif arg == 'nc' or arg == 'cn': copy_over = False
     elif arg == 'all' or arg == 'a': story_only = False
     elif arg == '?': usage()
     elif arg in i7.i7x:
@@ -187,17 +196,16 @@ with open(alf_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
+        index_second = line.lower().startswith("i2:")
+        if index_second: line = line[3:]
+        ll = line.strip().lower().split("\t")
         if line.startswith("xz:"): # quick notation for xx(stuff) zz(stuff)
             marker_suffix = line[3:].strip()
             for u in marker_suffix.split(","):
                 sort_start[current_project]['xx' + u] = -1
                 sort_end[current_project]['zz' + u] = -1
+                if index_second: sort_prefix_second[current_project]['xx' + u] = True
             continue
-        index_second = False
-        if line.lower().startswith("i2:"):
-            index_second = True
-            line=line[3:]
-        ll = line.strip().lower().split("\t")
         if ll[0].lower().startswith("project="):
             temp = re.sub("^.*?=", "", ll[0])
             current_project = i7.proj_exp(temp)
