@@ -88,18 +88,15 @@ while ( $x = <X> ) {
     my @z = split( /=/, $y );
     $forceDir{ $z[0] } = $z[1];
   }
-  elsif ( $x =~ /^z(8)?:/ ) { $y = $x; $y =~ s/^z(8)?://g; $zmac{ p($y) } = 1; }
-  elsif ( $x =~ /^z5:/ )    { $y = $x; $y =~ s/^z5://g;    $zmac{ p($y) } = 5; }
-  elsif ( $x =~ /^z6:/ ) {
-    $y = $x;
-    $y =~ s/^z6://g;
-    $zmac{ p($y) } = 6;
-  }    #z6 is hacky code for z5 in release/beta but z8 in debug
-  elsif ( $x =~ /^z7:/ ) {
-    $y = $x;
-    $y =~ s/^z7://g;
-    $zmac{ p($y) } = 7;
-  }    #z7 is hacky code for z5 in release but z8 in debug/beta
+  elsif ( $x =~ /^z.:/ )
+  {
+    my @tempAry = split(":", $x);
+	$zmac{$tempAry[1]} = $tempAry[0];
+  }
+  #z6 is hacky code for z5 in release/beta but z8 in debug
+  #z7 is hacky code for z5 in release but z8 in debug/beta
+  #z9 is hacky code for z8 in release/beta but glulx in debug
+  #zg is hacky code for z8 in release but glulx in debug/beta
   elsif ( $x =~ /^6l:/ ) {
     $y = $x;
     $y =~ s/^6l://g;
@@ -128,7 +125,11 @@ while ( $count <= $#ARGV ) {
 
     #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
     /^(b|beta)$/
-      && do { $buildSpecified = 1; $runBeta = 1 - $runBeta; $count++; next; };
+      && do { $buildSpecified = 1; $runBeta = 1 - $runBeta; $count++; print "Toggling beta to $runBeta\n"; next; };
+    /^(d|debig)$/
+      && do { $buildSpecified = 1; $debug = 1 - $debug; $count++; print "Toggling debug to $debug\n"; next; };
+    /^(b|beta)$/
+      && do { $buildSpecified = 1; $release = 1 - $release; $count++; print "Toggling release to $release\n"; next; };
     /^-?j([in])?[bdr]([in])?$/ && do {
       $buildSpecified  = 1;
       $debug           = ( $a =~ /d/ );
@@ -293,20 +294,26 @@ sub runProj {
 sub doOneBuild {
   my $startTime = time();
 
-  $ex    = "ulx";
-  $gz    = "gblorb";
-  $iflag = "G";
-  if ( defined( $zmac{ $_[4] } ) && z5( $zmac{ $_[4] }, $_[3] ) ) {
-    $ex    = "z5";
+  $ex = which_ext($_[4], $_[3]);
+
+  #for $a (sort keys %zmac) { print "$a $zmac{$a}\n"; }
+
+  if ($ex eq 'z5')
+  {
     $gz    = "zblorb";
     $iflag = "v5";
   }
-  elsif ( defined( $zmac{ $_[4] } ) && ( $zmac{ $_[4] } > 0 ) ) {
-    $ex    = "z8";
+  elsif ($ex eq 'z8')
+  {
     $gz    = "zblorb";
     $iflag = "v8";
   }
-
+  else
+  {
+  $gz    = "gblorb";
+  $iflag = "G";
+  }
+  
   my $tempSource = "$bdir\\source\\story.ni";
   my $outFile    = "$_[0]\\Build\\icl-output.$ex";
   my $dflag      = "$_[1]";
@@ -636,16 +643,31 @@ sub delIfThere {
   else              { print "No $_[0]\n"; }
 }
 
-sub z5 {
-  if ( !defined( $_[0] ) || ( $_[0] !~ /^[0-9]+$/ ) ) {
-    print "WARNING: bad value passed to Z5 function.\n";
-    return 0;
+sub which_ext {
+  my $z = 'ulx';
+  $z = $zmac{$_[0]} if defined($zmac{$_[0]});
+  return 'z5' if ($z eq 'z5');
+  if ($z eq 'z6')
+  {
+    return 'z8' if $_[1] eq 'debug';
+	return 'z5';
   }
-  if ( ( $_[0] == 1 ) || ( $_[0] == 8 ) ) { return 0; }
-  if ( ( $_[1] eq "debug" )   && ( $_[0] <= 5 ) ) { return 1; }
-  if ( ( $_[1] eq "beta" )    && ( $_[0] <= 6 ) ) { return 1; }
-  if ( ( $_[1] eq "release" ) && ( $_[0] <= 7 ) ) { return 1; }
-  return 0;
+  if ($z eq 'z7')
+  {
+    return 'z8' if $_[1] eq 'debug' || $_[1] eq 'beta';
+  }
+  return 'z8' if ($z eq 'z8');
+  if ($z eq 'z9')
+  {
+    return 'ulx' if $_[1] eq 'debug';
+	return 'z8'
+  }
+  if ($z eq 'zr')
+  {
+    return 'ulx' if $_[1] eq 'debug' || $_[1] eq 'beta';
+	return 'z8'
+  }
+  return 'ulx';
 }
 
 sub p {
