@@ -18,6 +18,7 @@ use warnings;
 use Time::HiRes qw(time);
 use i7;
 use File::Copy;
+use File::Compare;
 
 my %zmac;
 my %proj;
@@ -33,6 +34,8 @@ my $ignoreDRBPrefix    = 0;
 my $debugTables        = 0;
 my $forceBuild         = 0;
 my $runAfter = 0;
+my $dropboxCopy = 0;
+my $dropboxOnly = 0;
 
 my $infDir;
 
@@ -140,6 +143,8 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+	/^-?dc/ && do { $dropboxCopy = 1; $count++; next; };
+	/^-?do/ && do { $dropboxOnly = 1; $count++; next; };
     /^-?it$/ && do {
       $forceBuild = 1;
       $count++;
@@ -337,6 +342,18 @@ sub doOneBuild {
 "$tempSource has timestamp before $outFinal.\nBailing. Use -it (ignore timestamps) to go anyway"
     ) if ( $lastmod < $infmod );
   }
+  
+  my $binTarget = "c:\\users\\Andrew\\Dropbox\\bins\\$blorbFileShort";
+  if ($dropboxOnly) {
+    if ( compare($outFinal, $binTarget) ) {
+		my $cmd = "copy \"$outFile\" \"c:\\games\\inform\\prt\\$binFileShort\"";
+	}
+	else
+	{
+      print("Not copying $outFinal because the files are identical.");
+    }
+	die();
+  }
   if ($checkRecentChanges) {
 
     if ( defined($lastmod) && ( $lastmod < $infmod ) ) {
@@ -398,6 +415,15 @@ sub doOneBuild {
     my $cmd = "copy \"$outFile\" \"c:\\games\\inform\\prt\\$binFileShort\"";
 	print "COPYING TO PRT DIRECTORY: $cmd\n";
     system($cmd);
+	if ($dropboxCopy) {
+    if ( compare($outFinal, $binTarget) ) {
+		my $cmd = "copy \"$outFile\" \"c:\\games\\inform\\prt\\$binFileShort\"";
+	}
+	else
+	{
+      print("Not copying $outFinal because the files are identical.");
+    }
+	}
   }
 
   ####probably not necessary
