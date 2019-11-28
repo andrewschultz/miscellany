@@ -257,7 +257,7 @@ def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
 def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
-proj_src = src = main_src
+proj_src = src = get_src = main_src
 
 def src_file(x, y):
     if y in i7nonhdr.keys():
@@ -383,6 +383,18 @@ def go_proj(x):
     return
 
 go_p = proj_dir = to_proj = go_proj
+
+def rbr(my_proj = "", need_one = True, file_type = "thru"):
+    if my_proj in i7xr: my_proj = i7xr[my_proj]
+    if my_proj not in i7x: return
+    base_dir = proj2dir(my_proj)
+    first_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(my_proj, file_type))
+    if os.path.exists(first_try): return first_try
+    for x in i7x:
+        if i7x[x] == i7x[my_proj]:
+            next_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(x, file_type))
+            if os.path.exists(next_try): return next_try
+    sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
 
 def dir2proj(x = os.getcwd(), to_abbrev = False):
     x0 = x.lower()
