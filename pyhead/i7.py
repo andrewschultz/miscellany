@@ -89,17 +89,21 @@ def zap_end_brax(x):
     return x
 
 def topx2ary(x, div_char = "/"):
-    temp = zap_end_brax(x).replace('"', '')
-    base_array = ['']
-    tary = temp.split(" ")
-    for g in tary:
-        temp_stuff = g.split(div_char)
-        new_base_array = []
-        for t in temp_stuff:
-            for x in base_array:
-                new_base_array.append((x + " " if x else "") + t)
-        base_array = list(new_base_array)
-    return base_array
+    x = re.sub("^\"*", "", x)
+    my_topic_array = zap_end_brax(x).split('"')[0::2] # every other quoted thing, minus comments at the end
+    overall_array = []
+    for myt in my_topic_array:
+        base_array = ['']
+        tary = myt.split(" ")
+        for g in tary:
+            temp_stuff = g.split(div_char)
+            new_base_array = []
+            for t in temp_stuff:
+                for x in base_array:
+                    new_base_array.append((x + " " if x else "") + t)
+            base_array = list(new_base_array)
+        overall_array.extend(base_array)
+    return overall_array
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
@@ -384,18 +388,6 @@ def go_proj(x):
 
 go_p = proj_dir = to_proj = go_proj
 
-def rbr(my_proj = "", need_one = True, file_type = "thru"):
-    if my_proj in i7xr: my_proj = i7xr[my_proj]
-    if my_proj not in i7x: return
-    base_dir = proj2dir(my_proj)
-    first_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(my_proj, file_type))
-    if os.path.exists(first_try): return first_try
-    for x in i7x:
-        if i7x[x] == i7x[my_proj]:
-            next_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(x, file_type))
-            if os.path.exists(next_try): return next_try
-    sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
-
 def dir2proj(x = os.getcwd(), to_abbrev = False):
     x0 = x.lower()
     x2 = ""
@@ -416,6 +408,19 @@ def dir2proj(x = os.getcwd(), to_abbrev = False):
 sproj = d2p = dir2proj
 
 npo = mt.npo
+
+def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
+    if not my_proj: my_proj = dir2proj()
+    if my_proj in i7xr: my_proj = i7xr[my_proj]
+    elif my_proj not in i7x: return ""
+    base_dir = proj2dir(my_proj)
+    first_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(my_proj, file_type))
+    if os.path.exists(first_try): return first_try
+    for x in i7x:
+        if i7x[x] == i7x[my_proj]:
+            next_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(x, file_type))
+            if os.path.exists(next_try): return next_try
+    sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
 
 def see_uniq_and_vers(args):
     if args[0] == '-': args = args[1:]
