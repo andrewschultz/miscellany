@@ -188,8 +188,9 @@ While $cmdCount <= $CmdLine[0]
   EndIf
   $nextCmd = $cmdCount + 1
   $nextNum = -1
-  if StringRegExp($myCmd, '^[a-z]+[0-9]+$', "") Then
+  if StringRegExp($myCmd, '^[a-z]+[0-9]+', "") Then
     $nextNum = StringRegExpReplace($myCmd, "^[a-z]+", "")
+    $nextNum = StringRegExpReplace($nextNum, "^-?([0-9]+).*$", "\1")
 	$myCmd = StringRegExpReplace($myCmd, "[0-9]+$", "")
   ElseIf $cmdCount < $CmdLine[0] and StringIsDigit($CmdLine[$cmdCount+1]) Then
     $nextNum = $CmdLine[$cmdCount+1]
@@ -323,7 +324,7 @@ While $cmdCount <= $CmdLine[0]
       $clicks = $nextNum
     Endif
     if $cmdLine[0] >= $cmdCount+2 and $cmdLine[$cmdCount+2] > 0 Then
-      $clicks2 = $cmdLine[3]
+      $clicks2 = removeEndNonDigit($cmdLine[$cmdCount + 2])
     Endif
 	ToTasks(True)
     CheckClicks()
