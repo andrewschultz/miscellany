@@ -149,6 +149,8 @@ while $cmdCount <= $CmdLine[0]
     $onlyTrackMp = 1
   ElseIf $myCmd == 'ca' Then
     $closeAfter = 1
+  ElseIf $myCmd == 'as' Then
+    getAutosellValues()
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
 	; MOK("Starting MP", "Starting MP = " & $startMP)
@@ -430,6 +432,13 @@ Func PickItem($x, $y)
   sleep(2000)
 EndFunc
 
+Func GoItems()
+  MouseMove ( 250, 89 )
+  sleep(1000)
+  MouseClick ( "left", 250, 130, 1 )
+  sleep(2000)
+EndFunc
+
 Func GoEquip()
   MouseMove ( 250, 89 )
   sleep(1000)
@@ -440,8 +449,8 @@ EndFunc
 Func ToStable()
   MouseMove(225, 100)
   sleep(1200)
-  MouseMove(225, 200)
-  MouseClick("left")
+  MouseClick("left", 225, 200, 1)
+  sleep(1200)
 EndFunc
 
 Func ClickTasks()
@@ -492,6 +501,38 @@ Func clickSkill($clicks, $x, $cost, $my_delay, $delayLast = False)
     Endif
   Next
   ToTasks()
+EndFunc
+
+Func getAutosellValues($go_to_items = True)
+  ToHab()
+  ;GoItems()
+  $my_autosell = 0
+  Send("^a")
+  sleep(500)
+  Send("^c")
+  sleep(500)
+  $clip_in = ClipGet()
+  local $autosell_value = 0
+  local $ary = StringSplit($clip_in, @CR & @LF, $STR_ENTIRESPLIT)
+  local $my_num
+  local $got_eggs = False
+  local $got_hatch = False
+  local $got_food = False
+
+  for $q = 1 to $ary[0]
+    if StringLeft($ary[$q], 4) == "Eggs" Then
+	  $got_eggs = True
+	  $autosell_value += num_at_end($ary[$q]) * 3
+    elseif StringLeft($ary[$q], 16) == "Hatching Potions" Then
+	  $got_hatch = True
+	  $autosell_value += num_at_end($ary[$q]) * 89 / 30
+    elseif StringLeft($ary[$q], 16) == "Food and Saddles" Then
+	  $got_food = True
+	  $autosell_value += num_at_end($ary[$q])
+    EndIf
+  Next
+  MOK("Autosell value = " & Floor($autosell_value), (($got_eggs and $got_hatch and $got_food) ? "Found eggs/hatching potions/food" : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
+  Exit
 EndFunc
 
 Func MaxAttr($attr_to_max, $delays = 0)
@@ -808,7 +849,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[8] = [ 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'tr']
+  Local $metas[9] = [ 'as', 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'tr']
   Local $um = UBound($metas) - 1
 
   if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
@@ -1074,8 +1115,9 @@ Func CheckClass($desired_class)
 EndFunc
 
 Func Usage($questionmark, $badCmd = "")
-  Local $usgAry[19] = [ "-a, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the main options.", _
+  Local $usgAry[20] = [ "-a, -as, -b, -c, -ca, -d, -e, -f, -i, -iw, -m/-w, -o, -p, -q, -r, -s/-=, -t or -x are the main options.", _
   "-a (or only a number in the arguments) opens the armoire # times. Negative number clicks where the mouse is # times", _
+  "-as determines autosell value for rebirth (approximately)", _
   "-b does fiery blast, needs # and positioning", _
   "-c = open then close for cron, -co = keep open, -cv = (keep open and) visit after", _
   "-ca closes the tab after", _
