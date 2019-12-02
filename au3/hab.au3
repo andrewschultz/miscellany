@@ -272,7 +272,7 @@ While $cmdCount <= $CmdLine[0]
   ElseIf $myCmd == 'fe' or $myCmd == 'ffe' or $myCmd == 'fef' Then
     ToHab()
     if $myCmd == 'fe' and not in_url("stable") Then MOK("Oops!", "You are not on the stable page.", True)
-	; ToStable()
+	; GoStable()
     $times_to_click = int($nextNum / 100)
 	if $times_to_click == 0 Then $times_to_click = 9
 	if $times_to_click < 0 or $times_to_click > 9 Then
@@ -432,25 +432,23 @@ Func PickItem($x, $y)
   sleep(2000)
 EndFunc
 
-Func GoItems()
+Func GoInv($which_inv)
   MouseMove ( 250, 89 )
   sleep(1000)
-  MouseClick ( "left", 250, 130, 1 )
+  MouseClick ( "left", 250, 130 + $which_inv * 35, 1 )
   sleep(2000)
+EndFunc
+
+Func GoItems()
+  GoInv($ITEM_POSITION)
 EndFunc
 
 Func GoEquip()
-  MouseMove ( 250, 89 )
-  sleep(1000)
-  MouseClick ( "left", 250, 165, 1 )
-  sleep(2000)
+  GoInv($EQUIP_POSITION)
 EndFunc
 
-Func ToStable()
-  MouseMove(225, 100)
-  sleep(1200)
-  MouseClick("left", 225, 200, 1)
-  sleep(1200)
+Func GoStable()
+  GoInv($STABLE_POSITION)
 EndFunc
 
 Func ClickTasks()

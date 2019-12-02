@@ -41,3 +41,6 @@ Local $delay = 6000
 ; I don't need to change this when changing class. This should be changed in hab.txt under the "Class," line.
 Local $my_class = $CLASS_UNDEF
 
+Local $ITEM_POSITION = 0
+Local $EQUIP_POSITION = 1
+Local $STABLE_POSITION = 2
