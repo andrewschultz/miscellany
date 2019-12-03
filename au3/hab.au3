@@ -151,6 +151,8 @@ while $cmdCount <= $CmdLine[0]
     $closeAfter = 1
   ElseIf $myCmd == 'as' Then
     getAutosellValues()
+  ElseIf $myCmd == 'as' Then
+    getAutosellValues(False)
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
 	; MOK("Starting MP", "Starting MP = " & $startMP)
@@ -501,15 +503,16 @@ Func clickSkill($clicks, $x, $cost, $my_delay, $delayLast = False)
   ToTasks()
 EndFunc
 
-Func getAutosellValues($go_to_items = True)
-  ToHab()
-  ;GoItems()
-  $my_autosell = 0
-  Send("^a")
-  sleep(500)
-  Send("^c")
-  sleep(500)
+Func getAutosellValues($get_data_again = True)
+  if $get_data_again Then ; we could also have something for actually copying vs going to the page but that's too pedantic
+    ToHab()
+    Send("^a")
+    sleep(500)
+    Send("^c")
+    sleep(500)
+  EndIf
   $clip_in = ClipGet()
+  local $my_autosell = 0
   local $autosell_value = 0
   local $ary = StringSplit($clip_in, @CR & @LF, $STR_ENTIRESPLIT)
   local $my_num
@@ -517,19 +520,32 @@ Func getAutosellValues($go_to_items = True)
   local $got_hatch = False
   local $got_food = False
 
+  $success_string = "Found eggs/hatching potions/food" & @CRLF
   for $q = 1 to $ary[0]
     if StringLeft($ary[$q], 4) == "Eggs" Then
-	  $got_eggs = True
-	  $autosell_value += num_at_end($ary[$q]) * 3
+	  $temp = num_at_end($ary[$q])
+	  if $temp > 0 Then
+	    $got_eggs = True
+	    $autosell_value += $temp * 3
+	    $success_string &= StringFormat("Eggs %d/%d", $temp, $temp * 3) & @CRLF
+	  EndIf
     elseif StringLeft($ary[$q], 16) == "Hatching Potions" Then
-	  $got_hatch = True
-	  $autosell_value += num_at_end($ary[$q]) * 89 / 30
+	  $temp = num_at_end($ary[$q])
+	  if $temp > 0 Then
+	    $got_hatch = True
+	    $autosell_value += $temp
+	    $success_string &= StringFormat("Eggs %d/%d", $temp, $temp * 89 / 30) & @CRLF
+      EndIf
     elseif StringLeft($ary[$q], 16) == "Food and Saddles" Then
-	  $got_food = True
-	  $autosell_value += num_at_end($ary[$q])
+	  $temp = num_at_end($ary[$q])
+	  if $temp > 0 Then
+	    $got_food = True
+	    $autosell_value += $temp
+	    $success_string &= StringFormat("Food %d/%d", $temp, $temp) & @CRLF
+	  EndIf
     EndIf
   Next
-  MOK("Autosell value = " & Floor($autosell_value), (($got_eggs and $got_hatch and $got_food) ? "Found eggs/hatching potions/food" : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
+  MOK(StringFormat("Autosell value = %d, Exp = %d", $autosell_value, Floor($autosell_value * .15)), (($got_eggs and $got_hatch and $got_food) ? $success_string : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
   Exit
 EndFunc
 
@@ -847,7 +863,7 @@ Func ToHome()
 EndFunc
 
 Func meta_cmd($param)
-  Local $metas[9] = [ 'as', 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'tr']
+  Local $metas[10] = [ 'as', 'asq', 'om', 'te', '=', 's', 'ca', 'fo', 'fc', 'tr']
   Local $um = UBound($metas) - 1
 
   if StringRegExp($param, "^[0-9]+-[0-9]+$") Then Return True
