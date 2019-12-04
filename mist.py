@@ -107,6 +107,8 @@ def mister(a, my_file, do_standard):
             l = line.strip()
             if line.startswith(room_sect_var):
                 last_loc = re.sub(r'^[a-z]+ +', '', line.strip().lower())
+            elif line.startswith("book"):
+                last_loc = re.sub(r'^book +', 'REGION ', line.strip().lower())
             if l.startswith("[def="):
                 special_def = re.sub("^\[def=", "", l)
                 special_def = re.sub("\].*", "", special_def)
@@ -143,7 +145,7 @@ def mister(a, my_file, do_standard):
     extra_text = defaultdict(str)
     ignore_next = False
     for fi in to_look:
-        short_fi = re.sub(".*[\\\/]", "", fi)
+        short_fi = os.path.basename(fi)
         retest = False
         with open(fi) as file:
             count = 0
@@ -162,10 +164,15 @@ def mister(a, my_file, do_standard):
                     ignore_next = True
                     continue
                 if line.startswith("#mistake retest"):
+                    test_note = re.sub("^#mistake retest( for)? ", "", line.strip().lower())
+                    if test_note not in comment_found.keys():
+                        print("Retest of errant test case {} at {} line {}.".format(test_note, short_fi, line_count))
+                    elif not comment_found[test_note]:
+                        print("Retest occurs before test {} at {} line {}.".format(test_note, short_fi, line_count))
                     retest = True
                     continue
                 if line.startswith("#mistake text") or line.startswith("#mistake retext"):
-                    print('Line', count, 'says text not test.')
+                    print('Line', count, 'says text not test (X not S).')
                     continue
                 if line.startswith("##mistake"):
                     print('Line', count, 'has one two many pound signs.')
@@ -192,14 +199,13 @@ def mister(a, my_file, do_standard):
                         superfluous += 1
                     else:
                         if comment_found[test_note]:
-                            print('Duplicate mistake test for', test_note, 'at line', count, 'original', comment_line[test_note], 'D=', count - comment_line[test_note], '(reroute to mistake retest?)')
+                            print('Duplicate mistake test for', test_note, 'at line', count, 'original', comment_line[test_note], 'Delta=', count - comment_line[test_note], '(reroute to mistake retest?)')
                             duplicates += 1
                         else:
                             comment_found[test_note] = True
                             comment_line[test_note] = count
                         err_count += 1
                         # print("Got", test_note)
-                        comment_found[test_note] = True
                 elif line.startswith('>'):
                     last_cmd = line
                     ll = re.sub("^>", "", line.strip().lower())
@@ -207,7 +213,7 @@ def mister(a, my_file, do_standard):
                         if ll in need_test.keys():
                             if found[ll] is False:
                                 err_count += 1
-                                if print_output: print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test for {:s}".format(err_count, fi, count, ll))
+                                if print_output: print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test (or define [def=special test]) for {:s}".format(err_count, fi, count, ll))
                                 need_comment += 1
                             extra_text[count] = ll
                             found[ll] = True
@@ -252,7 +258,7 @@ def mister(a, my_file, do_standard):
                             print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
                     if print_location and print_output: print("##location =", location[f])
                     if print_condition and print_output: print("##condition(s)", condition[f])
-                    clip_out("#mistake test for {:s}".format(cmd_text[f]))
+                    clip_out("#mistake test for {:s}".format(f))
                     for ct in cmd_text[f].split('/'):
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
                         clip_out(mistake_text[f] if do_standard else mistake_msg(a))
@@ -290,7 +296,7 @@ def mister(a, my_file, do_standard):
         print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment")
 
 # note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
-files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/reg-sa-thru.txt'],
+files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/rbr-sa-forest.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-metros.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-ordeal-loader.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-resort.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-sortie.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-stores.txt', 'c:/games/inform/shuffling.inform/source/reg-sa-nudges-general.txt' ],
   'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
   'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt']
 }
