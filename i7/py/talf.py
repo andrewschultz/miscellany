@@ -436,7 +436,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("Only line break differences found. Not copying over.")
             if force_dupe_check:
                 crude_check_line_shifts(f2, f)
-        elif identical_when_shuffled(f, f2):
+        elif identical_when_shuffled:
             print("DIFFERENCES IN ORDER BUT NOT CONTENT FOUND. Copying over.")
             if check_shifts:
                 print("Total tables shifted: {0}. Total insertion shifts: {1}.".format(total_tables, total_shifts))
@@ -453,7 +453,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         if identical_ignoring_eol:
             print("Only line break differences found. No need to copy over.")
             os.remove(f2)
-        elif identical_when_shuffled(f, f2):
+        elif identical_when_shuffled:
             print("MEANINGFUL SORTABLE DIFFERENCES FOUND. Temp file not deleted. Run with -c to copy back over or -l to launch differences.")
     if launch:
         if not os.path.exists(f2):

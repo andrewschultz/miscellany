@@ -166,7 +166,10 @@ while ( $count <= $#ARGV ) {
           push( @ignore_array, "roiling" );
           push( @ignore_array, "roi.txt" );
         }
-        if ( $a !~ /1/ ) { push( @ignore_array, "shuffling" ); }
+        if ( $a !~ /1/ ) {
+		push( @ignore_array, "shuffling" );
+          push( @ignore_array, "sa.txt" );
+		}
       }
       $count++;
       next;
@@ -823,8 +826,8 @@ sub toProj {
   elsif ( $_[0] =~ /(threed|fourd)/i )                { return "opo"; }
   elsif ( $_[0] =~ /(compound|slicker|buck|past)/i )  { return "as"; }
   elsif ( $_[0] =~ /ailihphilia/i )                   { return "ai"; }
-  elsif ( $_[0] =~ /(roiling|shuffling)/i )           { return "sts"; }
-  elsif ( $_[0] =~ /(tragic|vvff|vf|vv|very-vile)/i ) { return "tm"; }
+  elsif ( $_[0] =~ /(roiling|shuffling|stale-tales-slate)/i )           { return "sts"; }
+  elsif ( $_[0] =~ /(tragic|vvff|vf|vv|very-vile|qq|qn|qqnn|quite-queer-night-near)/i ) { return "tm"; }
   elsif ( $_[0] =~ /(under-they-thunder)/i ) { return "ut"; }
   ( my $cproj = $pwd ) =~ s/\.inform.*//;
   $cproj =~ s/.*[\\\/]//;

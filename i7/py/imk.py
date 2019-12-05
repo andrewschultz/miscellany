@@ -41,8 +41,11 @@ while count < len(sys.argv):
             file_args.append(sys.argv[count])
         else:
             file_args.append(arg)
-            print("File arg:", arg)
     count += 1
+
+if file_args[1] in i7.i7x and file_args[0] not in i7.i7x:
+    print("It looks like you put the project name first, so I am flipping the arguments. No big deal.")
+    file_args = file_args[::-1]
 
 if len(file_args) == 1 and ' ' in file_args[0]:
     base_file_noxt = file_args[0].strip()

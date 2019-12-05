@@ -10,6 +10,7 @@ import os
 import i7
 import mytools as mt
 from filecmp import cmp
+from shutil import copy
 
 copy_over = False
 copy_back = False
@@ -67,8 +68,12 @@ if do_win_merge:
     mt.wm(my_gh, my_so)
     if not copy_over and not copy_back: sys.exit()
 
+
 if not copy_over and not copy_back:
-    sys.exit("Specify copying over or copying back.")
+    sys.exit("We shouldn't have hid this code, but you need to specify copying over or copying back.")
+
+if cmp(my_gh, my_so): sys.exit("After you modified one or both of them, GitHub and games/inform files are identical. No need to copy.")
+
 if copy_over and copy_back:
     sys.exit("Can't both copy over and copy back.")
 if copy_over:

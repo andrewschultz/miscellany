@@ -13,6 +13,7 @@ import os
 import sys
 import re
 from collections import defaultdict
+import i7
 
 keyword = ""
 launch_after = False
@@ -157,6 +158,8 @@ my_files = []
 
 download_move_ary = []
 
+my_proj = ""
+
 create_transcripts_dir = False
 
 while count < len(sys.argv):
@@ -187,6 +190,14 @@ while count < len(sys.argv):
     elif arg == 'q': track_quotes = True
     elif arg == 'nq' or arg == 'qn': track_quotes = False
     elif arg == 'cd' or arg == 'dc': create_transcripts_dir = True
+    elif arg[:2] == 'p:' or arg[:2] == 'p=':
+        if my_proj: sys.exit("Redefined project with p:/=. Bailing.")
+        proj_dir = i7.proj2dir(arg[2:])
+        print("Switching to", proj_dir)
+        try:
+            os.chdir(proj_dir)
+        except:
+            print(arg[2:], "had no project. Going with default directory.")
     elif arg == '?': usage()
     elif in_transcript_dir(arg):
         my_files.append(arg)
