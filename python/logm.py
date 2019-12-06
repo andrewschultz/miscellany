@@ -20,7 +20,7 @@ base_dir_needed = "c:\\users\\andrew\\documents\\github"
 set_author = True
 set_commit = True
 commit_message = ''
-auto_date = False
+auto_date = True
 auto_today_ok = False
 
 def my_time(t):
@@ -47,6 +47,7 @@ def usage(arg = ""):
     print()
     print("Previous standard usage is probably logm.py r(l) (!) (3)")
     print("Standard usage now is probably logm.py r(l) a \"commit-message\"")
+    print("    Also logm.py -lf -r 'commit message' for serious backdating.")
     print()
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
@@ -60,6 +61,27 @@ def bail_if_not_auto_ok():
         return
     sys.exit("Set -ao to say auto-today is okay and commit with the current time.")
 
+def get_date_delt(x):
+    ary = re.split("[-/]", x)
+    if len(ary) < 2 or len(ary) > 3: sys.exit("Need array length of 2 or 3.")
+    dspace = ' '.join(ary)
+    tdy = pendulum.today()
+    if len(ary) == 2:
+        y = pendulum.from_format(dspace, 'MM DD')
+        if y > tdy:
+            y = y.subtract(years=1)
+            print(y, "subtracting a year", pendulum.today())
+    else:
+        try:
+            y = pendulum.from_format(dspace, 'MM DD YY')
+        except:
+            sys.exit("Need format MM-DD-YY.")
+        if tdy < y:
+            sys.exit("The date you input is far ahead.")
+    if abs(y.diff(tdy).in_years()) > 0:
+        sys.exit("Can't have difference of a year or more.")
+    return y.diff(tdy).in_days()
+
 def days_since():
     result=subprocess.run(["git", "log", "-1"], stdout=subprocess.PIPE).stdout.decode("utf-8")
     ary = result.split('\n')
@@ -69,7 +91,8 @@ def days_since():
             my = re.sub("^date: *", "", my, 0, re.IGNORECASE)
             x = pendulum.from_format(my, 'ddd MMM DD')
             temp = day_start.diff(x).in_days()
-            bail_if_not_auto_ok()
+            if temp < 2:
+                bail_if_not_auto_ok()
             return temp
     sys.exit("Could not differ git log -1 from current datetime.")
 
@@ -110,6 +133,9 @@ while count < len(sys.argv):
     elif os.path.exists(arg) or '*' in arg:
         print("Detecting {} as file(s)-to-add.".format(arg))
         files_to_add.append(arg)
+    elif get_date_delt(arg):
+        days_back = get_date_delt(arg) # do date delta
+        auto_date = False
     elif ' ' in arg:
         if commit_message: sys.exit("Duplicate commit message {} vs {}".format(sys.argv[count].strip(), commit_message))
         commit_message = sys.argv[count].strip()
@@ -120,7 +146,9 @@ while count < len(sys.argv):
         run_log = 'l' in arg
         if cmd_counts == 0: print("WARNING an L without an R or X means nothing.")
         elif cmd_counts > 1: print("WARNING extra r/x in the argument to run the command mean nothing.")
-    elif arg.isdigit(): days = int(arg)
+    elif arg.isdigit():
+        days = int(arg)
+        auto_date = False
     elif i7.proj_exp(arg, False):
         if proj_shift_yet:
             print("WARNING shifting from project", proj_shift_yet)
@@ -153,7 +181,7 @@ while count < len(sys.argv):
     elif arg == 'ao':
         auto_date = True
         auto_today_ok = True
-    elif arg == 'fl':
+    elif arg == 'fl' or arg == 'lf':
         get_from_log = True
     elif arg == 'na':
         set_author = False
@@ -214,6 +242,7 @@ mod_date = my_time.subtract(days=days-1)
 
 sec_before += 60 * min_before
 mod_date = mod_date.subtract(seconds=sec_before)
+mod_date = mod_date.subtract(days=days_back)
 
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
