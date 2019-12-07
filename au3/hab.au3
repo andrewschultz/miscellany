@@ -151,7 +151,7 @@ while $cmdCount <= $CmdLine[0]
     $closeAfter = 1
   ElseIf $myCmd == 'as' Then
     getAutosellValues()
-  ElseIf $myCmd == 'as' Then
+  ElseIf $myCmd == 'asq' Then
     getAutosellValues(False)
   ElseIf $myCmd == '=' or $myCmd == 's' Then
     $startMP = $nextNum
@@ -506,10 +506,12 @@ EndFunc
 Func getAutosellValues($get_data_again = True)
   if $get_data_again Then ; we could also have something for actually copying vs going to the page but that's too pedantic
     ToHab()
+	GoItems()
     Send("^a")
     sleep(500)
     Send("^c")
     sleep(500)
+	MouseClick("left", 800, 89)
   EndIf
   $clip_in = ClipGet()
   local $my_autosell = 0
@@ -519,6 +521,8 @@ Func getAutosellValues($get_data_again = True)
   local $got_eggs = False
   local $got_hatch = False
   local $got_food = False
+
+  local $level_array[10] = [ 0, 150, 310, 480, 660, 860, 1070, 1290, 1530, 1780 ]
 
   $success_string = "Found eggs/hatching potions/food" & @CRLF
   for $q = 1 to $ary[0]
@@ -534,7 +538,7 @@ Func getAutosellValues($get_data_again = True)
 	  if $temp > 0 Then
 	    $got_hatch = True
 	    $autosell_value += $temp
-	    $success_string &= StringFormat("Eggs %d/%d", $temp, $temp * 89 / 30) & @CRLF
+	    $success_string &= StringFormat("Potions %d/%d", $temp, $temp * 89 / 30) & @CRLF
       EndIf
     elseif StringLeft($ary[$q], 16) == "Food and Saddles" Then
 	  $temp = num_at_end($ary[$q])
@@ -545,7 +549,13 @@ Func getAutosellValues($get_data_again = True)
 	  EndIf
     EndIf
   Next
-  MOK(StringFormat("Autosell value = %d, Exp = %d", $autosell_value, Floor($autosell_value * .15)), (($got_eggs and $got_hatch and $got_food) ? $success_string : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
+  
+  $experience = Floor($autosell_value * .15)
+  local $level = 0
+  while ($level < 10) and ($experience >= $level_array[$level])
+    $level += 1
+  wend
+  MOK(StringFormat("Autosell value = %d, Exp = %d, Level = %d", $autosell_value, $experience, $level), (($got_eggs and $got_hatch and $got_food) ? $success_string : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
   Exit
 EndFunc
 
