@@ -522,9 +522,9 @@ Func getAutosellValues($get_data_again = True)
   local $got_hatch = False
   local $got_food = False
 
-  local $level_array[10] = [ 0, 150, 310, 480, 660, 860, 1070, 1290, 1530, 1780 ]
+  local $level_array[11] = [ 0, 150, 310, 480, 660, 860, 1070, 1290, 1530, 1780, 2040 ]
 
-  $success_string = "Found eggs/hatching potions/food" & @CRLF
+  $success_string = "Found eggs/hatching potions/food. Approximate values below." & @CRLF
   for $q = 1 to $ary[0]
     if StringLeft($ary[$q], 4) == "Eggs" Then
 	  $temp = num_at_end($ary[$q])
@@ -555,7 +555,8 @@ Func getAutosellValues($get_data_again = True)
   while ($level < 10) and ($experience >= $level_array[$level])
     $level += 1
   wend
-  MOK(StringFormat("Autosell value = %d, Exp = %d, Level = %d", $autosell_value, $experience, $level), (($got_eggs and $got_hatch and $got_food) ? $success_string : "Missing one or more of eggs/hatching potions/food:" & @CRLF & @CRLF & "Eggs " & $got_eggs & " Hatching " & $got_hatch & " Food " & $got_food))
+  $level_info = StringFormat("Autosell value: %d%sExperience: %d = Level %d + %d, %s to go." & @CRLF & @CRLF, $autosell_value, @CRLF, $experience, $level, $experience - $level_array[$level-1], ($level < 10 ? $level_array[$level] - $experience : " clear"))
+  MOK("The numbers for autoselling", $level_info & ($got_eggs and $got_hatch and $got_food and False ? $success_string : StringFormat("Missing one or more of eggs/hatching potions/food:%s%sEggs: %d Hatching: %d Food: %d", @CRLF, @CRLF, $got_eggs, $got_hatch, $got_food)))
   Exit
 EndFunc
 
