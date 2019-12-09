@@ -524,7 +524,7 @@ Func getAutosellValues($get_data_again = True)
 
   local $level_array[11] = [ 0, 150, 310, 480, 660, 860, 1070, 1290, 1530, 1780, 2040 ]
 
-  $success_string = "Found eggs/hatching potions/food. Approximate values below." & @CRLF
+  $success_string = "Found everything. Detailed accounting below." & @CRLF
   for $q = 1 to $ary[0]
     if StringLeft($ary[$q], 4) == "Eggs" Then
 	  $temp = num_at_end($ary[$q])
@@ -537,7 +537,7 @@ Func getAutosellValues($get_data_again = True)
 	  $temp = num_at_end($ary[$q])
 	  if $temp > 0 Then
 	    $got_hatch = True
-	    $autosell_value += $temp
+	    $autosell_value += $temp * 89 / 30
 	    $success_string &= StringFormat("Potions %d/%d", $temp, $temp * 89 / 30) & @CRLF
       EndIf
     elseif StringLeft($ary[$q], 16) == "Food and Saddles" Then
@@ -555,8 +555,8 @@ Func getAutosellValues($get_data_again = True)
   while ($level < 10) and ($experience >= $level_array[$level])
     $level += 1
   wend
-  $level_info = StringFormat("Autosell value: %d%sExperience: %d = Level %d + %d, %s to go." & @CRLF & @CRLF, $autosell_value, @CRLF, $experience, $level, $experience - $level_array[$level-1], ($level < 10 ? $level_array[$level] - $experience : " clear"))
-  MOK("The numbers for autoselling", $level_info & ($got_eggs and $got_hatch and $got_food and False ? $success_string : StringFormat("Missing one or more of eggs/hatching potions/food:%s%sEggs: %d Hatching: %d Food: %d", @CRLF, @CRLF, $got_eggs, $got_hatch, $got_food)))
+  $level_info = StringFormat("Autosell value: %d%sExperience: %d = Level %d + %d, %s." & @CRLF & @CRLF, $autosell_value, @CRLF, $experience, $level, $experience - $level_array[$level-1], ($level < 7 ? ($level_array[$level] - $experience) & " to go" : "clear"))
+  MOK("Autoselling check results", $level_info & ($got_eggs and $got_hatch and $got_food ? $success_string : StringFormat("Missing one or more of eggs/hatching potions/food:%s%sEggs: %s Hatching: %s Food: %s", @CRLF, @CRLF, y_n($got_eggs), y_n($got_hatch), y_n($got_food))))
   Exit
 EndFunc
 
