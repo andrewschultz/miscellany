@@ -32,6 +32,11 @@ def usage():
     print("-o / -f / -fo = overwrite file")
     print("-n / -on / -no = don't open post conversion. Default = open.")
 
+def check_valid_combo(my_abbrev, abbrev_class, dict_of_abbrevs):
+    if my_abbrev in dict_of_abbrevs: return
+    if my_abbrev in dict_of_abbrevs.values(): return
+    sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing.".format(abbrev_class, my_abbrev))
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg == '-o' or arg == '-of' or arg [0] == '-of': overwrite = True
@@ -54,6 +59,12 @@ elif len(file_args) != 2:
     print("You need 2 file arguments: 1st the project, 2nd the module description. You have {:d}.".format(len(file_args)))
     print("Though it is okay to use 1 argument if it has a space in it. That space can be at the beginning or end if there is only one word.");
     usage()
+
+check_valid_combo(file_args[0], 'project', i7.i7x)
+check_valid_combo(file_args[1], 'header file', i7.i7hfx)
+
+if not file_args[1] in i7.i7hfx.keys() and not file_args[1] in i7.i7hfx.values():
+    sys.exit("You may need to define a valid header file abbreviation--{} turned up nothing.".format(file_args[1]))
 
 if not base_file_noxt:
     my_proj = i7.proj_exp(file_args[0], False)
