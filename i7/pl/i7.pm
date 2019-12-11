@@ -107,6 +107,7 @@ while ($i7p_line = <A>)
   elsif ($i7p_line =~ /:/)
   {
     next if ($i7p_line =~ /^HEADNAME/); # HEADNAME not processed by Perl. It is for my python functions.
+    next if ($i7p_line =~ /^TRIZMAPS/); # TRIZMAPS not processed by Perl. It is for my python functions.
     warn("WARNING: For I7 PERL, line $. has an unrecognized colon: $i7p_line\n");
   }
 

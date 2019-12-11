@@ -511,6 +511,7 @@ i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,
 i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
+i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -545,6 +546,18 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("trizbort:"):
             i7triz[lla[0]] = lla[1]
+            continue
+        if ll.startswith("trizmaps:"):
+            llproj = lln.split(":")
+            llpre = llproj[1].split(",")
+            for llp in llpre:
+                temp = llp.split("=")
+                if temp[1].startswith("tm"):
+                    temp[1] = os.path.join(triz_dir, temp[1][3:])
+                else:
+                    temp[1] = os.path.join(proj2dir(llproj[0]), temp[1])
+                for q in temp[0].split("/"):
+                    i7trizmaps[llproj[0]][q]=temp[1]
             continue
         if ll.startswith("combo:"):
             i7com[lla[0]] = lla[1]
