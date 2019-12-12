@@ -81,7 +81,7 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def compare_unshuffled_lines(fpath1, fpath2):
+def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
     with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
         for linef1, linef2 in zip(file1, file2):
             linef1 = linef1.rstrip('\r\n')
@@ -90,7 +90,9 @@ def compare_unshuffled_lines(fpath1, fpath2):
                 return False
         return next(file1, None) == None and next(file2, None) == None
 
-def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False):
+cu = cul = compare_unshuffled_lines
+
+def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False): # true if identical, false if not
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -138,7 +140,7 @@ def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonposi
     if rewrite or file_name not in file_post_list:
         file_post_list[file_name] = file_line
 
-addpost = add_postopen_file_line
+add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
 def postopen_files(bail_after = True, acknowledge_blank = False):
     if len(file_post_list):
@@ -159,6 +161,26 @@ def open_source_config(bail = True):
     if bail: exit()
 
 oc = o_c = open_config = open_source_config
+
+def create_temp_alf(file_1, file_2, comments, spaces):
+    l = sorted(open(file_1).readlines())
+    f2 = open(file_2, "w")
+    for x in l:
+        if spaces == False and not x.strip(): continue
+        if comments == False and x.startswith("#"): continue
+        f2.write(x)
+    f2.close()
+
+def alfcomp(x1, x2, bail = True, comments = True, spaces = False):
+    a1 = "c:/writing/temp/alpha-1.txt"
+    a2 = "c:/writing/temp/alpha-2.txt"
+    print("Alphabetical comparison: {} vs {}".format(x1, x2))
+    create_temp_alf(x1, a1, comments, spaces)
+    create_temp_alf(x2, a2, comments, spaces)
+    wm(a1, a2)
+    os.remove(a1)
+    os.remove(a2)
+    if bail: sys.exit()
 
 def wm(x1, x2, ignore_if_identical = True):
     if ignore_if_identical and cmp(x1, x2):
