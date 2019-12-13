@@ -12,10 +12,12 @@ from filecmp import cmp
 from collections import defaultdict
 from fractions import gcd
 from functools import reduce
+import subprocess
 
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
+default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(int)
 
 def bail_if_not(f, file_desc = ""):
@@ -259,6 +261,14 @@ def print_and_warn(x):
     sys.stderr.write("(STDERR)" + x + "\n")
 
 paw = p_a_w = print_and_warn
+
+def text_in_browser(file_name, print_action = True, bail=False):
+    cmd = '\"{}\" \"{}\"'.format(default_browser_exe, file_name)
+    if print_action: print("Opening {} with {}.".format(file_name, default_browser_exe))
+    subprocess.call([default_browser_exe, file_name])
+    if bail: sys.exit()
+
+tib = t_i_b = text_in_browser
 
 #####################################################basic main-program checking stuff
 
