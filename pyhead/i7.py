@@ -28,7 +28,6 @@ nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
 niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
 tmp_hdr = temp_hdr = tmp_header = temp_header = os.path.join(extdir, "temp.i7x")
 np = mt.np
-np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"

@@ -14,11 +14,13 @@ from fractions import gcd
 from functools import reduce
 import subprocess
 
+np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
 default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
-file_post_list = defaultdict(int)
+file_post_list = defaultdict(lambda: defaultdict(int))
 
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
@@ -137,16 +139,18 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     os.system(cmd)
     if bail: exit()
 
-def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True):
+def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True, priority = 10):
     if file_line <= 0 and reject_nonpositive_line: return
-    if rewrite or file_name not in file_post_list:
-        file_post_list[file_name] = file_line
+    if rewrite or file_name not in file_post_list or priority not in file_post_list[file_name]:
+        file_post_list[file_name][priority] = file_line
 
 add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
 def postopen_files(bail_after = True, acknowledge_blank = False):
     if len(file_post_list):
-        for x in file_post_list: npo(x, file_post_list[x], bail = False)
+        for x in file_post_list:
+            m = max(file_post_list[x])
+            npo(x, file_post_list[x][m], bail = False)
     elif acknowledge_blank:
         print("There weren't any files slated for opening/editing.")
     if bail_after: sys.exit()
