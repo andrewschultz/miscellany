@@ -25,6 +25,7 @@ import datetime
 import re
 import calendar
 import time
+import pendulum
 
 dupes = ['', 's']
 
@@ -70,9 +71,9 @@ def is_time(t, bail = False):
     return y[0].isdigit() and y[1].isdigit()
 
 def last_day_of_month(date):
-    if date.month == 12:
-        return date.replace(day=31)
-    return (date.replace(month=date.month+1, day=1) - datetime.timedelta(days=1)).day
+    x = pendulum.now()
+    y = x.add(months=1)
+    return (y-x).days
 
 def usage():
     print("=" * 50)
@@ -232,7 +233,8 @@ def see_what_to_run(ti, wd, md, hh):
     totals += carve_up(of_day[ti ^ hh], "daily run on")
     totals += carve_up(of_week[ti ^ hh][wd], "weekly run on")
     totals += carve_up(of_month[ti ^ hh][md], "monthly run on")
-    totals += carve_up(of_month[ti ^ hh][md-last_of_month+1], "monthly run on")
+    if md < 0:
+        totals += carve_up(of_month[ti ^ hh][last_of_month-md+1], "monthly run on")
     print("Ran", totals, "scripts for {:d}h/{:d}w/{:d}m".format(ti,wd,md))
 
 def list_queue():
