@@ -1,35 +1,30 @@
-#from pandas.plotting import register_matplotlib_converters
-#register_matplotlib_converters()
+import mytools as mt
 
-import os
-import datetime
-import re
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates
+from collections import defaultdict
+import xml.etree.ElementTree as ET
 
-times = []
-fitabs = []
-newtabs = []
+slink = defaultdict(list)
+file_name = mt.np_xml
 
-with open("c:/writing/scripts/ses.txt") as dat:
-    for (line_count, line) in enumerate(dat, 1):
-        if 'total files' not in line and 'new files' not in line: continue
-        q = re.split('[:,] ', line.strip())
-        fitabs.append(int(re.sub(" .*", "", q[1])))
-        newtabs.append(int(re.sub(" .*", "", q[2])))
-        tt = datetime.datetime.strptime(q[0], "%Y-%m-%d %H:%M:%S")
-        times.append(tt)
+news = 0
+e = ET.parse(file_name)
+root = e.getroot()
+github_warnings = 0
+link_warnings = 0
+for elem in e.iter('File'):
+    t = elem.get('filename')
+    if t.startswith('new '):
+        news += 1
+        continue
+    q = mt.follow_link(t).lower()
+    if "users\\andrew\\documents\\github\\" in q and q.count("\\") >= 6:
+        github_warnings += 1
+        print("GH WARNING {} github file should be in non-github directory: {}".format(github_warnings, q))
+    if q in slink:
+        link_warnings += 1
+        print("LINK WARNING: {} file and symbolic link both in notepad:".format(link_warnings))
+        print(t, '=>', q)
+    slink[q].append(t.lower())
+    #print(elem.get('filename'))
 
-sumz = [x + y for x,y in zip(fitabs, newtabs)]
-plt.plot_date(times, fitabs, xdate=True, markersize=1, color='g')
-plt.plot_date(times, newtabs, xdate=True, markersize=1, color='#ff8000')
-plt.plot_date(times, sumz, xdate=True, markersize=1, color='#808080')
-#plt.plot(times[1:5], newtabs[1:5])
-
-plt.xlabel('Date',fontsize=12, color="#00ff00")
-plt.ylabel("tabs open", fontsize=12, color="#ff0000")
-
-plt.legend()
-plt.savefig('ses.png')
-os.system("ses.png")
+print(github_warnings, "github warnings", link_warnings, "link warnings", news, "new files")
