@@ -16,6 +16,7 @@ import subprocess
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+my_creds = "c:/coding/perl/proj/mycreds.txt"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
@@ -247,7 +248,8 @@ def print_ranges_of(x, default_thing = "numbers"): # given a list of integers, t
 
 def follow_link(x):
     temp = x
-    while not os.path.islink(temp):
+    count = 0
+    while os.path.islink(temp):
         if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
         temp = os.readlink(temp)
         count += 1
@@ -265,6 +267,23 @@ def print_and_warn(x):
     sys.stderr.write("(STDERR)" + x + "\n")
 
 paw = p_a_w = print_and_warn
+
+ZAP_PAREN=1
+ZAP_BRACKETS=2
+ZAP_BRACES=3
+
+def zap_trail_paren(x, paren_flags = ZAP_PAREN, start_bracket = "\(", end_bracket = "\)"):
+    if paren_flags == ZAP_PAREN:
+        start_brax = "\("
+        end_brax = "\)"
+    if paren_flags == ZAP_BRACKETS:
+        start_brax = "\["
+        end_brax = "\]"
+    if paren_flags == ZAP_BRACES:
+        start_brax = "\{"
+        end_brax = "\}"
+    y = re.sub(r" *{}.*{} *$".format(start_brax, end_brax), "", x)
+    return y
 
 def text_in_browser(file_name, print_action = True, bail=False):
     cmd = '\"{}\" \"{}\"'.format(default_browser_exe, file_name)
