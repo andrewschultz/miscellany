@@ -87,6 +87,31 @@ def zap_end_brax(x):
         x = re.sub(" *\[.*?\]", "", x)
     return x
 
+def column_from_header_line(x, line, file_name = "", file_line = 0):
+    line = line.strip()
+    ary = [mt.zap_trail_paren(temp).lower() for temp in line.lower().split("\t")]
+    xl = x.lower()
+    try:
+        return ary.index(xl)
+    except:
+        sys.exit("Tried to find the element <<{}>> in the tab-delimited line <<{}>>{}{}but failed. Bailing.".format(xl, line.lower().strip().replace("\t", " / "), "" if not file_name else " " + file_name, "" if not file_line else " line {}".format(file_line) ))
+
+def column_from_file(file_name, table_name, column_name):
+    got_any = False
+    next_header = False
+    if not table_name.startswith("table of "):
+        table_name = "table of " + table_name
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(table_name) and "\t" not in line:
+                got_any = True
+                next_header = True
+                continue
+            if next_header:
+                return column_from_header_line(column_name, line, file_name, line_count)
+    if not got_any:
+        sys.exit("Could not find table <<>> in <<>> to read columns. Bailing.".format(table_name, file_name))
+
 def topx2ary(x, div_char = "/"):
     x = re.sub("^\"*", "", x)
     my_topic_array = zap_end_brax(x).split('"')[0::2] # every other quoted thing, minus comments at the end
