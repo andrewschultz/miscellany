@@ -19,7 +19,7 @@ import subprocess
 from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
-from mytools import nohy
+import mytools as mt
 
 my_strings = defaultdict(str)
 branch_variables = defaultdict(list)
@@ -61,7 +61,7 @@ default_rbrs = defaultdict(str)
 
 def can_make_rbr(x, verbose = False):
     if os.path.exists(x): return x
-    x = nohy(x)
+    x = mt.nohy(x)
     if x in default_rbrs:
         return default_rbrs[x]
     if os.path.exists(x + ".txt"):
@@ -178,7 +178,9 @@ def replace_mapping(x, my_f, my_l):
         y = re.sub("\}.*", "", y)
     y = re.sub(" *#.*", "", y) # strip out comments
     y = y.strip()
-    if y not in to_match.keys(): sys.exit("Oops, line {:d} of {:s} has undefined matching-class {:s}.".format(my_l, my_f, y))
+    if y not in to_match.keys():
+        print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, y, ', '.join(to_match)))
+        mt.npo(my_f, my_l)
     return "==" + to_match[y]
 
 def search_for(x):
@@ -420,6 +422,7 @@ def get_file(fname):
             if line.startswith("==t"):
                 if temp_diverge:
                     print("Oops, bailing due to second temporary divergence ==t at line", line_count, ":", line.strip())
+                    mt.npo(fname, line_count)
                     exit()
                 old_actives = list(actives)
                 temp_diverge = True
@@ -474,7 +477,7 @@ def get_file(fname):
                         file_list[ct].write(line_write_2)
                     last_cr[ct] = len(line_write.strip()) == 0
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
-            if actives[dupe_val]:
+            if dupe_val < len(actives) and actives[dupe_val]:
                 if dupe_file_name:
                     dupe_file.write(line)
                     if 'Last Lousy Point' in line: dupe_file.write("!by one point\n")
@@ -539,8 +542,8 @@ def get_file(fname):
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
-    if not got_any_test_name:
-        print("Uh oh. You don't have any test name specified with * main-thru")
+    if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
+        print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
     sys.exit()
     post_copy(file_array_base)
@@ -553,8 +556,8 @@ with open('c:/writing/scripts/rbr.txt') as file:
         ll = line.lower().strip()
         if ll.startswith(';'): break
         if ll.startswith('#'): continue
-        if '>' in ll[1:]:
-            print("WARNING: line", lc, "may need line break before command prompt:", line.strip())
+        if '>' in ll[1:] and '<' not in ll[1:]:
+            print("WARNING: possible erroneous cut and paste. Line", lc, "may need line break before command prompt:", line.strip())
         vars = wipe_first_word(ll)
         if ll.startswith('dupe'):
             ja = vars.split("\t")
@@ -620,7 +623,7 @@ poss_abbrev = []
 my_file_list = []
 
 while count < len(sys.argv):
-    arg = nohy(sys.argv[count].lower())
+    arg = mt.nohy(sys.argv[count].lower())
     if arg == 'c':
         i7.open_source()
         exit()
@@ -668,6 +671,12 @@ my_dir = os.getcwd()
 if 'github' in my_dir.lower():
     if not github_okay:
         sys.exit("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory.")
+
+if proj:
+    try:
+        i7.go_proj(proj)
+    except:
+        sys.exit("Could not find a path to", proj)
 
 if in_file:
     if not os.path.isfile(in_file): sys.exit(in_file + " not found.")
@@ -723,15 +732,16 @@ if not len(my_file_list):
     if len(my_file_list) == 0:
         print("No valid files specified. Checking rbr- glob.")
         my_file_list = glob.glob("rbr-*")
+        if not len(my_file_list) and os.path.exists("testing"):
+            print("Looking in testing subdir")
+            os.chdir("testing")
+            my_file_list = glob.glob("rbr-*")
         if len(my_file_list) == 0: sys.exit("No files found in rbr- glob. Bailing.")
         elif len(my_file_list) == 1: print("Only one rbr- file found ({}). Going with that.".format(my_file_list[0]))
         else:
             sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
         print("No valid files, going with default", ', '.join(branch_list[proj]))
-
-
-i7.go_proj(proj)
 
 my_file_list_valid = []
 
