@@ -92,12 +92,18 @@ Local $testDontClick = False, $didAnything = False
 
 ; put this along with 'a' into its own function.
 If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
+	$times = $cmdLine[1]
     ToHab()
-	justClick($cmdLine[1])
+	if $times < 0 Then
+	  $times = - $times
+	  ToTasks()
+	  sleep(1000)
+	EndIf
+	justClick($times)
 	Exit
 EndIf
 
-Global $note_daily_force = @CRLF & @CRLF & "NOTE: -md marks today's tasks done."
+Global $note_daily_force = $dsp & "NOTE: -md marks today's tasks done."
 
 ; read the config file first
 
@@ -119,8 +125,8 @@ while $cmdCount <= $CmdLine[0]
     $temp = StringSplit($myCmd, "-")
     $init_equip = $temp[1]
     $end_equip = $temp[2]
-    if $init_equip > $end_equip Then MOK("Error!", "You need initial equip line to be less than end equip line." & @CRLF & @CRLF & $init_equip & " > " & $end_equip, True)
-    if $init_equip > $max_equip Then MOK("Error!", "You need initial equip line to be less than max equip line. This is zero indexed." & @CRLF & @CRLF & $init_equip & " > " & $max_equip, True)
+    if $init_equip > $end_equip Then MOK("Error!", "You need initial equip line to be less than end equip line." & $dsp & $init_equip & " > " & $end_equip, True)
+    if $init_equip > $max_equip Then MOK("Error!", "You need initial equip line to be less than max equip line. This is zero indexed." & $dsp & $init_equip & " > " & $max_equip, True)
 	if $end_equip > $max_equip Then MOK("WARNING! End_equip > Max_equip" "Adjusting " & $end_equip & " down to " & $max_equip, True)
     $cmdCount += 1
 	ContinueLoop
@@ -207,7 +213,7 @@ While $cmdCount <= $CmdLine[0]
     if $negative == 0 Then
 	  if in_url("habitica.com/") Then
 	    MOK("Error", "You need to be on the front page for this to work. Or use a negative number to click at the current mouse point.", True)
-	EndIf
+      EndIf
 	  justClick($myCmd)
     Else
 	  justClick(0 - $myCmd)
@@ -235,7 +241,7 @@ While $cmdCount <= $CmdLine[0]
     $delay = 1000 * $nextNum
   ElseIf $myCmd == 'f' or $myCmd == 'fi' or $myCmd == 'ft' or $myCmd == 'ff' or $myCmd == 'ffs' or $myCmd == 'fc' or $myCmd == 'cf' or $myCmd == 'fs' Then
     if $nextNum <= 0 Then
-	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & @CRLF & @CRLF & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-cf = fish for class stats e.g. after resetting class" & @CRLF & @CRLF & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
+	  MsgBox($MB_OK, "Need # of times to fish", "You need to specify a positive number after -f(*)." & $dsp & "ff = fixed fish (where mouse is) ffs = single" & @CRLF & "fs = fish slow (only 1 click, for casting spells/doing tasks)" & @CRLF & "ft = fish toggle (end by toggling checked status)" & @CRLF & "-f/-fi = no toggle but go to where first unchecked task would be" & @CRLF & "-cf = fish for class stats e.g. after resetting class" & $dsp & "AFTER:" & @CRLF & "-q = get rid of the stuff in the upper right (about 3x # used)")
 	  Exit
     EndIf
 	$loc_toggle_at_end = $myCmd <> 'ff' and $myCmd <> 'fc' and $myCmd <> 'cf' and $myCmd <> 'fs'
@@ -365,10 +371,11 @@ While $cmdCount <= $CmdLine[0]
       MouseClick("left")
       sleep($delay)
     Next
-  Elseif $myCmd == 't' or $myCmd == 'tt' Then ; cast Tools of the Trade X times
+  Elseif $myCmd == 't' or $myCmd == 'tt' or $myCmd == 'ti' or $myCmd == 'tti' Then ; cast Tools of the Trade X times
 	checkClass($CLASS_ROGUE)
     $clicks = $nextNum
     ToolsTrade($clicks, False, False)
+	if StringInStr($myCmd, 'i') Then DoInt()
 	MarkBuffsDone($CLASS_ROGUE)
   Elseif $myCmd == 'tm' or $myCmd == 'ttm' Then
     MarkBuffsDone($CLASS_ROGUE)
@@ -555,7 +562,7 @@ Func getAutosellValues($get_data_again = True)
   while ($level < 10) and ($experience >= $level_array[$level])
     $level += 1
   wend
-  $level_info = StringFormat("Autosell value: %d%sExperience: %d = Level %d + %d, %s." & @CRLF & @CRLF, $autosell_value, @CRLF, $experience, $level, $experience - $level_array[$level-1], ($level < 7 ? ($level_array[$level] - $experience) & " to go" : "clear"))
+  $level_info = StringFormat("Autosell value: %d%sExperience: %d = Level %d + %d, %s." & $dsp, $autosell_value, @CRLF, $experience, $level, $experience - $level_array[$level-1], ($level < 10 ? StringFormat("%d exp to go, ~%d gold", ($level_array[$level] - $experience), 20 * ($level_array[$level] - $experience) / 3) : "clear"))
   MOK("Autoselling check results", $level_info & ($got_eggs and $got_hatch and $got_food ? $success_string : StringFormat("Missing one or more of eggs/hatching potions/food:%s%sEggs: %s Hatching: %s Food: %s", @CRLF, @CRLF, y_n($got_eggs), y_n($got_hatch), y_n($got_food))))
   Exit
 EndFunc
@@ -1158,7 +1165,7 @@ Func Usage($questionmark, $badCmd = "")
   "-q = quick click in upper right (to get rid of gain reports)", _
   "-r = repeated habit on the left column, needs # and positioning", _
   "-s or -= = gives starting MP so you can see final MP as well", _
-  "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays.", _
+  "-t / -tt (tools of the trade) needs a number after for clicks, with an optional second for delays. -ti/-tti re-equips intelligence gear.", _
   "-x (eXpress) equips perception outfit, runs Tools (#) times and re-equips the intelligence outfit. q ignores the nag. e only equips. r only reequips. -xm/-tm/-ttm marks tools of the trade as run for the day." _
   ]
   Local $header = "Bad/missing parameter(s)"
