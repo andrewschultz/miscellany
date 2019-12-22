@@ -91,16 +91,27 @@ Local $debug = False
 Local $testDontClick = False, $didAnything = False
 
 ; put this along with 'a' into its own function.
-If $cmdLine[0] == 1 and StringIsInt($cmdLine[1]) Then
-	$times = $cmdLine[1]
+If $cmdLine[0] == 1 Then
+  $myCmd = $cmdLine[1]
+  if StringIsInt($cmdLine[1]) Then
+    $times = $cmdLine[1]
     ToHab()
-	if $times < 0 Then
-	  $times = - $times
-	  ToTasks()
-	  sleep(1000)
-	EndIf
-	justClick($times)
-	Exit
+    if $times < 0 Then
+      $times = - $times
+      ToTasks()
+      sleep(1000)
+    EndIf
+    justClickDefaultArmoire($times)
+    Exit
+  EndIf
+  if StringLeft($myCmd, 1) == '=' Then
+    $possNumber = StringMid($myCmd, 2)
+	if StringIsInt($possNumber) Then
+      MOK(StringLeft($myCmd, 1), $possNumber)
+	  JustClickDefaultArmoire($possNumber, False)
+	  Exit
+    EndIf
+  EndIf
 EndIf
 
 Global $note_daily_force = $dsp & "NOTE: -md marks today's tasks done."
@@ -214,13 +225,13 @@ While $cmdCount <= $CmdLine[0]
 	  if in_url("habitica.com/") Then
 	    MOK("Error", "You need to be on the front page for this to work. Or use a negative number to click at the current mouse point.", True)
       EndIf
-	  justClick($myCmd)
+	  justClickDefaultArmoire($myCmd)
     Else
-	  justClick(0 - $myCmd)
+	  justClickDefaultArmoire(0 - $myCmd)
 	EndIf
   ElseIf $myCmd == 'a' Then
     ToHab()
-	justClick(StringMid($myCmd, 2))
+	justClickDefaultArmoire(StringMid($myCmd, 2))
   ElseIf $myCmd == 'b' Then
     ToHab()
     $MousePos = MouseGetPos()
@@ -934,18 +945,21 @@ Func digit_part($param)
 
 EndFunc
 
-Func justClick($clicksToDo)
+Func justClickDefaultArmoire($clicksToDo, $goToArmoire = True)
   $xi = 1325
   $yi = 450
   if $clicksToDo == 0 Then
-    MsgBox($MB_OKCANCEL, "Oops", "Need a number, positive or negative")
+    MsgBox($MB_OKCANCEL, "Oops", "Need a non-negative number")
 	Exit
   EndIf
   if $clicksToDo < 0 Then
+    MsgBox($MB_OKCANCEL, "Oops", "Sent negative number to the justClick routine. This is a bug.")
+	Exit
+  EndIf
+  if not $goToArmoire Then
     Local $aPos = MouseGetPos()
 	$xi = $aPos[0]
 	$yi = $aPos[1]
-	$clicksToDo = - $clicksToDo
   EndIf
   for $i = 1 to $clicksToDo
     MouseClick ( "left", $xi, $yi, 1 )
