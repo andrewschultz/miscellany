@@ -20,7 +20,9 @@ open_after = False
 copy_back = False
 keep_prev = False
 
-my_proj = 'pl'
+my_proj = ''
+default_proj = i7.dir2proj(to_abbrev = True)
+data_file = "c:/writing/scripts/nsi.txt"
 
 def usage(bad_cmd = ""):
     if bad_cmd: print("=" * 30, bad_cmd, "=" * 30)
@@ -80,10 +82,16 @@ while cmd_count < len(sys.argv):
         usage()
     cmd_count += 1
 
+if not my_proj:
+    if default_proj:
+        print("Going with project from command line: {}.".format(default_proj))
+    else:
+        sys.exit("Need to define project or be in a project directory.")
+    my_proj = default_proj
+
 i7.go_proj(my_proj)
 in_file = "notes.txt"
 out_file = "notes-sort.txt"
-data_file = "nsi.txt"
 
 in_before = True
 in_after = False
