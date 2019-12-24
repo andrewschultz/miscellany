@@ -29,6 +29,9 @@ def bail_if_not(f, file_desc = ""):
 def plur(a):
     return '' if a == 1 else 's'
 
+def is_basename(a):
+    return not ('/' in a or '\\' in a)
+
 def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML generated from text", launch = True):
 	f = open(out_file, "w")
 	f.write("<html>\n<title>{:s}</title>\n<body><\n><pre>\n{:s}\n</pre>\n</body>\n</html>\n".format(title, text_str))
