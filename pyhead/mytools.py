@@ -32,6 +32,15 @@ def plur(a):
 def is_basename(a):
     return not ('/' in a or '\\' in a)
 
+def temp_file_gen(file_name, my_dir = os.getcwd(), prefix="temp", before_extension = False):
+    if not is_basename(file_name):
+        return file_name
+    if not before_extension:
+        return os.path.join(my_dir, prefix + "-" + file_name)
+    ary = list(os.path.splitext(file_name))
+    ary[0] += "-" + prefix
+    return os.path.join(my_dir, ''.join(ary))
+
 def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML generated from text", launch = True):
 	f = open(out_file, "w")
 	f.write("<html>\n<title>{:s}</title>\n<body><\n><pre>\n{:s}\n</pre>\n</body>\n</html>\n".format(title, text_str))
