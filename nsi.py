@@ -8,11 +8,14 @@ import re
 import sys
 import mytools as mt
 
-my_regexes = defaultdict(str)
+my_regexes = defaultdict(lambda: defaultdict(str))
+indices = defaultdict(lambda: defaultdict(int))
 my_sect = defaultdict(str)
 sect_text = defaultdict(str)
-indices = defaultdict(int)
 ideas = defaultdict(int)
+
+in_file = defaultdict(str)
+out_file = defaultdict(str)
 
 unalphabetized_check = False
 alphabetized_check = False
@@ -21,7 +24,7 @@ copy_back = False
 keep_prev = False
 
 my_proj = ''
-default_proj = i7.dir2proj(to_abbrev = True)
+default_proj = i7.dir2proj()
 data_file = "c:/writing/scripts/nsi.txt"
 
 def usage(bad_cmd = ""):
@@ -31,8 +34,8 @@ def usage(bad_cmd = ""):
     exit()
 
 def this_sect(line):
-    for q in my_regexes:
-        if re.search(my_regexes[q], line):
+    for q in my_regexes[my_proj]:
+        if re.search(my_regexes[my_proj][q], line):
             return q
     return "unsorted"
 
@@ -51,7 +54,7 @@ def write_sorted_stuff():
     global of
     of.write("\n")
     print(len(sect_text), "sections used:", ', '.join(["{} ({})".format(x, ideas[x]) for x in sorted(sect_text, key=ideas.get, reverse = True)]))
-    for idx in sorted(sect_text, key=indices.get):
+    for idx in sorted(sect_text, key=indices[my_proj].get):
         of.write("#sect: {}\n{}\n".format(idx, sect_text[idx]))
     # print sections
 
@@ -78,6 +81,9 @@ while cmd_count < len(sys.argv):
         keep_prev = False
     elif arg == 'ck' or arg == 'kc':
         copy_back = keep_prev = True
+    elif arg in i7.i7x:
+        if cur_proj: sys.exit("Tried to define 2 projects.")
+        cur_proj = arg
     else:
         usage()
     cmd_count += 1
@@ -90,45 +96,66 @@ if not my_proj:
     my_proj = default_proj
 
 i7.go_proj(my_proj)
-in_file = "notes.txt"
-out_file = "notes-sort.txt"
 
 in_before = True
 in_after = False
 current_comments = ""
 cur_idx = 0
+project_read = ''
 
 with open(data_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(";"): break
         if line.startswith("#"): continue
+        ll = line.lower().strip()
+        if ll.startswith("proj:") or ll.startswith("proj="):
+            project_read = i7.proj_exp(ll[5:]).lower().strip()
+            continue
+        if not project_read:
+            print("Oops line {} has no project to read for the regex.".format(line_count))
+            mt.npo(data_file, line_count)
+        if ll.startswith("infile="):
+            in_file[project_read] = temp_file_gen(ll[7:], prefix="sort")
+            continue
+        if ll.startswith("outfile="):
+            out_file[project_read] = temp_file_gen(ll[8:], prefix="sort")
+            continue
         if line.startswith("~"):
-            print("simple word boundary regex at line {}.".format(line_count))
+            #print("simple word boundary regex at line {}.".format(line_count))
             ary = line[1:].strip().split(",")
             for x in ary:
                 y = x.replace("|", " or ")
-                if y in my_regexes:
+                if y in my_regexes[project_read]:
                     print("WARNING ignoring redefinition of {} at line {}.".format(y, line_count))
                     continue
-                my_regexes[y] = "\\b{}\\b".format(x.lower())
+                my_regexes[project_read][y] = "\\b{}\\b".format(x.lower())
                 cur_idx += 1
-                indices[y] = cur_idx
-                #print("Abbrev-add", x, my_regexes[x])
+                indices[project_read][y] = cur_idx
+                #print("Abbrev-add", y, my_regexes[project_read][y])
             continue
         if not "\t" in line:
             print("WARNING line {} needs tab delimiter: {}.".format(line_count, line.strip()))
         if line.count("\t") > 1:
             print("WARNING line {} can only have one tab delimiter for now: {}.".format(line_count, line.strip()))
         ary = line.strip().lower().split("\t")
-        if ary[0] in my_regexes:
+        if ary[0] in my_regexes[project_read]:
             print("WARNING ignoring redefinition of {} at line {}.".format(ary[0], line_count))
             continue
-        my_regexes[ary[0]] = ary[1]
+        my_regexes[project_read][ary[0]] = ary[1]
         cur_idx += 1
-        indices[ary[0]] = cur_idx
+        indices[project_read][ary[0]] = cur_idx
+
+if my_proj not in project_read:
+    sys.exit("Could not find {} in {}.".format(my_proj, data_file))
+
+in_file = in_file[project_read] if project_read in in_file else "notes.txt"
+out_file = out_file[project_read] if project_read in out_file else "sort-notes.txt"
+
+if not os.path.exists(in_file):
+    sys.exit("Could not find input file {}. Bailing.".format(in_file))
 
 cur_idx += 1
-indices["unsorted"] = cur_idx
+indices[my_proj]["unsorted"] = cur_idx
 
 #do_tests()
 
@@ -181,7 +208,7 @@ else:
     print("-c to copy back.")
 
 if open_after:
-    if os.exists(out_file):
+    if os.path.exists(out_file):
         os.system(out_file)
     else:
         os.system(in_file)
