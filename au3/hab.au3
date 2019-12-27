@@ -93,8 +93,14 @@ Local $testDontClick = False, $didAnything = False
 ; put this along with 'a' into its own function.
 If $cmdLine[0] == 1 Then
   $myCmd = $cmdLine[1]
-  if StringIsInt($cmdLine[1]) Then
-    $times = $cmdLine[1]
+  Local $closeAfter = False
+  if StringRight($myCmd, 1) == 'x' Then
+    $myCmd = StringLeft($myCmd, len($myCmd) - 1)
+	$closeAfter = True
+  EndIf
+
+  if StringIsInt($myCmd) Then
+    $times = $myCmd
     ToHab()
     if $times < 0 Then
       $times = - $times
@@ -102,6 +108,7 @@ If $cmdLine[0] == 1 Then
       sleep(1000)
     EndIf
     justClickDefaultArmoire($times)
+	if $closeAfter then Send("^w")
     Exit
   EndIf
   if StringLeft($myCmd, 1) == '=' Then
@@ -109,6 +116,7 @@ If $cmdLine[0] == 1 Then
 	if StringIsInt($possNumber) Then
       MOK(StringLeft($myCmd, 1), $possNumber)
 	  JustClickDefaultArmoire($possNumber, False)
+      if $closeAfter then Send("^w")
 	  Exit
     EndIf
   EndIf
