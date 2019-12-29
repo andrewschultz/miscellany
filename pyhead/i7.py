@@ -96,6 +96,10 @@ def column_from_header_line(x, line, file_name = "", file_line = 0):
     except:
         sys.exit("Tried to find the element <<{}>> in the tab-delimited line <<{}>>{}{}but failed. Bailing.".format(xl, line.lower().strip().replace("\t", " / "), "" if not file_name else " " + file_name, "" if not file_line else " line {}".format(file_line) ))
 
+def mult_columns_from_header_line(col_array, line, file_name = "", file_line = 0):
+    for q in col_array:
+        yield column_from_header_line(q, line, file_name = "", file_line = 0)
+
 def column_from_file(file_name, table_name, column_name):
     got_any = False
     next_header = False
@@ -108,9 +112,12 @@ def column_from_file(file_name, table_name, column_name):
                 next_header = True
                 continue
             if next_header:
+                if type(column_name) == list: return mult_columns_from_header_line(column_name, line, file_name, line_count)
                 return column_from_header_line(column_name, line, file_name, line_count)
     if not got_any:
         sys.exit("Could not find table <<>> in <<>> to read columns. Bailing.".format(table_name, file_name))
+
+mult_columns_from_header_file = column_from_file
 
 def topx2ary(x, div_char = "/"):
     x = re.sub("^\"*", "", x)
