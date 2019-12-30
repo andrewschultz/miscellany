@@ -11,8 +11,12 @@ import os
 import re
 import pendulum
 import sys
-from mytools import nohy
+import mytools as mt
+import time
 
+bail_if_created = False
+
+show_time = True
 look_for_last = False
 back_range = (0, 0)
 last_back = 1
@@ -41,7 +45,7 @@ def open_in_browser(x, file_desc = "google doc"):
 def get_drive_handle():
     gauth = GoogleAuth()
     if auto_credentials:
-        gauth.LoadCredentialsFile("c:/coding/perl/proj/mycreds.txt")
+        gauth.LoadCredentialsFile("mycreds.txt")
         if gauth.credentials is None:
             # Authenticate if they're not there
             gauth.LocalWebserverAuth()
@@ -65,7 +69,9 @@ def copy_file(service, source_id, dest_title):
 def create_if_not_there(lister, drive):
     for item in lister:
         if item['title'] == dest_title:
-            sys.exit("We already have a file named " + dest_title + ". Bailing.")
+            print("We already have a file named {}. {}.".format(dest_title, "Bailing" if bail_if_created else "Opening latest"))
+            if bail_if_created: exit()
+            return False
 
     dest_id = copy_file(drive.auth.service, source_id, dest_title)
     
@@ -73,6 +79,15 @@ def create_if_not_there(lister, drive):
     dest.FetchMetadata('title')
     
     print(dest['title'], "created")
+    return True
+
+def to_date(doc_title): # for "Transcript dated 1/11/20"
+    ary0 = doc_title.split(" ")
+    ary1 = [int(x) for x in ary0[-1].split("/")]
+    if ary1[-1] < 100:
+        ary1[-1] += 2000
+    ret_val = pendulum.datetime(ary1[-1], ary1[0], ary1[1])
+    return ret_val
 
 def open_latest_transcript(lister, drive):
     months = defaultdict(int)
@@ -127,14 +142,22 @@ def main():
 
     lister = drive.ListFile().GetList()
 
-    if look_for_last:
-        open_latest_transcript(lister, drive)
-    else:
-        create_if_not_there(lister, drive)
+    if not look_for_last:
+        temp = create_if_not_there(lister, drive)
+        if temp:
+            return
+        
+    open_latest_transcript(lister, drive)
     
+b4 = time.time()
+
 cmd_count = 1
+
+if cmd_count == 0:
+    print("No commands. Trying to create new daily document, then opening today's if it is there. To open today's, o/l/lo/ol works.")
+
 while cmd_count < len(sys.argv):
-    arg = nohy(sys.argv[cmd_count])
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
         look_for_last = True
         last_back = 1
@@ -165,3 +188,7 @@ while cmd_count < len(sys.argv):
 
 if __name__ == '__main__':
     main()
+
+if show_time:
+    af = time.time()
+    print("Program took {:4.2f} seconds.".format(af - b4))
