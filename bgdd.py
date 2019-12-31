@@ -31,10 +31,13 @@ auto_credentials = True
 
 def usage():
     print("Not many commands to use.")
-    print("-c = create today's file")
-    print("-l/o/ol/lo = look for most recently created file")
+    print("-c = create today's file (on by default)")
+    print("-l/o/ol/lo = look for most recently created file (on by default)")
+    print("-st/-ts = show time taken, -nt/-tn = no time taken")
     print("dft.py downloads finished transcripts from Google Drive")
     print("keso.py sorts the files by idea type")
+    print()
+    print("Default usage = create today's file and open the latest if it's already there.")
     exit()
 
 def open_in_browser(x, file_desc = "google doc"):
@@ -163,6 +166,10 @@ while cmd_count < len(sys.argv):
         last_back = 1
     elif arg == 'c':
         look_for_last = False
+    elif arg == 'nt' or arg == 'tn':
+        show_time = False
+    elif arg == 'st' or art == 'ts':
+        show_time = True
     elif arg.isdigit():
         look_for_last = True
         last_back = int(arg)
