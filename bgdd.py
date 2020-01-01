@@ -31,9 +31,10 @@ auto_credentials = True
 
 def usage():
     print("Not many commands to use.")
-    print("-c = create today's file (on by default)")
-    print("-l/o/ol/lo = look for most recently created file (on by default)")
+    print("-l/o/ol/lo (-c) = look for most recently created file (on by default)")
+    print("-nl/-no/-ln/-on = don't look for most recently created file (on by default)")
     print("-st/-ts = show time taken, -nt/-tn = no time taken")
+    print()
     print("dft.py downloads finished transcripts from Google Drive")
     print("keso.py sorts the files by idea type")
     print()
@@ -164,12 +165,14 @@ while cmd_count < len(sys.argv):
     if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
         look_for_last = True
         last_back = 1
-    elif arg == 'c':
-        look_for_last = False
     elif arg == 'nt' or arg == 'tn':
         show_time = False
     elif arg == 'st' or art == 'ts':
         show_time = True
+    elif arg == 'c' or arg == 'lo' or arg == 'ol':
+        look_for_last = False
+    elif arg == 'nl' or art == 'ln':
+        look_for_last = True
     elif arg.isdigit():
         look_for_last = True
         last_back = int(arg)

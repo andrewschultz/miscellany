@@ -305,6 +305,14 @@ def text_in_browser(file_name, print_action = True, bail=False):
 
 tib = t_i_b = text_in_browser
 
+def is_posneg_int(x):
+    try:
+        if x.isdigit(): return True
+        if x[0] == '-' and x[1:].isdigit(): return True
+    except:
+        pass
+    return False
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
