@@ -16,8 +16,11 @@ import time
 
 bail_if_created = False
 
+create_new = True
 show_time = True
 look_for_last = False
+look_for_last_mult = False
+look_for_last_num = 1
 back_range = (0, 0)
 last_back = 1
 max_back = 9
@@ -34,6 +37,7 @@ def usage():
     print("-l/o/ol/lo (-c) = look for most recently created file (on by default)")
     print("-nl/-no/-ln/-on = don't look for most recently created file (on by default)")
     print("-st/-ts = show time taken, -nt/-tn = no time taken")
+    print("-a3 = back 1, 2, 3, -b3 = back 3, 2-5=back 2, 3, 4, 5")
     print()
     print("dft.py downloads finished transcripts from Google Drive")
     print("keso.py sorts the files by idea type")
@@ -127,14 +131,13 @@ def open_latest_transcript(lister, drive):
             if mdy2[2] < 2000: years[temp_id] += 2000
         title_of[temp_id] = full_title
     mdy_sorted = sorted(months, key=lambda x:(years[x], months[x], days[x]), reverse=True)
-    print("Top ", max_back, " of", len(mdy_sorted))
+    print("Top {} of {}".format(max_back, len(mdy_sorted)))
     for x in range(0, max_back): print(x+1, mdy_sorted[x], title_of[mdy_sorted[x]], years[mdy_sorted[x]], months[mdy_sorted[x]], days[mdy_sorted[x]])
 
     global back_range
     if back_range[0] == 0:
         back_range = (last_back, last_back + 1)
     for x in range(back_range[0], back_range[1]):
-        print(x, back_range[0], back_range[1])
         open_in_browser(mdy_sorted[x - 1], title_of[mdy_sorted[x - 1]])
 
 def main():
@@ -146,7 +149,7 @@ def main():
 
     lister = drive.ListFile().GetList()
 
-    if not look_for_last:
+    if create_new:
         temp = create_if_not_there(lister, drive)
         if temp:
             return
@@ -163,16 +166,27 @@ if cmd_count == 0:
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
+        create_new = True
         look_for_last = True
         last_back = 1
     elif arg == 'nt' or arg == 'tn':
         show_time = False
-    elif arg == 'st' or art == 'ts':
+    elif arg == 'st' or arg == 'ts':
         show_time = True
     elif arg == 'c' or arg == 'lo' or arg == 'ol':
-        look_for_last = False
-    elif arg == 'nl' or art == 'ln':
+        create_new = False
         look_for_last = True
+    elif arg == 'nl' or arg == 'ln':
+        look_for_last = False
+    elif arg[0] == 'b' and mt.is_posneg_int(arg[1:], allow_zero = False):
+        look_for_last = True
+        look_for_last_mult = False
+        look_for_last_num = abs(int(arg[1:]))
+        back_range = (abs(int(arg[1:])), abs(int(arg[1:])+1))
+    elif arg[0] == 'a' and mt.is_posneg_int(arg[1:], allow_zero = False):
+        look_for_last = True
+        look_for_last_mult = True
+        back_range = (1, abs(int(arg[1:])) + 1)
     elif arg.isdigit():
         look_for_last = True
         last_back = int(arg)
@@ -180,7 +194,7 @@ while cmd_count < len(sys.argv):
             print("Can only go", max_back, "back.")
             last_back = max_back
     elif re.search("^[0-9]+-[0-9]+$", arg):
-        ary = sorted(re.split("-", arg))
+        ary = [int(x) for x in sorted(re.split("-", arg))]
         if ary[1] > max_back:
             print("Can only go", max_back, "back.")
             ary[1] = max_back

@@ -305,10 +305,10 @@ def text_in_browser(file_name, print_action = True, bail=False):
 
 tib = t_i_b = text_in_browser
 
-def is_posneg_int(x):
+def is_posneg_int(x, allow_zero = False):
     try:
-        if x.isdigit(): return True
-        if x[0] == '-' and x[1:].isdigit(): return True
+        q = int(x)
+        return allow_zero or q
     except:
         pass
     return False
