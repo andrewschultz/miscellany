@@ -10,6 +10,7 @@ import mytools as mt
 
 my_regexes = defaultdict(lambda: defaultdict(str))
 indices = defaultdict(lambda: defaultdict(int))
+alphabetize = defaultdict(lambda: defaultdict(str))
 my_sect = defaultdict(str)
 sect_text = defaultdict(str)
 ideas = defaultdict(int)
@@ -55,6 +56,8 @@ def write_sorted_stuff():
     of.write("\n")
     print(len(sect_text), "sections used:", ', '.join(["{} ({})".format(x, ideas[x]) for x in sorted(sect_text, key=ideas.get, reverse = True)]))
     for idx in sorted(sect_text, key=indices[my_proj].get):
+        if idx in alphabetize[my_proj]:
+            sect_text[idx] = mt.alphabetize_lines(sect_text[idx])
         of.write("#sect: {}\n{}\n".format(idx, sect_text[idx]))
     # print sections
 
@@ -108,6 +111,10 @@ with open(data_file) as file:
         if line.startswith(";"): break
         if line.startswith("#"): continue
         ll = line.lower().strip()
+        alpha_these = False
+        if ll.startswith("alpha:"):
+            alpha_these = True
+            ll = ll[6:]
         if ll.startswith("proj:") or ll.startswith("proj="):
             project_read = i7.proj_exp(ll[5:]).lower().strip()
             continue
@@ -131,19 +138,23 @@ with open(data_file) as file:
                 my_regexes[project_read][y] = "\\b{}\\b".format(x.lower())
                 cur_idx += 1
                 indices[project_read][y] = cur_idx
+                if alpha_these:
+                    alphabetize[project_read][y] = True
                 #print("Abbrev-add", y, my_regexes[project_read][y])
             continue
         if not "\t" in line:
             print("WARNING line {} needs tab delimiter: {}.".format(line_count, line.strip()))
         if line.count("\t") > 1:
             print("WARNING line {} can only have one tab delimiter for now: {}.".format(line_count, line.strip()))
-        ary = line.strip().lower().split("\t")
+        ary = ll.split("\t")
         if ary[0] in my_regexes[project_read]:
             print("WARNING ignoring redefinition of {} at line {}.".format(ary[0], line_count))
             continue
         my_regexes[project_read][ary[0]] = ary[1]
         cur_idx += 1
         indices[project_read][ary[0]] = cur_idx
+        if alpha_these:
+            alphabetize[project_read][ary[0]] = True
 
 if my_proj not in project_read:
     sys.exit("Could not find {} in {}.".format(my_proj, data_file))
@@ -205,7 +216,7 @@ if copy_back:
     copy(out_file, in_file)
     os.remove(out_file)
 else:
-    print("-c to copy back.")
+    print("-c to copy back, -a/-o for alphabetized check, -u for unalphabetized check.")
 
 if open_after:
     if os.path.exists(out_file):

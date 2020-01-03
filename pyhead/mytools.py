@@ -190,6 +190,11 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
+def alphabetize_lines(x):
+    if type(x) == str:
+        temp = x.split("\n")
+    return "\n".join(sorted(temp, key=lambda x:x.lower())) + "\n"
+
 def alfcomp(x1, x2, bail = True, comments = True, spaces = False):
     a1 = "c:/writing/temp/alpha-1.txt"
     a2 = "c:/writing/temp/alpha-2.txt"
