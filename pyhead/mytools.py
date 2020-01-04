@@ -190,10 +190,19 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
-def alphabetize_lines(x):
+def strip_punctuation(q):
+    q = q.replace('"', '')
+    q = q.replace('.', '')
+    q = q.replace(',', '')
+    q = q.replace('-', ' ')
+    q = ' '.join(q.split(' '))
+    q = re.sub("^(an|the|a) ", "", q).strip()
+    return q
+
+def alphabetize_lines(x, ignore_punctuation_and_articles = True):
     if type(x) == str:
         temp = x.split("\n")
-    return "\n".join(sorted(temp, key=lambda x:x.lower())) + "\n"
+    return "\n".join(sorted(temp, key=lambda x:strip_punctuation(x) if ignore_punctuation_and_articles else x.lower())) + "\n"
 
 def alfcomp(x1, x2, bail = True, comments = True, spaces = False):
     a1 = "c:/writing/temp/alpha-1.txt"
