@@ -1,6 +1,8 @@
-# bgdd.py: blank google drive daily document
+# gdu.py: google drive utilities script
 #
+# main tasks:
 # creates a blank Google Drive daily document, formatted with title and "IMPORTANT" section
+# also opens latest drive document created
 #
 
 from pydrive.auth import GoogleAuth
@@ -16,7 +18,7 @@ import time
 
 bail_if_created = False
 
-create_new = True
+create_new = False
 show_time = True
 look_for_last = False
 look_for_last_mult = False
@@ -31,6 +33,9 @@ folder_id = "" # '0BxbuUXtrs7adSFFYMG0zS3VZNFE'
 source_id = "1mkbVFs_911fx4qA0NYm1PL4ignwEn6-I4yoJG2oJsTI"
 
 auto_credentials = True
+
+if len(sys.argv) == 1:
+    sys.exit("No parameters. GDU.PY now requires a parameter to run. The most popular are -c to create a new document or -l to open the last created daily document.")
 
 def usage():
     print("Not many commands to use.")
@@ -159,9 +164,6 @@ def main():
 b4 = time.time()
 
 cmd_count = 1
-
-if cmd_count == 0:
-    print("No commands. Trying to create new daily document, then opening today's if it is there. To open today's, o/l/lo/ol works.")
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
