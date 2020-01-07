@@ -16,6 +16,7 @@ import sys
 import mytools as mt
 import time
 
+cred_file = "mycreds.txt"
 bail_if_created = False
 
 create_new = False
@@ -35,12 +36,15 @@ source_id = "1mkbVFs_911fx4qA0NYm1PL4ignwEn6-I4yoJG2oJsTI"
 auto_credentials = True
 
 if len(sys.argv) == 1:
-    sys.exit("No parameters. GDU.PY now requires a parameter to run. The most popular are -c to create a new document or -l to open the last created daily document.")
+    print("No parameters. GDU.PY now requires a parameter to run.")
+    print("The most popular are -c to create a new document or -l to open the last created daily document.")
+    print("Or you can combine the two to create a document--unless it's there, then open today's document.")
+    sys.exit()
 
 def usage():
     print("Not many commands to use.")
-    print("-l/o/ol/lo (-c) = look for most recently created file (on by default)")
-    print("-nl/-no/-ln/-on = don't look for most recently created file (on by default)")
+    print("-c = just create new, -cl= create, but if there, open last, -l/o/ol/lo = open last (main single usage paramaters)")
+    print("-nl/-no/-ln/-on = don't look for most recently created file (only with other parameters)")
     print("-st/-ts = show time taken, -nt/-tn = no time taken")
     print("-a3 = back 1, 2, 3, -b3 = back 3, 2-5=back 2, 3, 4, 5")
     print()
@@ -58,7 +62,7 @@ def open_in_browser(x, file_desc = "google doc"):
 def get_drive_handle():
     gauth = GoogleAuth()
     if auto_credentials:
-        gauth.LoadCredentialsFile("mycreds.txt")
+        gauth.LoadCredentialsFile(cred_file)
         if gauth.credentials is None:
             # Authenticate if they're not there
             gauth.LocalWebserverAuth()
@@ -69,7 +73,7 @@ def get_drive_handle():
             # Initialize the saved creds
             gauth.Authorize()
         # Save the current credentials to a file
-        gauth.SaveCredentialsFile("mycreds.txt")
+        gauth.SaveCredentialsFile(cred_file)
         gauth.LocalWebserverAuth()
         drive = GoogleDrive(gauth)
     return drive
@@ -158,28 +162,64 @@ def main():
         temp = create_if_not_there(lister, drive)
         if temp:
             return
-        
-    open_latest_transcript(lister, drive)
+
+    if look_for_last:
+        open_latest_transcript(lister, drive)
     
 b4 = time.time()
 
 cmd_count = 1
 
+gdu_abbrev = defaultdict(str)
+see_mod = []
+mod_back_days = 7
+
+with open(gdu_data) as file:
+    for (line_count, line) in file:
+        if line.startswith(";"): break
+        if line.startswith("#"): continue
+        if line.count('=') != 1:
+            print("Line {} needs one equals: {}".format(line_count, line.strip()))
+            continue
+        x = line.strip().split("=")
+        if len(x[1]) != id_length:
+            print("Line {} bad id length of {}. Should be {}.".format(len(x[1]), id_length))
+            continue
+        gdu_abbrev[x[0]] = x[1]
+
+sys.exit()
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
         create_new = True
+        look_for_last = False
+    elif arg == 'cl' or arg == 'lc':
+        create_new = True
+        look_for_last = True
+        last_back = 1
+    elif arg == 'lo' or arg == 'ol' or arg == 'l' or arg == 'o':
+        create_new = False
         look_for_last = True
         last_back = 1
     elif arg == 'nt' or arg == 'tn':
         show_time = False
     elif arg == 'st' or arg == 'ts':
         show_time = True
-    elif arg == 'c' or arg == 'lo' or arg == 'ol':
-        create_new = False
-        look_for_last = True
     elif arg == 'nl' or arg == 'ln':
         look_for_last = False
+    elif arg[:2] == 'lm':
+        see_mod.extend(arg[2:].split(","))
+        for q in arg[2:].split(","):
+            if q not in gdu_abbrev:
+                print(q, "not vaild abbreviation.")
+                continue
+            see_mod.append(q)
+    elif arg[:2] == 'lmd':
+        try:
+            mod_back_days = int(arg[3:])
+        except:
+            sys.exit("Need integer for LMD last modified days")
     elif arg[0] == 'b' and mt.is_posneg_int(arg[1:], allow_zero = False):
         look_for_last = True
         look_for_last_mult = False
