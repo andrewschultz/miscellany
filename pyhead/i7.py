@@ -506,6 +506,17 @@ def i7fa(p):
         if os.path.exists(temp): retary.append(temp)
     return retary
 
+def ext2blorb(game_ext, return_error = True, return_blank = False):
+    if game_ext == 'ulx':
+        return 'gblorb'
+    if game_ext == 'z8' or game_ext == 'z5':
+        return 'zblorb'
+    if return_error:
+        return 'err'
+    if return_blank:
+        return ''
+    sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext)
+
 def all_proj_fi(x, bail = True):
     xp = i7xr[x] if x in i7xr.keys() else x
     if xp not in i7com.keys():
