@@ -57,6 +57,8 @@ def is_main_abb(x):
     return x == main_abb(x)
 
 def main_abb(x):
+    if x in i7xr:
+        return i7xr[x]
     if x not in i7x: return ""
     if i7x[x] not in i7xr:
         print("    **** I7.PY WARNING {}/{} does not have reverse abbreviation.".format(x, i7x[x]))
@@ -515,7 +517,7 @@ def ext2blorb(game_ext, return_error = True, return_blank = False):
         return 'err'
     if return_blank:
         return ''
-    sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext)
+    sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext))
 
 def all_proj_fi(x, bail = True):
     xp = i7xr[x] if x in i7xr.keys() else x
@@ -554,6 +556,8 @@ i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
 i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
+i7gbx = {} # geneeral binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
+i7pbx = {} # project binary extensions for debug, beta and release
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -568,6 +572,7 @@ with open(i7_cfg_file) as file:
         lln = re.sub("^.*?:", "", ll)
         if ':' not in ll and '=' not in ll: print("WARNING line", line_count, "in i7p.txt needs = or :.")
         lla = lln.split("=")
+        lli = re.sub(":.*", "", ll)
         if ll.startswith("headname:"):
             for x in lla[1].split(","): i7hfx[x] = lla[0]
             continue
@@ -609,6 +614,17 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("ghproj:"):
             i7gx[lla[1]] = lla[0]
+            continue
+        if ll.startswith("binext:"):
+            for temp in lla[0].split(","):
+                i7gbx[temp] = lla[1].split(",")
+            continue
+        if ll.startswith("compile-"):
+            this_bin = i7gbx[re.sub(".*-", "", lli)]
+            for x in lla[0].split(","):
+                if not main_abb(x):
+                    print("Line {} has faulty project/abbreviation {} for compile binary extensions.".format(line_count, x))
+                i7pbx[x] = this_bin
             continue
         combos = False
         l0 = line.lower().strip().split("=")
