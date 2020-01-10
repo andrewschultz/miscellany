@@ -36,6 +36,11 @@ prt_temp = os.path.join(prt, "temp")
 i7_cfg_file = "c:/writing/scripts/i7p.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 gh_dir = "c:\\users\\andrew\\documents\\GitHub"
+beta_dir = "c:/games/inform/beta Materials/Release"
+
+DEBUG=1
+BETA=2
+RELEASE=3
 
 i7fi = { 'f': f_f, 'l': f_l, 'w': f_dic, 'b': f_dic }
 
@@ -384,15 +389,6 @@ def proj_exp(x, return_nonblank = True, to_github = False):
 
 pex = proj_exp
 
-def beta_file(x, bail=False):
-    q = proj_exp(x).replace('-', ' ')
-    beta_dir = "c:/games/inform/beta Materials/Release"
-    for j in ["zblorb", "gblorb", "z8", "z5", "glx" ]:
-        my_fi = os.path.join(beta_dir, "beta-{}.{}".format(q, j))
-        if os.path.exists(my_fi): yield my_fi
-    if bail: sys.exit("Couldn't find beta binary for {}.".format(x))
-    return ""
-
 def hfi_exp(x, return_nonblank = True):
     if x in i7nonhdr.keys(): return i7nonhdr[x]
     if x in i7nonhdr.values(): return x
@@ -519,6 +515,18 @@ def ext2blorb(game_ext, return_error = True, return_blank = False):
         return ''
     sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext))
 
+def bin_file(x, file_type = BETA, to_blorb = False):
+    my_file = proj_exp(x).replace('-', ' ')
+    my_dir = beta_dir if file_type == BETA else "c:/games/inform/{} materials/Release".format(proj_exp(x))
+    if not os.path.exists(my_dir):
+        print("WARNING tried to find materials/release directory {} from {} and failed.".format(my_dir, x))
+    x0 = main_abb(x)
+    my_ext = i7pbx[x0][file_type - 1] if x0 in i7pbx else 'ulx'
+    if to_blorb:
+        my_ext = ext2blorb(my_ext)
+    my_file += "." + my_ext
+    return os.path.normpath(os.path.join(my_dir, my_file))
+
 def all_proj_fi(x, bail = True):
     xp = i7xr[x] if x in i7xr.keys() else x
     if xp not in i7com.keys():
@@ -624,7 +632,9 @@ with open(i7_cfg_file) as file:
             for x in lla[0].split(","):
                 if not main_abb(x):
                     print("Line {} has faulty project/abbreviation {} for compile binary extensions.".format(line_count, x))
-                i7pbx[x] = this_bin
+                if main_abb(x) in i7pbx:
+                    print("Redefinition of {}/{} project binaries at line {}.".format(x, main_abb(x), line_count))
+                i7pbx[main_abb(x)] = this_bin
             continue
         combos = False
         l0 = line.lower().strip().split("=")
