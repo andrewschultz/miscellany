@@ -70,6 +70,15 @@ def main_abb(x):
         return ""
     return i7xr[i7x[x]]
 
+def in_dict_or_abbrev(my_key, my_dict):
+    if my_key in my_dict:
+        return True
+    if my_key in i7xr and i7x[my_key] in my_dict:
+        return True
+    if main_abb(my_key) in i7x:
+        return True
+    return False
+
 def apostrophe_to_quotes(x):
     temp = re.sub(" '", ' "', x)
     temp = re.sub("' ", '" ', temp)
