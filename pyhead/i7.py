@@ -79,6 +79,8 @@ def in_dict_or_abbrev(my_key, my_dict):
         return True
     return False
 
+inish = in_dict_or_abbrev
+
 def apostrophe_to_quotes(x):
     temp = re.sub(" '", ' "', x)
     temp = re.sub("' ", '" ', temp)
@@ -525,7 +527,10 @@ def ext2blorb(game_ext, return_error = True, return_blank = False):
     sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext))
 
 def bin_file(x, file_type = BETA, to_blorb = False):
-    my_file = proj_exp(x).replace('-', ' ')
+    if inish(x, i7binname):
+        my_file = i7binname[x]
+    else:
+        my_file = proj_exp(x).replace('-', ' ')
     my_dir = beta_dir if file_type == BETA else "c:/games/inform/{} materials/Release".format(proj_exp(x))
     if not os.path.exists(my_dir):
         print("WARNING tried to find materials/release directory {} from {} and failed.".format(my_dir, x))
@@ -575,6 +580,7 @@ i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling
 i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
 i7gbx = {} # geneeral binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
 i7pbx = {} # project binary extensions for debug, beta and release
+i7binname = {} # binary nams e.g. roiling to A Roiling Original
 
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
@@ -644,6 +650,9 @@ with open(i7_cfg_file) as file:
                 if main_abb(x) in i7pbx:
                     print("Redefinition of {}/{} project binaries at line {}.".format(x, main_abb(x), line_count))
                 i7pbx[main_abb(x)] = this_bin
+            continue
+        if ll.startswith("binname:"):
+            i7binname[lla[0]] = re.sub(".*=", "", line.strip()) # I want to keep case here
             continue
         combos = False
         l0 = line.lower().strip().split("=")
