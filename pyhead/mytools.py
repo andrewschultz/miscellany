@@ -283,6 +283,10 @@ def follow_link(x):
 
 fl = follow_link
 
+def last_mod(x):
+    x = follow_link(x)
+    return os.stat(x).st_mtime
+
 def add_quotes_if_space(x):
     if x.startswith('"'): return x
     if ' ' in x: return '"{}"'.format(x)
