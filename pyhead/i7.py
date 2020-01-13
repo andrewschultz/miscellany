@@ -70,12 +70,27 @@ def main_abb(x):
         return ""
     return i7xr[i7x[x]]
 
+def dict_val_or_similar(my_key, my_dict):
+    if my_key in my_dict:
+        return my_dict[my_key]
+    if my_key in i7xr and i7xr[my_key] in my_dict:
+        return my_dict[i7xr[my_key]]
+    if my_key in i7x and i7x[my_key] in my_dict:
+        return my_dict[i7x[my_key]]
+    if main_abb(my_key) in my_dict:
+        return my_dict[main_abb(my_key)]
+    return False
+
+dictish = dict_val_or_similar
+
 def in_dict_or_abbrev(my_key, my_dict):
     if my_key in my_dict:
         return True
-    if my_key in i7xr and i7x[my_key] in my_dict:
+    if my_key in i7xr and i7xr[my_key] in my_dict:
         return True
-    if main_abb(my_key) in i7x:
+    if my_key in i7x and i7x[my_key] in my_dict:
+        return True
+    if main_abb(my_key) in my_dict:
         return True
     return False
 
