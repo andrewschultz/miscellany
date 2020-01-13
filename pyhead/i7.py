@@ -38,9 +38,12 @@ triz_dir = "c:\\games\\inform\\triz\\mine"
 gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 beta_dir = "c:/games/inform/beta Materials/Release"
 
-DEBUG=1
-BETA=2
-RELEASE=3
+# these are default values for binaries--debug is assumed to be most important
+# since it is the one I'll be using the most.
+# beta is used for automation.
+DEBUG = 0
+BETA = 1
+RELEASE = 2
 
 i7fi = { 'f': f_f, 'l': f_l, 'w': f_dic, 'b': f_dic }
 
@@ -541,18 +544,32 @@ def ext2blorb(game_ext, return_error = True, return_blank = False):
         return ''
     sys.exit("Could not convert extension {} to blorb. Bailing. Set return_error or return_blank to skip this.".format(game_ext))
 
+def ext2blorb(y):
+    if y.startswith('z'):
+        return 'zblorb'
+    return 'gblorb'
+
+def bin_ext(x, file_type = BETA, to_blorb = False):
+    if not inish(x, i7pbx):
+        out_type = 'ulx'
+    else:
+        out_type = dictish(x0, i7pbx)[file_type]
+    if to_blorb:
+        out_type = ext2blorb(out_type)
+    return out_type
+
 def bin_file(x, file_type = BETA, to_blorb = False):
     if inish(x, i7binname):
         my_file = i7binname[x]
     else:
         my_file = proj_exp(x).replace('-', ' ')
     my_dir = beta_dir if file_type == BETA else "c:/games/inform/{} materials/Release".format(proj_exp(x))
+    if file_type == BETA:
+        my_file = "beta-" + my_file
     if not os.path.exists(my_dir):
         print("WARNING tried to find materials/release directory {} from {} and failed.".format(my_dir, x))
     x0 = main_abb(x)
-    my_ext = i7pbx[x0][file_type - 1] if x0 in i7pbx else 'ulx'
-    if to_blorb:
-        my_ext = ext2blorb(my_ext)
+    my_ext = bin_ext(x0, file_type, to_blorb)
     my_file += "." + my_ext
     return os.path.normpath(os.path.join(my_dir, my_file))
 
