@@ -23,21 +23,10 @@ def build_type(a):
     if a.startswith('r'): returni7.RELEASE
     sys.exit("Can't use buid type with {}. B/D/R.".format(a))
 
-def try_to_build(this_proj, this_build, this_blorb = False):
-    build_flags = '-kwSDG'
-    if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
-
-    output_ext = i7.bin_ext(this_proj, this_build, to_blorb)
-    inform_compiler = 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-633'
-    my_cmd = '"{}" {} +include_path=..\Source,.\ auto.inf output.{}"'.format(inform_compiler, build_flags, output_ext)
-
-    i7.go_proj(my_proj)
-    print(my_cmd)
-
 def last_proj_modified(this_proj, verbose=False):
     my_files = i7.dictish(this_proj,i7.i7f)
     if not my_files:
-        print("Could not find file list for", this_proj)
+        print("Could not find file list for {}--going with just story.ni.".format(this_proj))
         ms = i7.main_src(this_proj)
         if os.path.exists(ms):
             if verbose:
@@ -60,6 +49,28 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     proj_tuple = last_proj_modified(this_proj)
     return time.time() - proj_tuple[0] < time_since
 
+def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
+    bin_out = i7.bin_file(this_proj, this_build)
+    bin_base = os.path.basename(bin_out)
+    file_already_there = os.path.exists(bin_out)
+    print("{} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
+    modified_recently_enough = proj_modified_last_x_seconds(this_proj, file_change_time)
+    if file_already_there:
+        if not modified_recently_enough and not overwrite:
+            print("Not building {}/{}/{} -- no files modified recently enough.".format(this_proj, this_build, bin_base))
+            return
+        print(bin_base, "already there.")
+    print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
+    build_flags = '-kwSDG'
+    if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
+
+    output_ext = i7.bin_ext(this_proj, this_build, to_blorb)
+    inform_compiler = 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-633'
+    my_cmd = '"{}" {} +include_path=..\Source,.\ auto.inf output.{}"'.format(inform_compiler, build_flags, output_ext)
+
+    i7.go_proj(my_proj)
+    print(my_cmd)
+
 my_build = i7.DEBUG
 my_proj = 'vv'
 
@@ -80,7 +91,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
     elif arg == 'a' or arg == 'all':
-        build_projects.extend([(my_proj, 'b'), (my_proj, 'd'), (my_proj, 'r')])
+        build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
     elif i7.main_abb(arg):
         my_proj = arg
     elif '/' in arg:
@@ -90,7 +101,7 @@ while cmd_count < len(sys.argv):
         if main_abb(y[1]):
             y.reverse()
         if y[1] == 'a':
-            build_projects.extend([(my_proj, 'b'), (my_proj, 'd'), (my_proj, 'r')])
+            build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
         else:
             build_projects.append((y[0], build_type(y[1])))
     else:
