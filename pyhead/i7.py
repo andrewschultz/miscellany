@@ -281,10 +281,9 @@ def to_prt(include_glob = "reg-*", exclude_glob = ""):
             copied += 1
     print(copied, "copied of ", include_glob, "-", xg, ",", uncopied, "uncopied")
 
-def plur(a):
-    return '' if a == 1 else 's'
-
-wm = mt.wm #for backwards compatibility. wm used to be in i7.
+#for backwards compatibility. wm and plur used to be in i7.
+plur = mt.wm
+wm = mt.wm
 
 def remove_quotes(x):
     temp = re.sub("\"", "", x)
@@ -455,6 +454,30 @@ def proj2dir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))
 
 sdir = p2d = proj2dir
+
+def proj2mat(x):
+    return "c:\\games\\inform\\{:s} Materials".format(proj_exp(x))
+
+matdir = proj2mat
+
+def proj2matr(x):
+    return "c:\\games\\inform\\{:s} Materials\\Release".format(proj_exp(x))
+
+matrel = proj2matr
+
+def cover_art(x, small = False, bail = True):
+    stem = "Small Cover" if small else "Cover"
+    for q in [ 'png', 'jpg' ]:
+        temp = os.path.join(proj2matr(x), "{}.{}".format(stem, q))
+        if os.path.exists(temp):
+            return temp
+    sys.stderr.write("Could not find cover art for {}.".format(x))
+    if bail:
+        exit()
+    return ""
+
+def small_cover_art(x):
+    return cover_art(x, small = True)
 
 def go_proj(x):
     os.chdir(proj2dir(x))
