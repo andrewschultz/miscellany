@@ -325,6 +325,19 @@ def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
         print("... set force_copy to True in", sys._getframe().f_code.co_name, "to force copy")
         wm(temp, t2)
 
+def blurb_file(x):
+    return os.path.normpath(os.path.join(proj2root(x), "Release.blurb"))
+
+blurb = blurb_file
+
+def uid_file(x):
+    return os.path.normpath(os.path.join(proj2root(x), "uuid.txt"))
+
+uuid = uuid_file = uid_file
+
+def auto_file(x):
+    return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
+
 def main_src(x):
     return os.path.normpath(os.path.join(sdir(x), "story.ni"))
 
@@ -434,6 +447,9 @@ def has_ni(x):
     my_proj = proj2dir(i7.dir2proj(x))
     if os.path.exists(os.path.join(my_proj, "story.ni")): return True
     return False
+
+def proj2root(x):
+    return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
 def proj2dir(x):
     return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))
@@ -553,7 +569,7 @@ def bin_ext(x, file_type = BETA, to_blorb = False):
     if not inish(x, i7pbx):
         out_type = 'ulx'
     else:
-        out_type = dictish(x0, i7pbx)[file_type]
+        out_type = dictish(x, i7pbx)[file_type]
     if to_blorb:
         out_type = ext2blorb(out_type)
     return out_type
