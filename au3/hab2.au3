@@ -109,7 +109,6 @@ If $cmdLine[0] == 1 Then
     EndIf
     justClickDefaultArmoire($times)
 	if $closeAfter then Send("^w")
-	RefreshExp()
     Exit
   EndIf
   if StringLeft($myCmd, 1) == '=' Then
@@ -118,7 +117,6 @@ If $cmdLine[0] == 1 Then
       MOK(StringLeft($myCmd, 1), $possNumber)
 	  JustClickDefaultArmoire($possNumber, False)
       if $closeAfter then Send("^w")
-      RefreshExp()
 	  Exit
     EndIf
   EndIf
@@ -550,16 +548,8 @@ Func getAutosellValues($get_data_again = True)
   local $got_hatch = False
   local $got_food = False
 
-  local $bylev_exp_array[10] = [ 0, 25, 50, 75, 100, 150, 210, 220, 240, 250 ]
-  local $total_exp_array[10] = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ] ; 0 25 75 150 250 400 610 830 1070 1320
-
-  $max_lev = UBound($total_exp_array)
-
-  local $exp_tot = 0
-  for $q = 1 to $max_lev - 1
-    $exp_tot += $bylev_exp_array[$q]
-	$total_exp_array[$q] = $exp_tot
-  Next
+  local $level_array[10] = [ 0, 150, 310, 480, 660, 860, 1070, 1290, 1530, 1780 ] ; 2040 is next
+  $max_lev = UBound($level_array)
 
   $success_string = "Found everything. Detailed accounting below." & @CRLF
   for $q = 1 to $ary[0]
@@ -589,13 +579,13 @@ Func getAutosellValues($get_data_again = True)
 
   $experience = Floor($autosell_value * .15)
   local $level = 0
-  while ($level < $max_lev - 1) and ($experience >= $total_exp_array[$level])
+  while ($level < $max_lev - 1) and ($experience >= $level_array[$level])
     $level += 1
   wend
   $autosell_value = StringFormat("Autosell value: %d%s", $autosell_value, @CRLF)
-  $level_info = StringFormat("Experience: %d = Level %d + %d experience%s", $experience, $level, $experience - $total_exp_array[$level-1], @CRLF)
-  if $level < $max_lev Then $level_info &= StringFormat("Needed for next level (%d): %s experience, %d gold%s", $level + 1, $total_exp_array[$level] - $experience, 20 * ($total_exp_array[$level] - $experience) / 3, @CRLF)
-  if $level < $max_lev - 1 Then $level_info &= StringFormat("Needed for class choice level (%d): %s experience, %d gold%s", $max_lev, $total_exp_array[$max_lev - 1] - $experience, 20 * ($total_exp_array[$max_lev - 1] - $experience) / 3, @CRLF)
+  $level_info = StringFormat("Experience: %d = Level %d + %d experience%s", $experience, $level, $experience - $level_array[$level-1], @CRLF)
+  if $level < $max_lev Then $level_info &= StringFormat("Needed for next level (%d): %s experience, %d gold%s", $level + 1, $level_array[$level] - $experience, 20 * ($level_array[$level] - $experience) / 3, @CRLF)
+  if $level < $max_lev - 1 Then $level_info &= StringFormat("Needed for class choice level (%d): %s experience, %d gold%s", $max_lev, $level_array[$max_lev - 1] - $experience, 20 * ($level_array[$max_lev - 1] - $experience) / 3, @CRLF)
   MOK("Autoselling check results", $autosell_value & $level_info & @CRLF & ($got_eggs and $got_hatch and $got_food ? $success_string : StringFormat("Missing one or more of eggs/hatching potions/food:%s%sEggs: %s Hatching: %s Food: %s", @CRLF, @CRLF, y_n($got_eggs), y_n($got_hatch), y_n($got_food))))
   Exit
 EndFunc
@@ -1180,10 +1170,6 @@ EndFunc
 
 Func CheckClass($desired_class)
    if $desired_class <> $my_class Then MOK("Oops!", "You shouldn't be running " & $my_class == $CLASS_ROGUE : "Tools of the Trade when not a rogue.", "Earthquake/Ethereal Surge when not a mage", True)
-EndFunc
-
-Func RefreshExp()
-  MouseClick ( "left", 1556, 96, 1 )
 EndFunc
 
 Func Usage($questionmark, $badCmd = "")
