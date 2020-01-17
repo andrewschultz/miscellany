@@ -18,6 +18,7 @@ import ctypes
 import mytools as mt
 
 ignore_sort = defaultdict(lambda:defaultdict(str))
+fix_first_line = defaultdict(lambda:defaultdict(str))
 table_sort = defaultdict(lambda:defaultdict(str))
 default_sort = defaultdict(str)
 files_read = defaultdict(str)
@@ -252,6 +253,14 @@ def read_table_and_default_file():
                     okay[cur_file][right_side] = True
                     need_to_catch[cur_file][right_side] = True
                     continue
+                if ll.startswith("fixfirst="):
+                    if right_side in fix_first_line[cur_file].keys():
+                        print("BAILING double assignment of ignore for", right_side, "in", cur_file, "at line", line_count)
+                        exit()
+                    print("Fixing first line for {} in {}.".format(right_side, cur_file))
+                    fix_first_line[cur_file][right_side] = True
+                    need_to_catch[cur_file][right_side] = True
+                    continue
                 if ll.startswith("ignore="):
                     if right_side in ignore_sort[cur_file].keys():
                         print("BAILING double assignment of ignore for", right_side, "in", cur_file, "at line", line_count)
@@ -313,6 +322,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     f2 = f + "2"
     row_array = []
     need_head = False
+    need_extra_head = False
     in_sortable_table = False
     in_table = False
     if verbose: print("Inspecting", f)
@@ -325,9 +335,17 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     with open(f) as file:
         for (line_count, line) in enumerate(file, 1):
             if need_head:
+                if match_table in fix_first_line[f]:
+                    print("Ignoring first line of", match_table)
+                    need_extra_head = True
+                    need_to_catch[f].pop(match_table)
                 temp_out.write(line)
                 tabs_this_table = len(line.split("\t"))
                 need_head = False
+                continue
+            if need_extra_head:
+                need_extra_head = False
+                temp_out.write(line)
                 continue
             if in_sortable_table:
                 if line.count("\"") % 2 and 'ibq' not in line:
