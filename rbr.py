@@ -34,6 +34,7 @@ new_files = defaultdict(bool)
 changed_files = defaultdict(bool)
 unchanged_files = defaultdict(bool)
 
+ignore_first_file_changes = False
 force_postproc = False
 github_okay = False
 flag_all_brackets = False
@@ -282,6 +283,7 @@ def write_monty_file(fname, testnum):
     return
 
 def get_file(fname):
+    check_main_file_change = False
     got_any_test_name = False
     dupe_val = 1
     warns = 0
@@ -365,7 +367,10 @@ def get_file(fname):
                 branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
                 continue
             if re.search("^(`|=\{|@)", line): line = replace_mapping(line, fname, line_count)
-            if line.startswith('#--'): continue
+            if line.startswith('#--'):
+                if line.startswith("#--stable"):
+                    check_main_file_change = True
+                continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
                 for x in range(len(actives)):
@@ -516,6 +521,14 @@ def get_file(fname):
             if x2 in mwrites.keys():
                 for y in mwrites[x2].keys():
                     write_monty_file(x2, y)
+    if check_main_file_change:
+        x = file_array[0]
+        xb = os.path.basename(x)
+        print(x, xb)
+        if not ignore_first_file_changes and not cmp(x, xb):
+            print("Differences found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
+            mt.wm(x, xb)
+            sys.exit()
     for x in file_array:
         xb = os.path.basename(x)
         if not os.path.exists(xb):
@@ -658,6 +671,7 @@ while count < len(sys.argv):
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
+    elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
