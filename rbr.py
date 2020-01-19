@@ -51,6 +51,11 @@ cur_flag_brackets = 0
 quiet = False
 copy_over_post = True
 
+rbr_bookmark_indices = ["loc", "room", "rm", #places
+  "itm", "item", "thing", #things
+  "npc", "per" #people
+  ] #this is to give a lot of options for ###new so I don't have to remember anything too exact
+
 in_file = ""
 in_dir = os.getcwd()
 proj = ""
@@ -76,6 +81,12 @@ def is_equals_header(x):
     x = x.strip()
     if x.startswith('===') and x.endswith('==='):
         if len(re.findall("[a-zA-Z]", x)): return True
+    return False
+
+def is_rbr_bookmark(x):
+    x0 = x.lower()
+    for ind in rbr_bookmark_indices:
+        if x0.startswith("#") and "##new" + ind in x0: return True
     return False
 
 def should_be_nudge(x):
@@ -288,6 +299,8 @@ def get_file(fname):
     generic_bracket_error.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if is_rbr_bookmark(line):
+                continue
             if line.startswith("{--"):
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "")
