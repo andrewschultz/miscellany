@@ -3,6 +3,7 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import time
 import re
 import pyperclip
 import sys
@@ -159,11 +160,16 @@ def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonposi
 
 add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False):
+def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.1):
     if len(file_post_list):
+        l = len(file_post_list)
+        count = 0
         for x in file_post_list:
             m = max(file_post_list[x])
             npo(x, file_post_list[x][m], bail = False)
+            count += 1
+            if count < 0:
+                time.sleep(sleep_time)
     elif acknowledge_blank:
         print("There weren't any files slated for opening/editing.")
     if bail_after: sys.exit()
