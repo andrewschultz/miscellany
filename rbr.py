@@ -23,6 +23,7 @@ import mytools as mt
 
 my_strings = defaultdict(str)
 branch_variables = defaultdict(list)
+branch_check = defaultdict(lambda: defaultdict(list))
 to_match = defaultdict(str)
 monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
@@ -299,10 +300,19 @@ def get_file(fname):
     preproc_commands = []
     postproc_if_changed = defaultdict(list)
     generic_bracket_error.clear()
+    at_section = ''
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if is_rbr_bookmark(line):
                 continue
+            if line.startswith('@'):
+                at_section = line[1:].lower().strip() # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
+            elif not line.strip():
+                at_section = ''
+            if line.startswith('#'):
+                for x in branch_check[cur_proj]:
+                    if line[1:].startswith(x) and at_section != branch_check[cur_proj][x]:
+                        print("WARNING line {} has comment {} in section {}--should be in section {}.".format(line_count, line.strip(), at_section if at_section else "<blank>", branch_check[cur_proj][x]))
             if line.startswith("{--"):
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "")
@@ -605,6 +615,15 @@ with open('c:/writing/scripts/rbr.txt') as file:
         if ll.startswith('branchmain'):
             default_rbrs[cur_proj] = vars
             continue
+        if ll.startswith('branchcheck'):
+            ary0 = ll[12:].split(',')
+            for a in ary0:
+                x = a.split("/")
+                for y in x[1].split("+"):
+                    if y in cur_proj:
+                        print("WARNING REDEFINITION of branch_check key {} in {} at line {}.".format(y, cur_proj, line_count))
+                    branch_check[cur_proj][y] = x[0]
+            continue
         if ll.startswith('branchfiles'):
             branch_list[cur_proj] = vars.split(",")
             if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = vars.split(",")
@@ -768,7 +787,7 @@ if not len(my_file_list):
         else:
             sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
-        print("No valid files, going with default", ', '.join(branch_list[proj]))
+        print("No valid files specified on comand line. Going with default", ', '.join(branch_list[proj]))
 
 my_file_list_valid = []
 
