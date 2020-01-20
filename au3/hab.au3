@@ -397,7 +397,6 @@ While $cmdCount <= $CmdLine[0]
     $clicks = $nextNum
     ToolsTrade($clicks, False, False)
 	if StringInStr($myCmd, 'i') Then DoInt()
-	MarkBuffsDone($CLASS_ROGUE)
   Elseif $myCmd == 'tm' or $myCmd == 'ttm' Then
     MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == 'md' Then
@@ -423,7 +422,6 @@ While $cmdCount <= $CmdLine[0]
     if $avoid_equip_p and $avoid_reequip_i and not $testRun Then MOK("Oops canceling suboptions", "You can use the r (reequip) or e (equip) options with x, but not both. Use -t just to cast tools.", True)
 	; # of clicks, equip personality gear, reequip intelligence gear, detect MP before/after
 	ToolsTrade($clicks, not $avoid_equip_p, not $avoid_reequip_i, not $avoid_equip_p and not $avoid_reequip_i)
-	MarkBuffsDone($CLASS_ROGUE)
   ElseIf $myCmd == '?' Then
     Usage(1)
   Else
@@ -750,7 +748,7 @@ Func ClickEyewearAndAccessory($to_int)
   SendWait("{PGUP}")
 EndFunc
 
-Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cur_mp = True, $check_eq_adj = True)
+Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cur_mp = True, $check_eq_adj = True, $mark_buffs_done = True)
   ; number of times to cast Tools
 
   CheckClicks()
@@ -793,6 +791,8 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
   ToTasks()
 
   clickSkill($times, 2, 25, $delay)
+
+  if $markBuffsDone Then MarkBuffsDone($CLASS_ROGUE)
 
   if $unequipPer == True Then
     DoInt(2)
