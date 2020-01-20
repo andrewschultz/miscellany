@@ -35,6 +35,8 @@ new_files = defaultdict(bool)
 changed_files = defaultdict(bool)
 unchanged_files = defaultdict(bool)
 
+rbr_config = 'c:/writing/scripts/rbr.txt'
+
 ignore_first_file_changes = False
 force_postproc = False
 github_okay = False
@@ -301,18 +303,27 @@ def get_file(fname):
     postproc_if_changed = defaultdict(list)
     generic_bracket_error.clear()
     at_section = ''
+    last_at = 0
+    last_eq = 0
+    warns_so_far = 0
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if is_rbr_bookmark(line):
                 continue
-            if line.startswith('@'):
+            if line.startswith('@') or line.startswith('`'):
                 at_section = line[1:].lower().strip() # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
+                last_at = line_count
             elif not line.strip():
                 at_section = ''
+            if line.startswith('=='):
+                last_eq = line_count
             if line.startswith('#'):
                 for x in branch_check[cur_proj]:
                     if line[1:].startswith(x) and at_section != branch_check[cur_proj][x]:
-                        print("WARNING line {} has comment {} in section {}--should be in section {}.".format(line_count, line.strip(), at_section if at_section else "<blank>", branch_check[cur_proj][x]))
+                        lae = max(last_at, last_eq)
+                        warns_so_far += 1
+                        print("WARNING {} file {} line {} (last @/eq={}) has section {}, needs {} for comment {}.".format(warns_so_far, fname, line_count, lae, at_section if at_section else "<blank>", branch_check[cur_proj][x], line.strip()))
+                        mt.add_postopen(fname, line_count, priority=7)
             if line.startswith("{--"):
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "")
@@ -418,17 +429,21 @@ def get_file(fname):
             if line.strip() == "==!":
                 actives = [not x for x in actives]
                 continue
-            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^"):
+            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^") or line.startswith("==!t"):
                 actives = [True] * len(actives)
+                temp_idx = 3
+                if line.startswith("==!t"):
+                    temp_idx = 4
+                    print("Warning ==!t should be changed to ==! line {} of {}.".format(line_count, fname))
                 try:
-                    chgs = line.lower().strip()[3:].split(',')
+                    chgs = line.lower().strip()[temp_idx:].split(',')
                     if len(chgs):
                         for x in chgs:
                             actives[int(x)] = False
                     else:
                         print("No elements in ==!/-/^ array, line", line_count)
                 except:
-                    sys.exit("Failed at line " + line_count + ": " + line.strip())
+                    sys.exit("Failed at line {}: {}".format(line_count, line.strip()))
                 continue
             if line.startswith("==+"):
                 ll = line.lower().strip()[3:]
@@ -449,9 +464,8 @@ def get_file(fname):
                 continue
             if line.startswith("==t"):
                 if temp_diverge:
-                    print("Oops, bailing due to second temporary divergence ==t at line", line_count, ":", line.strip())
-                    mt.npo(fname, line_count)
-                    exit()
+                    print("ERROR: located second temporary divergence in {} with ==t at line {}: {}".format(fname, line_count, line.strip()))
+                    mt.add_postopen(fname, line_count)
                 old_actives = list(actives)
                 temp_diverge = True
                 ll = re.sub("^==t(!)?", "", line.lower().strip()).split(',')
@@ -486,7 +500,7 @@ def get_file(fname):
                         if x.isdigit(): actives[int(x)] = True
                     continue
             if line.startswith("==") and not is_equals_header(line):
-                print("Uh oh line", line_count, "may be a bad command.")
+                print("Uh oh {} line {} may be a bad branch-file redirector: {}".format(fname, line_count, line.strip()))
                 warns += 1
             if debug and line.startswith(">"): print(act(actives), line.strip())
             for ct in range(0, len(file_list)):
@@ -581,13 +595,12 @@ def get_file(fname):
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
         print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
-    sys.exit()
     post_copy(file_array_base)
 
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
 
-with open('c:/writing/scripts/rbr.txt') as file:
+with open(rbr_config) as file:
     for (lc, line) in enumerate(file, 1):
         ll = line.lower().strip()
         if ll.startswith(';'): break
@@ -794,7 +807,7 @@ my_file_list_valid = []
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
     if os.path.exists(x): my_file_list_valid.append(x)
     else:
-        print("Ignoring bad file", x)
+        print("Ignoring bad branch file", x)
 
 if len(my_file_list_valid) == 0:
     sys.exit("Uh oh, no valid files left after initial check. Bailing.")
@@ -803,3 +816,5 @@ for x in my_file_list_valid:
     get_file(x)
 
 print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
+
+mt.postopen_files()
