@@ -12,15 +12,22 @@ import pathlib
 import lz4.block
 import json
 import re
+import mytools as mt
 
 any_duplicate_pages_yet = False
 any_full_domains_yet = False
 any_top_domains_yet = False
 
-open_out_after = True
+open_out_after = False
+open_in_browser_after = True
 out_file = "c:/coding/perl/proj/fftabs.txt"
 
-fout = open(out_file, "w")
+mt.text_in_browser(out_file)
+exit()
+
+def usage():
+    print("A = after, B = browser after")
+    exit()
 
 def domain(link, full_domain = True):
     temp = re.sub("^.*?//", "", link)
@@ -40,10 +47,19 @@ full_domains = defaultdict(int)
 path = pathlib.WindowsPath("C:/Users/Andrew/AppData/Roaming/Mozilla/Firefox/Profiles/o72qwk6f.default")
 files = path.glob('sessionstore-backups/recovery.js*')
 
-try:
-    template = sys.argv[1]
-except IndexError:
-    template = '%s (%s)'
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'b':
+        open_out_after = False
+        open_in_browser_after = True
+    elif arg == 'a':
+        open_out_after = True
+        open_in_browser_after = False
+    else:
+        usage()
+    cmd_count += 1
 
 for f in files:
     b = f.read_bytes()
@@ -58,6 +74,8 @@ for f in files:
             top_domains[domain(my_url, False)] += 1
             full_domains[domain(my_url, True)] += 1
             
+fout = open(out_file, "w")
+
 for q in counts:
     if counts[q] == 1: continue
     if not any_duplicate_pages_yet:
@@ -89,3 +107,5 @@ fout.close()
 
 if open_out_after:
     os.system(out_file)
+if open_in_browser_after:
+    mt.text_in_browser(out_file)
