@@ -18,14 +18,16 @@ any_duplicate_pages_yet = False
 any_full_domains_yet = False
 any_top_domains_yet = False
 
+print_keep = False
 print_to_stdout = False
 open_out_after = False
 open_in_browser_after = True
 out_file = "c:/coding/perl/proj/fftabs.txt"
+del_file = "c:/coding/perl/proj/fftabs-del.txt"
 
 def usage():
     print("A = after, B = browser after")
-    print("P = print to stdout")
+    print("P = print to stdout, PO=only print to stdout, PK=keep old fftabs file")
     exit()
 
 def domain(link, full_domain = True):
@@ -42,14 +44,18 @@ def domain(link, full_domain = True):
 
 def print_out(my_dict, header_text = "<UNDEFINED HEADER TEXT>", ):
     any_gotten_yet = False
+    dupe_count = 0
     for q in sorted(my_dict, key=my_dict.get, reverse=True):
         if my_dict[q] == 1: continue
+        dupe_count += my_dict[q] - 1
         if not any_gotten_yet:
             any_gotten_yet = True
             fout.write("=" * 20 + "DUPLICATE " + header_text + "=" * 20 + "\n")
         fout.write("{:3d} of {}\n".format(my_dict[q], q))
     if not any_gotten_yet:
         print("Found no {}.".format(header_text.lower()))
+    else:
+        fout.write("Total deletable duplicates: {}\n".format(dupe_count))
 
 counts = defaultdict(int)
 top_domains = defaultdict(int)
@@ -70,9 +76,21 @@ while cmd_count < len(sys.argv):
         open_in_browser_after = False
     elif arg == 'p':
         print_to_stdout = True
+    elif arg == 'pk' or arg == 'kp':
+        print_to_stdout = True
+        print_keep = True
+    elif arg == 'po' or arg == 'op':
+        print_to_stdout = True
+        open_out_after = False
+        open_in_browser_after = False
+    elif arg == 'pn' or arg == 'np':
+        print_to_stdout = False
     else:
         usage()
     cmd_count += 1
+
+if not (print_to_stdout or open_out_after or open_in_browser_after):
+    sys.exit("Your command line options specified nothing to do. Default.")
 
 for f in files:
     b = f.read_bytes()
@@ -86,7 +104,10 @@ for f in files:
             counts[my_url] += 1
             top_domains[domain(my_url, False)] += 1
             full_domains[domain(my_url, True)] += 1
-            
+
+if print_keep:
+    out_file = del_file
+
 fout = open(out_file, "w")
 
 print_out(counts, "PAGES")
