@@ -18,18 +18,18 @@ any_duplicate_pages_yet = False
 any_full_domains_yet = False
 any_top_domains_yet = False
 
+print_to_stdout = False
 open_out_after = False
 open_in_browser_after = True
 out_file = "c:/coding/perl/proj/fftabs.txt"
 
-mt.text_in_browser(out_file)
-exit()
-
 def usage():
     print("A = after, B = browser after")
+    print("P = print to stdout")
     exit()
 
 def domain(link, full_domain = True):
+    if link.startswith("file"): return "<local>"
     temp = re.sub("^.*?//", "", link)
     if temp.startswith("www."): temp = temp[4:]
     x = temp.split("/")
@@ -57,6 +57,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'a':
         open_out_after = True
         open_in_browser_after = False
+    elif arg == 'p':
+        print_to_stdout = True
     else:
         usage()
     cmd_count += 1
@@ -104,6 +106,10 @@ for q in sorted(top_domains, key=top_domains.get):
 if not any_top_domains_yet: fout.write("No repeating top domains.\n")
 
 fout.close()
+
+if print_to_stdout:
+    with open(out_file, 'r') as fin:
+        print(fin.read(), end="")
 
 if open_out_after:
     os.system(out_file)
