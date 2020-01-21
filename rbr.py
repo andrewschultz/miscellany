@@ -48,6 +48,7 @@ edit_main_branch = False
 debug = False
 monty_process = False
 force_all_regs = False
+strict_name_referencing = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
@@ -65,6 +66,10 @@ in_dir = os.getcwd()
 proj = ""
 
 default_rbrs = defaultdict(str)
+
+def postopen_stub():
+    print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
+    mt.postopen_files()
 
 def name_or_num(my_string):
     try:
@@ -243,7 +248,7 @@ def examples():
     print("==- inverts the active file list")
     print("== ! - ^ 1,2,4 = all but numbers 1, 2, 4")
     print("*FILE is replaced by the file name.")
-    print("#-- is a comment only for the branch file.")
+    print("#-- is a comment only for the branch file, but #--stable means the main file should be kept stable.")
     exit()
 
 def usage():
@@ -319,8 +324,14 @@ def get_file(fname):
     last_at = 0
     last_eq = 0
     warns_so_far = 0
+    to_match.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if strict_name_referencing:
+                if line.startswith("==") or line.startswith("@") or line.startswith("`"):
+                    if any(x.isdigit() for x in line):
+                        print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
+                        mt.add_postopen(fname, line_count, priority=8)
             if is_rbr_bookmark(line):
                 continue
             if line.startswith('@') or line.startswith('`'):
@@ -346,8 +357,12 @@ def get_file(fname):
                 continue
             if line.startswith("~\t"):
                 eq_array = line.strip().lower().split("\t")
-                if len(eq_array) != 3: sys.exit("Bad equivalence array at line {:d} of file {:s}: needs exactly two tabs.".format(line_count, fname))
-                to_match[eq_array[1]] = eq_array[2]
+                if len(eq_array) != 3: sys.exit("Bad equivalence array at line {} of file {}: needs exactly two tabs.".format(line_count, fname))
+                ary2 = eq_array[1].split(",")
+                for a in ary2:
+                    if a in to_match:
+                        print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fname))
+                    to_match[a] = eq_array[2]
                 continue
             if line.startswith("*") and line[1] != '*': got_any_test_name = True
             if line.startswith("preproc="):
@@ -716,6 +731,8 @@ while count < len(sys.argv):
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
     elif arg == 'f1': ignore_first_file_changes = True
+    elif arg == 'st': strict_name_referencing = True
+    elif arg == 'nst' or arg == 'stn': strict_name_referencing = False
     elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
@@ -747,6 +764,8 @@ if proj:
     except:
         sys.exit("Could not find a path to", proj)
 
+my_file_list_valid = []
+
 if in_file:
     if not os.path.isfile(in_file): sys.exit(in_file + " not found.")
     os.chdir(os.path.dirname(os.path.abspath(in_file)))
@@ -755,7 +774,9 @@ if in_file:
         print("Opening branch file", in_file)
         os.system(in_file)
     else:
+        my_file_list_valid = [in_file]
         get_file(in_file)
+        postopen_stub()
     exit()
 
 if not proj:
@@ -765,7 +786,7 @@ if not proj:
         print("Going with project from current directory", proj)
     else:
         if not default_proj:
-            sys.exit("No default project defined, and I could determine nothing from the current directory or command line. Bailing.")
+            sys.exit("No default project defined, and I could not determine anything from the current directory or command line. Bailing.")
         print("Going with default", def_proj)
         proj = def_proj
 
@@ -814,8 +835,6 @@ if not len(my_file_list):
     else:
         print("No valid files specified on comand line. Going with default", ', '.join(branch_list[proj]))
 
-my_file_list_valid = []
-
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
     if os.path.exists(x): my_file_list_valid.append(x)
     else:
@@ -829,6 +848,4 @@ for x in my_file_list_valid:
 
 internal_postproc_stuff()
 
-print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
-
-mt.postopen_files()
+postopen_stub()
