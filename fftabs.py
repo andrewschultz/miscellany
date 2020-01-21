@@ -40,6 +40,17 @@ def domain(link, full_domain = True):
             return y[q]
     return y[0]
 
+def print_out(my_dict, header_text = "<UNDEFINED HEADER TEXT>", ):
+    any_gotten_yet = False
+    for q in sorted(my_dict, key=my_dict.get, reverse=True):
+        if my_dict[q] == 1: continue
+        if not any_gotten_yet:
+            any_gotten_yet = True
+            fout.write("=" * 20 + "DUPLICATE " + header_text + "=" * 20 + "\n")
+        fout.write("{:3d} of {}\n".format(my_dict[q], q))
+    if not any_gotten_yet:
+        print("Found no {}.".format(header_text.lower()))
+
 counts = defaultdict(int)
 top_domains = defaultdict(int)
 full_domains = defaultdict(int)
@@ -78,32 +89,9 @@ for f in files:
             
 fout = open(out_file, "w")
 
-for q in counts:
-    if counts[q] == 1: continue
-    if not any_duplicate_pages_yet:
-        any_duplicate_pages_yet = True
-        fout.write("==============DUPLICATE PAGES==============\n")
-    fout.write("{} ~ {}\n".format(q, counts[q]))
-
-if not any_duplicate_pages_yet: fout.write("No repeating individual pages.\n")
-
-for q in sorted(full_domains, key=full_domains.get):
-    if full_domains[q] == 1: continue
-    if not any_full_domains_yet:
-        any_full_domains_yet = True
-        fout.write("==============FULL DOMAINS==============\n")
-    fout.write("{} ~ {}\n".format(q, full_domains[q]))
-
-if not any_full_domains_yet: fout.write("No repeating full domains.\n")
-
-for q in sorted(top_domains, key=top_domains.get):
-    if top_domains[q] == 1: continue
-    if not any_top_domains_yet:
-        any_top_domains_yet = True
-        fout.write("==============TOP DOMAINS==============\n")
-    fout.write("{} ~ {}\n".format(q, top_domains[q]))
-
-if not any_top_domains_yet: fout.write("No repeating top domains.\n")
+print_out(counts, "PAGES")
+print_out(full_domains, "FULL DOMAINS")
+print_out(top_domains, "TOP DOMAINS")
 
 fout.close()
 
