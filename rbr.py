@@ -193,16 +193,25 @@ def vet_potential_errors(line, line_count, cur_pot):
     return False
 
 def replace_mapping(x, my_f, my_l):
-    if x.startswith('@') or x.startswith('`'): y = x[1:]
+    add_negation = False
+    if x.startswith('@') or x.startswith('`'):
+        y = x[1:]
+        if y[0] == '!':
+            add_negation = True
+            y = y[1:]
     else:
         y = re.sub("=+\{", "", x.strip())
         y = re.sub("\}.*", "", y)
     y = re.sub(" *#.*", "", y) # strip out comments
     y = y.strip()
-    if y not in to_match.keys():
-        print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, y, ', '.join(to_match)))
-        mt.npo(my_f, my_l)
-    return "==" + to_match[y]
+    my_matches = []
+    for q in y.split(","):
+        if q not in to_match.keys():
+            print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
+            mt.npo(my_f, my_l)
+            continue
+        my_matches.append(to_match[q].replace('t', ''))
+    return "==t{}{}".format("!" if add_negation else "", ",".join(my_matches))
 
 def search_for(x):
     a1 = glob.glob("reg-*.txt")
@@ -391,7 +400,8 @@ def get_file(fname):
                     sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
                 branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
                 continue
-            if re.search("^(`|=\{|@)", line): line = replace_mapping(line, fname, line_count)
+            if re.search("^(`|=\{|@)", line):
+                line = replace_mapping(line, fname, line_count)
             if line.startswith('#--'):
                 if line.startswith("#--stable"):
                     check_main_file_change = True
@@ -754,6 +764,8 @@ if not proj:
         proj = i7.dir2proj(myd)
         print("Going with project from current directory", proj)
     else:
+        if not default_proj:
+            sys.exit("No default project defined, and I could determine nothing from the current directory or command line. Bailing.")
         print("Going with default", def_proj)
         proj = def_proj
 
