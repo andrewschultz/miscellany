@@ -64,9 +64,17 @@ in_file = ""
 in_dir = os.getcwd()
 proj = ""
 
-show_singletons = False
-
 default_rbrs = defaultdict(str)
+
+def name_or_num(my_string):
+    try:
+        return int(my_string)
+    except:
+        if my_string in to_match:
+            temp = to_match[my_string]
+            if temp[0] == 't':
+                temp = temp[1:]
+                return int(temp)
 
 def can_make_rbr(x, verbose = False):
     if os.path.exists(x): return x
@@ -179,11 +187,9 @@ def vet_potential_errors(line, line_count, cur_pot):
         lmod = "{:d} {:s}".format(line_count, lmod)
         generic_bracket_error[lmod] += 1
         if flag_all_brackets:
-            global cur_flag_brackets
-            cur_flag_brackets += 1
             if max_flag_brackets and cur_flag_brackets > max_flag_brackets: return False
             print(cur_flag_brackets, "Text replacement/brackets artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
-            return False
+            return True
     return False
 
 def replace_mapping(x, my_f, my_l):
@@ -211,15 +217,15 @@ def search_for(x):
     if not got_count: print("Found nothing for", x)
     exit()
 
-def post_copy(file_array):
+def post_copy(file_array, in_file):
     if copy_over_post:
         if force_all_regs:
             print("Copying all files over to PRT directory.")
             for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
         elif len(changed_files.keys()):
-            print("Copying changed files over to PRT directory.")
+            print("Copying changed files over to PRT directory: {}".format(", ".join(changed_files)))
             for q in changed_files.keys(): copy(q, os.path.join(i7.prt, os.path.basename(q)))
-        else:
+        elif len(my_file_list_valid) == 1:
             print("No files copied over to PRT directory. Try -fp or -pf to force copying of all files encompassed by", in_file)
 
 def examples():
@@ -240,7 +246,6 @@ def usage():
     print("-m = Monty process")
     print("-q = Quiet")
     print("-np = no copy over post, -p = copy over post (default)")
-    print("-si = show singletons with brackets, -nsi/-sin = only count them")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
     exit()
@@ -301,7 +306,6 @@ def get_file(fname):
     old_actives = []
     preproc_commands = []
     postproc_if_changed = defaultdict(list)
-    generic_bracket_error.clear()
     at_section = ''
     last_at = 0
     last_eq = 0
@@ -401,7 +405,9 @@ def get_file(fname):
                 actives = list(old_actives)
                 continue
             if line.strip() == "\\\\": line = "\n"
-            warns += vet_potential_errors(line, line_count, warns)
+            if vet_potential_errors(line, line_count, warns):
+                mt.add_postopen(fname, line_count, priority=5)
+                warns += 1
             if line.startswith("dupefile="):
                 dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
@@ -439,11 +445,11 @@ def get_file(fname):
                     chgs = line.lower().strip()[temp_idx:].split(',')
                     if len(chgs):
                         for x in chgs:
-                            actives[int(x)] = False
+                            actives[name_or_num(x)] = False
                     else:
                         print("No elements in ==!/-/^ array, line", line_count)
                 except:
-                    sys.exit("Failed at line {}: {}".format(line_count, line.strip()))
+                    sys.exit("Failed extracting not-(item) at line {}: {}".format(line_count, line.strip()))
                 continue
             if line.startswith("==+"):
                 ll = line.lower().strip()[3:]
@@ -564,12 +570,12 @@ def get_file(fname):
             changed_files[xb] = True
             copy(x, xb)
         os.remove(x)
-    if len(generic_bracket_error) > 0:
-        singletons = 0
-        for x in sorted(generic_bracket_error.keys(), key = lambda x: (generic_bracket_error[x], x)):
-            if generic_bracket_error[x] > 1 or show_singletons: print("Bracketed text error ({:d} time(s)) line/stuff =".format(generic_bracket_error[x]), x)
-            else: singletons += 1
-        if singletons: print("Number of singletons (show detail with -si):", singletons)
+    if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
+        print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
+        print("Just a warning.")
+    post_copy(file_array_base, fname)
+
+def internal_postproc_stuff():
     nfk = len(new_files)
     if nfk > 0: print("New files ({}):".format(nfk), ', '.join(sorted(new_files)), 'from', fname)
     cfk = len(changed_files)
@@ -592,10 +598,6 @@ def get_file(fname):
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
-    if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
-        print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
-        print("Just a warning.")
-    post_copy(file_array_base)
 
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
@@ -709,8 +711,6 @@ while count < len(sys.argv):
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         proj = i7.i7x[arg]
     elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
-    elif arg == 'si': show_singletons = True
-    elif arg == 'sin' or arg == 'nsi': show_singletons = False
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
     elif arg == '?': usage()
@@ -814,6 +814,8 @@ if len(my_file_list_valid) == 0:
 
 for x in my_file_list_valid:
     get_file(x)
+
+internal_postproc_stuff()
 
 print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
 
