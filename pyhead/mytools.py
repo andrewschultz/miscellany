@@ -23,6 +23,7 @@ title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on"
 
 default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
+file_extra_edit = defaultdict(lambda: defaultdict(int))
 
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
@@ -155,6 +156,7 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
 
 def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True, priority = 10):
     if file_line <= 0 and reject_nonpositive_line: return
+    if file_name in file_post_list: file_extra_edit[file_name] = True
     if rewrite or file_name not in file_post_list or priority not in file_post_list[file_name]:
         file_post_list[file_name][priority] = file_line
 
@@ -166,6 +168,11 @@ def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.
         count = 0
         for x in file_post_list:
             m = max(file_post_list[x])
+            bnx = os.path.basename(x)
+            if x in file_extra_edit:
+                print(file_extra_edit[x], "total extra edits for", bnx)
+            if l > 1:
+                print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(l, bnx))
             npo(x, file_post_list[x][m], bail = False)
             count += 1
             if count < 0:
