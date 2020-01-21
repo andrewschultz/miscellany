@@ -329,9 +329,10 @@ def zap_trail_paren(x, paren_flags = ZAP_PAREN, start_bracket = "\(", end_bracke
     return y
 
 def text_in_browser(file_name, print_action = True, bail=False):
-    cmd = '\"{}\" \"{}\"'.format(default_browser_exe, file_name)
+    #obsolete -- subprocess launches Firefox without hogging the command line
+    # cmd = 'start \"\" \"{}\" \"file:///{}\"'.format(default_browser_exe, file_name)
     if print_action: print("Opening {} with {}.".format(file_name, default_browser_exe))
-    subprocess.call([default_browser_exe, file_name])
+    subprocess.call([default_browser_exe, "file://" + file_name])
     if bail: sys.exit()
 
 tib = t_i_b = text_in_browser
