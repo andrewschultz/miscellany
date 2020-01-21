@@ -22,6 +22,7 @@ set_commit = True
 commit_message = ''
 auto_date = True
 auto_today_ok = False
+days_back = 0
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -61,9 +62,13 @@ def bail_if_not_auto_ok():
         return
     sys.exit("Set -ao to say auto-today is okay and commit with the current time.")
 
-def get_date_delt(x):
+def get_date_delt(x, throw_error = False):
+    if x.count(' ') > 1: return False
     ary = re.split("[-/]", x)
-    if len(ary) < 2 or len(ary) > 3: sys.exit("Need array length of 2 or 3.")
+    if len(ary) < 2 or len(ary) > 3:
+        if throw_error:
+            sys.exit("Need array length of 2 or 3.")
+        return 0
     dspace = ' '.join(ary)
     tdy = pendulum.today()
     if len(ary) == 2:
@@ -127,6 +132,7 @@ add_commands = []
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
+    if not arg: usage("<blank parameter>")
     if arg.startswith("f:") or arg.startswith("a:"):
         files_to_add.append(arg[2:])
         print("Files to add:", arg[2:])
@@ -242,7 +248,7 @@ mod_date = my_time.subtract(days=days-1)
 
 sec_before += 60 * min_before
 mod_date = mod_date.subtract(seconds=sec_before)
-mod_date = mod_date.subtract(days=days_back)
+if days_back: mod_date = mod_date.subtract(days=days_back)
 
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
