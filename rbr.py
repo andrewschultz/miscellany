@@ -48,7 +48,8 @@ edit_main_branch = False
 debug = False
 monty_process = False
 force_all_regs = False
-strict_name_referencing = False
+strict_name_force_on = False
+strict_name_force_off = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
@@ -248,7 +249,9 @@ def examples():
     print("==- inverts the active file list")
     print("== ! - ^ 1,2,4 = all but numbers 1, 2, 4")
     print("*FILE is replaced by the file name.")
-    print("#-- is a comment only for the branch file, but #--stable means the main file should be kept stable.")
+    print("#-- is a comment only for the branch file, with a few flags:")
+    print("  #--stable means the main file should be kept stable.")
+    print("  #--strict means strict section referencing (no magic numbers)")
     exit()
 
 def usage():
@@ -325,9 +328,10 @@ def get_file(fname):
     last_eq = 0
     warns_so_far = 0
     to_match.clear()
+    strict_name_local = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
-            if strict_name_referencing:
+            if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
@@ -420,6 +424,8 @@ def get_file(fname):
             if line.startswith('#--'):
                 if line.startswith("#--stable"):
                     check_main_file_change = True
+                if line.startswith("#--strict"):
+                    strict_name_local = True
                 continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
@@ -731,8 +737,8 @@ while count < len(sys.argv):
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
     elif arg == 'f1': ignore_first_file_changes = True
-    elif arg == 'st': strict_name_referencing = True
-    elif arg == 'nst' or arg == 'stn': strict_name_referencing = False
+    elif arg == 'st': strict_name_force_on = True
+    elif arg == 'nst' or arg == 'stn': strict_name_force_off = True
     elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
@@ -752,6 +758,9 @@ while count < len(sys.argv):
         usage()
         exit()
     count += 1
+
+if strict_name_force_on and strict_name_force_off:
+    sys.exit("Conflicting force-strict options on command line. Bailing.")
 
 my_dir = os.getcwd()
 if 'github' in my_dir.lower():
