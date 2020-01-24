@@ -31,9 +31,10 @@ times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
 generic_bracket_error = defaultdict(int)
 
-new_files = defaultdict(bool)
-changed_files = defaultdict(bool)
-unchanged_files = defaultdict(bool)
+new_files = defaultdict(list)
+changed_files = defaultdict(list)
+unchanged_files = defaultdict(list)
+postproc_if_changed = defaultdict(list)
 
 rbr_config = 'c:/writing/scripts/rbr.txt'
 
@@ -101,7 +102,7 @@ def is_equals_header(x):
         if len(re.findall("[a-zA-Z]", x)): return True
     return False
 
-def is_rbr_bookmark(x):
+def is_rbr_bookmark(x): # a bookmark is usually ##newloc or ##newthing, and we don't want to print this to the branch files. It's there for quick searching.
     x0 = x.lower()
     for ind in rbr_bookmark_indices:
         if x0.startswith("#") and "##new" + ind in x0: return True
@@ -322,7 +323,6 @@ def get_file(fname):
     actives = []
     old_actives = []
     preproc_commands = []
-    postproc_if_changed = defaultdict(list)
     at_section = ''
     last_at = 0
     last_eq = 0
@@ -572,9 +572,6 @@ def get_file(fname):
         dupe_file.close()
         file_array.append(dupe_file_name)
     if warns > 0: print(warns, "potential bad commands.")
-    new_files.clear()
-    changed_files.clear()
-    unchanged_files.clear()
     if monty_process:
         print(file_array)
         for x in file_array:
@@ -593,12 +590,12 @@ def get_file(fname):
     for x in file_array:
         xb = os.path.basename(x)
         if not os.path.exists(xb):
-            new_files[xb] = True
+            new_files[fname].append(xb)
             copy(x, xb)
         elif cmp(x, xb):
-            unchanged_files[xb] = True
+            unchanged_files[fname].append(xb)
         else:
-            changed_files[xb] = True
+            changed_files[fname].append(xb)
             copy(x, xb)
         os.remove(x)
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
@@ -606,23 +603,24 @@ def get_file(fname):
         print("Just a warning.")
     post_copy(file_array_base, fname)
 
+def show_csv(my_dict, my_msg):
+    ret_val = 0
+    for q in my_dict:
+        lmd = len(my_dict[q])
+        print("{} {} from {}: {}".format(lmd, my_msg, q, ', '.join(sorted(my_dict[q]))))
+        ret_val += lmd
+    return ret_val
+
 def internal_postproc_stuff():
-    nfk = len(new_files)
-    if nfk > 0: print("New files ({}):".format(nfk), ', '.join(sorted(new_files)), 'from', fname)
-    cfk = len(changed_files)
-    if cfk: print("Changed files ({}):".format(cfk), ', '.join(sorted(changed_files)), 'from', fname)
-    ufk = len(unchanged_files)
-    lnc = len(new_files.keys()) + len(changed_files.keys()) > 0
-    if not lnc:
-        if not quiet: print("Nothing changed.")
-    elif ufk: print("Unchanged files ({}):".format(ufk), ', '.join(sorted(unchanged_files.keys())), 'from', fname)
-    if lnc or force_postproc:
+    total_csv = show_csv(new_files, "new files") + show_csv(changed_files, "changed files") + show_csv(unchanged_files, "unchanged files")
+    if total_csv or force_postproc:
         run_postproc = defaultdict(bool)
-        if not lnc: print("Forcing postproc even though nothing changed.")
+        if not total_csv: print("Forcing postproc even though nothing changed.")
         to_proc = list(new_files.keys()) + list(changed_files.keys())
         if force_postproc: to_proc += list(unchanged_files.keys())
         for fi in to_proc:
-            for cmd in postproc_if_changed[prt_temp_loc(fi)]:
+            temp_loc = prt_temp_loc(fi)
+            for cmd in postproc_if_changed[temp_loc]:
                 run_postproc[cmd] = True
         for cmd in run_postproc:
             print("Postproc: running", cmd, "for", fname)
