@@ -23,6 +23,15 @@ commit_message = ''
 auto_date = True
 auto_today_ok = False
 days_back = 0
+push_after_commit = False
+
+def commit_maybe_push(cmd):
+    os.system(cmd)
+    if push_after_commit:
+        print("Pushing changes after... (-np/-pn disables)")
+        os.system("git push")
+    else:
+        print("Use -p to push changes after...")
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -35,7 +44,7 @@ def usage(arg = ""):
     print("=" * 50)
     print("a tries for auto date, ao says today is okay")
     print("r or x executes the command")
-    print("p(project name) specifies the project name e.g. pmisc")
+    print("p(project name) specifies the project name e.g. pmisc, though p = git push after git commit")
     print("l at the end runs git log too")
     print("fl gets the next missing date from the log. For instance, if the last commit is on October 14, it will be October 15.")
     print("m# specifies minutes before midnight")
@@ -110,8 +119,7 @@ def check_bare_commit(bare_commit, files_to_add, bail=False):
     if not bare_commit: return
     add_my_files(files_to_add)
     print("Just committing with -bc/bare commit flag.")
-    print(bare_commit_cmd)
-    os.system(bare_commit_cmd)
+    commit_maybe_push(bare_commit_cmd)
     if bail: sys.exit()
 
 time_zone = 5
@@ -166,6 +174,10 @@ while count < len(sys.argv):
         min_before = 0
         sec_before = int(random.random()) * 600 + 1
         print("Random seconds before =", sec_before)
+    elif arg == 'p':
+        push_after_commit = True
+    elif arg == 'np' or arg == 'pn':
+        push_after_commit = False
     elif arg[0] == 'p':
         if proj_shift_yet:
             print("WARNING shifting from project", proj_shift_yet)
@@ -256,7 +268,7 @@ if run_cmd:
     add_my_files(files_to_add)
     if auto_date and days == 0:
         print("Forcing message-only commit since auto_date is on and day_delta is zero.")
-        os.system(bare_commit_cmd)
+        commit_maybe_push(bare_commit_cmd)
     else:
         if set_author:
             print("set GIT_AUTHOR_DATE=\"{}\"".format(date_string))
@@ -267,10 +279,10 @@ if run_cmd:
         if set_author or set_commit:
             if not commit_message:
                 sys.exit("You need either a commit message (something with spaces, in quotes) or to set -am to amend manually!")
-            os.system("git commit -m \"{}\"".format(commit_message))
+            commit_maybe_push("git commit -m \"{}\"".format(commit_message))
         if not (set_author or set_commit):
             print("Amending date via command line:", date_string)
-            os.system("git commit --amend --date=\"{} {}\"".format(date_string, time_zone))
+            commit_maybe_push("git commit --amend --date=\"{} {}\"".format(date_string, time_zone))
     if run_log:
         time.sleep(4)
         os.system("git log")
