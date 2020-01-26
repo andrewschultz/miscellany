@@ -13,6 +13,7 @@ import lz4.block
 import json
 import re
 import mytools as mt
+import codecs
 
 any_duplicate_pages_yet = False
 any_full_domains_yet = False
@@ -92,6 +93,8 @@ while cmd_count < len(sys.argv):
 if not (print_to_stdout or open_out_after or open_in_browser_after):
     sys.exit("Your command line options specified nothing to do. Default.")
 
+video_titles = []
+
 for f in files:
     b = f.read_bytes()
     if b[:8] == b'mozLz40\0':
@@ -104,15 +107,28 @@ for f in files:
             counts[my_url] += 1
             top_domains[domain(my_url, False)] += 1
             full_domains[domain(my_url, True)] += 1
+            if 'youtube' in my_url:
+                if t['entries'][i]['url'] not in video_titles:
+                    t1 = re.sub("^\([0-9]+\) *", "", t['entries'][i]['title'])
+                    video_titles.append(t1)
 
 if print_keep:
     out_file = del_file
 
-fout = open(out_file, "w")
+fout = codecs.open(out_file, "w", "utf-8")
 
 print_out(counts, "PAGES")
 print_out(full_domains, "FULL DOMAINS")
 print_out(top_domains, "TOP DOMAINS")
+
+if len(video_titles):
+    fout.write("YouTube video titles:\n")
+    for vt in video_titles:
+        try:
+            fout.write("  * {}\n".format(vt))
+        except:
+            print("!", vt)
+            fout.write("  * {}\n".format(vt.encode('cp1252','replace')))
 
 fout.close()
 
