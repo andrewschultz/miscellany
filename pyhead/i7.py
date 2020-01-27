@@ -235,6 +235,37 @@ def file_len_eq(f1, f2, bail = True, launch = False):
         return False
     return True
 
+def audit_table_rows(file_name):
+    rule_dict = defaultdict(int)
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file):
+            if "this is the" in line:
+                if re.search("this is the .* rule", line):
+                    my_rule = re.sub(r'.*this is the +(.*?) +rule.*', r'\1 rule', line.strip())
+                    if my_rule in rule_dict:
+                        print("Duplicate rule dict {} at line {}.".format(my_rule, line_count))
+                    else:
+                       rule_dict[my_rule] = line_count
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file):
+            if ' rule' not in line: continue
+            if "\t" in line.strip():
+                mb_rules = line.strip().split("\t")
+                for q in mb_rules:
+                    if ' rule' not in q or '"' in q: continue
+                    if q in rule_dict:
+                        rule_dict.pop(q)
+            x = re.sub('(consider|process|follow|abide by) the (.*?) rule.*', '\1 rule', line.strip())
+            if x in rule_dict:
+                rule_dict.delete(x)
+    lrd = len(rule_dict)
+    if lrd:
+        print( "{} rule{} did not match.".format(lrd, mt.plur(lrd)))
+        for q in rule_dict:
+            print(q, rule_dict[q])
+    else:
+        print("All tables match for {}.".format(os.path.basename(file_name)))
+
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
     table_start = 0
