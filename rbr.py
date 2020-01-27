@@ -65,7 +65,7 @@ rbr_bookmark_indices = ["loc", "room", "rm", #places
 
 in_file = ""
 in_dir = os.getcwd()
-proj = ""
+exe_proj = ""
 
 default_rbrs = defaultdict(str)
 
@@ -346,11 +346,11 @@ def get_file(fname):
             if line.startswith('=='):
                 last_eq = line_count
             if line.startswith('#'):
-                for x in branch_check[cur_proj]:
-                    if line[1:].startswith(x) and at_section != branch_check[cur_proj][x]:
+                for x in branch_check[exe_proj]:
+                    if line[1:].startswith(x) and at_section != branch_check[exe_proj][x]:
                         lae = max(last_at, last_eq)
                         warns_so_far += 1
-                        print("WARNING {} file {} line {} (last @/eq={}) has section {}, needs {} for comment {}.".format(warns_so_far, fname, line_count, lae, at_section if at_section else "<blank>", branch_check[cur_proj][x], line.strip()))
+                        print("WARNING {} file {} line {} (last @/eq={}) has section {}, needs {} for comment {}.".format(warns_so_far, fname, line_count, lae, at_section if at_section else "<blank>", branch_check[exe_proj][x], line.strip()))
                         mt.add_postopen(fname, line_count, priority=7)
             if line.startswith("{--"):
                 vta_before = re.sub("\}.*", "", line.strip())
@@ -644,10 +644,10 @@ with open(rbr_config) as file:
             times[ja[0]] = int(ja[1])
             continue
         if ll.startswith('default'):
-            def_proj = vars
+            def_proj = i7.main_abb(vars)
             continue
         if ll.startswith('project') or ll.startswith('projname'):
-            cur_proj = vars
+            cur_proj = i7.main_abb(vars)
             continue
         if ll.startswith('abbrevs'):
             temp = ll[8:].split(',')
@@ -739,8 +739,8 @@ while count < len(sys.argv):
     elif arg == 'nst' or arg == 'stn': strict_name_force_off = True
     elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
-        if proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
-        proj = i7.i7x[arg]
+        if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
+        exe_proj = i7.i7x[arg]
     elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
@@ -765,11 +765,11 @@ if 'github' in my_dir.lower():
     if not github_okay:
         sys.exit("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory.")
 
-if proj:
+if exe_proj:
     try:
-        i7.go_proj(proj)
+        i7.go_proj(exe_proj)
     except:
-        sys.exit("Could not find a path to", proj)
+        sys.exit("Could not find a path to", exe_proj)
 
 my_file_list_valid = []
 
@@ -786,16 +786,16 @@ if in_file:
         postopen_stub()
     exit()
 
-if not proj:
+if not exe_proj:
     myd = os.getcwd()
     if i7.dir2proj(myd):
-        proj = i7.dir2proj(myd)
-        print("Going with project from current directory", proj)
+        exe_proj = i7.dir2proj(myd, True)
+        print("Going with project from current directory", exe_proj)
     else:
         if not default_proj:
             sys.exit("No default project defined, and I could not determine anything from the current directory or command line. Bailing.")
         print("Going with default", def_proj)
-        proj = def_proj
+        exe_proj = def_proj
 
 if verify_nudges:
     q = glob.glob("reg-*.txt")
@@ -815,19 +815,19 @@ if verify_nudges:
     exit()
 
 for pa in poss_abbrev:
-    proj2 = i7.i7xr[proj] if proj in i7.i7xr.keys() else proj
+    proj2 = i7.i7xr[exe_proj] if exe_proj in i7.i7xr.keys() else exe_proj
     if proj2 in abbrevs[pa].keys():
         print("Adding specific file", abbrevs[pa][proj2], "from", proj2)
         my_file_list.append(abbrevs[pa][proj2])
     else:
-        print(pa, 'has nothing for current project', proj, 'but would be valid for', '/'.join(sorted(abbrevs[pa].keys())))
+        print(pa, 'has nothing for current project', exe_proj, 'but would be valid for', '/'.join(sorted(abbrevs[pa].keys())))
 
 if edit_individual_files:
     for mf in my_file_list: os.system(mf)
     exit()
 
 if not len(my_file_list):
-    my_file_list = list(branch_list[proj])
+    my_file_list = list(branch_list[exe_proj])
     if len(my_file_list) == 0:
         print("No valid files specified. Checking rbr- glob.")
         my_file_list = glob.glob("rbr-*")
@@ -840,7 +840,7 @@ if not len(my_file_list):
         else:
             sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
-        print("No valid files specified on comand line. Going with default", ', '.join(branch_list[proj]))
+        print("No valid files specified on comand line. Going with default", ', '.join(branch_list[exe_proj]))
 
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
     if os.path.exists(x): my_file_list_valid.append(x)
