@@ -235,7 +235,8 @@ def file_len_eq(f1, f2, bail = True, launch = False):
         return False
     return True
 
-def audit_table_rows(file_name):
+def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = []):
+    trivials = ['trivially true rule', 'trivially false rule']
     rule_dict = defaultdict(int)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file):
@@ -258,6 +259,19 @@ def audit_table_rows(file_name):
             x = re.sub('(consider|process|follow|abide by) the (.*?) rule.*', '\1 rule', line.strip())
             if x in rule_dict:
                 rule_dict.delete(x)
+    if ignore_trivial:
+        for t in trivials:
+            if t in rule_dict:
+                rule_dict.pop(t)
+    if len(ignore_specific):
+        for t in ignore_specific:
+            if t in rule_dict:
+                rule_dict.pop(t)
+    if len(ignore_glob):
+        for g in ignore_glob:
+            for t in list(rule_dict.keys()):
+                if re.search(g, t):
+                    rule_dict.pop(t)
     lrd = len(rule_dict)
     if lrd:
         print( "{} rule{} did not match.".format(lrd, mt.plur(lrd)))
