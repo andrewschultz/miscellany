@@ -17,6 +17,7 @@ import mytools as mt
 import time
 
 cred_file = "mycreds.txt"
+gdu_data = "gdu.txt"
 bail_if_created = False
 
 create_new = False
@@ -27,6 +28,9 @@ look_for_last_num = 1
 back_range = (0, 0)
 last_back = 1
 max_back = 9
+
+os.chdir("c:/writing/scripts")
+
 
 x = pendulum.today()
 dest_title = "Transcription notes " + x.format("M/D/YYYY")
@@ -150,14 +154,26 @@ def open_latest_transcript(lister, drive):
         open_in_browser(mdy_sorted[x - 1], title_of[mdy_sorted[x - 1]])
 
 def main():
-    os.chdir("c:/writing/scripts")
     drive = get_drive_handle()
 
     source = drive.CreateFile({'id': source_id})
-    source.FetchMetadata('title')
 
     lister = drive.ListFile().GetList()
 
+    if len(see_mod) > -1:
+        temp_time = source['modifiedDate']
+        temp_time_str = time.strptime(temp_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        epoch_time = time.mktime(temp_time_str)
+        cur_time = time.time()
+        cur_time_str = time.strftime('%Y %H:%M:%S %Z', time.localtime(cur_time))
+        x = cur_time - epoch_time
+        if 1 == 0:
+            for x in see_mod:
+                temp_id = gdu_abbrev[x]
+                temp_file = drive.creae
+                temp = time.strptime(item['modifiedDate'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                epoch_time = time.mktime(temp)
+        
     if create_new:
         temp = create_if_not_there(lister, drive)
         if temp:
@@ -168,14 +184,13 @@ def main():
     
 b4 = time.time()
 
-cmd_count = 1
-
 gdu_abbrev = defaultdict(str)
 see_mod = []
 mod_back_days = 7
+id_length = 44
 
 with open(gdu_data) as file:
-    for (line_count, line) in file:
+    for (line_count, line) in enumerate(file, 1):
         if line.startswith(";"): break
         if line.startswith("#"): continue
         if line.count('=') != 1:
@@ -187,11 +202,11 @@ with open(gdu_data) as file:
             continue
         gdu_abbrev[x[0]] = x[1]
 
-sys.exit()
+cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg == 'o' or arg == 'l' or arg == 'lo' or arg == 'ol':
+    if arg == 'c':
         create_new = True
         look_for_last = False
     elif arg == 'cl' or arg == 'lc':
