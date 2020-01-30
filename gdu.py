@@ -20,6 +20,7 @@ cred_file = "mycreds.txt"
 gdu_data = "gdu.txt"
 bail_if_created = False
 
+reject_future_date = True
 create_new = False
 show_time = True
 look_for_last = False
@@ -31,9 +32,8 @@ max_back = 9
 
 os.chdir("c:/writing/scripts")
 
-
-x = pendulum.today()
-dest_title = "Transcription notes " + x.format("M/D/YYYY")
+this_day = pendulum.today()
+dest_title = "Transcription notes " + this_day.format("M/D/YYYY")
 folder_id = "" # '0BxbuUXtrs7adSFFYMG0zS3VZNFE'
 source_id = "1mkbVFs_911fx4qA0NYm1PL4ignwEn6-I4yoJG2oJsTI"
 
@@ -135,6 +135,11 @@ def open_latest_transcript(lister, drive):
             print(temp_title, "is not of the numerical form MM/DD/(YYYY)")
             continue
         # print(temp_id)
+        if reject_future_date:
+            date_check = to_date(full_title)
+            if date_check > this_day:
+                print(full_title, "ahead of current date ", this_day, "use -nr/-rn to accept")
+                continue
         months[temp_id] = mdy2[0]
         days[temp_id] = mdy2[1]
         if len(mdy2) == 2:
@@ -217,6 +222,8 @@ while cmd_count < len(sys.argv):
         create_new = False
         look_for_last = True
         last_back = 1
+    elif arg == 'nr' or arg == 'rn':
+        reject_future_date = False
     elif arg == 'nt' or arg == 'tn':
         show_time = False
     elif arg == 'st' or arg == 'ts':
