@@ -123,6 +123,9 @@ def open_latest_transcript(lister, drive):
             continue
         if full_title.lower().startswith("clan store"): continue
         if full_title.lower().startswith("roster"): continue
+        if item.metadata['labels']['trashed'] == True:
+            print("Skipping", full_title, "as it is in the trash.")
+            continue
         temp_title = re.sub(".* ", "", full_title)
         mdy = temp_title.split("/")
         if len(mdy) > 3:
@@ -149,9 +152,12 @@ def open_latest_transcript(lister, drive):
             if mdy2[2] < 2000: years[temp_id] += 2000
         title_of[temp_id] = full_title
     mdy_sorted = sorted(months, key=lambda x:(years[x], months[x], days[x]), reverse=True)
-    print("Top {} of {}".format(max_back, len(mdy_sorted)))
-    for x in range(0, max_back): print(x+1, mdy_sorted[x], title_of[mdy_sorted[x]], years[mdy_sorted[x]], months[mdy_sorted[x]], days[mdy_sorted[x]])
-
+    if len(mdy_sorted) < max_back:
+        print("Only found {} so can't make a list of {}.".format(len(mdy_sorted), max_back))
+    else:
+        print("Top {} of {}".format(max_back, len(mdy_sorted)))
+    for x in range(0, min(max_back, len(mdy_sorted))):
+        print(x+1, mdy_sorted[x], title_of[mdy_sorted[x]], years[mdy_sorted[x]], months[mdy_sorted[x]], days[mdy_sorted[x]])
     global back_range
     if back_range[0] == 0:
         back_range = (last_back, last_back + 1)
