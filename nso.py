@@ -1,6 +1,8 @@
 #
 # nso.py: note sorter
 #
+# this doesn't sort them in any sort of order but rather just moves certain ones to tables in the source code
+#
 
 import filecmp
 from shutil import copy

@@ -4,16 +4,59 @@ import sys
 import time
 import winsound
 import pendulum
+from pydrive.auth import GoogleAuth
+import mytools as mt
 
 from urllib.request import Request, urlopen
 
 use_pendulum = True
 log_file = "ca-todo.htm"
+learn_file = "c:/writing/scripts/cad-learn-temp.htm"
 oops_file = "c:/coding/perl/proj/cad-oops.htm"
 
 auto_launch = False
 ignore_download = False
 cmd_count = 1
+do_by_learn = False
+
+learn_url = "https://www.codecademy.com/learn"
+badges_url = "https://www.codecademy.com/profiles/AndrewSchultzChicago"
+
+def read_learn_file():
+    gauth = GoogleAuth()
+    gauth.LoadCredentialsFile(mt.my_creds)
+    if gauth.credentials is None:
+        # Authenticate if they're not there
+        gauth.LocalWebserverAuth()
+    elif gauth.access_token_expired:
+        # Refresh them if expired
+        gauth.Refresh()
+    else:
+        # Initialize the saved creds
+        gauth.Authorize()
+    # Save the current credentials to a file
+    gauth.SaveCredentialsFile(mt.my_creds)
+    gauth.LocalWebserverAuth()
+    req = Request(learn_url, headers={'User-Agent': 'Mozilla/5.0'})
+    webpage = urlopen(req).read()
+    lines = webpage.split(b'\n')
+    f = open(learn_file, "wb")
+    for l in lines:
+        f.write(l)
+        f.write(b"\n")
+    f.close()
+    found_any = False
+    for l in lines:
+        print(l)
+        if 'hastodaysstreak' in str(l.lower()):
+            found_any = True
+            frag = re.search("hastodaysstream.?,", "", re.IGNORECASE)
+            if 'true' in frag:
+                print("Got one!")
+            else:
+                print("Nothing done today!")
+    if not found_any: print("Bug, didn't find anything.")
+    sys.exit()
 
 def usage(x = "General usage"):
     print(x)
@@ -24,6 +67,12 @@ def usage(x = "General usage"):
     print("A # > 0 gives a generic see-if-days-match. It assumes that the number on the command line is your current streak.")
     exit()
 
+def launch_url(x):
+    if not x.startswith("http:"):
+        print("Tried to launch {} but it was not a valid URL.")
+        return
+    os.system("start " + x)
+
 def launch_oops_bail_file(rewrite_string = "", last_code_string = ""):
     last_code_string_mod = last_code_string
     if last_code_string_mod: last_code_string_mod = "LAST CODED TIME DERIVED: " + last_code_string_mod
@@ -32,23 +81,24 @@ def launch_oops_bail_file(rewrite_string = "", last_code_string = ""):
             rewrite_string = "GENERAL REWRITE"
         print("Rewriting oops file")
         with open(oops_file, "w") as file:
-            file.write('<html><title>{}</title><body><center>{}<br />I couldn\'t find enough derivation text, so I\'ll force-open the LEARN page.<br /><a href="https://www.codecademy.com/learn"><font size=+4>LINK TO WHAT TO LEARN</font></a><br />{}</center></body></html>'.format(rewrite_string, rewrite_string, last_code_string_mod))
+            file.write('<html><title>CAD.PY {}</title><body><center>{}<br />I couldn\'t find enough derivation text, so I\'ll force-open the LEARN page.<br /><a href="https://www.codecademy.com/learn"><font size=+4>LINK TO WHAT TO LEARN</font></a><br />{}</center></body></html>'.format(rewrite_string, rewrite_string, last_code_string_mod))
             file.close()
     os.system(oops_file)
-    os.system("start https://www.codecademy.com/learn")
-    os.system("start https://www.codecademy.com/AndrewSchultzChicago/")
+    launch_url(learn_url)
+    #launch_url(badges_url)
     winsound.Beep(500, 500)
     winsound.Beep(500, 500)
     winsound.Beep(500, 500)
     exit()
 
-def launch_html_note(err_str, beep_freq, beep_dur):
+def launch_html_note(err_str, beep_freq, beep_dur, launch_learn = True):
     f = open(log_file, "w")
     f.write("<html><title>{}</title><body><center><font size=+5>CODECADEMY FOR TODAY, WELL UNTIL MIDNIGHT {}: {}</font></center></body></html>".format(err_str, "CENTRAL" if use_pendulum else "GMT", err_str))
     f.close()
     print(err_str)
     winsound.Beep(beep_freq, beep_dur)
     os.system(log_file)
+    if launch_learn: launch_url(learn_url)
 
 def process_day_deltas(actual_days, expected_days, extra_seconds, bail = False):
     print('should have', expected_days, 'days in a row')
@@ -91,6 +141,10 @@ while cmd_count < len(sys.argv):
         ignore_download = True
     elif arg == 'a':
         auto_launch = True
+    elif arg == 'l':
+        do_by_learn = True
+    elif arg == 'ln' or arg == 'nl':
+        do_by_learn = False
     elif arg == 'p' or arg == 'pe' or arg == 'pen':
         use_pendulum = True
     elif arg == 'g' or arg == 'gm' or arg == 'gmt' or arg == 'np' or arg == 'pn' or arg == 'npe':
@@ -104,12 +158,14 @@ while cmd_count < len(sys.argv):
         usage("Bad parameter {}".format(arg))
     cmd_count += 1
 
+if do_by_learn:
+    read_learn_file()
+
 doc_file = 'c:\coding\perl\proj\doc.html'
-my_url = "https://www.codecademy.com/AndrewSchultzChicago"
 
 if not ignore_download:
     print("(Re-)downloading from the web...")
-    req = Request(my_url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = Request(badges_url, headers={'User-Agent': 'Mozilla/5.0'})
     webpage = urlopen(req).read()
     lines = webpage.split(b'\n')
     f = open(doc_file, "wb")
@@ -125,19 +181,9 @@ days_ago_dawg = False
 found_any = False
 for li in lines:
     l2 = str(li)
-    if 'last coded' in l2.lower():
-        q = re.sub(".*last coded *", "", l2.lower())
-        while q.startswith("<"):
-            q = re.sub("^<.*?>", "", q)
-        q = re.sub("<.*", "", q)
-        if re.search("day(s)? ago", q) or re.search("2[0-9] hours ago", q):
-            days_ago_dawg = True
-            last_code_string = q
-            print("Found abberant last code string")
-        elif re.search("(hour|hours|minute|minutes) ago", q):
-            print("Flagged ok since-last:", q)
     if 'current streak' in l2.lower():
-        q = re.sub(".*current streak *", "", l2.lower())
+        print("Got current streak")
+        q = re.sub(".*current streak *", "", l2.lower(), 0, re.IGNORECASE)
         while q.startswith("<"):
             q = re.sub("^<.*?>", "", q)
         q = re.sub("<.*", "", q)
