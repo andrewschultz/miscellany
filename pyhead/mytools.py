@@ -31,6 +31,11 @@ def bail_if_not(f, file_desc = ""):
 def plur(a):
     return '' if a == 1 else 's'
 
+def no_quotes(a):
+    return a.replace('"', '')
+
+noquotes = no_quo = noquo = no_quotes
+
 def is_basename(a):
     return not ('/' in a or '\\' in a)
 
@@ -327,6 +332,18 @@ def zap_trail_paren(x, paren_flags = ZAP_PAREN, start_bracket = "\(", end_bracke
         end_brax = "\}"
     y = re.sub(r" *{}.*{} *$".format(start_brax, end_brax), "", x)
     return y
+
+def first_word_of(x, allow_dashes = False, additional_chars = ""):
+    valid_chars = "a-zA-Z"
+    x = x.replace('"', '')
+    if additional_chars:
+        valid_chars += additional_chars
+    elif allow_dashes:
+        valid_chars += "-"
+    my_regex = r'[^{}].*'.format(valid_chars)
+    return re.sub(my_regex, "", x, 0, re.IGNORECASE)
+
+first_word = first_word_of
 
 def text_in_browser(file_name, print_action = True, bail=False):
     #obsolete -- subprocess launches Firefox without hogging the command line
