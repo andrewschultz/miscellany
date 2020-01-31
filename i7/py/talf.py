@@ -30,6 +30,7 @@ onoff = ['off', 'on']
 
 table_default_file = "c:/writing/scripts/talf.txt"
 
+check_apostrophes = True
 force_dupe_check = False
 popup_err = False
 copy_over = False
@@ -47,11 +48,12 @@ ignored_tables = ""
 force_lower = True
 
 def usage():
-    print("-l/-nl decides whether or not to launch, default is", onoff[launch_dif])
-    print("-c/-nc decides whether or not to copy back over, default is", onoff[copy_over])
-    print("-co/-oc/-lo/-ol = only copy or launch")
+    print("-l/-nl decides whether or not to launch, default is {}.".format(onoff[launch_dif]))
+    print("-c/-nc decides whether or not to copy back over, default is {}.".format(onoff[copy_over]))
+    print("-co/-oc/-lo/-ol = only copy or launch.")
+    print("-ca and -can/-nca = toggle check apostrophes.")
     print("-cs = check # of shifts e.g. 123406785 has 2.")
-    print("-os overrides size differences")
+    print("-os overrides size differences.")
     print("-oo overrides tables omitted from the data file")
     print("-e edits the data file. -ec edits the code file.")
     print("-si shows all ignored tables.")
@@ -305,7 +307,6 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     elif story_only and 'story' not in f.lower(): return
     elif table_only and 'table' not in f.lower(): return
     global ignored_tables
-    fs = os.path.basename(f)
     cur_table = ''
     match_table = ''
     if f not in default_sort.keys() and len(ignore_sort[f].keys()) > 0:
@@ -313,13 +314,15 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         for x in ignore_sort[f].keys():
             need_to_catch[f].pop(x)
         ignore_sort[f].clear()
+    f2 = f + "2"
+    fb = os.path.basename(f)
+    f2b = os.path.basename(f2)
     if f not in table_sort.keys() and f not in default_sort.keys():
-        print("WARNING: no table sort keys/default sorts for {0}. Returning. If you are looking for something in this file, you may wish to check for slash directions.".format(fs.upper()))
+        print("WARNING: no table sort keys/default sorts for {0}. Returning. If you are looking for something in this file, you may wish to check for slash directions.".format(fb.upper()))
         if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys(): #?? this can be fixed
             print("NOTE: brief check shows", f, "very likely has slashes normalized badly.")
         return
     files_read[f] = True
-    f2 = f + "2"
     row_array = []
     need_head = False
     need_extra_head = False
@@ -330,8 +333,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     has_default = f in default_sort.keys()
     tabs_this_table = 0
     err_line.clear()
-    fb = os.path.basename(f)
-    f2b = os.path.basename(f2)
+    apostrophe_errors = 0
     with open(f) as file:
         for (line_count, line) in enumerate(file, 1):
             if need_head:
@@ -347,6 +349,10 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 need_extra_head = False
                 temp_out.write(line)
                 continue
+            if check_apostrophes and in_table:
+                apostrophe_errors += i7.apostrophe_check_line(line, True, f, line_count)
+                if not copy_over:
+                    mt.add_postopen(f, line_count, priority=8)
             if in_sortable_table:
                 if line.count("\"") % 2 and 'ibq' not in line:
                     print("Odd number of quotes at line {:d}: {:s}".format(line_count, line))
@@ -359,7 +365,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     if temp:
                         total_tables += 1
                         total_shifts += temp
-                        print(fs, match_table, "had {0} shift{1}".format(temp, mt.plur(temp)))
+                        print(fb, match_table, "had {0} shift{1}".format(temp, mt.plur(temp)))
                     # print("Wrote", cur_table)
                     in_sortable_table = False
                     in_table = False
@@ -396,9 +402,9 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     temp_out.write(line)
                     cur_table = got_match(line, ignore_sort[f])
                     if cur_table:
-                        ignored_tables = ignored_tables + "{:s} Line {:d} (DIRECTED): {:s}".format(fs, line_count, line)
-                        print("Ignoring {:s} file default for {:s}{:s}.".format(os.path.basename(f), cur_table, ("/ " + line.strip() if cur_table != line else "")))
-                        # print("Zapping", x, "from", os.path.basename(f))
+                        ignored_tables = ignored_tables + "{:s} Line {:d} (DIRECTED): {:s}".format(fb, line_count, line)
+                        print("Ignoring {:s} file default for {:s}{:s}.".format(fb, cur_table, ("/ " + line.strip() if cur_table != line else "")))
+                        # print("Zapping", x, "from", fb)
                         if "(continued)" not in line:
                             need_to_catch[f].pop(cur_table)
                         continue
@@ -411,7 +417,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     need_to_catch[f].pop(got_match(line, okay[f]))
                     temp_out.write(line)
                     continue
-                ignored_tables = ignored_tables + "{:s} Line {:d} ({:s}): {:s}".format(fs, line_count,
+                ignored_tables = ignored_tables + "{:s} Line {:d} ({:s}): {:s}".format(fb, line_count,
                   "OKAY DIF" if got_match(line, okay[f]) else ("DEFAULT " if has_default else "PASSTHRU"), line)
             # if line.startswith("table"): print(">>", line.strip())
             temp_out.write(line)
@@ -422,11 +428,12 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             if temp:
                 total_tables += 1
                 total_shifts += temp
-                print(fs, match_table, "had", temp, "shift{0}".format(mt.plur(temp)))
+                print(fb, match_table, "had", temp, "shift{0}".format(mt.plur(temp)))
             in_sortable_table = False
             temp_out.write(line)
     temp_out.close()
-    if verbose: print("Done writing to", os.path.basename(f2))
+    if apostrophe_errors: print("{} errors found in {}.".format(apostrophe_errors, fb))
+    if verbose: print("Done writing to", f2b)
     forgot_to_catch = False
     for x in files_read.keys():
         if len(need_to_catch[x]) > 0:
@@ -441,7 +448,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("You need to sort out the unaccessed tables in talf.txt before I copy back over.")
             exit()
     if total_tables:
-        print("{0} table{1} shifted, {2} line{3} shifted in {4}.".format(total_tables, mt.plur(total_tables), total_shifts, mt.plur(total_shifts), fs))
+        print("{0} table{1} shifted, {2} line{3} shifted in {4}.".format(total_tables, mt.plur(total_tables), total_shifts, mt.plur(total_shifts), fb))
     files_identical = cmp(f, f2)
     identical_ignoring_eol = mt.compare_unshuffled_lines(f, f2)
     identical_when_shuffled = mt.compare_shuffled_lines(f, f2)
@@ -511,6 +518,8 @@ while cmd_count < len(sys.argv):
         copy_over = False
         launch_dif = True
     elif arg == 'cs': check_shifts = True
+    elif arg == 'ca': check_apostrophes = True
+    elif arg == 'nca' or arg == 'can': check_apostrophes = False
     elif arg == 'ec': open_source()
     elif arg == 'e': os.system(table_default_file)
     elif arg == 'os': override_source_size_differences = True
