@@ -155,7 +155,7 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
-def topx2ary(x, div_char = "/"):
+def topics_to_array(x, div_char = "/"):
     x = re.sub("^\"*", "", x)
     my_topic_array = zap_end_brax(x).split('"')[0::2] # every other quoted thing, minus comments at the end
     overall_array = []
@@ -171,6 +171,8 @@ def topx2ary(x, div_char = "/"):
             base_array = list(new_base_array)
         overall_array.extend(base_array)
     return overall_array
+
+topx2ary = topics_to_array
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
@@ -235,7 +237,11 @@ def file_len_eq(f1, f2, bail = True, launch = False):
         return False
     return True
 
-def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = []):
+def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = [], show_params = False, parse_string_parameters = True):
+    if type(ignore_specific) == str:
+        ignore_specific = ignore_specific.split(",") if parse_string_parameters else [ignore_specific]
+    if type(ignore_glob) == str:
+        ignore_glob = ignore_glob.split(",") if parse_string_parameters else [ignore_glob]
     trivials = ['trivially true rule', 'trivially false rule']
     rule_dict = defaultdict(int)
     with open(file_name) as file:
@@ -279,6 +285,8 @@ def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ign
             print(q, rule_dict[q])
     else:
         print("All tables match for {}.".format(os.path.basename(file_name)))
+    if show_params:
+        print("Ignore trivial={}, ignore_specific={}, ignore_glob={}".format(ignore_trivial, ignore_specific, ignore_glob))
 
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
@@ -667,6 +675,23 @@ def all_proj_fi(x, bail = True):
     return ary
 
 apf = all_proj_fi
+
+def apostrophe_check_string(my_string, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
+    ml = my_string.strip()
+    lefts = re.findall(r"[^a-zA-Z!,.?\]]'", ml)
+    rights = re.findall(r"'[^a-zA-Z!,.?]", ml) # we can have the start of a [one of/or] after quotes, but ]' is a bit awkward. Exceptions have [apostrophe ok].
+    ll = len(lefts)
+    rl = len(rights)
+    if ll != rl and "[apostrophe ok]" not in my_string:
+        if print_results:
+            print("potential bad apostrophes {} to {} {} line {} >>> {}".format(abs(ll-rl), "left" if ll > rl else "right", os.path.basename(my_file), line_num if line_num > -1 else "<NO LINE>", ml))
+    return abs(ll - rl)
+
+def apostrophe_check_line(my_line, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
+    retval = 0
+    for x in re.split("\t+", my_line.strip()):
+        retval += apostrophe_check_string(x, print_results, my_file, line_num)
+    return retval
 
 i7c = {
   "sts": ["roiling", "shuffling"],
