@@ -30,7 +30,7 @@ branch_list = defaultdict(list)
 times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
 generic_bracket_error = defaultdict(int)
-
+okay_apostrophes = defaultdict(bool)
 new_files = defaultdict(list)
 changed_files = defaultdict(list)
 unchanged_files = defaultdict(list)
@@ -172,8 +172,17 @@ def branch_variable_adjust(var_line, err_stub, actives):
     #print("After:", my_var, branch_variables[my_var])
     return
 
+def basic_bad_apostrophes(my_line):
+    if not(line.startswith("'") or line.strip().endswith("'") or " '" in line):
+        return False
+    for x in okay_apostrophes:
+        if x in my_line:
+            my_line = my_line.replace(x, "OKAY PHRASE")
+    if not(line.startswith("'") or line.strip().endswith("'") or " '" in line):
+        return False
+    
 def vet_potential_errors(line, line_count, cur_pot):
-    if line.startswith("'") or line.strip().endswith("'"):
+    if basic_bad_apostrophes(line):
         print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
         return True
     elif '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
@@ -339,7 +348,7 @@ def get_file(fname):
             if is_rbr_bookmark(line):
                 continue
             if line.startswith('@') or line.startswith('`'):
-                at_section = line[1:].lower().strip() # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
+                at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif not line.strip():
                 at_section = ''
@@ -358,6 +367,13 @@ def get_file(fname):
                 very_temp_array = [int(x) for x in vta[3:].split(",")]
                 for q in very_temp_array:
                     file_list[q].write(re.sub("\\", "\n", vta_after))
+                continue
+            if line.startswith("OK-APOSTROPHE:"):
+                l = re.sub("^.*?:", "", line)
+                if not line.strip():
+                    okay_apostrophes.clear()
+                for l0 in l.strip().split("\t"):
+                    okay_apostrophes[l0] = True
                 continue
             if line.startswith("~\t"):
                 eq_array = line.strip().lower().split("\t")
@@ -439,6 +455,7 @@ def get_file(fname):
             if vet_potential_errors(line, line_count, warns):
                 mt.add_postopen(fname, line_count, priority=5)
                 warns += 1
+            ignore_apostrophe_warnings = False
             if line.startswith("dupefile="):
                 dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
