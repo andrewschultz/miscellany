@@ -354,6 +354,11 @@ def text_in_browser(file_name, print_action = True, bail=False):
 
 tib = t_i_b = text_in_browser
 
+def zap_comment(my_line, zap_spaces_before = True):
+    substring = "#.*"
+    if zap_spaces_before: substring = ' *' + substring
+    return re.sub(substring, "", my_line)
+
 def is_posneg_int(x, allow_zero = False):
     try:
         q = int(x)
