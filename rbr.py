@@ -317,6 +317,18 @@ def write_monty_file(fname, testnum):
         copy(from_file, to_file)
     return
 
+def no_parser(cmd):
+    return re.sub("^> *", "", cmd)
+
+def viable_untested(my_cmd, my_ignores):
+    for q in my_ignores:
+        if "*" in q:
+            if re.search(q, my_cmd):
+                return False
+        elif my_cmd == q:
+            return False
+    return True
+
 def get_file(fname):
     check_main_file_change = False
     got_any_test_name = False
@@ -338,6 +350,9 @@ def get_file(fname):
     warns_so_far = 0
     to_match.clear()
     strict_name_local = False
+    last_atted_command = ""
+    untested_commands = defaultdict(list)
+    untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd' ]
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
@@ -345,12 +360,19 @@ def get_file(fname):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
-            if is_rbr_bookmark(line):
+            if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
+                if "skip at checking" in line:
+                    last_atted_command = ""
                 continue
             if line.startswith('@') or line.startswith('`'):
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif not line.strip():
+                if at_section and last_atted_command:
+                    if viable_untested(last_atted_command,untested_ignore):
+                        untested_commands[last_atted_command].append(line_count)
+                        mt.add_postopen(fname, line_count, priority=10)
+                        last_atted_command = ''
                 at_section = ''
             if line.startswith('=='):
                 last_eq = line_count
@@ -476,7 +498,13 @@ def get_file(fname):
             if all_false(actives):
                 if always_be_writing and len(actives):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
-            if line.startswith(">"): last_cmd = line.lower().strip()
+            if line.startswith(">"):
+                last_cmd = line.lower().strip()
+                if at_section:
+                    if last_atted_command and viable_untested(last_atted_command,untested_ignore):
+                        untested_commands[last_atted_command].append(line_count)
+                        mt.add_postopen(fname, line_count, priority=10)
+                    last_atted_command = no_parser(last_cmd)
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
@@ -557,6 +585,8 @@ def get_file(fname):
                 print("Uh oh {} line {} may be a bad branch-file redirector: {}".format(fname, line_count, line.strip()))
                 warns += 1
             if debug and line.startswith(">"): print(act(actives), line.strip())
+            if last_atted_command and not line.startswith("#") and not line.startswith(">"):
+                last_atted_command = ""
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
@@ -585,6 +615,16 @@ def get_file(fname):
                             dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
     for ct in range(0, len(file_array)):
         file_list[ct].close()
+    if len(untested_commands):
+        print("POTENTIALLY UNTESTED COMMANDS: (remove with ###skip at checking)")
+        cmd_count = 0
+        total_count = 0
+        for u in sorted(untested_commands):
+            cmd_count += 1
+            total_count += len(untested_commands[u])
+            print("{} ({}): {} at line{} {}.".format(cmd_count, total_count, u, mt.plur(len(untested_commands[u])), ", ".join([str(x) for x in untested_commands[u]])))
+    else:
+        print("No potentially untested commands.")
     if dupe_file_name:
         dupe_file.close()
         file_array.append(dupe_file_name)
@@ -599,7 +639,7 @@ def get_file(fname):
     if check_main_file_change:
         x = file_array[0]
         xb = os.path.basename(x)
-        print(x, xb)
+        print("Making sure {} / {} are identical.".format(x, xb))
         if not ignore_first_file_changes and not cmp(x, xb):
             print("Differences found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
             mt.wm(x, xb)
@@ -624,12 +664,12 @@ def show_csv(my_dict, my_msg):
     ret_val = 0
     for q in my_dict:
         lmd = len(my_dict[q])
-        print("{} {} from {}: {}".format(lmd, my_msg, q, ', '.join(sorted(my_dict[q]))))
+        print("{} {}{} from {}: {}".format(lmd, my_msg, mt.plur(lmd), q, ', '.join(sorted(my_dict[q]))))
         ret_val += lmd
     return ret_val
 
 def internal_postproc_stuff():
-    total_csv = show_csv(new_files, "new files") + show_csv(changed_files, "changed files") + show_csv(unchanged_files, "unchanged files")
+    total_csv = show_csv(new_files, "new file") + show_csv(changed_files, "changed file") + show_csv(unchanged_files, "unchanged file")
     if total_csv or force_postproc:
         run_postproc = defaultdict(bool)
         if not total_csv: print("Forcing postproc even though nothing changed.")
