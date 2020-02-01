@@ -353,6 +353,7 @@ def get_file(fname):
     last_atted_command = ""
     untested_commands = defaultdict(list)
     untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd' ]
+    untested_default = list(untested_ignore)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
@@ -361,7 +362,7 @@ def get_file(fname):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
-                if "skip at checking" in line:
+                if "#skip test checking" in line:
                     last_atted_command = ""
                 continue
             if line.startswith('@') or line.startswith('`'):
@@ -396,6 +397,17 @@ def get_file(fname):
                     okay_apostrophes.clear()
                 for l0 in l.strip().split("\t"):
                     okay_apostrophes[l0] = True
+                continue
+            if line.startswith("ALSO-IGNORE:"):
+                l = re.sub("^.*?:", "", line.strip().lower())
+                if not l:
+                    untested_ignore = list(untested_default)
+                else:
+                    for x in l.split("\t"):
+                        if x in untested_ignore:
+                            print("Warning ALSO-IGNORE re-adds {} at line {}.".format(x, line_count))
+                        else:
+                            untested_ignore.append(x)
                 continue
             if line.startswith("~\t"):
                 eq_array = line.strip().lower().split("\t")
@@ -616,7 +628,7 @@ def get_file(fname):
     for ct in range(0, len(file_array)):
         file_list[ct].close()
     if len(untested_commands):
-        print("POTENTIALLY UNTESTED COMMANDS: (remove with ###skip at checking)")
+        print("POTENTIALLY UNTESTED COMMANDS: (remove with ###skip test checking)")
         cmd_count = 0
         total_count = 0
         for u in sorted(untested_commands):
