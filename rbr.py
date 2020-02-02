@@ -356,6 +356,7 @@ def get_file(fname):
     untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd' ]
     untested_default = list(untested_ignore)
     wrong_lines = []
+    last_cmd_line = -1
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
@@ -373,7 +374,7 @@ def get_file(fname):
             elif not line.strip():
                 if at_section and last_atted_command:
                     if viable_untested(last_atted_command,untested_ignore):
-                        untested_commands[last_atted_command].append(line_count)
+                        untested_commands[last_atted_command].append(last_cmd_line)
                         mt.add_postopen(fname, line_count, priority=10)
                         last_atted_command = ''
                 at_section = ''
@@ -402,6 +403,14 @@ def get_file(fname):
                     okay_apostrophes.clear()
                 for l0 in l.strip().split("\t"):
                     okay_apostrophes[l0] = True
+                continue
+            if line.startswith("DE-IGNORE:"):
+                l = re.sub("^.*?:", "", line.strip().lower())
+                for x in l.split("\t"):
+                    if x not in untested_ignore:
+                        print("Warning DE-IGNORE tries to remove element not in ignore list {} at line {}.".format(x, line_count))
+                    else:
+                        untested_ignore.remove(x)
                 continue
             if line.startswith("ALSO-IGNORE:"):
                 l = re.sub("^.*?:", "", line.strip().lower())
@@ -519,9 +528,10 @@ def get_file(fname):
                 last_cmd = line.lower().strip()
                 if at_section:
                     if last_atted_command and viable_untested(last_atted_command,untested_ignore):
-                        untested_commands[last_atted_command].append(line_count)
+                        untested_commands[last_atted_command].append(last_cmd_line)
                         mt.add_postopen(fname, line_count, priority=10)
                     last_atted_command = no_parser(last_cmd)
+                last_cmd_line = line_count
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
