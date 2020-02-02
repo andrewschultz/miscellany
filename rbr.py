@@ -51,6 +51,7 @@ monty_process = False
 force_all_regs = False
 strict_name_force_on = False
 strict_name_force_off = False
+wrong_check = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
@@ -354,6 +355,7 @@ def get_file(fname):
     untested_commands = defaultdict(list)
     untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd' ]
     untested_default = list(untested_ignore)
+    wrong_lines = []
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
@@ -391,6 +393,9 @@ def get_file(fname):
                 for q in very_temp_array:
                     file_list[q].write(re.sub("\\", "\n", vta_after))
                 continue
+            if wrong_check and line.startswith("WRONG"):
+                wrong_lines.append(line_count)
+                mt.add_postopen(fname, line_count, priority=6)
             if line.startswith("OK-APOSTROPHE:"):
                 l = re.sub("^.*?:", "", line)
                 if not line.strip():
@@ -667,6 +672,11 @@ def get_file(fname):
             changed_files[fname].append(xb)
             copy(x, xb)
         os.remove(x)
+    if len(wrong_lines) > 1:
+        if wrong_check:
+            print("{} WRONG line{} to fix: {}".format(len(wrong_lines), mt.plur(len(wrong_lines)), ", ".join([str(x) for x in wrong_lines])))
+        else:
+            print("{} WRONG line{} were found. Use -wc to track them and potentially open the first error.".format(len(wrong_lines), mt.plur(len(wrong_lines))))
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
         print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
@@ -803,6 +813,8 @@ while count < len(sys.argv):
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
+    elif arg == 'wc': wrong_check = True
+    elif arg == 'wcn' or arg == 'nwc': wrong_check = False
     elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'st': strict_name_force_on = True
     elif arg == 'nst' or arg == 'stn': strict_name_force_off = True
