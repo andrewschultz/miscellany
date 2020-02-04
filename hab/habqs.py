@@ -1,3 +1,10 @@
+# todo: add Wikipedia link for TZ
+# https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+# make a default write_to_quest_file that people can adjust
+# allow people to edit the name and location of the quest file/cfg file as well?
+# option to print what is pasted to the clipboard (pp/npp)
+# put our_zones into the config file
+
 import re
 from collections import defaultdict
 import pyperclip
@@ -15,10 +22,16 @@ quest_nag = "c:/scripts/start-quest.htm"
 overwrite_html = True
 execute_command = True
 
-our_zones = [ 'America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'Europe/Sofia', 'Australia/Sydney', "America/El Salvador" ]
+# it's okay to have duplicate-ish time zones below.
+our_zones = [ 'America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'Europe/Sofia', 'Australia/Sydney', "America/El_Salvador" ]
+
+def usage():
+    print("Options include w / nw / wn to write to a quest file or not. The default is not to write to it.")
+    print("You can also enter a quest name e.g. cow. The program will try to match anything over 1 character long.")
+    exit()
 
 def local_area(x):
-    return re.sub("^.*?/", "", x).replace('_', ' ')
+    return re.sub("^.*/", "", x).replace('_', ' ') # we want a greedy match since there is stuff like, say, America/Kentucky/Louisville
 
 def slash_join(ary):
     ary2 = [ local_area(x) for x in ary ]
@@ -46,6 +59,8 @@ os.chdir("c:/scripts")
 
 with open("habqs.txt") as file:
     for (line_count, line) in enumerate(file, 1):
+        if line.startswith("#"): continue
+        if line.startswith(";"): break
         ary = line.strip().split("\t")
         if len(ary) < 2:
             print("Need tab in line", line_count)
@@ -63,12 +78,17 @@ poss_match = []
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
-    arg = sys.argv[cmd_count]
+    arg = sys.argv[cmd_count].lower()
     if arg == 'w':
         write_to_quest_file = True
+    elif arg == 'wn' or arg == 'nw':
+        write_to_quest_file = False
     elif arg in quest_details:
         poss_match.append(arg)
+    elif arg == '?':
+        usage()
     else:
+        prev = len(poss_match)
         for x in quest_details:
             if x.startswith(arg):
                 poss_match.append(x)
@@ -76,6 +96,9 @@ while cmd_count < len(sys.argv):
             for x in quest_details:
                 if arg in x:
                     poss_match.append(x)
+        if prev == len(poss_match):
+            print("{} didn't match any quests or recognized command line parameters.".format(arg))
+            usage()
     cmd_count += 1
 
 if len(poss_match) > 1:
@@ -91,10 +114,12 @@ in_24_hours = my_time.add(days=1)
 
 for x in poss_match:
     paste_string += "Habitica {} quest ({} pet) invites sent {}. Quest starts by time zone:\n".format(x, quest_details[x], hab_format(my_time, our_zones[0]))
-    for q in timezone_list:
-        paste_string += "* {} for the {} timezone{}\n".format(q, slash_join(timezone_list[q]), "" if len(timezone_list[q]) == 1 else "s")
+
+for q in sorted(timezone_list): # the sorting is so times will be sorted from the international date line (top) east around the globe. This seems like the best way to do things, though it doesn't feel perfect.
+    paste_string += "* {} for the {} timezone{}\n".format(q, slash_join(timezone_list[q]), "" if len(timezone_list[q]) == 1 else "s")
 
 pyperclip.copy(paste_string)
+
 print("PASTED===================")
 print(paste_string)
 
