@@ -14,6 +14,8 @@ import os
 
 write_to_quest_file = False
 
+quest_hours = quest_default_hours = 24
+
 timezone_list = defaultdict(list)
 
 quest_details = defaultdict(str)
@@ -30,6 +32,18 @@ def usage():
     print("You can also enter a quest name e.g. cow. The program will try to match anything over 1 character long.")
     exit()
 
+def extract_copy():
+    to_parse = pyperclip.paste()
+    parse_lines = re.split("\r\n+", to_parse)
+    for x in parse_lines:
+        u = bytes(x, encoding='utf-8')
+        if 0xe2 not in u: continue
+        if "Level" not in x: continue
+        v = re.sub(".Level .*", "", x)
+        print(v)
+    exit()
+
+
 def local_area(x):
     return re.sub("^.*/", "", x).replace('_', ' ') # we want a greedy match since there is stuff like, say, America/Kentucky/Louisville
 
@@ -40,20 +54,6 @@ def slash_join(ary):
 def hab_format(tm, tz):
     temp = tm.in_timezone(tz)
     return temp.format("dddd MMMM DD HH:mm (h:mm A)")
-
-my_time = pendulum.now()
-
-for x in our_zones:
-    try:
-        if ' ' in x:
-            print("WARNING: IANA timezones require underscores. <<{}>> has a space. I can fix this, but I'm still going to throw this nag out.".format(x))
-            x = x.replace(' ', '_')
-        y = hab_format(my_time, x)
-    except:
-        if "/" not in x:
-            print("Uh oh. {} needs a slash to be a valid IANA time zone. Skipping -- please verify.")
-        print("Uh oh. {} may not have been a valid IANA time zone. Skipping -- please verify.".format(x))
-    timezone_list[y].append(x)
 
 os.chdir("c:/scripts")
 
@@ -85,6 +85,15 @@ while cmd_count < len(sys.argv):
         write_to_quest_file = False
     elif arg in quest_details:
         poss_match.append(arg)
+    elif arg.isdigit():
+        atemp = abs(int(arg))
+        if atemp > 2:
+            quest_hours = int(atemp)
+        else:
+            quest_hours = 24 * int(atemp)
+    elif arg == 'xc':
+        extract_copy()
+        exit()
     elif arg == '?':
         usage()
     else:
@@ -110,7 +119,19 @@ if not len(poss_match):
 paste_string = ""
 
 my_time = pendulum.now()
-in_24_hours = my_time.add(days=1)
+quest_start_time = my_time.add(hours=quest_hours)
+
+for x in our_zones:
+    try:
+        if ' ' in x:
+            print("WARNING: IANA timezones require underscores. <<{}>> has a space. I can fix this, but I'm still going to throw this nag out.".format(x))
+            x = x.replace(' ', '_')
+        y = hab_format(quest_start_time, x)
+    except:
+        if "/" not in x:
+            print("Uh oh. {} needs a slash to be a valid IANA time zone. Skipping -- please verify.")
+        print("Uh oh. {} may not have been a valid IANA time zone. Skipping -- please verify.".format(x))
+    timezone_list[y].append(x)
 
 for x in poss_match:
     paste_string += "Habitica {} quest ({} pet) invites sent {}. Quest starts by time zone:\n".format(x, quest_details[x], hab_format(my_time, our_zones[0]))
@@ -123,8 +144,8 @@ pyperclip.copy(paste_string)
 print("PASTED===================")
 print(paste_string)
 
-alert_date = in_24_hours.format("MM/DD/YYYY")
-alert_time = in_24_hours.format("HH:mm")
+alert_date = quest_start_time.format("MM/DD/YYYY")
+alert_time = quest_start_time.format("HH:mm")
 
 my_cmd = 'schtasks /f /create /sc ONCE /tn hman /tr "c:\\scripts\\start-quest.htm" /st {} /sd {}'.format(alert_time, alert_date)
 
