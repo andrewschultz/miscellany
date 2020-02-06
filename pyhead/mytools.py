@@ -367,6 +367,14 @@ def is_posneg_int(x, allow_zero = False):
         pass
     return False
 
+def print_and_run(x):
+    print(x)
+    os.system(x)
+
+def delete_task(task_name):
+    my_cmd = "schtasks /delete /f /tn {}"
+    print_and_run(my_cmd)
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
