@@ -371,8 +371,12 @@ def print_and_run(x):
     print(x)
     os.system(x)
 
-def delete_task(task_name):
+def delete_task(my_cmd):
     my_cmd = "schtasks /delete /f /tn {}"
+    print_and_run(my_cmd)
+
+def set_task(task_name, task_to_run, task_time, task_date):
+    my_cmd = "schtasks /f /create /sc ONCE /tn {} /tr {} /st {} /sd {}'.format(task_name, task_to_run, task_time, task_date)
     print_and_run(my_cmd)
 
 #####################################################basic main-program checking stuff
