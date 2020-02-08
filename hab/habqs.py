@@ -12,6 +12,8 @@ import pendulum
 import sys
 import os
 
+launch_html = False
+
 write_to_quest_file = False
 
 quest_hours = quest_default_hours = 24
@@ -21,15 +23,18 @@ timezone_list = defaultdict(list)
 quest_details = defaultdict(str)
 quest_nag = "c:/scripts/start-quest.htm"
 
-overwrite_html = True
-execute_command = True
+overwrite_html = False
+reset_task = False
 
 # it's okay to have duplicate-ish time zones below.
 our_zones = [ 'America/Chicago', 'America/New_York', 'America/Denver', 'America/Los_Angeles', 'Europe/Sofia', 'Australia/Sydney', "America/El_Salvador" ]
 
 def usage():
+    print("The main thing to know is, -f turns full options on, which is useful for setting a quest.")
     print("Options include w / nw / wn to write to a quest file or not. The default is not to write to it.")
     print("You can also enter a quest name e.g. cow. The program will try to match anything over 1 character long.")
+    print("x / nx / xn = execute the command or set up a task")
+    print("l launches the task command")
     exit()
 
 def extract_copy():
@@ -79,10 +84,16 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
-    if arg == 'w':
+    if arg == 'f':
         write_to_quest_file = True
+        overwrite_html = True
+        reset_task = True
+    elif arg == 'w':
+        write_to_quest_file = True
+        overwrite_html = True
     elif arg == 'wn' or arg == 'nw':
         write_to_quest_file = False
+        overwrite_html = False
     elif arg in quest_details:
         poss_match.append(arg)
     elif arg.isdigit():
@@ -93,6 +104,13 @@ while cmd_count < len(sys.argv):
             quest_hours = 24 * int(atemp)
     elif arg == 'xc':
         extract_copy()
+        exit()
+    elif arg == 't':
+        reset_task = True
+    elif arg == 'nt' or arg == 'tn':
+        reset_task = False
+    elif arg == 'lh':
+        launch_html = True
         exit()
     elif arg == '?':
         usage()
@@ -150,19 +168,23 @@ alert_time = quest_start_time.format("HH:mm")
 my_cmd = 'schtasks /f /create /sc ONCE /tn hman /tr "c:\\scripts\\start-quest.htm" /st {} /sd {}'.format(alert_time, alert_date)
 
 if overwrite_html:
-    f = open(quest_nag, "a")
-    f.write("<html>\n<title>\nStart quest nag</title>\n<body>\n<center>\nSTART QUEST NAG AT {} {}</center>\n</body>\n</html>\n")
+    f = open(quest_nag, "w")
+    f.write("<html>\n<title>\nStart quest nag</title>\n<body>\n<center>\nSTART QUEST NAG AT {} {}</center>\n</body>\n</html>\n".format(alert_time, alert_date))
     f.close()
     print("Rewrote", quest_nag)
 else:
-    print("Did not overwrite html.")
+    print("Did not overwrite html. Do so with -w or with -f = full go")
+
+if launch_html:
+    os.system(quest_nag)
 
 if write_to_quest_file:
     with open("c:/scripts/habqlog.txt", "a") as file:
         file.write(paste_string)
 
 print(my_cmd)
-if execute_command:
+if reset_task:
+    print("Running task-set command.")
     os.system(my_cmd)
 else:
-    print("Remember to execute the command.")
+    print("You didn't task-set the command. Do so with -t or with -f = full go.")
