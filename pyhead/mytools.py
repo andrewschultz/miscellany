@@ -116,7 +116,8 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False): # true if identical, false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False): # true if identical, false if not
+    print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -133,15 +134,15 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False)
     right = 0
     totals = 0
     if len(difs):
-        for j in difs:
+        for j in sorted(difs):
             if freq[j] > 0 : left += 1
             else: right += 1
             totals += 1
             if not max or totals <= max:
-                print('Extra', j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
+                print(">>>>R" if freq[j] > 0 else "L<<<<", 'Extra', j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
-        print(os.path.basename(f1), "has", left, "but", os.path.basename(f2), "has", right)
+        print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
         if len(difs) == 1 and difs[0] == '':
             print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
         if bail:
@@ -151,7 +152,7 @@ def compare_shuffled_lines(f1, f2, bail = False, max = 0, ignore_blanks = False)
     print("No shuffle-diffs")
     return True
 
-csl = cs = compare_shuffled_lines
+compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
 def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
@@ -376,7 +377,7 @@ def delete_task(my_cmd):
     print_and_run(my_cmd)
 
 def set_task(task_name, task_to_run, task_time, task_date):
-    my_cmd = "schtasks /f /create /sc ONCE /tn {} /tr {} /st {} /sd {}'.format(task_name, task_to_run, task_time, task_date)
+    my_cmd = "schtasks /f /create /sc ONCE /tn {} /tr {} /st {} /sd {}".format(task_name, task_to_run, task_time, task_date)
     print_and_run(my_cmd)
 
 #####################################################basic main-program checking stuff
