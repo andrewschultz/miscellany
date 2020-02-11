@@ -106,6 +106,7 @@ quest_details['<NULL>'] = "<PLACEHOLDER>"
 
 poss_match = []
 
+match_type = "none"
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
@@ -122,6 +123,7 @@ while cmd_count < len(sys.argv):
         overwrite_html = False
     elif arg in quest_details:
         poss_match.append(arg)
+        match_type = "exact"
     elif arg.isdigit():
         atemp = abs(int(arg))
         if atemp > 2:
@@ -154,10 +156,21 @@ while cmd_count < len(sys.argv):
         for x in quest_details:
             if x.startswith(arg):
                 poss_match.append(x)
+                match_type = "full match"
+        for x in quest_details:
+            if x.startswith(arg):
+                poss_match.append(x)
+                match_type = "starting match"
         if not len(poss_match):
             for x in quest_details:
                 if arg in x:
                     poss_match.append(x)
+                    match_type = "general substring match"
+        if not len(poss_match):
+            for x in quest_details:
+                if arg in quest_details[x].lower():
+                    poss_match.append(x)
+                    match_type = "quest name substring match"
         if prev == len(poss_match):
             print("{} didn't match any quests or recognized command line parameters.".format(arg))
             usage()
@@ -174,6 +187,8 @@ paste_string = ""
 my_time = pendulum.now()
 quest_start_time = my_time.add(hours=quest_hours)
 quest_warn_time = my_time.add(hours=quest_hours - preview_hours)
+
+print("MATCH TYPE FOUND:", match_type)
 
 for x in our_zones:
     try:
