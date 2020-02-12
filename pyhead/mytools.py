@@ -28,8 +28,11 @@ file_extra_edit = defaultdict(lambda: defaultdict(int))
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
-def plur(a):
-    return '' if a == 1 else 's'
+def plur(a, choices=['s', '']):
+    return choices[a != 1]
+
+def is_are(a):
+    return plur(a, ['is', 'are'])
 
 def no_quotes(a):
     return a.replace('"', '')
