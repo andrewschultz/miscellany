@@ -383,6 +383,32 @@ def set_task(task_name, task_to_run, task_time, task_date):
     my_cmd = "schtasks /f /create /sc ONCE /tn {} /tr {} /st {} /sd {}".format(task_name, task_to_run, task_time, task_date)
     print_and_run(my_cmd)
 
+def latest_of(file_array, latest = True):
+    new_ret = ''
+    last_time = 0
+    for x in file_array:
+        try:
+            y = os.stat(x)
+            if y.st_mtime > last_time:
+                new_ret = x
+        except:
+            print("No info for", x)
+    if not new_ret: sys.exit("Can't get latest of {}".format(', '.join(file_array)))
+    return new_ret
+
+def first_of(file_array, latest = True):
+    new_ret = ''
+    first_time = time.time()
+    for x in file_array:
+        try:
+            y = os.stat(x)
+            if y.st_mtime < first_time:
+                new_ret = x
+        except:
+            print("No info for", x)
+    if not new_ret: sys.exit("Can't get first of {}".format(', '.join(file_array)))
+    return new_ret
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
