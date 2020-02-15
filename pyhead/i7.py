@@ -237,15 +237,17 @@ def file_len_eq(f1, f2, bail = True, launch = False):
         return False
     return True
 
-def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = [], show_params = False, parse_string_parameters = True):
+def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = [], only_glob = [], show_params = False, parse_string_parameters = True, open_after_priority = 10):
     if type(ignore_specific) == str:
         ignore_specific = ignore_specific.split(",") if parse_string_parameters else [ignore_specific]
     if type(ignore_glob) == str:
         ignore_glob = ignore_glob.split(",") if parse_string_parameters else [ignore_glob]
+    if type(only_glob) == str:
+        only_glob = only_glob.split(",") if parse_string_parameters else [only_glob]
     trivials = ['trivially true rule', 'trivially false rule']
     rule_dict = defaultdict(int)
     with open(file_name) as file:
-        for (line_count, line) in enumerate(file):
+        for (line_count, line) in enumerate(file, 1):
             if "this is the" in line:
                 if re.search("this is the .* rule", line):
                     my_rule = re.sub(r'.*this is the +(.*?) +rule.*', r'\1 rule', line.strip())
@@ -265,6 +267,11 @@ def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ign
             x = re.sub('(consider|process|follow|abide by) the (.*?) rule.*', '\1 rule', line.strip())
             if x in rule_dict:
                 rule_dict.delete(x)
+    if only_glob:
+        for g in only_glob:
+            for t in list(rule_dict.keys()):
+                if not re.search(g, t):
+                    rule_dict.pop(t)
     if ignore_trivial:
         for t in trivials:
             if t in rule_dict:
@@ -280,13 +287,16 @@ def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ign
                     rule_dict.pop(t)
     lrd = len(rule_dict)
     if lrd:
-        print( "{} rule{} did not match.".format(lrd, mt.plur(lrd)))
+        print( "{} rule{} were found in the source but not in a table.".format(lrd, mt.plur(lrd)))
         for q in rule_dict:
             print(q, rule_dict[q])
     else:
         print("All tables match for {}.".format(os.path.basename(file_name)))
     if show_params:
         print("Ignore trivial={}, ignore_specific={}, ignore_glob={}".format(ignore_trivial, ignore_specific, ignore_glob))
+    if open_after_priority and len(rule_dict):
+        mt.add_postopen_file_line(file_name, min(rule_dict.values()), priority=open_after_priority)
+    return lrd
 
 def get_table_row_count(q, clear_trc = False, show_detail = False, lower_case = True, bail_on_dupe = False):
     if clear_trc: table_row_count.clear()
