@@ -447,8 +447,8 @@ def invis_file(x, warning=False):
 def notes_file(x):
     return sdir(x) + "/" + "notes.txt"
 
-def walkthrough_file(x):
-    return sdir(x) + "/" + "walkthrough.txt"
+def walkthrough_file(x, extra_string = ""):
+    return sdir(x) + "/" + "walkthrough" + ( '-' + extra_string if extra_string else '') + ".txt"
 
 wthru = walkthrough_file
 
