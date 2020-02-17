@@ -96,7 +96,9 @@ def match_source_invisiclues():
     room_force = ""
     if not i7.revproj(project): sys.exit("Can't figure out a project for {:s}.".format(project))
     invisfile = "c:/writing/scripts/invis/{:s}.txt".format(i7.revproj(project))
-    if not os.path.exists(invisfile): sys.exit("No file {:s}. Bailing.".format(invisfile))
+    if not os.path.exists(invisfile):
+        print("No file {:s}. Ignoring invisiclues testing.".format(invisfile))
+        return
     print("Checking invisiclues file", invisfile, "...")
     with open(invisfile) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -150,7 +152,7 @@ def match_source_invisiclues():
             count += 1
             print(count, a, "in invisiclues but not source.")
             inviserr['<' + a] = True
-    warnings_source = warnings_invis = 0
+    warnings_source = warnings_invis = warnings_clash = 0
     for a in b:
         if a in source.keys() and source[a] in region_ignore.keys(): continue
         if a not in source.keys():
@@ -160,36 +162,52 @@ def match_source_invisiclues():
             warnings_invis += 1
             print("WARNING: invis({:d}) {:s} (source={:s}) does not have a region in the invisiclues.".format(warnings_invis, a, source[a]))
         elif region_mismatch(a):
-            print("WARNING: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(a, line_dict[a], source[a], invis_region[a]))
+            warnings_clash += 1
+            print("WARNING {}: region clash for {:s} (line {:d}): {:s} in source but {:s} in invisiclues.".format(warnings_clash, a, line_dict[a], source[a], invis_region[a]))
     print ("TEST RESULTS:triz2invis-" + project + ",0,0, " + ", ".join(sorted(inviserr.keys())))
 
 def match_source_triz():
     source_mod = defaultdict(bool)
     count = 0
+    this_count = 0
     for x in source.keys():
         if x in triz_renamer.keys():
             source_mod[triz_renamer[x]] = source[x]
             triz[triz_renamer[x]] = triz[x]
             triz.pop(x)
         else: source_mod[x] = source[x]
-
-    for a in list(set(triz.keys()) | set(source_mod.keys())):
+    source_and_triz = sorted(list(set(triz.keys()) | set(source_mod.keys())))
+    for a in source_and_triz:
         # if a in triz.keys():
             # print (a, "is in triz and source keys.")
         if a not in triz.keys() and a not in ignore.keys():
+            if not this_count:
+                print("IN SOURCE BUT NOT TRIZBORT")
             count += 1
-            print (count, a, "is in the source but not in the Trizbort map.")
+            this_count += 1
+            print (count, this_count, a)
             maperr.append(a)
             continue
+    this_count = 0
+    for a in source_and_triz:
         if a not in source_mod.keys() and a not in ignore.keys():
+            if not this_count:
+                print("IN TRIZBORT BUT NOT SOURCE")
             count += 1
-            print(count, a, "is in the Trizbort map but not in the source.")
+            this_count += 1
+            print(count, this_count, a)
             sourceerr.append(a)
             continue
-        if a in ignore.keys():
+    this_count = 0
+    for a in source_and_triz:
+        if a in ignore.keys() or a not in triz.keys() or a not in ignore.keys():
             continue
         if triz[a] != source[a]:
-            print(a, "has different regions: source =", source[a], "and trizbort =", triz[a])
+            if not this_count:
+                print("IN DIFFERENT REGIONS")
+            count += 1
+            this_count += 1
+            print(count, this_count, a, "source =", source[a], "and trizbort =", triz[a])
             # print(a, triz[a], source[a])
 
 # default dictionaries and such
@@ -222,16 +240,16 @@ if i7.dir2proj():
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    j = re.sub("^-", "", sys.argv[cmd_count].lower())
-    if j in i7.i7x.keys():
-        project = i7.i7x[j]
+    arg = re.sub("^-", "", sys.argv[cmd_count].lower())
+    if arg in i7.i7x.keys():
+        project = i7.i7x[arg]
         current_as_default = False
-    elif os.path.isdir("c:/games/inform/" + j + ".inform"):
-        project = j
+    elif os.path.isdir("c:/games/inform/" + arg + ".inform"):
+        project = arg
         current_as_default = False
-    elif j == 'v':
+    elif arg == 'v':
         verbose = True
-    elif j == 'f':
+    elif arg == 'f':
         format_help()
     else:
         usage()
@@ -249,10 +267,9 @@ if not os.path.exists(source_file):
     print(source_file, "does not exist, and there is no expansion for it. Bailing.")
     exit()
 
-triz = i7.get_trizbort_rooms(trizfile)
+triz = i7.get_trizbort_rooms(trizfile, keep_punctuation = False, ignore_regions = ['poorly penned'])
 
 read_ignore_file()
-
 
 def region_name(li):
     li2 = re.sub("\".*?\"", "", li)
@@ -298,7 +315,7 @@ with open(source_file) as f:
             source[from_table(line, project)] = forced_region(current_table, project)
             print(line_count, from_table(line, project), forced_region(current_table, project))
             continue
-        if "\t" in line: continue
+        if "\t" in line or line.startswith("["): continue
         if line.lower().startswith("index map with"): continue
         line = line.rstrip().lower()
         if re.search("^there is a (passroom|pushroom|room) called ", line, flags=re.IGNORECASE):
