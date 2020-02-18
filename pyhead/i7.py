@@ -829,7 +829,7 @@ with open(i7_cfg_file) as file:
         if i7x[q] in i7com.keys():
             i7com[q] = i7com[i7x[q]]
 
-def triz_rooms(file_name):
+def get_trizbort_rooms(file_name, keep_punctuation = True, ignore_regions = [], get_all_slash = False):
     triz = defaultdict(str)
     try:
         e = ET.parse(file_name)
@@ -839,15 +839,22 @@ def triz_rooms(file_name):
     root = e.getroot()
     for elem in e.iter('room'):
         if elem.get('name'):
+            if elem.get('region') and elem.get('region').lower() in ignore_regions: continue
             x = str(elem.get('name')).lower()
             x = re.sub(" *\(.*\)", "", x) # get rid of parenthetical/alternate name
-            x = re.sub(",", "", x) # get rid of commas Inform source doesn't like
+            if not keep_punctuation:
+                x = mt.strip_punctuation(x, zap_bounding_apostrophe = True)
             stuf_ary = re.split(" */ *", x) # optional for if a room name changes
-            for q in stuf_ary:
-                triz[q] = str(elem.get('region')).lower()
+            if get_all_slash:
+                for q in stuf_ary:
+                    triz[q] = str(elem.get('region')).lower()
+            else:
+                triz[stuf_ary[0]] = str(elem.get('region')).lower()
         # print (x,triz[x])
         # triz[atype.get('name')] = 1;
     return triz
+
+triz_rooms = get_triz_rooms = trizbort_rooms = get_trizbort_rooms
 
 def _valid_i7m_arg(x):
     if x[0] == '-': x = x[1:];
