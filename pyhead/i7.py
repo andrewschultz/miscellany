@@ -697,6 +697,25 @@ def apostrophe_check_string(my_string, print_results = False, my_file = '<UNDEFI
             print("potential bad apostrophes {} to {} {} line {} >>> {}".format(abs(ll-rl), "left" if ll > rl else "right", os.path.basename(my_file), line_num if line_num > -1 else "<NO LINE>", ml))
     return abs(ll - rl)
 
+def is_vardef_line(my_line):
+    mll = my_line.lower().strip()
+    mll = re.sub(" +", " ", mll)
+    if "is a list of" in my_line and "variable" in line: return True
+    if re.search("is a (number|truth state|thing|room) that varies", my_line): return True
+    return False
+
+def search_defs(my_file, print_defs = False):
+    defs_found = 0
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if is_vardef_line(line):
+                defs_found += 1
+                if print_defs:
+                    print("DEF {} at line {}: {}".format(defs_found, line_count, line.rstrip()))
+    if print_defs and defs_found == 0:
+        print("No definitions in", my_file)
+    return defs_found
+
 def apostrophe_check_line(my_line, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
     retval = 0
     for x in re.split("\t+", my_line.strip()):
