@@ -181,11 +181,12 @@ def match_source_triz():
         # if a in triz.keys():
             # print (a, "is in triz and source keys.")
         if a not in triz.keys() and a not in ignore.keys():
+            if a in source and source[a] in region_ignore: continue
             if not this_count:
                 print("IN SOURCE BUT NOT TRIZBORT")
             count += 1
             this_count += 1
-            print (count, this_count, a)
+            print (count, this_count, a, "/", source[a])
             maperr.append(a)
             continue
     this_count = 0
@@ -215,13 +216,12 @@ source = defaultdict(bool)
 triz = defaultdict(bool)
 invis_rooms = defaultdict(bool)
 ignore = defaultdict(bool) # specific rooms to ignore
+region_ignore = defaultdict(bool) # specific regions to ignore
 room_renamer = defaultdict(str)
 invis_renamer = defaultdict(str)
 triz_renamer = defaultdict(str)
 invis_region = defaultdict(str)
 invis_region_rename = defaultdict(str)
-
-region_ignore = defaultdict(bool)
 
 default_project = "buck-the-past"
 project = ""
@@ -267,9 +267,9 @@ if not os.path.exists(source_file):
     print(source_file, "does not exist, and there is no expansion for it. Bailing.")
     exit()
 
-triz = i7.get_trizbort_rooms(trizfile, keep_punctuation = False, ignore_regions = ['poorly penned'])
-
 read_ignore_file()
+
+triz = i7.get_trizbort_rooms(trizfile, keep_punctuation = False, ignore_regions = list(region_ignore))
 
 def region_name(li):
     li2 = re.sub("\".*?\"", "", li)
