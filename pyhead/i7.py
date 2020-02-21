@@ -467,11 +467,11 @@ def test_file(x):
 
 tefi = test_file
 
-def triz(x):
+def triz_map_of(x):
     x2 = proj_exp(x)
-    return os.path.join(triz_dir, "{:s}.trizbort".format(i7triz[x2] if x2 in i7triz.keys() else x2))
+    return os.path.join(triz_dir, "{:s}.trizbort".format(dictish(x2, i7x)))
 
-triz_file = triz
+triz = triz_file = triz_map = triz_map_of
 
 def hf_exp(x, return_nonblank = True):
     xl = x.lower()
