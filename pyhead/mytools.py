@@ -17,6 +17,7 @@ import subprocess
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+npnq = np.replace('"', '')
 my_creds = "c:/coding/perl/proj/mycreds.txt"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
@@ -29,7 +30,7 @@ def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
 def plur(a, choices=['s', '']):
-    return choices[a != 1]
+    return choices[a == 1]
 
 def is_are(a):
     return plur(a, ['is', 'are'])
@@ -212,8 +213,10 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
-def strip_punctuation(q):
+def strip_punctuation(q, zap_bounding_apostrophe = False):
     q = q.replace('"', '')
+    if zap_bounding_apostrophe:
+        q = re.sub("(\b'|'\b)", "", q)
     q = q.replace('.', '')
     q = q.replace(',', '')
     q = q.replace('-', ' ')
