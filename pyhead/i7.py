@@ -437,7 +437,7 @@ def hdr(x, y, base=False):
         return os.path.basename(temp)
     return temp
 
-hdrfile = hfile = hdr
+headerfile = header = hdrfile = hfile = hdr
 
 def invis_file(x, warning=False):
     try_1 = "c:/writing/scripts/invis/{:s}.txt".format(i7xr[x] if x in i7xr.keys() else x)
@@ -705,16 +705,19 @@ def is_vardef_line(my_line):
     if re.search("is a (number|truth state|thing|room) that varies", my_line): return True
     return False
 
-def search_defs(my_file, print_defs = False):
+def search_defs(my_file_array, print_defs = False, print_success = True):
     defs_found = 0
-    with open(my_file) as file:
-        for (line_count, line) in enumerate(file, 1):
-            if is_vardef_line(line):
-                defs_found += 1
-                if print_defs:
-                    print("DEF {} at line {}: {}".format(defs_found, line_count, line.rstrip()))
-    if print_defs and defs_found == 0:
-        print("No definitions in", my_file)
+    if type(my_file_array) == str:
+        my_file_array = [ my_file_array ]
+    for my_file in my_file_array:
+        with open(my_file) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if is_vardef_line(line):
+                    defs_found += 1
+                    if print_defs:
+                        print("DEF {} at line {}: {}".format(defs_found, line_count, line.rstrip()))
+        if print_defs and defs_found == 0:
+            print("No definitions in {}.{}".format(my_file, ' Success!' if print_success else ''))
     return defs_found
 
 def apostrophe_check_line(my_line, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
