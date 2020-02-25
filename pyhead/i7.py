@@ -707,17 +707,25 @@ def is_vardef_line(my_line):
 
 def search_defs(my_file_array, print_defs = False, print_success = True):
     defs_found = 0
+    files_passed = 0
+    files_failed = 0
     if type(my_file_array) == str:
         my_file_array = [ my_file_array ]
     for my_file in my_file_array:
+        this_failed = False
         with open(my_file) as file:
             for (line_count, line) in enumerate(file, 1):
                 if is_vardef_line(line):
                     defs_found += 1
+                    this_failed = True
                     if print_defs:
                         print("DEF {} at line {}: {}".format(defs_found, line_count, line.rstrip()))
+        files_passed += (defs_found == 0)
+        files_failed += (defs_found != 0)
         if print_defs and defs_found == 0:
             print("No definitions in {}.{}".format(my_file, ' Success!' if print_success else ''))
+    if len(my_file_array) > 1:
+        print("Files passed: {} Files failed: {}.".format(files_passed, files_failed))
     return defs_found
 
 def apostrophe_check_line(my_line, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
