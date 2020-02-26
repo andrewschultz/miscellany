@@ -58,6 +58,13 @@ def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML 
 	f.close()
 	if launch: os.system(out_file)
 
+def num_index_from_text(my_line, my_index = 0):
+    nums = re.findall("[0-9]+", my_line)
+    try:
+        return int(nums[my_index])
+    except:
+        return 0
+
 def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
     return x.lower()
