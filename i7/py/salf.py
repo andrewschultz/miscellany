@@ -57,16 +57,17 @@ def firstline(q):
 
 def do_one_sort(sort_string, fout, prefix_second = False):
     split_string = ""
-    if "\n\n" in sort_string:
+    # not perfect below, but the basic idea is: if we only have one rule so far, don't shuffle the rule's lines themselves
+    if "\n\n" in sort_string or "\t" in sort_string:
         if verbose: print("Double-cr sorting rules.")
         divs = sort_string.split("\n\n")
         split_string = "\n\n"
     else:
         if verbose: print("Single-cr sorting definitions.")
-        print("! bailing and showing sortable below")
         split_string = "\n"
     if not split_string: sys.exit("Oops failed to get split_string.")
     divs = sort_string.split(split_string)
+    print(divs)
     divs = sorted(divs, key=lambda x: (re.sub(" [a-z\( ]+-", " ", rule_removal(firstline(x))), re.sub("-.*", "", rule_removal(firstline(x)))) if prefix_second else x.lower())
     ow = split_string.join(divs)
     fout.write("\n" + ow + "\n\n")
@@ -155,7 +156,7 @@ def main_sect_alf(my_proj, my_file):
             os.remove(my_bak)
             return
         elif not force_copy and not mt.compare_shuffled_lines(my_file, my_bak):
-            print("Content may have been altered between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file)), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences."))
+            print("Content may have been altered between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences.")))
             return
         print("Changes found, copying back {}.".format(os.path.basename(my_file)))
         copy(my_bak, my_file)
