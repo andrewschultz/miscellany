@@ -53,6 +53,12 @@ def usage():
     print("Other arguments are the project name, short or long")
     exit()
 
+def bad_brackets(my_line):
+    if my_line.startswith("#"): return False
+    if my_line.count("[") != my_line.count("]"): return True
+    if my_line.count("[") > bracket_minimum: return True
+    if my_line.startswith("[") and my_line.endswith("."): return True
+
 def mistake_msg(proj):
     if proj in base_err.keys(): return base_err[proj]
     return "(Need default for project {:s} in {:s}) That's not something you can do or say here.".format(proj, mistake_defaults)
@@ -95,6 +101,8 @@ def mister(a, my_file, do_standard):
     found = defaultdict(bool)
     comment_found = defaultdict(bool)
     comment_line = defaultdict(int)
+    comment_file = defaultdict(str)
+    full_line = defaultdict(str)
     source_dir = "c:/games/inform/{:s}.inform/Source/".format(a)
     count = 0
     special_def = ''
@@ -131,6 +139,7 @@ def mister(a, my_file, do_standard):
                 if x in need_test.keys() and '[okdup]' not in l.lower():
                     print('Uh oh,', x, 'duplicates line', need_test[x], 'at line', line_count, 'in', os.path.basename(my_file))
                 need_test[x] = line_count
+                full_line[x] = line.strip()
                 found[x] = False
                 comment_found[x] = False
                 if 'when' in l.lower():
@@ -147,20 +156,20 @@ def mister(a, my_file, do_standard):
     for fi in to_look:
         short_fi = os.path.basename(fi)
         retest = False
+        fs = os.path.basename(fi)
         with open(fi) as file:
-            count = 0
             err_count = 0
             test_note = ""
-            for (count, line) in enumerate(file, 1):
+            for (line_count, line) in enumerate(file, 1):
                 if ignore_next == True:
                     ignore_next = False
-                    # print ("Purposely ignored command -- probably a point scorer before you need to ignore it, count, line.strip())
+                    # print ("Purposely ignored command -- probably a point scorer before you need to ignore it, line_count, line.strip())
                     continue
                 if retest == True:
                     retest = False
                     # print("Skipping", line.strip())
                     continue
-                if line.startswith("#not a mistake"):
+                if line.startswith("#not a mistake") or (line.startswith("#pre-") and " rule" in line):
                     ignore_next = True
                     continue
                 if line.startswith("#mistake retest"):
@@ -172,19 +181,19 @@ def mister(a, my_file, do_standard):
                     retest = True
                     continue
                 if line.startswith("#mistake text") or line.startswith("#mistake retext"):
-                    print('Line', count, 'says text not test (X not S).')
+                    print('Line {} says text not test (X not S).'.format(line_count))
                     continue
                 if line.startswith("##mistake"):
-                    print('Line', count, 'has one two many pound signs.')
+                    print('Line {} has one two many pound signs.'.format(line_count))
                     continue
                 if line.startswith('#') and 'to find' in line:
-                    print('Line', count, 'comment mentions search info:', line.strip().lower())
+                    print('Line {} comment mentions search info: {}'.format(line_count, line.strip().lower()))
                 if line.startswith("##condition(s)") or line.startswith("##location"):
-                    print('Line', count, 'has helper text to remove:', line.strip().lower())
+                    print('Line {} has helper text to remove: {}'.format(line_count, line.strip().lower()))
                     help_text_rm += 1
                 brax = line.count('[')
-                if brax > bracket_minimum and not line.startswith('#'):
-                    print(brax, 'floating ' + ('if' if '[if' in line else 'code') + '-brackets in line', count, 'of', short_fi, ':', line.strip().lower())
+                if bad_brackets(line):
+                    print(brax, 'floating ' + ('if' if '[if' in line else 'code') + '-brackets in line', line_count, 'of', short_fi, ':', line.strip().lower())
                     bracket_errs += 1
                     if to_clipboard:
                         clipboard_str += re.sub("mistake test", "mistake retest", last_mistake) + last_cmd + line + '\n'
@@ -193,32 +202,39 @@ def mister(a, my_file, do_standard):
                     last_mistake = line
                     test_note = re.sub("^#mistake test for ", "", line.strip().lower())
                     if test_note not in comment_found.keys():
-                        print('Superfluous(?) mistake test', test_note, 'at line', count, 'of', short_fi)
+                        print('Superfluous(?) mistake test', test_note, 'at line', line_count, 'of', short_fi)
                         if '/' in test_note:
                             slashes.append(test_note)
                         superfluous += 1
                     else:
                         if comment_found[test_note]:
-                            print('Duplicate mistake test for', test_note, 'at line', count, 'original', comment_line[test_note], 'Delta=', count - comment_line[test_note], '(reroute to mistake retest?)')
+                            if comment_file[test_note] == fs:
+                                print('Duplicate mistake test for', test_note, 'at line', line_count, fs, 'original', comment_line[test_note], 'Delta=', line_count - comment_line[test_note], '(reroute to mistake retest?)')
+                            else:
+                                print('Duplicate mistake test for', test_note, 'at line', line_count, fs, 'original', comment_line[test_note], 'File', comment_file[test_note], '(reroute to mistake retest?)')
                             duplicates += 1
                         else:
                             comment_found[test_note] = True
-                            comment_line[test_note] = count
+                            comment_line[test_note] = line_count
+                            comment_file[test_note] = fs
                         err_count += 1
                         # print("Got", test_note)
                 elif line.startswith('>'):
                     last_cmd = line
                     ll = re.sub("^>", "", line.strip().lower())
+                    if test_note and test_note in found.keys():
+                        found[test_note] = True
+                        continue
                     if ll != test_note:
                         if ll in need_test.keys():
                             if found[ll] is False:
                                 err_count += 1
-                                if print_output: print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test (or define [def=special test]) for {:s}".format(err_count, fi, count, ll))
+                                if print_output:
+                                    print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test (or define [def=special test]) for {:s}".format(err_count, fi, line_count, ll))
+                                    print("    ", full_line[ll])
                                 need_comment += 1
-                            extra_text[count] = ll
+                            extra_text[line_count] = ll
                             found[ll] = True
-                    if test_note in found.keys():
-                        found[test_note] = True
                     ll = ""
                     test_note = ""
                 else:
@@ -293,11 +309,12 @@ def mister(a, my_file, do_standard):
     if not (mistakes + flags + duplicates + superfluous + bracket_errs + help_text_rm + need_comment):
         print("No errors found for {:s}!".format(a))
     else:
-        print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment")
+        totes = mistakes + flags + duplicates + superfluous + bracket_errs + help_text_rm + need_comment
+        print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment", totes, "total")
 
-# note that some of the nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
+# note that some of the non-branching nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
 files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/rbr-sa-forest.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-metros.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-ordeal-loader.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-resort.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-sortie.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-stores.txt', 'c:/games/inform/shuffling.inform/source/reg-sa-nudges-general.txt' ],
-  'roiling': ['c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
+  'roiling': ['c:/games/inform/roiling.inform/source/rbr-roi-ordeal-reload.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-routes.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-troves.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-presto.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-oyster.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-towers.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-otters.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-others.txt', 'c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
   'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt']
 }
 
