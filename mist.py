@@ -19,6 +19,8 @@ from collections import defaultdict
 ary = []
 projs = []
 
+mist_data = "c:/writing/scripts/mist.txt"
+
 added = defaultdict(bool)
 srev = defaultdict(str)
 condition = defaultdict(str)
@@ -53,11 +55,31 @@ def usage():
     print("Other arguments are the project name, short or long")
     exit()
 
+def read_from_mist_data(mist_data):
+    f = defaultdict(list)
+    sf = defaultdict(list)
+    with open(mist_data) as file:
+        for (line_count, line) in enumerate(file, 1):
+            line = line.lower().strip()
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
+            to_sf = False
+            if line[:6] == 'small:':
+                line = line[6:]
+                to_sf = True
+            ary = line.split("=")
+            if to_sf:
+                sf[ary[0]].extend(ary[1].split(','))
+            else:
+                f[ary[0]].extend(ary[1].split(','))
+    return (f, sf)
+
 def bad_brackets(my_line):
     if my_line.startswith("#"): return False
     if my_line.count("[") != my_line.count("]"): return True
     if my_line.count("[") > bracket_minimum: return True
     if my_line.startswith("[") and my_line.endswith("."): return True
+    if "[']" in my_line: return True
 
 def mistake_msg(proj):
     if proj in base_err.keys(): return base_err[proj]
@@ -312,14 +334,9 @@ def mister(a, my_file, do_standard):
         totes = mistakes + flags + duplicates + superfluous + bracket_errs + help_text_rm + need_comment
         print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment", totes, "total")
 
-# note that some of the non-branching nudge files are necessary because, for instance, the Loftier Trefoil enemies are random and not covered in the general walkthrough.
-files = { 'shuffling': ['c:/games/inform/shuffling.inform/source/rbr-sa-forest.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-metros.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-ordeal-loader.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-resort.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-sortie.txt', 'c:/games/inform/shuffling.inform/source/rbr-sa-stores.txt', 'c:/games/inform/shuffling.inform/source/reg-sa-nudges-general.txt' ],
-  'roiling': ['c:/games/inform/roiling.inform/source/rbr-roi-ordeal-reload.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-routes.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-troves.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-presto.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-oyster.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-towers.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-otters.txt', 'c:/games/inform/roiling.inform/source/rbr-roi-others.txt', 'c:/games/inform/roiling.inform/source/reg-roi-thru.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-towers.txt', 'c:/games/inform/roiling.inform/source/reg-roi-nudges-demo-dome.txt'],
-  'ailihphilia': ['c:/games/inform/ailihphilia.inform/source/rbr-ai-thru.txt']
-}
-
-smallfiles = { 'ailihphilia' : ['c:/games/inform/ailihphilia.inform/source/reg-ai-mist-neg.txt']
-}
+files = defaultdict(str)
+smallfiles = defaultdict(str)
+(files, smallfiles) = read_from_mist_data(mist_data)
 
 edit_source = False
 run_check = False
