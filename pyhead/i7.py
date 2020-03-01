@@ -346,7 +346,7 @@ def to_prt(include_glob = "reg-*", exclude_glob = ""):
     print(copied, "copied of ", include_glob, "-", xg, ",", uncopied, "uncopied")
 
 #for backwards compatibility. wm and plur used to be in i7.
-plur = mt.wm
+plur = mt.plur
 wm = mt.wm
 
 def remove_quotes(x):
@@ -907,6 +907,38 @@ def get_defined_region(l): # we assume that a region is defined in the first sen
     if l.startswith("there is"):
         return re.sub("there is a region called ", "", l, 0, re.IGNORECASE)
     return re.sub(" is a region.*", "", l, 0, re.IGNORECASE)
+
+def one_if_branch(if_string):
+    if "[" not in if_string:
+        print("Yielding", if_string)
+        yield if_string
+        return
+    ary = re.split("\[.*?\]", if_string)[1:-1]
+    for y in ary:
+        yield y
+        #print("Branching", if_string.replace(if_string, y))
+        #yield one_if_branch(if_string.replace(if_string, y))
+    return
+
+def first_fragment_of(string_gen):
+    ary = []
+    for st in string_gen:
+        if "[if " not in st:
+            yield(st)
+            continue
+        x = re.findall("\[if .*end if\]", st)
+        x = re.findall("\[if .*?end if\]", st)
+        for y in list(one_if_branch(x[0])):
+            yield(st.replace(x[0], str(y)))
+
+def all_possible_fragments(text_string):
+    array_to_expand = [text_string]
+    while "[if " in array_to_expand[0]:
+        array_gen = first_fragment_of(array_to_expand)
+        array_to_expand = list(array_gen)
+        if not len(array_to_expand):
+            sys.exit("Expand array blank.")
+    return array_to_expand
 
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
