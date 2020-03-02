@@ -908,37 +908,53 @@ def get_defined_region(l): # we assume that a region is defined in the first sen
         return re.sub("there is a region called ", "", l, 0, re.IGNORECASE)
     return re.sub(" is a region.*", "", l, 0, re.IGNORECASE)
 
-def one_if_branch(if_string):
-    if "[" not in if_string:
-        print("Yielding", if_string)
-        yield if_string
+def escape_brackets(my_string):
+    temp = my_string.replace("[", "\[")
+    temp = temp.replace("]", "\]")
+    return temp
+
+def all_branches(conditional_string):
+    if "[" not in conditional_string:
+        yield conditional_string
         return
-    ary = re.split("\[.*?\]", if_string)[1:-1]
+    ary = re.split("\[.*?\]", conditional_string)[1:-1]
     for y in ary:
         yield y
-        #print("Branching", if_string.replace(if_string, y))
-        #yield one_if_branch(if_string.replace(if_string, y))
     return
 
-def first_fragment_of(string_gen):
+def first_fragment_of(string_gen, start_match, end_match):
     ary = []
+    find_all_string = "{}.*?{}".format(escape_brackets(start_match), escape_brackets(end_match))
+    if "(" in find_all_string:
+        find_all_string = "({})".format(find_all_string)
     for st in string_gen:
-        if "[if " not in st:
+        if start_match not in st:
             yield(st)
             continue
-        x = re.findall("\[if .*end if\]", st)
-        x = re.findall("\[if .*?end if\]", st)
-        for y in list(one_if_branch(x[0])):
+        x = re.findall(find_all_string, st)
+        if type(x[0]) == tuple:
+            x = list(x[0])
+        lab = list(all_branches(x[0]))
+        if not len(lab):
+            sys.exit("Oops, bad branching for {} {} {}".format(string_gen, start_match, end_match))
+        for y in list(all_branches(x[0])):
             yield(st.replace(x[0], str(y)))
 
-def all_possible_fragments(text_string):
+def all_possible_fragments(text_string, start_match, end_match):
     array_to_expand = [text_string]
-    while "[if " in array_to_expand[0]:
-        array_gen = first_fragment_of(array_to_expand)
+    while start_match in array_to_expand[0]:
+        last_len = len(array_to_expand)
+        array_gen = first_fragment_of(array_to_expand, start_match, end_match)
         array_to_expand = list(array_gen)
-        if not len(array_to_expand):
-            sys.exit("Expand array blank.")
+        if last_len == len(array_to_expand):
+            break
     return array_to_expand
+
+def all_if_fragments(text_string):
+    return all_possible_fragments(text_string, "[if ", "[end if]")
+
+def all_oneof_fragments(text_string):
+    return all_possible_fragments(text_string, "[one of]", "[(stopping|in random order|at random)]")
 
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
