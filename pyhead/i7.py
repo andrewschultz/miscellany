@@ -918,6 +918,8 @@ def all_branches(conditional_string):
         yield conditional_string
         return
     ary = re.split("\[.*?\]", conditional_string)[1:-1]
+    if len(ary) == 1 and conditional_string.startswith("[if"):
+        ary.append("<BLANK: possibly add to beginning of line: !{}>".format(ary[0]))
     for y in ary:
         yield y
     return
@@ -955,6 +957,13 @@ def all_if_fragments(text_string):
 
 def all_oneof_fragments(text_string):
     return all_possible_fragments(text_string, "[one of]", "[(stopping|in random order|at random)]")
+
+def if_oneof_crude_convert(text_string):
+    temp_array = all_if_fragments(text_string)
+    return_array = []
+    for x in temp_array:
+        return_array.extend(all_oneof_fragments(x))
+    return return_array
 
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
