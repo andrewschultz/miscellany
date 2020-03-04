@@ -917,8 +917,8 @@ def all_branches(conditional_string):
     if "[" not in conditional_string:
         yield conditional_string
         return
-    ary = re.split("\[.*?\]", conditional_string)[1:-1]
-    if len(ary) == 1 and conditional_string.startswith("[if"):
+    ary = re.split("\[[^\]]*\]", conditional_string)[1:-1]
+    if len(ary) == 1 and (conditional_string.startswith("[if") or conditional_string.startswith("[unless")):
         ary.append("<BLANK: possibly add to beginning of line: !{}>".format(ary[0]))
     for y in ary:
         yield y
@@ -930,7 +930,7 @@ def first_fragment_of(string_gen, start_match, end_match):
     if "(" in find_all_string:
         find_all_string = "({})".format(find_all_string)
     for st in string_gen:
-        if start_match not in st:
+        if not re.findall(find_all_string, st):
             yield(st)
             continue
         x = re.findall(find_all_string, st)
@@ -942,9 +942,17 @@ def first_fragment_of(string_gen, start_match, end_match):
         for y in list(all_branches(x[0])):
             yield(st.replace(x[0], str(y)))
 
-def all_possible_fragments(text_string, start_match, end_match):
+def all_possible_fragments(text_string, start_match, end_match, bail = True):
     array_to_expand = [text_string]
-    while start_match in array_to_expand[0]:
+    start_match_adj = escape_brackets(start_match)
+    end_match_adj = escape_brackets(start_match)
+    if start_match_adj and not end_match_adj:
+        print("BAD MATCHING")
+        print(text_string)
+        print(start_match_adj)
+        print(end_match_adj)
+        if bail: sys.exit()
+    while re.findall(start_match_adj, array_to_expand[0]):
         last_len = len(array_to_expand)
         array_gen = first_fragment_of(array_to_expand, start_match, end_match)
         array_to_expand = list(array_gen)
@@ -953,12 +961,16 @@ def all_possible_fragments(text_string, start_match, end_match):
     return array_to_expand
 
 def all_if_fragments(text_string):
-    return all_possible_fragments(text_string, "[if ", "[end if]")
+    if ("[end if][end if]") in text_string:
+        print("WARNING recursive endifs may make trouble:")
+        print("    ", text_string)
+    return all_possible_fragments(text_string, "[(if|unless) ", "[end if]")
 
 def all_oneof_fragments(text_string):
     return all_possible_fragments(text_string, "[one of]", "[(stopping|in random order|at random)]")
 
 def if_oneof_crude_convert(text_string):
+    text_string = text_string.replace("[']", "'")
     temp_array = all_if_fragments(text_string)
     return_array = []
     for x in temp_array:
