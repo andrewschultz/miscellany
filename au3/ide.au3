@@ -6,6 +6,7 @@
 
 #include <Array.au3>
 #include <File.au3>
+#include <Misc.au3>
 
 #include "ide-h.au3"
 #include <MsgBoxConstants.au3>
@@ -27,6 +28,8 @@ Global $projHash
 Opt("WinTitleMatchMode", -2)
 
 Local $cmdCount = 1
+
+BailOnSingleton()
 
 ReadProjectHash()
 
@@ -52,8 +55,8 @@ While $cmdCount <= $CmdLine[0]
 	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
     MOK("List of projects", $cmdStr)
     Exit
-  Elseif $a1 == 'd' or $a1 == 'h' Then
-    $num = StringMid($cmd, 2)
+  Elseif ($a1 == 'd' or $a1 == 'h') and (StringIsDigit(StringMid($arg, 2))) Then
+    $num = StringMid($arg, 2)
 	if not StringIsDigit($num) Then
 	  MOK("Need number right after d/h", "d20 or h20 is ok, d 20 or h 20 is not")
 	  Exit
