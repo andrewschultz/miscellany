@@ -11,6 +11,7 @@ import re
 import sys
 import glob
 import pyperclip
+import mytools as mt
 
 from collections import defaultdict
 
@@ -19,7 +20,6 @@ from collections import defaultdict
 ary = []
 projs = []
 
-mist_data = "c:/writing/scripts/mist.txt"
 
 added = defaultdict(bool)
 srev = defaultdict(str)
@@ -27,6 +27,8 @@ condition = defaultdict(str)
 location = defaultdict(str)
 
 base_err = defaultdict(str)
+
+end_room = ""
 
 short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
 
@@ -51,7 +53,7 @@ def usage():
     print("-2 = to clipboard")
     print("-p/-np = print or don't")
     print("-po/-wo = print or write only")
-    print("-e = edit the branch file")
+    print("-e = edit the data file, -ec/ce = edit source, -eb = edit branches")
     print("Other arguments are the project name, short or long")
     exit()
 
@@ -272,6 +274,7 @@ def mister(a, my_file, do_standard):
                 for line in file:
                     count += 1
                     if count in extra_text.keys():
+                        if end_room and end_room in location[count]: break
                         fout.write("##mistake test for " + extra_text[count] + "\n")
                         if print_location: fout.write("##location = " + location[count])
                         if print_condition: fout.write("##condition(s) " + condition[count])
@@ -289,6 +292,7 @@ def mister(a, my_file, do_standard):
                 check_after[ct] = len(ctf)
             if print_output or to_clipboard:
                 if (find_max == 0 or find_count <= find_max) and find_count > find_min:
+                    if end_room and end_room in location[f]: break
                     if print_output:
                         if verbose:
                             print('#mistake test for {:80s}{:4d} to find({:d})'.format(f, find_count, need_test[f]))
@@ -310,13 +314,11 @@ def mister(a, my_file, do_standard):
         for f2 in files[a]:
             files_to_check[f2] = True
         for f1 in regs:
-            line_count = 0
             with open(f1) as file:
-                for line in file:
-                    line_count += 1
+                for (line_count, line) in enumerate(file, 1):
                     if not line.startswith('>'): continue
                     for c in check_ary:
-                        if line.startswith(c):
+                        if line.strip() == c:
                             c1 = c[1:] if c.startswith('>') else c
                             if check_after[c1] > 1:
                                 mults.append(c1)
@@ -336,8 +338,11 @@ def mister(a, my_file, do_standard):
 
 files = defaultdict(str)
 smallfiles = defaultdict(str)
+mist_data = "c:/writing/scripts/mist.txt"
 (files, smallfiles) = read_from_mist_data(mist_data)
 
+edit_data = False
+edit_branches = False
 edit_source = False
 run_check = False
 to_clipboard = False
@@ -366,8 +371,11 @@ if len(sys.argv) > 1:
             print_output = False
         elif arg[:2] == 'fm': find_min = int(arg[2:])
         elif arg[0] == 'f': find_max = int(arg[1:])
-        elif arg == 'e': edit_source = True
-        elif arg == 'eo':
+        elif arg == 'e': edit_data = True
+        elif arg == 'eo' or arg == 'oe': edit_data_only = True
+        elif arg == 'eb' or arg == 'be':
+            edit_branches = True
+        elif arg == 'ec' or arg == 'ce':
             edit_source = True
             run_check = False
         elif arg == 'a': check_stuff_after = True
@@ -390,6 +398,8 @@ if len(sys.argv) > 1:
         elif arg == 'po':
             print_output = True
             write_file = False
+        elif arg[:2] == 'e=':
+            end_room = arg[2:].replace("-", " ")
         elif arg == '?': usage()
         else:
             for q in arg.split(','):
@@ -407,6 +417,12 @@ if len(sys.argv) > 1:
                     usage()
         count += 1
 
+if edit_source:
+    mt.open_source()
+
+if edit_data:
+    i7.npo(mist_data)
+
 if not write_file and not print_output and not to_clipboard:
     print("You need to write a file or the clipboard or print the output.")
     exit()
@@ -419,10 +435,11 @@ if len(added.keys()) == 0:
     else:
         print("No mistake file in default directory.")
 
-if edit_source:
+if edit_branches:
     for a in added.keys():
         for b in files[a]:
-            i7.npo(b, 1, True)
+            i7.npo(b, True, bail=False)
+    if len(added): exit()
     if not run_check: exit()
 
 for e in sorted(added.keys()):
@@ -438,4 +455,3 @@ if clipboard_str:
     pyperclip.paste()
     lines = len(clipboard_str.split("\n"))
     print("Rough testing text sent to clipboard,", lines, "lines.")
-
