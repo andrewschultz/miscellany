@@ -223,6 +223,9 @@ def replace_mapping(x, my_f, my_l):
     y = y.strip()
     my_matches = []
     for q in y.split(","):
+        if q != q.strip():
+            print("WARNING extra space {} line {}".format(my_l, my_f))
+            q = q.strip()
         if q not in to_match.keys():
             print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
             mt.npo(my_f, my_l)
@@ -353,7 +356,7 @@ def get_file(fname):
     strict_name_local = False
     last_atted_command = ""
     untested_commands = defaultdict(list)
-    untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd' ]
+    untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd', 'in', 'out', 'gs', 'slon' ] # ?? put this into rbr.txt
     untested_default = list(untested_ignore)
     wrong_lines = []
     last_cmd_line = -1
@@ -417,7 +420,9 @@ def get_file(fname):
                 if not l:
                     untested_ignore = list(untested_default)
                 else:
-                    for x in l.split("\t"):
+                    if "\t" in x:
+                        print("WARNING split with commas and not tabs line {}.".format(line_count))
+                    for x in l.split(","):
                         if x in untested_ignore:
                             print("Warning ALSO-IGNORE re-adds {} at line {}.".format(x, line_count))
                         else:
@@ -483,6 +488,9 @@ def get_file(fname):
                     sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
                 branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
                 continue
+            if line.strip() == "==!" or line.strip() == "@!":
+                actives = [not x for x in actives]
+                continue
             if re.search("^(`|=\{|@)", line):
                 line = replace_mapping(line, fname, line_count)
             if line.startswith('#--'):
@@ -535,15 +543,13 @@ def get_file(fname):
             if line.startswith("===a"):
                 actives = [True] * len(actives)
                 continue
-            if line.strip() == "==!":
-                actives = [not x for x in actives]
-                continue
-            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^") or line.startswith("==!t"):
+            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^") or line.startswith("==!t") or line.startswith("@!"):
+                if not line.startswith("@!"):
+                    print("@! is the preferred syntax. ==!t, etc., should be deprecated or mapped to strings. Line {} of {}.".format(line_count, fname))
+                    line = re.sub("==(!|-|\^|!t", "", line)
+                else:
+                    line = line[2:]
                 actives = [True] * len(actives)
-                temp_idx = 3
-                if line.startswith("==!t"):
-                    temp_idx = 4
-                    print("Warning ==!t should be changed to ==! line {} of {}.".format(line_count, fname))
                 try:
                     chgs = line.lower().strip()[temp_idx:].split(',')
                     if len(chgs):
@@ -643,10 +649,10 @@ def get_file(fname):
     for ct in range(0, len(file_array)):
         file_list[ct].close()
     if len(untested_commands):
-        print("POTENTIALLY UNTESTED COMMANDS: (remove with ###skip test checking)")
+        print("POTENTIALLY UNTESTED COMMANDS for {}: (remove with ###skip test checking (optional explanation) below the command, or ALSO_IGNORE:x or x*)".format(fname))
         cmd_count = 0
         total_count = 0
-        for u in sorted(untested_commands):
+        for u in sorted(untested_commands, key=untested_commands.get):
             cmd_count += 1
             total_count += len(untested_commands[u])
             print("{} ({}): {} at line{} {}.".format(cmd_count, total_count, u, mt.plur(len(untested_commands[u])), ", ".join([str(x) for x in untested_commands[u]])))
@@ -705,14 +711,20 @@ def internal_postproc_stuff():
     if total_csv or force_postproc:
         run_postproc = defaultdict(bool)
         if not total_csv: print("Forcing postproc even though nothing changed.")
-        to_proc = list(new_files.keys()) + list(changed_files.keys())
-        if force_postproc: to_proc += list(unchanged_files.keys())
+        to_proc = []
+        for x in new_files:
+            to_proc += list(new_files[x])
+        for x in changed_files:
+            to_proc += list(changed_files[x])
+        if force_postproc:
+            for x in unchanged_files:
+                to_proc += list(unchanged_files[x])
         for fi in to_proc:
             temp_loc = prt_temp_loc(fi)
             for cmd in postproc_if_changed[temp_loc]:
                 run_postproc[cmd] = True
         for cmd in run_postproc:
-            print("Postproc: running", cmd, "for", fname)
+            print("Postproc: running", cmd)
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
@@ -874,6 +886,7 @@ if in_file:
     else:
         my_file_list_valid = [in_file]
         get_file(in_file)
+        internal_postproc_stuff()
         postopen_stub()
     exit()
 
@@ -883,7 +896,7 @@ if not exe_proj:
         exe_proj = i7.dir2proj(myd, True)
         print("Going with project from current directory", exe_proj)
     else:
-        if not default_proj:
+        if not def_proj:
             sys.exit("No default project defined, and I could not determine anything from the current directory or command line. Bailing.")
         print("Going with default", def_proj)
         exe_proj = def_proj
@@ -892,8 +905,12 @@ if verify_nudges:
     q = glob.glob("reg-*.txt")
     nudge_overall = 0
     for q1 in q:
-        if 'nudmis' in q1: continue
-        if 'nudges' in q1: continue
+        if 'nudmis' in q1:
+            print("Expected nudges in", q1)
+            continue
+        if 'nudges' in q1:
+            print("Ignoring old nudge file", q1)
+            continue
         if 'roi-' in q1: continue
         print("Checking nudges (generally valid for Stale Tales Slate only) for", q1)
         nudge_this = 0
