@@ -35,6 +35,7 @@ new_files = defaultdict(list)
 changed_files = defaultdict(list)
 unchanged_files = defaultdict(list)
 postproc_if_changed = defaultdict(list)
+ignores = defaultdict(str)
 
 rbr_config = 'c:/writing/scripts/rbr.txt'
 
@@ -333,6 +334,10 @@ def viable_untested(my_cmd, my_ignores):
             return False
     return True
 
+def proj_of(file_name):
+    temp = os.path.basename(file_name).split('-')[1]
+    return temp
+
 def get_file(fname):
     check_main_file_change = False
     got_any_test_name = False
@@ -356,7 +361,8 @@ def get_file(fname):
     strict_name_local = False
     last_atted_command = ""
     untested_commands = defaultdict(list)
-    untested_ignore = [ 'n', 's', 'e', 'w', 'purloin *', 'gonear *', 'abstract *', 'undo', 'z', 'd', 'in', 'out', 'gs', 'slon' ] # ?? put this into rbr.txt
+    untested_ignore = list(ignores['global'])
+    untested_ignore.extend(x for x in ignores[proj_of(fname)] if x not in ignores['global'])
     untested_default = list(untested_ignore)
     wrong_lines = []
     last_cmd_line = -1
@@ -766,7 +772,7 @@ with open(rbr_config) as file:
                 x = a.split("/")
                 for y in x[1].split("+"):
                     if y in cur_proj:
-                        print("WARNING REDEFINITION of branch_check key {} in {} at line {}.".format(y, cur_proj, line_count))
+                        print("WARNING REDEFINITION of branch_check key {} in {} at line {}.".format(y, cur_proj, lc))
                     branch_check[cur_proj][y] = x[0]
             continue
         if ll.startswith('branchfiles'):
@@ -774,12 +780,30 @@ with open(rbr_config) as file:
             if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = vars.split(",")
             if cur_proj in i7.i7x.keys(): branch_list[i7.i7x[cur_proj]] = vars.split(",")
             continue
+        if ll.startswith("ignoreglobal"):
+            if 'global' in ignores:
+                print("Redef of IGNOREGLOBAL at line {}.".format(lc))
+            y = ll.split('=')
+            if '=' not in ll:
+                print(ll, 'in line', lc, ll, 'needs an =')
+                continue
+            ignores['global'] = y[1].strip().split(",")
+            continue
+        if ll.startswith("ignorelocal"):
+            if cur_proj in ignores:
+                print("Redef of IGNORELOCAL for {} at line {}.".format(cur_proj, lc))
+            y = ll.split('=')
+            if '=' not in ll:
+                print(ll, 'in line', lc, ll, 'needs an =')
+                continue
+            ignores[cur_proj] = y[1].strip().split(",")
+            continue
         if ll.startswith('montyfiles'):
             mfi = vars.split("\t")
-            for x in mfi:
-                y = x.split("=")
-                if '=' not in x:
-                    print(x, 'in line', line_count, ll, 'needs an =')
+            for ll in mfi:
+                y = ll.split("=")
+                if '=' not in ll:
+                    print(ll, 'in line', lc, ll, 'needs an =')
                     continue
                 z = y[1].split(',')
                 for z0 in z:
