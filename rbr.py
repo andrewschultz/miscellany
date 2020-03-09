@@ -42,7 +42,7 @@ rbr_config = 'c:/writing/scripts/rbr.txt'
 ignore_first_file_changes = False
 force_postproc = False
 github_okay = False
-flag_all_brackets = False
+flag_all_brackets = True
 edit_individual_files = False
 verify_nudges = False
 always_be_writing = False
@@ -116,9 +116,12 @@ def should_be_nudge(x):
     if re.search("(spechelp|mistake|nudge)", x): return True
     return False
 
-def fill_vars(my_line, file_idx):
+def fill_vars(my_line, file_idx, line_count, print_errs):
     for q in re.findall("\{[A-Z]+\}", my_line):
         #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
+        if q[1:-1] not in branch_variables:
+            if print_errs: print("Bad variable", q[1:-1], "at", line_count)
+            continue
         my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
     return my_line
 
@@ -127,6 +130,7 @@ def string_fill(var_line):
     for q in re.findall("\{\$[A-Z]+\}", var_line):
         q0 = q[2:-1]
         if q0 not in my_strings:
+            print(q0, my_strings)
             print("WARNING unrecognized string {}.".format(q0))
             continue
         temp = re.sub("\{\$" + q0 + "\}", my_strings[q0], temp)
@@ -184,6 +188,7 @@ def basic_bad_apostrophes(my_line):
         return False
     
 def vet_potential_errors(line, line_count, cur_pot):
+    global cur_flag_brackets
     if basic_bad_apostrophes(line):
         print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
         return True
@@ -206,6 +211,7 @@ def vet_potential_errors(line, line_count, cur_pot):
         generic_bracket_error[lmod] += 1
         if flag_all_brackets:
             if max_flag_brackets and cur_flag_brackets > max_flag_brackets: return False
+            cur_flag_brackets += 1
             print(cur_flag_brackets, "Text replacement/brackets artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             return True
     return False
@@ -247,14 +253,17 @@ def search_for(x):
     if not got_count: print("Found nothing for", x)
     exit()
 
-def post_copy(file_array, in_file):
+def post_copy(file_array, in_file): #todo: move this to postproc function
     if copy_over_post:
         if force_all_regs:
             print("Copying all files over to PRT directory.")
             for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
         elif len(changed_files.keys()):
-            print("Copying changed files over to PRT directory: {}".format(", ".join(changed_files)))
-            for q in changed_files.keys(): copy(q, os.path.join(i7.prt, os.path.basename(q)))
+            print("Copying changed files over to PRT directory.")
+            for q in changed_files.keys():
+                print(q, "=>", ', '.join(changed_files[q]))
+                for r in changed_files[q]:
+                    copy(r, os.path.join(i7.prt, os.path.basename(r)))
         elif len(my_file_list_valid) == 1:
             print("No files copied over to PRT directory. Try -fp or -pf to force copying of all files encompassed by", in_file)
 
@@ -366,8 +375,10 @@ def get_file(fname):
     untested_default = list(untested_ignore)
     wrong_lines = []
     last_cmd_line = -1
+    branch_variables.clear()
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            line_orig = line.strip()
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
                     if any(x.isdigit() for x in line):
@@ -485,14 +496,18 @@ def get_file(fname):
                     file_list.append(f)
                 continue
             if not len(file_array): continue # allows for comments at the start
+            if line.startswith(")"):
+                print("WARNING line starting with ) may need to start with } instead.", fname, line_count)
             if line.startswith("}$"):
                 temp_ary = line[2:].strip().split("=")
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
+                last_atted_command = ""
                 continue
             if line.startswith("}}"):
                 if len(file_array) == 0:
                     sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
                 branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
+                last_atted_command = ""
                 continue
             if line.strip() == "==!" or line.strip() == "@!":
                 actives = [not x for x in actives]
@@ -552,7 +567,7 @@ def get_file(fname):
             if line.startswith("==!") or line.startswith("==-") or line.startswith("==^") or line.startswith("==!t") or line.startswith("@!"):
                 if not line.startswith("@!"):
                     print("@! is the preferred syntax. ==!t, etc., should be deprecated or mapped to strings. Line {} of {}.".format(line_count, fname))
-                    line = re.sub("==(!|-|\^|!t", "", line)
+                    line = re.sub("==(!|-|\^|t)", "", line)
                 else:
                     line = line[2:]
                 actives = [True] * len(actives)
@@ -585,7 +600,7 @@ def get_file(fname):
                 continue
             if line.startswith("==t"):
                 if temp_diverge:
-                    print("ERROR: located second temporary divergence in {} with ==t at line {}: {}".format(fname, line_count, line.strip()))
+                    print("ERROR: located second temporary divergence in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
                     mt.add_postopen(fname, line_count)
                 old_actives = list(actives)
                 temp_diverge = True
@@ -626,6 +641,7 @@ def get_file(fname):
             if debug and line.startswith(">"): print(act(actives), line.strip())
             if last_atted_command and not line.startswith("#") and not line.startswith(">"):
                 last_atted_command = ""
+            first_file = True
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
@@ -637,10 +653,11 @@ def get_file(fname):
                             #print("BEFORE:", line_write.strip())
                             line_write = string_fill(line_write)
                             #print("AFTER:", line_write.strip())
-                        line_write_2 = fill_vars(line_write, ct)
+                        line_write_2 = fill_vars(line_write, ct, line_count, first_file)
                         #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
                         file_list[ct].write(line_write_2)
                     last_cr[ct] = len(line_write.strip()) == 0
+                    first_file = False
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if dupe_val < len(actives) and actives[dupe_val]:
                 if dupe_file_name:
@@ -888,6 +905,10 @@ if strict_name_force_on and strict_name_force_off:
     sys.exit("Conflicting force-strict options on command line. Bailing.")
 
 my_dir = os.getcwd()
+
+if my_dir == "c:\\games\\inform\\prt":
+    sys.exit("Can't run from the PRT directory. Move to an Inform source directory.")
+
 if 'github' in my_dir.lower():
     if not github_okay:
         sys.exit("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory.")
