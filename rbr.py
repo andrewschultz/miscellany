@@ -119,33 +119,34 @@ def should_be_nudge(x):
 def fill_vars(my_line, file_idx, line_count, print_errs):
     for q in re.findall("\{[A-Z]+\}", my_line):
         #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
-        if q[1:-1] not in branch_variables:
-            if print_errs: print("Bad variable", q[1:-1], "at", line_count)
+        qt = q[1:-1]
+        if qt not in branch_variables:
+            if print_errs: print("Bad variable", qt, "at", line_count)
+            if qt in my_strings: print("  Maybe add a $ as there is such a string variable.")
             continue
         my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
     return my_line
 
-def string_fill(var_line):
+def string_fill(var_line, line_count):
     temp = var_line
     for q in re.findall("\{\$[A-Z]+\}", var_line):
         q0 = q[2:-1]
         if q0 not in my_strings:
-            print(q0, my_strings)
-            print("WARNING unrecognized string {}.".format(q0))
+            print("WARNING line {} unrecognized string {}.".format(line_count, q0)) #?? printed more than once e.g. put in a bogus string at end
+            if q0 in branch_variables: print("  Maybe get rid of the $ as there is such a variable.")
             continue
         temp = re.sub("\{\$" + q0 + "\}", my_strings[q0], temp)
     return temp
 
 def branch_variable_adjust(var_line, err_stub, actives):
+    if '+' not in var_line and '-' not in var_line and '=' not in var_line:
+        print("ERROR need +/-/= in variable-adjust {}.".format(err_stub))
+        return
     temp = var_line.replace(' ', '')
     #print("temp", temp)
     my_var = re.sub("[-=\+].*", "", temp).upper()
     my_op = re.sub(".*?([-=\+]+).*", r'\1', temp)
-    my_num = re.sub(".*?[-=\+]+", "", temp)
-    if my_num:
-        my_num = int(my_num)
-    else:
-        my_num = 0
+    text_num = re.sub(".*?[-=\+]+", "", temp)
     #print("my_var", my_var)
     #print("my_op", my_op)
     #print("my_num", my_num)
@@ -157,10 +158,18 @@ def branch_variable_adjust(var_line, err_stub, actives):
             if not x:
                 print("WARNING tried to define a variable {} when not all files were active {}.".format(my_var, err_stub))
                 return
-        branch_variables[my_var] = [my_num] * len(actives)
+        branch_variables[my_var] = [int(text_num)] * len(actives)
     #print("Before:", my_var, branch_variables[my_var])
     for q in range(0, len(actives)):
         if not actives[q]: continue
+        if text_num:
+            if text_num in branch_variables: # this is very bad at the moment as we could have VAR+=OTHERVAR, but for now we just use ==
+                branch_variables[my_var][q] = branch_variables[text_num][q]
+                continue
+            else:
+                my_num = int(text_num)
+        else:
+            my_num = 0
         if my_op == "++":
             branch_variables[my_var][q] += 1
         elif my_op == "--":
@@ -174,7 +183,7 @@ def branch_variable_adjust(var_line, err_stub, actives):
         elif my_op == "=":
             branch_variables[my_var][q] = my_num
         else:
-            print("Unknown operator {} {}.".format(my_var, err_stub))
+            print("{} {} {}.".format("Unknown operator" if len(my_op) < 3 else "Likely badly formed variable adjust", my_var, err_stub))
     #print("After:", my_var, branch_variables[my_var])
     return
 
@@ -332,7 +341,7 @@ def write_monty_file(fname, testnum):
     return
 
 def no_parser(cmd):
-    return re.sub("^> *", "", cmd)
+    return re.sub("^>+ *", "", cmd)
 
 def viable_untested(my_cmd, my_ignores):
     for q in my_ignores:
@@ -498,6 +507,8 @@ def get_file(fname):
             if not len(file_array): continue # allows for comments at the start
             if line.startswith(")"):
                 print("WARNING line starting with ) may need to start with } instead.", fname, line_count)
+            if line.startswith("{{"):
+                print("WARNING line starting with {{ may need to start with } instead.", fname, line_count)
             if line.startswith("}$"):
                 temp_ary = line[2:].strip().split("=")
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
@@ -554,6 +565,8 @@ def get_file(fname):
                 if always_be_writing and len(actives):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
+                if line.startswith(">>"):
+                    print("ERROR: double prompt at line", line_count, "of", fname)
                 last_cmd = line.lower().strip()
                 if at_section:
                     if last_atted_command and viable_untested(last_atted_command,untested_ignore):
@@ -651,7 +664,7 @@ def get_file(fname):
                     else:
                         if "{$" in line_write:
                             #print("BEFORE:", line_write.strip())
-                            line_write = string_fill(line_write)
+                            line_write = string_fill(line_write, line_count)
                             #print("AFTER:", line_write.strip())
                         line_write_2 = fill_vars(line_write, ct, line_count, first_file)
                         #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
