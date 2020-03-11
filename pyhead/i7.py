@@ -124,6 +124,25 @@ def zap_end_brax(x):
         x = re.sub(" *\[.*?\]", "", x)
     return x
 
+def cols_of(file_name, table_name, default_value = 0):
+    if not os.path.exists(file_name):
+        print("Going with default value {} for {} # of columns as {} doesn't exist.".format(default_value, table_name, file_name))
+        return default_value
+    check_next = False
+    with open(file_name) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.lower().startswith(table_name.lower()):
+                check_next = True
+                continue
+            if check_next:
+                line = re.sub("[ \t]*\[[^\]]*\]", "", line)
+                retval = len(line.split("\t"))
+                if default_value and warn_if_different and default_value != ret_val:
+                    print("WARNING: return value {} different from default value {}.".format(retval, default_value))
+                return retval
+    print("Did not find table name {} in {}. Returning default value {} for # of columns.".format(table_name, file_name, default_value))
+    return default_value
+
 def column_from_header_line(x, line, file_name = "", file_line = 0):
     line = line.strip()
     ary = [mt.zap_trail_paren(temp).lower() for temp in line.lower().split("\t")]
