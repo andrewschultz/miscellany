@@ -1,4 +1,5 @@
 # rbr.py: regression brancher
+# rbr.py: regression brancher
 #
 # takes an rbr*.txt file and separates it into many reg-*
 #
@@ -385,6 +386,8 @@ def get_file(fname):
     wrong_lines = []
     last_cmd_line = -1
     branch_variables.clear()
+    balance_undos = False
+    net_undos = 0
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             line_orig = line.strip()
@@ -393,6 +396,11 @@ def get_file(fname):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
+            if line.startswith("##balance undos"):
+                balance_undos = True
+                net_undos = 0
+                balance_start = line_count
+                continue
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
                 if "#skip test checking" in line:
                     last_atted_command = ""
@@ -407,6 +415,11 @@ def get_file(fname):
                         mt.add_postopen(fname, line_count, priority=10)
                         last_atted_command = ''
                 at_section = ''
+                if balance_undos:
+                    if net_undos:
+                        print("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.".format(net_undos, balance_start, line_count, fname))
+                    net_undos = 0
+                    balance_undos = False
             if line.startswith('=='):
                 last_eq = line_count
             if line.startswith('#'):
@@ -565,6 +578,17 @@ def get_file(fname):
                 if always_be_writing and len(actives):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
+                if balance_undos:
+                    if line[1:].strip().startswith("undo"):
+                        net_undos -= 1
+                        if net_undos < 0:
+                            print("Net undos below 0 in balanced block line {} file {}.".format(line_count, fname))
+                            mt.add_postopen(fname, line_count)
+                    else:
+                        net_undos += 1
+                        if net_undos > 10:
+                            print("Net undos over 10 in balanced block line {} file {}--Inform may not be able to go that far back.".format(line_count, fname))
+                            mt.add_postopen(fname, line_count)
                 if line.startswith(">>"):
                     print("ERROR: double prompt at line", line_count, "of", fname)
                 last_cmd = line.lower().strip()
