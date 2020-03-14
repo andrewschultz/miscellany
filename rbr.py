@@ -341,6 +341,12 @@ def write_monty_file(fname, testnum):
         copy(from_file, to_file)
     return
 
+def potentially_faulty_regex(test_line):
+    if "|" in line or "\" in line:
+        if not line.startswith("/") and not line.startswith("#"):
+            return True
+    return False
+
 def no_parser(cmd):
     return re.sub("^>+ *", "", cmd)
 
@@ -387,6 +393,7 @@ def get_file(fname):
     last_cmd_line = -1
     branch_variables.clear()
     balance_undos = False
+    track_baance_undos = False
     net_undos = 0
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -398,9 +405,13 @@ def get_file(fname):
                         mt.add_postopen(fname, line_count, priority=8)
             if line.startswith("##balance undos"):
                 balance_undos = True
+                track_balance_undos = 'trace' in line or 'track' in line
+                balance_trace = []
                 net_undos = 0
                 balance_start = line_count
                 continue
+            if potentially_faulty_regex(line):
+                print("WARNING", fname, line_count, "may need starting slash for regex:", line_orig)
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
                 if "#skip test checking" in line:
                     last_atted_command = ""
@@ -584,8 +595,16 @@ def get_file(fname):
                         if net_undos < 0:
                             print("Net undos below 0 in balanced block line {} file {}.".format(line_count, fname))
                             mt.add_postopen(fname, line_count)
+                        if track_balance_undos:
+                            try:
+                                balance_trace.pop()
+                            except:
+                                pass
                     else:
                         net_undos += 1
+                        if track_balance_undos:
+                            balance_trace.append(line[1:].strip())
+                            print('TRACE:', line_count, ' / '.join(balance_trace))
                         if net_undos > 10:
                             print("Net undos over 10 in balanced block line {} file {}--Inform may not be able to go that far back.".format(line_count, fname))
                             mt.add_postopen(fname, line_count)
