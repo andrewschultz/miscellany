@@ -58,7 +58,7 @@ def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML 
 	f.close()
 	if launch: os.system(out_file)
 
-def num_index_from_text(my_line, my_index = 0):
+def num_value_from_text(my_line, my_index = 0):
     nums = re.findall("[0-9]+", my_line)
     try:
         return int(nums[my_index])
@@ -163,7 +163,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     print("No shuffle-diffs")
     return True
 
-compare_shuffled_lines = cal = calf = compare_alphabetized_lines
+cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
 def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
@@ -173,11 +173,15 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
 
 def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True, priority = 10):
     if file_line <= 0 and reject_nonpositive_line: return
-    if file_name in file_post_list: file_extra_edit[file_name] = True
+    if file_name in file_post_list:
+        try:
+            file_extra_edit[file_name] += 1
+        except:
+            file_extra_edit[file_name] = 1
     if rewrite or file_name not in file_post_list or priority not in file_post_list[file_name]:
         file_post_list[file_name][priority] = file_line
 
-add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
+add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
 def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.1):
     if len(file_post_list):
@@ -188,8 +192,9 @@ def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.
             bnx = os.path.basename(x)
             if x in file_extra_edit:
                 print(file_extra_edit[x], "total extra edits for", bnx)
-            if l > 1:
-                print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(l, bnx))
+            el = len(file_post_list[x])
+            if el > 1:
+                print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
             npo(x, file_post_list[x][m], bail = False)
             count += 1
             if count < 0:
@@ -197,6 +202,8 @@ def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.
     elif acknowledge_blank:
         print("There weren't any files slated for opening/editing.")
     if bail_after: sys.exit()
+
+post_open = postopen = postopen_files
 
 def open_source(bail = True):
     npo(main.__file__)
