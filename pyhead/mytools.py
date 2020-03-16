@@ -171,6 +171,16 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True):
     os.system(cmd)
     if bail: exit()
 
+def open_this(bail = True):
+    try:
+        npo(main.__file__, bail=bail)
+    except Exception as e:
+        print("Could not open source", main.__file__)
+        print("Error thrown:")
+        print(e)
+        if bail:
+            exit()
+
 def add_postopen_file_line(file_name, file_line, rewrite = False, reject_nonpositive_line = True, priority = 10):
     if file_line <= 0 and reject_nonpositive_line: return
     if file_name in file_post_list:
