@@ -40,6 +40,8 @@ ignores = defaultdict(str)
 
 rbr_config = 'c:/writing/scripts/rbr.txt'
 
+branch_timestamp_skip_check = True
+
 ignore_first_file_changes = False
 force_postproc = False
 github_okay = False
@@ -95,6 +97,9 @@ def can_make_rbr(x, verbose = False):
         if verbose: print(x, "doesn't exist but {}.{} does. Adding extension.".format(x, "txt"))
         return x + ".txt" # small but real possibility there may be something like vv.txt which would mess things up
     return ""
+
+def no_new_branch_edits(x):
+    return False
 
 def prt_temp_loc(x):
     return os.path.normpath(os.path.join(i7.prt_temp, x))
@@ -342,7 +347,7 @@ def write_monty_file(fname, testnum):
     return
 
 def potentially_faulty_regex(test_line):
-    if "|" in line or "\" in line:
+    if "|" in line or "\\" in line:
         if not line.startswith("/") and not line.startswith("#"):
             return True
     return False
@@ -393,8 +398,8 @@ def get_file(fname):
     last_cmd_line = -1
     branch_variables.clear()
     balance_undos = False
-    track_baance_undos = False
-    net_undos = 0
+    track_balance_undos = False
+    ignore_extra_undos = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             line_orig = line.strip()
@@ -403,11 +408,12 @@ def get_file(fname):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
-            if line.startswith("##balance undos"):
+            if line.startswith("##balance undo"):
+                balance_error_yet = False
                 balance_undos = True
                 track_balance_undos = 'trace' in line or 'track' in line
+                ignore_extra_undos = 'ignore-neg' in line
                 balance_trace = []
-                net_undos = 0
                 balance_start = line_count
                 continue
             if potentially_faulty_regex(line):
@@ -427,9 +433,8 @@ def get_file(fname):
                         last_atted_command = ''
                 at_section = ''
                 if balance_undos:
-                    if net_undos:
-                        print("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.".format(net_undos, balance_start, line_count, fname))
-                    net_undos = 0
+                    if len(balance_trace):
+                        print("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
                     balance_undos = False
             if line.startswith('=='):
                 last_eq = line_count
@@ -440,7 +445,7 @@ def get_file(fname):
                         warns_so_far += 1
                         print("WARNING {} file {} line {} (last @/eq={}) has section {}, needs {} for comment {}.".format(warns_so_far, fname, line_count, lae, at_section if at_section else "<blank>", branch_check[exe_proj][x], line.strip()))
                         mt.add_postopen(fname, line_count, priority=7)
-            if line.startswith("{--"):
+            if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "")
                 very_temp_array = [int(x) for x in vta[3:].split(",")]
@@ -465,7 +470,7 @@ def get_file(fname):
                     else:
                         untested_ignore.remove(x)
                 continue
-            if line.startswith("ALSO-IGNORE:"):
+            if line.startswith("ALSO-IGNORE:") or line.startswith("ALSO_IGNORE"):
                 l = re.sub("^.*?:", "", line.strip().lower())
                 if not l:
                     untested_ignore = list(untested_default)
@@ -591,21 +596,21 @@ def get_file(fname):
             if line.startswith(">"):
                 if balance_undos:
                     if line[1:].strip().startswith("undo"):
-                        net_undos -= 1
-                        if net_undos < 0:
-                            print("Net undos below 0 in balanced block line {} file {}.".format(line_count, fname))
-                            mt.add_postopen(fname, line_count)
-                        if track_balance_undos:
-                            try:
+                        try:
+                            temp_cmd = balance_trace.pop()
+                            if temp_cmd == 'no' or temp_cmd == 'yes':
                                 balance_trace.pop()
-                            except:
-                                pass
+                        except:
+                            if not ignore_extra_undos: # we might be ok with an extra undo. It's bad scripting, but it's ok.
+                                print("Uh oh, too many undos at file {} line {} in block starting at line {}".format(fname, line_count, balance_start))
+                                mt.add_postopen(fname, line_count)
+                                balance_error_yet = True
                     else:
-                        net_undos += 1
+                        balance_trace.append(line[1:].strip())
                         if track_balance_undos:
-                            balance_trace.append(line[1:].strip())
                             print('TRACE:', line_count, ' / '.join(balance_trace))
-                        if net_undos > 10:
+                        if not balance_error_yet and len(balance_trace) > 10:
+                            balance_error_yet = True
                             print("Net undos over 10 in balanced block line {} file {}--Inform may not be able to go that far back.".format(line_count, fname))
                             mt.add_postopen(fname, line_count)
                 if line.startswith(">>"):
@@ -764,6 +769,9 @@ def get_file(fname):
         elif cmp(x, xb):
             unchanged_files[fname].append(xb)
         else:
+            if xb in changed_files:
+                print("Oh no! two RBR files seem to point to", xb)
+                continue
             changed_files[fname].append(xb)
             copy(x, xb)
         os.remove(x)
@@ -1060,6 +1068,9 @@ if len(my_file_list_valid) == 0:
     sys.exit("Uh oh, no valid files left after initial check. Bailing.")
 
 for x in my_file_list_valid:
+    if branch_timestamp_skip_check and no_new_branch_edits(x):
+        print("Skipping", x, "for no new edits.")
+        continue
     get_file(x)
 
 internal_postproc_stuff()
