@@ -246,7 +246,7 @@ def replace_mapping(x, my_f, my_l):
     my_matches = []
     for q in y.split(","):
         if q != q.strip():
-            print("WARNING extra space {} line {}".format(my_l, my_f))
+            print("WARNING extra space {} line {} in file-mapping.".format(my_f, my_l))
             q = q.strip()
         if q not in to_match.keys():
             print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
@@ -448,7 +448,7 @@ def get_file(fname):
             if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "")
-                very_temp_array = [int(x) for x in vta[3:].split(",")]
+                very_temp_array = [to_match[x] if x in to_match else int(x) for x in vta[3:].split(",")]
                 for q in very_temp_array:
                     file_list[q].write(re.sub("\\", "\n", vta_after))
                 continue
@@ -487,6 +487,9 @@ def get_file(fname):
                 eq_array = line.strip().lower().split("\t")
                 if len(eq_array) != 3: sys.exit("Bad equivalence array at line {} of file {}: needs exactly two tabs.".format(line_count, fname))
                 ary2 = eq_array[1].split(",")
+                final_digit = int(eq_array[2][1:])
+                if final_digit >= len(actives):
+                    print("WARNING ~ maps to nonexistent file at line {}. {} should not be more than {}.".format(line_count, final_digit, len(actives)-1))
                 for a in ary2:
                     if a in to_match:
                         print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fname))
@@ -673,7 +676,7 @@ def get_file(fname):
                     try:
                         if x.isdigit(): actives[int(x)] = not towhich
                     except:
-                        print("uh oh went boom on", x, "at line", line_count)
+                        print("uh oh went out of array bounds trying to load file", x, "at line", line_count, "with only", len(actives) - 1, "as max")
                         exit()
                 continue
             if line.startswith("==c-"):
