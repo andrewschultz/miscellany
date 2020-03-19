@@ -59,6 +59,7 @@ wrong_check = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
+ignore_next_bracket = False
 
 quiet = False
 copy_over_post = True
@@ -219,7 +220,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     if '[if' in line or '[unless' in line or '[one of]' in line:
         print(cur_pot+1, "Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
         return True
-    if '[' in line and ']' in line and not line.startswith('#'):
+    if '[' in line and ']' in line and not line.startswith('#') and not ignore_next_bracket:
         lmod = re.sub("^[^\[]*\[", "", line.strip())
         lmod = re.sub("\].*", "", lmod)
         lmod = "{:d} {:s}".format(line_count, lmod)
@@ -369,6 +370,7 @@ def proj_of(file_name):
     return temp
 
 def get_file(fname):
+    global ignore_next_bracket
     check_main_file_change = False
     got_any_test_name = False
     dupe_val = 1
@@ -495,6 +497,9 @@ def get_file(fname):
                         print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fname))
                     to_match[a] = eq_array[2]
                 continue
+            if line.startswith("#brackets ok") or line.startswith("#ignore next bracket") or line.startswith("#ignore bracket"):
+                ignore_next_bracket = True
+                continue
             if line.startswith("*") and line[1] != '*': got_any_test_name = True
             if line.startswith("preproc="):
                 if len(file_array) > 0:
@@ -575,6 +580,7 @@ def get_file(fname):
             if vet_potential_errors(line, line_count, warns):
                 mt.add_postopen(fname, line_count, priority=5)
                 warns += 1
+            ignore_next_bracket = False
             ignore_apostrophe_warnings = False
             if line.startswith("dupefile="):
                 dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
