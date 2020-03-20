@@ -79,6 +79,15 @@ def postopen_stub():
     print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
     mt.postopen_files()
 
+def abbrevs_to_ints(my_ary):
+    my_ary_1 = [to_match[x] if x in to_match else x for x in my_ary]
+    try:
+        my_ary_2 = [int(x[1:]) for x in my_ary_1]
+    except:
+        print("Bad array", my_ary, my_ary_1)
+        sys.exit()
+    return my_ary_2
+
 def name_or_num(my_string):
     try:
         return int(my_string)
@@ -202,7 +211,7 @@ def basic_bad_apostrophes(my_line):
             my_line = my_line.replace(x, "OKAY PHRASE")
     if not(line.startswith("'") or line.strip().endswith("'") or " '" in line):
         return False
-    
+
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
     if basic_bad_apostrophes(line):
@@ -402,6 +411,7 @@ def get_file(fname):
     balance_undos = False
     track_balance_undos = False
     ignore_extra_undos = False
+    temp_diverge_warned = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             line_orig = line.strip()
@@ -449,10 +459,11 @@ def get_file(fname):
                         mt.add_postopen(fname, line_count, priority=7)
             if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
                 vta_before = re.sub("\}.*", "", line.strip())
-                vta_after = re.sub("^.*?\}", "")
-                very_temp_array = [to_match[x] if x in to_match else int(x) for x in vta[3:].split(",")]
+                vta_after = re.sub("^.*?\}", "", line.strip())
+                very_temp_array = abbrevs_to_ints(vta_before[3:].split(","))
+                u = vta_after.replace("\\\\", "\n")
                 for q in very_temp_array:
-                    file_list[q].write(re.sub("\\", "\n", vta_after))
+                    file_list[q].write(u)
                 continue
             if wrong_check and line.startswith("WRONG"):
                 wrong_lines.append(line_count)
@@ -670,7 +681,10 @@ def get_file(fname):
                 continue
             if line.startswith("==t"):
                 if temp_diverge:
-                    print("ERROR: located second temporary divergence in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
+                    print("ERROR: located second file branch array in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
+                    if not temp_diverge_warned:
+                        print("    (to make a temporary branch, use brackets and dashes as so: {--F1,F2}")
+                        temp_diverge_warned = True
                     mt.add_postopen(fname, line_count)
                 old_actives = list(actives)
                 temp_diverge = True
