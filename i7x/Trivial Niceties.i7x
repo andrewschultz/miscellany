@@ -282,12 +282,12 @@ to drop-player-at (myrm - a room):
 
 chapter basic consents
 
-[ "if the player direct-consents" is useful for when I am running a regex script and want to test full yes/no behavior, especially if I need to undo.
+[ "if the player regex-prompt-consents" is useful for when I am running a regex script and want to test full yes/no behavior, especially if I need to undo.
   "if the player switch-consents" is useful for when I want to say no automatically. ]
 
-to decide whether the player direct-consents:
+to decide whether the player regex-prompt-consents: [used to be (mis)named "direct-consents"]
 	if debug-state is true:
-		say "[line break]> ";
+		say "[line break]FOR TESTING: WE NEED A Y OR N.[line break]> ";
 	if the player consents, decide yes;
 	decide no;
 
@@ -333,10 +333,12 @@ understand the command "au" as something new.
 understand "au [number]" as auing.
 
 carry out auing:
-	if number understood > 1 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
-	if number understood is yn-auto, say "It's already set to [auto-set]." instead;
+	if number understood > 2 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
+	let temp be number understood;
+	if temp is 2, now temp is -1;
+	if temp is yn-auto, say "It's already set to [auto-set]." instead;
 	say "Y/N responses changed from [auto-set] to ";
-	now yn-auto is number understood;
+	now yn-auto is temp;
 	say "[auto-set].";
 	the rule succeeds;
 
