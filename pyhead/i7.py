@@ -498,7 +498,10 @@ tefi = test_file
 
 def triz_map_of(x):
     x2 = proj_exp(x)
-    return os.path.join(triz_dir, "{:s}.trizbort".format(dictish(x2, i7x)))
+    base_name = dictish(x2, i7triz)
+    if not base_name:
+        base_name = dictish(x2, i7x)
+    return os.path.join(triz_dir, "{:s}.trizbort".format(base_name))
 
 triz = triz_file = triz_map = triz_map_of
 
@@ -539,20 +542,37 @@ def has_ni(x):
     if os.path.exists(os.path.join(my_proj, "story.ni")): return True
     return False
 
-def proj2root(x):
+def dir2proj(x = os.getcwd(), to_abbrev = False):
+    x0 = x.lower()
+    x2 = ""
+    if os.path.exists(x0 + "\\story.ni") or ".inform" in x: # this works whether in the github or inform directory
+        x2 = re.sub("\.inform.*", "", x0)
+        x2 = re.sub(".*[\\\/]", "", x2)
+    elif " materials" in x0:
+        x2 = re.sub(" materials.*", "", x0)
+        x2 = re.sub(".*[\\\/]", "", x2)
+    elif re.search("documents.github..", x0):
+        x2 = re.sub(".*documents.github.", "", x0, 0, re.IGNORECASE)
+        x2 = re.sub("[\\\/].*", "", x2)
+        if not re.search("[a-z]", x2): return ""
+    if "\\" in x2 or "/" in x2 or not x2: return ""
+    if to_abbrev and x2 in i7xr: return i7xr[x2]
+    return x2
+
+def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x):
+def proj2dir(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))
 
 sdir = p2d = proj2dir
 
-def proj2mat(x):
+def proj2mat(x = dir2proj()):
     return "c:\\games\\inform\\{:s} Materials".format(proj_exp(x))
 
 matdir = proj2mat
 
-def proj2matr(x):
+def proj2matr(x = dir2proj()):
     return "c:\\games\\inform\\{:s} Materials\\Release".format(proj_exp(x))
 
 matrel = proj2matr
@@ -576,23 +596,6 @@ def go_proj(x):
     return
 
 go_p = proj_dir = to_proj = go_proj
-
-def dir2proj(x = os.getcwd(), to_abbrev = False):
-    x0 = x.lower()
-    x2 = ""
-    if os.path.exists(x0 + "\\story.ni") or ".inform" in x: # this works whether in the github or inform directory
-        x2 = re.sub("\.inform.*", "", x0)
-        x2 = re.sub(".*[\\\/]", "", x2)
-    elif " materials" in x0:
-        x2 = re.sub(" materials.*", "", x0)
-        x2 = re.sub(".*[\\\/]", "", x2)
-    elif re.search("documents.github..", x0):
-        x2 = re.sub(".*documents.github.", "", x0, 0, re.IGNORECASE)
-        x2 = re.sub("[\\\/].*", "", x2)
-        if not re.search("[a-z]", x2): return ""
-    if "\\" in x2 or "/" in x2 or not x2: return ""
-    if to_abbrev and x2 in i7xr: return i7xr[x2]
-    return x2
 
 sproj = d2p = dir2proj
 
@@ -740,6 +743,8 @@ def search_defs(my_file_array, print_defs = False, print_success = True):
     if type(my_file_array) == str:
         my_file_array = [ my_file_array ]
     for my_file in my_file_array:
+        mf = os.path.basename(my_file).lower()
+        if 'definitions' in mf: continue
         this_failed = False
         with open(my_file) as file:
             for (line_count, line) in enumerate(file, 1):
@@ -747,7 +752,7 @@ def search_defs(my_file_array, print_defs = False, print_success = True):
                     defs_found += 1
                     this_failed = True
                     if print_defs:
-                        print("DEF {} at line {}: {}".format(defs_found, line_count, line.rstrip()))
+                        print("DEF {} at {} line {}: {}".format(defs_found, mf, line_count, line.rstrip()))
         files_passed += (defs_found == 0)
         files_failed += (defs_found != 0)
         if print_defs and defs_found == 0:
