@@ -65,6 +65,16 @@ spoon = "c:/writing/spopal.otl"
 def is_main_abb(x):
     return x == main_abb(x)
 
+def strip_name_punc(x, remove_apostrophe = True, space_dash = True):
+    temp = x
+    if space_dash:
+        temp = temp.replace('-', ' ')
+    if remove_apostrophe:
+        temp = temp.replace("'", '')
+    return temp
+
+strip_name = name_strip = strip_name_punc
+
 def main_abb(x):
     if x in i7xr:
         return i7xr[x]
