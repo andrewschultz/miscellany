@@ -185,9 +185,9 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
-def quoted_text_array_of(my_line, erase_brackets = True, get_inside = True, as_list = True):
-    temp = my_line.strip()
-    if erase_brackets: temp = re.sub("\[[^\]]*\]", "", temp)
+def quoted_text_array_of(my_line, erase_brackets = True, get_inside = True, as_list = True, bracket_replace = '/'):
+    temp = my_line.strip().replace("[']", "'")
+    if erase_brackets: temp = re.sub("\[[^\]]*\]", bracket_replace, temp)
     ary = temp.split('"')[get_inside::2]
     if as_list:
         return ary
