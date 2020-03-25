@@ -149,7 +149,7 @@ def mister(a, my_file, do_standard):
                 cmd = re.sub("understand +\"", "", l)
                 cmd = re.sub("\" as a mistake.*", "", cmd)
                 cmd = re.sub("\"", "", cmd)
-                cmd = re.sub(" and ", "/", cmd)
+                cmd = re.sub(" (and|or) ", "/", cmd)
                 if special_def != '':
                     x = special_def
                 else:
@@ -181,6 +181,9 @@ def mister(a, my_file, do_standard):
         short_fi = os.path.basename(fi)
         retest = False
         fs = os.path.basename(fi)
+        if not os.path.exists(fi):
+            print("WARNING NO FILE", fi)
+            continue
         with open(fi) as file:
             err_count = 0
             test_note = ""
@@ -270,10 +273,8 @@ def mister(a, my_file, do_standard):
             print("Writing", out_file)
             mistakes_added = 0
             with open(fi) as file:
-                count = 0
-                for line in file:
-                    count += 1
-                    if count in extra_text.keys():
+                for (line_count, line) in enumerate(file, 1):
+                    if line_count in extra_text.keys():
                         if end_room and end_room in location[count]: break
                         fout.write("##mistake test for " + extra_text[count] + "\n")
                         if print_location: fout.write("##location = " + location[count])
@@ -300,10 +301,15 @@ def mister(a, my_file, do_standard):
                             print('#{:4d} to find({:d})'.format(find_count, need_test[f]))
                     if print_location and print_output: print("##location =", location[f])
                     if print_condition and print_output: print("##condition(s)", condition[f])
-                    clip_out("#mistake test for {:s}".format(f))
+                    clip_out("@mis\n#mistake test for {:s}".format(f))
                     for ct in cmd_text[f].split('/'):
                         clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
                         clip_out(mistake_text[f] if do_standard else mistake_msg(a))
+                    if "[" in mistake_text[f]:
+                        clip_out("\n@mis\n#mistake retest for {:s}".format(f))
+                        for ct in cmd_text[f].split('/'):
+                            clip_out(">{:s}".format(re.sub("\[text\]", "zozimus", ct)))
+                            clip_out(mistake_text[f] if do_standard else mistake_msg(a))
                     if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
                     if print_output: print()
@@ -342,6 +348,7 @@ mist_data = "c:/writing/scripts/mist.txt"
 (files, smallfiles) = read_from_mist_data(mist_data)
 
 edit_data = False
+edit_data_only = False
 edit_branches = False
 edit_source = False
 run_check = False
@@ -420,7 +427,7 @@ if len(sys.argv) > 1:
 if edit_source:
     mt.open_source()
 
-if edit_data:
+if edit_data or edit_data_only:
     i7.npo(mist_data)
 
 if not write_file and not print_output and not to_clipboard:
