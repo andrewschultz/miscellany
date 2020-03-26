@@ -175,6 +175,41 @@ def mister(a, my_file, do_standard):
     # for p in sorted(need_test.keys(), key=need_test.get):
         # print(p, need_test[p])
     # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
+    if a == 'roiling':
+        got_trailing_a = False
+        in_trailing_a = False
+        read_next = False
+        with open(i7.main_src('roi')) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if "this is the trailing-a rule" in line:
+                    got_trailing_a = True
+                    in_trailing_a = True
+                if not line.strip(): in_trailing_a = False
+                if not in_trailing_a: continue
+                if re.search("if .*player is (not )?in", line):
+                    my_loc = re.sub(".* in +", "", line.strip())
+                    my_loc = re.sub(":", "", my_loc)
+                if "if the player's command exactly matches the text" in line:
+                    read_next = True
+                    my_cmd = line.split('"')[1]
+                    need_test[my_cmd] = line_count
+                    cmd_text[my_cmd] = my_cmd
+                    comment_found[my_cmd] = False
+                    continue
+                if read_next:
+                    read_next = False
+                    output_text = line.split('"')[1]
+                    mistake_text[my_cmd] = output_text
+                    found[my_cmd] = False
+                    try:
+                        location[my_cmd] = my_loc
+                        condition[my_cmd] = "in " + my_loc
+                    except:
+                        location[my_cmd] = "UNDEFINED"
+                        condition[my_cmd] = "UNKNOWN"
+                    continue
+        if not got_trailing_a:
+            print("No trailing a.")
     extra_text = defaultdict(str)
     ignore_next = False
     for fi in to_look:
