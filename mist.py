@@ -150,6 +150,8 @@ def mister(a, my_file, do_standard):
                 cmd = re.sub("\" as a mistake.*", "", cmd)
                 cmd = re.sub("\"", "", cmd)
                 cmd = re.sub(" (and|or) ", "/", cmd)
+                cmd_ary = cmd.split('"')[0::2]
+                cmd = '/'.join(cmd_ary)
                 if special_def != '':
                     x = special_def
                 else:
@@ -211,7 +213,6 @@ def mister(a, my_file, do_standard):
         if not got_trailing_a:
             print("No trailing a.")
     extra_text = defaultdict(str)
-    ignore_next = False
     for fi in to_look:
         short_fi = os.path.basename(fi)
         retest = False
@@ -219,6 +220,8 @@ def mister(a, my_file, do_standard):
         if not os.path.exists(fi):
             print("WARNING NO FILE", fi)
             continue
+        ignore_next = False
+        ignore_brackets = False
         with open(fi) as file:
             err_count = 0
             test_note = ""
@@ -230,6 +233,9 @@ def mister(a, my_file, do_standard):
                 if retest == True:
                     retest = False
                     # print("Skipping", line.strip())
+                    continue
+                if line.startswith("#brackets ok") or line.startswith("#ignore next bracket") or line.startswith("#ignore bracket"):
+                    ignore_brackets = True
                     continue
                 if line.startswith("#not a mistake") or (line.startswith("#pre-") and " rule" in line):
                     ignore_next = True
@@ -254,11 +260,12 @@ def mister(a, my_file, do_standard):
                     print('Line {} has helper text to remove: {}'.format(line_count, line.strip().lower()))
                     help_text_rm += 1
                 brax = line.count('[')
-                if bad_brackets(line):
+                if bad_brackets(line) and not ignore_brackets:
                     print(brax, 'floating ' + ('if' if '[if' in line else 'code') + '-brackets in line', line_count, 'of', short_fi, ':', line.strip().lower())
                     bracket_errs += 1
                     if to_clipboard:
                         clipboard_str += re.sub("mistake test", "mistake retest", last_mistake) + last_cmd + line + '\n'
+                ignore_brackets = False
                 retest = False
                 if line.startswith("#mistake "):
                     last_mistake = line
@@ -292,7 +299,7 @@ def mister(a, my_file, do_standard):
                             if found[ll] is False:
                                 err_count += 1
                                 if print_output:
-                                    print("({:4d}) {:14s} Line {:4d} #not a mistake/#mistake test (or define [def=special test]) for {:s}".format(err_count, fi, line_count, ll))
+                                    print("WARNING: potential false positive mistake {} {}. Insert #not a mistake if it is a legitimate command or #mistake test (or define [def=special test]) in case it is a duplicate command.".format(fi, line_count))
                                     print("    ", full_line[ll])
                                 need_comment += 1
                             extra_text[line_count] = ll
