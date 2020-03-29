@@ -24,9 +24,7 @@ carry out unxing:
 
 chapter unving
 
-a thing can be examined or unexamined. a thing is usually unexamined.
-
-unving is an action applying to one room.
+unving is an action applying to one visible thing.
 
 understand the command "unv" as something new.
 
@@ -51,13 +49,23 @@ understand "dfl [number]" as dfling.
 
 carry out dfling:
 	let Q be number understood;
-	let dset be whether or not Q > 0;
-	if Q < 0, now Q is 0 - Q;
-	if number understood > 31:
-		say "You need a flag between 1 and 31." instead;
-		choose row (number understood) in the table of debug flags
+	if Q > 31:
+		say "You need a flag between 1 and 31. You can use negative flags to flag a bunch of numbers." instead;
+	if Q > 0:
+		choose row Q in the table of debug flags;
+		now dfl-state entry is whether or not dfl-state entry is false;
+		say "Set flag [Q] [dfl-text entry] to [dfl-state entry].";
+		the rule succeeds;
+	now Q is 0 - Q;
+	let myrow be 0;
+	while myrow <= 30:
 		repeat through table of debug flags:
-			c
+			if the remainder after dividing Q by 2 is 1:
+				now dfl-state entry is true;
+				say "Set [myrow] [dfl-text entry].";
+			else:
+				now dfl-state entry is false;
+			now Q is Q / 2;
 	the rule succeeds.
 
 table of debug flags
@@ -94,6 +102,8 @@ dfl-text	dfl-state
 "test 30"	False
 
 chapter dlving
+
+debug-level is a number that varies.
 
 dlving is an action applying to one number.
 
