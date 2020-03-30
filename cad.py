@@ -1,3 +1,7 @@
+#
+# cad.py: daily Codecademy task-done checker
+#
+
 import os
 import re
 import sys
@@ -68,8 +72,8 @@ def usage(x = "General usage"):
     exit()
 
 def launch_url(x):
-    if not x.startswith("http:"):
-        print("Tried to launch {} but it was not a valid URL.")
+    if not x.startswith("http://") and not x.startswith("https://")
+        print("Tried to launch {} but it was not a valid URL.".format(x))
         return
     os.system("start " + x)
 

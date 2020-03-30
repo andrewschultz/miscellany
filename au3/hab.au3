@@ -765,6 +765,8 @@ Func ToolsTrade($times, $equipPer, $unequipPer, $check_max_mp = False, $check_cu
 
   $check_any = $check_max_mp or $check_cur_mp or $check_eq_adj
 
+  ToHab()
+
   if $check_any Then
     ClickTasks()
     $start_stat_array = find_player_stat($STAT_MP, True, True)

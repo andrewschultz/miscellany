@@ -27,6 +27,8 @@ sect_ary = []
 files_back_wanted = 1
 verbose = False
 
+my_sections_file = "c:/writing/scripts/2dy.txt"
+
 def usage(param = 'Cmd line usage'):
     print(param)
     print('=' * 50)
@@ -39,7 +41,7 @@ def usage(param = 'Cmd line usage'):
 
 def get_init_sections():
     global sect_ary
-    with open("2dy.txt") as file:
+    with open(my_sections_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
