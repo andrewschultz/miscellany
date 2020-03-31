@@ -8,8 +8,13 @@
 # or you can run it from a project source directory
 #
 
-# todo: keep postproc commands ordered
-# todo: postproc globs inside file_array
+# TODO:
+# 1 allow for ignore-list in RBR.PY e.g. if we only want to test mistakes then @nud would not be on but @mis would be
+# 2 levels of testing (1, 2) (may be similar to 1)
+# 3 search for something in rbr files and open
+# 4 keep postproc commands ordered
+# 5 postproc globs inside file_array
+# 6 eliminate duplicate file-change printouts
 
 import sys
 import re
@@ -253,6 +258,10 @@ def replace_mapping(x, my_f, my_l):
         y = re.sub("\}.*", "", y)
     y = re.sub(" *#.*", "", y) # strip out comments
     y = y.strip()
+    if not y:
+        print("OOPS blank file-class-match {} line {}.")
+        mt.npo(my_f, my_l)
+        return
     my_matches = []
     for q in y.split(","):
         if q != q.strip():
@@ -412,6 +421,7 @@ def get_file(fname):
     track_balance_undos = False
     ignore_extra_undos = False
     temp_diverge_warned = False
+    fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             line_orig = line.strip()
@@ -421,6 +431,8 @@ def get_file(fname):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
             if line.startswith("##balance undo"):
+                if balance_undos:
+                    print("WARNING {} line {}: another balance-undo block is already operational.".format(fb, line_count))
                 balance_error_yet = False
                 balance_undos = True
                 track_balance_undos = 'trace' in line or 'track' in line
@@ -461,7 +473,7 @@ def get_file(fname):
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "", line.strip())
                 very_temp_array = abbrevs_to_ints(vta_before[3:].split(","))
-                u = vta_after.replace("\\\\", "\n")
+                u = vta_after.replace("\\\\", "\n") + "\n"
                 for q in very_temp_array:
                     file_list[q].write(u)
                 continue
@@ -614,6 +626,8 @@ def get_file(fname):
                 if always_be_writing and len(actives):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
+                if '#' in line:
+                    line_orig = re.sub(" *#.*", "", line) # eliminate comments from line -- we want to be able to GREP for comments if need be
                 if balance_undos:
                     if line[1:].strip().startswith("undo"):
                         try:
