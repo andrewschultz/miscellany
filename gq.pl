@@ -52,6 +52,7 @@ my $foundTotal     = 0;
 my $stringAtEnd    = "";
 my $skippedAny     = 0;
 my $verbose        = 0;
+my $ignoreHeaders = 0;
 
 my @ignore_array = ();
 
@@ -122,6 +123,7 @@ while ( $count <= $#ARGV ) {
       $count++;
       next;
     };
+    /^-?(ih|hi)$/ && do { $ignoreHeaders = 1; $count++; next; };    # names
     /^-?n$/ && do { @runs = ("names"); $count++; next; };    # names
     /^-?sno$/i && do {
       @runs = ("sno");
@@ -659,7 +661,7 @@ sub cromu {
   $a =~ s/\[one of\]/\[\]/g;
   $a =~ s/\[end if\]/\[\]/g;
 
-  return 0 if $_[0] =~ /^(volume|chapter|book|part|section)/i;
+  return 0 if $_[0] =~ /^(volume|chapter|book|part|section)/i && $ignoreHeaders;
 
   return 0 if ( $_[0] =~ /^test/i ) && ( $_[1] !~ /test/i );
 

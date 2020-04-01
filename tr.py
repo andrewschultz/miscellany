@@ -47,7 +47,6 @@ for x in my_triz:
         tf = i7.triz(x)
     else:
         tf = i7.i7trizmaps[x[0]][x[1]]
-    print(x, tf, my_triz[x])
     if not os.path.exists(tf):
         print("Uh oh. {0} is not a valid path for {1}.".format(tf, x))
         continue
