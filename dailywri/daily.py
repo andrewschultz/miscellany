@@ -15,6 +15,8 @@ lower_bound = "20170101.txt"
 upper_bound = today_file
 days_back_start = days_back_end = total_files = 0
 
+wri_temp = "c:/writing/temp"
+
 def read_main_daily_config():
     global lower_bound
     global upper_bound
@@ -41,6 +43,11 @@ def read_main_daily_config():
 
 def done_of(dir_path):
     return os.path.join(dir_path, "done")
+
+def to_proc(dir_path):
+    return os.path.join(dir_path, "to-proc")
+
+toproc = proc = to_proc
 
 def slashy_equals(dir_1, dir_list):
     for dir_2 in dir_list:
