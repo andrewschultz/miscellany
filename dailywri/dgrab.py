@@ -4,7 +4,7 @@
 #
 # for instand #whau would go to welp-haunted file
 #
-# usage: dgrab.py s=wh
+# usage: dgrab.py -da s=wh
 #
 # question: search for starting tabs in non-.ni files. What script for that?
 #
@@ -46,7 +46,7 @@ sect_lines = defaultdict(int)
 
 max_process = 0
 open_notes = 0
-days_before_ignore = 7
+days_before_ignore = 0 # this used to make sure we didn't hack into a current daily file, but now we have a processing subdirectory, we don't need that
 min_for_list = 0
 
 bail_without_copying = False
@@ -59,9 +59,9 @@ print_ignored_files = False
 list_it = False
 
 daily_dir = "c:/writing/daily"
-daily_done = daily.done_of(daily_dir)
+daily_proc = daily.to_proc(daily_dir)
 gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
-gdrive_done = daily.done_of(gdrive_dir)
+gdrive_proc = daily.to_proc(gdrive_dir)
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -74,6 +74,8 @@ def usage(header="GENERAL USAGE"):
     print("pi = print ignore, npi/pin = don't print ignore")
     print("l = list headers, l# = list headers with # or more entries")
     print("s= = section to look for")
+    print("")
+    print("sample usage: dgrab.py -da ut for Under processing")
     exit()
 
 def append_one_important(my_file):
@@ -159,7 +161,7 @@ def file_len(fname):
 def send_mapping(sect_name, file_name, change_files = False):
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
-    time_delta = time.time() - temp_time.st_ctime
+    time_delta = time.time() - temp_time.st_mtime
     my_reg = regex_sect[sect_name]
     my_reg_comment = regex_comment[sect_name]
     found_sect_name = False
@@ -190,7 +192,9 @@ def send_mapping(sect_name, file_name, change_files = False):
     if time_delta < days_before_ignore * 86400 and found_sect_name:
         print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
         return 0
-    if not sect_text: return False
+    if not sect_text:
+        print("No section text was found in", fn, "for", sect_name)
+        return False
     if not change_files:
         global change_list
         change_list.append(fn)
@@ -338,8 +342,8 @@ while cmd_count < len(sys.argv):
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
         min_for_list = int(arg[1:])
-    elif arg == 'da': dir_to_proc = daily_dir
-    elif arg == 'dr': dir_to_proc = gdrive_dir
+    elif arg == 'da': dir_to_proc = daily_proc
+    elif arg == 'dr': dir_to_proc = gdrive_proc
     elif arg[:3] == 's20': daily.lower_bound = arg[1:]
     elif arg[:3] == 'e20': daily.upper_bound = arg[1:]
     elif arg == 'e':
@@ -385,12 +389,11 @@ max_warning = False
 if max_process == -1: print("Running test to cull all eligible files.")
 
 for q in my_file_list:
-    if not daily.valid_file(q, dir_to_proc): continue
     qbase = os.path.basename(q)
+    temp_file = os.path.join(daily.wri_temp, qbase)
     if qbase < daily.lower_bound: continue
     if qbase > daily.upper_bound: continue
-    print(q)
-    daily.copy_to_done(qbase, dir_to_proc)
+    print("Processing", qbase)
     if list_it:
         get_list_data(q)
         continue
@@ -399,6 +402,7 @@ for q in my_file_list:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
 
+exit()
 if list_it:
     mins_ignored = 0
     for x in sorted(file_list, key=lambda y: len(file_list[y]), reverse=True):
