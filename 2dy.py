@@ -22,6 +22,8 @@ latest_daily = True
 daily = "c:/writing/daily/"
 daily_done = "c:/writing/daily/done/"
 
+file_header = ""
+
 sect_ary = []
 
 files_back_wanted = 1
@@ -41,13 +43,19 @@ def usage(param = 'Cmd line usage'):
 
 def get_init_sections():
     global sect_ary
+    global file_header
     with open(my_sections_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
+            if line.startswith("file_header="):
+                file_header = line[12:].replace("\\", "\n")
+                continue
             ary = line.lower().strip().split(",")
+            print(ary)
             for q in ary:
                 ary2 = q.split('=')
+                print(ary2)
                 sect_ary.append(ary2[0])
                 # init_sect[ary2[0]] = ary2[1]
 
@@ -58,6 +66,8 @@ def see_back(d, my_dir, days_back):
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
     f = open(my_file, "w")
+    if file_header:
+        f.write(file_header)
     for s in sect_ary: f.write("\n\\{:s}\n".format(s))
     f.close()
     if launch: os.system(my_file)
