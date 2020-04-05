@@ -75,7 +75,7 @@ def usage(header="GENERAL USAGE"):
     print("l = list headers, l# = list headers with # or more entries")
     print("s= = section to look for")
     print("")
-    print("sample usage: dgrab.py -da ut for Under processing")
+    print("sample usage: dgrab.py -da s=ut for Under processing")
     exit()
 
 def append_one_important(my_file):
@@ -124,8 +124,7 @@ def append_all_important():
     appended = 0
     for a in glob.glob(gdrive_dir + "/20*"):
         ap = re.sub("\..*", "", os.path.basename(a))
-        if ap < daily.lower_bound: continue
-        if ap > daily.upper_bound: continue
+        if invalid_year(ap): continue
         appended += append_one_important(a)
     print(appended, "total important sections appended")
     exit()
@@ -193,7 +192,8 @@ def send_mapping(sect_name, file_name, change_files = False):
         print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
         return 0
     if not sect_text:
-        print("No section text was found in", fn, "for", sect_name)
+        if verbose:
+            print("No section text was found in", fn, "for", sect_name)
         return False
     if not change_files:
         global change_list
@@ -203,6 +203,7 @@ def send_mapping(sect_name, file_name, change_files = False):
     f.write(file_remain_text)
     f.close()
     nfi = mapping[sect_name]
+    remain_written=False
     print("Found", sect_name, "in", file_name, "to add to", nfi)
     if nfi not in notes_to_open:
         notes_to_open[nfi] = file_len(nfi)
@@ -215,16 +216,20 @@ def send_mapping(sect_name, file_name, change_files = False):
             for (line_count, line) in enumerate(file, 1):
                 if line.lower().strip() == w2i:
                     f.write(line)
-                    if write_next_blank and not line.strip():
-                        f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
-                        remain_written = True
-                    elif line.startswith("\\"):
+                    if line.startswith("\\"):
+                        print("Will start writing at line", line_count)
                         write_next_blank = True
                     else:
                         f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
-                        write_next_blank = False
                         remain_written = True
-                else: f.write(line)
+                    continue
+                if write_next_blank and not line.strip():
+                    f.write(sect_text)
+                    f.write("\n")
+                    write_next_blank = False
+                    remain_written = True
+                    continue
+                f.write(line)
         if write_next_blank:
             print("Need CR at end of section for {:s}. Writing at end of file anyway.".format(sect_name))
             f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
@@ -232,6 +237,7 @@ def send_mapping(sect_name, file_name, change_files = False):
             remain_written = True
         if not remain_written: sys.exit("Text chunk for {:s}/{:s} not written to {:s}. Bailing".format(sect_name, w2i, nif))
         f.close()
+        sys.exit("Ok done with test")
     else:
         print("Appending to", nfi)
         f = open(nfi, "a")
@@ -328,7 +334,8 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
     if arg[0] == '-': arg = arg[1:]
-    if arg.isdigit(): max_process = arg
+    if arg.isdigit():
+        max_process = int(arg)
     elif re.search("^d(b)?[0-9]+$", arg):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
@@ -350,11 +357,13 @@ while cmd_count < len(sys.argv):
         os.system(dg_cfg)
         exit()
     elif arg == 'o': open_notes_after = True
-    elif arg == 'di': do_diff = True
     elif arg == 'pi': print_ignored_files = True
     elif arg == 'npi' or arg == 'pin': print_ignored_files = False
+    elif arg == 'di': do_diff = True
     elif arg == 'ndi' or arg == 'din' or arg == 'dn' or arg == 'nd': do_diff = False
     elif arg == 'no' or arg == 'on': open_notes_after = False
+    elif arg == 'v': verbose = True
+    elif arg == 'q': verbose = False
     elif arg == '?': usage()
     else:
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
@@ -393,7 +402,7 @@ for q in my_file_list:
     temp_file = os.path.join(daily.wri_temp, qbase)
     if qbase < daily.lower_bound: continue
     if qbase > daily.upper_bound: continue
-    print("Processing", qbase)
+    if verbose: print("Processing", qbase)
     if list_it:
         get_list_data(q)
         continue
@@ -402,7 +411,6 @@ for q in my_file_list:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
 
-exit()
 if list_it:
     mins_ignored = 0
     for x in sorted(file_list, key=lambda y: len(file_list[y]), reverse=True):
