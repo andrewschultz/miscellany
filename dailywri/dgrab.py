@@ -34,6 +34,7 @@ dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 flat_temp = os.path.basename(dg_temp)
 
 mapping = defaultdict(str)
+preferred_header = defaultdict(str)
 regex_sect = defaultdict(str)
 regex_comment = defaultdict(str)
 file_regex = defaultdict(str)
@@ -49,6 +50,7 @@ open_notes = 0
 days_before_ignore = 0 # this used to make sure we didn't hack into a current daily file, but now we have a processing subdirectory, we don't need that
 min_for_list = 0
 
+just_analyze = False
 bail_without_copying = False
 open_on_warn = False
 do_diff = True
@@ -74,8 +76,34 @@ def usage(header="GENERAL USAGE"):
     print("pi = print ignore, npi/pin = don't print ignore")
     print("l = list headers, l# = list headers with # or more entries")
     print("s= = section to look for")
+    print("a= analyze what is left")
     print("")
     print("sample usage: dgrab.py -da s=ut for Under processing")
+    exit()
+
+def analyze_to_proc():
+    sections_left = defaultdict(int)
+    first_file_with_section = defaultdict(str)
+    files_to_verify = glob.glob(daily_proc + "/*.*")
+    err_flagged = defaultdict(int)
+    count = 0
+    for this_daily in files_to_verify:
+        with open(this_daily) as file:
+            daily_basename = os.path.basename(this_daily)
+            for (line_count, line) in enumerate(file, 1):
+                if line.startswith("\\"):
+                    ll = line.lower().strip()[1:]
+                    if ll not in mapping and ll not in err_flagged:
+                        count += 1
+                        print("Bad header #{:2d}:".format(count), ll, "line", line_count, daily_basename)
+                        err_flagged[ll] = True
+                    sections_left[ll] += 1
+                    if ll not in first_file_with_section:
+                        first_file_with_section[ll] = daily_basename
+    count = 0
+    for x in sorted(sections_left, key=lambda x: (-sections_left[x], x)):
+        count += 1
+        print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(count, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
     exit()
 
 def append_one_important(my_file):
@@ -282,6 +310,7 @@ with open(dg_cfg) as file:
                 print("You need to have 3 arguments in a MAPPING: headers, file, and headers-in-file to insert after (empty is ok).")
                 i7.npo(dg_cfg, line_count)
             for q in my_args:
+                preferred_header[q] = my_args[0]
                 mapping[q] = lary[1]
                 regex_sect[q] = my_regex_1
                 regex_comment[q] = my_regex_2
@@ -364,10 +393,14 @@ while cmd_count < len(sys.argv):
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
+    elif arg == 'a': just_analyze = True
     elif arg == '?': usage()
     else:
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
+
+if just_analyze:
+    analyze_to_proc()
 
 if not dir_to_proc:
     my_cwd = os.getcwd()
