@@ -52,7 +52,6 @@ def get_init_sections():
                 file_header = line[12:].replace("\\", "\n")
                 continue
             ary = line.lower().strip().split(",")
-            print(ary)
             for q in ary:
                 ary2 = q.split('=')
                 print(ary2)

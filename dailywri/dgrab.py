@@ -51,6 +51,7 @@ days_before_ignore = 0 # this used to make sure we didn't hack into a current da
 min_for_list = 0
 
 just_analyze = False
+look_for_lines = False
 bail_without_copying = False
 open_on_warn = False
 do_diff = True
@@ -81,6 +82,19 @@ def usage(header="GENERAL USAGE"):
     print("sample usage: dgrab.py -da s=ut for Under processing")
     exit()
 
+def attempt_line(poss_header):
+    otls = glob.glob("c:/writing/*.otl")
+    poss_matches = 0
+    for f in otls:
+        fb = os.path.basename(f)
+        with open(f) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if line.startswith("\\" + poss_header + '='):
+                    poss_matches += 1
+                    print("  possible match {} for {} at line {} of file {}: {}".format(poss_matches, poss_header, line_count, fb, line.strip()))
+                    print("  suggested configuration line for dgrab.txt: MAPPING={},{},{}".format(poss_header, f, line.strip()))
+    return poss_matches
+
 def analyze_to_proc():
     sections_left = defaultdict(int)
     first_file_with_section = defaultdict(str)
@@ -96,6 +110,9 @@ def analyze_to_proc():
                     if ll not in mapping and ll not in err_flagged:
                         count += 1
                         print("Bad header #{:2d}:".format(count), ll, "line", line_count, daily_basename)
+                        if look_for_lines:
+                            if not attempt_line(ll):
+                                print("Could not find suggestions.")
                         err_flagged[ll] = True
                     sections_left[ll] += 1
                     if ll not in first_file_with_section:
@@ -394,6 +411,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
     elif arg == 'a': just_analyze = True
+    elif arg == 'al' or arg == 'la': just_analyze = look_for_lines = True
     elif arg == '?': usage()
     else:
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
@@ -401,6 +419,7 @@ while cmd_count < len(sys.argv):
 
 if just_analyze:
     analyze_to_proc()
+exit()
 
 if not dir_to_proc:
     my_cwd = os.getcwd()
