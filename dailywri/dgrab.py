@@ -20,6 +20,7 @@ import sys
 import time
 import filecmp
 import daily
+import mytools as mt
 
 glob_default = "da"
 default_sect = ""
@@ -50,6 +51,7 @@ open_notes = 0
 days_before_ignore = 0 # this used to make sure we didn't hack into a current daily file, but now we have a processing subdirectory, we don't need that
 min_for_list = 0
 
+open_cluttered = False
 just_analyze = False
 look_for_lines = False
 bail_without_copying = False
@@ -100,16 +102,19 @@ def analyze_to_proc():
     first_file_with_section = defaultdict(str)
     files_to_verify = glob.glob(daily_proc + "/*.*")
     err_flagged = defaultdict(int)
-    count = 0
+    bad_header_count = 0
+    file_to_open = ""
     for this_daily in files_to_verify:
         with open(this_daily) as file:
             daily_basename = os.path.basename(this_daily)
             for (line_count, line) in enumerate(file, 1):
+                if line.startswith("#"): continue
                 if line.startswith("\\"):
+                    in_section = True
                     ll = line.lower().strip()[1:]
                     if ll not in mapping and ll not in err_flagged:
-                        count += 1
-                        print("Bad header #{:2d}:".format(count), ll, "line", line_count, daily_basename)
+                        bad_header_count += 1
+                        print("Bad header #{:2d}:".format(bad_header_count), ll, "line", line_count, daily_basename)
                         if look_for_lines:
                             if not attempt_line(ll):
                                 print("Could not find suggestions.")
@@ -117,10 +122,21 @@ def analyze_to_proc():
                     sections_left[ll] += 1
                     if ll not in first_file_with_section:
                         first_file_with_section[ll] = daily_basename
-    count = 0
+                elif not line.strip():
+                    in_section = False
+                elif not in_section:
+                    if not file_to_open:
+                        print("Potential cleanup at file {} line {}: {}".format(this_daily, line_count, line.strip()))
+                        file_to_open = this_daily
+                        line_to_open = line_count
+    if not bad_header_count: print("Hooray! You have no bad headers.")
+    sections_to_sort = 0
     for x in sorted(sections_left, key=lambda x: (-sections_left[x], x)):
-        count += 1
-        print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(count, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
+        sections_to_sort += 1
+        print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
+    if not sections_to_sort: print("Hooray! You have no sections to shuffle.")
+    if open_cluttered:
+        mt.npo(file_to_open, line_to_open)
     exit()
 
 def append_one_important(my_file):
@@ -411,7 +427,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
     elif arg == 'a': just_analyze = True
-    elif arg == 'al' or arg == 'la': just_analyze = look_for_lines = True
+    elif re.search('^a[lc]+', arg):
+        just_analyze = True
+        look_for_lines = 'l' in arg
+        open_cluttered = 'c' in arg
     elif arg == '?': usage()
     else:
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
