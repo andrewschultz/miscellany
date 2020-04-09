@@ -13,6 +13,7 @@ import mytools as mt
 #d = pendulum.now()
 d = pendulum.today()
 
+#these are covered in the config file, but keep them here to make sure
 max_days_new = 7
 max_days_back = 1000
 
@@ -39,6 +40,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)mn/n/nm (#) = # max new days back")
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
+    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
 def get_init_sections():
@@ -48,13 +50,18 @@ def get_init_sections():
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
+            if line.startswith("maxnew="):
+                max_days_new = int(line[7:])
+                continue
+            if line.startswith("maxback="):
+                min_days_new = int(line[8:])
+                continue
             if line.startswith("file_header="):
                 file_header = line[12:].replace("\\", "\n")
                 continue
             ary = line.lower().strip().split(",")
             for q in ary:
                 ary2 = q.split('=')
-                print(ary2)
                 sect_ary.append(ary2[0])
                 # init_sect[ary2[0]] = ary2[1]
 
@@ -95,6 +102,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nl' or arg == 'ln': latest_daily = False
     elif arg == 'v': verbose = True
     elif arg == 'nv' or arg == 'vn': verbose = False
+    elif arg == 'e': mt.npo(my_sections_file)
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
