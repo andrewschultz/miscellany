@@ -21,6 +21,7 @@ import time
 import filecmp
 import daily
 import mytools as mt
+from pathlib import Path
 
 glob_default = "da"
 default_sect = ""
@@ -84,6 +85,23 @@ def usage(header="GENERAL USAGE"):
     print("sample usage: dgrab.py -da s=ut for Under processing")
     exit()
 
+def orig_vs_proc(file_to_compare, ask_before = False):
+    file_to_compare = os.path.basename(file_to_compare)
+    if not file_to_compare.endswith(".txt"):
+        file_to_compare += ".txt"
+    global dir_to_proc
+    if not dir_to_proc:
+        print("Assuming daily_proc directory")
+        dir_to_proc = daily_proc
+    dir_to_orig = Path(dir_to_proc).parent
+    proc_file = os.path.join(dir_to_proc, file_to_compare)
+    orig_file = os.path.join(dir_to_orig, file_to_compare)
+    if not ask_before or 'y' in input("Compare after editing?").lower().strip():
+        mt.wm(orig_file, proc_file)
+    else:
+        print("OK, but if you want, wm", orig_file, proc_file)
+    exit()
+
 def attempt_line(poss_header):
     otls = glob.glob("c:/writing/*.otl")
     poss_matches = 0
@@ -104,7 +122,12 @@ def analyze_to_proc():
     err_flagged = defaultdict(int)
     bad_header_count = 0
     file_to_open = ""
+    lines_to_open = []
+    last_line = -1
     for this_daily in files_to_verify:
+        if this_daily.endswith(".bak"):
+            print("Backup file", this_daily, "should probably be deleted.")
+            continue
         with open(this_daily) as file:
             daily_basename = os.path.basename(this_daily)
             for (line_count, line) in enumerate(file, 1):
@@ -125,18 +148,24 @@ def analyze_to_proc():
                 elif not line.strip():
                     in_section = False
                 elif not in_section:
-                    if not file_to_open:
-                        print("Potential cleanup at file {} line {}: {}".format(this_daily, line_count, line.strip()))
+                    if not file_to_open or file_to_open == this_daily:
                         file_to_open = this_daily
-                        line_to_open = line_count
+                        if line_count - last_line > 1:
+                            lines_to_open.append(line_count)
+                            print("Potential cleanup at file {} line {}: {}".format(this_daily, line_count, line.strip()))
+                        last_line = line_count
     if not bad_header_count: print("Hooray! You have no bad headers.")
     sections_to_sort = 0
     for x in sorted(sections_left, key=lambda x: (-sections_left[x], x)):
         sections_to_sort += 1
         print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
     if not sections_to_sort: print("Hooray! You have no sections to shuffle.")
-    if open_cluttered:
-        mt.npo(file_to_open, line_to_open)
+    if open_cluttered and lines_to_open:
+        print("Look to clean up {} line{}: {}".format(len(lines_to_open), 's' if len(lines_to_open) != 1 else '', ','.join([str(x) for x in lines_to_open[::-1]])))
+        mt.npo(file_to_open, lines_to_open[-1], bail=False)
+        orig_vs_proc(file_to_open, ask_before = True)
+    elif open_cluttered:
+        print("No files to de-clutter. Nice going.")
     exit()
 
 def append_one_important(my_file):
@@ -234,9 +263,11 @@ def send_mapping(sect_name, file_name, change_files = False):
         for (line_count, line) in enumerate(file, 1):
             lls = line.lower().strip()
             if re.search(my_reg, line):
+                if found_sect_name:
+                    print("WARNING -- (no information lost) 2 section types map to", sect_name, my_reg, "line", found_sect_name, line_count, file_name)
                 if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
                 if not line.startswith("\\" + sect_name): print("    NOTE: alternate section name from {:s} is {:s}".format(sect_name, line.strip()))
-                found_sect_name = True
+                found_sect_name = line_count
                 in_sect = True
                 continue
             if in_sect:
@@ -305,8 +336,8 @@ def send_mapping(sect_name, file_name, change_files = False):
         f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
         f.close()
     if do_diff:
-        if os.path.exists(dg_temp_2): i7.wm(nfi, dg_temp_2)
-        i7.wm(file_name, dg_temp)
+        if os.path.exists(dg_temp_2): mt.wm(nfi, dg_temp_2)
+        mt.wm(file_name, dg_temp)
     if bail_without_copying:
         print("Bailing before copying back over")
         print(dg_temp, file_name)
@@ -341,7 +372,7 @@ with open(dg_cfg) as file:
             my_regex_2 = r' *#({:s})\b'.format(lary[0])
             if len(lary) < 3:
                 print("You need to have 3 arguments in a MAPPING: headers, file, and headers-in-file to insert after (empty is ok).")
-                i7.npo(dg_cfg, line_count)
+                mt.npo(dg_cfg, line_count)
             for q in my_args:
                 preferred_header[q] = my_args[0]
                 mapping[q] = lary[1]
@@ -386,7 +417,7 @@ if cfg_edit_line:
     if not open_on_warn:
         for q in sys.argv:
             if q == 'e' or q == '-e': open_on_warn = True
-    if open_on_warn: i7.npo(dg_cfg, cfg_edit_line)
+    if open_on_warn: mt.npo(dg_cfg, cfg_edit_line)
     else: print("Put in an OPENONWARN in {:s} to open the CFG file, or type e/-e on the command line.".format(dg_cfg))
 
 daily.read_main_daily_config()
@@ -413,8 +444,10 @@ while cmd_count < len(sys.argv):
         min_for_list = int(arg[1:])
     elif arg == 'da': dir_to_proc = daily_proc
     elif arg == 'dr': dir_to_proc = gdrive_proc
-    elif arg[:3] == 's20': daily.lower_bound = arg[1:]
-    elif arg[:3] == 'e20': daily.upper_bound = arg[1:]
+    elif arg[:3] == 'l20': daily.lower_bound = arg[1:]
+    elif arg[:3] == 'u20': daily.upper_bound = arg[1:]
+    elif re.search(r'^m20[0-9]{6}$', arg):
+        orig_vs_proc(arg[1:])
     elif arg == 'e':
         os.system(dg_cfg)
         exit()
@@ -438,7 +471,7 @@ while cmd_count < len(sys.argv):
 
 if just_analyze:
     analyze_to_proc()
-exit()
+    exit()
 
 if not dir_to_proc:
     my_cwd = os.getcwd()
@@ -471,6 +504,8 @@ if max_process == -1: print("Running test to cull all eligible files.")
 for q in my_file_list:
     qbase = os.path.basename(q)
     temp_file = os.path.join(daily.wri_temp, qbase)
+    if q.endswith(".bak"):
+        print("WARNING backup file", q)
     if qbase < daily.lower_bound: continue
     if qbase > daily.upper_bound: continue
     if verbose: print("Processing", qbase)
@@ -501,4 +536,4 @@ if len(change_list):
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
 if open_notes_after:
-    for q in notes_to_open: i7.npo(q, notes_to_open[q], False, False)
+    for q in notes_to_open: mt.npo(q, notes_to_open[q], False, False)
