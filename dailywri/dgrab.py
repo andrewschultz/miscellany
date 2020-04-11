@@ -360,6 +360,10 @@ def send_mapping(sect_name, file_name, change_files = False):
 
 cfg_edit_line = 0
 
+mapping_check = defaultdict(str)
+
+cfg_bail = False
+
 with open(dg_cfg) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("#"): continue
@@ -374,6 +378,10 @@ with open(dg_cfg) as file:
                 print("You need to have 3 arguments in a MAPPING: headers, file, and headers-in-file to insert after (empty is ok).")
                 mt.npo(dg_cfg, line_count)
             for q in my_args:
+                if q in preferred_header:
+                    print("Uh oh, duplicate header definition", q, "points to", preferred_header[q], "reassigned to", my_args[0], "at line", line_count)
+                    mt.add_postopen(dg_cfg, line_count)
+                    cfg_bail = True
                 preferred_header[q] = my_args[0]
                 mapping[q] = lary[1]
                 regex_sect[q] = my_regex_1
@@ -412,6 +420,10 @@ with open(dg_cfg) as file:
         else:
             print("Unrecognized command line", line_count, line.strip())
             cfg_edit_line = line_count
+
+if cfg_bail:
+    print("Fix problems in the CFG file.")
+    mt.postopen()
 
 if cfg_edit_line:
     if not open_on_warn:
