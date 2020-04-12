@@ -23,27 +23,16 @@ import daily
 import mytools as mt
 from pathlib import Path
 
-glob_default = "da"
-default_sect = ""
 my_sect = ""
 default_by_dir = i7.dir2proj(to_abbrev = True)
 my_globs = []
 
-dg_cfg = "c:/writing/scripts/dgrab.txt"
-flat_cfg = os.path.basename(dg_cfg)
 dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 flat_temp = os.path.basename(dg_temp)
 
-mapping = defaultdict(str)
-preferred_header = defaultdict(str)
-regex_sect = defaultdict(str)
-regex_comment = defaultdict(str)
-file_regex = defaultdict(str)
 notes_to_open = defaultdict(int)
-globs = defaultdict(str)
 
-where_to_insert = defaultdict(str)
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
 
@@ -135,7 +124,7 @@ def analyze_to_proc():
                 if line.startswith("\\"):
                     in_section = True
                     ll = line.lower().strip()[1:]
-                    if ll not in mapping and ll not in err_flagged:
+                    if ll not in daily.mapping and ll not in err_flagged:
                         bad_header_count += 1
                         print("Bad header #{:2d}:".format(bad_header_count), ll, "line", line_count, daily_basename)
                         if look_for_lines:
@@ -237,10 +226,6 @@ def get_list_data(this_fi):
                 sect_lines[my_section] += line_count - sect_start
                 in_sect = False
 
-def is_true_string(x):
-    if x == '0' or x == 'false': return False
-    return True
-
 def file_len(fname):
     with open(fname) as f:
         for (i, l) in enumerate(f, 1):
@@ -251,13 +236,13 @@ def send_mapping(sect_name, file_name, change_files = False):
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_mtime
-    my_reg = regex_sect[sect_name]
-    my_reg_comment = regex_comment[sect_name]
+    my_reg = daily.regex_sect[sect_name]
+    my_reg_comment = daily.regex_comment[sect_name]
     found_sect_name = False
     in_sect = False
     file_remain_text = ""
     sect_text = ""
-    if sect_name not in mapping: sys.exit("No section name {:s} in the general mappings. Bailing on file {:s} before even running. Run with (-)e to open config.".format(sect_name, file_name))
+    if sect_name not in daily.mapping: sys.exit("No section name {:s} in the general mappings. Bailing on file {:s} before even running. Run with (-)e to open config.".format(sect_name, file_name))
     # print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -294,15 +279,15 @@ def send_mapping(sect_name, file_name, change_files = False):
     f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
-    nfi = mapping[sect_name]
-    remain_written=False
+    nfi = daily.mapping[sect_name]
+    remain_written = False
     print("Found", sect_name, "in", file_name, "to add to", nfi)
     if nfi not in notes_to_open:
         notes_to_open[nfi] = file_len(nfi)
-    if where_to_insert[sect_name]:
+    if daily.where_to_insert[sect_name]:
         print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, nfi))
         write_next_blank = False
-        w2i = where_to_insert[sect_name]
+        w2i = daily.where_to_insert[sect_name]
         f = open(dg_temp_2, "w")
         with open(nfi) as file:
             for (line_count, line) in enumerate(file, 1):
@@ -354,84 +339,7 @@ def send_mapping(sect_name, file_name, change_files = False):
 # start main program
 #
 
-#
-# need to read CFG file first as defaults may be in there
-#
-
-cfg_edit_line = 0
-
-mapping_check = defaultdict(str)
-
-cfg_bail = False
-
-with open(dg_cfg) as file:
-    for (line_count, line) in enumerate(file, 1):
-        if line.startswith("#"): continue
-        if line.startswith(";"): break
-        l0 = re.sub("^.*?=", "", line.strip())
-        lary = l0.split(",")
-        my_args = lary[0].split("|")
-        if line.startswith("MAPPING="):
-            my_regex_1 = r'^\\({:s})'.format(lary[0])
-            my_regex_2 = r' *#({:s})\b'.format(lary[0])
-            if len(lary) < 3:
-                print("You need to have 3 arguments in a MAPPING: headers, file, and headers-in-file to insert after (empty is ok).")
-                mt.npo(dg_cfg, line_count)
-            for q in my_args:
-                if q in preferred_header:
-                    print("Uh oh, duplicate header definition", q, "points to", preferred_header[q], "reassigned to", my_args[0], "at line", line_count)
-                    mt.add_postopen(dg_cfg, line_count)
-                    cfg_bail = True
-                preferred_header[q] = my_args[0]
-                mapping[q] = lary[1]
-                regex_sect[q] = my_regex_1
-                regex_comment[q] = my_regex_2
-                where_to_insert[q] = lary[2]
-        elif line.startswith("DEFAULT="): default_sect = lary[0]
-        elif line.startswith("GLOBDEF="): glob_default = lary[0]
-        elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])
-        elif line.startswith("GLOB="):
-            for q in my_args:
-                if len(lary) > 2: file_regex[q] = lary[2]
-                else: file_regex[q] = '.'
-                globs[q] = lary[1]
-                temp = glob.glob(globs[q])
-                temp1 = [u for u in temp if re.search(file_regex[q], u)]
-                if len(temp) == 0:
-                    print("WARNING: glob pattern {:s}/{:s} at line {:d} does not turn up any files.".format(q, globs[q], line_count))
-                    cfg_edit_line = line_count
-                elif len(temp1) == 0:
-                    print("WARNING: glob pattern {:s}/{:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
-                    cfg_edit_line = line_count
-                if print_ignored_files and len(temp) != len(temp1):
-                    print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
-        elif line.startswith("OPENONWARN="):
-            open_on_warn = int(lary[0])
-        elif line.startswith("SHOWDIFF="): do_diff = is_true_string(lary[0])
-        elif line.startswith("MAXPROC="):
-            try:
-                max_process = int(lary[0])
-                if max_process < -1:
-                    print("Setting default max_process to -1. Maybe fix line", line_count)
-                    max_process = -1
-            except:
-                print("MAXPROC= went wrong at line", line_count)
-                cfg_edit_line = line_count
-        else:
-            print("Unrecognized command line", line_count, line.strip())
-            cfg_edit_line = line_count
-
-if cfg_bail:
-    print("Fix problems in the CFG file.")
-    mt.postopen()
-
-if cfg_edit_line:
-    if not open_on_warn:
-        for q in sys.argv:
-            if q == 'e' or q == '-e': open_on_warn = True
-    if open_on_warn: mt.npo(dg_cfg, cfg_edit_line)
-    else: print("Put in an OPENONWARN in {:s} to open the CFG file, or type e/-e on the command line.".format(dg_cfg))
-
+daily.read_section_sort_cfg()
 daily.read_main_daily_config()
 dir_to_proc = ""
 
@@ -493,7 +401,7 @@ if not dir_to_proc:
         print("Trying current directory", my_cwd)
         dir_to_proc = my_cwd
     else:
-        sys.exit("Need to specify a directory with -da or -dr or go to either writing-daily or google drive dir.")
+        sys.exit("Need to specify a directory with -da (daily) or -dr (drive) or go to either writing-daily or google drive dir.")
 
 os.chdir(dir_to_proc)
 
@@ -501,9 +409,9 @@ the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
 
 if not my_sect:
-    if not default_by_dir or default_by_dir not in mapping:
-        print("Going with default section defined in {:s}: {:s}.{:s}".format(flat_cfg, default_sect, (" {:s} is defined by the PWD but is not in the {:s} mapping.".format(default_by_dir, flat_cfg) if default_by_dir else "")))
-        my_sect = default_sect
+    if not default_by_dir or default_by_dir not in daily.mapping:
+        print("Going with default section defined in {:s}: {:s}.{:s}".format(daily.flat_cfg, daily.default_sect, (" {:s} is defined by the PWD but is not in the {:s} mapping.".format(default_by_dir, daily.flat_cfg) if default_by_dir else "")))
+        my_sect = daily.default_sect
     else:
         print("Going with default section defined by directory you're in {:s}.".format(default_by_dir))
         my_sect = default_by_dir
