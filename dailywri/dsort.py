@@ -28,7 +28,7 @@ file_name = defaultdict(str)
 file_comment = defaultdict(lambda:defaultdict(str))
 cfg_line = defaultdict(lambda:defaultdict(str))
 changed_out_files = defaultdict(bool)
-daily_done_with = defaultdict(bool)
+daily_proc_with = defaultdict(bool)
 or_dict = defaultdict(str)
 text_out = defaultdict(str)
 
@@ -49,7 +49,7 @@ wm_diff = False
 
 write_to_undef = False
 
-copy_over = True
+copy_over = False
 to_full_only = True
 
 print_warnings = False
@@ -159,7 +159,7 @@ def usage_sorting_check():
 def usage():
     print("U# = upper bound")
     print("L# = lower bound")
-    print("B/D# = days back")
+    print("E# = end of days back, S# = start of days back")
     print("FE(#)/EF(#) = earliest first, FL(#)/LF(#) = latest first")
     print("Numbers are right after the letters, with no spaces.")
     print("WM = show WinMerge differences, WN/NW = turn it off, default = {:s}".format(i7.on_off[wm_diff]))
@@ -176,10 +176,8 @@ def to_backups():
     for q in file_name.keys(): copy(q, to_full(q, backup_dir))
 
 def to_section(x, fill_in_default = False):
-    x = re.sub("^\\\\", "", x)
-    if x in file_name.keys(): return x
-    if x in or_dict.keys(): return or_dict[x]
-    if fill_in_default: return x
+    x = x[1:]
+    if x in daily.preferred_header: return daily.preferred_header[x]
     return ""
 
 def warn_print(x):
@@ -264,7 +262,9 @@ def get_stuff_from_one_file(x):
                     section_name = to_section(ll, True)
                     check_section = to_section(ll, False)
                     ls = ll[1:]
-                    if not check_section: print(ls, "may be bad section in", x, "line", line_count)
+                    if not check_section:
+                        print(ls, "may be bad section in", x, "line", line_count)
+                        sys.exit()
                     if ls in loc_sections.keys(): sys.exit("{:s} has 2 local sections of {:s}: line {:d} and {:d}.".format(x, ls, line_count, loc_sections[ls]))
                     loc_sections[ls] = line_count
                     if section_name in loc_text_out.keys(): print("WARNING {:s} has semi-duplicate section {:s}/{:s} at line {:d}/{:d}.".format(x, ls, section_name, line_count, last_line[section_name]))
@@ -277,15 +277,16 @@ def get_stuff_from_one_file(x):
             print("Skipping empty section", y, "in", x)
             continue
         # if y in file_name.keys(): print("Saw", y, "(", file_name[y], ")", "in", x)
-        if not file_name[y] and not write_to_undef: sys.exit("Could not find file name for section {:s}. Set write undef flag -wu/-uw.".format(y))
-        changed_out_files[file_name[y]] = True
+        if not daily.mapping[y] and not write_to_undef: sys.exit("Could not find file name for section {:s}. Set write undef flag -wu/-uw.".format(y))
+        changed_out_files[daily.mapping[y]] = True
         if y in need_tabs.keys(): loc_text_out[y] = "\t" + loc_text_out[x]
         text_out[y] += loc_text_out[y]
-    daily_done_with[x] = True
+    daily_proc_with[x] = True
     print("Got stuff from", x)
 
 ##############################main program
 
+daily.read_section_sort_cfg()
 daily.read_main_daily_config()
 days_back_start = daily.days_back_start
 days_back_end = daily.days_back_end
@@ -293,9 +294,9 @@ lower_bound = daily.lower_bound
 upper_bound = daily.upper_bound
 
 daily_dir = "c:/writing/daily"
-daily_done = daily.done_of(daily_dir)
+daily_proc = daily.to_proc(daily_dir)
 gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
-gdrive_done = daily.done_of(gdrive_dir)
+gdrive_done = daily.to_proc(gdrive_dir)
 
 count = 1
 while count < len(sys.argv):
@@ -349,7 +350,7 @@ if not dir_to_proc:
         print("Using current directory", x)
         dir_to_proc = x
     else:
-        print("Need to specify a directory with -g or -d or be in that directory.")
+        print("Need to specify a directory with -g (google drive) or -d (daily) or be in that directory.")
         sys.exit("{0} / {1} / {2}".format(x, gdrive_dir, daily_dir))
 
 if days_back_start or days_back_end:
@@ -460,8 +461,8 @@ if copy_over: # maybe we should put this into a function
             print(the_temp, the_base)
             # copy(the_temp, the_base)
             os.remove(the_temp)
-        for j in daily_done_with.keys():
+        for j in daily_proc_with.keys():
             j1 = to_full(j, daily_dir)
-            j2 = to_full(j, daily_done)
+            j2 = to_full(j, daily_proc)
             print("Move", j1, j2)
             # os.move(j1, j2)

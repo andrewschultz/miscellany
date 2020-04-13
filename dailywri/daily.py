@@ -64,6 +64,7 @@ def read_main_daily_config():
         (lower_bound, upper_bound) = (upper_bound, lower_bound)
 
 def read_section_sort_cfg(cfg_bail = False):
+    global default_sect
     cfg_edit_line = 0
     mapping_check = defaultdict(str)
     with open(dg_cfg) as file:
