@@ -20,8 +20,10 @@ from glob import glob
 from filecmp import cmp
 from shutil import copy
 
+only_one = False
+
 raw_dir = "c:/coding/perl/proj/from_drive"
-done_dir = "c:/coding/perl/proj/from_drive/drive_mod"
+proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
 raw_glob = "raw-*.txt"
 important_file = "{0}/important.txt".format(raw_dir)
 
@@ -33,7 +35,19 @@ cmds['ana'] = "ni an"
 cmds['vvff'] = "ni no vv"
 cmds['spo'] = "np spopal"
 
-comment_sortable = defaultdict(str)
+comment_dict = defaultdict(str)
+
+def read_comment_cfg():
+    with open(comment_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            l = line.lower().strip()
+            if l.startswith('#'): continue
+            if l.startswith(';'): break
+            ary = l.split('=')
+            if len(ary) != 2:
+                print("Bad comment/regex definition line", line_count, l)
+                continue
+            comment_dict[ary[0]] = ary[1]
 
 def in_important_file(x, y):
     with open(y) as file:
@@ -47,18 +61,20 @@ def special_colon_value(l):
     if l.startswith("song:") or l.startswith("song:"): return "mov"
     return ""
 
+def is_spoonerism_rated(l):
+    return re.search(r'([0-9\*])\1+ ', l)
+
 def my_section(l):
+    for x in comment_dict:
+        if re.search(r'# ?{}\b'.format(comment_dict[x]), l):
+            return x
     if '\t' in l or l.count('  ') > 2: return 'nam'
     if mt.is_palindrome(l): return 'pal'
-    if mt.is_anagram(l): return 'ana'
+    if '==' in l and not l.startswith('=='): return 'btp'
+    if mt.is_anagram(l, accept_comments = True) and not is_spoonerism_rated(l): return 'ana'
     if mt.is_limerick(l, accept_comments = True): return 'lim'
-    if re.search(r'([0-9\*])\1+', l): return 'spo'
-    if ' / ' in l: return 'vvff'
-    if "#q" in l: return 'qui'
-    if "#pc" in l: return 'pc'
-    if "#wh" in l: return 'whau'
-    if '==' in l: return 'btp'
-    if "~" in l: return 'pl'
+    if is_spoonerism_rated(l): return 'spo'
+    if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
     return ""
 
@@ -126,7 +142,7 @@ def sort_raw(x):
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
-    final_out_file = "{0}/{1}".format(done_dir, daily_file)
+    final_out_file = "{0}/{1}".format(proc_dir, daily_file)
     temp_out_file = "c:/writing/temp/drive-temp.txt"
     fout = open(temp_out_file, "w")
     for x in sorted(sections, key=lambda x:sort_priority(x)):
@@ -137,10 +153,15 @@ def sort_raw(x):
     fout.close()
     if os.path.exists(final_out_file) and cmp(final_out_file, temp_out_file):
         print(final_out_file, "was not changed since last run.")
+        return 0
     else:
         copy(temp_out_file, final_out_file)
-    sys.exit()
+    if only_one:
+        print("Bailing after first file converted, since only_one is set to True.")
+        sys.exit()
+    print("Opening", final_out_file)
     os.system(final_out_file)
+    return 1
 
 files_done = 0
 file_list = []
@@ -162,9 +183,10 @@ while cmd_count < len(sys.argv):
             file_list.append(arg)
     cmd_count += 1
 
+read_comment_cfg()
+
 if not len(file_list):
     file_list = glob("{0}/{1}".format(raw_dir, raw_glob))
     for fi in file_list:
-        sort_raw(fi)
-        files_done += 1
+        files_done += sort_raw(fi)
         if files_done == max_files: break
