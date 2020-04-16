@@ -1,4 +1,4 @@
-# keso.py
+# dff.py
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
 #
@@ -66,7 +66,7 @@ def is_spoonerism_rated(l):
 
 def my_section(l):
     for x in comment_dict:
-        if re.search(r'# ?{}\b'.format(comment_dict[x]), l):
+        if re.search(r'#( )?{}\b'.format(comment_dict[x]), l):
             return x
     if '\t' in l or l.count('  ') > 2: return 'nam'
     if mt.is_palindrome(l): return 'pal'
@@ -83,6 +83,17 @@ def sort_priority(x):
     if x == 'nam': prio_num = 20
     if x == 'vvff': prio_num = 15
     return (prio_num, x)
+
+def is_locked(proc_file):
+    print("Checking if locked", proc_file)
+    if not os.path.exists(proc_file): return False
+    with open(proc_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#locked"):
+                return True
+            if not line.startswith("#"):
+                return False
+    return False
 
 def is_anagrammy_or_comments(x):
     if x.lower().startswith("anagram") or '#ana' in x.lower(): return True
@@ -101,6 +112,11 @@ def sort_raw(x):
     z = [int(q) for q in y]
     daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
     # print(x0, daily_file)
+    final_out_file = "{0}/{1}".format(proc_dir, daily_file)
+    if is_locked(final_out_file):
+        print(final_out_file, "has been locked for writing, skipping.")
+        return 0
+    return 0
     print("Parsing", x, "...")
     important = False
     with open(x, mode='r', encoding='utf-8-sig') as file:
@@ -142,7 +158,6 @@ def sort_raw(x):
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
-    final_out_file = "{0}/{1}".format(proc_dir, daily_file)
     temp_out_file = "c:/writing/temp/drive-temp.txt"
     fout = open(temp_out_file, "w")
     for x in sorted(sections, key=lambda x:sort_priority(x)):
