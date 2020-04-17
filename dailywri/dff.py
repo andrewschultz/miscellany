@@ -85,7 +85,6 @@ def sort_priority(x):
     return (prio_num, x)
 
 def is_locked(proc_file):
-    print("Checking if locked", proc_file)
     if not os.path.exists(proc_file): return False
     with open(proc_file) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -94,6 +93,23 @@ def is_locked(proc_file):
             if not line.startswith("#"):
                 return False
     return False
+
+def lock_it(proc_file):
+    if not os.path.exists(proc_file):
+        print("Could not find", proc_file)
+    if is_locked(proc_file):
+        print(proc_file, "is already locked.")
+        return
+    f = open(proc_file, "r")
+    my_lines = f.readlines()
+    f.close()
+    f = open(proc_file, "w")
+    f.write("#locked\n")
+    if my_lines[0].strip():
+        f.write("\n")
+    for m in my_lines:
+        f.write(m)
+    f.close()
 
 def is_anagrammy_or_comments(x):
     if x.lower().startswith("anagram") or '#ana' in x.lower(): return True
