@@ -21,11 +21,14 @@ from filecmp import cmp
 from shutil import copy
 
 only_one = False
+see_drive_files = True
 
-raw_dir = "c:/coding/perl/proj/from_drive"
-proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
+raw_drive_dir = "c:/coding/perl/proj/from_drive"
+drive_proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
+raw_keep_dir = "c:/coding/perl/proj/from_keep"
+keep_proc_dir = "c:/coding/perl/proj/from_keep/to-proc"
 raw_glob = "raw-*.txt"
-important_file = "{0}/important.txt".format(raw_dir)
+important_file = "{0}/important.txt".format(raw_drive_dir)
 
 comment_cfg = "c:/writing/scripts/keso.txt"
 
@@ -121,14 +124,14 @@ def sort_raw(x):
         print("Skipping {0} which does not exist.".format(x))
         return
     x0 = os.path.basename(x)
-    if not re.search("raw-drive-[0-9]+-[0-9]+-[0-9]+.txt", x0):
-        print("Skipping {0} which is not in the raw-drive-##-##-#### format.".format(x))
+    if not re.search("raw-(drive|keep)-[0-9]+-[0-9]+-[0-9]+.txt", x0):
+        print("Skipping {0} which is not in the raw-drive/keep-##-##-#### format.".format(x))
         return
     y = x0[:-4].split('-')[2:]
     z = [int(q) for q in y]
     daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
     # print(x0, daily_file)
-    final_out_file = "{0}/{1}".format(proc_dir, daily_file)
+    final_out_file = "{0}/{1}".format(drive_proc_dir, daily_file)
     if is_locked(final_out_file):
         print(final_out_file, "has been locked for writing, skipping.")
         return 0
@@ -199,25 +202,32 @@ file_list = []
 cmd_count = 1
 max_files = 1
 
-os.chdir(raw_dir)
-
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'f' and arg[1:].isdigit():
         max_files = int(arg[1:])
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
+    elif arg == 'k':
+        see_drive_files = False
+    elif arg == 'd':
+        see_drive_files = True
     else:
-        if not os.path.exists(arg) and not os.path.exists(os.path.join(raw_dir, arg)):
+        if not os.path.exists(arg) and not os.path.exists(os.path.join(raw_drive_dir, arg)):
             print("WARNING", arg, "is not a valid file")
         else:
             file_list.append(arg)
     cmd_count += 1
 
+if see_drive_files:
+    os.chdir(raw_drive_dir)
+else:
+    os.chdir(raw_keep_dir)
+
 read_comment_cfg()
 
 if not len(file_list):
-    file_list = glob("{0}/{1}".format(raw_dir, raw_glob))
+    file_list = glob("{0}/{1}".format(raw_drive_dir, raw_glob))
     for fi in file_list:
         files_done += sort_raw(fi)
         if files_done == max_files: break
