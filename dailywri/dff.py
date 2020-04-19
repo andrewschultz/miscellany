@@ -22,6 +22,7 @@ from shutil import copy
 
 only_one = False
 see_drive_files = True
+test_copy_only = False
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 drive_proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
@@ -39,6 +40,15 @@ cmds['vvff'] = "ni no vv"
 cmds['spo'] = "np spopal"
 
 comment_dict = defaultdict(str)
+
+def usage(my_arg):
+    if (my_arg):
+        print("Bad argument", my_arg)
+    print("=" * 50)
+    print("DFF usage:")
+    print("Default should be okay.")
+    print("-d/-k specifies google drive or google keep downloads. Default is google drive.")
+    exit()
 
 def read_comment_cfg():
     with open(comment_cfg) as file:
@@ -65,17 +75,17 @@ def special_colon_value(l):
     return ""
 
 def is_spoonerism_rated(l):
-    return re.search(r'([0-9\*])\1+ ', l)
+    return re.search(r'\b([0-9\*])\1\b', l)
 
 def my_section(l):
+    if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     for x in comment_dict:
-        if re.search(r'#( )?{}\b'.format(comment_dict[x]), l):
+        if re.search(r'# *({})\b'.format(comment_dict[x]), l):
             return x
     if '\t' in l or l.count('  ') > 2: return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
     if mt.is_anagram(l, accept_comments = True) and not is_spoonerism_rated(l): return 'ana'
-    if mt.is_limerick(l, accept_comments = True): return 'lim'
     if is_spoonerism_rated(l): return 'spo'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
@@ -122,11 +132,11 @@ def sort_raw(x):
     sections = defaultdict(str)
     if not os.path.exists(x):
         print("Skipping {0} which does not exist.".format(x))
-        return
+        return 0
     x0 = os.path.basename(x)
     if not re.search("raw-(drive|keep)-[0-9]+-[0-9]+-[0-9]+.txt", x0):
         print("Skipping {0} which is not in the raw-drive/keep-##-##-#### format.".format(x))
-        return
+        return 0
     y = x0[:-4].split('-')[2:]
     z = [int(q) for q in y]
     daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
@@ -135,7 +145,6 @@ def sort_raw(x):
     if is_locked(final_out_file):
         print(final_out_file, "has been locked for writing, skipping.")
         return 0
-    return 0
     print("Parsing", x, "...")
     important = False
     with open(x, mode='r', encoding='utf-8-sig') as file:
@@ -187,8 +196,13 @@ def sort_raw(x):
     fout.close()
     if os.path.exists(final_out_file) and cmp(final_out_file, temp_out_file):
         print(final_out_file, "was not changed since last run.")
+        exit()
         return 0
     else:
+        if test_copy_only:
+            print("Not copying tho dif")
+            if only_one: sys.exit()
+            return 1
         copy(temp_out_file, final_out_file)
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
@@ -212,6 +226,10 @@ while cmd_count < len(sys.argv):
         see_drive_files = False
     elif arg == 'd':
         see_drive_files = True
+    elif arg == '?':
+        usage()
+    elif len(arg) < 2:
+        usage(arg)
     else:
         if not os.path.exists(arg) and not os.path.exists(os.path.join(raw_drive_dir, arg)):
             print("WARNING", arg, "is not a valid file")
