@@ -20,15 +20,28 @@ from glob import glob
 from filecmp import cmp
 from shutil import copy
 
-only_one = False
+DAILY = DAILIES = 0
+DRIVE = 1
+KEEP = 2
+
+what_to_sort = DAILIES
+sort_proc = False
+
+# this should go in a config file later
+open_raw = True
+only_one = True
 see_drive_files = True
-test_copy_only = False
+test_copy_only = True
+only_list_files = False
+show_differences = True
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 drive_proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
 raw_keep_dir = "c:/coding/perl/proj/from_keep"
 keep_proc_dir = "c:/coding/perl/proj/from_keep/to-proc"
+daily_proc_dir = "c:/writing/daily/to-proc"
 raw_glob = "raw-*.txt"
+dailies_glob = "20*.txt"
 important_file = "{0}/important.txt".format(raw_drive_dir)
 
 comment_cfg = "c:/writing/scripts/keso.txt"
@@ -75,10 +88,13 @@ def special_colon_value(l):
     return ""
 
 def is_spoonerism_rated(l):
-    return re.search(r'\b([0-9\*])\1\b', l)
+    return re.search(r'\b([0-9])\1\b', l) or ('**' in l and not '***' in l) # we can filter out anything with extra ** in it
 
 def my_section(l):
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
+    if l.startswith('wfl'): return 'pc'
+    if l.startswith('mov:') or l.startswith('movie:') or l.startswith('movies:'): return 'mov'
+    if l.startswith('boo:') or l.startswith('book:') or l.startswith('books:'): return 'boo'
     for x in comment_dict:
         if re.search(r'# *({})\b'.format(comment_dict[x]), l):
             return x
@@ -128,36 +144,49 @@ def is_anagrammy_or_comments(x):
     if x.lower().startswith("anagram") or '#ana' in x.lower(): return True
     return mt.is_anagrammy(x)
 
-def sort_raw(x):
+def sort_raw(raw_long):
     sections = defaultdict(str)
-    if not os.path.exists(x):
-        print("Skipping {0} which does not exist.".format(x))
+    if not os.path.exists(raw_long):
+        print("Skipping {0} which does not exist.".format(raw_long))
         return 0
-    x0 = os.path.basename(x)
-    if not re.search("raw-(drive|keep)-[0-9]+-[0-9]+-[0-9]+.txt", x0):
-        print("Skipping {0} which is not in the raw-drive/keep-##-##-#### format.".format(x))
-        return 0
+    x0 = os.path.basename(raw_long)
+    if ".bak" in x0:
+        print("Badly named file", x0, "skipped")
     y = x0[:-4].split('-')[2:]
     z = [int(q) for q in y]
-    daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
-    # print(x0, daily_file)
-    final_out_file = "{0}/{1}".format(drive_proc_dir, daily_file)
+    if what_to_sort == DAILIES:
+        final_out_file = raw_long
+    else:
+        daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
+        final_out_file = "{0}/{1}".format(drive_proc_dir, daily_file)
     if is_locked(final_out_file):
         print(final_out_file, "has been locked for writing, skipping.")
         return 0
-    print("Parsing", x, "...")
+    print("Parsing", raw_long, "...")
     important = False
-    with open(x, mode='r', encoding='utf-8-sig') as file:
+    in_header = True
+    header_to_write = ""
+    with open(raw_long, mode='r', encoding='utf-8-sig') as file:
         for (line_count, line) in enumerate(file, 1):
+            if in_header:
+                if line.startswith("#"):
+                    header_to_write += line
+                    continue
+                in_header = False
             if important:
                 if not line.strip: line = "blank line ---\n"
                 sections['important'] += line
                 continue
             ll = line.strip().lower()
             if ll.startswith("\\"):
-                mt.npo(x, line_count)
-                print("Uh oh. You can't start with a backslash. Change to something else. {0} line {1}".format(os.path.basename(x), line_count))
-            if not ll: continue
+                current_section = ll[1:]
+                continue
+            if not ll:
+                current_section = ''
+                continue
+            if current_section:
+                sections[current_section] += line
+                continue
             if line.startswith('IMPORTANT'):
                 important = True
                 continue
@@ -176,37 +205,46 @@ def sort_raw(x):
                 sections['sh'] += line
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
-        sections['nam'] = "\t" + sections['nam']
+        sections['nam'] = "\t" + sections['nam'].lstrip()
     if 'important' in sections:
-        if in_important_file(x, important_file):
+        if in_important_file(raw_long, important_file):
             print("Not dumping text to", important_file, "as it's already in there.")
         else:
             fout = open(important_file, "w")
-            fout.write("From {0}:\n".format(x))
+            fout.write("From {0}:\n".format(raw_long))
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
     temp_out_file = "c:/writing/temp/drive-temp.txt"
     fout = open(temp_out_file, "w")
+    fout.write(header_to_write)
     for x in sorted(sections, key=lambda x:sort_priority(x)):
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
         if x != 'nam': fout.write("\n\n")
     fout.close()
+    mt.compare_alphabetized_lines(raw_long, temp_out_file)
     if os.path.exists(final_out_file) and cmp(final_out_file, temp_out_file):
         print(final_out_file, "was not changed since last run.")
         exit()
         return 0
     else:
         if test_copy_only:
-            print("Not copying tho dif")
-            if only_one: sys.exit()
-            return 1
+            print("Not copying even though differences were found.")
+            if show_differences:
+                mt.wm(raw_long, temp_out_file)
+            if only_one:
+                print("Bailing, because flag for only one file was set, probably for testing.")
+                sys.exit()
         copy(temp_out_file, final_out_file)
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
+    print(open_raw, raw_long)
+    if open_raw:
+        print("Opening raw", raw_long)
+        os.system(raw_long)
     print("Opening", final_out_file)
     os.system(final_out_file)
     return 1
@@ -223,9 +261,15 @@ while cmd_count < len(sys.argv):
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
     elif arg == 'k':
-        see_drive_files = False
+        what_to_sort = KEEP
     elif arg == 'd':
-        see_drive_files = True
+        what_to_sort = DRIVE
+    elif arg == 'a':
+        what_to_sort = DAILY
+    elif arg == 'p' or arg == 'sp':
+        sort_proc = True
+    elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
+        only_list_files = True
     elif arg == '?':
         usage()
     elif len(arg) < 2:
@@ -237,15 +281,28 @@ while cmd_count < len(sys.argv):
             file_list.append(arg)
     cmd_count += 1
 
-if see_drive_files:
-    os.chdir(raw_drive_dir)
+if what_to_sort == DAILIES:
+    dir_to_scour = daily_proc_dir
+    sort_proc = True
+elif what_to_sort == DRIVE:
+    dir_to_scour = raw_drive_dir
+elif what_to_sort == KEEP:
+    dir_to_scour = raw_keep_dir
 else:
-    os.chdir(raw_keep_dir)
+    sys.exit("Unknown sorting type.")
+
+os.chdir(dir_to_scour)
 
 read_comment_cfg()
 
 if not len(file_list):
-    file_list = glob("{0}/{1}".format(raw_drive_dir, raw_glob))
-    for fi in file_list:
-        files_done += sort_raw(fi)
-        if files_done == max_files: break
+    my_glob = "{}/{}".format(dir_to_scour, dailies_glob if what_to_sort == DAILIES else raw_glob)
+    file_list = glob(my_glob)
+    print("Globbing", my_glob)
+
+for fi in file_list:
+    if only_list_files:
+        print(fi)
+        continue
+    files_done += sort_raw(fi)
+    if files_done == max_files: break
