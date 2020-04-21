@@ -14,6 +14,7 @@
 use strict;
 use warnings;
 use lib "c:/writing/scripts";
+use mytools;
 use i7;
 
 use File::Compare;
@@ -434,7 +435,9 @@ sub processTerms {
             if ( !-f $tg ) {
               die("$tg (in greater array) is not a valid file.");
             }
-            if ( stat($tl)->mtime > stat($tg)->mtime ) {
+			my $tl0 = follow_symlink($tl);
+			my $tg0 = follow_symlink($tg);
+            if ( stat($tl0)->mtime > stat($tg0)->mtime ) {
               if ( defined( $ignoreFatal{$hashProj} ) ) {
                 print "SKIPPING $tl vs $tg timestamp error.\n";
                 $skippedFatal++;
