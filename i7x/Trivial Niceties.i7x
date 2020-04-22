@@ -8,6 +8,8 @@ debug-state is a truth state that varies.
 
 in-beta is a truth state that varies.
 
+to say this-game: (- print (string) Story; -)
+
 to say fill-in-here: say "!!!!" [This is something that should never be in a game's release. At times I want to be able to compile the game but still reliably note when something needs to be implemented. I track this with a script elsewhere.]
 
 definition: a thing (called qvc) is qv:
@@ -358,6 +360,22 @@ understand "win" as wining.
 carry out wining:
 	end the story finally;
 	the rule succeeds;
+
+volume forcegoing (for Glulx only)
+
+chapter fging
+
+fging is an action applying to one visible thing.
+
+understand the command "fg" as something new.
+
+understand "fg [direction]" as fging.
+
+carry out fging:
+	if noun is not a direction, say "We need a direction.";
+	if the room noun of location of player is nowhere, say "That doesn't lead anywhere.";
+	move player to the room noun of location of player;
+	the rule succeeds.
 
 volume debug printing (for Glulx only)
 
