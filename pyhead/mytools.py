@@ -71,7 +71,8 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
-def is_anagram(x):
+def is_anagram(x, accept_comments = True):
+    x = re.sub("#.*", "", x)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
     for j in y: q[j] += 1
@@ -88,8 +89,9 @@ def is_limerick(x, accept_comments = False): # quick and dirty limerick checker
 
 is_limericky = is_limerick
 
-def is_palindrome(x, accept_comments = False):
+def is_palindrome(x, accept_comments = True):
     if accept_comments and "#pal" in x: return True
+    if accept_comments: x = re.sub('#.*', '', x)
     let_only = re.sub("[^a-z]", "", x.lower())
     return let_only == let_only[::-1]
 
@@ -150,7 +152,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             else: right += 1
             totals += 1
             if not max or totals <= max:
-                print(">>>>R" if freq[j] > 0 else "L<<<<", 'Extra', j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
+                print(">>>>RIGHT FILE" if freq[j] > 0 else "LEFT FILE<<<<", 'Extra line', "<blank>" if not j else j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
