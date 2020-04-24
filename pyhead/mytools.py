@@ -97,6 +97,12 @@ def is_palindrome(x, accept_comments = True):
 
 is_palindromey = is_palindromy = is_palindrome
 
+def print_and_to_clip(my_str):
+    print(my_str, end='')
+    pyperclip.copy(my_str)
+
+pc = print_and_to_clip
+
 def clipboard_slash_to_limerick(print_it = False):
     x = slash_to_limerick(pyperclip.paste())
     if print_it: print(x)
