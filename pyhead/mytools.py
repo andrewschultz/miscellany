@@ -26,6 +26,9 @@ default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
 
+def on_off(my_truth_state):
+    return "on" if my_truth_state else "off"
+
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
