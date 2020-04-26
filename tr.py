@@ -52,20 +52,11 @@ for x in my_triz:
         continue
     exe = mt.npnq if my_triz[x] == 'txt' else "c:/tech/trizbort/trizbort.exe"
     print(exe)
-    if os.path.islink(tf):
-        print("Got symlink.")
-        u = os.readlink(tf)
-        x = Path(tf).resolve()
-        if u == tf:
-            sys.exit("Looping symlink {0}, bailing.".format(tf))
-        print("Opening symlink", tf, "to", u, exe)
-        if exe == 'txt':
-            mt.npo(u)
-        else:
-            subprocess.Popen([exe, u], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    tf2 = mt.follow_link(tf)
+    if tf2 != tf:
+        print("Followed link from", tf, "to", tf2)
+    if exe == 'txt':
+        mt.npo(u)
     else:
-        if exe == 'txt':
-            mt.npo(tf)
-        else:
-            subprocess.Popen([exe, tf])
-        print("Launching file", tf)
+        subprocess.Popen([exe, tf2], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print("Launching file", tf2)
