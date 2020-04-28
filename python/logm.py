@@ -24,6 +24,7 @@ auto_date = True
 auto_today_ok = False
 days_back = 0
 push_after_commit = False
+no_verify = False
 
 def commit_maybe_push(cmd):
     os.system(cmd)
@@ -49,6 +50,7 @@ def usage(arg = ""):
     print("fl gets the next missing date from the log. For instance, if the last commit is on October 14, it will be October 15.")
     print("m# specifies minutes before midnight")
     print("nc/na sets no author or commit change, and am amends manually.")
+    print("nv = --no-verify as sometimes I may not want to copy over the very latest changes")
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
     print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d} for a time of {:s}.".format(min_before * 60 + sec_before,
@@ -172,7 +174,7 @@ while count < len(sys.argv):
         print("Found project for {:s} as {:s} but -p is extra-super-proper usage.".format(arg, proj_shift_yet))
     elif arg == '!':
         min_before = 0
-        sec_before = int(random.random()) * 600 + 1
+        sec_before = int(random.random() * 600) + 1
         print("Random seconds before =", sec_before)
     elif arg == 'p':
         push_after_commit = True
@@ -212,13 +214,15 @@ while count < len(sys.argv):
         set_commit = False
     elif arg == 'bc':
         bare_commit = True
+    elif arg == 'nv':
+        no_verify = True
     elif arg == '?': usage()
     else: usage(arg)
     count += 1
 
 my_time = pendulum.today()
 
-bare_commit_cmd = "git commit -m \"{}\"".format(commit_message)
+bare_commit_cmd = "git commit{} -m \"{}\"".format(" --no-verify" if no_verify else "", commit_message)
 
 if get_from_log:
     days = days_since()
