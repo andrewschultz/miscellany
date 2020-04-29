@@ -487,7 +487,11 @@ def notes_file(x):
     return sdir(x) + "/" + "notes.txt"
 
 def walkthrough_file(x, extra_string = ""):
-    return sdir(x) + "/" + "walkthrough" + ( '-' + extra_string if extra_string else '') + ".txt"
+    if extra_string == 'base' or extra_string == 'wbase':
+        file_short = "wbase.txt"
+    else:
+        file_short = "walkthrough" + ( '-' + extra_string if extra_string else '') + ".txt"
+    return os.path.join(sdir(x), file_short)
 
 wthru = walkthrough_file
 
@@ -736,7 +740,7 @@ def apostrophe_check_string(my_string, print_results = False, my_file = '<UNDEFI
     rl = len(rights)
     if ll != rl and "[apostrophe ok]" not in my_string:
         if print_results:
-            print("potential bad apostrophes {} to {} {} line {} >>> {}".format(abs(ll-rl), "left" if ll > rl else "right", os.path.basename(my_file), line_num if line_num > -1 else "<NO LINE>", ml))
+            print("potential bad apostrophes (ignore with [apostrophe ok]) {} to {} {} line {} >>> {}".format(abs(ll-rl), "left" if ll > rl else "right", os.path.basename(my_file), line_num if line_num > -1 else "<NO LINE>", ml))
     return abs(ll - rl)
 
 def is_vardef_line(my_line):
