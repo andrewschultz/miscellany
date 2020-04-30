@@ -48,6 +48,16 @@ while count < len(sys.argv):
             file_args.append(arg)
     count += 1
 
+if len(file_args) == 0:
+    sys.exit("I need a valid project and/or header. I have neither.")
+
+if len(file_args) == 1:
+    temp = i7.dir2proj()
+    if not temp:
+        sys.exit("You need to provide a valid project (abbreviation) and header (abbreviation) or be in a product directory and specify a header (abbreviation).")
+    print("Assuming default project", temp)
+    file_args.insert(0, temp)
+
 if file_args[1] in i7.i7x and file_args[0] not in i7.i7x:
     print("It looks like you put the project name first, so I am flipping the arguments. No big deal.")
     file_args = file_args[::-1]
@@ -72,21 +82,27 @@ if not base_file_noxt:
     base_file_noxt = '{:s} {:s}'.format(i7.proj_exp(file_args[0], False), i7.hf_exp(file_args[1])).title().replace('-', ' ')
 
 base_file = base_file_noxt + ".i7x"
-x = i7.extdir + "\\" + base_file # can't use os.path.join since the file may not be there
+nongit_file = i7.extdir + "\\" + base_file # can't use os.path.join since the file may not be there
+git_file = i7.gh_dir + "\\" + my_proj + "\\" + base_file
 
-if os.path.exists(x) and not overwrite:
+link_command = "mklink \"{}\" \"{}\"".format(nongit_file, git_file))
+
+if os.path.exists(git_file) and not overwrite:
     if not open_post_conversion: sys.exit("With open post conversion set to off, there is nothing to do here. Bailing.")
-    print(x, "exists. Opening and not creating.")
-    os.system('"' + x + '"')
+    print(nongit_file, "exists. Opening and not creating.")
+    os.system('"' + nongit_file + '"')
 else:
     if overwrite:
-        print(x, "exists but overwriting.")
+        print(nongit_file, "exists but overwriting.")
     else:
-        print(x, "does not exist. Creating.")
+        print(nongit_file, "does not exist. Creating.")
     now = datetime.datetime.now()
-    f = open(x, "w")
+    f = open(nongit_file, "w")
     f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"This should briefly describe the purpose of {:s}.\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, base_file_noxt))
     f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
     f.close()
 
-if open_post_conversion: i7.npo(x)
+print("Running link command", link_command)
+os.system(link_command)
+
+if open_post_conversion: i7.npo(nongit_file)
