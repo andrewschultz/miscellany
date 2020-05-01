@@ -11,16 +11,19 @@ use i7proj;
 use File::Basename;
 use File::Compare;
 use File::Copy;
+use File::stat;
+use mytools;
 
 my %fileCopy;
 
 findProj();
 
+my $ignore_timestamps = 1;
 my $ignoreBinary = 0;
 my $prt          = "c:\\games\\inform\\prt";
 my $projToRead   = "";
 my $projName     = getcwd();
-my $defaultProj  = "ai";
+my $defaultProj  = "vv";
 
 if ( $projName =~ /\.inform/ ) {
   $projName =~ s/\.inform.*//g;
@@ -30,21 +33,31 @@ else {
   $projName = "";
 }
 
-if ( $#ARGV >= 0 ) {
-  my $arg = $ARGV[0];
-  if ( $arg =~ /^-/ ) { $arg =~ s/^-//g; $ignoreBinary = 1; }
-  $projToRead = $i7x{$arg};
-  if ( !$projToRead && ( !$defaultProj ) ) {
-    die("Couldn't find any project for $arg.\n");
-  }
+my $arg_count = 0;
+while ($arg_count <= $#ARGV)
+{
+  my $arg = $ARGV[$arg_count];
+  print "$arg\n";
+  if ($arg =~ /\?/) { print("ib = ignore binary, it = ignore timestamps."); exit(); }
+  if ( $arg =~ /^(-)?ib/ ) { $arg =~ s/^-//g; $ignoreBinary = 1; $arg_count++; next;}
+  if ( $arg =~ /^(-)?it/ ) {$ignore_timestamps = 1; $arg_count++; next;}
+  if ( $arg =~ /^(-)?ni/ ) {$ignore_timestamps = 0; $arg_count++; next;}
+  die ("Redefined proj-to-read.") if $projToRead;
+  if (defined($i7x{$arg})) {
+    $projToRead = $i7x{$arg};
+	} elsif ( defined($i7x{$projName}) ) { $projToRead = $projName; }
+	else { die("Couldn't find any project for $arg.\n") }
+  $arg_count++;
 }
-elsif ( $i7x{$projName} ) { $projToRead = $projName; }
-elsif ($projName)         { $projToRead = $projName; }
+
+$projToRead = $projName if $projName && !$projToRead;
 
 if ( !$projToRead && $defaultProj ) {
   $projToRead = i7::to_proj($defaultProj);
   print "Going with default project $defaultProj/$projToRead.\n";
 }
+
+die("Couldn't locate or determine a project. Find a story.ni source directory or specify a project shortcut.") if !$projToRead;
 
 open( A, "c:/writing/scripts/prt.txt" );
 
@@ -123,13 +136,25 @@ sub glob_over {
   if ( scalar @g ) {
     print "REG files first.\n";
     for my $g2 (@g) {
-      my $g3 = "$prt\\" . ( basename $g2);
+	  my $bg = basename $g2;
+      my $g3 = "$prt\\$bg";
       if ( !-f $g3 ) {
         copy( $g2, $g3 );
         print "Copying new file $g2 to $g3\n";
         $news++;
       }
+	  $g2 = mytools::follow_symlink($g2);
+	  $g3 = mytools::follow_symlink($g3);
       if ( compare( $g2, $g3 ) ) {
+	    if ( stat($g2)->mtime < stat($g3)->mtime ) {
+		if ($ignore_timestamps) {
+		  print("Ignoring that the PRT directory timestamp for $g2 is after the source directory.\n");
+		}
+		else {
+		print "SKIPPING--$bg timestamp is after the main file $g2. This may cause overwrites. -it ignores this.\n";
+		next;
+		}
+		}
         copy( $g2, $g3 );
         print "Copying modified file $g2 to $g3\n";
         $difs++;
