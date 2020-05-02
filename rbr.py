@@ -242,7 +242,7 @@ def vet_potential_errors(line, line_count, cur_pot):
         if flag_all_brackets:
             if max_flag_brackets and cur_flag_brackets > max_flag_brackets: return False
             cur_flag_brackets += 1
-            print(cur_flag_brackets, "Text replacement/brackets artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
+            print(cur_flag_brackets, "Text replacement/brackets artifact (ignore with #brackets ok) in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
             return True
     return False
 
@@ -384,7 +384,10 @@ def viable_untested(my_cmd, my_ignores):
     return True
 
 def proj_of(file_name):
-    temp = os.path.basename(file_name).split('-')[1]
+    try:
+        temp = os.path.basename(file_name).split('-')[1]
+    except:
+        return ""
     return temp
 
 def get_file(fname):
@@ -627,7 +630,7 @@ def get_file(fname):
                     sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
                 if '#' in line:
-                    line_orig = re.sub(" *#.*", "", line) # eliminate comments from line -- we want to be able to GREP for comments if need be
+                    line = re.sub(" *#.*", "", line) # eliminate comments from line -- we want to be able to GREP for comments if need be
                 if balance_undos:
                     if line[1:].strip().startswith("undo"):
                         try:
