@@ -67,13 +67,18 @@ def do_one_sort(sort_string, fout, prefix_second = False):
         split_string = "\n"
     if not split_string: sys.exit("Oops failed to get split_string.")
     divs = sort_string.split(split_string)
-    print(divs)
     divs = sorted(divs, key=lambda x: (re.sub(" [a-z\( ]+-", " ", rule_removal(firstline(x))), re.sub("-.*", "", rule_removal(firstline(x)))) if prefix_second else x.lower())
     ow = split_string.join(divs)
     fout.write("\n" + ow + "\n\n")
     return
 
 def main_sect_alf(my_proj, my_file):
+    if not my_file:
+        print("WARNING no file to alphabetize. Maybe you put in the wrong section header.");
+        return
+    if not os.path.exists(my_file):
+        print("WARNING could not get". my_file, "to run.");
+        return
     my_bak = my_file + ".bak"
     fout = open(my_bak, "w", newline="\n")
     print("Alphabetizing sections in", my_file, "...")
