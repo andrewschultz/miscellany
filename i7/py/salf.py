@@ -42,6 +42,7 @@ def usage(header="USAGE FOR SALF.PY"):
     print(header)
     print("=" * 50)
     print("-d = show differences if something goes wrong")
+    print("-e = edit configs file {}".format(os.path.basename(alf_file)))
     print("-f = force copy-over on different sizes")
     print("-v = verbose")
     exit()
@@ -139,7 +140,7 @@ def main_sect_alf(my_proj, my_file):
             if do_more:
                 ll = line.lower().strip()
                 if re.search("\[(xx|zz)[0-9a-z]+\]", ll) and not ll.startswith("table of "):
-                    print("WARNING: line {} has potential unrecognized start/end marker {}".format(line_count, ll))
+                    print("WARNING: line {} has potential unrecognized start/end marker {}. Check salf.txt.".format(line_count, ll))
                 if in_sort:
                     sort_string = sort_string + line
                 else:
@@ -187,6 +188,9 @@ while cmd_count < len(sys.argv):
     elif arg == 'so': story_only = True
     elif arg == 'nc' or arg == 'cn': copy_over = False
     elif arg == 'all' or arg == 'a': story_only = False
+    elif arg == 'e':
+        os.system(alf_file)
+        exit()
     elif arg == '?': usage()
     elif arg in i7.i7x:
         if cmd_defined_proj: sys.exit("Redefined project from {:s} to {:s}.".format(cmd_defined_proj, i7.proj_exp(arg)))
