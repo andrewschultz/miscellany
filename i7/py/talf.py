@@ -350,9 +350,12 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 temp_out.write(line)
                 continue
             if check_apostrophes and in_table:
-                apostrophe_errors += i7.apostrophe_check_line(line, True, f, line_count)
-                if not copy_over:
-                    mt.add_postopen(f, line_count, priority=8)
+                this_apostrophe = i7.apostrophe_check_line(line, True, f, line_count)
+                if this_apostrophe:
+                    apostrophe_errors += this_apostrophe
+                    if not copy_over:
+                        print("Iffy apostrophe", f, line_count)
+                        mt.add_postopen(f, line_count, priority=8)
             if in_sortable_table:
                 if line.count("\"") % 2 and 'ibq' not in line:
                     print("Odd number of quotes at line {:d}: {:s}".format(line_count, line))
@@ -440,7 +443,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print(os.path.basename(x), "had leftover table-sort key" + ('s' if len(need_to_catch[x]) > 1 else '') + ":", ','.join(sorted(need_to_catch[x].keys())))
             forgot_to_catch = True
         else:
-            print(os.path.basename(x), "is okay")
+            print(os.path.basename(x), "had no leftover table-sort keys")
     if forgot_to_catch:
         if override_omissions:
             print("Ignoring unaccessed tables.")
