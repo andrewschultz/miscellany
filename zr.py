@@ -346,6 +346,13 @@ for x in i7.i7f[proj]:
     if source_only and 'story.ni' not in x.lower(): continue
     check_source(x)
 
+y = [ x for x in cs if cap_search[x] == False ]
+
+if len(y):
+    print(len(y), "Locations listed in zr.txt but not found in source:", ', '.join(y))
+else:
+    print("All locations listed in zr.txt were found in source.")
+
 if line_to_open:
     if not open_post: sys.exit("Use -o to open the config file at the line that threw a warning.")
     i7.npo(zr_data, line_to_open)
