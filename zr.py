@@ -140,6 +140,7 @@ def check_source(a):
                 this_line_yet = False
                 for x in cs:
                     if x.lower() in line.lower():
+                        cap_search[x] = True
                         ll_old = ll
                         if quick_quote_reject and with_quotes(x.lower(), line.lower()): continue
                         # once I understand regex better, I want to try this...
@@ -298,7 +299,7 @@ with open(zr_data) as file:
             if temp in cap_search:
                 print("WARNING line {:d}:".format(line_count), "entry", q1, "=", temp, "already accounted for, probably a duplicate.")
                 if not line_to_open: line_to_open = line_count
-            cap_search[temp] = True
+            cap_search[temp] = False
             if always:
                 always_adj[temp] = True
             if add_first_loc_word:
