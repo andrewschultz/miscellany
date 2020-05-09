@@ -92,7 +92,7 @@ def check_source(a):
     b = a + "2"
     short = os.path.basename(a)
     short2 = os.path.basename(b)
-    fout = open(b, "w", newline='\n') # STORY.NI files have unix line endings
+    fout = open(b, "w", newline='\n') # STORY.NI and *.i7x files have, for the moment, unix line endings
     bail_from_now = False
     if verbose: print("Looking at", a)
     global max_total_errs
@@ -161,8 +161,8 @@ def check_source(a):
         print(short, "hit the maximum number of errors and may or may not have overrun. You may wish to rerun.")
     if not cmp(a, b):
         if difs == 0:
-            print("There are no flagged differences, but", short, "is not", short2 + ". This should not happen. Bailing.")
-            exit()
+            print("There are no flagged differences, but", short, "is not", short2 + ". This is likely due to different or mixed CR/LFs within the file. You may wish to convert to windows line endings and back.")
+            return
         print(difs, "differences", noncaps_difs, "noncaps", caps_difs, "caps differences, copying", short, "back over")
         if only_test:
             print("Testing differences, so, not copying back over.")
@@ -172,7 +172,8 @@ def check_source(a):
             try:
                 copy(b, a)
             except:
-                print("Couldn't copy back to story.ni.")
+                print("Couldn't copy", b, "to", a)
+                print("Make sure", a, "isn't open in a hex editor or anything.")
                 exit()
             try:
                 os.remove(b)
@@ -341,6 +342,9 @@ if not got_proj:
     sys.exit()
 
 cs = sorted(list(cap_search))
+
+if proj not in i7.i7f:
+    sys.exit("{} did not have a file manifest in i7f. You may wish to update things in i7p.txt.".format(proj))
 
 for x in i7.i7f[proj]:
     if 'tests' in x.lower(): continue
