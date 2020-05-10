@@ -34,6 +34,7 @@ my $hours_before     = 0;
 my $hours_after     = 0;
 
 #######################variables
+my $show_master_main = 0;
 my $count  = 0;
 my $ghBase = "";
 my $popupText;
@@ -41,7 +42,7 @@ my $overallSum;
 my $sum;
 my $daysAgo             = 0;
 my $allBranches         = 0;
-my $masterBranchWarning = 0;
+my $mainBranchWarning = 0;
 
 chdir("c:\\writing\\scripts");
 my $siteFile = __FILE__;
@@ -77,11 +78,12 @@ next;
 };
     /^-?sl$/   && do { $showLog             = 1; $count++; next; };
     /^-?nsl?$/ && do { $showLog             = 0; $count++; next; };
-    /^-nmw$/   && do { $masterBranchWarning = 0; $count++; next; };
-    /^-mw$/    && do { $masterBranchWarning = 1; $count++; next; };
+    /^-nmw$/   && do { $mainBranchWarning = 0; $count++; next; };
+    /^-mw$/    && do { $mainBranchWarning = 1; $count++; next; };
     /^-?p$/    && do { $popup               = 1; $count++; next; };
     /^-?ty$/    && do { $today_yday           = 1; $count++; next; };
     /^-?u$/    && do { $unchAfter           = 1; $count++; next; };
+    /^-?(m|mm)$/    && do { show_shift_branch_name('<your project>'); exit(); };
     /^-?[es]$/ && do { `$siteFile`; exit(); };
     /^-?\d+$/ && do {
       $daysAgo = $ARGV[0];
@@ -154,28 +156,40 @@ my $since =
 print "Running on all dirs: $cmdBase ... $since\n";
 print "-ns to remove logs\n" if $showLog && !$debug;
 
-my $branch = "master";
+my $branch = "main";
 my $subdir = "";
 
 for $r (@repos) {
-  $branch = $allBranches ? "" : "master";
+  $branch = $allBranches ? "" : "main";
   $subdir = $r;
   if ( $r =~ /\// ) {
     my @ary = split( /\//, $r );
     $subdir = $ary[0];
-    $branch = "$ary[1] --not master";
+    $branch = "$ary[1] --not main";
   }
   my $cmd = "$cmdBase $branch $since";
   chdir("$ghBase\\$subdir") or do { warn "fail $ghBase\\$subdir"; next; };
 
-  # `git checkout master`;
+  my $git_branch = `git branch --list master`;
+  if (($branch eq "main") && ($git_branch =~ /master/)) {
+    print("Repo $r may wish to change master to main.\n");
+	if (!$show_master_main) {
+	  $show_master_main = 1;
+	  show_shift_branch_name($r);
+	}
+
+	$branch = "master";
+	next;
+  }
+
+  # `git checkout main`;
   $thisLog = `$cmd`;
-  if ( ( $hasBranch{$r} ) && ( $branch eq "master" ) ) {
+  if ( ( $hasBranch{$r} ) && ( $branch eq "main" ) ) {
     print "Checking $r\'s branches:\n" if $debug;
     $cmd = "$cmdBase $since";
     my $res2 = `$cmd`;
     if ( $res2 ne $thisLog ) {
-      print "WARNING: $r repo has non-master change.\n";
+      print "WARNING: $r repo has non-main change.\n";
     }
   }
   print getcwd() . ": $cmd\n" if $debug;
@@ -272,17 +286,27 @@ sub hrnorm {
   return ($_[0] + 24) % 24;
 }
 
+sub show_shift_branch_name {
+  print("git branch -m master main\n");
+  print("git push -u origin main\n");
+  print("echo CHANGE DEFAULT BRANCH\n");
+  print("https://github.com/andrewschultz/$_[0]/settings/branches\n");
+  print("https://bitbucket.com/andrewschultz/$_[0]/admin\n");
+  print("DONT QUITE git push origin --delete master\n");
+}
+
 sub usage {
   print <<EOT;
 ==========basic usage==========
 -ab all branches
--nw/nmw (no) master warnings
+-nw/nmw (no) main warnings
 -c open this source
 -d debug (or detail, to see log details)
 -sl show only log details default=$showLog, -ns/-nsl = don't show
 -p pop up results
 -h# = number of the hour to tweak, ha/hb=after/before norms
 -[es] open site file
+-m/mm shows how to switch from "master" to "main"
 -u run unch.pl afterwards
 -v verbose (shows commands etc.)
 -(#) how many days back (default = 0, today)
