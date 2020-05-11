@@ -403,6 +403,14 @@ to dn:
 
 to ital-txt (x - indexed text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]".
 
+volume trivial rules and cases
+
+to decide whether always-no: decide no;
+to decide whether always-yes: decide no;
+
+this is the trivially false rule: the rule fails;
+this is the trivially true rule: the rule succeeds;
+
 Trivial Niceties ends here.
 
 ---- DOCUMENTATION ----

@@ -7,7 +7,6 @@ volume intro/restore/skip
 include Trivial Niceties by Andrew Schultz.
 
 this is the check-skip-intro rule:
-	say "debug state [debug-state].";
 	if debug-state is false:
 		let got-good-key be false;
 		say "If you've played [story title] before, you may wish to jump ahead a bit. ";
