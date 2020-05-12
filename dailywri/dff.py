@@ -24,14 +24,14 @@ DAILY = DAILIES = 0
 DRIVE = 1
 KEEP = 2
 
-what_to_sort = DAILIES
+what_to_sort = DRIVE
 sort_proc = False
 
 # this should go in a config file later
 open_raw = True
 only_one = True
 see_drive_files = True
-test_copy_only = True
+test_no_copy = True
 only_list_files = False
 show_differences = True
 
@@ -59,8 +59,13 @@ def usage(my_arg):
         print("Bad argument", my_arg)
     print("=" * 50)
     print("DFF usage:")
-    print("Default should be okay.")
-    print("-d/-k specifies google drive or google keep downloads. Default is google drive.")
+    print()
+    print("-a/-d/-k specifies dAily, google Drive or google Keep downloads. Default is Google Drive. dAily is useful at the end of each week.")
+    print("co/te toggles the test-or-copy flag.")
+    print("-o/-fo/-of/-f only lists files.")\
+    print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
+    print()
+    print("You can also list files you wish to look up.")
     exit()
 
 def read_comment_cfg():
@@ -166,6 +171,7 @@ def sort_raw(raw_long):
     important = False
     in_header = True
     header_to_write = ""
+    current_section = ''
     with open(raw_long, mode='r', encoding='utf-8-sig') as file:
         for (line_count, line) in enumerate(file, 1):
             if in_header:
@@ -173,6 +179,8 @@ def sort_raw(raw_long):
                     header_to_write += line
                     continue
                 in_header = False
+                if header_to_write:
+                    header_to_write += "\n"
             if important:
                 if not line.strip: line = "blank line ---\n"
                 sections['important'] += line
@@ -230,8 +238,8 @@ def sort_raw(raw_long):
         exit()
         return 0
     else:
-        if test_copy_only:
-            print("Not copying even though differences were found.")
+        if test_no_copy:
+            print("Not copying to", final_out_file, "even though differences were found.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if only_one:
@@ -270,6 +278,10 @@ while cmd_count < len(sys.argv):
         sort_proc = True
     elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
         only_list_files = True
+    elif arg == 'co':
+        test_no_copy = False
+    elif arg == 'te':
+        test_no_copy = True
     elif arg == '?':
         usage()
     elif len(arg) < 2:
