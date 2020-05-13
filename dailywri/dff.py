@@ -13,18 +13,33 @@ import os
 import re
 import sys
 from collections import defaultdict
-from fractions import gcd
+from math import gcd
 from functools import reduce
 import mytools as mt
 from glob import glob
 from filecmp import cmp
 from shutil import copy
 
+DEFAULT_SORT = 0
+
 DAILY = DAILIES = 0
 DRIVE = 1
 KEEP = 2
 
-what_to_sort = DRIVE
+daily_strings = ['daily', 'drive', 'keep']
+
+if 'daily' in os.getcwd():
+    print("Sorting DAILY stuff")
+    what_to_sort = DAILY
+elif 'keep' in os.getcwd():
+    print("Sorting KEEP stuff")
+    what_to_sort = KEEP
+elif 'drive' in os.getcwd():
+    print("Sorting KEEP stuff")
+else:
+    what_to_sort = DEFAULT_SORT
+    print("Default sorting", daily_strings[what_to_sort])
+
 sort_proc = False
 
 # this should go in a config file later
@@ -62,7 +77,7 @@ def usage(my_arg):
     print()
     print("-a/-d/-k specifies dAily, google Drive or google Keep downloads. Default is Google Drive. dAily is useful at the end of each week.")
     print("co/te toggles the test-or-copy flag.")
-    print("-o/-fo/-of/-f only lists files.")\
+    print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print()
     print("You can also list files you wish to look up.")
