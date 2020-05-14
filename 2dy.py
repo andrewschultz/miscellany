@@ -2,6 +2,8 @@
 # 2dy.py: replacement for perl script that went X daily files back.
 #
 
+import glob
+import xml.etree.ElementTree as ET
 import sys
 import pendulum
 import os
@@ -21,6 +23,7 @@ os.chdir("c:/writing/daily")
 latest_daily = True
 
 daily = "c:/writing/daily/"
+daily_proc = "c:/writing/daily/to_proc"
 daily_done = "c:/writing/daily/done/"
 
 file_header = ""
@@ -31,6 +34,50 @@ files_back_wanted = 1
 verbose = False
 
 my_sections_file = "c:/writing/scripts/2dy.txt"
+
+def see_back(this_file = d, my_dir = "", days_back = 7):
+    my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
+    return os.path.join(my_dir, my_file)
+
+def check_unsaved():
+    open_array = []
+    e = ET.parse(mt.np_xml)
+    root = e.getroot()
+    for elem in e.iter('File'):
+        itersize += 1
+        t = elem.get('filename')
+        if 'daily' in t and re.search("[\\\/][0-9]{8}\.txt", t):
+            bfp = elem.get("backupFilePath")
+            if bfp:
+                if not os.path.exists(bfp):
+                    print("No backup file for", t, "exists. It should be", bfp)
+                    continue
+                print(t, "has backup/needs re-saving")
+                open_array.append(t)
+    if not len(open_array): return
+    for x in open_array:
+        mt.npo(x, bail = False)
+
+def move_to_proc():
+    os.chdir("c:/writing/daily")
+    g1 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/20*.txt")]
+    g2 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/to_proc/20*.txt")]
+
+    threshold = see_back(d, '', 7)
+    sys.exit(threshold)
+    for q in g1:
+        if q > threshold:
+            print(q, "above threshold of", threshold, "so ignoring. Set mn= to change.")
+            continue
+        if mt.is_daily(q):
+            if q not in g2:
+                print(q, "needs to be moved to to_proc and set read-only")
+                continue
+                shutil.copy(q, "to_proc/{}".format(q))
+                os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
+                print("attrib -r {}".format(q))
+            if q in g2:
+                pass
 
 def usage(param = 'Cmd line usage'):
     print(param)
@@ -64,10 +111,6 @@ def get_init_sections():
                 ary2 = q.split('=')
                 sect_ary.append(ary2[0])
                 # init_sect[ary2[0]] = ary2[1]
-
-def see_back(d, my_dir, days_back):
-    my_file = d.subtract(days=days_back).format('YYYYMMDD') + ".txt"
-    return os.path.join(my_dir, my_file)
 
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
