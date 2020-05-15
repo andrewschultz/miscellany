@@ -8,7 +8,9 @@ import sys
 import pendulum
 import os
 from collections import defaultdict
+from shutil import copy
 import mytools as mt
+from stat import S_IREAD, S_IRGRP, S_IROTH
 
 #init_sect = defaultdict(str)
 
@@ -23,7 +25,7 @@ os.chdir("c:/writing/daily")
 latest_daily = True
 
 daily = "c:/writing/daily/"
-daily_proc = "c:/writing/daily/to_proc"
+daily_proc = "c:/writing/daily/to-proc"
 daily_done = "c:/writing/daily/done/"
 
 file_header = ""
@@ -61,23 +63,23 @@ def check_unsaved():
 def move_to_proc():
     os.chdir("c:/writing/daily")
     g1 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/20*.txt")]
-    g2 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/to_proc/20*.txt")]
+    g2 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/to-proc/20*.txt")]
 
     threshold = see_back(d, '', 7)
-    sys.exit(threshold)
+
     for q in g1:
         if q > threshold:
-            print(q, "above threshold of", threshold, "so ignoring. Set mn= to change.")
+            print(q, "above threshold of", threshold, "so ignoring. Set mn= to change.") # this should only happen once
             continue
         if mt.is_daily(q):
             if q not in g2:
-                print(q, "needs to be moved to to_proc and set read-only")
-                continue
-                shutil.copy(q, "to_proc/{}".format(q))
+                print(q, "needs to be moved to to-proc and set read-only. Let's do that now!")
+                copy(q, "to-proc/{}".format(q))
                 os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
-                print("attrib -r {}".format(q))
-            if q in g2:
-                pass
+            else:
+                if os.access(q, os.W_OK):
+                    print(q, "needs to be set read-only in the base directory.")
+                    os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
 
 def usage(param = 'Cmd line usage'):
     print(param)
@@ -87,6 +89,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)mn/n/nm (#) = # max new days back")
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
+    print("(-?)p/tp = move to to_proc")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
@@ -146,6 +149,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
+    elif arg == 'p' or arg == 'tp': move_to_proc()
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
