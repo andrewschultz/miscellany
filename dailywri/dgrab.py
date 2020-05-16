@@ -4,10 +4,15 @@
 #
 # for instand #whau would go to welp-haunted file
 #
+# this looks at files in the to-proc directory
+#
 # usage: dgrab.py -da s=wh
 #
 # question: search for starting tabs in non-.ni files. What script for that?
 #
+# daily.py has the main engine details
+# dgrab.txt has what maps where
+# todo: utf8 to ascii, open first nonblank, open first bad header
 
 import datetime
 from shutil import copy
@@ -71,7 +76,10 @@ def usage(header="GENERAL USAGE"):
     print("s= = section to look for")
     print("a= analyze what is left")
     print("")
-    print("sample usage: dgrab.py -da s=ut for Under processing")
+    print("sample usage:")
+    print("  dgrab.py -da s=ut for processing Under They Thunder sections in daily files")
+    print("  dgrab.py -dr s=vvff for processing VVFF sections in Google Drive files")
+    print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     exit()
 
 def orig_vs_proc(file_to_compare, ask_before = False):
@@ -294,13 +302,14 @@ def send_mapping(sect_name, file_name, change_files = False):
                 if line.lower().strip() == w2i:
                     f.write(line)
                     if line.startswith("\\"):
-                        print("Will start writing at line", line_count)
+                        print("Section to append starts at line", line_count)
                         write_next_blank = True
                     else:
                         f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
                         remain_written = True
                     continue
                 if write_next_blank and not line.strip():
+                    print("Will start writing at line", line_count)
                     f.write(sect_text)
                     f.write("\n")
                     write_next_blank = False
@@ -312,9 +321,9 @@ def send_mapping(sect_name, file_name, change_files = False):
             f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
             f.write(sect_text)
             remain_written = True
-        if not remain_written: sys.exit("Text chunk for {:s}/{:s} not written to {:s}. Bailing".format(sect_name, w2i, nif))
+        if not remain_written: sys.exit("Text chunk for {:s} ~ {:s} not written to {:s}. Bailing.".format(sect_name, w2i, nfi))
         f.close()
-        sys.exit("Ok done with test")
+        #sys.exit("Ok done with test")
     else:
         print("Appending to", nfi)
         f = open(nfi, "a")
@@ -449,7 +458,10 @@ if list_it:
     print(", ".join("{:s}={:d}".format(x, sect_lines[x]) for x in sorted(sect_lines, key=sect_lines.get, reverse=True)))
     exit()
 
-if processed == 0 and max_process >= 0: print("Could not find anything to process for {:s}.".format(my_sect))
+if processed == 0:
+    print("Could not find anything to process for {:s}.".format(my_sect))
+else:
+    print("Processed", processed, "total file(s)")
 
 if len(change_list):
     print("Files still to process:", ', '.join(change_list))
