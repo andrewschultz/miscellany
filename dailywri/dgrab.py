@@ -50,7 +50,6 @@ open_cluttered = False
 just_analyze = False
 look_for_lines = False
 bail_without_copying = False
-open_on_warn = False
 do_diff = True
 verbose = False
 open_notes_after = True
@@ -60,8 +59,10 @@ list_it = False
 
 daily_dir = "c:/writing/daily"
 daily_proc = daily.to_proc(daily_dir)
-gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
+gdrive_dir = "c:/coding/perl/proj/from_drive"
 gdrive_proc = daily.to_proc(gdrive_dir)
+kdrive_dir = "c:/coding/perl/proj/from_keep"
+kdrive_proc = daily.to_proc(kdrive_dir)
 
 def usage(header="GENERAL USAGE"):
     print(header)
@@ -126,6 +127,7 @@ def analyze_to_proc():
             print("Backup file", this_daily, "should probably be deleted.")
             continue
         with open(this_daily) as file:
+            in_section = False
             daily_basename = os.path.basename(this_daily)
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("#"): continue
@@ -153,7 +155,7 @@ def analyze_to_proc():
                         last_line = line_count
     if not bad_header_count: print("Hooray! You have no bad headers.")
     sections_to_sort = 0
-    for x in sorted(sections_left, key=lambda x: (-sections_left[x], x)):
+    for x in sorted(sections_left, key=lambda x: (-sections_left[x], x), reverse=True):
         sections_to_sort += 1
         print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
     if not sections_to_sort: print("Hooray! You have no sections to shuffle.")
@@ -250,12 +252,12 @@ def send_mapping(sect_name, file_name, change_files = False):
     in_sect = False
     file_remain_text = ""
     sect_text = ""
-    if sect_name not in daily.mapping: sys.exit("No section name {:s} in the general mappings. Bailing on file {:s} before even running. Run with (-)e to open config.".format(sect_name, file_name))
+    if sect_name not in daily.mapping: sys.exit("No section name {:s} in the general mappings file dgrab.txt. Bailing on file {:s} before even running. Run with (-)e to open config.".format(sect_name, file_name))
     # print(sect_name, "looking for", my_reg, "in", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
             lls = line.lower().strip()
-            if re.search(my_reg, line):
+            if re.search(r"{}\b".format(my_reg), line):
                 if found_sect_name:
                     print("WARNING -- (no information lost) 2 section types map to", sect_name, my_reg, "line", found_sect_name, line_count, file_name)
                 if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
@@ -299,7 +301,7 @@ def send_mapping(sect_name, file_name, change_files = False):
         f = open(dg_temp_2, "w")
         with open(nfi) as file:
             for (line_count, line) in enumerate(file, 1):
-                if line.lower().strip() == w2i:
+                if line.lower().strip() == w2i.lower():
                     f.write(line)
                     if line.startswith("\\"):
                         print("Section to append starts at line", line_count)
@@ -404,13 +406,16 @@ if just_analyze:
 
 if not dir_to_proc:
     my_cwd = os.getcwd()
-    temp = daily.slashy_equals(my_cwd, [daily_dir, gdrive_dir])
-    print(gdrive_dir)
+    temp = daily.is_dir_or_proc(my_cwd, [daily_dir, gdrive_dir, kdrive_dir])
+    print(temp)
     if temp:
         print("Trying current directory", my_cwd)
         dir_to_proc = my_cwd
     else:
         sys.exit("Need to specify a directory with -da (daily) or -dr (drive) or go to either writing-daily or google drive dir.")
+
+if "to-proc" not in dir_to_proc:
+    dir_to_proc = os.path.join(dir_to_proc, "to-proc")
 
 os.chdir(dir_to_proc)
 
