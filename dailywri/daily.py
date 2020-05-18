@@ -4,12 +4,15 @@
 # common code for dsort.py and dgrab.py
 #
 
+import sys
 from shutil import copy
 import re
 import os
 import pendulum
 from collections import defaultdict
 import glob
+import mytools as mt
+from pathlib import Path
 
 today_file = pendulum.now().format("YYYYMMDD") + ".txt"
 
@@ -34,6 +37,8 @@ where_to_insert = defaultdict(str)
 
 default_sect = ""
 glob_default = "da"
+
+open_on_warn = False
 
 def is_true_string(x):
     if x == '0' or x == 'false': return False
@@ -101,10 +106,10 @@ def read_section_sort_cfg(cfg_bail = False):
                     temp = glob.glob(globs[q])
                     temp1 = [u for u in temp if re.search(file_regex[q], u)]
                     if len(temp) == 0:
-                        print("WARNING: glob pattern {:s}/{:s} at line {:d} does not turn up any files.".format(q, globs[q], line_count))
+                        print("WARNING: glob pattern {:s} ~ {:s} at line {:d} of {} does not turn up any files.".format(q, globs[q], line_count, dg_cfg))
                         cfg_edit_line = line_count
                     elif len(temp1) == 0:
-                        print("WARNING: glob pattern {:s}/{:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
+                        print("WARNING: glob pattern {:s} ~ {:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
                         cfg_edit_line = line_count
                     if print_ignored_files and len(temp) != len(temp1):
                         print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
@@ -127,6 +132,7 @@ def read_section_sort_cfg(cfg_bail = False):
         print("Fix problems in the CFG file.")
         mt.postopen()
     if cfg_edit_line:
+        open_on_warn = False
         if not open_on_warn:
             for q in sys.argv:
                 if q == 'e' or q == '-e': open_on_warn = True
@@ -141,11 +147,12 @@ def to_proc(dir_path):
 
 toproc = proc = to_proc
 
-def slashy_equals(dir_1, dir_list):
+def is_dir_or_proc(dir_1, dir_list):
     for dir_2 in dir_list:
-        d1 = dir_1.replace("\\", "/").lower()
-        d2 = dir_2.replace("\\", "/").lower()
-        if (d1 == d2): return dir_2
+        temp1 = Path(dir_1)
+        temp2 = Path(dir_2)
+        if temp2 in temp1.parents or temp2 == temp1:
+            return temp2
     return ""
     
 def copy_to_done(file_name, dir_path):
