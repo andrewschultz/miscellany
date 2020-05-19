@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 slink = defaultdict(list)
 file_name = mt.np_xml
 
+totals = 0
 news = 0
 e = ET.parse(file_name)
 root = e.getroot()
@@ -13,6 +14,7 @@ github_warnings = 0
 link_warnings = 0
 for elem in e.iter('File'):
     t = elem.get('filename')
+    totals += 1
     if t.startswith('new '):
         news += 1
         continue
@@ -27,4 +29,4 @@ for elem in e.iter('File'):
     slink[q].append(t.lower())
     #print(elem.get('filename'))
 
-print(github_warnings, "github warnings", link_warnings, "link warnings", news, "new files")
+print(github_warnings, "github warnings", link_warnings, "link warnings", news, "new files", totals, "total files")
