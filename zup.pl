@@ -87,6 +87,12 @@ while ( $count <= $#ARGV ) {
     };
     /^-?a$/ && do {
       print "Kitchen sink flags for ZUP.\n";
+      $executeBeforeZip = $dropboxThisCopy = $dropLinkClip = 1;
+      $count++;
+      next;
+    };
+    /^-?ao$/ && do {
+      print "Kitchen sink flags for ZUP, open too.\n";
       $executeBeforeZip = $dropboxThisCopy = $dropBinOpen = $dropLinkClip = 1;
       $count++;
       next;
@@ -117,7 +123,7 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?d[qs]$/ && do {
-      print "Quick/simple copying to Dropbox afterwards. To overwrite, -do.\n";
+      print "Quick/simple copying to Dropbox afterwards. To overwrite, -do.\nNOTE: THIS DOES NOT RECREATE THE ZIP FILE. USE -do FOR THAT, OR BETTER, -a TO PERFORM THE MOST COMMON TASKS.\n";
       $dropboxSimpleCopy = 1;
       $noExecute         = 1;
       $deleteBefore      = 0;
@@ -125,7 +131,7 @@ while ( $count <= $#ARGV ) {
       next;
     };
     /^-?do$/ && do {
-      print "Quick/simple copying to Dropbox afterwards, with overwrite. To avoid this, -dq.\n";
+      print "Quick/simple copying to Dropbox afterwards, with overwrite. To avoid this, -dq. To do more, try -a.\n";
       $copyAfter = 1;
       $noExecute         = 1;
       $deleteBefore      = 1;
@@ -632,10 +638,11 @@ USAGE: zupt.pl (project)
 -x execute optional commands (x+ forces things in the file)
 -b builds before zipping
 -nx execute nothing (overrides -x)
--a = -x -db -dc -dl(without bailing). -[ol] open after used to be part of this but no longer is.
+-a = -x -db -dc -dl(without bailing). -[ol] open after used to be part of this but no longer is. -ao has that.
 -?f = show example of formats
 EXAMPLE: zup.pl -dq -x -b 17
 EXAMPLE: zup.pl -eo 17
+EXAMPLE: zup.pl a ut
 EOT
   exit;
 }
