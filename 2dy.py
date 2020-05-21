@@ -1,6 +1,8 @@
 #
 # 2dy.py: replacement for perl script that went X daily files back.
 #
+# 2dy.txt is the CFG file
+#
 
 import glob
 import xml.etree.ElementTree as ET
@@ -24,9 +26,11 @@ max_days_back = 1000
 os.chdir("c:/writing/daily")
 latest_daily = True
 
-daily = "c:/writing/daily/"
+daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
-daily_done = "c:/writing/daily/done/"
+daily_done = "c:/writing/daily/done"
+
+daily_wildcard = "20*.txt"
 
 file_header = ""
 
@@ -60,10 +64,13 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
+def dailies_of(my_dir):
+    return [os.path.basename[x] for x in glob.glob(my_dir + "/" + daily_wildcard)]
+
 def move_to_proc():
     os.chdir("c:/writing/daily")
-    g1 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/20*.txt")]
-    g2 = [os.path.basename(x).lower() for x in glob.glob("c:/writing/daily/to-proc/20*.txt")]
+    g1 = dailies_of(daily)
+    g2 = dailies_of(daily_proc)
 
     threshold = see_back(d, '', 7)
 
@@ -107,7 +114,7 @@ def get_init_sections():
                 min_days_new = int(line[8:])
                 continue
             if line.startswith("file_header="):
-                file_header = line[12:].replace("\\", "\n")
+                file_header += line[12:].replace("\\", "\n")
                 continue
             ary = line.lower().strip().split(",")
             for q in ary:
@@ -149,7 +156,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
-    elif arg == 'p' or arg == 'tp': move_to_proc()
+    elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
