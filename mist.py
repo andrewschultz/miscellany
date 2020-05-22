@@ -18,7 +18,6 @@ from collections import defaultdict
 # ary = ['roiling', 'shuffling']
 # ary = ['shuffling']
 ary = []
-projs = []
 
 
 added = defaultdict(bool)
@@ -267,9 +266,10 @@ def mister(a, my_file, do_standard):
                         clipboard_str += re.sub("mistake test", "mistake retest", last_mistake) + last_cmd + line + '\n'
                 ignore_brackets = False
                 retest = False
-                if line.startswith("#mistake "):
+                if "\\#mistake " in line or line.startswith("#mistake "):
                     last_mistake = line
-                    test_note = re.sub("^#mistake test for ", "", line.strip().lower())
+                    test_note = re.sub(".*#mistake test for ", "", line.strip().lower())
+                    test_note = re.sub("\\\\.*", "", test_note)
                     if test_note not in comment_found.keys():
                         print('Superfluous(?) mistake test', test_note, 'at line', line_count, 'of', short_fi)
                         if '/' in test_note:
@@ -447,6 +447,9 @@ if len(sys.argv) > 1:
         elif arg == 'po':
             print_output = True
             write_file = False
+        elif arg == 'sts':
+            added['shuffling'] = True
+            added['roiling'] = True
         elif arg[:2] == 'e=':
             end_room = arg[2:].replace("-", " ")
         elif arg == '?': usage()
