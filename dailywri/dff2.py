@@ -13,49 +13,27 @@ import os
 import re
 import sys
 from collections import defaultdict
-from math import gcd
+from fractions import gcd
 from functools import reduce
 import mytools as mt
 from glob import glob
 from filecmp import cmp
 from shutil import copy
 
-DEFAULT_SORT = 0
-
 DAILY = DAILIES = 0
 DRIVE = 1
 KEEP = 2
 
-daily_strings = ['daily', 'drive', 'keep']
-
-what_to_sort = DEFAULT_SORT
-
-my_cwd = os.getcwd()
-
-if 'daily' in my_cwd:
-    print("Sorting DAILY stuff")
-    what_to_sort = DAILY
-elif 'keep' in my_cwd:
-    print("Sorting KEEP stuff")
-    what_to_sort = KEEP
-elif 'drive' in my_cwd:
-    print("Sorting DRIVE stuff")
-    what_to_sort = DRIVE
-else:
-    what_to_sort = DEFAULT_SORT
-    print("Default sorting", daily_strings[what_to_sort])
-
+what_to_sort = DRIVE
 sort_proc = False
 
-# this should go in a config file later
+# this should go in a config file later if we have time
 open_raw = True
 only_one = True
 see_drive_files = True
 test_no_copy = True
 only_list_files = False
 show_differences = True
-my_min_file = "20170000.txt"
-my_max_file = "21000000.txt"
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 drive_proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
@@ -84,7 +62,7 @@ def usage(my_arg):
     print()
     print("-a/-d/-k specifies dAily, google Drive or google Keep downloads. Default is Google Drive. dAily is useful at the end of each week.")
     print("co/te toggles the test-or-copy flag.")
-    print("-o/-fo/-of/-f only lists files.")
+    print("-o/-fo/-of/-f only lists files.")\
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print()
     print("You can also list files you wish to look up.")
@@ -173,8 +151,21 @@ def is_anagrammy_or_comments(x):
 
 def sort_raw(raw_long):
     sections = defaultdict(str)
-    if is_locked(raw_long):
-        print(raw_long, "has been locked for writing, skipping.")
+    if not os.path.exists(raw_long):
+        print("Skipping {0} which does not exist.".format(raw_long))
+        return 0
+    x0 = os.path.basename(raw_long)
+    if ".bak" in x0:
+        print("Badly named file", x0, "skipped")
+    y = x0[:-4].split('-')[2:]
+    z = [int(q) for q in y]
+    if what_to_sort == DAILIES:
+        final_out_file = raw_long
+    else:
+        daily_file = "{:04d}{:02d}{:02d}.txt".format(z[2], z[0], z[1])
+        final_out_file = "{0}/{1}".format(drive_proc_dir, daily_file)
+    if is_locked(final_out_file):
+        print(final_out_file, "has been locked for writing, skipping.")
         return 0
     print("Parsing", raw_long, "...")
     important = False
@@ -242,19 +233,19 @@ def sort_raw(raw_long):
         if x != 'nam': fout.write("\n\n")
     fout.close()
     mt.compare_alphabetized_lines(raw_long, temp_out_file)
-    if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
-        print(raw_long, "was not changed since last run.")
+    if os.path.exists(final_out_file) and cmp(final_out_file, temp_out_file):
+        print(final_out_file, "was not changed since last run.")
         exit()
         return 0
     else:
         if test_no_copy:
-            print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
+            print("Not copying to", final_out_file, "even though differences were found.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if only_one:
                 print("Bailing, because flag for only one file was set, probably for testing.")
                 sys.exit()
-        copy(temp_out_file, raw_long)
+        copy(temp_out_file, final_out_file)
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
@@ -262,8 +253,8 @@ def sort_raw(raw_long):
     if open_raw:
         print("Opening raw", raw_long)
         os.system(raw_long)
-    print("Opening", raw_long)
-    os.system(raw_long)
+    print("Opening", final_out_file)
+    os.system(final_out_file)
     return 1
 
 files_done = 0
@@ -291,9 +282,6 @@ while cmd_count < len(sys.argv):
         test_no_copy = False
     elif arg == 'te':
         test_no_copy = True
-    elif arg[0:2] == 'm=':
-        my_min_file = arg[2:]
-        print("minfile", my_min_file)
     elif arg == '?':
         usage()
     elif len(arg) < 2:
@@ -315,29 +303,18 @@ elif what_to_sort == KEEP:
 else:
     sys.exit("Unknown sorting type.")
 
-dir_to_scour += "/to-proc"
-
 os.chdir(dir_to_scour)
 
 read_comment_cfg()
 
 if not len(file_list):
-    my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
+    my_glob = "{}/{}".format(dir_to_scour, dailies_glob if what_to_sort == DAILIES else raw_glob)
     file_list = glob(my_glob)
     print("Globbing", my_glob)
 
 for fi in file_list:
-    fbn = os.path.basename(fi)
-    print(fbn)
-    if fbn < my_min_file:
-        continue
-    if fbn > my_max_file:
-        continue
     if only_list_files:
         print(fi)
         continue
     files_done += sort_raw(fi)
     if files_done == max_files: break
-
-if not files_done:
-    print("No files sorted.")
