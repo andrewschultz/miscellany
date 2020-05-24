@@ -83,6 +83,33 @@ def usage(header="GENERAL USAGE"):
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     exit()
 
+def look_for_section(sec_to_find, the_files):
+    if sec_to_find not in daily.mapping:
+        print(sec_to_find, "not in mapping file dgrab.txt")
+    else:
+        print(sec_to_find, "in", daily.mapping[sec_to_find], daily.where_to_insert[sec_to_find])
+    got_one = False
+    my_token = "\\" + sec_to_find.lower()
+    for f in sorted(the_files):
+        with open(f) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if line.strip() == my_token:
+                    mt.npo(f, line_count, bail=False)
+                    got_one = True
+                    break
+    if not got_one:
+        print("Found nothing.")
+        exit()
+    if sec_to_find not in daily.mapping:
+        print(sec_to_find, "is not visible in the daily mapping. You may wish to open dgrab.txt.")
+        sys.exit()
+    with open(daily.mapping[sec_to_find]) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(daily.where_to_insert[sec_to_find]):
+                mt.npo(daily.mapping[sec_to_find], line_count)
+    print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
+    exit()
+
 def orig_vs_proc(file_to_compare, ask_before = False):
     file_to_compare = os.path.basename(file_to_compare)
     if not file_to_compare.endswith(".txt"):
@@ -259,9 +286,9 @@ def send_mapping(sect_name, file_name, change_files = False):
             lls = line.lower().strip()
             if re.search(r"{}\b".format(my_reg), line):
                 if found_sect_name:
-                    print("WARNING -- (no information lost) 2 section types map to", sect_name, my_reg, "line", found_sect_name, line_count, file_name)
+                    print("WARNING -- (no information lost) 2 section types similar to", sect_name, "from", my_reg, "line", found_sect_name, line_count, file_name)
                 if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
-                if not line.startswith("\\" + sect_name): print("    NOTE: alternate section name from {:s} is {:s}".format(sect_name, line.strip()))
+                if not re.search(r'^\\{}\n'.format(sect_name), lls): print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
                 found_sect_name = line_count
                 in_sect = True
                 continue
@@ -354,6 +381,8 @@ daily.read_section_sort_cfg()
 daily.read_main_daily_config()
 dir_to_proc = ""
 
+section_to_find = ''
+
 cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
@@ -363,6 +392,8 @@ while cmd_count < len(sys.argv):
     elif re.search("^d(b)?[0-9]+$", arg):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
+    elif arg[:2] == 'o:' or arg[:2] == 'o=':
+        section_to_find = arg[2:]
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'i':
@@ -421,6 +452,10 @@ os.chdir(dir_to_proc)
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
+
+if section_to_find:
+    look_for_section(section_to_find, the_glob)
+    exit()
 
 if not my_sect:
     if not default_by_dir or default_by_dir not in daily.mapping:
