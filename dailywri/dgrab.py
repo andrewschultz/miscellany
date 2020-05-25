@@ -28,6 +28,8 @@ import daily
 import mytools as mt
 from pathlib import Path
 
+delete_empties = True
+
 my_sect = ""
 default_by_dir = i7.dir2proj(to_abbrev = True)
 my_globs = []
@@ -305,10 +307,16 @@ def send_mapping(sect_name, file_name, change_files = False):
     if time_delta < days_before_ignore * 86400 and found_sect_name:
         print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
         return 0
-    if not sect_text:
+    if not found_sect_name:
         if verbose:
             print("No section text was found in", fn, "for", sect_name)
         return False
+    if not sect_text:
+        if delete_empties:
+            print("Empty section found. Deleting.")
+        else:
+            print("Empty section found but not deleting.")
+            return
     if not change_files:
         global change_list
         change_list.append(fn)
@@ -316,17 +324,25 @@ def send_mapping(sect_name, file_name, change_files = False):
     f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
-    nfi = daily.mapping[sect_name]
+    to_file = daily.mapping[sect_name]
     remain_written = False
-    print("Found", sect_name, "in", file_name, "to add to", nfi)
-    if nfi not in notes_to_open:
-        notes_to_open[nfi] = file_len(nfi)
+    if sect_text:
+        print("Found", sect_name, "in", file_name, "to add to", to_file)
+    else:
+        print("Not adding to", to_file, "but deleting from", file_name)
+        if bail_without_copying:
+            print("Actually, I would, if I didn't bail without copying.")
+        else:
+            copy(dg_temp, file_name)
+        sys.exit()
+    if to_file not in notes_to_open:
+        notes_to_open[to_file] = file_len(to_file)
     if daily.where_to_insert[sect_name]:
-        print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, nfi))
+        print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, to_file))
         write_next_blank = False
         w2i = daily.where_to_insert[sect_name]
         f = open(dg_temp_2, "w")
-        with open(nfi) as file:
+        with open(to_file) as file:
             for (line_count, line) in enumerate(file, 1):
                 if line.lower().strip() == w2i.lower():
                     f.write(line)
@@ -350,25 +366,25 @@ def send_mapping(sect_name, file_name, change_files = False):
             f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
             f.write(sect_text)
             remain_written = True
-        if not remain_written: sys.exit("Text chunk for {:s} ~ {:s} not written to {:s}. Bailing.".format(sect_name, w2i, nfi))
+        if not remain_written: sys.exit("Text chunk for {:s} ~ {:s} not written to {:s}. Bailing.".format(sect_name, w2i, to_file))
         f.close()
         #sys.exit("Ok done with test")
     else:
-        print("Appending to", nfi)
-        f = open(nfi, "a")
+        print("Appending to", to_file)
+        f = open(to_file, "a")
         f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
         f.close()
     if do_diff:
-        if os.path.exists(dg_temp_2): mt.wm(nfi, dg_temp_2)
+        if os.path.exists(dg_temp_2): mt.wm(to_file, dg_temp_2)
         mt.wm(file_name, dg_temp)
     if bail_without_copying:
         print("Bailing before copying back over")
         print(dg_temp, file_name)
-        print(dg_temp_2, nfi)
+        print(dg_temp_2, to_file)
         sys.exit()
     if not filecmp.cmp(dg_temp, file_name): copy(dg_temp, file_name)
-    if os.path.exists(dg_temp_2) and not filecmp.cmp(dg_temp_2, nfi):
-        copy(dg_temp_2, nfi)
+    if os.path.exists(dg_temp_2) and not filecmp.cmp(dg_temp_2, to_file):
+        copy(dg_temp_2, to_file)
         os.remove(dg_temp_2)
     if os.path.exists(dg_temp): os.remove(dg_temp)
     return True
