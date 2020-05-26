@@ -65,7 +65,7 @@ def check_unsaved():
         mt.npo(x, bail = False)
 
 def dailies_of(my_dir):
-    return [os.path.basename[x] for x in glob.glob(my_dir + "/" + daily_wildcard)]
+    return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
 
 def move_to_proc():
     os.chdir("c:/writing/daily")
