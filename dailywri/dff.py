@@ -117,14 +117,20 @@ def special_colon_value(l):
 def is_spoonerism_rated(l):
     return re.search(r'\b([0-9])\1\b', l) or ('**' in l and not '***' in l) # we can filter out anything with extra ** in it
 
+def comment_section(my_line, exact = False):
+    for x in comment_dict:
+        if re.search(r'# *({}){}'.format(comment_dict[x], '\b' if exact else ''), my_line):
+            return x
+    return ""
+
 def my_section(l):
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     if l.startswith('wfl'): return 'pc'
     if l.startswith('mov:') or l.startswith('movie:') or l.startswith('movies:'): return 'mov'
     if l.startswith('boo:') or l.startswith('book:') or l.startswith('books:'): return 'boo'
-    for x in comment_dict:
-        if re.search(r'# *({})\b'.format(comment_dict[x]), l):
-            return x
+    temp = comment_section(l, exact = True)
+    if temp:
+        return temp
     if '\t' in l or l.count('  ') > 2: return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
@@ -132,6 +138,9 @@ def my_section(l):
     if is_spoonerism_rated(l): return 'spo'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
+    temp = comment_section(l, exact = False)
+    if temp:
+        return temp
     return ""
 
 def sort_priority(x):
@@ -181,7 +190,7 @@ def sort_raw(raw_long):
     in_header = True
     header_to_write = ""
     current_section = ''
-    with open(raw_long, mode='r', encoding='utf-8-sig') as file:
+    with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if in_header:
                 if line.startswith("#"):
@@ -212,6 +221,7 @@ def sort_raw(raw_long):
                 sections[temp] += line
                 continue
             temp = my_section(line)
+            print(line_count, temp, '=', line)
             if temp:
                 if temp == 'lim':
                     sections[temp] += mt.slash_to_limerick(line)
