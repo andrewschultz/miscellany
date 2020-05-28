@@ -3,6 +3,7 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import ctypes
 import time
 import re
 import pyperclip
@@ -446,6 +447,15 @@ def first_of(file_array, latest = True):
             print("No info for", x)
     if not new_ret: sys.exit("Can't get first of {}".format(', '.join(file_array)))
     return new_ret
+
+def isAdmin():
+    try:
+        is_admin = (os.getuid() == 0)
+    except AttributeError:
+        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+    return is_admin
+
+is_admin = admin = isadmin = Admin = isAdmin
 
 #####################################################basic main-program checking stuff
 
