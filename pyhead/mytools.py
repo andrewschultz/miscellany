@@ -12,9 +12,10 @@ import os
 import __main__ as main
 from filecmp import cmp
 from collections import defaultdict
-from fractions import gcd
+from math import gcd
 from functools import reduce
 import subprocess
+from shutil import copy
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
