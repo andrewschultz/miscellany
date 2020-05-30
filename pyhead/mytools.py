@@ -19,6 +19,9 @@ from shutil import copy
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+if not os.path.exists(np):
+    np = "\"c:\\program files\\notepad++\\notepad++.exe\""
+
 npnq = np.replace('"', '')
 my_creds = "c:/coding/perl/proj/mycreds.txt"
 
