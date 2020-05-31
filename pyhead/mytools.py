@@ -46,6 +46,12 @@ def is_are(a):
 def no_quotes(a):
     return a.replace('"', '')
 
+def letters_only(my_word, accept_hyphens=True):
+    my_word = re.sub("[^a-zA-Z -]", "", my_word)
+    if not accept_hyphens:
+        my_word.replace("-", "")
+    return my_word
+
 noquotes = no_quo = noquo = no_quotes
 
 def is_basename(a):
