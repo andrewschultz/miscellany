@@ -57,6 +57,11 @@ noquotes = no_quo = noquo = no_quotes
 def is_basename(a):
     return not ('/' in a or '\\' in a)
 
+def is_daily(x):
+    if '/' in x or '\\' in x:
+        x = os.path.basename(x).lower()
+    return re.search("^2[0-9]{7}\.txt$", x)
+
 def temp_file_gen(file_name, my_dir = os.getcwd(), prefix="temp", before_extension = False):
     if not is_basename(file_name):
         return file_name
