@@ -94,6 +94,7 @@ def is_anagram(x, accept_comments = True):
     x = re.sub("#.*", "", x)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
+    if not y: return False
     for j in y: q[j] += 1
     gc = reduce(gcd, q.values())
     return gc > 1
@@ -112,6 +113,7 @@ def is_palindrome(x, accept_comments = True):
     if accept_comments and "#pal" in x: return True
     if accept_comments: x = re.sub('#.*', '', x)
     let_only = re.sub("[^a-z]", "", x.lower())
+    if not let_only: return False # blank strings don't work
     return let_only == let_only[::-1]
 
 is_palindromey = is_palindromy = is_palindrome
