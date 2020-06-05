@@ -223,11 +223,14 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.1):
+def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1):
     if len(file_post_list):
         l = len(file_post_list)
         count = 0
         for x in file_post_list:
+            if max_opens and count == max_opens:
+                print("Reached max_opens of", max_opens, "so I am cutting it off here.")
+                break
             m = max(file_post_list[x])
             bnx = os.path.basename(x)
             if x in file_extra_edit:
