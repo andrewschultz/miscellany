@@ -361,6 +361,8 @@ def follow_link(x):
         if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
         temp = os.readlink(temp)
         count += 1
+    if temp.startswith("\\\\?\\"):
+        temp = temp[4:]
     return temp
 
 fl = follow_link
