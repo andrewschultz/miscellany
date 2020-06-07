@@ -18,11 +18,7 @@ import subprocess
 from shutil import copy
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
-np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
-if not os.path.exists(np):
-    np = "\"c:\\program files\\notepad++\\notepad++.exe\""
 
-npnq = np.replace('"', '')
 my_creds = "c:/coding/perl/proj/mycreds.txt"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
@@ -30,6 +26,21 @@ title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on"
 default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
+
+def progfile_of(my_path):
+    if os.path.exists(my_path):
+        return my_path
+    path_array = os.path.normpath(my_path).split(os.sep)
+    if ' (x86)' not in path_array[1]:
+        path_array[1] += ' (x86)'
+    else:
+        path_array[1] = path_array[1].replace(' (x86)', '')
+    if os.path.exists(os.sep.join(path_array)):
+        return os.sep.join(path_array)
+    return my_path
+
+npnq = progfile_of("\"c:\\program files\\notepad++\\notepad++.exe\"")
+np = '"{}"'.format(npnq)
 
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
