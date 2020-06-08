@@ -45,6 +45,8 @@ else:
     what_to_sort = DEFAULT_SORT
     print("Default sorting", daily_strings[what_to_sort])
 
+resort_already_sorted = True
+
 sort_proc = False
 
 # this should go in a config file later
@@ -119,7 +121,7 @@ def is_spoonerism_rated(l):
 
 def comment_section(my_line, exact = False):
     for x in comment_dict:
-        if re.search(r'# *({}){}'.format(comment_dict[x], '\b' if exact else ''), my_line):
+        if re.search(r'# *({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line):
             return x
     return ""
 
@@ -210,6 +212,15 @@ def sort_raw(raw_long):
             if not ll:
                 current_section = ''
                 continue
+            if resort_already_sorted:
+                temp = my_section(line)
+                if line_count < 20: print(line_count, temp, "!")
+                if temp:
+                    if temp == 'lim':
+                        sections[temp] += mt.slash_to_limerick(line)
+                    else:
+                        sections[temp] += line
+                    continue
             if current_section:
                 sections[current_section] += line
                 continue
@@ -220,16 +231,15 @@ def sort_raw(raw_long):
             if temp:
                 sections[temp] += line
                 continue
-            temp = my_section(line)
-            print(line_count, temp, '=', line)
-            if temp:
-                if temp == 'lim':
-                    sections[temp] += mt.slash_to_limerick(line)
-                else:
-                    sections[temp] += line
-                continue
-            else:
-                sections['sh'] += line
+            if not resort_already_sorted:
+                temp = my_section(line)
+                if temp:
+                    if temp == 'lim':
+                        sections[temp] += mt.slash_to_limerick(line)
+                    else:
+                        sections[temp] += line
+                    continue
+            sections['sh'] += line
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
