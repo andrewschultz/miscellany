@@ -3,7 +3,6 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
-import ctypes
 import time
 import re
 import pyperclip
@@ -12,13 +11,13 @@ import os
 import __main__ as main
 from filecmp import cmp
 from collections import defaultdict
-from math import gcd
+from fractions import gcd
 from functools import reduce
 import subprocess
-from shutil import copy
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
-
+np = "\"c:\\program files (x86)\\notepad++\\notepad++.exe\""
+npnq = np.replace('"', '')
 my_creds = "c:/coding/perl/proj/mycreds.txt"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
@@ -26,21 +25,6 @@ title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on"
 default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
-
-def progfile_of(my_path):
-    if os.path.exists(my_path):
-        return my_path
-    path_array = os.path.normpath(my_path).split(os.sep)
-    if ' (x86)' not in path_array[1]:
-        path_array[1] += ' (x86)'
-    else:
-        path_array[1] = path_array[1].replace(' (x86)', '')
-    if os.path.exists(os.sep.join(path_array)):
-        return os.sep.join(path_array)
-    return my_path
-
-npnq = progfile_of("c:\\program files\\notepad++\\notepad++.exe")
-np = '"{}"'.format(npnq)
 
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
@@ -67,11 +51,6 @@ noquotes = no_quo = noquo = no_quotes
 
 def is_basename(a):
     return not ('/' in a or '\\' in a)
-
-def is_daily(x):
-    if '/' in x or '\\' in x:
-        x = os.path.basename(x).lower()
-    return re.search("^2[0-9]{7}\.txt$", x)
 
 def temp_file_gen(file_name, my_dir = os.getcwd(), prefix="temp", before_extension = False):
     if not is_basename(file_name):
@@ -105,7 +84,6 @@ def is_anagram(x, accept_comments = True):
     x = re.sub("#.*", "", x)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
-    if not y: return False
     for j in y: q[j] += 1
     gc = reduce(gcd, q.values())
     return gc > 1
@@ -124,7 +102,6 @@ def is_palindrome(x, accept_comments = True):
     if accept_comments and "#pal" in x: return True
     if accept_comments: x = re.sub('#.*', '', x)
     let_only = re.sub("[^a-z]", "", x.lower())
-    if not let_only: return False # blank strings don't work
     return let_only == let_only[::-1]
 
 is_palindromey = is_palindromy = is_palindrome
@@ -205,9 +182,8 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = True):
-    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, follow_link(my_file) if follow_open_link else my_file, my_line)
-    print(cmd)
+def npo(my_file, my_line = 1, print_cmd = True, bail = True):
+    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
     if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
     os.system(cmd)
     if bail: exit()
@@ -234,14 +210,11 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1):
+def postopen_files(bail_after = True, acknowledge_blank = False, sleep_time = 0.1):
     if len(file_post_list):
         l = len(file_post_list)
         count = 0
         for x in file_post_list:
-            if max_opens and count == max_opens:
-                print("Reached max_opens of", max_opens, "so I am cutting it off here.")
-                break
             m = max(file_post_list[x])
             bnx = os.path.basename(x)
             if x in file_extra_edit:
@@ -372,8 +345,6 @@ def follow_link(x):
         if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
         temp = os.readlink(temp)
         count += 1
-    if temp.startswith("\\\\?\\"):
-        temp = temp[4:]
     return temp
 
 fl = follow_link
@@ -436,11 +407,6 @@ def zap_comment(my_line, zap_spaces_before = True):
     if zap_spaces_before: substring = ' *' + substring
     return re.sub(substring, "", my_line)
 
-no_comment = no_comments = zap_comments = zap_comment
-
-def uncommented_length(x):
-    return len(zap_comment(x))
-
 def is_posneg_int(x, allow_zero = False):
     try:
         q = int(x)
@@ -486,15 +452,6 @@ def first_of(file_array, latest = True):
             print("No info for", x)
     if not new_ret: sys.exit("Can't get first of {}".format(', '.join(file_array)))
     return new_ret
-
-def isAdmin():
-    try:
-        is_admin = (os.getuid() == 0)
-    except AttributeError:
-        is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
-    return is_admin
-
-is_admin = admin = isadmin = Admin = isAdmin
 
 #####################################################basic main-program checking stuff
 
