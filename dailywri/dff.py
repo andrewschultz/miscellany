@@ -117,7 +117,11 @@ def special_colon_value(l):
     return ""
 
 def is_spoonerism_rated(l):
-    return re.search(r'\b([0-9])\1\b', l) or ('**' in l and not '***' in l) # we can filter out anything with extra ** in it
+    if '**' in l and '***' not in l: return True
+    double_digits = re.findall(r'\b([0-9])\1\b', l)
+    if not len(double_digits): return False
+    if mt.uncommented_length(l) > len(double_digits) * 60: return False # this prevents odd cases where I just throw out the number 77
+    return True
 
 def comment_section(my_line, exact = False):
     for x in comment_dict:
