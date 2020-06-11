@@ -129,6 +129,11 @@ def comment_section(my_line, exact = False):
             return x
     return ""
 
+def smart_section(my_line):
+    if re.search(r'\b(portia|whitney)\b', my_line, re.IGNORECASE): return 'w'
+    if re.search(r'\b(ektor)\b', my_line, re.IGNORECASE): return 'aa'
+    return ""
+
 def my_section(l):
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     if l.startswith('wfl'): return 'pc'
@@ -144,6 +149,9 @@ def my_section(l):
     if is_spoonerism_rated(l): return 'spo'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
+    temp = smart_section(l)
+    if temp:
+        return temp
     temp = comment_section(l, exact = False)
     if temp:
         return temp
