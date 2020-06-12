@@ -77,6 +77,7 @@ cmds['vvff'] = "ni no vv"
 cmds['spo'] = "np spopal"
 
 comment_dict = defaultdict(str)
+section_words = defaultdict(str)
 
 def usage(my_arg):
     if (my_arg):
@@ -98,11 +99,19 @@ def read_comment_cfg():
             l = line.lower().strip()
             if l.startswith('#'): continue
             if l.startswith(';'): break
+            if l.startswith("section:"):
+                l = l[8:]
+                get_section = True
+            else:
+                get_section = False
             ary = l.split('=')
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
                 continue
-            comment_dict[ary[0]] = ary[1]
+            if get_section:
+                section_words[ary[0]] = ary[1]
+            else:
+                comment_dict[ary[0]] = ary[1]
 
 def in_important_file(x, y):
     with open(y) as file:
@@ -130,8 +139,10 @@ def comment_section(my_line, exact = False):
     return ""
 
 def smart_section(my_line):
-    if re.search(r'\b(portia|whitney)\b', my_line, re.IGNORECASE): return 'w'
-    if re.search(r'\b(ektor)\b', my_line, re.IGNORECASE): return 'aa'
+    for sw in section_words:
+        search_string = r'\b{}\b'.format(sw)
+        if re.search(search_string, my_line, re.IGNORECASE):
+            return section_words[sw]
     return ""
 
 def my_section(l):
@@ -226,7 +237,6 @@ def sort_raw(raw_long):
                 continue
             if resort_already_sorted:
                 temp = my_section(line)
-                if line_count < 20: print(line_count, temp, "!")
                 if temp:
                     if temp == 'lim':
                         sections[temp] += mt.slash_to_limerick(line)
@@ -267,7 +277,7 @@ def sort_raw(raw_long):
     temp_out_file = "c:/writing/temp/drive-temp.txt"
     fout = open(temp_out_file, "w")
     fout.write(header_to_write)
-    for x in sorted(sections, key=lambda x:sort_priority(x)):
+    for x in sorted(sections, key=lambda x:sort_priority(x)): # note this is a tuple that's used to push current hot projects to the bottom
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
