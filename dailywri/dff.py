@@ -52,6 +52,7 @@ sort_proc = False
 # this should go in a config file later
 open_raw = True
 only_one = True
+bail_after_unchanged = False
 see_drive_files = True
 test_no_copy = True
 only_list_files = False
@@ -89,6 +90,7 @@ def usage(my_arg):
     print("co/te toggles the test-or-copy flag.")
     print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
+    print("-bu bails after unchanged. Used for testing.")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -286,7 +288,8 @@ def sort_raw(raw_long):
     mt.compare_alphabetized_lines(raw_long, temp_out_file)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         print(raw_long, "was not changed since last run.")
-        exit()
+        if bail_after_unchanged:
+            exit()
         return 0
     else:
         if test_no_copy:
@@ -294,7 +297,7 @@ def sort_raw(raw_long):
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if only_one:
-                print("Bailing, because flag for only one file was set, probably for testing.")
+                print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
                 sys.exit()
         copy(temp_out_file, raw_long)
     if only_one:
@@ -333,6 +336,8 @@ while cmd_count < len(sys.argv):
         test_no_copy = False
     elif arg == 'te':
         test_no_copy = True
+    elif arg == 'bu':
+        bail_after_unchanged = True
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("minfile", my_min_file)
@@ -370,7 +375,6 @@ if not len(file_list):
 
 for fi in file_list:
     fbn = os.path.basename(fi)
-    print(fbn)
     if fbn < my_min_file:
         continue
     if fbn > my_max_file:
