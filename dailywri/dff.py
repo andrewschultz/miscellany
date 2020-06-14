@@ -128,11 +128,13 @@ def special_colon_value(l):
     return ""
 
 def is_spoonerism_rated(l):
-    if '**' in l and '***' not in l: return True
-    double_digits = re.findall(r'\b([0-9])\1\b', l)
+    double_digits = re.findall(r'\b([1-9])\1\b', l)
     if not len(double_digits): return False
     if mt.uncommented_length(l) > len(double_digits) * 60: return False # this prevents odd cases where I just throw out the number 77
     return True
+
+def is_risque_spoonerism(l):
+    return '**' in l and '***' not in l
 
 def comment_section(my_line, exact = False):
     for x in comment_dict:
@@ -158,8 +160,9 @@ def my_section(l):
     if '\t' in l or l.count('  ') > 2: return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
-    if mt.is_anagram(l, accept_comments = True) and not is_spoonerism_rated(l): return 'ana'
+    if is_risque_spoonerism(l): return 'sw'
     if is_spoonerism_rated(l): return 'spo'
+    if mt.is_anagram(l, accept_comments = True): return 'ana'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
     temp = smart_section(l)
