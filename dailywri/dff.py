@@ -138,7 +138,7 @@ def is_risque_spoonerism(l):
 
 def comment_section(my_line, exact = False):
     for x in comment_dict:
-        if re.search(r'# *({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line):
+        if re.search(r'# *({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line, re.IGNORECASE):
             return x
     return ""
 
@@ -288,7 +288,7 @@ def sort_raw(raw_long):
         fout.write(sections[x])
         if x != 'nam': fout.write("\n\n")
     fout.close()
-    mt.compare_alphabetized_lines(raw_long, temp_out_file)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         print(raw_long, "was not changed since last run.")
         if bail_after_unchanged:
