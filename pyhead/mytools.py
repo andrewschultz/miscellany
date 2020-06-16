@@ -101,14 +101,24 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
-def is_anagram(x, accept_comments = True):
+def is_anagram(x, accept_comments = True, check_sections = True):
     x = re.sub("#.*", "", x)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
     if not y: return False
     for j in y: q[j] += 1
     gc = reduce(gcd, q.values())
-    return gc > 1
+    if gc == 1:
+        return False
+    if not check_sections:
+        return True
+    chunk_size = len(y) // gc
+    first_chunk = sorted(y[0:chunk_size])
+    for x in range (1, gc):
+        this_chunk = sorted(y[x * chunk_size:(x+1) * chunk_size])
+        if this_chunk != first_chunk:
+            return False
+    return True
 
 is_anagramy = is_anagrammy = is_anagram
 
