@@ -177,8 +177,9 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False): # true if identical, false if not
-    print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True): # true if identical, false if not
+    if verbose:
+        print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -210,7 +211,8 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             print("Compare shuffled lines is bailing on difference.")
             sys.exit()
         return False
-    print("No shuffle-diffs")
+    if verbose:
+        print("No shuffle-diffs")
     return True
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
