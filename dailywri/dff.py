@@ -79,6 +79,7 @@ cmds['spo'] = "np spopal"
 
 comment_dict = defaultdict(str)
 section_words = defaultdict(str)
+prefixes = defaultdict(str)
 
 def usage(my_arg):
     if (my_arg):
@@ -101,19 +102,25 @@ def read_comment_cfg():
             l = line.lower().strip()
             if l.startswith('#'): continue
             if l.startswith(';'): break
-            if l.startswith("section:"):
-                l = l[8:]
-                get_section = True
-            else:
-                get_section = False
-            ary = l.split('=')
+            if ':' not in l:
+                print("Line", l, "needs colon prefix.")
+                continue
+            ary = mt.cfgary(l, delimiter='=')
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
                 continue
-            if get_section:
+            if l.startswith("keyword:"):
                 section_words[ary[0]] = ary[1]
-            else:
+            elif l.startswith("prefix:"):
+                for u in ary[0].split(','):
+                    if u in prefixes:
+                        print("Duplicate", u, "line", line_count)
+                        continue
+                    prefixes[u] = ary[1]
+            elif l.startswith("suffix:"):
                 comment_dict[ary[0]] = ary[1]
+            else:
+                print("ERROR bad colon/cfg definition line", line_count, ary[0])
 
 def in_important_file(x, y):
     with open(y) as file:
@@ -121,10 +128,10 @@ def in_important_file(x, y):
             if x in line.lower(): return True
     return False
 
-def special_colon_value(l):
-    if l.startswith("btp:"): return "btp"
-    if l.startswith("mov:") or l.startswith("movie:"): return "mov"
-    if l.startswith("song:") or l.startswith("song:"): return "mov"
+def section_from_prefix(l):
+    for p in prefixes:
+        if l.startswith(p + ":"):
+            return prefixes[p]
     return ""
 
 def is_spoonerism_rated(l):
