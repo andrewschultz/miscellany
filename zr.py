@@ -23,6 +23,7 @@ default_proj = ""
 proj = i7.dir2proj(os.getcwd())
 if proj: print("Getting directory/project", proj, "from command line directory. If you define another, it will overwrite this.")
 
+ignore_tests = True
 verbose = False
 bail_first_diff_file = False
 bail_text_keys = False
@@ -59,6 +60,7 @@ def usage():
     print("o/no/on toggles opening zr.txt post-errors.")
     print('qq is quick quotes reject. understand "x y" as X y will be skipped.')
     print("t only tests things. It doesn't copy back over. t0 = unlimited test difference, t1 = only one. tb = text key bail.")
+    print("ti/it ignores tests. vt/tv views tests.")
     print("e# = max errs per file, t# = max total errors")
     print("fwn/nfw skips bail on first word warning check e.g. Den Loft / End Den.")
     exit()
@@ -221,7 +223,8 @@ while count < len(sys.argv):
     elif myarg == 'v': verbose = True
     elif myarg == 'nv' or myarg == 'vn': verbose = False
     elif myarg == 'no' or myarg == 'on': open_post = False
-    elif myarg == 'no' or myarg == 'on': test_diff = True
+    elif myarg == 'ti' or myarg == 'it': ignore_tests = True
+    elif myarg == 'tv' or myarg == 'vt': ignore_tests = False
     elif myarg == 'qn' or myarg == 'nq': quick_quote_reject = False
     elif myarg in i7.i7x.keys():
         proj = i7.i7x[myarg]
@@ -347,7 +350,7 @@ if proj not in i7.i7f:
     sys.exit("{} did not have a file manifest in i7f. You may wish to update things in i7p.txt.".format(proj))
 
 for x in i7.i7f[proj]:
-    if 'tests' in x.lower(): continue
+    if ignore_tests and 'tests' in x.lower(): continue
     if source_only and 'story.ni' not in x.lower(): continue
     check_source(x)
 
