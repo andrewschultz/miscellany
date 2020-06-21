@@ -213,10 +213,6 @@ def lock_it(proc_file):
         f.write(m)
     f.close()
 
-def is_anagrammy_or_comments(x):
-    if x.lower().startswith("anagram") or '#ana' in x.lower(): return True
-    return mt.is_anagrammy(x)
-
 def sort_raw(raw_long):
     sections = defaultdict(str)
     if is_locked(raw_long):
