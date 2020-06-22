@@ -169,12 +169,12 @@ def my_section(l):
     if '==' in l and not l.startswith('=='): return 'btp'
     if is_risque_spoonerism(l): return 'sw'
     if is_spoonerism_rated(l): return 'spo'
-    if mt.is_anagram(l, accept_comments = True): return 'ana'
-    if "~" in l: return 'ut'
-    if not re.search("[^a-z]", l): return 'nam'
     temp = smart_section(l)
     if temp:
         return temp
+    if mt.is_anagram(l, accept_comments = True): return 'ana'
+    if "~" in l: return 'ut'
+    if not re.search("[^a-z]", l): return 'nam'
     temp = comment_section(l, exact = False)
     if temp:
         return temp
@@ -243,31 +243,30 @@ def sort_raw(raw_long):
             if not ll:
                 current_section = ''
                 continue
-            if resort_already_sorted:
-                temp = my_section(line)
-                if temp:
-                    if temp == 'lim':
-                        sections[temp] += mt.slash_to_limerick(line)
-                    else:
-                        sections[temp] += line
+            if not resort_already_sorted:
+                if current_section:
+                    sections[current_section] += line
                     continue
-            if current_section:
-                sections[current_section] += line
-                continue
-            if line.startswith('IMPORTANT'):
-                important = True
-                continue
-            temp = special_colon_value(ll)
+                if line.startswith('IMPORTANT'):
+                    important = True
+                    continue
+            temp = section_from_prefix(ll)
             if temp:
                 sections[temp] += line
                 continue
-            if not resort_already_sorted:
-                temp = my_section(line)
-                if temp:
-                    if temp == 'lim':
-                        sections[temp] += mt.slash_to_limerick(line)
-                    else:
-                        sections[temp] += line
+            temp = my_section(line)
+            if temp:
+                if temp == 'lim':
+                    sections[temp] += mt.slash_to_limerick(line)
+                else:
+                    sections[temp] += line
+                continue
+            if resort_already_sorted:
+                if current_section:
+                    sections[current_section] += line
+                    continue
+                if line.startswith('IMPORTANT'):
+                    important = True
                     continue
             sections['sh'] += line
     if 'nam' in sections:
