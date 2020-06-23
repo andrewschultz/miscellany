@@ -4,9 +4,6 @@
 # this doesn't sort them in any sort of order but rather just moves certain ones to tables in the source code
 #
 # usage is, if a table has [xxstuff], stuff:[whatever]
-#
-# there is no side config file
-#
 
 import filecmp
 from shutil import copy
@@ -48,13 +45,6 @@ def invalid_text(pro, line):
     """this checks if certain projects have bad / extra text"""
     if pro == 'under-they-thunder' and '~' in line: return True
     return False
-
-def apostrophe_border(x):
-    if x.count("'") != 1:
-        return x
-    if re.search(r"'\b", x) or re.search(r"\b'", x):
-        return x.replace("'", "[']")
-    return x
 
 def unique_header(a, b, f, l):
     if a.startswith("="): return l
@@ -116,7 +106,7 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
             n2 = msort[z]
             if n1.startswith(n2) or n2.startswith(n1):
                 bail = True
-                print("Bailing on overlapping table:\n  {0} defined line {1}\n  {2} defined line {3}.\n  Delete one -- ABCDEF will also capture ABCDE.".format(n1, markers[n1], n2, markers[n2]))
+                print("Bailing on overlapping table-def {0} {1} {2} {3}. Delete one -- ABCDEF will also capture ABCDE.".format(n1, markers[n1], n2, markers[n2]))
     if bail: sys.exit()
     out_stream = open(notes_out, "w")
     uniques = 0
@@ -139,7 +129,6 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                         print("{} line {} did not get prefix {} removed: >>{}<<.".format(os.path.basename(notes_in), line_count, prefix_bail, new_text))
                     if not new_text.startswith("\""): new_text = "\"" + new_text
                     if not new_text.endswith("\""): new_text = new_text + "\""
-                    new_text = apostrophe_border(new_text)
                     print_this_line = False
                     to_insert[uh] += new_text + "\n"
                     uniques += 1
