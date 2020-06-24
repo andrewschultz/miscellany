@@ -129,9 +129,9 @@ while ( $count <= $#ARGV ) {
     #print "Argument " . ($a + 1) . " of " . ($#ARGV + 1) . ": $a\n";
     /^(b|beta)$/
       && do { $buildSpecified = 1; $runBeta = 1 - $runBeta; $count++; print "Toggling beta to $runBeta\n"; next; };
-    /^(d|debig)$/
+    /^(d|debug)$/
       && do { $buildSpecified = 1; $debug = 1 - $debug; $count++; print "Toggling debug to $debug\n"; next; };
-    /^(b|beta)$/
+    /^(r|release)$/
       && do { $buildSpecified = 1; $release = 1 - $release; $count++; print "Toggling release to $release\n"; next; };
     /^-?j([in])?[bdr]([in])?$/ && do {
       $buildSpecified  = 1;
