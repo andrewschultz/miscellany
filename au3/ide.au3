@@ -52,7 +52,7 @@ While $cmdCount <= $CmdLine[0]
 	if Mod ($count, 2) == 1 Then
 	  $cmdStr = $cmdStr & @CRLF
     Endif
-	$cmdStr = $cmdStr & @CRLF & $count & " total projects. ide-h.au3 is where to add stuff."
+	$cmdStr = StringFormat("%s%s%s total projects. %s is where to add stuff.", $cmdStr, @CRLF, $count, $i7p)
     MOK("List of projects", $cmdStr)
     Exit
   Elseif ($a1 == 'd' or $a1 == 'h') and (StringIsDigit(StringMid($arg, 2))) Then
