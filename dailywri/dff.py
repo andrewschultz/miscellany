@@ -233,8 +233,13 @@ def sort_raw(raw_long):
                 if header_to_write:
                     header_to_write += "\n"
             if important:
-                if not line.strip: line = "blank line ---\n"
                 sections['important'] += line
+                continue
+            if line.startswith('IMPORTANT'):
+                important = True
+                continue
+            if line.startswith('UNIMPORTANT'):
+                important = False
                 continue
             ll = line.strip().lower()
             if ll.startswith("\\"):
@@ -242,13 +247,11 @@ def sort_raw(raw_long):
                 continue
             if not ll:
                 current_section = ''
+                important = False
                 continue
             if not resort_already_sorted:
                 if current_section:
                     sections[current_section] += line
-                    continue
-                if line.startswith('IMPORTANT'):
-                    important = True
                     continue
             temp = section_from_prefix(ll)
             if temp:
@@ -265,9 +268,6 @@ def sort_raw(raw_long):
                 if current_section:
                     sections[current_section] += line
                     continue
-                if line.startswith('IMPORTANT'):
-                    important = True
-                    continue
             sections['sh'] += line
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
@@ -276,7 +276,7 @@ def sort_raw(raw_long):
         if in_important_file(raw_long, important_file):
             print("Not dumping text to", important_file, "as it's already in there.")
         else:
-            fout = open(important_file, "w")
+            fout = open(important_file, "a")
             fout.write("From {0}:\n".format(raw_long))
             fout.write(sections['important'])
             fout.close()
