@@ -50,6 +50,7 @@ resort_already_sorted = True
 sort_proc = False
 
 # this should go in a config file later
+one_word_names = True
 open_raw = True
 only_one = True
 bail_after_unchanged = False
@@ -92,6 +93,7 @@ def usage(my_arg):
     print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print("-bu bails after unchanged. Used for testing.")
+    print("-n1/1w toggles one-word names in lines.")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -264,6 +266,9 @@ def sort_raw(raw_long):
                 else:
                     sections[temp] += line
                 continue
+            if one_word_names and ' ' not in line and '=' not in line:
+                sections['nam'] += "\t" + line.strip()
+                continue
             if resort_already_sorted:
                 if current_section:
                     sections[current_section] += line
@@ -343,6 +348,10 @@ while cmd_count < len(sys.argv):
         test_no_copy = True
     elif arg == 'bu':
         bail_after_unchanged = True
+    elif arg == 'n1':
+        one_word_names = False
+    elif arg == '1w' or arg == 'w1':
+        one_word_names = True
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("minfile", my_min_file)
