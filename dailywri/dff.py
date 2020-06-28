@@ -147,7 +147,7 @@ def is_risque_spoonerism(l):
 
 def comment_section(my_line, exact = False):
     for x in comment_dict:
-        if re.search(r'# *({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line, re.IGNORECASE):
+        if re.search(r'(# *| zz)({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line, re.IGNORECASE):
             return x
     return ""
 
