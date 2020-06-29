@@ -67,10 +67,11 @@ def check_unsaved():
 def dailies_of(my_dir):
     return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
 
-def move_to_proc():
-    os.chdir("c:/writing/daily")
-    g1 = dailies_of(daily)
-    g2 = dailies_of(daily_proc)
+def move_to_proc(my_dir = "c:/writing/daily"):
+    os.chdir(my_dir)
+    print("Moving", my_dir, "to to-proc.")
+    g1 = dailies_of(my_dir)
+    g2 = dailies_of(my_dir + "/to-proc")
 
     threshold = see_back(d, '', 7)
 
@@ -88,6 +89,9 @@ def move_to_proc():
                     print(q, "needs to be set read-only in the base directory.")
                     os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
 
+    if 'daily' not in my_dir:
+        sys.exit("Bailing since we're using non-daily directory.")
+
 def usage(param = 'Cmd line usage'):
     print(param)
     print('=' * 50)
@@ -96,7 +100,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)mn/n/nm (#) = # max new days back")
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
-    print("(-?)p/tp = move to to_proc")
+    print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
@@ -157,6 +161,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
+    elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
