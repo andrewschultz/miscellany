@@ -85,7 +85,7 @@ def usage(header="GENERAL USAGE"):
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     exit()
 
-def look_for_section(sec_to_find, the_files):
+def find_section_in_daily(sec_to_find, the_files):
     if sec_to_find not in daily.mapping:
         print(sec_to_find, "not in mapping file dgrab.txt")
     else:
@@ -109,6 +109,32 @@ def look_for_section(sec_to_find, the_files):
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(daily.where_to_insert[sec_to_find]):
                 mt.npo(daily.mapping[sec_to_find], line_count)
+    print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
+    exit()
+
+def open_original(sec_to_find, the_files, look_for_end = False):
+    if sec_to_find not in daily.mapping:
+        print(sec_to_find, "is not visible in the daily mapping. You may wish to open dgrab.txt.")
+        sys.exit()
+    if my_section not in daily.where_to_insert:
+        sys.exit("Could not find section for {} in daily mapping file. Open dgrab.txt to check.".format(my_section))
+    print(sec_to_find, "in", daily.mapping[sec_to_find], daily.where_to_insert[sec_to_find])
+    got_one = False
+    open_next_blank = 0
+    with open(daily.mapping[sec_to_find]) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(daily.where_to_insert[sec_to_find]):
+                if look_for_end:
+                    mt.npo(daily.mapping[sec_to_find], line_count)
+                open_next_blank = True
+                continue
+            if open_next_blank:
+                open_next_blank += 1
+                if not line.strip():
+                    mt.npo(daily.mapping[sec_to_find], line_count)
+    if open_next_blank:
+        print("Section {} ended the file. We will open at the end.".format(daily.where_to_insert))
+        mt.npo(daily.mapping[sec_to_find])
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
 
@@ -470,7 +496,7 @@ the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
 
 if section_to_find:
-    look_for_section(section_to_find, the_glob)
+    find_section_in_daily(section_to_find, the_glob)
     exit()
 
 if not my_sect:
