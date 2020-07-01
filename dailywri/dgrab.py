@@ -42,6 +42,7 @@ notes_to_open = defaultdict(int)
 
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
+blank_sect = defaultdict(int)
 
 max_process = 0
 open_notes = 0
@@ -177,6 +178,8 @@ def analyze_to_proc():
     file_to_open = ""
     lines_to_open = []
     last_line = -1
+    last_header = ""
+    section_start = False
     for this_daily in files_to_verify:
         if this_daily.endswith(".bak"):
             print("Backup file", this_daily, "should probably be deleted.")
@@ -186,6 +189,9 @@ def analyze_to_proc():
             daily_basename = os.path.basename(this_daily)
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("#"): continue
+                if section_start:
+                    if not line.strip():
+                        blank_sect[last_header] += 1
                 if line.startswith("\\"):
                     in_section = True
                     ll = line.lower().strip()[1:]
@@ -197,6 +203,8 @@ def analyze_to_proc():
                                 print("Could not find suggestions.")
                         err_flagged[ll] = True
                     sections_left[ll] += 1
+                    last_header = ll
+                    section_start = True
                     if ll not in first_file_with_section:
                         first_file_with_section[ll] = daily_basename
                 elif not line.strip():
@@ -212,7 +220,8 @@ def analyze_to_proc():
     sections_to_sort = 0
     for x in sorted(sections_left, key=lambda x: (-sections_left[x], x), reverse=True):
         sections_to_sort += 1
-        print("{:2d}: {:15s} {:2d} time{} 1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", first_file_with_section[x]))
+        blanks_string = "" if x not in blank_sect else "{} blank{} ".format(blank_sect[x], "s" if blank_sect[x] > 1 else "")
+        print("{:2d}: {:15s} {:2d} time{} {}1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", blanks_string, first_file_with_section[x]))
     if not sections_to_sort: print("Hooray! You have no sections to shuffle.")
     if open_cluttered and lines_to_open:
         print("Look to clean up {} line{}: {}".format(len(lines_to_open), 's' if len(lines_to_open) != 1 else '', ','.join([str(x) for x in lines_to_open[::-1]])))
