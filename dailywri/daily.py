@@ -40,6 +40,8 @@ glob_default = "da"
 
 open_on_warn = False
 
+dir_keywords = [ "daily", "from_drive", "from_keep" ]
+
 def is_true_string(x):
     if x == '0' or x == 'false': return False
     return True
@@ -163,9 +165,11 @@ def copy_to_done(file_name, dir_path):
         print("Copying", done_from, "to", done_target)
         copy(done_from, done_target)
 
-def valid_file(file_name, dir_name): # this should work for from_drive\drive_mod or 
+def valid_file(file_name, dir_name):
     base_name = os.path.basename(file_name)
-    if "daily" in dir_name or "from_drive" in dir_name: return re.search("^20[0-9]{6}\.txt$", base_name.lower())
+    for d in dir_keywords:
+        if d in dir_name.lower():
+            return re.search("^20[0-9]{6}\.txt$", base_name.lower())
     print("Bad dir name in", dir_name, "for", base_name)
     return False
 

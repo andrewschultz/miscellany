@@ -6,7 +6,10 @@
 #
 # this looks at files in the to-proc directory
 #
-# usage: dgrab.py -da s=wh
+# usage: dgrab.py -da -nd s=wh
+# usage: dgrab.py a # just analyzes
+#
+# (don't show differences)
 #
 # question: search for starting tabs in non-.ni files. What script for that?
 #
@@ -81,12 +84,13 @@ def usage(header="GENERAL USAGE"):
     print("a= analyze what is left")
     print("")
     print("sample usage:")
-    print("  dgrab.py -da s=ut for processing Under They Thunder sections in daily files")
+    print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
     print("  dgrab.py -dr s=vvff for processing VVFF sections in Google Drive files")
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     exit()
 
 def find_section_in_daily(sec_to_find, the_files):
+    print("NOTE: if you want to open the original big list document, use o= instead.")
     if sec_to_find not in daily.mapping:
         print(sec_to_find, "not in mapping file dgrab.txt")
     else:
@@ -456,13 +460,14 @@ while cmd_count < len(sys.argv):
         list_it = True
         min_for_list = int(arg[1:])
     elif arg == 'da': dir_to_proc = daily_proc
-    elif arg == 'dr': dir_to_proc = gdrive_proc
+    elif arg == 'dr' or arg == 'dd': dir_to_proc = gdrive_proc
+    elif arg == 'dk': dir_to_proc = kdrive_proc
     elif arg[:3] == 'l20': daily.lower_bound = arg[1:]
     elif arg[:3] == 'u20': daily.upper_bound = arg[1:]
     elif re.search(r'^m20[0-9]{6}$', arg):
         orig_vs_proc(arg[1:])
     elif arg == 'e':
-        os.system(dg_cfg)
+        os.system(daily.dg_cfg)
         exit()
     elif arg == 'o': open_notes_after = True
     elif arg == 'pi': print_ignored_files = True
@@ -520,6 +525,8 @@ processed = 0
 
 max_warning = False
 if max_process == -1: print("Running test to cull all eligible files.")
+
+print("REMINDER: -di means to do diff. -ndi means not to. The default is not to do differences. You can break during differences after seeing stuff is added.")
 
 for q in my_file_list:
     qbase = os.path.basename(q)
