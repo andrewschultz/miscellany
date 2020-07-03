@@ -117,29 +117,30 @@ def find_section_in_daily(sec_to_find, the_files):
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
 
-def open_original(sec_to_find, the_files, look_for_end = False):
+def open_original(sec_to_find, look_for_end = True):
+    print("NOTE: if you want to open in dailies, use od= instead.")
     if sec_to_find not in daily.mapping:
         print(sec_to_find, "is not visible in the daily mapping. You may wish to open dgrab.txt.")
         sys.exit()
-    if my_section not in daily.where_to_insert:
+    if sec_to_find not in daily.where_to_insert:
         sys.exit("Could not find section for {} in daily mapping file. Open dgrab.txt to check.".format(my_section))
     print(sec_to_find, "in", daily.mapping[sec_to_find], daily.where_to_insert[sec_to_find])
     got_one = False
-    open_next_blank = 0
+    temp_open_line = 0
     with open(daily.mapping[sec_to_find]) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(daily.where_to_insert[sec_to_find]):
-                if look_for_end:
+                if not look_for_end:
                     mt.npo(daily.mapping[sec_to_find], line_count)
-                open_next_blank = True
+                temp_open_line = True
                 continue
-            if open_next_blank:
-                open_next_blank += 1
+            if temp_open_line:
+                temp_open_line += 1
                 if not line.strip():
                     mt.npo(daily.mapping[sec_to_find], line_count)
-    if open_next_blank:
+    if temp_open_line:
         print("Section {} ended the file. We will open at the end.".format(daily.where_to_insert))
-        mt.npo(daily.mapping[sec_to_find])
+        mt.npo(daily.mapping[sec_to_find], temp_open_line)
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
 
@@ -447,8 +448,11 @@ while cmd_count < len(sys.argv):
     elif re.search("^d(b)?[0-9]+$", arg):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
+    elif arg[:3] == 'do:' or arg[:3] == 'od:' or arg[:3] == 'od=' or arg[:3] == 'do=':
+        section_to_find = arg[3:]
     elif arg[:2] == 'o:' or arg[:2] == 'o=':
         section_to_find = arg[2:]
+        open_original(section_to_find)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'i':
