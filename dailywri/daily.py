@@ -101,20 +101,20 @@ def read_section_sort_cfg(cfg_bail = False):
             elif line.startswith("GLOBDEF="): glob_default = lary[0]
             elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])
             elif line.startswith("GLOB="):
-                for q in my_args:
-                    if len(lary) > 2: file_regex[q] = lary[2]
-                    else: file_regex[q] = '.'
-                    globs[q] = lary[1]
-                    temp = glob.glob(globs[q])
-                    temp1 = [u for u in temp if re.search(file_regex[q], u)]
-                    if len(temp) == 0:
-                        print("WARNING: glob pattern {:s} ~ {:s} at line {:d} of {} does not turn up any files.".format(q, globs[q], line_count, dg_cfg))
-                        cfg_edit_line = line_count
-                    elif len(temp1) == 0:
-                        print("WARNING: glob pattern {:s} ~ {:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
-                        cfg_edit_line = line_count
-                    if print_ignored_files and len(temp) != len(temp1):
-                        print("IGNORED: {:s}".format(', '.join([u for u in temp if u not in temp1])))
+                q = my_args[2]
+                if len(lary) > 2: file_regex[q] = lary[2]
+                else: file_regex[q] = '.'
+                globs[q] = lary[1]
+                temp = glob.glob(globs[q])
+                temp1 = [u for u in temp if re.search(file_regex[q], u)]
+                if len(temp) == 0:
+                    print("WARNING: glob pattern {:s} ~ {:s} at line {:d} of {} does not turn up any files.".format(q, globs[q], line_count, dg_cfg))
+                    cfg_edit_line = line_count
+                elif len(temp1) == 0:
+                    print("WARNING: glob pattern {:s} ~ {:s} at line {:d} turns up files, but none are matched by subsequent regex.".format(q, globs[q], line_count))
+                    cfg_edit_line = line_count
+                if print_ignored_files and len(temp) != len(temp1):
+                    print("IGNORED from {}: {:s}".format(q, ', '.join([u for u in temp if u not in temp1])))
             elif line.startswith("OPENONWARN="):
                 open_on_warn = int(lary[0])
             elif line.startswith("SHOWDIFF="): do_diff = is_true_string(lary[0])
