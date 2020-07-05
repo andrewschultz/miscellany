@@ -3,6 +3,7 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import glob
 import ctypes
 import time
 import re
@@ -26,6 +27,11 @@ title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on"
 default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
+
+daily_wildcard = "20*.txt"
+
+def dailies_of(my_dir):
+    return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
 
 def progfile_of(my_path):
     if os.path.exists(my_path):
