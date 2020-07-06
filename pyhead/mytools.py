@@ -107,7 +107,11 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
-def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True):
+def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True, ignore_leading_articles = True):
+    article_string = r'^(a|an|the) '
+    if ignore_leading_articles and re.search(article_string, x):
+        if is_anagram(re.sub(article_string, "", x, re.IGNORECASE), accept_comments, check_sections, wipe_author, ignore_leading_articles):
+            return True
     x = re.sub("#.*", "", x)
     if wipe_author: # for book titles for Roiling
         x = re.sub("\[r\], by ", "", x, re.IGNORECASE)
