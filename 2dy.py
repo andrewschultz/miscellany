@@ -30,8 +30,6 @@ daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
 daily_done = "c:/writing/daily/done"
 
-daily_wildcard = "20*.txt"
-
 file_header = ""
 
 sect_ary = []
@@ -64,14 +62,11 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def dailies_of(my_dir):
-    return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
-
 def move_to_proc(my_dir = "c:/writing/daily"):
     os.chdir(my_dir)
     print("Moving", my_dir, "to to-proc.")
-    g1 = dailies_of(my_dir)
-    g2 = dailies_of(my_dir + "/to-proc")
+    g1 = mt.dailies_of(my_dir)
+    g2 = mt.dailies_of(my_dir + "/to-proc")
 
     threshold = see_back(d, '', 7)
 
