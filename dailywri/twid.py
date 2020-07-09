@@ -26,6 +26,8 @@ from_and_to = []
 def get_twiddle_mappings():
     with open(my_twiddle_config) as file:
         for (line_count, line) in enumerate (file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
             ary = line.strip().split(",")
             from_file[ary[0]] = ary[1]
             to_file[ary[0]] = ary[2]
@@ -44,7 +46,7 @@ def get_twiddle_mappings():
 def twiddle_of(my_file):
     return os.path.join(my_twiddle_dir, os.path.basename(my_file))
 
-def display_diffs(my_file):
+def write_out_files(my_file):
     in_section = False
     current_section = ""
     twiddle_file = twiddle_of(to_temp[my_file])
@@ -60,6 +62,7 @@ def display_diffs(my_file):
                     # print("Processing", ls, "section")
                 current_section = ls
                 f.write(line)
+                print("Writing section text for", ls, section_text[ls].count("\n"))
                 f.write(section_text[ls])
                 continue
             if not current_section:
@@ -79,7 +82,7 @@ def pattern_check(my_line):
 
 get_twiddle_mappings()
 
-for x in from_file.values():
+for x in to_temp.values():
     with open(x) as file:
         current_section = ""
         for (line_count, line) in enumerate (file, 1):
@@ -104,8 +107,10 @@ for x in from_file.values():
 print("FROM AND TO:", from_and_to)
 
 for x in from_and_to:
+    write_out_files(x)
     print("TWIDDLY", twiddle_of(to_temp[x]), x)
-    display_diffs(x)
+    #print(os.stat(x).st_size, x)
+    #print(os.stat(twiddle_of(to_temp[x])).st_size, twiddle_of(to_temp[x]))
 
 if not copy_over:
     sys.exit("-co to copy over")
