@@ -14,6 +14,7 @@ section_text = defaultdict(str)
 regex_pattern = defaultdict(str)
 from_file = defaultdict(str)
 to_file = defaultdict(str)
+priority = defaultdict(int)
 
 from_temp = defaultdict(str)
 to_temp = defaultdict(str)
@@ -29,9 +30,10 @@ def get_twiddle_mappings():
             if line.startswith(";"): break
             if line.startswith("#"): continue
             ary = line.strip().split(",")
-            from_file[ary[0]] = ary[1]
-            to_file[ary[0]] = ary[2]
-            regex_pattern[ary[0]] = ary[3]
+            priority[ary[1]] = int(ary[0])
+            from_file[ary[1]] = ary[2]
+            to_file[ary[1]] = ary[3]
+            regex_pattern[ary[1]] = ary[4]
     global from_and_to
     from_and_to = list(set(from_file.values()) | set(to_file.values()))
     for q in from_and_to:
@@ -75,8 +77,8 @@ def write_out_files(my_file):
     mt.compare_alphabetized_lines(my_file, twiddle_file)
 
 def pattern_check(my_line):
-    for x in sorted(regex_pattern, key=lambda x: (priority[x]))
-        if re.search(regex_pattern[x], my_line):
+    for x in sorted(regex_pattern, key=lambda x: (-priority[x])):
+        if re.search(regex_pattern[x], my_line, re.IGNORECASE):
             return x
     return ""
 
