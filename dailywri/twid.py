@@ -8,6 +8,7 @@ from shutil import copy
 
 copy_over = True
 secure_backup = True
+print_stats = False
 
 section_text = defaultdict(str)
 
@@ -23,6 +24,12 @@ my_twiddle_config = "c:/writing/scripts/twid.txt"
 my_twiddle_dir = "c:/writing/twiddle"
 
 from_and_to = []
+
+def usage(arg = "general usage"):
+    print(arg)
+    print('=' * 100)
+    print("-ps = print stats, -nps/psn = don't print stats")
+    exit()
 
 def get_twiddle_mappings():
     with open(my_twiddle_config) as file:
@@ -82,6 +89,20 @@ def pattern_check(my_line):
             return x
     return ""
 
+################################### main file
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'ps':
+        print_stats = True
+    elif arg == 'nps' or arg == 'psn':
+        print_stats = False
+    else:
+        usage("Bad parameter " + arg)
+    cmd_count += 1
+
 get_twiddle_mappings()
 
 for x in to_temp.values():
@@ -111,8 +132,9 @@ print("FROM AND TO:", from_and_to)
 for x in from_and_to:
     write_out_files(x)
     print("TWIDDLY", twiddle_of(to_temp[x]), x)
-    #print(os.stat(x).st_size, x)
-    #print(os.stat(twiddle_of(to_temp[x])).st_size, twiddle_of(to_temp[x]))
+    if print_stats:
+        print("Orig:", os.stat(x).st_size, x)
+        print("New:", os.stat(twiddle_of(to_temp[x])).st_size, twiddle_of(to_temp[x]))
 
 if not copy_over:
     sys.exit("-co to copy over")
