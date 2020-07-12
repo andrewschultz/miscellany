@@ -29,6 +29,7 @@ def usage(arg = "general usage"):
     print(arg)
     print('=' * 100)
     print("-ps = print stats, -nps/psn = don't print stats")
+    print("-sb/bs = secure backup to my_twiddle_dir/bak directory, (n) negates it")
     exit()
 
 def get_twiddle_mappings():
@@ -99,6 +100,10 @@ while cmd_count < len(sys.argv):
         print_stats = True
     elif arg == 'nps' or arg == 'psn':
         print_stats = False
+    elif arg == 'nbs' or arg == 'bsn' or arg == 'nsb' or arg == 'sbn':
+        secure_backup = False
+    elif arg == 'bs' or arg == 'sb':
+        secure_backup = True
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
