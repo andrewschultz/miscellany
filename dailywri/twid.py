@@ -9,6 +9,8 @@ from shutil import copy
 copy_over = True
 secure_backup = True
 print_stats = False
+alphabetical_comparisons = True
+overall_comparisons = True
 
 section_text = defaultdict(str)
 
@@ -30,6 +32,7 @@ def usage(arg = "general usage"):
     print('=' * 100)
     print("-ps = print stats, -nps/psn = don't print stats")
     print("-sb/bs = secure backup to my_twiddle_dir/bak directory, (n) negates it")
+    print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
     exit()
 
 def get_twiddle_mappings():
@@ -81,8 +84,12 @@ def write_out_files(my_file):
             # if we are in a section, we already wrote the section text, so continue
             continue
     f.close()
-    mt.wm(my_file, twiddle_file)
-    mt.compare_alphabetized_lines(my_file, twiddle_file)
+    if cmp(my_file, twiddle_file):
+        return
+    if overall_comparisons:
+        mt.wm(my_file, twiddle_file)
+    if alphabetical_comparisons:
+        mt.compare_alphabetized_lines(my_file, twiddle_file)
 
 def pattern_check(my_line):
     for x in sorted(regex_pattern, key=lambda x: (-priority[x])):
@@ -104,6 +111,14 @@ while cmd_count < len(sys.argv):
         secure_backup = False
     elif arg == 'bs' or arg == 'sb':
         secure_backup = True
+    elif arg == 'an' or arg == 'na':
+        alphabetical_comparisons = False
+    elif arg == 'cn' or arg == 'nc':
+        overall_comparisons = False
+    elif arg == 'a':
+        alphabetical_comparisons = True
+    elif arg == 'c':
+        overall_comparisons = True
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
