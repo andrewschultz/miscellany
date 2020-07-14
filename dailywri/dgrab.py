@@ -174,10 +174,11 @@ def attempt_line(poss_header):
                     print("  suggested configuration line for dgrab.txt: MAPPING={},{},{}".format(poss_header, f, line.strip()))
     return poss_matches
 
-def analyze_to_proc():
+def analyze_to_proc(my_dir):
     sections_left = defaultdict(int)
     first_file_with_section = defaultdict(str)
-    files_to_verify = glob.glob(daily_proc + "/*.*")
+    os.chdir(my_dir)
+    files_to_verify = mt.dailies_of(my_dir)
     err_flagged = defaultdict(int)
     bad_header_count = 0
     file_to_open = ""
@@ -185,6 +186,7 @@ def analyze_to_proc():
     last_line = -1
     last_header = ""
     section_start = False
+    print("Analyzing section headers in", my_dir)
     for this_daily in files_to_verify:
         if this_daily.endswith(".bak"):
             print("Backup file", this_daily, "should probably be deleted.")
@@ -280,7 +282,7 @@ def append_one_important(my_file):
 def append_all_important():
     os.chdir(gdrive_dir)
     appended = 0
-    for a in glob.glob(gdrive_dir + "/20*"):
+    for a in mt.dailies_of(gdrive_dir):
         ap = re.sub("\..*", "", os.path.basename(a))
         if invalid_year(ap): continue
         appended += append_one_important(a)
@@ -492,7 +494,7 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if just_analyze:
-    analyze_to_proc()
+    analyze_to_proc(dir_to_proc)
     exit()
 
 if not dir_to_proc:
@@ -547,6 +549,7 @@ for q in my_file_list:
     if max_process and processed == max_process and not max_warning:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
+        continue
 
 if list_it:
     mins_ignored = 0
