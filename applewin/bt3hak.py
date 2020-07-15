@@ -28,10 +28,12 @@ def byte_array_to_file(my_ary, my_file_name):
         f = open(file_name, "wb")
     except:
         print("Failed to open", file_name)
+        return
     try:
         f.write(my_ary)
     except:
         print("Failed to write to", file_name)
+        return
     f.close()
 
 def file_to_byte_array(file_name):
@@ -44,6 +46,7 @@ def file_to_byte_array(file_name):
     return ba
 
 def add_items(my_items):
+    print("Item-editing file", file_name)
     l = len(my_items)
     bain = file_to_byte_array(file_name)
     for x in range(0, 7):
@@ -57,13 +60,20 @@ def add_items(my_items):
             print("Gave item", hex(my_items[0]), "to character", x+1)
             my_items = my_items[1:]
             if not my_items:
-                print("Placed all", l, "items. Yay!")
+                print("Placed all", l, "items in the byte array. Yay!")
                 break
     if l == len(my_items):
         print("All inventories full. Replaced nothing.")
     elif len(my_items) != 0:
         print("Placed", l - len(my_items), "of", l, "items.")
-    byte_array_to_file(bain, file_name)
+    try:
+        byte_array_to_file(bain, file_name)
+    except:
+        print("Uh oh, tried to write the byte array but failed.")
+    try:
+        byte_array_to_file(bain, file_name)
+    except:
+        print("Uh oh, tried to write the byte array but failed.")
     sys.exit()
 
 def extract_code_wheel():
@@ -113,9 +123,9 @@ while cmd_count < len(sys.argv):
         get_coords()
     elif arg[:3] == 'xy=' or arg[:3] == 'yx':
         change_coords(arg[3:])
-    elif arg[:3] == 'b':
+    elif arg == 'b':
         file_name = "bt3_dungeon_b.aws"
-    elif arg[:3] == 'a':
+    elif arg == 'a':
         file_name = "bt3_dungeon_a.aws"
     elif re.search("^[0-9]+,[0-9]+$", arg):
         change_coords(arg)
