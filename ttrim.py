@@ -53,7 +53,7 @@ def is_unix(f):
 def is_okay(f):
     for q in bad_extensions:
         if f.endswith(q): return False
-    if do_perl_tidy:
+    if perl_only:
         return f.endswith("pl") or f.endswith("pm")
     if flag_neutral:
         for q in good_extensions:
@@ -65,7 +65,7 @@ def is_okay(f):
 def test_type(f):
     suf = Path(f).suffix.lower()
     if suf == '.pl' or suf == 'pm': return "perltidy"
-    if suf == '.py': return "python tab strip"
+    if suf in good_extensions or suf[1:] in good_extensions: return "python/text/source end-whitespace strip"
     return "unknown"
     
 def check_file(my_f):
@@ -76,7 +76,8 @@ def check_file(my_f):
         return (0, 0)
     if not quiet_mode: print("Checking", my_f)
     lines_stripped = 0
-    if do_perl_tidy:
+    chars_stripped = 0
+    if perl_only:
         tidy_out = "c:/writing/temp/tidy.tdy"
         os.system("perltidy.bat -i=2 {0} -o {1}".format(my_f, tidy_out))
         temp = cmp(my_f, tidy_out)
@@ -91,21 +92,16 @@ def check_file(my_f):
     else:
         with open(tabtemp, "w") as out_file:
             with open(my_f, "U") as in_file:
-                for line in in_file:
-                    ls = 0
-                    if re.search("[\t ]$", line):
-                        # print(text.endswith(" "), text.endswith("\t"), text.endswith(")"), "!" + text[-1] + "!")
-                        line = re.sub("[ \t]+$", "", line)
-                        ls = 1
-                    if tab_space_search and re.search("( \t|\t )", line):
-                        line = re.sub("( +\t|\t +)", "\t", line)
-                        ls = 1
-                    lines_stripped += ls
-                    out_file.write(line)
+                for (line_count, line) in enumerate(in_file, 1):
+                    lr = re.sub("[ \t]+$", "", line)
+                    if line != lr:
+                        lines_stripped += 1
+                        chars_stripped += len(line) - len(lr)
+                    out_file.write(lr)
         # print(my_f, os.path.getsize(my_f), tabtemp, os.path.getsize(tabtemp))
     if win_merge_show: i7.wm(my_f, tabtemp)
     if lines_stripped:
-        print("Rstripping/copying" if copy_back else "flagging (use -c to copy back)", my_f, "of", lines_stripped, "rstrips")
+        print("Rstripping/copying" if copy_back else "flagging (use -c to copy back)", my_f, "of", lines_stripped, "lines", chars_stripped, "characters")
         if copy_back: copy(tabtemp, my_f)
         return (1, 1)
     else:
@@ -124,7 +120,7 @@ def check_directory(my_dir):
             total_files += x[1]
     sys.exit("Total changes = {:d} of {:d}.".format(total_changes, total_files))
 
-do_perl_tidy = True
+perl_only = False
 
 to_edit = []
 cmd_count = 1
@@ -136,7 +132,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nw' or arg == 'wn': win_merge_show = False
     elif arg == 'q': quiet_mode = True
     elif arg == 'ts': tab_space_search = True
-    elif arg == 'npt' or arg == 'ptn': do_perl_tidy = False
+    elif arg == 'npt' or arg == 'ptn': perl_only = False
     elif arg == 'nts' or arg == 'tsn': tab_space_search = False
     elif arg == 'f': flag_neutral = True
     elif arg == 'nfn' or arg == 'fn' or arg == 'nf': flag_neutral = False
@@ -158,7 +154,8 @@ for my_f in to_edit:
     done_yet[my_f] = True
     if os.path.isdir(my_f): check_directory(my_f)
     elif os.path.isfile(my_f):
-        cf = check_file(my_f)[0]
+        cfa = check_file(my_f)
+        cf = cfa[0]
         if cf:
             print(my_f, "needed {0}s.".format(test_type(my_f)))
             total_tweaks += 1
