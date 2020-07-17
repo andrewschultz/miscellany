@@ -18,6 +18,12 @@
 #:(0-5) = 0 past, 10 past, etc.
 #
 #0 = monday
+#
+# put tasks that are once a day at my discretion, any time, to check off
+# todo: hrcheck use taskscheduler ~1 hour after
+#
+# How to set up on a new computer to run every half hour:
+# schtasks /create /SC MINUTE /MO 30 /TN hrcheck /TR py c:\writing\scripts\hrcheck.py 0:33 /st 06:03
 
 import sys
 import os
@@ -60,6 +66,8 @@ extraFiles = [];
 
 show_warnings = False
 
+verbose = False
+
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
 def is_time(t, bail = False):
@@ -84,6 +92,7 @@ def usage():
     print("e=edit main file, ea=edit all ex=edit extra ep=edit private")
     print("b= = bookmarks to run, bp prints bookmarks")
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
+    print("v = verbose")
     exit()
 
 def print_all_bookmarks():
@@ -126,12 +135,14 @@ def make_time_array(j, k, line_count):
     if len(monthday_array):
         for m in monthday_array:
             for h in hour_array:
-                #print("Monthday/hour adding", m, h)
+                if verbose:
+                    print("Monthday/hour adding", m, h)
                 of_month[int(h)][int(m)] += kn
     if len(weekday_array):
         for w in weekday_array:
             for h in hour_array:
-                # print("Weekday/hour adding", w, h)
+                if verbose:
+                    print("Weekday/hour adding", w, h, j, k)
                 of_week[int(h)][int(w)] += kn
     if not len(monthday_array) and not len(weekday_array):
         for h in hour_array:
@@ -413,6 +424,8 @@ while count < len(sys.argv):
         my_bookmarks += arg[2:].split(",")
     elif arg == "bp":
         print_bookmarks = True
+    elif arg == 'v':
+        verbose = True
     elif arg == '?':
         usage()
         exit()
