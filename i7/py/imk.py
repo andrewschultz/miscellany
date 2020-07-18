@@ -85,7 +85,7 @@ base_file = base_file_noxt + ".i7x"
 nongit_file = i7.extdir + "\\" + base_file # can't use os.path.join since the file may not be there
 git_file = i7.gh_dir + "\\" + my_proj + "\\" + base_file
 
-link_command = "mklink \"{}\" \"{}\"".format(nongit_file, git_file))
+link_command = "mklink \"{}\" \"{}\"".format(nongit_file, git_file)
 
 if os.path.exists(git_file) and not overwrite:
     if not open_post_conversion: sys.exit("With open post conversion set to off, there is nothing to do here. Bailing.")
@@ -93,11 +93,11 @@ if os.path.exists(git_file) and not overwrite:
     os.system('"' + nongit_file + '"')
 else:
     if overwrite:
-        print(nongit_file, "exists but overwriting.")
+        print(git_file, "exists but overwriting.")
     else:
-        print(nongit_file, "does not exist. Creating.")
+        print(git_file, "does not exist. Creating.")
     now = datetime.datetime.now()
-    f = open(nongit_file, "w")
+    f = open(git_file, "w")
     f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"This should briefly describe the purpose of {:s}.\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, base_file_noxt))
     f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
     f.close()
