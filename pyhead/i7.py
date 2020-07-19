@@ -93,7 +93,7 @@ def dict_val_or_similar(my_key, my_dict):
         return my_dict[i7x[my_key]]
     if main_abb(my_key) in my_dict:
         return my_dict[main_abb(my_key)]
-    return False
+    return my_key
 
 dictish = dict_val_or_similar
 
@@ -468,11 +468,15 @@ def build_log_open(x):
 
 blo = bl_o = build_log_open
 
-def hdr(x, y, base=False):
+def hdr(x, y, base=False, github=False):
     if proj_exp(y, False) and x in i7hfx and not proj_exp(x, False): (x, y) = (y, x) # if x is a header and not a project, flip x and y
-    temp = '{:s}\{:s} {:s}.i7x'.format(extdir, lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+    x = main_abb(x)
+    base_file_name = '{:s} {:s}.i7x'.format(lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+    temp = '{:s}\{:s}'.format(extdir, base_file_name)
     if base:
         return os.path.basename(temp)
+    if github:
+        return '{:s}\{:s}\{:s}'.format(gh_dir, dict_val_or_similar(dict_val_or_similar(x, i7gx), i7x), base_file_name)
     return temp
 
 headerfile = header = hdrfile = hfile = hdr
@@ -803,6 +807,7 @@ i7com = {} # combos e.g. opo = 3d and 4d
 i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
 i7hfx = {} # header mappings e.g. ta to tables
 i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7fg = {} # which github header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
@@ -889,8 +894,10 @@ with open(i7_cfg_file) as file:
         l1 = l0[1].split(",")
         if l0[0].startswith("headers:"):
             i7f[l0p] = [ src(l0p) ]
+            i7fg[l0p] = [ gh_src(l0p) ]
             for q in l1:
                 i7f[l0p].append(hdr(l0p, q))
+                i7fg[l0p].append(hdr(l0p, q, github=True))
             continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
@@ -1023,6 +1030,9 @@ def if_oneof_crude_convert(text_string):
     for x in temp_array:
         return_array.extend(all_oneof_fragments(x))
     return return_array
+
+#put unit tests for new functions here, then run i7.py
+#move them where needed for future reference
 
 if os.path.basename(main.__file__) == "i7.py":
     if len(sys.argv) > 1:
