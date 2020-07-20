@@ -16,6 +16,8 @@ from collections import defaultdict
 import mytools
 from mytools import title_words
 
+debug = False
+
 title_words.append("y")
 
 cur_proj = ""
@@ -37,6 +39,7 @@ def usage():
     print("So far we only can allow one project at a time defined on the command line.")
     print("If nothing is defined, we look at the current directory, then look in punc.txt for the default project.")
     print("-nae/-ae disables/enables extraneous apostrophe suggestions")
+    print("-d/-nd/-dn toggles debug")
     exit()
 
 def cfg_expand(x):
@@ -104,7 +107,7 @@ def good_rules(my_line, table_rubric, line_count):
             continue
         this_apost = apostrophe_imbalance(text_to_check)
         if this_apost:
-            print("Apostrophe imbalance line", line_count, text_to_check)
+            print("Apostrophe imbalance line", line_count, text_to_check, this_apost)
             errs += 1
         num_quotes = text_to_check.count('"')
         if not num_quotes == 2:
@@ -305,6 +308,8 @@ while cmd_count < len(sys.argv):
         cur_proj = i7.i7x[arg]
     elif arg == 'ae': suggest_apostrophes = True
     elif arg == 'nae': suggest_apostrophes = False
+    elif arg == 'nd' or arg == 'dn': debug = False
+    elif arg == 'd': debug = True
     else:
         print("Bad command line parameter", arg)
         usage()
