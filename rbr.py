@@ -15,6 +15,10 @@
 # 4 keep postproc commands ordered
 # 5 postproc globs inside file_array
 # 6 eliminate duplicate file-change printouts
+# 7 double space warn, eliminate double spaces at end
+# rbr.py shouls allow you to end early with ####branch track end
+# rbr-globals.txt for rbr: global strings so we don't have to change them. Only read if 1) read globals and 2) there is, indeed, an rbr-globals.txt file
+#
 
 import sys
 import re

@@ -1,6 +1,11 @@
 #from pandas.plotting import register_matplotlib_converters
 #register_matplotlib_converters()
 
+#
+# this works with ses.pl output
+# use ses.py for the "new" notetab+ organizer
+#
+
 import os
 import datetime
 import re

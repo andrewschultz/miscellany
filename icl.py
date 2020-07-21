@@ -2,6 +2,12 @@
 #
 # inform command line script in Python
 #
+# list all files and see if you can re-compile or need to. If something is there, and no files have been modified, that is a PASS.
+# for x in (list of files): if date(link(x)) < date(compiled binary) then boom
+# i7 needs a function that determines a compiled binary as well.
+# "c:/program files (x86)/Inform 7\Compilers\ni" -release -rules "c:/program files (x86)/Inform 7\Inform7\Extensions" -package "c:\games\inform\beta.inform" -extension="glulx"
+#   C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kwSDG +include_path=..\Source,.\ auto.inf output.ulx
+
 
 from collections import defaultdict
 import i7
@@ -50,6 +56,8 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     return time.time() - proj_tuple[0] < time_since
 
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
+    auto_file = i7.auto_file(this_proj)
+
     bin_out = i7.bin_file(this_proj, this_build)
     bin_base = os.path.basename(bin_out)
     file_already_there = os.path.exists(bin_out)
@@ -79,6 +87,8 @@ to_blorb = False
 
 what_to_build = [ False, False, False ]
 build_projects = []
+
+print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
