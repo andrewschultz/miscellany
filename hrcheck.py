@@ -163,6 +163,8 @@ def read_hourly_check(a):
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
+            if line.count("|") > 1:
+                print("WARNING too many OR pipes line", line_count, line.strip())
             if line.startswith("="):
                 bookmark_past = bookmark_string
                 bookmark_string = re.sub("^=*", "", line.lower().strip())
@@ -435,7 +437,7 @@ while count < len(sys.argv):
         exit()
     count += 1
 
-n = datetime.datetime.now()
+n = pendulum.now()
 
 read_hourly_check(check_file)
 read_hourly_check(check_private)
@@ -464,7 +466,7 @@ if print_bookmarks == True:
 if len(time_array):
     time_index = time_array[0] * hour_parts + (time_array[1] * hour_parts) // 60
 else:
-    n -= datetime.timedelta(minutes=minute_delta)
+    n.subtract(minutes=minute_delta)
     if minute_delta: print("WARNING shifting", minute_delta, "back" if minute_delta < 0 else "forward")
     time_index = n.hour * 4 + (n.minute * hour_parts) // 60
 
