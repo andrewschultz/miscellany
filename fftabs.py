@@ -62,8 +62,8 @@ counts = defaultdict(int)
 top_domains = defaultdict(int)
 full_domains = defaultdict(int)
 
-path = pathlib.WindowsPath("C:/Users/Andrew/AppData/Roaming/Mozilla/Firefox/Profiles/o72qwk6f.default")
-files = path.glob('sessionstore-backups/recovery.js*')
+path = pathlib.WindowsPath("C:/Users/Andrew/AppData/Roaming/Mozilla/Firefox/Profiles/h7me4p7f.default-release")
+files = path.glob('sessionstore-backups/*.js*')
 
 cmd_count = 1
 
