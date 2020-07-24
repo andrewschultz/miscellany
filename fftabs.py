@@ -15,9 +15,14 @@ import re
 import mytools as mt
 import codecs
 
+urls = defaultdict(int)
+video_dict = defaultdict(str)
+
 any_duplicate_pages_yet = False
 any_full_domains_yet = False
 any_top_domains_yet = False
+
+just_urls = False
 
 print_keep = False
 print_to_stdout = False
@@ -28,6 +33,7 @@ del_file = "c:/coding/perl/proj/fftabs-del.txt"
 
 def usage():
     print("A = after, B = browser after")
+    print("j = just urls")
     print("P = print to stdout, PO=only print to stdout, PK=keep old fftabs file")
     exit()
 
@@ -86,6 +92,8 @@ while cmd_count < len(sys.argv):
         open_in_browser_after = False
     elif arg == 'pn' or arg == 'np':
         print_to_stdout = False
+    elif arg == 'j':
+        just_urls = True
     else:
         usage()
     cmd_count += 1
@@ -102,15 +110,36 @@ for f in files:
     j = json.loads(b)
     for w in j['windows']:
         for t in w['tabs']:
-            i = t['index'] - 1
+            try:
+                i = t['index'] - 1
+            except:
+                if 'index' not in t:
+                    print("No index found...")
+                    continue
+                print("windows/tabs had null value for index", type(t['index']), t['index'])
+                continue
             my_url = t['entries'][i]['url']
-            counts[my_url] += 1
-            top_domains[domain(my_url, False)] += 1
-            full_domains[domain(my_url, True)] += 1
+            if just_urls:
+                urls[my_url] += 1
+            print(my_url)
             if 'youtube' in my_url:
                 if t['entries'][i]['url'] not in video_titles:
                     t1 = re.sub("^\([0-9]+\) *", "", t['entries'][i]['title'])
                     video_titles.append(t1)
+                    video_dict[my_url] = t1
+            continue
+            counts[my_url] += 1
+            top_domains[domain(my_url, False)] += 1
+            full_domains[domain(my_url, True)] += 1
+
+if just_urls:
+    print("=" * 50)
+    for x in sorted(urls):
+        try:
+            print(x, urls[x], video_dict[x])
+        except:
+            print(x, urls[x], video_dict[x].encode('utf8'))
+    exit()
 
 if print_keep:
     out_file = del_file
