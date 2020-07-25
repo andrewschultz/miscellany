@@ -3,6 +3,7 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import pathlib
 import glob
 import ctypes
 import time
@@ -450,7 +451,8 @@ def text_in_browser(file_name, print_action = True, bail=False):
     #obsolete -- subprocess launches Firefox without hogging the command line
     # cmd = 'start \"\" \"{}\" \"file:///{}\"'.format(default_browser_exe, file_name)
     if print_action: print("Opening {} with {}.".format(file_name, default_browser_exe))
-    subprocess.call([default_browser_exe, "file://" + file_name])
+    print(default_browser_exe, pathlib.Path(file_name).as_uri())
+    subprocess.call([default_browser_exe, pathlib.Path(file_name).as_uri()])
     if bail: sys.exit()
 
 tib = t_i_b = text_in_browser
