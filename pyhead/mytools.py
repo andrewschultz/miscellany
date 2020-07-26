@@ -25,7 +25,6 @@ my_creds = "c:/coding/perl/proj/mycreds.txt"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
-default_browser_exe = "c:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe"
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
 
@@ -45,6 +44,8 @@ def progfile_of(my_path):
     if os.path.exists(os.sep.join(path_array)):
         return os.sep.join(path_array)
     return my_path
+
+default_browser_exe = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
 
 npnq = progfile_of("c:\\program files\\notepad++\\notepad++.exe")
 np = '"{}"'.format(npnq)
@@ -115,7 +116,7 @@ def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = T
             return True
     x = re.sub("#.*", "", x)
     if wipe_author: # for book titles for Roiling
-        x = re.sub("\[r\], by ", "", x, re.IGNORECASE)
+        x = re.sub("\[r\], +by +", "", x, re.IGNORECASE)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
     if not y: return False
