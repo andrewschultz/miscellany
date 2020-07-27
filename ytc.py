@@ -34,7 +34,7 @@ def id_from_url(x):
 def trans_to_file(hlink, fi):
     length_of_line = 0
     ids = id_from_url(hlink)
-    q = YouTubeTranscriptApi.get_transcript(ids)
+    q = YouTubeTranscriptApi.get_transcript([ids])
     results = youtube.videos().list(id=ids, part='snippet').execute()
     for result in results.get('items', []):
         title = "Title: " + result['snippet']['title']
@@ -121,9 +121,7 @@ if not video_id:
             if not x.startswith("http"): continue
             valid += 1
             tempfi = "ytrans-{:d}.txt".format(valid)
-            print(1)
             trans_to_file(x, tempfi)
-            print(2)
             os.system(tempfi)
         if not valid: sys.exit("No valid links found on clipboard.")
         sys.exit("{:d} youtube video{:s} to files.".format(valid, 's' if valid == 1 else ''))

@@ -72,7 +72,7 @@ def usage(x = "General usage"):
     exit()
 
 def launch_url(x):
-    if not x.startswith("http://") and not x.startswith("https://")
+    if not x.startswith("http://") and not x.startswith("https://"):
         print("Tried to launch {} but it was not a valid URL.".format(x))
         return
     os.system("start " + x)

@@ -101,7 +101,7 @@ def read_blockable_cfg(my_data_file):
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
             if line.startswith('#'): continue
-            if line.startswith("BLOCK") or line.startswith("#BLOCK"):
+            if line.startswith("BLOCK"): # or line.startswith("#BLOCK"):
                 tary = line.strip().split("\t")
                 if len(tary) != 3: sys.exit("Fix blockable to have 2 tabs at", line_count, line.rstrip())
                 if '.' not in tary[1]:

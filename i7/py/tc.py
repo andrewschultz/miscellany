@@ -162,6 +162,8 @@ my_proj = ""
 
 create_transcripts_dir = False
 
+print("N. B. for table checking, use TCH.PY.")
+
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg.startswith('-'): arg = arg[1:]
