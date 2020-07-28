@@ -270,7 +270,7 @@ if ($maxOverallFind < $maxFileFind) {
 
 if ( $pwd_runs && !( scalar @runs ) ) {
   @runs = ($pwd_runs);
-  print("Going with default current directory $pwd_runs.\n");
+  print("Going with default current directory/project $pwd_runs.\n");
 }
 readLastRun() if ( !( scalar @runs ) );
 
@@ -830,7 +830,7 @@ sub toProj {
   elsif ( $_[0] =~ /ailihphilia/i )                   { return "ai"; }
   elsif ( $_[0] =~ /(roiling|shuffling|stale-tales-slate)/i )           { return "sts"; }
   elsif ( $_[0] =~ /(tragic|vvff|vf|vv|very-vile|qq|qn|qqnn|quite-queer-night-near)/i ) { return "tm"; }
-  elsif ( $_[0] =~ /(under-they-thunder)/i ) { return "ut"; }
+  elsif ( $_[0] =~ /(under-they-thunder|grit-writ-gay|weary-eerie-way|gwg|wew)/i ) { return "pl"; }
   ( my $cproj = $pwd ) =~ s/\.inform.*//;
   $cproj =~ s/.*[\\\/]//;
   return $cproj if ( -f "story.ni" );

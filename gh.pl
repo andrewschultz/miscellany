@@ -152,10 +152,10 @@ while ( $count <= $#ARGV ) {
     /^-?(ec|ce)$/ && do {
       print "Opening code/external.\n";
       system(
-        "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ghs"
+        "start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\"  $ghs"
       );
       system(
-        "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $ght"
+        "start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\"  $ght"
       );
       exit;
     };

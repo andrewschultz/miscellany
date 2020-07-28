@@ -100,8 +100,14 @@ while ($i7p_line = <A>)
 	my $hname = toExt($tempAry[0]);
 	for my $j (@hdrAry) {
 	  my $temp = "$i7hdir$hname $j.i7x";
-	};
-
+  }
+  }
+  elsif ($i7p_line =~ /^compile-/i)
+  {
+	next;
+  }
+  elsif ($i7p_line =~ /^(binext|binname)/i)
+  {
 	next;
   }
   elsif ($i7p_line =~ /:/)
