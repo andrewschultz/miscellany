@@ -22,6 +22,8 @@ priority = defaultdict(lambda:defaultdict(int))
 from_temp = defaultdict(lambda:defaultdict(str))
 to_temp = defaultdict(lambda:defaultdict(str))
 
+before_lines = defaultdict(int)
+
 my_twiddle_config = "c:/writing/scripts/twid.txt"
 my_twiddle_dir = "c:/writing/twiddle"
 
@@ -84,7 +86,7 @@ def write_out_files(my_file):
                     # print("Processing", ls, "section")
                 current_section = ls
                 f.write(line)
-                print("Writing section text for", ls, section_text[ls].count("\n"))
+                print("Writing section text for", ls, "previously", before_lines[ls], "now", section_text[ls].count("\n"))
                 f.write(section_text[ls])
                 continue
             if not current_section:
@@ -144,6 +146,8 @@ for x in to_temp[my_project]:
                     section_text[current_section] = ""
                 continue
             temp = pattern_check(line)
+            if current_section:
+                before_lines[current_section] += 1
             if temp:
                 section_text[temp] += line
                 continue
