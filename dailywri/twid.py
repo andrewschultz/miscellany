@@ -12,6 +12,8 @@ print_stats = False
 alphabetical_comparisons = True
 overall_comparisons = True
 
+track_line_delta = True
+
 section_text = defaultdict(str)
 
 regex_pattern = defaultdict(lambda:defaultdict(str))
@@ -86,7 +88,11 @@ def write_out_files(my_file):
                     # print("Processing", ls, "section")
                 current_section = ls
                 f.write(line)
-                print("Writing section text for", ls, "previously", before_lines[ls], "now", section_text[ls].count("\n"))
+                if track_line_delta:
+                    if before_lines[ls] == section_text[ls].count("\n"):
+                        pass
+                    else:
+                        print("Section text for", ls, "previously", before_lines[ls], "increased" if before_lines[ls] < section_text[ls].count("\n") else "decreased", "to", section_text[ls].count("\n"))
                 f.write(section_text[ls])
                 continue
             if not current_section:
@@ -130,6 +136,10 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = True
     elif arg == 'c':
         overall_comparisons = True
+    elif arg == 'ld':
+        track_line_delta = True
+    elif arg == 'nld' or arg == 'ldn':
+        track_line_delta = False
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
