@@ -31,7 +31,8 @@ my_twiddle_dir = "c:/writing/twiddle"
 
 from_and_to = []
 
-my_project = "spo"
+my_default_project = "spo"
+my_project = ""
 
 def usage(arg = "general usage"):
     print(arg)
@@ -140,11 +141,20 @@ while cmd_count < len(sys.argv):
         track_line_delta = True
     elif arg == 'nld' or arg == 'ldn':
         track_line_delta = False
+    elif arg[:2] == 'p=' or arg[:2] == 'p:':
+        my_project = arg[2:]
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
 
 get_twiddle_mappings()
+
+if not my_project:
+    print("Going with default project", my_default_project)
+    my_project = my_default_project
+
+if my_project not in to_temp:
+    sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(to_temp)))
 
 for x in to_temp[my_project]:
     with open(x) as file:
@@ -169,8 +179,6 @@ for x in to_temp[my_project]:
                 if re.search(regex_pattern[my_project][q], line):
                     section_text[q] += line
                     print(line, "matches with", q, "pattern", regex_pattern[my_project][q])
-
-print("FROM AND TO:", from_and_to)
 
 for x in from_and_to:
     write_out_files(x)
