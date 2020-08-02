@@ -40,6 +40,9 @@ def usage(arg = "general usage"):
     print("-ps = print stats, -nps/psn = don't print stats")
     print("-sb/bs = secure backup to my_twiddle_dir/bak directory, (n) negates it")
     print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
+    print("-e = edit config file")
+    print("-ld = track line delta, nld/ldn = don't")
+    print("Specify project with p= or p:. Default is", my_default_project)
     exit()
 
 def get_twiddle_mappings():
@@ -121,7 +124,9 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg == 'ps':
+    if arg == 'e':
+        mt.npo(my_twiddle_config)
+    elif arg == 'ps':
         print_stats = True
     elif arg == 'nps' or arg == 'psn':
         print_stats = False
@@ -143,6 +148,8 @@ while cmd_count < len(sys.argv):
         track_line_delta = False
     elif arg[:2] == 'p=' or arg[:2] == 'p:':
         my_project = arg[2:]
+    elif arg == '?':
+        usage()
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
