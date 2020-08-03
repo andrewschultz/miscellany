@@ -44,9 +44,10 @@ def extract_table_from_file(pro, hdr_type = 'ta'):
                     print(y, '==', '/'.join(x))
     exit()
 
-def invalid_text(pro, line):
+def invalid_text_check(pro, line):
     """this checks if certain projects have bad / extra text"""
-    if pro == 'under-they-thunder' and '~' in line: return True
+    if pro == 'under-they-thunder' and '~' in line: return "replaceable twiddle in piglatinism"
+    if pro == 'ailihphilia' and not mt.is_palindrome(line) and not '#ok' in line: return "bogus palindrome (#ok to ignore)"
     return False
 
 def apostrophe_border(x):
@@ -129,8 +130,9 @@ def copy_smart_ideas(pro, hdr_type = "ta"):
                 left_bit = re.sub("[:;].*", "", line.lower().strip())
                 uh = unique_header(left_bit, markers, full_name, last_header)
                 if uh:
-                    if invalid_text(pro, line):
-                        print("WARNING invalid text at notes.txt line {0}: {1}".format(line_count, line.lower().strip()[:40]))
+                    error_msg = invalid_text_check(pro, line)
+                    if error_msg:
+                        print("WARNING invalid text <error {}> at notes.txt line {}: {}".format(error_msg, line_count, line.lower().strip()[:40]))
                         mt.add_postopen_file_line(file, line_count)
                         continue
                     new_text = re.sub("^([a-z0-9]+:|=:|=;)", "", line.rstrip(), 0, re.IGNORECASE).strip()
