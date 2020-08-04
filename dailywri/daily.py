@@ -101,10 +101,11 @@ def read_section_sort_cfg(cfg_bail = False):
             elif line.startswith("GLOBDEF="): glob_default = lary[0]
             elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])
             elif line.startswith("GLOB="):
-                q = my_args[2]
-                if len(lary) > 2: file_regex[q] = lary[2]
-                else: file_regex[q] = '.'
-                globs[q] = lary[1]
+                for q in my_args:
+                    if len(lary) > 2: file_regex[q] = lary[2]
+                    else: file_regex[q] = '.'
+                    globs[q] = lary[1]
+                q = my_args[0]
                 temp = glob.glob(globs[q])
                 temp1 = [u for u in temp if re.search(file_regex[q], u)]
                 if len(temp) == 0:
