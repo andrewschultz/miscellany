@@ -736,7 +736,8 @@ def all_proj_fi(x, bail = True):
 
 apf = all_proj_fi
 
-def apostrophe_check_string(my_string, print_results = False, my_file = '<UNDEFINED>', line_num = -1):
+def apostrophe_check_string(my_string, print_results = False, my_file = '<UNDEFINED>', line_num = -1, require_quoted = True):
+    if require_quoted and '"' not in my_string: return 0
     ml = my_string.strip()
     lefts = re.findall(r"[^a-zA-Z!,.?\]]'", ml)
     rights = re.findall(r"'[^a-zA-Z!,.?]", ml) # we can have the start of a [one of/or] after quotes, but ]' is a bit awkward. Exceptions have [apostrophe ok].
