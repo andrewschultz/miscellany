@@ -63,6 +63,9 @@ change_list = []
 print_ignored_files = False
 list_it = False
 
+append_importants = False
+important_test = True
+
 daily_dir = "c:/writing/daily"
 daily_proc = daily.to_proc(daily_dir)
 gdrive_dir = "c:/coding/perl/proj/from_drive"
@@ -279,13 +282,10 @@ def append_one_important(my_file):
     os.remove(my_file_back)
     return important_start > 0
 
-def append_all_important():
-    os.chdir(gdrive_dir)
+def append_all_important(my_dir):
     appended = 0
-    for a in mt.dailies_of(gdrive_dir):
-        ap = re.sub("\..*", "", os.path.basename(a))
-        if invalid_year(ap): continue
-        appended += append_one_important(a)
+    for a in mt.dailies_of(my_dir):
+        appended += append_one_important(a, my_dir)
     print(appended, "total important sections appended")
     exit()
 
@@ -458,8 +458,11 @@ while cmd_count < len(sys.argv):
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'i':
-        append_all_important()
-        exit()
+        append_importants = True
+        important_test = False
+    elif arg == 'it' or arg == 'ti':
+        append_importants = True
+        important_test = True
     elif arg == 'l': list_it = True
     elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
@@ -493,10 +496,6 @@ while cmd_count < len(sys.argv):
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
     cmd_count += 1
 
-if just_analyze:
-    analyze_to_proc(dir_to_proc)
-    exit()
-
 if not dir_to_proc:
     my_cwd = os.getcwd()
     temp = daily.is_dir_or_proc(my_cwd, [daily_dir, gdrive_dir, kdrive_dir])
@@ -511,6 +510,14 @@ if "to-proc" not in dir_to_proc:
     dir_to_proc = os.path.join(dir_to_proc, "to-proc")
 
 os.chdir(dir_to_proc)
+
+if append_importants:
+    append_all_important(dir_to_proc)
+    exit()
+
+if just_analyze:
+    analyze_to_proc(dir_to_proc)
+    exit()
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
