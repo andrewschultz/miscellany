@@ -241,46 +241,58 @@ def analyze_to_proc(my_dir):
         print("No files to de-clutter. Nice going.")
     exit()
 
-def append_one_important(my_file):
-    important_file = os.path.join(gdrive_dir, "important.txt")
-    my_file_back = os.path.join(gdrive_dir, "my-file-backup.txt")
+def append_one_important(my_file, my_dir):
+    important_file = os.path.join(my_dir, "important.txt")
+    important_file_2 = os.path.join(my_dir, "important2.txt")
+    my_file_back = os.path.join(my_dir, "my-file-backup.txt")
     if not os.path.exists(important_file):
         print("Create", important_file, "before continuing.")
         sys.exit()
-    important_string = "\n\nIMPORTANT STRING FOR FILE {0} at {1}====\n".format(os.path.basename(my_file), datetime.datetime.now())
-    in_important = False
-    important_start = 0
-    fb = os.path.basename(my_file)
+    important_string = "\n\nIMPORTANT STRING FOR FILE {0}...====\n".format(os.path.join(my_dir, my_file))
     f = open(my_file_back, "w")
+    with open(important_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.strip() == important_string.strip():
+                print("Important stuff from", my_file, "already copied over.")
+                return 0
+    in_important = False
+    ever_important = False
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
-            write_main = True
-            if in_important:
-                important_string += line
-                write_main = False
-                if not line.strip():
-                    in_important = False
-                    continue
-            if line.startswith("\\important"):
-                write_main = False
-                if important_start:
-                    print("Uh oh, extra important start at line", line_count, "after", important_start)
-                    continue
-                print("Started important section in {0} at line {1}".format(fb, line_count))
-                important_start = line_count
+            if line.startswith("IMPORTANT") and len(line) < 20:
+                ever_important = True
                 in_important = True
                 continue
-            if write_main: f.write(line)
+            if line.startswith("UNIMPORTANT") and len(line) < 20:
+                in_important = False
+                continue
+            if in_important:
+                important_string += line
+            else:
+                f.write(line)
     f.close()
-    if important_start:
-        copy(my_file_back, my_file)
-        f = open(important_file, "a")
-        f.write(important_string)
-        f.close()
-    else:
-        print("Nothing important for", fb)
+    copy(important_file, important_file_2)
+    f = open(important_file_2, "a")
+    f.write(important_string)
+    f.close()
+    if not ever_important:
+        os.remove(my_file_back)
+        print("Nothing important in", my_file)
+        return 0
+    if important_test:
+        print("Testing important. Run with -i to actually do stuff.")
+        mt.wm(my_file, my_file_back)
+        mt.wm(important_file, important_file_2)
+        os.remove(my_file_back)
+        os.remove(important_file_2)
+        exit()
+    mt.wm(my_file, my_file_back)
+    mt.wm(important_file, important_file_2)
+    copy(my_file_back, my_file)
+    copy(important_file_2, important_file)
     os.remove(my_file_back)
-    return important_start > 0
+    os.remove(important_file_2)
+    return 1
 
 def append_all_important(my_dir):
     appended = 0
