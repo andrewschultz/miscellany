@@ -1,6 +1,8 @@
 # gq.py
 # replaces gq.pl
 
+max_in_file = 25
+
 import re
 import i7
 import sys
@@ -8,7 +10,7 @@ import os
 
 def find_text_in_file(my_text, my_text_2, projfile):
     bf = os.path.basename(projfile)
-    results_yet = False
+    found_so_far = 0
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             found_one = False
@@ -19,10 +21,13 @@ def find_text_in_file(my_text, my_text_2, projfile):
                 if re.search(r'\b({}{}|{}{})\b'.format(my_text, my_text_2, my_text_2, my_text), line, re.IGNORECASE):
                     found_one = True
             if found_one:
-                if not results_yet:
+                if max_in_file and found_so_far == max_in_file:
+                    print("Found maximum per file", max_in_file)
+                    return
+                if not found_so_far:
                     print('=' * 25, bf, "found matches", '=' * 25)
-                    results_yet = True
-                print("    Line", line_count, ':', line.strip())
+                found_so_far += 1
+                print("    ({:5d}):".format(line_count), line.strip())
 
 def related_projects(my_proj):
     cur_proj = ""
