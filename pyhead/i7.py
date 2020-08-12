@@ -577,6 +577,12 @@ def dir2proj(x = os.getcwd(), to_abbrev = False):
     if to_abbrev and x2 in i7xr: return i7xr[x2]
     return x2
 
+def inform_short_name(my_file):
+    retval = os.path.basename(my_file)
+    if retval == 'story.ni':
+        return dir2proj(my_file) + " source"
+    return retval.replace('.i7x', '')
+
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
@@ -813,7 +819,7 @@ i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
 i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
-i7gbx = {} # geneeral binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
+i7gbx = {} # general binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
 i7pbx = {} # project binary extensions for debug, beta and release
 i7binname = {} # binary nams e.g. roiling to A Roiling Original
 
