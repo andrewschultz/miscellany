@@ -6,23 +6,24 @@ max_in_file = 25
 
 found_overall = 0
 
+import mytools as mt
 import re
 import i7
 import sys
 import os
 
-def find_text_in_file(my_text, my_text_2, projfile):
+def find_text_in_file(my_text, projfile):
     global found_overall
     bf = i7.inform_short_name(projfile)
     found_so_far = 0
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             found_one = False
-            if not my_text_2:
-                if re.search(r'\b{}(s?)\b'.format(my_text), line, re.IGNORECASE):
+            if not my_text[1]:
+                if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE):
                     found_one = True
             else:
-                if re.search(r'\b({}{}|{}{})\b'.format(my_text, my_text_2, my_text_2, my_text), line, re.IGNORECASE):
+                if re.search(r'\b({}{}|{}{})\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, re.IGNORECASE):
                     found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
@@ -53,16 +54,23 @@ def related_projects(my_proj):
     except:
         return [my_proj]
 
-try:
-    my_text = sys.argv[1]
-except:
+cmd_count = 1
+
+my_text = []
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if len(my_text) == 2:
+        sys.exit("Found more than 2 text string to search. Bailing.")
+    my_text.append(arg)
+    cmd_count += 1
+
+if not len(my_text):
     sys.exit("You need to specify text to find.")
 
-try:
-    my_text_2 = sys.argv[2]
-except:
+if len(my_text) == 1:
     print("No second word to search.")
-    my_text_2 = ""
+    my_text.append('')
 
 default_dir = i7.dir2proj()
 if not default_dir:
@@ -79,6 +87,6 @@ print("Looking through projects:", ', '.join(proj_umbrella))
 
 for proj in proj_umbrella:
     for projfile in i7.i7f[proj]:
-        find_text_in_file(my_text, my_text_2, projfile)
+        find_text_in_file(my_text, projfile)
 
 #why do arrows move cursor?
