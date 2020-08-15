@@ -58,11 +58,24 @@ cmd_count = 1
 
 my_text = []
 
+default_dir = i7.dir2proj()
+if not default_dir:
+	default_dir = i7.dict_val_or_similar(i7.curdef, i7.i7x)
+
+my_proj = i7.proj2dir(default_dir)
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if len(my_text) == 2:
-        sys.exit("Found more than 2 text string to search. Bailing.")
-    my_text.append(arg)
+    if arg in i7.i7x:
+        my_proj = i7.i7x[arg]
+    elif arg in i7.i7xr:
+        my_proj = i7.i7x[arg]
+    else:
+        if len(my_text) == 2:
+            sys.exit("Found more than 2 text string to search. Bailing.")
+        arg = arg.replace("`", "")
+        my_text.append(arg)
+        print("String", len(my_text), arg)
     cmd_count += 1
 
 if not len(my_text):
@@ -72,20 +85,17 @@ if len(my_text) == 1:
     print("No second word to search.")
     my_text.append('')
 
-default_dir = i7.dir2proj()
-if not default_dir:
-	default_dir = i7.dict_val_or_similar(i7.curdef, i7.i7x)
-
-my_proj = i7.proj2dir(default_dir)
-
 print("Project", my_proj)
 
 #file_list = i7.i7com[default_dir]
-proj_umbrella = related_projects(default_dir)
+proj_umbrella = related_projects(my_proj)
 
 print("Looking through projects:", ', '.join(proj_umbrella))
 
 for proj in proj_umbrella:
+    if proj not in i7.i7f:
+        print("WARNING", proj, "does not have project files associated with it. It may not be a valid inform project.")
+        continue
     for projfile in i7.i7f[proj]:
         find_text_in_file(my_text, projfile)
 
