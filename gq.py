@@ -6,11 +6,14 @@ max_in_file = 25
 
 found_overall = 0
 
+from collections import defaultdict
 import mytools as mt
 import re
 import i7
 import sys
 import os
+
+frequencies = defaultdict(int)
 
 def find_text_in_file(my_text, projfile):
     global found_overall
@@ -28,10 +31,10 @@ def find_text_in_file(my_text, projfile):
             if found_one:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
-                    return
+                    return found_so_far
                 if max_in_file and found_so_far == max_in_file:
                     print("Found maximum per file", max_in_file)
-                    return
+                    return found_so_far
                 if not found_so_far:
                     print('=' * 25, bf, "found matches", '=' * 25)
                 found_so_far += 1
@@ -97,6 +100,10 @@ for proj in proj_umbrella:
         print("WARNING", proj, "does not have project files associated with it. It may not be a valid inform project.")
         continue
     for projfile in i7.i7f[proj]:
-        find_text_in_file(my_text, projfile)
+        frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
 
-#why do arrows move cursor?
+if not found_overall: sys.exit("Nothing found.")
+
+print("    ---- total differences printed:", found_overall)
+for x in sorted(frequencies, key=frequencies.get, reverse=True):
+    print("    ---- {} match{} in {}".format(frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x)))
