@@ -1,8 +1,12 @@
 # gq.py
 # replaces gq.pl
 
+# variables in CFG file
+
 max_overall = 100
 max_in_file = 25
+
+# variables not in CFG file
 
 found_overall = 0
 
@@ -14,6 +18,24 @@ import sys
 import os
 
 frequencies = defaultdict(int)
+
+my_cfg = "c:/writing/scripts/gqcfg.txt"
+
+def read_cfg():
+    with open(my_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith(';'): break
+            if line.startswith(';'): continue
+            if '=' in line:
+                lary = line.strip().lower().split("=")
+                if lary[0] == "max_overall":
+                    global max_overall
+                    max_overall = int(lary[1])
+                elif lary[1] == "min_overall":
+                    global min_overall
+                    min_overall = int(lary[1])
+                else:
+                    print("Unknown =")
 
 def find_text_in_file(my_text, projfile):
     global found_overall
@@ -66,6 +88,8 @@ if not default_dir:
 	default_dir = i7.dict_val_or_similar(i7.curdef, i7.i7x)
 
 my_proj = i7.proj2dir(default_dir)
+
+read_cfg()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
