@@ -6,6 +6,8 @@
 max_overall = 100
 max_in_file = 25
 
+post_open_matches = True
+
 # variables not in CFG file
 
 found_overall = 0
@@ -62,6 +64,8 @@ def find_text_in_file(my_text, projfile):
                 found_so_far += 1
                 found_overall += 1
                 print("    ({:5d}):".format(line_count), line.strip())
+                if post_open_matches:
+                    mt.add_postopen(projfile, line_count)
     return found_so_far
 
 def related_projects(my_proj):
@@ -97,6 +101,10 @@ while cmd_count < len(sys.argv):
         my_proj = i7.i7x[arg]
     elif arg in i7.i7xr:
         my_proj = i7.i7x[arg]
+    elif arg == 'npo' or arg == 'pon':
+        post_open_matches = False
+    elif arg == 'po':
+        post_open_matches = True
     else:
         if len(my_text) == 2:
             sys.exit("Found more than 2 text string to search. Bailing.")
@@ -131,3 +139,5 @@ if not found_overall: sys.exit("Nothing found.")
 print("    ---- total differences printed:", found_overall)
 for x in sorted(frequencies, key=frequencies.get, reverse=True):
     print("    ---- {} match{} in {}".format(frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x)))
+
+mt.post_open()
