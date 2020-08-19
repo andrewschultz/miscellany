@@ -24,6 +24,8 @@ priority = defaultdict(lambda:defaultdict(int))
 from_temp = defaultdict(lambda:defaultdict(str))
 to_temp = defaultdict(lambda:defaultdict(str))
 
+locked = defaultdict(lambda:defaultdict(int))
+
 before_lines = defaultdict(int)
 
 my_twiddle_config = "c:/writing/scripts/twid.txt"
@@ -61,6 +63,10 @@ def get_twiddle_mappings():
             from_file[current_project][ary[1]] = ary[2]
             to_file[current_project][ary[1]] = ary[3]
             regex_pattern[current_project][ary[1]] = ary[4]
+            try:
+                locked[current_project][ary[1]] = ary[5]
+            except:
+                pass
     global from_and_to
     for proj in priority:
         from_and_to = list(set(from_file[proj].values()) | set(to_file[proj].values()))
@@ -175,7 +181,7 @@ for x in to_temp[my_project]:
             temp = pattern_check(line)
             if current_section:
                 before_lines[current_section] += 1
-            if temp:
+            if temp and not locked[my_project][current_section]:
                 section_text[temp] += line
                 continue
             if current_section:
