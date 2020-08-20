@@ -105,6 +105,10 @@ while cmd_count < len(sys.argv):
         post_open_matches = False
     elif arg == 'po':
         post_open_matches = True
+    elif arg[:2] == 'mf' and arg[2:].isdigit():
+        max_in_file = int(arg[2:])
+    elif arg[:2] == 'mo' and arg[2:].isdigit():
+        max_overall = int(arg[2:])
     else:
         if len(my_text) == 2:
             sys.exit("Found more than 2 text string to search. Bailing.")
