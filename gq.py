@@ -42,6 +42,8 @@ def read_cfg():
 def find_text_in_file(my_text, projfile):
     global found_overall
     bf = i7.inform_short_name(projfile)
+    if found_overall == max_overall:
+        return -1
     found_so_far = 0
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -142,6 +144,15 @@ if not found_overall: sys.exit("Nothing found.")
 
 print("    ---- total differences printed:", found_overall)
 for x in sorted(frequencies, key=frequencies.get, reverse=True):
+    if frequencies[x] < 1: continue
     print("    ---- {} match{} in {}".format(frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x)))
+
+temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0]
+if len(temp_array):
+    print("No matches for", ', '.join(temp_array))
+
+temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
+if len(temp_array):
+    print("Left untested:", ', '.join(temp_array))
 
 mt.post_open()
