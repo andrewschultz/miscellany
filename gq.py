@@ -5,6 +5,7 @@
 
 max_overall = 100
 max_in_file = 25
+history_max = 100
 
 post_open_matches = True
 
@@ -22,6 +23,29 @@ import os
 frequencies = defaultdict(int)
 
 my_cfg = "c:/writing/scripts/gqcfg.txt"
+
+def hist_file_of(my_proj):
+    return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(my_proj)))
+
+def write_history(my_file, my_query):
+    first_line = ' '.join(my_query)
+    try:
+        f = open(my_file, "r")
+    except:
+        print("File open failed for", my_file, "so I'll make you create it.")
+        sys.exit()
+    ary = f.readlines()
+    f.close()
+    if first_line in ary:
+        print(first_line, "already in history.")
+        ary.remove(first_line)
+    ary.insert(0, first_line)
+    if len(ary) > history_max:
+        print("Removing excess history",', '.join(ary[history_max:]))
+        ary = ary[:history_max]
+    f = open(my_file, "w")
+    f.write("\n".join(ary))
+    f.close()
 
 def read_cfg():
     with open(my_cfg) as file:
@@ -133,6 +157,8 @@ print("Project", my_proj)
 #file_list = i7.i7com[default_dir]
 proj_umbrella = related_projects(my_proj)
 
+history_file = hist_file_of(my_proj)
+
 print("Looking through projects:", ', '.join(proj_umbrella))
 
 for proj in proj_umbrella:
@@ -156,5 +182,7 @@ if len(temp_array):
 temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
 if len(temp_array):
     print("Left untested:", ', '.join(temp_array))
+
+write_history(history_file, my_text)
 
 mt.post_open()
