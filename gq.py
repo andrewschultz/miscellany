@@ -5,8 +5,14 @@
 
 max_overall = 100
 max_in_file = 25
+
+# constants
+
 history_max = 100
 
+# options only on cmd line
+
+view_history = False
 post_open_matches = True
 
 # variables not in CFG file
@@ -28,13 +34,13 @@ def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(my_proj)))
 
 def write_history(my_file, my_query):
-    first_line = ' '.join(my_query)
+    first_line = ' '.join(my_query).strip()
     try:
         f = open(my_file, "r")
     except:
         print("File open failed for", my_file, "so I'll make you create it.")
         sys.exit()
-    ary = f.readlines()
+    ary = [x.strip() for x in f.readlines()]
     f.close()
     if first_line in ary:
         print(first_line, "already in history.")
@@ -45,6 +51,8 @@ def write_history(my_file, my_query):
         ary = ary[:history_max]
     f = open(my_file, "w")
     f.write("\n".join(ary))
+    for x in range(0, len(ary)):
+        print(x, ary[x])
     f.close()
 
 def read_cfg():
@@ -57,11 +65,11 @@ def read_cfg():
                 if lary[0] == "max_overall":
                     global max_overall
                     max_overall = int(lary[1])
-                elif lary[1] == "min_overall":
+                elif lary[0] == "min_overall":
                     global min_overall
                     min_overall = int(lary[1])
                 else:
-                    print("Unknown =")
+                    print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(my_text, projfile):
     global found_overall
@@ -137,6 +145,8 @@ while cmd_count < len(sys.argv):
         max_in_file = int(arg[2:])
     elif arg[:2] == 'mo' and arg[2:].isdigit():
         max_overall = int(arg[2:])
+    elif arg == 'vh':
+        view_history = True
     else:
         if len(my_text) == 2:
             sys.exit("Found more than 2 text string to search. Bailing.")
@@ -145,19 +155,23 @@ while cmd_count < len(sys.argv):
         print("String", len(my_text), arg)
     cmd_count += 1
 
-if not len(my_text):
-    sys.exit("You need to specify text to find.")
-
-if len(my_text) == 1:
-    print("No second word to search.")
-    my_text.append('')
-
 print("Project", my_proj)
 
 #file_list = i7.i7com[default_dir]
 proj_umbrella = related_projects(my_proj)
 
 history_file = hist_file_of(my_proj)
+
+if view_history:
+    print(history_file)
+    mt.npo(history_file)
+
+if not len(my_text):
+    sys.exit("You need to specify text to find.")
+
+if len(my_text) == 1:
+    print("No second word to search.")
+    my_text.append('')
 
 print("Looking through projects:", ', '.join(proj_umbrella))
 
@@ -167,6 +181,8 @@ for proj in proj_umbrella:
         continue
     for projfile in i7.i7f[proj]:
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
+
+write_history(history_file, my_text)
 
 if not found_overall: sys.exit("Nothing found.")
 
@@ -182,7 +198,5 @@ if len(temp_array):
 temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
 if len(temp_array):
     print("Left untested:", ', '.join(temp_array))
-
-write_history(history_file, my_text)
 
 mt.post_open()
