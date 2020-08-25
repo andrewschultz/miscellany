@@ -1,5 +1,17 @@
 # gq.py
+#
 # replaces gq.pl
+#
+# usage gq.py as my_text (for alex smart)
+# usage gq.py `as to search for the word AS
+# can use one word or two
+
+from collections import defaultdict
+import mytools as mt
+import re
+import i7
+import sys
+import os
 
 # variables in CFG file
 
@@ -9,6 +21,7 @@ max_in_file = 25
 # constants
 
 history_max = 100
+my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 # options only on cmd line
 
@@ -19,16 +32,7 @@ post_open_matches = True
 
 found_overall = 0
 
-from collections import defaultdict
-import mytools as mt
-import re
-import i7
-import sys
-import os
-
 frequencies = defaultdict(int)
-
-my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(my_proj)))
