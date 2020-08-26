@@ -173,6 +173,11 @@ def slash_to_limerick(x): # limerick converter
         else: retval += x0 + "\n"
     return retval.rstrip() + "\n"
 
+def chop_front(x, delimiter=":"):
+    return re.sub(r'^.*?{}'.format(delimiter), '', x)
+
+no_colon = chop_front
+
 def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     if ':' not in x:
         print("WARNING, cfgary called on line without starting colon")
