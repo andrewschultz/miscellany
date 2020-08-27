@@ -2,7 +2,6 @@
 #
 # searches for duplicate-ish table entries
 #
-# todo: specify project (currently just i7 ailihphilia)
 # todo: allow write-over (?)
 #
 
@@ -22,9 +21,16 @@ dup_table_custom = "c:/writing/scripts/duptab.txt"
 # options
 check_spaceless = True
 
+rewrite_none = 0
+rewrite_exact = 1
+rewrite_ignore_punc = 2
+rewrite_ignore_space = 3
+
 def usage():
     print("-ns/-sn removes spaceless checks e.g. No Ton ~ Not On")
     print("-s allows spaceless checks (default)")
+    print("-r allows rewriting punctuation neutral dupes")
+    print("-r[1-3] allows rewriting levels of spaces e.g. No Ton ~ Not On")
     exit()
 
 def wordrev(w):
@@ -50,6 +56,7 @@ def chop_up(format_str, format_ary):
 def table_hack(file_name):
     global dupes
     global dupe_without_spaces
+    global perfect_duplicates
     in_table = False
     cur_table = "(none)"
     i7.get_table_row_count(file_name, lower_case = True)
@@ -71,7 +78,8 @@ def table_hack(file_name):
                     lsort = chop_up(format_string[cur_table], ll)
                 else: lsort = ll[0]
                 if lsort in temp_dup_table.keys():
-                    print(cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
+                    print('PERFECT DUPLICATE', cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
+                    perfect_duplicates += 1
                 else:
                     if re.search("[a-z0-9]", lsort): temp_dup_table[lsort] = line_count
                 ignore_ok = 'okdup' in line.lower()
@@ -81,10 +89,10 @@ def table_hack(file_name):
                 l1 = re.sub("[^a-z]", "", l0)
                 if l0 in dup_yet.keys():
                     if cur_table == t2d[l0]:
-                        print("Uh oh, duplicate entry", l0, "in", cur_table, "line", line_count, "~", dup_yet[l0])
+                        print("PUNCTUATION NEUTRAL DUPLICATE:", l0, "in", cur_table, "line", line_count, "~", dup_yet[l0])
                     else:
                         table_delt = i7.table_row_count[cur_table] - i7.table_row_count[t2d[l0]]
-                        print("Uh oh, line {:d}/{:s} sz {:d} has >{:s}< which duplicates line {:d}/{:s} sz {:d}. {:s}".format(line_count, cur_table, i7.table_row_count[cur_table], l0, dup_yet[l0], t2d[l0], i7.table_row_count[t2d[l0]], 'EQUAL' if table_delt == 0 else (cur_table if table_delt > 0 else t2d[l0]) + ' BIGGER')) # , "which duplicates line", )
+                        print("PUNCTUATION NEUTRAL: line {:d}/{:s} sz {:d} has >{:s}< which duplicates line {:d}/{:s} sz {:d}. {:s}".format(line_count, cur_table, i7.table_row_count[cur_table], l0, dup_yet[l0], t2d[l0], i7.table_row_count[t2d[l0]], 'EQUAL' if table_delt == 0 else (cur_table if table_delt > 0 else t2d[l0]) + ' BIGGER')) # , "which duplicates line", )
                     dupes += 1
                 elif l0 in dup_reverse.keys():
                     print("Reversed duplicate", l0, "vs", wordrev(l0), "at line", line_count, "originally at", dup_reverse[l0])
@@ -100,6 +108,7 @@ def table_hack(file_name):
 
 dupes = 0
 dupe_without_spaces = 0
+perfect_duplicates = 0
 
 this_project = ""
 
@@ -125,7 +134,10 @@ read_format_strings()
 table_hack(i7.src(this_project))
 table_hack(i7.tafi(this_project))
 
-if dupes: print(dupes, "total duplicates to fix.")
+if perfect_duplicates: print(perfect_duplicates, "perfect duplicates to fix.")
+else: print("DUPLICATE TESTING WITHOUT SPACES PASSED")
+
+if dupes: print(dupes, "total punctuation neutral duplicates to fix.")
 else: print("DUPLICATE TESTING PASSED")
 
 if dupe_without_spaces: print(dupe_without_spaces, "duplicates without spaces to fix e.g. Not On vs No Ton.")
