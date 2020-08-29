@@ -30,6 +30,8 @@ rewrite_ignore_spaces = 3
 
 rewrite_desired = rewrite_exact
 
+flag_for_compare = False
+
 def usage():
     print("-ns/-sn removes spaceless checks e.g. No Ton ~ Not On")
     print("-s allows spaceless checks (default)")
@@ -67,7 +69,7 @@ def table_hack(file_name):
     temp_dup_table = defaultdict(int)
     full_dup_table = defaultdict(int)
     out_string = ""
-    missing_lines = False
+    changed_lines = False
     print("Looking at", file_name)
     with open(file_name) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -81,7 +83,7 @@ def table_hack(file_name):
                 in_table = False
                 out_string += line
                 continue
-            write_this_line_out = True
+            write_line_as_is = True
             if in_table:
                 ll = line.lower().strip().split("\t")
                 if not ll[0].startswith('"'):
@@ -93,11 +95,11 @@ def table_hack(file_name):
                 if lsort in temp_dup_table.keys():
                     print('IN-TABLE PERFECT DUPLICATE', cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
                     perfect_duplicates += 1
-                    if rewrite_desired >= rewrite_exact: write_this_line_out = False
+                    if rewrite_desired >= rewrite_exact or flag_for_compare: write_line_as_is = False
                 elif lsort in full_dup_table.keys():
                     print('BETWEEN-TABLE PERFECT DUPLICATE', cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
                     perfect_duplicates += 1
-                    if rewrite_desired >= rewrite_exact: write_this_line_out = False
+                    if rewrite_desired >= rewrite_exact or flag_for_compare: write_line_as_is = False
                 else:
                     if re.search("[a-z0-9]", lsort): temp_dup_table[lsort] = full_dup_table[lsort] = line_count
                 ignore_ok = 'okdup' in line.lower()
@@ -110,7 +112,7 @@ def table_hack(file_name):
                     else:
                         table_delt = i7.table_row_count[cur_table] - i7.table_row_count[t2d[l0]]
                         print("PUNCTUATION NEUTRAL: line {:d}/{:s} sz {:d} has >{:s}< which duplicates line {:d}/{:s} sz {:d}. {:s}".format(line_count, cur_table, i7.table_row_count[cur_table], l0, dup_yet[l0], t2d[l0], i7.table_row_count[t2d[l0]], 'EQUAL' if table_delt == 0 else (cur_table if table_delt > 0 else t2d[l0]) + ' BIGGER')) # , "which duplicates line", )
-                    if rewrite_desired >= rewrite_ignore_punc: write_this_line_out = False
+                    if rewrite_desired >= rewrite_ignore_punc or flag_for_compare: write_line_as_is = False
                     dupes += 1
                 elif l0 in dup_reverse.keys():
                     print("Reversed duplicate", l0, "vs", wordrev(l0), "at line", line_count, "originally at", dup_reverse[l0])
@@ -118,24 +120,27 @@ def table_hack(file_name):
                     if not ignore_ok:
                         print("Dup-without-spaces line", line_count, l1, l0, "from line", dup_no_space[l1])
                         dupe_without_spaces += 1
-                        if rewrite_desired >= rewrite_ignore_spaces: write_this_line_out = False
+                        if rewrite_desired >= rewrite_ignore_spaces or flag_for_compare: write_line_as_is = False
                 dup_no_space[l1] = "{:d}/{:s}".format(line_count, l0)
                 dup_yet[l0] = line_count
                 if l0.count(' ') == 1:
                     dup_reverse[wordrev(l0)] = line_count
                 t2d[l0] = cur_table
-            if write_this_line_out:
+            if write_line_as_is:
                 out_string += line
             else:
-                missing_lines = True
-    if missing_lines:
+                if flag_for_compare:
+                    out_string += line.strip() + " <CHECK>\n"
+                changed_lines = True
+    if flag_for_compare or changed_lines:
         temp_file = "c:/writing/temp/duptab-temp.txt"
-        f = open(temp_file, "w")
+        f = open(temp_file, "w", newline="\n")
         f.write(out_string)
         f.close()
         mt.wm(file_name, temp_file)
-        move(temp_file, file_name)
-        print("Removed duplicate lines from", file_name)
+        if not flag_for_compare:
+            move(temp_file, file_name)
+            print("Removed duplicate lines from", file_name)
 
 dupes = 0
 dupe_without_spaces = 0
@@ -148,6 +153,7 @@ while count < len(sys.argv):
     if arg[0] == '-': arg = arg[1:]
     if arg == 'ns' or arg == 'sn': check_spaceless = False
     elif arg == 's': check_spaceless = True
+    elif arg == 'fc' or arg == 'cf': flag_for_compare = True
     elif arg in i7.i7x.keys(): this_project = i7.i7x[arg]
     elif arg in i7.i7x.values(): this_project = arg
     else:
