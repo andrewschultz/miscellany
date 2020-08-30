@@ -11,6 +11,7 @@ import re
 import sys
 from shutil import move
 import mytools as mt
+import pyperclip
 
 dup_yet = defaultdict(int)
 dup_reverse = defaultdict(int)
@@ -37,6 +38,7 @@ def usage():
     print("-s allows spaceless checks (default)")
     print("-r allows rewriting punctuation neutral dupes")
     print("-r[1-3] allows rewriting levels of spaces e.g. No Ton ~ Not On")
+    print("-fc/-cf = flag for compare, add c for [okdup]")
     exit()
 
 def wordrev(w):
@@ -91,7 +93,8 @@ def table_hack(file_name):
                     continue
                 if cur_table in format_string.keys():
                     lsort = chop_up(format_string[cur_table], ll)
-                else: lsort = ll[0]
+                else:
+                    lsort = ll[0]
                 if lsort in temp_dup_table.keys():
                     print('IN-TABLE PERFECT DUPLICATE', cur_table, '/', lsort, 'at', line_count, "duplicates", temp_dup_table[lsort], ':', line.strip())
                     perfect_duplicates += 1
@@ -154,6 +157,9 @@ while count < len(sys.argv):
     if arg == 'ns' or arg == 'sn': check_spaceless = False
     elif arg == 's': check_spaceless = True
     elif arg == 'fc' or arg == 'cf': flag_for_compare = True
+    elif arg == 'fcc' or arg == 'cfc':
+        flag_for_compare = True
+        pyperclip.copy(" [okdup]")
     elif arg in i7.i7x.keys(): this_project = i7.i7x[arg]
     elif arg in i7.i7x.values(): this_project = arg
     else:
