@@ -104,7 +104,8 @@ def table_hack(file_name):
                     perfect_duplicates += 1
                     if rewrite_desired >= rewrite_exact or flag_for_compare: write_line_as_is = False
                 else:
-                    if re.search("[a-z0-9]", lsort): temp_dup_table[lsort] = full_dup_table[lsort] = line_count
+                    lsort2 = re.sub("( \[[^\]]*\])+$", "", lsort.strip())
+                    if re.search("[a-z0-9]", lsort2): temp_dup_table[lsort2] = full_dup_table[lsort2] = line_count
                 ignore_ok = 'okdup' in line.lower()
                 l0 = re.sub("\"", "", ll[0])
                 l0 = re.sub("[^a-z ]", "", l0)
