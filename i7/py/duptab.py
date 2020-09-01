@@ -70,6 +70,8 @@ def table_hack(file_name):
     i7.get_table_row_count(file_name, lower_case = True)
     temp_dup_table = defaultdict(int)
     full_dup_table = defaultdict(int)
+    orig_of = defaultdict(str)
+    no_space_first = defaultdict(str)
     out_string = ""
     changed_lines = False
     print("Looking at", file_name)
@@ -108,6 +110,7 @@ def table_hack(file_name):
                     if re.search("[a-z0-9]", lsort2): temp_dup_table[lsort2] = full_dup_table[lsort2] = line_count
                 ignore_ok = 'okdup' in line.lower()
                 l0 = re.sub("\"", "", ll[0])
+                l0 = l0.replace("[okdup]", "")
                 l0 = re.sub("[^a-z ]", "", l0)
                 l1 = re.sub("[^a-z]", "", l0)
                 if l0 in dup_yet.keys():
@@ -116,6 +119,7 @@ def table_hack(file_name):
                     else:
                         table_delt = i7.table_row_count[cur_table] - i7.table_row_count[t2d[l0]]
                         print("PUNCTUATION NEUTRAL: line {:d}/{:s} sz {:d} has >{:s}< which duplicates line {:d}/{:s} sz {:d}. {:s}".format(line_count, cur_table, i7.table_row_count[cur_table], l0, dup_yet[l0], t2d[l0], i7.table_row_count[t2d[l0]], 'EQUAL' if table_delt == 0 else (cur_table if table_delt > 0 else t2d[l0]) + ' BIGGER')) # , "which duplicates line", )
+                    print("  Comparison:", line.strip().split("\t")[0], '<- now then ->', orig_of[l0])
                     if rewrite_desired >= rewrite_ignore_punc or flag_for_compare: write_line_as_is = False
                     dupes += 1
                 elif l0 in dup_reverse.keys():
@@ -123,10 +127,17 @@ def table_hack(file_name):
                 elif check_spaceless and l1 in dup_no_space.keys():
                     if not ignore_ok:
                         print("Dup-without-spaces line", line_count, l1, l0, "from line", dup_no_space[l1])
+                        print("    full context:", line.strip().split("\t")[0], '<- now then ->', no_space_first[l1])
                         dupe_without_spaces += 1
                         if rewrite_desired >= rewrite_ignore_spaces or flag_for_compare: write_line_as_is = False
-                dup_no_space[l1] = "{:d}/{:s}".format(line_count, l0)
-                dup_yet[l0] = line_count
+                if l1 not in dup_no_space.keys():
+                    if ignore_ok:
+                        print("WARNING", line_count, l0, "superfluous [okdup]")
+                    dup_no_space[l1] = "{:d}/{:s}".format(line_count, l0)
+                    no_space_first[l1] = line.strip().split("\t")[0]
+                if l0 not in dup_yet:
+                    dup_yet[l0] = line_count
+                    orig_of[l0] = line.strip().split("\t")[0]
                 if l0.count(' ') == 1:
                     dup_reverse[wordrev(l0)] = line_count
                 t2d[l0] = cur_table
