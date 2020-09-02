@@ -101,6 +101,7 @@ def find_section_in_daily(sec_to_find, the_files):
     got_one = False
     my_token = "\\" + sec_to_find.lower()
     for f in sorted(the_files):
+        if got_one: break
         with open(f) as file:
             for (line_count, line) in enumerate(file, 1):
                 if line.strip() == my_token:
@@ -120,7 +121,7 @@ def find_section_in_daily(sec_to_find, the_files):
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
 
-def open_original(sec_to_find, look_for_end = True):
+def open_destination_doc(sec_to_find, look_for_end = True):
     print("NOTE: if you want to open in dailies, use od= instead.")
     if sec_to_find not in daily.mapping:
         print(sec_to_find, "is not visible in the daily mapping. You may wish to open dgrab.txt.")
@@ -135,14 +136,14 @@ def open_original(sec_to_find, look_for_end = True):
             if line.startswith(daily.where_to_insert[sec_to_find]):
                 if not look_for_end:
                     mt.npo(daily.mapping[sec_to_find], line_count)
-                temp_open_line = True
+                temp_open_line = line_count
                 continue
             if temp_open_line:
                 temp_open_line += 1
                 if not line.strip():
                     mt.npo(daily.mapping[sec_to_find], line_count)
     if temp_open_line:
-        print("Section {} ended the file. We will open at the end.".format(daily.where_to_insert))
+        print("Section {} ended the file.".format(daily.where_to_insert[sec_to_find]) if sec_to_find in daily.where_to_insert and daily.where_to_insert[sec_to_find] else "This may be a file without sections.", "We will open at the end.")
         mt.npo(daily.mapping[sec_to_find], temp_open_line)
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
@@ -197,6 +198,7 @@ def analyze_to_proc(my_dir):
         with open(this_daily) as file:
             in_section = False
             daily_basename = os.path.basename(this_daily)
+            if verbose: print(daily_basename)
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("#"): continue
                 if section_start:
@@ -463,10 +465,10 @@ while cmd_count < len(sys.argv):
         temp = re.sub("^d(b)?", "", arg)
         days_before_ignore = int(temp)
     elif arg[:3] == 'do:' or arg[:3] == 'od:' or arg[:3] == 'od=' or arg[:3] == 'do=':
-        section_to_find = arg[3:]
+        section_to_find = arg[3:] #find_section_in_daily
     elif arg[:2] == 'o:' or arg[:2] == 'o=':
         section_to_find = arg[2:]
-        open_original(section_to_find)
+        open_destination_doc(section_to_find)
     elif arg == 'd' or arg == 'db': days_before_ignore = 0
     elif arg == 'dt' or arg == 't': max_process = -1
     elif arg == 'i':
