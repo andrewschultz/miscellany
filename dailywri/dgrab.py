@@ -63,6 +63,7 @@ change_list = []
 print_ignored_files = False
 list_it = False
 
+look_for_blank = False
 append_importants = False
 important_test = True
 
@@ -119,6 +120,20 @@ def find_section_in_daily(sec_to_find, the_files):
             if line.startswith(daily.where_to_insert[sec_to_find]):
                 mt.npo(daily.mapping[sec_to_find], line_count)
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
+    exit()
+
+def find_first_blank(the_files):
+    for f in sorted(the_files):
+        should_start_outline = False
+        with open(f) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if not line.strip():
+                    should_start_outline = True
+                    continue
+                if should_start_outline and not line.startswith("\\"):
+                    mt.npo(f, line_count)
+                should_start_outline = False
+    print("No orphaned/blank lines! Yay!")
     exit()
 
 def open_destination_doc(sec_to_find, look_for_end = True):
@@ -500,6 +515,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
+    elif arg == '1b': look_for_blank = True
     elif arg == 'a': just_analyze = True
     elif re.search('^a[lc]+', arg):
         just_analyze = True
@@ -535,6 +551,10 @@ if just_analyze:
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
+
+if look_for_blank:
+    find_first_blank(the_glob)
+    exit()
 
 if section_to_find:
     find_section_in_daily(section_to_find, the_glob)
