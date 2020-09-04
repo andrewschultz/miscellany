@@ -178,6 +178,9 @@ def chop_front(x, delimiter=":"):
 
 no_colon = chop_front
 
+def no_equals(x):
+    return chop_front(x, '=')
+
 def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
     if ':' not in x:
         print("WARNING, cfgary called on line without starting colon")
@@ -237,8 +240,9 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
 def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = True):
-    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, follow_link(my_file) if follow_open_link else my_file, my_line)
-    print(cmd)
+    if follow_open_link:
+        my_file = follow_link(my_file)
+    cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
     if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
     os.system(cmd)
     if bail: exit()
