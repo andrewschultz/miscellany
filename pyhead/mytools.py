@@ -239,11 +239,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = True):
+def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False):
     if follow_open_link:
         my_file = follow_link(my_file)
     cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
-    if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file, my_line, " and bailing" if bail else ""))
+    if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file if print_full_path else os.path.basename(myfile), my_line, " and bailing" if bail else ""))
     os.system(cmd)
     if bail: exit()
 
