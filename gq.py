@@ -34,6 +34,11 @@ found_overall = 0
 
 frequencies = defaultdict(int)
 
+cmd_count = 1
+my_text = []
+default_proj = i7.dir2proj()
+my_proj = ""
+
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(my_proj)))
 
@@ -123,15 +128,7 @@ def related_projects(my_proj):
     except:
         return [my_proj]
 
-cmd_count = 1
-
-my_text = []
-
-default_dir = i7.dir2proj()
-if not default_dir:
-	default_dir = i7.dict_val_or_similar(i7.curdef, i7.i7x)
-
-my_proj = i7.proj2dir(default_dir)
+######################################main file below
 
 read_cfg()
 
@@ -159,9 +156,13 @@ while cmd_count < len(sys.argv):
         print("String", len(my_text), arg)
     cmd_count += 1
 
-print("Project", my_proj)
+if not my_proj:
+    if not default_proj:
+        sys.exit("Must be in a project directory or specify a project.")
+    print("Using default project", default_proj)
+    my_proj = default_proj
 
-#file_list = i7.i7com[default_dir]
+#file_list = i7.i7com[default_proj]
 proj_umbrella = related_projects(my_proj)
 
 history_file = hist_file_of(my_proj)
