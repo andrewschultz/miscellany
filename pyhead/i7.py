@@ -625,6 +625,14 @@ sproj = d2p = dir2proj
 
 npo = mt.npo
 
+def combo_of(my_proj):
+    proj_alt = i7x[my_proj] if my_proj in i7x else ""
+    for x in i7com:
+        for y in i7com[x].split(','):
+            if y == my_proj or y == proj_alt: return x
+    #if x in i7x: return combo_of[i7x[x]]
+    return my_proj
+
 def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
     if not my_proj: my_proj = dir2proj()
     if my_proj in i7xr: my_proj = i7xr[my_proj]
