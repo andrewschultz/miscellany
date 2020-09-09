@@ -40,7 +40,7 @@ default_proj = i7.dir2proj()
 my_proj = ""
 
 def hist_file_of(my_proj):
-    return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(my_proj)))
+    return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
 def write_history(my_file, my_query):
     first_line = ' '.join(my_query).strip()
