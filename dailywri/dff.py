@@ -62,10 +62,11 @@ my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
-drive_proc_dir = "c:/coding/perl/proj/from_drive/to-proc"
+proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
 raw_keep_dir = "c:/coding/perl/proj/from_keep"
-keep_proc_dir = "c:/coding/perl/proj/from_keep/to-proc"
-daily_proc_dir = "c:/writing/daily/to-proc"
+proc_keep_dir = "c:/coding/perl/proj/from_keep/to-proc"
+raw_daily_dir = "c:/writing/daily"
+proc_daily_dir = "c:/writing/daily/to-proc"
 raw_glob = "raw-*.txt"
 dailies_glob = "20*.txt"
 important_file = "{0}/important.txt".format(raw_drive_dir)
@@ -367,7 +368,7 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if what_to_sort == DAILIES:
-    dir_to_scour = daily_proc_dir
+    dir_to_scour = raw_daily_dir
     sort_proc = True
 elif what_to_sort == DRIVE:
     dir_to_scour = raw_drive_dir
@@ -376,7 +377,15 @@ elif what_to_sort == KEEP:
 else:
     sys.exit("Unknown sorting type.")
 
-dir_to_scour += "/to-proc"
+if not os.path.exists(dir_to_scour):
+    sys.exit("Can't open scour-directory {}.".format(dir_to_scour)
+
+if "to-proc" not in dir_to_scour:
+    print("Something happened that should not have. I am tacking on to-proc.")
+    new_proc = os.path.join(dir_to_scour, "to-proc")
+    if not os.path.exists(new_proc)
+        sys.exit("Can't open scour-directory after tacking on to-proc: {}.".format(new_proc)
+    dir_to_scour = new_proc
 
 os.chdir(dir_to_scour)
 
