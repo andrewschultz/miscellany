@@ -175,6 +175,8 @@ def my_section(l):
     temp = smart_section(l)
     if temp:
         return temp
+    if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
+    if l.startswith("1") and (("2 " in l) or (" 2" in l)): return '12'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
@@ -378,13 +380,13 @@ else:
     sys.exit("Unknown sorting type.")
 
 if not os.path.exists(dir_to_scour):
-    sys.exit("Can't open scour-directory {}.".format(dir_to_scour)
+    sys.exit("Can't open scour-directory {}.".format(dir_to_scour))
 
 if "to-proc" not in dir_to_scour:
     print("Something happened that should not have. I am tacking on to-proc.")
     new_proc = os.path.join(dir_to_scour, "to-proc")
-    if not os.path.exists(new_proc)
-        sys.exit("Can't open scour-directory after tacking on to-proc: {}.".format(new_proc)
+    if not os.path.exists(new_proc):
+        sys.exit("Can't open scour-directory after tacking on to-proc: {}.".format(new_proc))
     dir_to_scour = new_proc
 
 os.chdir(dir_to_scour)
