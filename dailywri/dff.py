@@ -125,6 +125,12 @@ def read_comment_cfg():
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
 
+def is_likely_name(my_line, my_sec):
+    if ' ' in my_line or '=' in my_line: return False
+    if '/' in my_line and '(' not in my_line: return False
+    if my_sec == 'por' or my_sec == 'oro' or my_sec == 'q': return False
+    return True
+
 def in_important_file(x, y):
     with open(y) as file:
         for line in file:
@@ -269,7 +275,7 @@ def sort_raw(raw_long):
                 else:
                     sections[temp] += line
                 continue
-            if one_word_names and ' ' not in line and '=' not in line:
+            if one_word_names and is_likely_name(line, current_section):
                 sections['nam'] += "\t" + line.strip()
                 continue
             if resort_already_sorted:
