@@ -41,8 +41,6 @@ dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 flat_temp = os.path.basename(dg_temp)
 
-notes_to_open = defaultdict(int)
-
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
 blank_sect = defaultdict(int)
@@ -406,8 +404,7 @@ def send_mapping(sect_name, file_name, change_files = False):
         else:
             copy(dg_temp, file_name)
         sys.exit()
-    if to_file not in notes_to_open:
-        notes_to_open[to_file] = file_len(to_file)
+    mt.add_post_open(to_file, file_len(to_file))
     if daily.where_to_insert[sect_name]:
         print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, to_file))
         write_next_blank = False
@@ -613,5 +610,4 @@ if len(change_list):
     print("Files still to process:", ', '.join(change_list))
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
-if open_notes_after:
-    for q in notes_to_open: mt.npo(q, notes_to_open[q], False, False)
+mt.postopen_files()
