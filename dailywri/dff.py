@@ -71,6 +71,8 @@ raw_glob = "raw-*.txt"
 dailies_glob = "20*.txt"
 important_file = "{0}/important.txt".format(raw_drive_dir)
 
+valid_procs = [proc_drive_dir, proc_keep_dir, proc_daily_dir]
+
 comment_cfg = "c:/writing/scripts/keso.txt"
 
 cmds = defaultdict(str)
@@ -124,6 +126,15 @@ def read_comment_cfg():
                 comment_dict[ary[0]] = ary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
+
+def is_in_procs(my_file):
+    fbn = os.path.normpath(my_file)
+    for vp in valid_procs:
+        if os.path.exists(os.path.join(vp, fbn)): return True
+    retval = False
+    if ".txt" not in fbn:
+        retval |= is_in_procs(fbn + ".txt")
+    return retval
 
 def is_likely_name(my_line, my_sec):
     if ' ' in my_line or '=' in my_line: return False
@@ -369,10 +380,14 @@ while cmd_count < len(sys.argv):
     elif len(arg) < 2:
         usage(arg)
     else:
-        if not os.path.exists(arg) and not os.path.exists(os.path.join(raw_drive_dir, arg)):
-            print("WARNING", arg, "is not a valid file")
-        else:
+        if arg.startswith("20"):
+            if ".txt" not in arg:
+                arg += ".txt"
             file_list.append(arg)
+        elif is_in_procs(arg):
+            file_list.append(arg)
+        else:
+            print("WARNING", arg, "is not a readable file in any to-proc directory.")
     cmd_count += 1
 
 if what_to_sort == DAILIES:
@@ -406,6 +421,9 @@ if not len(file_list):
 
 for fi in file_list:
     fbn = os.path.basename(fi)
+    if not os.path.exists(fi):
+        print("WARNING: {} does not exist.".format(fbn), dir_to_scour)
+        continue
     if fbn < my_min_file:
         continue
     if fbn > my_max_file:
