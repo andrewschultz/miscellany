@@ -15,7 +15,7 @@
 #
 # daily.py has the main engine details
 # dgrab.txt has what maps where
-# todo: utf8 to ascii, open first nonblank, open first bad header
+# todo: utf8 to ascii, open first nonorphan, open first bad header
 
 import datetime
 from shutil import copy
@@ -43,7 +43,7 @@ flat_temp = os.path.basename(dg_temp)
 
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
-blank_sect = defaultdict(int)
+orphan_sect = defaultdict(int)
 
 max_process = 0
 open_notes = 0
@@ -61,7 +61,8 @@ change_list = []
 print_ignored_files = False
 list_it = False
 
-look_for_blank = False
+analyze_orphans = False
+look_for_orphan = False
 append_importants = False
 important_test = True
 
@@ -120,7 +121,7 @@ def find_section_in_daily(sec_to_find, the_files):
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
     exit()
 
-def find_first_blank(the_files):
+def find_first_orphan(the_files):
     for f in sorted(the_files):
         should_start_outline = False
         with open(f) as file:
@@ -131,8 +132,44 @@ def find_first_blank(the_files):
                 if should_start_outline and not line.startswith("\\"):
                     mt.npo(f, line_count)
                 should_start_outline = False
-    print("No orphaned/blank lines! Yay!")
+    print("No orphaned/orphan lines! Yay!")
     exit()
+
+def find_all_orphans(the_files):
+    if not len(the_files):
+        sys.exit("No files to look through!")
+    total_orphans = total_sections = orphan_files = okay_files = 0
+    for f in sorted(the_files):
+        in_section = in_orphan_section = False
+        orphan_lines = orphan_sections = 0
+        with open(f) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if line.startswith("\\"):
+                    in_section = True
+                    continue
+                if not line.strip():
+                    in_section = in_orphan_section = False
+                    continue
+                if in_section:
+                    continue
+                orphan_lines += 1
+                if not in_orphan_section:
+                    orphan_sections += 1
+                    in_orphan_section = True
+        if orphan_lines:
+            print("{} has {} orphan lines in {} sections.".format(f, orphan_lines, orphan_sections))
+            orphan_files += 1
+            total_sections += orphan_sections
+            total_orphans += orphan_lines
+        else:
+            okay_files += 1
+    if not orphan_files:
+        print("No files with orphan lines. All {} are sorted. Well done!".format(len(the_files)))
+        sys.exit()
+    if okay_files:
+        print(okay_files, "files had no orphans.")
+    print("{} total files with {} lines in {} sections. Open the first with -1b.".format(orphan_files, total_orphans, total_sections))
+    sys.exit()
 
 def open_destination_doc(sec_to_find, look_for_end = True):
     print("NOTE: if you want to open in dailies, use od= instead.")
@@ -513,6 +550,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
     elif arg == '1b': look_for_blank = True
+    elif arg == 'ab': analyze_blanks = True
     elif arg == 'a': just_analyze = True
     elif re.search('^a[lc]+', arg):
         just_analyze = True
@@ -536,6 +574,7 @@ if not dir_to_proc:
 if "to-proc" not in dir_to_proc:
     dir_to_proc = os.path.join(dir_to_proc, "to-proc")
 
+dir_to_proc = os.path.normpath(dir_to_proc)
 os.chdir(dir_to_proc)
 
 if append_importants:
@@ -548,6 +587,10 @@ if just_analyze:
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
+
+if analyze_blanks:
+    find_all_blanks(the_glob)
+    exit()
 
 if look_for_blank:
     find_first_blank(the_glob)
