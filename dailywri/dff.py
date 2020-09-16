@@ -56,6 +56,7 @@ only_one = True
 bail_after_unchanged = False
 see_drive_files = True
 test_no_copy = True
+copy_then_test = False
 only_list_files = False
 show_differences = True
 my_min_file = "20170000.txt"
@@ -92,7 +93,7 @@ def usage(my_arg):
     print("DFF usage:")
     print()
     print("-a/-d/-k specifies dAily, google Drive or google Keep downloads. Default is Google Drive. dAily is useful at the end of each week.")
-    print("co/te toggles the test-or-copy flag.")
+    print("co/te toggles the test-or-copy flag. 1a copies, then tests the next file in the directory.")
     print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print("-bu bails after unchanged. Used for testing.")
@@ -236,6 +237,8 @@ def lock_it(proc_file):
     f.close()
 
 def sort_raw(raw_long):
+    global test_no_copy
+    global copy_then_test
     sections = defaultdict(str)
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
@@ -330,6 +333,11 @@ def sort_raw(raw_long):
                 print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
                 sys.exit()
         copy(temp_out_file, raw_long)
+        if copy_then_test:
+            print("OK, copied one, now testing another.")
+            test_no_copy = True
+            copy_then_test = False
+            return 1
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
@@ -362,6 +370,10 @@ while cmd_count < len(sys.argv):
         sort_proc = True
     elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
         only_list_files = True
+    elif arg == '1a':
+        copy_then_test = True
+        test_no_copy = False
+        max_files = 2
     elif arg == 'co':
         test_no_copy = False
     elif arg == 'te':
