@@ -74,7 +74,7 @@ important_file = "{0}/important.txt".format(raw_drive_dir)
 
 valid_procs = [proc_drive_dir, proc_keep_dir, proc_daily_dir]
 
-comment_cfg = "c:/writing/scripts/keso.txt"
+comment_cfg = "c:/writing/scripts/dff.txt"
 
 cmds = defaultdict(str)
 cmds['pal'] = "ni no ai"
@@ -115,16 +115,32 @@ def read_comment_cfg():
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
                 continue
+            entries = ary[0].split(",")
             if l.startswith("keyword:"):
                 section_words[ary[0]] = ary[1]
             elif l.startswith("prefix:"):
-                for u in ary[0].split(','):
+                for u in entries:
                     if u in prefixes:
-                        print("Duplicate", u, "line", line_count)
+                        print("Duplicate prefix", u, "line", line_count)
                         continue
                     prefixes[u] = ary[1]
             elif l.startswith("suffix:"):
-                comment_dict[ary[0]] = ary[1]
+                for u in entries:
+                    if u in comment_dict:
+                        print("Duplicate suffix", u, "line", line_count)
+                        continue
+                    comment_dict[u] = ary[1]
+            elif l.startswith("presuf") or l.startswith("sufpre"):
+                for u in entries:
+                    if u in comment_dict:
+                        print("Duplicate suffix", u, "line", line_count)
+                        continue
+                    comment_dict[u] = ary[1]
+                for u in entries:
+                    if u in prefixes:
+                        print("Duplicate prefix", u, "line", line_count)
+                        continue
+                    prefixes[u] = ary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
 
