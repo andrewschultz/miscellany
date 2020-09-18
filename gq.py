@@ -95,7 +95,7 @@ def find_text_in_file(my_text, projfile):
             else:
                 if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, re.IGNORECASE):
                     found_one = True
-                elif re.search(r'\b{}{}(s?)\b'.format(my_text[0])) and re.search(r'\b{}{}(s?)\b'.format(my_text[1])):
+                elif re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE) and re.search(r'\b{}(s?)\b'.format(my_text[1]), line, re.IGNORECASE):
                     found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
