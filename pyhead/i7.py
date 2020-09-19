@@ -19,7 +19,7 @@ import re
 import os
 import glob
 from filecmp import cmp
-from shutil import copy
+from shutil import copy, move
 import __main__ as main
 
 auth = "Andrew Schultz"
@@ -212,6 +212,35 @@ def topics_to_array(x, div_char = "/"):
     return overall_array
 
 topx2ary = topics_to_array
+
+def allow_beta_code(my_file, making_beta_release):
+    got_beta_line = False
+    changed_beta_line = False
+    temp_out_file = "c:/writing/temp/story-beta.ni"
+    beta_line = "volume beta testing{}\n".format('' if making_beta_release else ' - not for release')
+    f = open(temp_out_file, "w")
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if "volume beta testing" in line:
+                if line == beta_line:
+                    print("Found beta line {}, but it wasn't changed.".format(line.strip()))
+                else:
+                    changed_beta_line = True
+                f.write(beta_line)
+                got_beta_line = True
+            else:
+                f.write(line)
+    f.close()
+    if not got_beta_line:
+        print("Found no 'volume beta testing' line in {}, returning.".format(my_file))
+        os.remove(temp_out_file)
+        return
+    if not changed_beta_line:
+        print("Did not change 'volume beta testing' line in {}, returning.".format(my_file))
+        os.remove(temp_out_file)
+        return
+    move(temp_out_file, my_file)
+    print("Successfully toggled beta line to {}for release".format("" if making_beta_release else "not "))
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
