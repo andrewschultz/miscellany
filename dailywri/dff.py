@@ -376,11 +376,11 @@ while cmd_count < len(sys.argv):
         max_files = int(arg[1:])
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
-    elif arg == 'k':
+    elif arg == 'k' or arg == 'dk':
         what_to_sort = KEEP
-    elif arg == 'd':
+    elif arg == 'd' or arg == 'dr':
         what_to_sort = DRIVE
-    elif arg == 'a':
+    elif arg == 'a' or arg == 'da':
         what_to_sort = DAILY
     elif arg == 'p' or arg == 'sp':
         sort_proc = True
