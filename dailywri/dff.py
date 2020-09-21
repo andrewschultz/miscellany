@@ -82,9 +82,10 @@ cmds['ana'] = "ni an"
 cmds['vvff'] = "ni no vv"
 cmds['spo'] = "np spopal"
 
-comment_dict = defaultdict(str)
+suffixes = defaultdict(str)
 section_words = defaultdict(str)
 prefixes = defaultdict(str)
+delete_marker = defaultdict(str)
 
 def usage(my_arg):
     if (my_arg):
@@ -111,11 +112,23 @@ def read_comment_cfg():
             if ':' not in l:
                 print("Line", l, "needs colon prefix.")
                 continue
+            if l[:2] == 'd:':
+                delete_next = True
+                l = l[2:]
+            else:
+                delete_next = False
             ary = mt.cfgary(l, delimiter='=')
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
                 continue
             entries = ary[0].split(",")
+            if delete_next:
+                print("Will delete marker", ary[0])
+                for y in ary[0].split(','):
+                    if y in delete_marker:
+                        print("doubly deleted marker", y, "line", line_count)
+                    else:
+                        delete_marker[y] = True
             if l.startswith("keyword:"):
                 section_words[ary[0]] = ary[1]
             elif l.startswith("prefix:"):
@@ -126,16 +139,16 @@ def read_comment_cfg():
                     prefixes[u] = ary[1]
             elif l.startswith("suffix:"):
                 for u in entries:
-                    if u in comment_dict:
+                    if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
                         continue
-                    comment_dict[u] = ary[1]
+                    suffixes[u] = ary[1]
             elif l.startswith("presuf") or l.startswith("sufpre"):
                 for u in entries:
-                    if u in comment_dict:
+                    if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
                         continue
-                    comment_dict[u] = ary[1]
+                    suffixes[u] = ary[1]
                 for u in entries:
                     if u in prefixes:
                         print("Duplicate prefix", u, "line", line_count)
@@ -180,9 +193,13 @@ def is_spoonerism_rated(l):
 def is_risque_spoonerism(l):
     return '**' in l and '***' not in l
 
-def comment_section(my_line, exact = False):
-    for x in comment_dict:
-        if re.search(r'(# *| zz)({}){}'.format(comment_dict[x], r'\b' if exact else ''), my_line, re.IGNORECASE):
+def section_from_suffix(my_line, exact = False):
+    if '#' not in my_line and ' zz' not in my_line: return
+    ml2 = re.sub(".*(#| zz)", "", my_line).strip().lower()
+    for x in suffixes:
+        if not exact and ml2.startswith(x):
+            return x
+        if exact and ml2.startswith(x) and re.search(r'{}\b'.format(x), ml2):
             return x
     return ""
 
@@ -198,7 +215,7 @@ def my_section(l):
     if l.startswith('wfl'): return 'pc'
     if l.startswith('mov:') or l.startswith('movie:') or l.startswith('movies:'): return 'mov'
     if l.startswith('boo:') or l.startswith('book:') or l.startswith('books:'): return 'boo'
-    temp = comment_section(l, exact = True)
+    temp = section_from_suffix(l, exact = True)
     if temp:
         return temp
     if '\t' in l or l.count('  ') > 2: return 'nam'
@@ -214,7 +231,7 @@ def my_section(l):
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
-    temp = comment_section(l, exact = False)
+    temp = section_from_suffix(l, exact = False)
     if temp:
         return temp
     return ""
