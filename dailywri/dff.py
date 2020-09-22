@@ -123,7 +123,6 @@ def read_comment_cfg():
                 continue
             entries = ary[0].split(",")
             if delete_next:
-                print("Will delete marker", ary[0])
                 for y in ary[0].split(','):
                     if y in delete_marker:
                         print("doubly deleted marker", y, "line", line_count)
@@ -313,6 +312,9 @@ def sort_raw(raw_long):
                     continue
             temp = section_from_prefix(ll)
             if temp:
+                if temp in delete_marker:
+                    print("Shortening", line.strip())
+                    line = re.sub("^.*?:", "", line).lstrip()
                 sections[temp] += line
                 continue
             temp = my_section(line)
@@ -320,6 +322,10 @@ def sort_raw(raw_long):
                 if temp == 'lim':
                     sections[temp] += mt.slash_to_limerick(line)
                 else:
+                    if temp in suffixes and temp in delete_marker:
+                        sfs = section_from_suffix(line, exact=True)
+                        if sfs:
+                            line = re.sub(r'( zz|#){}.*'.format(sfs), "", line, re.IGNORECASE)
                     sections[temp] += line
                 continue
             if one_word_names and is_likely_name(line, current_section):
@@ -422,7 +428,7 @@ while cmd_count < len(sys.argv):
         print("minfile", my_min_file)
     elif arg == '?':
         usage()
-    elif len(arg) < 2:
+    elif len(arg) <= 2:
         usage(arg)
     else:
         if arg.startswith("20"):
@@ -432,7 +438,7 @@ while cmd_count < len(sys.argv):
         elif is_in_procs(arg):
             file_list.append(arg)
         else:
-            print("WARNING", arg, "is not a readable file in any to-proc directory.")
+            print("WARNING", arg, "is not a readable file in any to-proc directory. Ignoring.")
     cmd_count += 1
 
 if what_to_sort == DAILIES:
