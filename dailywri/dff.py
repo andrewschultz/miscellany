@@ -86,6 +86,7 @@ suffixes = defaultdict(str)
 section_words = defaultdict(str)
 prefixes = defaultdict(str)
 delete_marker = defaultdict(str)
+fixed_marker = defaultdict(str)
 
 def usage(my_arg):
     if (my_arg):
@@ -153,6 +154,12 @@ def read_comment_cfg():
                         print("Duplicate prefix", u, "line", line_count)
                         continue
                     prefixes[u] = ary[1]
+            elif l.startswith("fixmar:"):
+                for u in entries:
+                    if u in fixed_marker:
+                        print("Duplicate save-marker", u, "line", line_count)
+                        continue
+                    fixed_marker[u] = ary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
 
@@ -305,6 +312,9 @@ def sort_raw(raw_long):
             if not ll:
                 current_section = ''
                 important = False
+                continue
+            if current_section in fixed_marker:
+                sections[current_section] += line
                 continue
             if not resort_already_sorted:
                 if current_section:
