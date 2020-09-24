@@ -204,9 +204,9 @@ def section_from_suffix(my_line, exact = False):
     ml2 = re.sub(".*(#| zz)", "", my_line).strip().lower()
     for x in suffixes:
         if not exact and ml2.startswith(x):
-            return x
+            return suffixes[x]
         if exact and ml2.startswith(x) and re.search(r'{}\b'.format(x), ml2):
-            return x
+            return suffixes[x]
     return ""
 
 def smart_section(my_line):
@@ -322,8 +322,7 @@ def sort_raw(raw_long):
                     continue
             temp = section_from_prefix(ll)
             if temp:
-                if temp in delete_marker:
-                    print("Shortening", line.strip())
+                if temp in prefixes and temp in delete_marker:
                     line = re.sub("^.*?:", "", line).lstrip()
                 sections[temp] += line
                 continue
