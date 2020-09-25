@@ -94,7 +94,7 @@ def usage(my_arg):
     print("=" * 50)
     print("DFF usage:")
     print()
-    print("-a/-d/-k specifies dAily, google Drive or google Keep downloads. Default is Google Drive. dAily is useful at the end of each week.")
+    print("-a/da, -d/dr, -k/-dk specifies dAily, google Drive or google Keep downloads. Default is daily. dAily is useful at the end of each week.")
     print("co/te toggles the test-or-copy flag. 1a copies, then tests the next file in the directory.")
     print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
@@ -282,7 +282,6 @@ def sort_raw(raw_long):
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
         return 0
-    print("Parsing", raw_long, "...")
     important = False
     in_header = True
     header_to_write = ""
@@ -479,7 +478,9 @@ if not len(file_list):
     file_list = glob(my_glob)
     print("Globbing", my_glob)
 
+list_count = 0
 for fi in file_list:
+    list_count += 1
     fbn = os.path.basename(fi)
     if not os.path.exists(fi):
         print("WARNING: {} does not exist.".format(fbn), dir_to_scour)
@@ -491,6 +492,7 @@ for fi in file_list:
     if only_list_files:
         print(fi)
         continue
+    print("Parsing file {} of {}: {}".format(list_count, len(file_list), fbn))
     files_done += sort_raw(fi)
     if files_done == max_files: break
 
