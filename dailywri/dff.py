@@ -61,6 +61,7 @@ only_list_files = False
 show_differences = True
 my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
+verbose = True
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
@@ -100,6 +101,7 @@ def usage(my_arg):
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print("-bu bails after unchanged. Used for testing.")
     print("-n1/1w toggles one-word names in lines.")
+    print("-v/-q is verbose/quiet")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -367,8 +369,9 @@ def sort_raw(raw_long):
     fout.close()
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
-        print(raw_long, "was not changed since last run.")
+        if verbose: print(raw_long, "was not changed since last run.")
         if bail_after_unchanged:
+            if not verbose: print("Bailing after unchanged.")
             exit()
         return 0
     else:
@@ -431,6 +434,10 @@ while cmd_count < len(sys.argv):
         one_word_names = False
     elif arg == '1w' or arg == 'w1':
         one_word_names = True
+    elif arg == 'v':
+        verbose = True
+    elif arg == 'q':
+        verbose = False
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("minfile", my_min_file)
