@@ -1,11 +1,15 @@
 #
 # nso.py: note sorter
 #
-# this doesn't sort them in any sort of order but rather just moves certain ones to tables in the source code
+# this takes stuff marked from the notes.txt file and sends it to tables in a source header.
+# this itself does not sort things.
 #
-# usage is, if a table has [xxstuff], stuff:[whatever]
+# there is no side config file. Everything is determined by markers in the source.
+# for instance table of stuff [xxmystuff] [xxstuff] would look for mystuff and stuff.
 #
-# there is no side config file
+# cs = copy smart
+# al = alphabetically sort afterwards
+# nc = noted-copy, in other words, show notes in a separate popup. Each OK runs and refreshes the popup.
 #
 
 import filecmp
@@ -33,7 +37,7 @@ def usage(my_text="USAGE PRINTOUT"):
     print("x = extract table substitution strings")
     exit()
 
-def extract_table_from_file(pro, hdr_type = 'ta'):
+def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = True):
     my_tfile = i7.hdr(pro, hdr_type)
     with open(my_tfile) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -41,8 +45,12 @@ def extract_table_from_file(pro, hdr_type = 'ta'):
                 x = re.findall("\[xx(.*?)\]", line)
                 if len(x):
                     y = re.sub(" *\[.*", "", line.lower().strip())
-                    print(y, '==', '/'.join(x))
-    exit()
+                    ret_val += "{} =~ {}\n".format(y, '/'.join(x)))
+    ret_val = ret_val.strip()
+    if print_and_bail:
+        print(ret_val)
+        sys.exit()
+    return ret_val
 
 def invalid_text_check(pro, line):
     """this checks if certain projects have bad / extra text"""
