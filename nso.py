@@ -20,6 +20,8 @@ import mytools as mt
 import os
 import i7
 import sys
+import win32ui
+import win32con
 
 display_changes = False
 copy_to_old = True
@@ -37,7 +39,8 @@ def usage(my_text="USAGE PRINTOUT"):
     print("x = extract table substitution strings")
     exit()
 
-def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = True):
+def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = False):
+    ret_val = ""
     my_tfile = i7.hdr(pro, hdr_type)
     with open(my_tfile) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -45,7 +48,7 @@ def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = True):
                 x = re.findall("\[xx(.*?)\]", line)
                 if len(x):
                     y = re.sub(" *\[.*", "", line.lower().strip())
-                    ret_val += "{} =~ {}\n".format(y, '/'.join(x)))
+                    ret_val += "{} =~ {}\n".format(y, '/'.join(x))
     ret_val = ret_val.strip()
     if print_and_bail:
         print(ret_val)
@@ -259,6 +262,9 @@ while cmd_count < len(sys.argv):
         copy_smart = True
         copy_to_old = True
         alphabetize_after = True
+    elif arg == 'cn' or arg == 'nc':
+        copy_with_notes_reference = True
+        copy_smart = True
     elif arg == 'dc':
         display_changes = True
     elif arg == 'al':
@@ -287,8 +293,20 @@ if not cmd_proj:
 else: my_proj = cmd_proj
 
 if extract_table_subs:
-    extract_table_from_file(my_proj)
+    extract_table_from_file(my_proj, print_and_bail = True)
     exit()
+
+if copy_with_notes_reference:
+    main_message = extract_table_from_file(my_proj)
+    while 1:
+        temp = win32ui.MessageBox(main_message, "markers for {}".format(my_proj), win32con.MB_OKCANCEL)
+        if temp == win32con.IDOK:
+            copy_smart_ideas(my_proj)
+        if temp == win32con.IDCANCEL:
+            sys.exit()
+    exit()
+
+    sys.exit()
 
 if copy_smart or copy_to_old:
     if copy_smart: copy_smart_ideas(my_proj)
