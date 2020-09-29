@@ -42,14 +42,29 @@ def usage(my_text="USAGE PRINTOUT"):
 def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = False):
     ret_val = ""
     my_tfile = i7.hdr(pro, hdr_type)
+    check_headers = False
+    valid_headers = []
+    invalid_headers = []
     with open(my_tfile) as file:
         for (line_count, line) in enumerate(file, 1):
+            if check_headers:
+                if line.count("\t") > 1:
+                    invalid_headers.append(candidate_val)
+                else:
+                    valid_headers.append(candidate_val)
+                check_headers = False
+                continue
             if line.startswith("table"):
                 x = re.findall("\[xx(.*?)\]", line)
                 if len(x):
                     y = re.sub(" *\[.*", "", line.lower().strip())
-                    ret_val += "{} =~ {}\n".format(y, '/'.join(x))
-    ret_val = ret_val.strip()
+                    candidate_val = "{} =~ {}\n".format(y, '/'.join(x))
+                    check_headers = True
+    ret_val = ''
+    if len(valid_headers):
+        ret_val = "VALID HEADERS\n" + ''.join(sorted(valid_headers)) + '\n\n'
+    if len(invalid_headers):
+        ret_val += "INVALID HEADERS\n" + ''.join(sorted(invalid_headers)) + '\n\n'
     if print_and_bail:
         print(ret_val)
         sys.exit()
