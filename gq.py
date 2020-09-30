@@ -26,7 +26,7 @@ my_cfg = "c:/writing/scripts/gqcfg.txt"
 # options only on cmd line
 
 view_history = False
-post_open_matches = True
+post_open_matches = False
 
 # variables not in CFG file
 
@@ -60,8 +60,6 @@ def write_history(my_file, my_query):
         ary = ary[:history_max]
     f = open(my_file, "w")
     f.write("\n".join(ary))
-    for x in range(0, len(ary)):
-        print(x, ary[x])
     f.close()
 
 def read_cfg():
@@ -137,7 +135,7 @@ while cmd_count < len(sys.argv):
     if arg in i7.i7x:
         my_proj = i7.i7x[arg]
     elif arg in i7.i7xr:
-        my_proj = i7.i7x[arg]
+        my_proj = i7.i7xr[arg]
     elif arg == 'npo' or arg == 'pon':
         post_open_matches = False
     elif arg == 'po':
