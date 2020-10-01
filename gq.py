@@ -39,6 +39,16 @@ my_text = []
 default_proj = i7.dir2proj()
 my_proj = ""
 
+def usage():
+    print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as.")
+    print()
+    print("You may also specify a project or combinations e.g. sts and roi do the same thing.")
+    print()
+    print("vh = view history file of a project, what you have searched")
+    print("mf/mo=# sets maximum file/overall matches")
+    print("po postopens matches, npo/opn kills it")
+    exit()
+
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
@@ -146,6 +156,8 @@ while cmd_count < len(sys.argv):
         max_overall = int(arg[2:])
     elif arg == 'vh':
         view_history = True
+    elif arg == '?':
+        usage()
     else:
         if len(my_text) == 2:
             sys.exit("Found more than 2 text string to search. Bailing.")
