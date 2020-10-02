@@ -27,6 +27,7 @@ my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 view_history = False
 post_open_matches = False
+all_similar_projects = True
 
 # variables not in CFG file
 
@@ -119,6 +120,7 @@ def find_text_in_file(my_text, projfile):
                 print("    ({:5d}):".format(line_count), line.strip())
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
+    if not found_so_far: print("Nothing in", projfile)
     return found_so_far
 
 def related_projects(my_proj):
@@ -150,6 +152,8 @@ while cmd_count < len(sys.argv):
         post_open_matches = False
     elif arg == 'po':
         post_open_matches = True
+    elif arg == 'o':
+        all_similar_projects = False
     elif arg[:2] == 'mf' and arg[2:].isdigit():
         max_in_file = int(arg[2:])
     elif arg[:2] == 'mo' and arg[2:].isdigit():
@@ -173,7 +177,10 @@ if not my_proj:
     my_proj = default_proj
 
 #file_list = i7.i7com[default_proj]
-proj_umbrella = related_projects(my_proj)
+if all_similar_projects:
+    proj_umbrella = related_projects(my_proj)
+else:
+    proj_umbrella = [my_proj]
 
 history_file = hist_file_of(my_proj)
 
@@ -195,6 +202,12 @@ for proj in proj_umbrella:
         print("WARNING", proj, "does not have project files associated with it. It may not be a valid inform project.")
         continue
     for projfile in i7.i7f[proj]:
+        if not os.path.exists(projfile):
+            if 'story.ni' in projfile:
+                print("Skipping nonexistent story file, probably due to 'only' parameter.")
+                continue
+            print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
+            continue
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
 
 write_history(history_file, my_text)
