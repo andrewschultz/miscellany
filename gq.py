@@ -28,8 +28,9 @@ my_cfg = "c:/writing/scripts/gqcfg.txt"
 view_history = False
 post_open_matches = False
 all_similar_projects = True
+verbose = False
 
-# variables not in CFG file
+# variables not in CFG file/cmd line
 
 found_overall = 0
 
@@ -48,6 +49,7 @@ def usage():
     print("vh = view history file of a project, what you have searched")
     print("mf/mo=# sets maximum file/overall matches")
     print("po postopens matches, npo/opn kills it")
+    print("v/q = verbose/quiet")
     exit()
 
 def hist_file_of(my_proj):
@@ -120,7 +122,8 @@ def find_text_in_file(my_text, projfile):
                 print("    ({:5d}):".format(line_count), line.strip())
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
-    if not found_so_far: print("Nothing in", projfile)
+    if verbose and not found_so_far:
+        print("Nothing found in", projfile)
     return found_so_far
 
 def related_projects(my_proj):
@@ -160,6 +163,10 @@ while cmd_count < len(sys.argv):
         max_overall = int(arg[2:])
     elif arg == 'vh':
         view_history = True
+    elif arg == 'v':
+        verbose = True
+    elif arg == 'q':
+        verbose = False
     elif arg == '?':
         usage()
     else:
