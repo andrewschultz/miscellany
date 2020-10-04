@@ -76,6 +76,10 @@ def write_history(my_file, my_query):
     f.close()
 
 def read_cfg():
+    if not os.path.exists(my_cfg):
+        print("Could not find CFG file", my_cfg)
+        print("This is not a fatal error, since variables are defined in the script itself. But you can adjust variables there.")
+        return
     with open(my_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith(';'): break
@@ -88,6 +92,12 @@ def read_cfg():
                 elif lary[0] == "min_overall":
                     global min_overall
                     min_overall = int(lary[1])
+                elif lary[0] == "verbose":
+                    global verbose
+                    verbose = int(lary[1])
+                elif lary[0] == "all_similar_projects":
+                    global all_similar_projects
+                    all_similar_projects = int(lary[1])
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
