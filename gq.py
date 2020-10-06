@@ -51,6 +51,8 @@ def usage():
     print("mf/mo=# sets maximum file/overall matches")
     print("po postopens matches, npo/opn kills it")
     print("v/q = verbose/quiet")
+    print()
+    print("e/ec/ce = edit config file")
     exit()
 
 def hist_file_of(my_proj):
@@ -95,10 +97,10 @@ def read_cfg():
                     min_overall = int(lary[1])
                 elif lary[0] == "verbose":
                     global verbose
-                    verbose = int(lary[1])
+                    verbose = bool(int(lary[1]))
                 elif lary[0] == "all_similar_projects":
                     global all_similar_projects
-                    all_similar_projects = int(lary[1])
+                    all_similar_projects = bool(int(lary[1]))
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -180,6 +182,8 @@ while cmd_count < len(sys.argv):
         verbose = True
     elif arg == 'q':
         verbose = False
+    elif arg == 'e' or arg == 'ec' or arg == 'ce':
+        mt.npo(my_cfg)
     elif arg == '?':
         usage()
     else:
