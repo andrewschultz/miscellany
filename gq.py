@@ -110,9 +110,18 @@ def find_text_in_file(my_text, projfile):
     if found_overall == max_overall:
         return -1
     found_so_far = 0
+    current_table = ""
+    current_table_line = 0
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             found_one = False
+            if current_table:
+                current_table_line += 1
+                if not line.strip():
+                    current_table = ""
+            if line.startswith("table of") and not current_table:
+                current_table = re.sub(" *\[.*", "", line.strip().lower())
+                current_table_line = -1
             if not my_text[1]:
                 if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE):
                     found_one = True
@@ -132,7 +141,7 @@ def find_text_in_file(my_text, projfile):
                     print('=' * 25, bf, "found matches", '=' * 25)
                 found_so_far += 1
                 found_overall += 1
-                print("    ({:5d}):".format(line_count), line.strip())
+                print("    ({:5d}):".format(line_count), line.strip(), "{} L{}".format(current_table, current_table_line))
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
