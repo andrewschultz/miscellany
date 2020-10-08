@@ -86,7 +86,7 @@ def read_cfg():
     with open(my_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith(';'): break
-            if line.startswith(';'): continue
+            if line.startswith('#'): continue
             if '=' in line:
                 lary = line.strip().lower().split("=")
                 if lary[0] == "max_overall":
@@ -141,7 +141,7 @@ def find_text_in_file(my_text, projfile):
                     print('=' * 25, bf, "found matches", '=' * 25)
                 found_so_far += 1
                 found_overall += 1
-                print("    ({:5d}):".format(line_count), line.strip(), "{} L{}".format(current_table, current_table_line))
+                print("    ({:5d}):".format(line_count), line.strip(), "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
@@ -150,7 +150,14 @@ def find_text_in_file(my_text, projfile):
 
 def related_projects(my_proj):
     cur_proj = ""
+
     for x in i7.i7com:
+        if my_proj == x:
+            if cur_proj:
+                print("WARNING, redefinition of project-umbrella for", myproj)
+            print("Forcing umbrella project", x)
+            cur_proj = x
+            break
         if my_proj in i7.i7com[x].split(","):
             if cur_proj:
                 if i7.i7com[x] == i7.i7com[x]:
@@ -227,8 +234,6 @@ if not len(my_text):
 if len(my_text) == 1:
     print("No second word to search.")
     my_text.append('')
-
-print("Looking through projects:", ', '.join(proj_umbrella))
 
 for proj in proj_umbrella:
     if proj not in i7.i7f:
