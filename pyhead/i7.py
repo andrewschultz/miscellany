@@ -23,7 +23,7 @@ from shutil import copy, move
 import __main__ as main
 
 auth = "Andrew Schultz"
-extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth)
+extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth) # NOTE: the x86 is right, here. No need for mt.progfile.
 nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
 niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
 tmp_hdr = temp_hdr = tmp_header = temp_header = os.path.join(extdir, "temp.i7x")

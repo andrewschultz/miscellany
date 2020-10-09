@@ -169,7 +169,7 @@ def slash_to_limerick(x): # limerick converter
     retval = ""
     for x0 in x.split("\n"):
         if "/" in x0:
-            retval += "====\n" + re.sub(" *\/ ", "\n", x0) + "\n"
+            retval += "====\n" + re.sub(" *\/ *", "\n", x0) + "\n"
         else: retval += x0 + "\n"
     return retval.rstrip() + "\n"
 
