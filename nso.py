@@ -26,6 +26,7 @@ import win32con
 display_changes = False
 copy_to_old = True
 copy_smart = True
+copy_with_notes_reference = False
 alphabetize_after = False
 extract_table_subs = False
 
@@ -39,9 +40,18 @@ def usage(my_text="USAGE PRINTOUT"):
     print("x = extract table substitution strings")
     exit()
 
-def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = False):
+def alpha_header(my_proj):
+    my_proj = i7.proj_exp(my_proj)
+    if my_proj == 'shuffling' or my_proj == 'roiling':
+        return 'ra'
+    return 'ta'
+
+def alpha_file(my_proj):
+    return i7.hdr(my_proj, alpha_header(my_proj))
+
+def extract_table_from_file(pro, print_and_bail = False):
     ret_val = ""
-    my_tfile = i7.hdr(pro, hdr_type)
+    my_tfile = alpha_file(pro)
     check_headers = False
     valid_headers = []
     invalid_headers = []
@@ -65,6 +75,8 @@ def extract_table_from_file(pro, hdr_type = 'ta', print_and_bail = False):
         ret_val = "VALID HEADERS\n" + ''.join(sorted(valid_headers)) + '\n\n'
     if len(invalid_headers):
         ret_val += "INVALID HEADERS\n" + ''.join(sorted(invalid_headers)) + '\n\n'
+    if not ret_val:
+        ret_val = ("No header alphabetizing information in {}.".format(os.path.basename(my_tfile)))
     if print_and_bail:
         print(ret_val)
         sys.exit()
@@ -114,11 +126,11 @@ def show_nonblanks(file_name):
             else: ideas += 1
     print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blank lines:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
 
-def copy_smart_ideas(pro, hdr_type = "ta"):
+def copy_smart_ideas(pro):
     notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
     notes_out = os.path.join(i7.proj2dir(pro), "notes-temp.txt")
     hdr_tmp = os.path.join(i7.extdir, "temp.i7x")
-    hdr_to_change = i7.hdr(pro, hdr_type)
+    hdr_to_change = alpha_file(pro)
     markers = defaultdict(int)
     full_name = defaultdict(str)
     bail = False
