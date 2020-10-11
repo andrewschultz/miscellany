@@ -237,7 +237,7 @@ def my_section(l):
     if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
     if l.startswith("1") and (("2 " in l) or (" 2" in l)): return '12'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
-    if "~" in l: return 'ut'
+    # if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
     temp = section_from_suffix(l, exact = False)
     if temp:
@@ -278,6 +278,7 @@ def lock_it(proc_file):
     f.close()
 
 def sort_raw(raw_long):
+    raw_long = os.path.normpath(raw_long)
     global test_no_copy
     global copy_then_test
     sections = defaultdict(str)
@@ -351,10 +352,10 @@ def sort_raw(raw_long):
         sections['nam'] = "\t" + sections['nam'].lstrip()
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
-            print("Not dumping text to", important_file, "as it's already in there.")
+            print("Not dumping text to", important_file, "as the text", raw_long, "is already in there.")
         else:
             fout = open(important_file, "a")
-            fout.write("From {0}:\n".format(raw_long))
+            fout.write("\nIMPORTANT STUFF from {0}:\n".format(raw_long))
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
@@ -440,7 +441,10 @@ while cmd_count < len(sys.argv):
         verbose = False
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
-        print("minfile", my_min_file)
+        print("Minfile is now", my_min_file)
+    elif arg[0:2] == 'ma=':
+        my_max_file = arg[2:]
+        print("Maxfile is now", my_max_file)
     elif arg == '?':
         usage()
     elif len(arg) <= 2:
@@ -455,6 +459,8 @@ while cmd_count < len(sys.argv):
         else:
             print("WARNING", arg, "is not a readable file in any to-proc directory. Ignoring.")
     cmd_count += 1
+
+if my_min_file > my_max_file: sys.exit("Min file specified >> max file specified. Bailing.")
 
 if what_to_sort == DAILIES:
     dir_to_scour = raw_daily_dir
