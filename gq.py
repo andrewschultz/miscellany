@@ -30,6 +30,9 @@ post_open_matches = False
 all_similar_projects = True
 verbose = False
 
+# Keep this false or you may overwrite something
+create_new_history = False
+
 # variables not in CFG file/cmd line
 
 found_overall = 0
@@ -58,12 +61,18 @@ def usage():
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
-def write_history(my_file, my_query):
+def write_history(my_file, my_query, create_new_history = False):
     first_line = ' '.join(my_query).strip()
+    if create_new_history:
+        if os.path.exists(my_file):
+            print(my_file, "exists. If you can't write to it, check it manually.")
+            sys.exit()
+        f = open(my_file, "w")
+        f.close()
     try:
         f = open(my_file, "r")
     except:
-        print("File open failed for", my_file, "so I'll make you create it.")
+        print("File open failed for", my_file, "so I'll make you create it with -newhist.")
         sys.exit()
     ary = [x.strip() for x in f.readlines()]
     f.close()
@@ -198,6 +207,8 @@ while cmd_count < len(sys.argv):
         verbose = True
     elif arg == 'q':
         verbose = False
+    elif arg == 'newhist':
+        create_new_history = True
     elif arg == 'e' or arg == 'ec' or arg == 'ce':
         mt.npo(my_cfg)
     elif arg == '?':
@@ -248,7 +259,7 @@ for proj in proj_umbrella:
             continue
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
 
-write_history(history_file, my_text)
+write_history(history_file, my_text, create_new_history)
 
 if not found_overall: sys.exit("Nothing found.")
 
