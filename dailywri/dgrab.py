@@ -43,7 +43,7 @@ flat_temp = os.path.basename(dg_temp)
 
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
-orphan_sect = defaultdict(int)
+blank_sect = defaultdict(int) # not orphan_sect since this is literally the blank stuff we want to dump elsewhere, and the section name may change
 
 max_process = 0
 open_notes = 0
@@ -54,7 +54,7 @@ open_cluttered = False
 just_analyze = False
 look_for_lines = False
 bail_without_copying = False
-do_diff = True
+do_diff = False
 verbose = False
 open_notes_after = True
 change_list = []
@@ -85,6 +85,7 @@ def usage(header="GENERAL USAGE"):
     print("l = list headers, l# = list headers with # or more entries")
     print("s= = section to look for")
     print("a= analyze what is left")
+    print("1o/ao = first orphan or analyze orphans")
     print("")
     print("sample usage:")
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
@@ -549,8 +550,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'no' or arg == 'on': open_notes_after = False
     elif arg == 'v': verbose = True
     elif arg == 'q': verbose = False
-    elif arg == '1b': look_for_blank = True
-    elif arg == 'ab': analyze_blanks = True
+    elif arg == '1o': look_for_orphan = True
+    elif arg == 'ao': analyze_orphans = True
     elif arg == 'a': just_analyze = True
     elif re.search('^a[lc]+', arg):
         just_analyze = True
@@ -588,11 +589,11 @@ if just_analyze:
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
 
-if analyze_blanks:
+if analyze_orphans:
     find_all_blanks(the_glob)
     exit()
 
-if look_for_blank:
+if look_for_orphan:
     find_first_blank(the_glob)
     exit()
 
