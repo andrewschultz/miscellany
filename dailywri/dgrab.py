@@ -60,6 +60,7 @@ open_notes_after = True
 change_list = []
 print_ignored_files = False
 list_it = False
+print_commands = False
 
 analyze_orphans = False
 look_for_orphan = False
@@ -86,12 +87,19 @@ def usage(header="GENERAL USAGE"):
     print("s= = section to look for")
     print("a= analyze what is left")
     print("1o/ao = first orphan or analyze orphans")
+    print("pc = print suggested commands")
     print("")
     print("sample usage:")
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
     print("  dgrab.py -dr s=vvff for processing VVFF sections in Google Drive files")
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     exit()
+
+def cmd_param_of(my_dir):
+    if 'daily' in my_dir: return "-da"
+    if 'keep' in my_dir: return "-dk"
+    if 'drive' in my_dir: return "-dr"
+    return "-?"
 
 def find_section_in_daily(sec_to_find, the_files):
     print("NOTE: if you want to open the original big list document, use o= instead.")
@@ -285,6 +293,9 @@ def analyze_to_proc(my_dir):
         sections_to_sort += 1
         blanks_string = "" if x not in blank_sect else "{} blank{} ".format(blank_sect[x], "s" if blank_sect[x] > 1 else "")
         print("{:2d}: {:15s} {:2d} time{} {}1st file={}".format(sections_to_sort, x, sections_left[x], "s" if sections_left[x] > 1 else " ", blanks_string, first_file_with_section[x]))
+    if print_commands:
+        for x in sorted(sections_left, key=lambda x: (-sections_left[x], x), reverse=True):
+            print("dgrab.py {} s={}".format(cmd_param_of(my_dir), x))
     if not sections_to_sort: print("Hooray! You have no sections to shuffle.")
     if open_cluttered and lines_to_open:
         print("Look to clean up {} line{}: {}".format(len(lines_to_open), 's' if len(lines_to_open) != 1 else '', ','.join([str(x) for x in lines_to_open[::-1]])))
@@ -553,6 +564,7 @@ while cmd_count < len(sys.argv):
     elif arg == '1o': look_for_orphan = True
     elif arg == 'ao': analyze_orphans = True
     elif arg == 'a': just_analyze = True
+    elif arg == 'pc': print_commands = True
     elif re.search('^a[lc]+', arg):
         just_analyze = True
         look_for_lines = 'l' in arg
