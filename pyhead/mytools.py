@@ -18,6 +18,7 @@ from math import gcd
 from functools import reduce
 import subprocess
 from shutil import copy
+import xml.etree.ElementTree as ET
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
@@ -108,6 +109,19 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
     return x.lower()
 
 nohyp = noh = nohy
+
+def is_npp_modified(my_file): # see if a file is unsaved in notepad++
+    e = ET.parse(np_xml)
+    for elem in e.iter('File'):
+        this_np_file = elem.get("filename")
+        if not os.path.exists(this_np_file): continue
+        if my_file.lower() not in this_np_file.lower(): continue # this speeds stuff up slightly
+        if os.path.samefile(this_np_file, os.path.abspath(my_file)):
+            bfp = elem.get("backupFilePath")
+            if bfp:
+                if os.path.exists(bfp):
+                    return True
+            return False
 
 def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True, ignore_leading_articles = True):
     article_string = r'^(a|an|the) '
