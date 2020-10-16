@@ -63,6 +63,9 @@ def check_unsaved():
         mt.npo(x, bail = False)
 
 def move_to_proc(my_dir = "c:/writing/daily"):
+    import win32ui
+    import win32con
+
     os.chdir(my_dir)
     print("Moving", my_dir, "to to-proc.")
     g1 = mt.dailies_of(my_dir)
@@ -72,16 +75,21 @@ def move_to_proc(my_dir = "c:/writing/daily"):
 
     for q in g1:
         if q > threshold:
-            print(q, "above threshold of", threshold, "so ignoring. Set mn= to change.") # this should only happen once
+            print(q, "above threshold of", threshold, "so ignoring. Set mn=0 to harvest/read-only all files.") # this should only happen once per run
             continue
         if mt.is_daily(q):
+            abs_q = os.path.abspath(q)
+            if mt.is_npp_modified(abs_q):
+                temp = win32ui.MessageBox("{} is open in notepad. Save and click OK, or CANCEL.".format(abs_q), "Save {} first!".format(q), win32con.MB_OKCANCEL)
+                if temp == win32con.IDCANCEL:
+                    sys.exit()
             if q not in g2:
                 print(q, "needs to be moved to to-proc and set read-only. Let's do that now!")
                 copy(q, "to-proc/{}".format(q))
                 os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
             else:
                 if os.access(q, os.W_OK):
-                    print(q, "needs to be set read-only in the base directory.")
+                    print(q, "needs to be set read-only in the base directory. Let's do that now!")
                     os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
 
     if 'daily' not in my_dir:
