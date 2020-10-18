@@ -61,6 +61,7 @@ change_list = []
 print_ignored_files = False
 list_it = False
 print_commands = False
+open_to_after = False
 
 analyze_orphans = False
 look_for_orphan = False
@@ -87,6 +88,7 @@ def usage(header="GENERAL USAGE"):
     print("s= = section to look for")
     print("a= analyze what is left")
     print("1o/ao = first orphan or analyze orphans")
+    print("noa = no open after")
     print("pc = print suggested commands")
     print("")
     print("sample usage:")
@@ -453,7 +455,8 @@ def send_mapping(sect_name, file_name, change_files = False):
         else:
             copy(dg_temp, file_name)
         sys.exit()
-    mt.add_post_open(to_file, file_len(to_file))
+    if open_to_after:
+        mt.add_post_open(to_file, file_len(to_file))
     if daily.where_to_insert[sect_name]:
         print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, to_file))
         write_next_blank = False
@@ -565,6 +568,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'ao': analyze_orphans = True
     elif arg == 'a': just_analyze = True
     elif arg == 'pc': print_commands = True
+    elif arg == 'oa': open_to_after = True
+    elif arg == 'noa': open_to_after = False
     elif re.search('^a[lc]+', arg):
         just_analyze = True
         look_for_lines = 'l' in arg
@@ -666,4 +671,5 @@ if len(change_list):
     print("Files still to process:", ', '.join(change_list))
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
-mt.postopen_files()
+if open_to_after:
+    mt.postopen_files()
