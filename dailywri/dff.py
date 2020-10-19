@@ -51,7 +51,7 @@ sort_proc = False
 
 # this should go in a config file later
 one_word_names = True
-open_raw = True
+open_raw = False
 only_one = True
 bail_after_unchanged = False
 see_drive_files = True
@@ -213,7 +213,7 @@ def section_from_suffix(my_line, exact = False):
 
 def smart_section(my_line):
     for sw in section_words:
-        search_string = r'\b{}\b'.format(sw)
+        search_string = r'\b({})\b'.format(sw)
         if re.search(search_string, my_line, re.IGNORECASE):
             return section_words[sw]
     return ""
@@ -281,6 +281,7 @@ def sort_raw(raw_long):
     raw_long = os.path.normpath(raw_long)
     global test_no_copy
     global copy_then_test
+    global open_raw
     sections = defaultdict(str)
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
@@ -381,6 +382,8 @@ def sort_raw(raw_long):
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if only_one:
+                if open_raw:
+                    os.system(raw_long)
                 print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
                 sys.exit()
         copy(temp_out_file, raw_long)
@@ -388,11 +391,11 @@ def sort_raw(raw_long):
             print("OK, copied one, now testing another.")
             test_no_copy = True
             copy_then_test = False
+            open_raw = True
             return 1
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
-    print(open_raw, raw_long)
     if open_raw:
         print("Opening raw", raw_long)
         os.system(raw_long)
