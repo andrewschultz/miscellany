@@ -72,6 +72,7 @@ def move_to_proc(my_dir = "c:/writing/daily"):
     g2 = mt.dailies_of(my_dir + "/to-proc")
 
     threshold = see_back(d, '', 7)
+    temp_save_string = ""
 
     for q in g1:
         if q > threshold:
@@ -82,7 +83,8 @@ def move_to_proc(my_dir = "c:/writing/daily"):
             if mt.is_npp_modified(abs_q):
                 temp = win32ui.MessageBox("{} is open in notepad. Save and click OK, or CANCEL.".format(abs_q), "Save {} first!".format(q), win32con.MB_OKCANCEL)
                 if temp == win32con.IDCANCEL:
-                    sys.exit()
+                    temp_save_string += "\n" + q
+                    continue
             if q not in g2:
                 print(q, "needs to be moved to to-proc and set read-only. Let's do that now!")
                 copy(q, "to-proc/{}".format(q))
@@ -91,6 +93,14 @@ def move_to_proc(my_dir = "c:/writing/daily"):
                 if os.access(q, os.W_OK):
                     print(q, "needs to be set read-only in the base directory. Let's do that now!")
                     os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
+
+    if temp_save_string:
+        to_save = "c:/writing/temp/daily-to-save.htm"
+        f = open(to_save, "w")
+        f.write("Daily file(s) that need saving:")
+        f.write(temp_save_string)
+        f.close()
+        mt.text_in_browser(to_save)
 
     if 'daily' not in my_dir:
         sys.exit("Bailing since we're using non-daily directory.")
