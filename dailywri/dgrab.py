@@ -68,6 +68,8 @@ look_for_orphan = False
 append_importants = False
 important_test = True
 
+search_ary = ""
+
 daily_dir = "c:/writing/daily"
 daily_proc = daily.to_proc(daily_dir)
 gdrive_dir = "c:/coding/perl/proj/from_drive"
@@ -360,6 +362,21 @@ def append_one_important(my_file, my_dir):
     os.remove(important_file_2)
     return 1
 
+def search_regex_in_section(section_name, regex, my_dir):
+    for a in mt.dailies_of(my_dir):
+        my_section = ""
+        with open(a) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if line.startswith("\\"):
+                    my_section = line[1:].strip()
+                    continue
+                if not line.strip():
+                    my_section = ""
+                if section_name == my_section:
+                    if re.search(r'{}'.format(regex), line, re.IGNORECASE):
+                        print(a, line_count, line.strip())
+    exit()
+
 def append_all_important(my_dir):
     appended = 0
     for a in mt.dailies_of(my_dir):
@@ -570,6 +587,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'pc': print_commands = True
     elif arg == 'oa': open_to_after = True
     elif arg == 'noa': open_to_after = False
+    elif arg[0:3] == 'ss:' or arg[0:3] == 'ss=':
+        search_ary = arg[3:].split(",")
+        if len(search_ary) != 2:
+            sys.exit("Searching must have a section and a regex separated by a comma.")
     elif re.search('^a[lc]+', arg):
         just_analyze = True
         look_for_lines = 'l' in arg
@@ -616,6 +637,10 @@ if look_for_orphan:
 
 if section_to_find:
     find_section_in_daily(section_to_find, the_glob)
+    exit()
+
+if len(search_ary):
+    search_regex_in_section(search_ary[0],search_ary[1], dir_to_proc)
     exit()
 
 if not my_sect:
