@@ -68,6 +68,11 @@ look_for_orphan = False
 append_importants = False
 important_test = True
 
+TOPROC = 0
+ROOT = 1
+BACKUP = 2
+dir_search_flag = TOPROC
+
 search_ary = ""
 
 daily_dir = "c:/writing/daily"
@@ -588,6 +593,17 @@ while cmd_count < len(sys.argv):
     elif arg == 'oa': open_to_after = True
     elif arg == 'noa': open_to_after = False
     elif arg[0:3] == 'ss:' or arg[0:3] == 'ss=':
+        dir_search_flag = TOPROC
+        search_ary = arg[3:].split(",")
+        if len(search_ary) != 2:
+            sys.exit("Searching must have a section and a regex separated by a comma.")
+    elif arg[0:3] == 'sr:' or arg[0:3] == 'sr=':
+        dir_search_flag = ROOT
+        search_ary = arg[3:].split(",")
+        if len(search_ary) != 2:
+            sys.exit("Searching must have a section and a regex separated by a comma.")
+    elif arg[0:3] == 'sb:' or arg[0:3] == 'sb=':
+        dir_search_flag = BACKUP
         search_ary = arg[3:].split(",")
         if len(search_ary) != 2:
             sys.exit("Searching must have a section and a regex separated by a comma.")
@@ -614,6 +630,14 @@ if "to-proc" not in dir_to_proc:
     dir_to_proc = os.path.join(dir_to_proc, "to-proc")
 
 dir_to_proc = os.path.normpath(dir_to_proc)
+
+if dir_search_flag == ROOT:
+    dir_to_proc = os.path.join(dir_to_proc, '..')
+    print("Switching to", dir_to_proc)
+elif dir_search_flag == BACKUP:
+    dir_to_proc = os.path.join(dir_to_proc, '..', 'backup')
+    print("Switching to", dir_to_proc)
+
 os.chdir(dir_to_proc)
 
 if append_importants:
