@@ -226,7 +226,10 @@ def my_section(l):
     temp = section_from_suffix(l, exact = True)
     if temp:
         return temp
-    if '\t' in l or l.count('  ') > 2: return 'nam'
+    if '\t' in l or l.count('  ') > 2:
+        if l.count(' ') - l.count('\t') > 2:
+            print("LOOK OUT line may have errant tab(s):", l.strip())
+        return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
     if is_risque_spoonerism(l): return 'sw'
@@ -292,6 +295,8 @@ def sort_raw(raw_long):
     current_section = ''
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
+            if '\t' in line:
+                line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if in_header:
                 if line.startswith("#"):
                     header_to_write += line
