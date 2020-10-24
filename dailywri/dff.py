@@ -193,12 +193,23 @@ def section_from_prefix(l):
     return ""
 
 def is_spoonerism_rated(l):
-    double_digits = re.findall(r'\b([1-9])\1\b', l)
-    if not len(double_digits): return False
-    if mt.uncommented_length(l) > len(double_digits) * 60: return False # this prevents odd cases where I just throw out the number 77
-    return True
+    double_digits = re.findall(r'([^0-9]([1-9])\2[^0-9])', l)
+    for dig in double_digits:
+        if ':' in dig[0] or '/' in dig[0]: return False
+        if ' ' in dig[0]:
+            if mt.uncommented_length(l) > len(double_digits) * 40:
+                return False # this prevents odd cases where I just throw out the number 77
+            return True
+    return False
 
 def is_risque_spoonerism(l):
+    double_digits = re.findall(r'([^0-9]([0\*])\2[^0-9])', l)
+    for dig in double_digits:
+        if ':' in dig[0] or '/' in dig[0]: return False
+        if ' ' in dig[0]:
+            if mt.uncommented_length(l) > len(double_digits) * 40:
+                return False # this prevents odd cases where I just throw out the number 77
+            return True
     return '**' in l and '***' not in l
 
 def section_from_suffix(my_line, exact = False):
