@@ -229,7 +229,13 @@ def smart_section(my_line):
             return section_words[sw]
     return ""
 
+def is_one_two_punch(l):
+    if l.startswith("1") and (("2 " in l) or (" 2" in l)) and not l.startswith('12'): return True
+    if " 1 " in l and " 2 " in l: return True
+    return False
+
 def my_section(l):
+    l = l.strip()
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     if l.startswith('wfl'): return 'pc'
     if l.startswith('mov:') or l.startswith('movie:') or l.startswith('movies:'): return 'mov'
@@ -249,7 +255,7 @@ def my_section(l):
     if temp:
         return temp
     if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
-    if l.startswith("1") and (("2 " in l) or (" 2" in l)): return '12'
+    if is_one_two_punch(l): 'return 12'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
