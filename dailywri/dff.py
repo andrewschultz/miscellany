@@ -133,6 +133,12 @@ def read_comment_cfg():
                         delete_marker[y] = True
             if l.startswith("keyword:"):
                 section_words[ary[0]] = ary[1]
+            elif l.startswith("delmar:"):
+                for u in entries:
+                    if u in delete_marker:
+                        print("Duplicate delete-marker", u, "line", line_count)
+                        continue
+                    delete_marker[u] = ary[1]
             elif l.startswith("prefix:"):
                 for u in entries:
                     if u in prefixes:
@@ -164,6 +170,9 @@ def read_comment_cfg():
                     fixed_marker[u] = ary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
+    for d in delete_marker:
+        if d not in prefixes and d not in suffixes:
+            print("WARNING: we have a delete-marker for something not in prefixes or suffixes:", d)
 
 def is_in_procs(my_file):
     fbn = os.path.normpath(my_file)
