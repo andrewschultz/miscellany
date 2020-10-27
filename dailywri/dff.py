@@ -63,6 +63,8 @@ my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 verbose = True
 
+bail_on_warnings = True
+
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
 raw_keep_dir = "c:/coding/perl/proj/from_keep"
@@ -105,6 +107,10 @@ def usage(my_arg):
     print()
     print("You can also list files you wish to look up.")
     exit()
+
+def conditional_bail():
+    if bail_on_warnings:
+        sys.exit("Bailing on warning. Set -nbw to change this.")
 
 def read_comment_cfg():
     with open(comment_cfg) as file:
@@ -473,6 +479,10 @@ while cmd_count < len(sys.argv):
         verbose = True
     elif arg == 'q':
         verbose = False
+    elif arg == 'bw' or arg == 'wb':
+        bail_on_warning = True
+    elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
+        bail_on_warning = False
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("Minfile is now", my_min_file)
