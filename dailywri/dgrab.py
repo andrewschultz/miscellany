@@ -17,6 +17,7 @@
 # dgrab.txt has what maps where
 # todo: utf8 to ascii, open first nonorphan, open first bad header
 
+import codecs
 import datetime
 from shutil import copy
 from collections import defaultdict
@@ -368,9 +369,10 @@ def append_one_important(my_file, my_dir):
     return 1
 
 def search_regex_in_section(section_name, regex, my_dir):
+    got_one = False
     for a in mt.dailies_of(my_dir):
         my_section = ""
-        with open(a) as file:
+        with codecs.open(a, mode='r', encoding='utf-8', errors='replace') as file:
             for (line_count, line) in enumerate (file, 1):
                 if line.startswith("\\"):
                     my_section = line[1:].strip()
@@ -379,7 +381,10 @@ def search_regex_in_section(section_name, regex, my_dir):
                     my_section = ""
                 if section_name == my_section:
                     if re.search(r'{}'.format(regex), line, re.IGNORECASE):
+                        got_one = True
                         print(a, line_count, line.strip())
+    if not got_one:
+        print("Found no regex ({})".format(regex), "in section", "\\" + section_name, "in dir", my_dir)
     exit()
 
 def append_all_important(my_dir):
