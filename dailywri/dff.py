@@ -249,6 +249,12 @@ def is_one_two_punch(l):
     if " 1 " in l and " 2 " in l: return True
     return False
 
+def is_repeated_text(l):
+    l = l.lower()
+    if not l[0].isalpha(): return False
+    y = len(l) // 2
+    return l[:y] == l[y:]
+
 def my_section(l):
     l = l.strip()
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
@@ -271,6 +277,7 @@ def my_section(l):
         return temp
     if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
     if is_one_two_punch(l): 'return 12'
+    if is_repeated_text(l): return 'py'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
