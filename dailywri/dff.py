@@ -113,6 +113,7 @@ def conditional_bail():
         sys.exit("Bailing on warning. Set -nbw to change this.")
 
 def read_comment_cfg():
+    any_warnings = False
     with open(comment_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             l = line.lower().strip()
@@ -120,7 +121,7 @@ def read_comment_cfg():
             if l.startswith(';'): break
             if ':' not in l:
                 print("Line", l, "needs colon prefix.")
-                continue
+                any_warnings = True
             if l[:2] == 'd:':
                 delete_next = True
                 l = l[2:]
@@ -129,12 +130,14 @@ def read_comment_cfg():
             ary = mt.cfgary(l, delimiter='=')
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
+                any_warnings = True
                 continue
             entries = ary[0].split(",")
             if delete_next:
                 for y in ary[0].split(','):
                     if y in delete_marker:
                         print("doubly deleted marker", y, "line", line_count)
+                        any_warnings = True
                     else:
                         delete_marker[y] = True
             if l.startswith("keyword:"):
@@ -143,42 +146,52 @@ def read_comment_cfg():
                 for u in entries:
                     if u in delete_marker:
                         print("Duplicate delete-marker", u, "line", line_count)
+                        any_warnings = True
                         continue
                     delete_marker[u] = ary[1]
             elif l.startswith("prefix:"):
                 for u in entries:
                     if u in prefixes:
                         print("Duplicate prefix", u, "line", line_count)
+                        any_warnings = True
                         continue
                     prefixes[u] = ary[1]
             elif l.startswith("suffix:"):
                 for u in entries:
                     if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
+                        any_warnings = True
                         continue
                     suffixes[u] = ary[1]
             elif l.startswith("presuf") or l.startswith("sufpre"):
                 for u in entries:
                     if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
+                        any_warnings = True
                         continue
                     suffixes[u] = ary[1]
                 for u in entries:
                     if u in prefixes:
                         print("Duplicate prefix", u, "line", line_count)
+                        any_warnings = True
                         continue
                     prefixes[u] = ary[1]
             elif l.startswith("fixmar:"):
                 for u in entries:
                     if u in fixed_marker:
                         print("Duplicate save-marker", u, "line", line_count)
+                        any_warnings = True
                         continue
                     fixed_marker[u] = ary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
+                any_warnings = True
     for d in delete_marker:
         if d not in prefixes and d not in suffixes:
             print("WARNING: we have a delete-marker for something not in prefixes or suffixes:", d)
+            any_warnings = True
+    if any_warnings:
+        conditional_bail()
 
 def is_in_procs(my_file):
     fbn = os.path.normpath(my_file)
