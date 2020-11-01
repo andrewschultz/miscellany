@@ -44,5 +44,14 @@ for elem in e.iter('File'):
 print("10 earliest-timestamp files:")
 for x in sorted(made_date, key=made_date.get)[:10]:
     print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
-    
+
+files_by_size = sorted(made_date, key=lambda x:os.stat(orig_file[x]).st_size, reverse=True)
+print("10 largest new files:")
+for x in files_by_size[:10]:
+    print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+
+print("10 smallest new files:")
+for x in reversed(files_by_size[-10:]):
+    print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+
 print(link_warnings, "link warnings", news, "new files", olds, "actual files", totals, "total files")
