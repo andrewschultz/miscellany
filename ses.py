@@ -1,3 +1,9 @@
+# ses.py
+#
+# notepad++ session data parsing script
+#
+
+import sys
 import os
 import re
 import mytools as mt
@@ -21,6 +27,18 @@ e = ET.parse(file_name)
 root = e.getroot()
 github_warnings = 0
 link_warnings = 0
+
+list_max_size = 10
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count]
+    if arg.isdigit():
+        list_max_size = int(arg)
+    else:
+        sys.exit("Only option now is #s for list sizes.")
+    cmd_count += 1
+
 for elem in e.iter('File'):
     t = elem.get('filename')
     if t.startswith('new '):
@@ -41,17 +59,17 @@ for elem in e.iter('File'):
     slink[q].append(t.lower())
     #print(elem.get('filename'))
 
-print("10 earliest-timestamp files:")
-for x in sorted(made_date, key=made_date.get)[:10]:
+print("{} earliest-timestamp files:".format(list_max_size))
+for x in sorted(made_date, key=made_date.get)[:list_max_size]:
     print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
 files_by_size = sorted(made_date, key=lambda x:os.stat(orig_file[x]).st_size, reverse=True)
 print("10 largest new files:")
-for x in files_by_size[:10]:
+for x in files_by_size[:list_max_size]:
     print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
-print("10 smallest new files:")
-for x in reversed(files_by_size[-10:]):
+print("{} smallest new files:".format(list_max_size))
+for x in reversed(files_by_size[-list_max_size:]):
     print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
 print(link_warnings, "link warnings", news, "new files", olds, "actual files", totals, "total files")
