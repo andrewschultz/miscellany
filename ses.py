@@ -42,9 +42,12 @@ while cmd_count < len(sys.argv):
 for elem in e.iter('File'):
     t = elem.get('filename')
     if t.startswith('new '):
-        news += 1
         base_name = t
         long_name = elem.get('backupFilePath')
+        if not os.path.exists(long_name):
+            print("You may have recently deleted {}/{}, so I am skipping it.".format(t, long_name))
+            continue
+        news += 1
         timestamp = re.sub(".*@", "", long_name)
         made_date[base_name] = timestamp
         orig_file[base_name] = long_name
@@ -61,15 +64,15 @@ for elem in e.iter('File'):
 
 print("{} earliest-timestamp files:".format(list_max_size))
 for x in sorted(made_date, key=made_date.get)[:list_max_size]:
-    print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
 files_by_size = sorted(made_date, key=lambda x:os.stat(orig_file[x]).st_size, reverse=True)
 print("10 largest new files:")
 for x in files_by_size[:list_max_size]:
-    print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
 print("{} smallest new files:".format(list_max_size))
 for x in reversed(files_by_size[-list_max_size:]):
-    print("{:7} {} {:73} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
 print(link_warnings, "link warnings", news, "new files", olds, "actual files", totals, "total files")
