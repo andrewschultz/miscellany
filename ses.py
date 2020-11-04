@@ -30,7 +30,26 @@ link_warnings = 0
 
 list_max_size = 10
 
+def shuffle_out(starting_text):
+    totes = 0
+    any_yet = False
+    s2 = slink.copy()
+    starting_text = os.path.normpath(starting_text)
+    for s in s2:
+        if s.lower().startswith(starting_text):
+            if not any_yet:
+                print("\nFiles starting with", starting_text)
+            any_yet = True
+            print("    " + s)
+            slink.pop(s)
+            totes += 1
+    if not any_yet:
+        print("\nNothing started with", starting_text)
+    else:
+        print(totes, "total such files")
+
 cmd_count = 1
+
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg.isdigit():
@@ -74,5 +93,15 @@ for x in files_by_size[:list_max_size]:
 print("{} smallest new files:".format(list_max_size))
 for x in reversed(files_by_size[-list_max_size:]):
     print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+
+shuffle_out_array = [ "d:", "c:/writing/daily", "c:/coding/perl/proj/from_drive", "c:/coding/perl/proj/from_keep", "c:/coding/games/nox" ]
+
+for x in shuffle_out_array:
+    shuffle_out(x)
+
+if len(slink):
+    print("\n{} Miscellaneous files:".format(len(slink)))
+    for y in sorted(slink):
+        print("    " + y)
 
 print(link_warnings, "link warnings", news, "new files", olds, "actual files", totals, "total files")
