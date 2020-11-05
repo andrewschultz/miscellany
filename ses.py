@@ -16,6 +16,8 @@ slink = defaultdict(list)
 made_date = defaultdict(str)
 orig_file = defaultdict(str)
 
+shuf_name_dict = defaultdict(str)
+
 file_name = mt.np_xml
 
 dfiles = []
@@ -30,19 +32,30 @@ link_warnings = 0
 
 list_max_size = 10
 
+def read_ses_cfg():
+    ses_cfg = "c:/writing/scripts/sescfg.txt"
+    with open(ses_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            if '=' not in line:
+                print("Line", line_count, "needs =")
+            ary = line.strip().split("=")
+            ary[0] = os.path.normpath(ary[0])
+            shuf_name_dict[ary[0]] = ary[1]
+
 def shuffle_out(starting_text):
     totes = 0
     any_yet = False
     s2 = slink.copy()
-    starting_text = os.path.normpath(starting_text)
     for s in s2:
         if s.lower().startswith(starting_text):
             if not any_yet:
                 print("\nFiles starting with", starting_text)
             any_yet = True
             print("    " + s)
-            slink.pop(s)
             totes += 1
+            slink.pop(s)
     if not any_yet:
         print("\nNothing started with", starting_text)
     else:
@@ -94,9 +107,9 @@ print("{} smallest new files:".format(list_max_size))
 for x in reversed(files_by_size[-list_max_size:]):
     print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
 
-shuffle_out_array = [ "d:", "c:/writing/daily", "c:/coding/perl/proj/from_drive", "c:/coding/perl/proj/from_keep", "c:/coding/games/nox" ]
+read_ses_cfg()
 
-for x in shuffle_out_array:
+for x in sorted(shuf_name_dict, reverse = True):
     shuffle_out(x)
 
 if len(slink):
