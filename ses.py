@@ -17,6 +17,7 @@ made_date = defaultdict(str)
 orig_file = defaultdict(str)
 
 shuf_name_dict = defaultdict(str)
+shuf_name_ord = defaultdict(int)
 
 file_name = mt.np_xml
 
@@ -34,6 +35,7 @@ list_max_size = 10
 
 def read_ses_cfg():
     ses_cfg = "c:/writing/scripts/sescfg.txt"
+    cur_idx = 0
     with open(ses_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
@@ -41,8 +43,13 @@ def read_ses_cfg():
             if '=' not in line:
                 print("Line", line_count, "needs =")
             ary = line.strip().split("=")
-            ary[0] = os.path.normpath(ary[0])
+            ary[0] = os.path.normpath(ary[0]).lower()
             shuf_name_dict[ary[0]] = ary[1]
+            cur_idx += 1
+            shuf_name_ord[ary[0]] = cur_idx
+            for x in shuf_name_dict:
+                if ary[0].startswith(x):
+                    print("WARNING: ordering of dictionary values means {} may overlap {}.".format(ary[0], x))
 
 def shuffle_out(starting_text):
     totes = 0
@@ -109,7 +116,7 @@ for x in reversed(files_by_size[-list_max_size:]):
 
 read_ses_cfg()
 
-for x in sorted(shuf_name_dict, reverse = True):
+for x in sorted(shuf_name_ord, key=shuf_name_ord.get):
     shuffle_out(x)
 
 if len(slink):
