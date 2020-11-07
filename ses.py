@@ -33,6 +33,8 @@ link_warnings = 0
 
 list_max_size = 10
 
+show_blanks = False
+
 def read_ses_cfg():
     ses_cfg = "c:/writing/scripts/sescfg.txt"
     cur_idx = 0
@@ -44,12 +46,12 @@ def read_ses_cfg():
                 print("Line", line_count, "needs =")
             ary = line.strip().split("=")
             ary[0] = os.path.normpath(ary[0]).lower()
-            shuf_name_dict[ary[0]] = ary[1]
             cur_idx += 1
-            shuf_name_ord[ary[0]] = cur_idx
             for x in shuf_name_dict:
                 if ary[0].startswith(x):
-                    print("WARNING: ordering of dictionary values means {} may overlap {}.".format(ary[0], x))
+                    print("WARNING: ordering of dictionary values means {} is overlapped by parent directory {}.".format(ary[0], x))
+            shuf_name_dict[ary[0]] = ary[1]
+            shuf_name_ord[ary[0]] = cur_idx
 
 def shuffle_out(starting_text):
     totes = 0
@@ -64,7 +66,8 @@ def shuffle_out(starting_text):
             totes += 1
             slink.pop(s)
     if not any_yet:
-        print("\nNothing started with", starting_text)
+        if show_blanks:
+            print("\nNothing started with", starting_text)
     else:
         print(totes, "total such files")
 
@@ -74,6 +77,10 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg.isdigit():
         list_max_size = int(arg)
+    elif arg == 'b':
+        show_blanks = False
+    elif arg == 'nb' or arg == 'bn':
+        show_blanks = True
     else:
         sys.exit("Only option now is #s for list sizes.")
     cmd_count += 1
