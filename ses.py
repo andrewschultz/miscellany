@@ -35,6 +35,13 @@ list_max_size = 10
 
 show_blanks = False
 
+def usage(my_msg = "General usage"):
+    print(my_msg)
+    print("=" * 50)
+    print("-b/-nb/-bn toggles whether to print blanks")
+    print("A number changes the list max size")
+    exit()
+
 def read_ses_cfg():
     ses_cfg = "c:/writing/scripts/sescfg.txt"
     cur_idx = 0
@@ -74,14 +81,17 @@ def shuffle_out(starting_text):
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
-    arg = sys.argv[cmd_count]
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg.isdigit():
         list_max_size = int(arg)
     elif arg == 'b':
         show_blanks = False
     elif arg == 'nb' or arg == 'bn':
         show_blanks = True
+    elif arg == '?':
+        usage()
     else:
+        usage("Unrecognized argument " + arg)
         sys.exit("Only option now is #s for list sizes.")
     cmd_count += 1
 
