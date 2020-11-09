@@ -14,6 +14,10 @@ import glob
 import mytools as mt
 from pathlib import Path
 
+TOPROC = 0
+ROOT = 1
+BACKUP = 2
+
 today_file = pendulum.now().format("YYYYMMDD") + ".txt"
 
 lower_bound = "20170101.txt"

@@ -7,7 +7,8 @@
 #
 # lc = outline check (e.g. update what backslashes point where)
 #
-# use dgrab to grab a specific sort of section
+# this grabs everything from a file
+# use dgrab to grab a specific sort of section, which is more flexible
 
 import daily
 import i7
