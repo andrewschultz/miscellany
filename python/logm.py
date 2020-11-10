@@ -26,6 +26,8 @@ days_back = 0
 push_after_commit = False
 no_verify = False
 
+by_end_of_month = False
+
 def commit_maybe_push(cmd):
     os.system(cmd)
     if push_after_commit:
@@ -216,6 +218,8 @@ while count < len(sys.argv):
         bare_commit = True
     elif arg == 'nv':
         no_verify = True
+    elif arg == 'eom':
+        by_end_of_month = True
     elif arg == '?': usage()
     else: usage(arg)
     count += 1
@@ -247,6 +251,15 @@ if auto_date:
                 bail_if_not_auto_ok()
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
+                if by_end_of_month:
+                    import calendar
+                    d = pendulum.now()
+                    last_day = calendar.monthrange(d.year, d.month)[1]
+                    a1 = pendulum.local(d.year, d.month, last_day).timestamp() + 86400
+                    a2 = d.timestamp()
+                    days_left = (a1-a2)/86400
+                    commits_per_day = days / days_left
+                    print("To get stuff done by end of month, {:.3f} commits per day.".format(commits_per_day))
             break
 
 if proj_shift_yet:
