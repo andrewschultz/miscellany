@@ -27,6 +27,7 @@ push_after_commit = False
 no_verify = False
 
 by_end_of_month = False
+by_end_of_year = False
 
 def commit_maybe_push(cmd):
     os.system(cmd)
@@ -220,6 +221,8 @@ while count < len(sys.argv):
         no_verify = True
     elif arg == 'eom':
         by_end_of_month = True
+    elif arg == 'eoy':
+        by_end_of_year = True
     elif arg == '?': usage()
     else: usage(arg)
     count += 1
@@ -260,6 +263,14 @@ if auto_date:
                     days_left = (a1-a2)/86400
                     commits_per_day = days / days_left
                     print("To get stuff done by end of month, {:.3f} commits per day.".format(commits_per_day))
+                if by_end_of_year:
+                    import calendar
+                    d = pendulum.now()
+                    a1 = pendulum.local(d.year + 1, 1, 1).timestamp()
+                    a2 = d.timestamp()
+                    days_left = (a1-a2)/86400
+                    commits_per_day = days / days_left
+                    print("To get stuff done by end of year, {:.3f} commits per day.".format(commits_per_day))
             break
 
 if proj_shift_yet:
