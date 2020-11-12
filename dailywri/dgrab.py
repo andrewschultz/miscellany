@@ -69,10 +69,7 @@ look_for_orphan = False
 append_importants = False
 important_test = True
 
-TOPROC = 0
-ROOT = 1
-BACKUP = 2
-dir_search_flag = TOPROC
+dir_search_flag = daily.TOPROC
 
 search_ary = ""
 
@@ -598,17 +595,17 @@ while cmd_count < len(sys.argv):
     elif arg == 'oa': open_to_after = True
     elif arg == 'noa': open_to_after = False
     elif arg[0:3] == 'ss:' or arg[0:3] == 'ss=':
-        dir_search_flag = TOPROC
+        dir_search_flag = daily.TOPROC
         search_ary = arg[3:].split(",")
         if len(search_ary) != 2:
             sys.exit("Searching must have a section and a regex separated by a comma.")
     elif arg[0:3] == 'sr:' or arg[0:3] == 'sr=':
-        dir_search_flag = ROOT
+        dir_search_flag = daily.ROOT
         search_ary = arg[3:].split(",")
         if len(search_ary) != 2:
             sys.exit("Searching must have a section and a regex separated by a comma.")
     elif arg[0:3] == 'sb:' or arg[0:3] == 'sb=':
-        dir_search_flag = BACKUP
+        dir_search_flag = daily.BACKUP
         search_ary = arg[3:].split(",")
         if len(search_ary) != 2:
             sys.exit("Searching must have a section and a regex separated by a comma.")

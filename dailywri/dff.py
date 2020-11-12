@@ -32,6 +32,8 @@ what_to_sort = DEFAULT_SORT
 
 my_cwd = os.getcwd()
 
+dir_search_flag = daily.TOPROC
+
 if 'daily' in my_cwd:
     print("Sorting DAILY stuff")
     what_to_sort = DAILY
@@ -503,6 +505,12 @@ while cmd_count < len(sys.argv):
         bail_on_warning = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
         bail_on_warning = False
+    elif arg == 'sb':
+        dir_search_flag = daily.BACKUP
+    elif arg == 'sr':
+        dir_search_flag = daily.ROOT
+    elif arg == 'st':
+        dir_search_flag = daily.TOSORT
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("Minfile is now", my_min_file)
