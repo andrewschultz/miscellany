@@ -34,6 +34,7 @@ link_warnings = 0
 list_max_size = 10
 
 show_blanks = False
+bail_cfg_warnings = True
 
 def usage(my_msg = "General usage"):
     print(my_msg)
@@ -45,6 +46,7 @@ def usage(my_msg = "General usage"):
 def read_ses_cfg():
     ses_cfg = "c:/writing/scripts/sescfg.txt"
     cur_idx = 0
+    any_warnings = False
     with open(ses_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
@@ -55,10 +57,16 @@ def read_ses_cfg():
             ary[0] = os.path.normpath(ary[0]).lower()
             cur_idx += 1
             for x in shuf_name_dict:
+                if not x.endswith(os.path.sep):
+                    x += os.path.sep # this is so, for instance c:/temp and c:/tempstuff aren't marked off
                 if ary[0].startswith(x):
                     print("WARNING: ordering of dictionary values means {} is overlapped by parent directory {}.".format(ary[0], x))
+                    any_warnings = True
             shuf_name_dict[ary[0]] = ary[1]
             shuf_name_ord[ary[0]] = cur_idx
+    if bail_cfg_warnings and any_warnings:
+        print("Bailing on cfg warnings. -nbw/-bwn to disable this.")
+    sys.exit()
 
 def shuffle_out(starting_text):
     totes = 0
@@ -88,6 +96,10 @@ while cmd_count < len(sys.argv):
         show_blanks = False
     elif arg == 'nb' or arg == 'bn':
         show_blanks = True
+    elif arg == 'bw' or arg == 'wb':
+        bail_cfg_warnings = True
+    elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
+        bail_cfg_warnings = False
     elif arg == '?':
         usage()
     else:
@@ -118,6 +130,8 @@ for elem in e.iter('File'):
     slink[q].append(t.lower())
     #print(elem.get('filename'))
 
+read_ses_cfg()
+
 print("{} earliest-timestamp files:".format(list_max_size))
 for x in sorted(made_date, key=made_date.get)[:list_max_size]:
     print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
@@ -130,8 +144,6 @@ for x in files_by_size[:list_max_size]:
 print("{} smallest new files:".format(list_max_size))
 for x in reversed(files_by_size[-list_max_size:]):
     print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
-
-read_ses_cfg()
 
 for x in sorted(shuf_name_ord, key=shuf_name_ord.get):
     shuffle_out(x)
