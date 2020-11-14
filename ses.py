@@ -36,11 +36,31 @@ list_max_size = 10
 show_blanks = False
 bail_cfg_warnings = True
 
+open_wildcard = ""
+max_wildcard = 25
+
 def usage(my_msg = "General usage"):
     print(my_msg)
     print("=" * 50)
     print("-b/-nb/-bn toggles whether to print blanks")
     print("A number changes the list max size")
+    print("ow/oa := = wildcard of files to open")
+    exit()
+
+def open_in_notepad(my_wildcard):
+    count = 0
+    for elem in e.iter('File'):
+        t = elem.get('filename')
+        if my_wildcard in t.lower():
+            count += 1
+            if count == max_wildcard:
+                print("Went over maximum # of wildcard files to open at", t)
+                break
+            print(t)
+            mt.add_postopen(t)
+    if not count:
+        print("Found nothing to open.")
+    mt.postopen()
     exit()
 
 def read_ses_cfg():
@@ -66,7 +86,6 @@ def read_ses_cfg():
             shuf_name_ord[ary[0]] = cur_idx
     if bail_cfg_warnings and any_warnings:
         print("Bailing on cfg warnings. -nbw/-bwn to disable this.")
-    sys.exit()
 
 def shuffle_out(starting_text):
     totes = 0
@@ -100,12 +119,21 @@ while cmd_count < len(sys.argv):
         bail_cfg_warnings = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
         bail_cfg_warnings = False
+    elif arg.startswith("oa:") or arg.startswith("oa=") or arg.startswith("ow:") or arg.startswith("ow="):
+        open_wildcard = arg[3:]
+        if not open_wildcard:
+            print("You need a wildcard to open multiple files.")
+            sys.exit()
     elif arg == '?':
         usage()
     else:
         usage("Unrecognized argument " + arg)
         sys.exit("Only option now is #s for list sizes.")
     cmd_count += 1
+
+if open_wildcard:
+    open_in_notepad(open_wildcard)
+    sys.exit()
 
 for elem in e.iter('File'):
     t = elem.get('filename')
