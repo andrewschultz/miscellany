@@ -60,6 +60,8 @@ def usage(arg = ""):
  time_str))
     print("A commit message can be put in quotes, and it needs a space.")
     print()
+    print("emy/eym = end of month and year goals displayed. eoy/eom = end of year or month.")
+    print()
     print("Previous standard usage is probably logm.py r(l) (!) (3)")
     print("Standard usage now is probably logm.py r(l) a \"commit-message\"")
     print("    Also logm.py -lf -r 'commit message' for serious backdating.")
@@ -222,6 +224,9 @@ while count < len(sys.argv):
     elif arg == 'eom':
         by_end_of_month = True
     elif arg == 'eoy':
+        by_end_of_year = True
+    elif arg == 'eym' or arg == 'emy':
+        by_end_of_month = True
         by_end_of_year = True
     elif arg == '?': usage()
     else: usage(arg)
