@@ -8,6 +8,7 @@
 #TODO: Note if there were any changes if file already exists e.g. rewriting from raw to 2019333
 #also todo: -keep- files have special notes (?) / notifications. Is this in ld2?
 
+import daily
 import codecs
 import os
 import re
@@ -511,6 +512,9 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.ROOT
     elif arg == 'st':
         dir_search_flag = daily.TOSORT
+    elif arg == 'rd':
+        read_recent_daily = True
+        dir_search_flag = daily.ROOT        
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("Minfile is now", my_min_file)
@@ -554,14 +558,24 @@ if "to-proc" not in dir_to_scour:
         sys.exit("Can't open scour-directory after tacking on to-proc: {}.".format(new_proc))
     dir_to_scour = new_proc
 
+if dir_search_flag == daily.BACKUP:
+    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "../backup"))
+elif dir_search_flag == daily.ROOT:
+    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, ".."))
+
 os.chdir(dir_to_scour)
 
 read_comment_cfg()
+
 
 if not len(file_list):
     my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
     file_list = glob(my_glob)
     print("Globbing", my_glob)
+
+if read_recent_daily:
+    sort_raw(file_list[-1])
+    exit()
 
 list_count = 0
 for fi in file_list:
