@@ -16,6 +16,8 @@ slink = defaultdict(list)
 made_date = defaultdict(str)
 orig_file = defaultdict(str)
 
+new_file_description = defaultdict(str)
+
 shuf_name_dict = defaultdict(str)
 shuf_name_ord = defaultdict(int)
 
@@ -47,6 +49,11 @@ def usage(my_msg = "General usage"):
     print("ow/oa := = wildcard of files to open")
     exit()
 
+def desc_new(x):
+    if x in new_file_description:
+        return " ({})".format(new_file_description[x])
+    return ""
+
 def open_in_notepad(my_wildcard):
     count = 0
     for elem in e.iter('File'):
@@ -71,8 +78,13 @@ def read_ses_cfg():
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
+            if '~' in line:
+                ary = line.strip().split("~")
+                new_file_description[ary[0].strip()] = ary[1].strip()
             if '=' not in line:
-                print("Line", line_count, "needs =")
+                print("Line", line_count, "needs = or ~")
+                any_warnings = True
+                continue
             ary = line.strip().split("=")
             ary[0] = os.path.normpath(ary[0]).lower()
             cur_idx += 1
@@ -162,16 +174,16 @@ read_ses_cfg()
 
 print("{} earliest-timestamp files:".format(list_max_size))
 for x in sorted(made_date, key=made_date.get)[:list_max_size]:
-    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}{}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size, desc_new(x)))
 
 files_by_size = sorted(made_date, key=lambda x:os.stat(orig_file[x]).st_size, reverse=True)
 print("10 largest new files:")
 for x in files_by_size[:list_max_size]:
-    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}{}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size, desc_new(x)))
 
 print("{} smallest new files:".format(list_max_size))
 for x in reversed(files_by_size[-list_max_size:]):
-    print("{:7} {} {:74} {}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size))
+    print("{:7} {} {:74} {}{}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size, desc_new(x)))
 
 for x in sorted(shuf_name_ord, key=shuf_name_ord.get):
     shuffle_out(x)
