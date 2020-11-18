@@ -41,12 +41,15 @@ bail_cfg_warnings = True
 open_wildcard = ""
 max_wildcard = 25
 
+ses_cfg = "c:/writing/scripts/sescfg.txt"
+
 def usage(my_msg = "General usage"):
     print(my_msg)
     print("=" * 50)
     print("-b/-nb/-bn toggles whether to print blanks")
     print("A number changes the list max size")
     print("ow/oa := = wildcard of files to open")
+    print("e = edit cfg file")
     exit()
 
 def desc_new(x):
@@ -71,7 +74,6 @@ def open_in_notepad(my_wildcard):
     exit()
 
 def read_ses_cfg():
-    ses_cfg = "c:/writing/scripts/sescfg.txt"
     cur_idx = 0
     any_warnings = False
     with open(ses_cfg) as file:
@@ -131,6 +133,9 @@ while cmd_count < len(sys.argv):
         bail_cfg_warnings = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
         bail_cfg_warnings = False
+    elif arg == 'e':
+        mt.npo(ses_cfg)
+        exit()
     elif arg.startswith("oa:") or arg.startswith("oa=") or arg.startswith("ow:") or arg.startswith("ow="):
         open_wildcard = arg[3:]
         if not open_wildcard:
