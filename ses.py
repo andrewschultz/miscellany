@@ -37,6 +37,7 @@ list_max_size = 10
 
 show_blanks = False
 bail_cfg_warnings = True
+any_warnings = False
 
 open_wildcard = ""
 max_wildcard = 25
@@ -176,6 +177,15 @@ for elem in e.iter('File'):
     #print(elem.get('filename'))
 
 read_ses_cfg()
+
+for q in new_file_description:
+    if q not in made_date:
+        print("Deleted file {} ({}) is no longer in sessions.xml. Check to make sure it wasn't deleted.")
+        any_warnings = True
+
+if any_warnings and bail_cfg_warnings:
+    print("Bailing on cfg warnings. -nbw/-bwn to disable this.")
+    sys.exit()
 
 print("{} earliest-timestamp files:".format(list_max_size))
 for x in sorted(made_date, key=made_date.get)[:list_max_size]:
