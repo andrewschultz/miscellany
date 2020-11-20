@@ -30,6 +30,12 @@ post_open_matches = False
 all_similar_projects = True
 verbose = False
 
+ALL=0
+INSIDE=1
+OUTSIDE=2
+
+quote_status = ALL
+
 # Keep this false or you may overwrite something
 create_new_history = False
 
@@ -56,6 +62,7 @@ def usage():
     print("v/q = verbose/quiet")
     print()
     print("e/ec/ce = edit config file")
+    print("qi/qo/qa = quotes inside/outside/all")
     exit()
 
 def hist_file_of(my_proj):
@@ -131,6 +138,12 @@ def find_text_in_file(my_text, projfile):
             if line.startswith("table of") and not current_table:
                 current_table = re.sub(" *\[.*", "", line.strip().lower())
                 current_table_line = -1
+            if quote_status == OUTSIDE:
+                ary = line.split('"')
+                line = ' '.join(ary[::2])
+            elif quote_status == INSIDE:
+                ary = line.split('"')
+                line = ' '.join(ary[1::2])
             if not my_text[1]:
                 if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE):
                     found_one = True
@@ -207,6 +220,12 @@ while cmd_count < len(sys.argv):
         verbose = True
     elif arg == 'q':
         verbose = False
+    elif arg == 'qo' or arg == 'oq':
+        quote_status = OUTSIDE
+    elif arg == 'qi' or arg == 'iq':
+        quote_status = INSIDE
+    elif arg == 'qa' or arg == 'aq':
+        quote_status = ALL
     elif arg == 'newhist':
         create_new_history = True
     elif arg == 'e' or arg == 'ec' or arg == 'ce':
@@ -253,7 +272,7 @@ for proj in proj_umbrella:
     for projfile in i7.i7f[proj]:
         if not os.path.exists(projfile):
             if 'story.ni' in projfile:
-                print("Skipping nonexistent story file, probably due to 'only' parameter.")
+                print("Skipping nonexistent story file for {}, probably due to 'only' parameter.".format(proj))
                 continue
             print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
             continue
