@@ -234,14 +234,13 @@ def is_spoonerism_rated(l):
     return False
 
 def is_risque_spoonerism(l):
-    double_digits = re.findall(r'([^0-9]([0\*])\2[^0-9])', l)
+    double_digits = re.findall(r'([^0-9]([0\*])(\2+)[^0-9])', l)
     for dig in double_digits:
-        if ':' in dig[0] or '/' in dig[0]: return False
-        if ' ' in dig[0]:
-            if mt.uncommented_length(l) > len(double_digits) * 40:
-                return False # this prevents odd cases where I just throw out the number 77
-            return True
-    return '**' in l and '***' not in l
+        if ':' in dig[0] or '/' in dig[0]: continue
+        if re.search("[fs]\*\*\*", dig[0], re.IGNORECASE): continue
+        if '****' in dig: continue
+        return True
+    return False
 
 def section_from_suffix(my_line, exact = False):
     if '#' not in my_line and ' zz' not in my_line: return
