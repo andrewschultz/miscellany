@@ -291,7 +291,7 @@ def my_section(l):
     if temp:
         return temp
     if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
-    if is_one_two_punch(l): 'return 12'
+    if is_one_two_punch(l): return '12'
     if is_repeated_text(l): return 'py'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
@@ -390,7 +390,10 @@ def sort_raw(raw_long):
                 continue
             temp = my_section(line)
             if temp:
-                if temp == 'lim':
+                if temp == 'nam':
+                    line = "\t" + line.strip()
+                    sections[temp] += line
+                elif temp == 'lim':
                     sections[temp] += mt.slash_to_limerick(line)
                 else:
                     if temp in suffixes and temp in delete_marker:
