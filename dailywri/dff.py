@@ -223,10 +223,15 @@ def section_from_prefix(l):
             return prefixes[p]
     return ""
 
+def probably_numerical(my_text):
+    if ':' in my_text or '/' in my_text or ',' in my_text or '%' in my_text: return True
+    return False
+
 def is_spoonerism_rated(l):
     double_digits = re.findall(r'([^0-9]([1-9])\2[^0-9])', l)
     for dig in double_digits:
-        if ':' in dig[0] or '/' in dig[0]: return False
+        if probably_numerical(dig[0]):
+            return False
         if ' ' in dig[0]:
             if mt.uncommented_length(l) > len(double_digits) * 40:
                 return False # this prevents odd cases where I just throw out the number 77
@@ -234,11 +239,12 @@ def is_spoonerism_rated(l):
     return False
 
 def is_risque_spoonerism(l):
-    double_digits = re.findall(r'([^0-9]([0\*])(\2+)[^0-9])', l)
+    double_digits = re.findall(r'([^0\*]([0\*])\2{1,2}[^0\*])', l)
     for dig in double_digits:
-        if ':' in dig[0] or '/' in dig[0]: continue
-        if re.search("[fs]\*\*\*", dig[0], re.IGNORECASE): continue
-        if '****' in dig: continue
+        if probably_numerical(dig[0]): continue
+        if re.search("[dfs]\*{3}", dig[0], re.IGNORECASE): continue
+        if re.search(r'[1-9]', dig[0]): continue
+        if '****' in dig[0]: continue
         return True
     return False
 
