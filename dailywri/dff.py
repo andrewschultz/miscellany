@@ -46,7 +46,7 @@ elif 'drive' in my_cwd:
     what_to_sort = DRIVE
 else:
     what_to_sort = DEFAULT_SORT
-    print("Default sorting", daily_strings[what_to_sort])
+    print("The directory gives us a default of", daily_strings[what_to_sort])
 
 resort_already_sorted = True
 
@@ -65,6 +65,8 @@ show_differences = True
 my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 verbose = True
+
+read_recent_daily = False
 
 bail_on_warnings = True
 
@@ -554,23 +556,21 @@ elif what_to_sort == DRIVE:
 elif what_to_sort == KEEP:
     dir_to_scour = raw_keep_dir
 else:
-    sys.exit("Unknown sorting type.")
+    sys.exit("Unknown sorting type/directory.")
 
 if not os.path.exists(dir_to_scour):
     sys.exit("Can't open scour-directory {}.".format(dir_to_scour))
 
-if "to-proc" not in dir_to_scour:
-    print("Something happened that should not have. I am tacking on to-proc.")
-    new_proc = os.path.join(dir_to_scour, "to-proc")
-    if not os.path.exists(new_proc):
-        sys.exit("Can't open scour-directory after tacking on to-proc: {}.".format(new_proc))
-    dir_to_scour = new_proc
-
-if dir_search_flag == daily.BACKUP:
-    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "../backup"))
+if dir_search_flag == daily.TOPROC:
+    dir_to_scour = os.path.join(dir_to_scour, "to-proc")
+elif dir_search_flag == daily.BACKUP:
+    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "backup"))
 elif dir_search_flag == daily.ROOT:
-    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, ".."))
+    dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "."))
 
+if not os.path.exists(dir_to_scour):
+    sys.exit("Something went wrong after changing directories according to the dir-search-flags.\n\nI am bailing as I could not find {}.".format(dir_to_scour))
+    
 os.chdir(dir_to_scour)
 
 read_comment_cfg()
