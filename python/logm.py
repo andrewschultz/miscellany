@@ -69,6 +69,22 @@ def usage(arg = ""):
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
     exit()
 
+def per_day_metrics(days, end_goal = 'month'):
+    import calendar
+    d = pendulum.now()
+    last_day = calendar.monthrange(d.year, d.month)[1]
+    if end_goal == 'month':
+        a1 = pendulum.local(d.year, d.month, last_day).timestamp() + 86400
+    elif end_goal == 'year':
+        a1 = pendulum.local(d.year + 1, 1, 1).timestamp()
+    a2 = d.timestamp()
+    days_left = (a1-a2)/86400
+    commits_per_day = (days + days_left - 1) / days_left
+    if commits_per_day > 0:
+        print("To get stuff done by end of {}, {:.3f} commits per day.".format(end_goal, commits_per_day))
+    else:
+        print("You don't need any specific goals.")
+
 def bail_if_not_auto_ok():
     global set_author
     global set_commit
@@ -259,23 +275,12 @@ if auto_date:
                 bail_if_not_auto_ok()
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
+                if days == 0: break
+                if not (by_end_of_month or by_end_of_year): break
                 if by_end_of_month:
-                    import calendar
-                    d = pendulum.now()
-                    last_day = calendar.monthrange(d.year, d.month)[1]
-                    a1 = pendulum.local(d.year, d.month, last_day).timestamp() + 86400
-                    a2 = d.timestamp()
-                    days_left = (a1-a2)/86400
-                    commits_per_day = days / days_left
-                    print("To get stuff done by end of month, {:.3f} commits per day.".format(commits_per_day))
+                    per_day_metrics(days, 'month')
                 if by_end_of_year:
-                    import calendar
-                    d = pendulum.now()
-                    a1 = pendulum.local(d.year + 1, 1, 1).timestamp()
-                    a2 = d.timestamp()
-                    days_left = (a1-a2)/86400
-                    commits_per_day = days / days_left
-                    print("To get stuff done by end of year, {:.3f} commits per day.".format(commits_per_day))
+                    per_day_metrics(days, 'year')
             break
 
 if proj_shift_yet:
