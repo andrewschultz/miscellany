@@ -27,6 +27,7 @@ push_after_commit = False
 no_verify = False
 
 by_end_of_month = False
+by_end_of_week = False
 by_end_of_year = False
 
 def commit_maybe_push(cmd):
@@ -77,11 +78,14 @@ def per_day_metrics(days, end_goal = 'month'):
         a1 = pendulum.local(d.year, d.month, last_day).timestamp() + 86400
     elif end_goal == 'year':
         a1 = pendulum.local(d.year + 1, 1, 1).timestamp()
+    elif end_goal == 'week':
+        a1 = pendulum.today().add(days = 7 - d.day_of_week).timestamp()
     a2 = d.timestamp()
     days_left = (a1-a2)/86400
-    commits_per_day = (days + days_left - 1) / days_left
-    if commits_per_day > 0:
-        print("To get stuff done by end of {}, {:.3f} commits per day.".format(end_goal, commits_per_day))
+    commits_per_day_total = (days + days_left - 1) / days_left
+    commits_per_day_catchup = days / days_left
+    if commits_per_day_total > 0:
+        print("To get stuff done by end of {}, {:.3f}/{:3f} commits per day current/actual.".format(end_goal, commits_per_day_total, commits_per_day_catchup))
     else:
         print("You don't need any specific goals.")
 
@@ -276,7 +280,9 @@ if auto_date:
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
                 if days == 0: break
-                if not (by_end_of_month or by_end_of_year): break
+                if not (by_end_of_week or by_end_of_month or by_end_of_year): break
+                if by_end_of_week:
+                    per_day_metrics(days, 'week')
                 if by_end_of_month:
                     per_day_metrics(days, 'month')
                 if by_end_of_year:
