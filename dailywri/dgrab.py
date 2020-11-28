@@ -633,10 +633,10 @@ if "to-proc" not in dir_to_proc:
 
 dir_to_proc = os.path.normpath(dir_to_proc)
 
-if dir_search_flag == ROOT:
+if dir_search_flag == daily.ROOT:
     dir_to_proc = os.path.join(dir_to_proc, '..')
     print("Switching to", dir_to_proc)
-elif dir_search_flag == BACKUP:
+elif dir_search_flag == daily.BACKUP:
     dir_to_proc = os.path.join(dir_to_proc, '..', 'backup')
     print("Switching to", dir_to_proc)
 

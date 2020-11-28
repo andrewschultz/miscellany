@@ -1,3 +1,9 @@
+#
+# twid.py
+#
+# twiddles sections internal to a file
+#
+
 import mytools as mt
 import sys
 import os
