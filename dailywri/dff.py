@@ -377,6 +377,8 @@ def sort_raw(raw_long):
                 continue
             ll = line.strip().lower()
             if ll.startswith("\\"):
+                if current_section:
+                    print("WARNING: reassigning section at line {} of {}.".format(line_count, os.path.basename(raw_long)))
                 current_section = ll[1:]
                 continue
             if not ll:
@@ -582,8 +584,14 @@ if not len(file_list):
     print("Globbing", my_glob)
 
 if read_recent_daily:
-    sort_raw(file_list[-1])
-    exit()
+    for r in reversed(file_list):
+        if not os.stat(r).st_size:
+            print("Skipping over zero-byte file {} which we should delete.".format(r))
+            continue
+        sort_raw(r)
+        sys.exit()
+    print("No recent daily to read.")
+    sys.exit()
 
 list_count = 0
 for fi in file_list:
