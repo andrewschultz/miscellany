@@ -187,6 +187,9 @@ if latest_daily:
         day_file = see_back(d, daily, x)
         day_done_file = see_back(d, daily_done, x)
         if os.path.exists(day_file):
+            if os.stat(day_file).st_size == 0:
+                print("Ignoring blank file", day_file)
+                continue
             print("Found recent daily file {:s}, opening.".format(day_file))
             os.system(day_file)
             exit()
@@ -197,13 +200,19 @@ if latest_daily:
     exit()
 
 files_back_in_dir = 0
+
 for x in range(0, max_days_back):
     day_file = see_back(d, daily, x)
     if os.path.exists(day_file):
+        if os.stat(day_file).st_size == 0:
+            print("Ignoring blank file", day_file)
+            continue
         files_back_in_dir += 1
         if verbose and files_back_in_dir <= files_back_wanted: print("Skipping", day_file)
     if files_back_in_dir > files_back_wanted:
         print("Got daily file", day_file, files_back_wanted, "files back.")
         os.system(day_file)
         exit()
+
+print("Failed to get a file in the last", max_days_back, "days")
 
