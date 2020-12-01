@@ -84,7 +84,8 @@ def read_ses_cfg():
             if '~' in line:
                 ary = line.strip().split("~")
                 new_file_description[ary[0].strip()] = ary[1].strip()
-            if '=' not in line:
+                continue
+            elif '=' not in line:
                 print("Line", line_count, "needs = or ~")
                 any_warnings = True
                 continue
@@ -180,7 +181,7 @@ read_ses_cfg()
 
 for q in new_file_description:
     if q not in made_date:
-        print("Deleted file {} ({}) is no longer in sessions.xml. Check to make sure it wasn't deleted.")
+        print("Deleted file {} ({}) is no longer in sessions.xml. Check to make sure it wasn't deleted.".format(q, new_file_description[q]))
         any_warnings = True
 
 if any_warnings and bail_cfg_warnings:
