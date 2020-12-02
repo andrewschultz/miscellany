@@ -30,6 +30,8 @@ post_open_matches = False
 all_similar_projects = True
 verbose = False
 
+modify_line = True
+
 ALL=0
 INSIDE=1
 OUTSIDE=2
@@ -144,14 +146,26 @@ def find_text_in_file(my_text, projfile):
             elif quote_status == INSIDE:
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
+            line_out = line.strip()
             if not my_text[1]:
-                if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE):
+                if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, flags=re.IGNORECASE):
                     found_one = True
             else:
-                if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, re.IGNORECASE):
+                if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, flags=re.IGNORECASE):
+                    if modify_line:
+                        line_out = re.sub(r'(\b({}{}|{}{})(s?)\b)', lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                        print(1, line_out)
                     found_one = True
-                elif re.search(r'\b{}(s?)\b'.format(my_text[0]), line, re.IGNORECASE) and re.search(r'\b{}(s?)\b'.format(my_text[1]), line, re.IGNORECASE):
-                    found_one = True
+                else:
+                    first_string = r'\b{}(s?)\b'.format(my_text[0])
+                    second_string = r'\b{}(s?)\b'.format(my_text[1])
+                    if re.search(first_string, line, re.IGNORECASE) and re.search(second_string, line, re.IGNORECASE):
+                        if modify_line:
+                            line_out = re.sub(first_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                            print(2, line_out)
+                            line_out = re.sub(second_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                            print(3, line_out)
+                        found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
@@ -163,7 +177,7 @@ def find_text_in_file(my_text, projfile):
                     print('=' * 25, bf, "found matches", '=' * 25)
                 found_so_far += 1
                 found_overall += 1
-                print("    ({:5d}):".format(line_count), line.strip(), "{} L{}".format(current_table, current_table_line) if current_table else "")
+                print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
