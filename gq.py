@@ -55,7 +55,7 @@ my_proj = ""
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as.")
     print()
-    print("You may also specify a project or combinations e.g. sts and roi do the same thing by default")
+    print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi.")
     print("o = only this project, a = all similar projects")
     print()
     print("vh = view history file of a project, what you have searched")
@@ -65,6 +65,7 @@ def usage():
     print()
     print("e/ec/ce = edit config file")
     print("qi/qo/qa = quotes inside/outside/all")
+    print("ml/nml/mln = whether or not to modify line where search results are found")
     exit()
 
 def hist_file_of(my_proj):
@@ -154,7 +155,6 @@ def find_text_in_file(my_text, projfile):
                 if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, flags=re.IGNORECASE):
                     if modify_line:
                         line_out = re.sub(r'(\b({}{}|{}{})(s?)\b)', lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
-                        print(1, line_out)
                     found_one = True
                 else:
                     first_string = r'\b{}(s?)\b'.format(my_text[0])
@@ -162,9 +162,7 @@ def find_text_in_file(my_text, projfile):
                     if re.search(first_string, line, re.IGNORECASE) and re.search(second_string, line, re.IGNORECASE):
                         if modify_line:
                             line_out = re.sub(first_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
-                            print(2, line_out)
                             line_out = re.sub(second_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
-                            print(3, line_out)
                         found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
@@ -244,6 +242,13 @@ while cmd_count < len(sys.argv):
         create_new_history = True
     elif arg == 'e' or arg == 'ec' or arg == 'ce':
         mt.npo(my_cfg)
+    elif arg == 'r':
+        print("Using super-shortcut 'r' for A Roiling Original.")
+        my_proj = "roiling"
+    elif arg == 'ml':
+        modify_line = True
+    elif arg == 'nml' or arg == 'mln':
+        modify_line = False
     elif arg == '?':
         usage()
     else:
