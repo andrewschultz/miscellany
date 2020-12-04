@@ -26,8 +26,8 @@ file_name = mt.np_xml
 dfiles = []
 
 totals = 0
-news = 0
-olds = 0
+unnamed = 0
+named = 0
 e = ET.parse(file_name)
 root = e.getroot()
 github_warnings = 0
@@ -50,7 +50,7 @@ def usage(my_msg = "General usage"):
     print("-b/-nb/-bn toggles whether to print blanks")
     print("A number changes the list max size")
     print("ow/oa := = wildcard of files to open")
-    print("e = edit cfg file")
+    print("e/c = edit cfg file")
     exit()
 
 def desc_new(x):
@@ -135,7 +135,7 @@ while cmd_count < len(sys.argv):
         bail_cfg_warnings = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
         bail_cfg_warnings = False
-    elif arg == 'e':
+    elif arg == 'e' or arg == 'c':
         mt.npo(ses_cfg)
         exit()
     elif arg.startswith("oa:") or arg.startswith("oa=") or arg.startswith("ow:") or arg.startswith("ow="):
@@ -162,13 +162,13 @@ for elem in e.iter('File'):
         if not os.path.exists(long_name):
             print("You may have recently deleted {}/{}, so I am skipping it.".format(t, long_name))
             continue
-        news += 1
+        unnamed += 1
         timestamp = re.sub(".*@", "", long_name)
         made_date[base_name] = timestamp
         orig_file[base_name] = long_name
         continue
     else:
-        olds += 1
+        named += 1
     q = mt.follow_link(t).lower()
     if q in slink:
         link_warnings += 1
@@ -209,4 +209,4 @@ if len(slink):
     for y in sorted(slink):
         print("    " + y)
 
-print(link_warnings, "link warnings", news, "new files", olds, "actual files", totals, "total files")
+print(link_warnings, "link warnings", unnamed, "unnamed/new files", named, "standard files", totals, "total tabs open in Notepad")
