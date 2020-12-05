@@ -149,8 +149,11 @@ def find_text_in_file(my_text, projfile):
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
             if not my_text[1]:
-                if re.search(r'\b{}(s?)\b'.format(my_text[0]), line, flags=re.IGNORECASE):
+                reg_string = r'\b{}(s?)\b'.format(my_text[0])
+                if re.search(reg_string, line, flags=re.IGNORECASE):
                     found_one = True
+                    if modify_line:
+                        line_out = re.sub(reg_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
             else:
                 if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, flags=re.IGNORECASE):
                     if modify_line:
