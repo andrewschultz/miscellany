@@ -213,10 +213,14 @@ read_cfg()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg in i7.i7x:
-        my_proj = i7.i7x[arg]
-    elif arg in i7.i7xr:
-        my_proj = i7.i7xr[arg]
+    arg_orig = sys.argv[cmd_count]
+    if arg_orig in i7.i7x:
+        my_proj = i7.i7x[arg_orig]
+    elif arg_orig in i7.i7xr: # this is because we may have a dash- flag going to the same as a project name, so let's have a way to look at any project
+        my_proj = i7.i7xr[arg_orig]
+    elif arg == 'r':
+        print("Using super-shortcut 'r' for A Roiling Original.")
+        my_proj = "roiling"
     elif arg == 'npo' or arg == 'pon':
         post_open_matches = False
     elif arg == 'po':
@@ -245,12 +249,9 @@ while cmd_count < len(sys.argv):
         create_new_history = True
     elif arg == 'e' or arg == 'ec' or arg == 'ce':
         mt.npo(my_cfg)
-    elif arg == 'r':
-        print("Using super-shortcut 'r' for A Roiling Original.")
-        my_proj = "roiling"
-    elif arg == 'ml':
+    elif arg == 'ml' or arg == 'lm':
         modify_line = True
-    elif arg == 'nml' or arg == 'mln':
+    elif sorted(arg) == 'lmn': #no modify line
         modify_line = False
     elif arg == '?':
         usage()
