@@ -49,7 +49,8 @@ frequencies = defaultdict(int)
 
 cmd_count = 1
 my_text = []
-default_proj = i7.dir2proj()
+default_from_cwd = i7.dir2proj()
+default_from_cfg =  ""
 my_proj = ""
 
 def usage():
@@ -120,6 +121,9 @@ def read_cfg():
                 elif lary[0] == "all_similar_projects":
                     global all_similar_projects
                     all_similar_projects = bool(int(lary[1]))
+                elif lary[0] == "default_from_cwd":
+                    global default_from_cfg
+                    default_from_cfg = lary[1]
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -264,12 +268,17 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if not my_proj:
-    if not default_proj:
-        sys.exit("Must be in a project directory or specify a project.")
-    print("Using default project", default_proj)
-    my_proj = default_proj
+    if not default_from_cwd:
+        if not default_from_cfg:
+            sys.exit("Must be in a project directory or specify a project.")
+        if default_from_cfg in i7.i7x:
+            my_proj = i7.i7x[default_from_cfg]
+        print("Config file gives", my_proj, "as default project, so we'll use that, since the current directory isn't mapped to a valid project.")
+    else:
+        print("Using default project", default_from_cwd)
+        my_proj = default_from_cwd
 
-#file_list = i7.i7com[default_proj]
+#file_list = i7.i7com[default_from_cwd]
 if all_similar_projects:
     proj_umbrella = related_projects(my_proj)
 else:
