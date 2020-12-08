@@ -22,6 +22,36 @@ from filecmp import cmp
 from shutil import copy, move
 import __main__ as main
 
+# these are the main dicts used in the i7 modules
+# some of these may have underscores due to how I named the release files
+# e.g. shuffling -> shuffling_around
+#
+# I could create i7full but that would be arduous
+
+# i7 defined arrays for both perl/python files
+# read from i7p.txt/i7_cfg_file
+
+i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most of the time this won't matter--GH = what's on my computer
+i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
+i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
+i7com = {} # combos e.g. opo = 3d and 4d
+i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
+i7hfx = {} # header mappings e.g. ta to tables
+i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7fg = {} # which github header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7rn = {} # release numbers
+i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
+i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
+i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
+i7gbx = {} # general binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
+i7pbx = {} # project binary extensions for debug, beta and release
+i7binname = {} # binary nams e.g. roiling to A Roiling Original
+
+i7bb = [] # list of bitbucket repos
+i7gh = [] # list of github repos
+
+######################################################default variables
+
 auth = "Andrew Schultz"
 extdir = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions\{:s}'.format(auth) # NOTE: the x86 is right, here. No need for mt.progfile.
 nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
@@ -834,34 +864,6 @@ i7c = {
   "ops": ["threediopolis", "fourdiopolis"],
   "as": ["slicker-city", "compound", "buck-the-past", "seeker-status" ]
 }
-
-#
-# some of these may have underscores due to how I named the release files
-# e.g. shuffling -> shuffling_around
-#
-# I could create i7full but that would be arduous
-
-# i7 defined arrays for both perl/python files
-# read from i7p.txt/i7_cfg_file
-
-i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most of the time this won't matter--GH = what's on my computer
-i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
-i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
-i7com = {} # combos e.g. opo = 3d and 4d
-i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
-i7hfx = {} # header mappings e.g. ta to tables
-i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
-i7fg = {} # which github header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
-i7rn = {} # release numbers
-i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
-i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
-i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
-i7gbx = {} # general binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
-i7pbx = {} # project binary extensions for debug, beta and release
-i7binname = {} # binary nams e.g. roiling to A Roiling Original
-
-i7bb = [] # list of bitbucket repos
-i7gh = [] # list of github repos
 
 # here is where we sort out stuff like abbreviations and header files
 
