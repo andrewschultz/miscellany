@@ -21,6 +21,7 @@ import glob
 from filecmp import cmp
 from shutil import copy, move
 import __main__ as main
+import pathlib
 
 # these are the main dicts used in the i7 modules
 # some of these may have underscores due to how I named the release files
@@ -622,16 +623,23 @@ def has_ni(x):
 def dir2proj(x = os.getcwd(), to_abbrev = False):
     x0 = x.lower()
     x2 = ""
-    if os.path.exists(x0 + "\\story.ni") or ".inform" in x: # this works whether in the github or inform directory
-        x2 = re.sub("\.inform.*", "", x0)
-        x2 = re.sub(".*[\\\/]", "", x2)
-    elif " materials" in x0:
+    ary = pathlib.PurePath(x).parts
+    if " materials" in x0:
         x2 = re.sub(" materials.*", "", x0)
         x2 = re.sub(".*[\\\/]", "", x2)
-    elif re.search("documents.github..", x0):
-        x2 = re.sub(".*documents.github.", "", x0, 0, re.IGNORECASE)
-        x2 = re.sub("[\\\/].*", "", x2)
-        if not re.search("[a-z]", x2): return ""
+    elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
+        x2 = re.sub("\.inform.*", "", x0)
+        x2 = re.sub(".*[\\\/]", "", x2)
+    else:
+        if 'github' in ary and ary.index('github') < len(ary) - 1:
+            x2 = ary[ary.index('github') + 1]
+    print(x2, i7gx)
+    if x2 in i7gx: # this is for irregularly named projects that lead to story.ni, e.g. the-problems-compound/compound or the STS games
+        x3 = i7gx[x2]
+        if to_abbrev:
+            return x3
+        if x3 in i7x:
+            return i7x[x3]
     if "\\" in x2 or "/" in x2 or not x2: return ""
     if to_abbrev and x2 in i7xr: return i7xr[x2]
     return x2
