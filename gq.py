@@ -299,9 +299,15 @@ if len(my_text) == 1:
 
 for proj in proj_umbrella:
     if proj not in i7.i7f:
-        print("WARNING", proj, "does not have project files associated with it. It may not be a valid inform project.")
-        continue
-    for projfile in i7.i7f[proj]:
+        if os.path.exists(i7.main_src(proj)):
+            print("No project exists for {}. But there is a story file. So I am using that.")
+        else:
+            my_array = [ i7.main_src(proj) ]
+            print("WARNING", proj, "does not have a project file array associated with it. It may not be a valid inform project.")
+            continue
+    else:
+        my_array = i7.i7f[proj]
+    for projfile in my_array:
         if not os.path.exists(projfile):
             if 'story.ni' in projfile:
                 print("Skipping nonexistent story file for {}, probably due to 'only' parameter.".format(proj))
