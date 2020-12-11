@@ -53,6 +53,19 @@ default_from_cwd = i7.dir2proj()
 default_from_cfg =  ""
 my_proj = ""
 
+TAGS = 0
+PARENTHESES = 1
+BRACKETS = 2
+CURLY_BRACKETS = 3
+highlight_repeat = 4
+highlight_types = {
+  TAGS: "<>",
+  PARENTHESES: "()",
+  BRACKETS: "[]",
+  CURLY_BRACKETS: "{}"
+}
+my_highlight = TAGS
+
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as.")
     print()
@@ -68,6 +81,12 @@ def usage():
     print("qi/qo/qa = quotes inside/outside/all")
     print("ml/nml/mln = whether or not to modify line where search results are found")
     exit()
+
+def left_highlight():
+    return highlight_types[my_highlight][0] * highlight_repeat
+
+def right_highlight():
+    return highlight_types[my_highlight][1] * highlight_repeat
 
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
@@ -157,19 +176,19 @@ def find_text_in_file(my_text, projfile):
                 if re.search(reg_string, line, flags=re.IGNORECASE):
                     found_one = True
                     if modify_line:
-                        line_out = re.sub(reg_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                        line_out = re.sub(reg_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             else:
                 if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, flags=re.IGNORECASE):
                     if modify_line:
-                        line_out = re.sub(r'(\b({}{}|{}{})(s?)\b)', lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                        line_out = re.sub(r'(\b({}{}|{}{})(s?)\b)', lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
                     found_one = True
                 else:
                     first_string = r'\b{}(s?)\b'.format(my_text[0])
                     second_string = r'\b{}(s?)\b'.format(my_text[1])
                     if re.search(first_string, line, re.IGNORECASE) and re.search(second_string, line, re.IGNORECASE):
                         if modify_line:
-                            line_out = re.sub(first_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
-                            line_out = re.sub(second_string, lambda x: "<<<{}>>>".format(x.group(0)), line_out, flags=re.IGNORECASE)
+                            line_out = re.sub(first_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
+                            line_out = re.sub(second_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
                         found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
