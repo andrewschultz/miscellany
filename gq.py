@@ -140,7 +140,7 @@ def read_cfg():
                 elif lary[0] == "all_similar_projects":
                     global all_similar_projects
                     all_similar_projects = bool(int(lary[1]))
-                elif lary[0] == "default_from_cwd":
+                elif lary[0] == "default_from_cfg":
                     global default_from_cfg
                     default_from_cfg = lary[1]
                 else:
@@ -240,7 +240,7 @@ while cmd_count < len(sys.argv):
     if arg_orig in i7.i7x:
         my_proj = i7.i7x[arg_orig]
     elif arg_orig in i7.i7xr: # this is because we may have a dash- flag going to the same as a project name, so let's have a way to look at any project
-        my_proj = i7.i7xr[arg_orig]
+        my_proj = arg_orig
     elif arg == 'r':
         print("Using super-shortcut 'r' for A Roiling Original.")
         my_proj = "roiling"
@@ -294,7 +294,7 @@ if not my_proj:
             my_proj = i7.i7x[default_from_cfg]
         print("Config file gives", my_proj, "as default project, so we'll use that, since the current directory isn't mapped to a valid project.")
     else:
-        print("Using default project", default_from_cwd)
+        print("Using default project", default_from_cwd, "from current directory")
         my_proj = default_from_cwd
 
 #file_list = i7.i7com[default_from_cwd]
