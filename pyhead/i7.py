@@ -33,6 +33,7 @@ import pathlib
 # read from i7p.txt/i7_cfg_file
 
 i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most of the time this won't matter--GH = what's on my computer
+i7gxr = {} # github project renaming reversed e.g. the_problems_compound -> compound. Most of the time this won't matter--GH = what's on my computer
 i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
 i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
 i7com = {} # combos e.g. opo = 3d and 4d
@@ -633,9 +634,8 @@ def dir2proj(x = os.getcwd(), to_abbrev = False):
     else:
         if 'github' in ary and ary.index('github') < len(ary) - 1:
             x2 = ary[ary.index('github') + 1]
-    print(x2, i7gx)
-    if x2 in i7gx: # this is for irregularly named projects that lead to story.ni, e.g. the-problems-compound/compound or the STS games
-        x3 = i7gx[x2]
+    if x2 in i7gxr: # this is for irregularly named projects that lead to story.ni, e.g. the-problems-compound/compound or the STS games
+        x3 = i7gxr[x2]
         if to_abbrev:
             return x3
         if x3 in i7x:
@@ -925,6 +925,7 @@ with open(i7_cfg_file) as file:
             continue
         if ll.startswith("ghproj:"):
             i7gx[lla[1]] = lla[0]
+            i7gxr[lla[0]] = lla[1]
             continue
         if ll.startswith("binext:"):
             for temp in lla[0].split(","):
