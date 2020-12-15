@@ -503,8 +503,8 @@ projects = []
 while cmd_count < len(sys.argv):
     a1 = sys.argv[cmd_count].lower()
     arg = mt.nohy(sys.argv[cmd_count].lower())
-    if a1 in i7.i7c.keys():
-        projects = projects + i7.i7c[arg]
+    if a1 in i7.i7com.keys():
+        projects.extend(i7.i7com[arg].split(","))
     elif a1 in i7.i7x.keys():
         projects.append(i7.i7x[arg])
     elif a1 in i7.i7xr.keys():
@@ -565,7 +565,7 @@ read_table_and_default_file()
 
 for x in projects:
     if x not in i7.i7f:
-        print("Uh oh. You need to define which tables are in project", x, "in i7p.txt.")
+        print("WARNING for project {x}: you need to define which header files have tables in project", x, "via i7p.txt.")
         continue
     for y in i7.i7f[x]:
         table_alf_one_file(y.lower(), launch_dif, copy_over)
