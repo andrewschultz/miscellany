@@ -500,8 +500,11 @@ uuid = uuid_file = uid_file
 def auto_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
 
-def main_src(x):
-    return os.path.normpath(os.path.join(sdir(x), "story.ni"))
+def main_src(x, return_nonexistent = True):
+    main_path = os.path.normpath(os.path.join(sdir(x), "story.ni"))
+    if return_nonexistent or os.path.exists(main_path):
+        return main_path
+    return ""
 
 proj_src = src = get_src = main_src
 
