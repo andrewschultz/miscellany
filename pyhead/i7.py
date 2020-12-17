@@ -8,8 +8,6 @@
 # in_quotes only gets text in quotes
 # proj_exp = project expansion
 #
-# todo: erase i7c and see where i7c pops up in other Python files in the whole tree.
-#
 
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -869,12 +867,6 @@ def apostrophe_check_line(my_line, print_results = False, my_file = '<UNDEFINED>
     for x in re.split("\t+", my_line.strip()):
         retval += apostrophe_check_string(x, print_results, my_file, line_num)
     return retval
-
-i7c = {
-  "sts": ["roiling", "shuffling"],
-  "ops": ["threediopolis", "fourdiopolis"],
-  "as": ["slicker-city", "compound", "buck-the-past", "seeker-status" ]
-}
 
 # here is where we sort out stuff like abbreviations and header files
 
