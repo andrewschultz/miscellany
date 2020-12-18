@@ -117,6 +117,11 @@ def conditional_bail():
     if bail_on_warnings:
         sys.exit("Bailing on warning. Set -nbw to change this.")
 
+def short_cfg_prefix(my_line):
+    if my_line[1] != ':':
+        return False
+    return my_line[0].isalpha()
+
 def read_comment_cfg():
     any_warnings = False
     with open(comment_cfg) as file:
@@ -124,20 +129,31 @@ def read_comment_cfg():
             l = line.lower().strip()
             if l.startswith('#'): continue
             if l.startswith(';'): break
-            if ':' not in l:
-                print("Line", l, "needs colon prefix.")
-                any_warnings = True
-            if l[:2] == 'd:':
-                delete_next = True
+            delete_next = fix_next = False
+            while short_cfg_prefix(l):
+                if l[0] == 'd':
+                    delete_next = True
+                elif l[0] == 'f':
+                    fix_next = True
+                else:
+                    print("Bad short-prefix {} line {}.".format(l[0], line_count))
                 l = l[2:]
-            else:
-                delete_next = False
+            if ':' not in l:
+                print("Line", l, "needs main colon prefix.")
+                any_warnings = True
             ary = mt.cfgary(l, delimiter='=')
             if len(ary) != 2:
                 print("Bad comment/regex definition line", line_count, l)
                 any_warnings = True
                 continue
             entries = ary[0].split(",")
+            if fix_next:
+                for y in ary[0].split(','):
+                    if y in fixed_marker:
+                        print("doubly fixed marker", y, "line", line_count)
+                        any_warnings = True
+                    else:
+                        fixed_marker[y] = True
             if delete_next:
                 for y in ary[0].split(','):
                     if y in delete_marker:
