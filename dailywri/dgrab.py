@@ -68,6 +68,7 @@ analyze_orphans = False
 look_for_orphan = False
 append_importants = False
 important_test = True
+latest_daily_only = False
 
 dir_search_flag = daily.TOPROC
 
@@ -95,6 +96,7 @@ def usage(header="GENERAL USAGE"):
     print("1o/ao = first orphan or analyze orphans")
     print("noa = no open after")
     print("pc = print suggested commands")
+    print("ld = latest daily only")
     print("")
     print("sample usage:")
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
@@ -566,6 +568,7 @@ while cmd_count < len(sys.argv):
         append_importants = True
         important_test = True
     elif arg == 'l': list_it = True
+    elif arg == 'ld': latest_daily_only = True
     elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
@@ -652,6 +655,13 @@ if just_analyze:
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
+
+if latest_daily_only:
+    the_glob = glob.glob("c:/writing/daily/20*.txt")
+    if os.path.exists("c:/writing/daily/to-proc/{}"):
+        sys.exit("Daily file {} exists in to-proc. Bailing.".format(the_glob[-1]))
+    dir_to_proc = "c:/writing/daily"
+    my_file_list = [the_glob[-1]]
 
 if analyze_orphans:
     find_all_blanks(the_glob)
