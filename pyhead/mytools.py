@@ -504,8 +504,8 @@ def is_posneg_int(x, allow_zero = False):
         pass
     return False
 
-def print_and_run(x):
-    print(x)
+def print_and_run(x, actually_print = True):
+    if actually_print: print(x)
     os.system(x)
 
 def delete_task(my_cmd):
