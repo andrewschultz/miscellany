@@ -508,6 +508,13 @@ def print_and_run(x, actually_print = True):
     if actually_print: print(x)
     os.system(x)
 
+def subproc_and_run(x, actually_print = True, check_it = False):
+    if actually_print: print("RUNNING:", ' '.join(x))
+    if check_it:
+        subprocess.check_call(x)
+    else:
+        subprocess.call(x)
+
 def delete_task(my_cmd):
     my_cmd = "schtasks /delete /f /tn {}"
     print_and_run(my_cmd)
