@@ -24,10 +24,10 @@ def usage():
     exit()
 
 def build_type(a):
-    if a.startswith('b'): returni7.BETA
-    if a.startswith('d'): returni7.DEBUG
-    if a.startswith('r'): returni7.RELEASE
-    sys.exit("Can't use buid type with {}. B/D/R.".format(a))
+    if a.startswith('b'): return i7.BETA
+    if a.startswith('d'): return i7.DEBUG
+    if a.startswith('r'): return i7.RELEASE
+    sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
 def last_proj_modified(this_proj, verbose=False):
     my_files = i7.dictish(this_proj,i7.i7f)
