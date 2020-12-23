@@ -16,6 +16,11 @@ import time
 import pendulum
 import sys
 import mytools as mt
+import subprocess
+import re
+
+icl_cfg = "c:/writing/scripts/icl.txt"
+default_proj_from_cfg = ''
 
 def usage():
     print("b d r = beta debug release")
@@ -28,6 +33,25 @@ def build_type(a):
     if a.startswith('d'): return i7.DEBUG
     if a.startswith('r'): return i7.RELEASE
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
+
+def read_icl_cfg():
+    with open(icl_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#") or not line.strip(): continue
+            if line.startswith(";"): break
+            parsed_line = re.split("[:=]", line.strip().lower(), 1)
+            if len(parsed_line) == 1:
+                print("Need a : or = to start line in the CFG:", line_count, line.strip())
+                continue
+            prefix = parsed_line[0]
+            data = parsed_line[1]
+            if prefix == "default":
+                global default_proj_from_cfg
+                if default_proj_from_cfg:
+                    print("WARNING: redefining default project from CFG on line {}: {}")
+                default_proj_from_cfg = data
+                continue
+            print("Unknown prefix", prefix, "line", line_count)
 
 def last_proj_modified(this_proj, verbose=False):
     my_files = i7.dictish(this_proj,i7.i7f)
