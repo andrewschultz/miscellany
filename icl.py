@@ -22,6 +22,19 @@ import re
 icl_cfg = "c:/writing/scripts/icl.txt"
 default_proj_from_cfg = ''
 
+my_build = i7.UNSPECIFIED
+my_proj = ''
+tried_one = False
+
+cmd_count = 1
+to_blorb = False
+
+what_to_build = [ False, False, False ]
+build_projects = []
+
+print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
+
+
 def usage():
     print("b d r = beta debug release")
     print("bl = force to blorb")
@@ -103,16 +116,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     i7.go_proj(my_proj)
     print(my_cmd)
 
-my_build = i7.DEBUG
-my_proj = 'vv'
-
-cmd_count = 1
-to_blorb = False
-
-what_to_build = [ False, False, False ]
-build_projects = []
-
-print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
+read_icl_cfg()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
@@ -143,8 +147,6 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 #sys.exit("Build: {} Projects: {}.".format(what_to_build, build_projects))
-
-tried_one = False
 
 for x in what_to_build:
     if x:
