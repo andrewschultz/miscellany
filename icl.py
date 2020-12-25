@@ -32,6 +32,9 @@ to_blorb = False
 what_to_build = [ False, False, False ]
 build_projects = []
 
+build_states = defaultdict(list)
+build_state_for_proj = defaultdict(str)
+
 print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
 
 
@@ -47,12 +50,15 @@ def build_type(a):
     if a.startswith('r'): return i7.RELEASE
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
+def cfg_data_split(x, delimiter=":="):
+    return re.split("[{}]".format(delimiter), x, 1)
+
 def read_icl_cfg():
     with open(icl_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#") or not line.strip(): continue
             if line.startswith(";"): break
-            parsed_line = re.split("[:=]", line.strip().lower(), 1)
+            parsed_line = cfg_data_split(line.strip().lower())
             if len(parsed_line) == 1:
                 print("Need a : or = to start line in the CFG:", line_count, line.strip())
                 continue
@@ -64,7 +70,17 @@ def read_icl_cfg():
                     print("WARNING: redefining default project from CFG on line {}: {}")
                 default_proj_from_cfg = data
                 continue
+            parsed_data = cfg_data_split(data)
+            if prefix == 'ext':
+                build_states[parsed_data[0]] = parsed_data[1].split(',')
+                continue
+            if prefix == 'type':
+                for x in parsed_data[1].split(','):
+                    build_state_for_proj[x] = parsed_data[0]
+                continue
             print("Unknown prefix", prefix, "line", line_count)
+    print(build_states)
+    print(build_state_for_proj)
 
 def last_proj_modified(this_proj, verbose=False):
     my_files = i7.dictish(this_proj,i7.i7f)
