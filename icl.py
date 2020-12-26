@@ -33,7 +33,7 @@ what_to_build = [ False, False, False ]
 build_projects = []
 
 build_states = defaultdict(list)
-build_state_for_proj = defaultdict(str)
+build_state_of_proj = defaultdict(str)
 
 print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
 
@@ -76,11 +76,14 @@ def read_icl_cfg():
                 continue
             if prefix == 'type':
                 for x in parsed_data[1].split(','):
-                    build_state_for_proj[x] = parsed_data[0]
+                    build_state_of_proj[x] = parsed_data[0]
                 continue
             print("Unknown prefix", prefix, "line", line_count)
-    print(build_states)
-    print(build_state_for_proj)
+
+def derive_extension(this_project, this_build = i7.RELEASE):
+    if this_project not in build_state_of_proj:
+        return 'ulx'
+    return build_states[build_state_of_proj[this_project]][this_build]
 
 def last_proj_modified(this_proj, verbose=False):
     my_files = i7.dictish(this_proj,i7.i7f)
@@ -109,6 +112,7 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     return time.time() - proj_tuple[0] < time_since
 
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
+    output_ext = derive_extension(this_proj, this_build)
     auto_file = i7.auto_file(this_proj)
 
     bin_out = i7.bin_file(this_proj, this_build)
