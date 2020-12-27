@@ -195,12 +195,18 @@ no_colon = chop_front
 def no_equals(x):
     return chop_front(x, '=')
 
-def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d]
+def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_split below
     if ':' not in x:
         print("WARNING, cfgary called on line without starting colon")
         return []
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
+
+def cfg_data_split(x, delimiter=":=", to_tuple = True):
+    ary = re.split("[{}]".format(delimiter), x, 1)
+    if to_tuple:
+        return(ary[0], ary[1])
+    return ary
 
 def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
     with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
