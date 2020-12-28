@@ -50,33 +50,33 @@ def build_type(a):
     if a.startswith('r'): return i7.RELEASE
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
-def cfg_data_split(x, delimiter=":="):
-    return re.split("[{}]".format(delimiter), x, 1)
-
 def read_icl_cfg():
     with open(icl_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#") or not line.strip(): continue
             if line.startswith(";"): break
-            parsed_line = cfg_data_split(line.strip().lower())
-            if len(parsed_line) == 1:
+            try:
+                (prefix, data) = mt.cfg_data_split(line.strip().lower())
+            except:
                 print("Need a : or = to start line in the CFG:", line_count, line.strip())
                 continue
-            prefix = parsed_line[0]
-            data = parsed_line[1]
             if prefix == "default":
                 global default_proj_from_cfg
                 if default_proj_from_cfg:
                     print("WARNING: redefining default project from CFG on line {}: {}")
                 default_proj_from_cfg = data
                 continue
-            parsed_data = cfg_data_split(data)
+            try:
+                (my_varname, my_data) = mt.cfg_data_split(data)
+            except:
+                print("Need a : or = after the initial data marker", prefix, "at line", line_count)
+                continue
             if prefix == 'ext':
-                build_states[parsed_data[0]] = parsed_data[1].split(',')
+                build_states[my_varname] = my_data.split(',')
                 continue
             if prefix == 'type':
-                for x in parsed_data[1].split(','):
-                    build_state_of_proj[x] = parsed_data[0]
+                for x in my_data.split(','):
+                    build_state_of_proj[x] = my_varname
                 continue
             print("Unknown prefix", prefix, "line", line_count)
 
