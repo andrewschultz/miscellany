@@ -129,12 +129,27 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     build_flags = '-kwSDG'
     if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
 
-    output_ext = i7.bin_ext(this_proj, this_build, to_blorb)
-    inform_compiler = 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-633'
-    my_cmd = '"{}" {} +include_path=..\Source,.\ auto.inf output.{}"'.format(inform_compiler, build_flags, output_ext)
+    mt.subproc_and_run(
+      [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
+      "-rules",
+      "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
+      "-package",
+      "C:\\games\\inform\\{}.inform".format(i7.i7x[this_proj], "-extension={}'".output_ext)
+      ]
+      )
+
+    print("Moved CWD to", os.getcwd())
+
+    mt.subproc_and_run(
+    [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-632',
+    build_flags,
+    "+include_path=..\\Source,.\\",
+    "auto.inf",
+    "output.{}".format(output_ext)
+    ]
+    )
 
     i7.go_proj(my_proj)
-    print(my_cmd)
 
 read_icl_cfg()
 
