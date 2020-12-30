@@ -74,6 +74,13 @@ def letters_only(my_word, accept_hyphens=True):
 
 noquotes = no_quo = noquo = no_quotes
 
+def only_certain_letters(letter_list, string_to_search):
+    if any(x not in letter_list for x in string_to_search):
+        return False
+    if len(string_to_search) == 0:
+        return False
+    return True
+
 def is_basename(a):
     return not ('/' in a or '\\' in a)
 
