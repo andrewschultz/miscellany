@@ -155,12 +155,16 @@ read_icl_cfg()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg == 'd' or arg == 'debug':
+    if arg == 'debug':
         what_to_build[i7.DEBUG] = True
-    elif arg == 'b' or arg == 'beta':
+    elif arg == 'beta':
         what_to_build[i7.RELEASE] = True
-    elif arg == 'r' or arg == 'release':
+    elif arg == 'release':
         what_to_build[i7.BETA] = True
+    elif mt.only_certain_letters("dbr", arg):
+        what_to_build[i7.RELEASE] = 'r' in arg
+        what_to_build[i7.DEBUG] = 'd' in arg
+        what_to_build[i7.BETA] = 'b' in arg
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
     elif arg == 'a' or arg == 'all':
