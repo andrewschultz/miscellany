@@ -35,10 +35,9 @@ build_projects = []
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
 
-print("NOTE: USE ICL.PL UNTIL THIS IS FULLY IMPLEMENTED.")
-
-
-def usage():
+def usage(arg="USAGE FOR ICL.PY"):
+    print(arg)
+    print('=' * 50)
     print("b d r = beta debug release")
     print("bl = force to blorb")
     print("use project name if necessary")
@@ -182,7 +181,7 @@ while cmd_count < len(sys.argv):
         else:
             build_projects.append((y[0], build_type(y[1])))
     else:
-        usage()
+        usage("Bad argument {}".format(arg))
     cmd_count += 1
 
 #sys.exit("Build: {} Projects: {}.".format(what_to_build, build_projects))

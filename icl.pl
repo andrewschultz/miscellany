@@ -59,7 +59,7 @@ my $buildSpecified = 0;
 my $betaDir = "c:\\games\\inform\\beta.inform";
 my $baseDir = "c:\\games\\inform";
 my $logFile = "c:\\writing\\scripts\\icl-log.txt";
-my $cfgFile = "c:\\writing\\scripts\\icl.txt";
+my $cfgFile = "c:\\writing\\scripts\\icl-old.txt";
 
 open( X, $cfgFile ) || die("Need $cfgFile.");
 
