@@ -184,6 +184,22 @@ while cmd_count < len(sys.argv):
         usage("Bad argument {}".format(arg))
     cmd_count += 1
 
+if not my_proj:
+    try_from_dir = i7.dir2proj(to_abbrev = True)
+    if try_from_dir:
+        print("You didn't specify a project, so I'm going with what your current directory suggests: {}.".format(try_from_dir))
+        if default_proj_from_cfg:
+            if try_from_dir == default_proj_from_cfg:
+                print("It's the same as the default from the CFG.")
+            else:
+                print("To get the default from the CFG, {}, move to a different directory.".format(default_proj_from_cfg))
+        my_proj = try_from_dir
+    elif default_proj_from_cfg:
+        print("You didn't specify a project, so I'm going with the default from the config, {}.".format(default_proj_from_cfg))
+        my_proj = default_proj_from_cfg
+    else:
+        sys.exit("No project specified, none found in current directory or cfg file. Bailing.")
+
 #sys.exit("Build: {} Projects: {}.".format(what_to_build, build_projects))
 
 for x in what_to_build:
