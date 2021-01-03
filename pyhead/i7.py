@@ -641,14 +641,17 @@ def dir2proj(x = os.getcwd(), to_abbrev = False):
             return x3
         if x3 in i7x:
             return i7x[x3]
-    if "\\" in x2 or "/" in x2 or not x2: return ""
     if to_abbrev and x2 in i7xr: return i7xr[x2]
+    if empty_if_unmatched and x2 not in i7xr:
+        return ""
     return x2
 
 def inform_short_name(my_file):
     retval = os.path.basename(my_file)
     if retval == 'story.ni':
         return dir2proj(my_file) + " source"
+    if retval == 'notes.txt':
+        return dir2proj(my_file) + " notes file"
     return retval.replace('.i7x', '')
 
 def proj2root(x = dir2proj()):
