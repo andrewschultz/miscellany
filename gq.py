@@ -30,6 +30,8 @@ post_open_matches = False
 all_similar_projects = True
 verbose = False
 
+include_notes = True
+
 modify_line = True
 
 ALL=0
@@ -319,9 +321,9 @@ if len(my_text) == 1:
 for proj in proj_umbrella:
     if proj not in i7.i7f:
         if os.path.exists(i7.main_src(proj)):
-            print("No project exists for {}. But there is a story file. So I am using that.")
-        else:
+            print("No project exists for {}. But there is a story file. So I am using that.".format(proj))
             my_array = [ i7.main_src(proj) ]
+        else:
             print("WARNING", proj, "does not have a project file array associated with it. It may not be a valid inform project.")
             continue
     else:
@@ -334,6 +336,12 @@ for proj in proj_umbrella:
             print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
             continue
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
+    if include_notes:
+        notes_file = i7.notes_file(proj)
+        if not os.path.exists(notes_file):
+            print("Skipping absent notes file for", proj)
+            continue
+        frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(my_text, notes_file)
 
 write_history(history_file, my_text, create_new_history)
 
