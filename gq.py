@@ -78,6 +78,7 @@ def usage():
     print("mf/mo=# sets maximum file/overall matches")
     print("po postopens matches, npo/opn kills it")
     print("v/q = verbose/quiet")
+    print("nn/yn/ny = toggle searching notes file")
     print()
     print("e/ec/ce = edit config file")
     print("qi/qo/qa = quotes inside/outside/all")
@@ -278,6 +279,10 @@ while cmd_count < len(sys.argv):
         modify_line = True
     elif sorted(arg) == 'lmn': #no modify line
         modify_line = False
+    elif arg == 'ny' or arg == 'yn':
+        include_notes = True
+    elif arg == 'nn':
+        include_notes = False
     elif arg == '?':
         usage()
     else:
@@ -336,12 +341,14 @@ for proj in proj_umbrella:
             print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
             continue
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
+    notes_file = i7.notes_file(proj)
     if include_notes:
-        notes_file = i7.notes_file(proj)
         if not os.path.exists(notes_file):
             print("Skipping absent notes file for", proj)
             continue
         frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(my_text, notes_file)
+    elif os.path.exists(notes_file):
+            print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
 
 write_history(history_file, my_text, create_new_history)
 
