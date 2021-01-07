@@ -425,7 +425,7 @@ def sort_raw(raw_long):
                     if temp in suffixes and temp in delete_marker:
                         sfs = section_from_suffix(line, exact=True)
                         if sfs:
-                            line = re.sub(r'( zz|#){}.*'.format(sfs), "", line, re.IGNORECASE)
+                            line = re.sub(r'( zz| *#).*'.format(sfs), "", line, re.IGNORECASE)
                     sections[temp] += line
                 continue
             if one_word_names and is_likely_name(line, current_section):
@@ -495,6 +495,7 @@ files_done = 0
 file_list = []
 cmd_count = 1
 max_files = 1
+daily_files_back = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
@@ -542,7 +543,11 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.TOSORT
     elif arg == 'rd':
         read_recent_daily = True
-        dir_search_flag = daily.ROOT        
+        dir_search_flag = daily.ROOT
+    elif arg[:2] == 'rd' and arg[2:].isdigit():
+        read_recent_daily = True
+        dir_search_flag = daily.ROOT
+        daily_files_back = int(arg[2:])
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("Minfile is now", my_min_file)
@@ -600,13 +605,19 @@ if not len(file_list):
     print("Globbing", my_glob)
 
 if read_recent_daily:
+    daily_count = 0
     for r in reversed(file_list):
         if not os.stat(r).st_size:
             print("Skipping over zero-byte file {} which we should delete.".format(r))
             continue
-        sort_raw(r)
-        sys.exit()
-    print("No recent daily to read.")
+        daily_count += 1
+        if daily_count == daily_files_back:
+            sort_raw(r)
+            sys.exit()
+    if daily_count == 0:
+        print("No recent daily to read.")
+    else:
+        print("Could only go {} of {} back.".format(daily_count, daily_files_back))
     sys.exit()
 
 list_count = 0
