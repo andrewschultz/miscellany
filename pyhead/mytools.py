@@ -19,6 +19,7 @@ from functools import reduce
 import subprocess
 from shutil import copy
 import xml.etree.ElementTree as ET
+import codecs
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
@@ -88,6 +89,15 @@ def is_daily(x):
     if '/' in x or '\\' in x:
         x = os.path.basename(x).lower()
     return re.search("^2[0-9]{7}\.txt$", x)
+
+def has_uncommented_text(x, bail_on_semicolon = False):
+    if not exist(x): return False
+    with codecs.open(x, errors='ignore') as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"): continue
+            if bail_on_semicolong and line.startswith(";"): break
+            if not line.strip(): return True
+    return False
 
 def temp_file_gen(file_name, my_dir = os.getcwd(), prefix="temp", before_extension = False):
     if not is_basename(file_name):
