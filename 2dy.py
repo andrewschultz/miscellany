@@ -108,7 +108,7 @@ def move_to_proc(my_dir = "c:/writing/daily"):
 def usage(param = 'Cmd line usage'):
     print(param)
     print('=' * 50)
-    print("(-?)f (#) = # files back")
+    print("(-?)f (#) = # files back (or # without f)")
     print("(-?)m (#) = # max days back")
     print("(-?)mn/n/nm (#) = # max new days back")
     print("(-?)l or ln/nl = latest-daily (or not)")
@@ -161,6 +161,9 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'f' and arg[1:].isdigit():
         files_back_wanted = int(arg[1:])
+        latest_daily = False
+    elif arg.isdigit():
+        files_back_wanted = int(arg)
         latest_daily = False
     elif arg[0] == 'm' and arg[1:].isdigit():
         max_days_back = int(arg[1:])
