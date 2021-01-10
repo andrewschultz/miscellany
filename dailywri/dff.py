@@ -109,6 +109,7 @@ def usage(my_arg):
     print("-bu bails after unchanged. Used for testing.")
     print("-n1/1w toggles one-word names in lines.")
     print("-v/-q is verbose/quiet")
+    print("-rd# means go back # daily files, default is 1")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -121,6 +122,17 @@ def short_cfg_prefix(my_line):
     if my_line[1] != ':':
         return False
     return my_line[0].isalpha()
+
+def sanitize(tabbed_names):
+    low_case_dict = defaultdict(bool)
+    new_ary = []
+    for x in tabbed_names.split("\t"):
+        if x.lower() in low_case_dict:
+            print("WARNING deleting duplicate name (case-insensitive)", x)
+        else:
+            new_ary.append(x)
+            low_case_dict[x.lower()] = True
+    return "\t".join(new_ary)
 
 def read_comment_cfg():
     any_warnings = False
@@ -439,6 +451,7 @@ def sort_raw(raw_long):
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
+        sections['nam'] = sanitize(sections['nam'])
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
             print("Not dumping text to", important_file, "as the text", raw_long, "is already in there.")
@@ -593,7 +606,7 @@ elif dir_search_flag == daily.ROOT:
 
 if not os.path.exists(dir_to_scour):
     sys.exit("Something went wrong after changing directories according to the dir-search-flags.\n\nI am bailing as I could not find {}.".format(dir_to_scour))
-    
+
 os.chdir(dir_to_scour)
 
 read_comment_cfg()
