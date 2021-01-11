@@ -333,6 +333,8 @@ for proj in proj_umbrella:
             continue
     else:
         my_array = i7.i7f[proj]
+        if proj in i7.i7aux:
+            my_array.extend(i7.i7aux[proj])
     for projfile in my_array:
         if not os.path.exists(projfile):
             if 'story.ni' in projfile:
@@ -340,21 +342,23 @@ for proj in proj_umbrella:
                 continue
             print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
             continue
+        if i7.inform_short_name(projfile) in frequencies:
+            continue
         frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
     notes_file = i7.notes_file(proj)
     if include_notes:
         if not os.path.exists(notes_file):
             print("Skipping absent notes file for", proj)
             continue
+        if i7.inform_short_name(notes_file) in frequencies: # STS files overlap
+            continue
         frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(my_text, notes_file)
     elif os.path.exists(notes_file):
             print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
 
-write_history(history_file, my_text, create_new_history)
-
 if not found_overall: sys.exit("Nothing found.")
 
-print("    ---- total differences printed:", found_overall)
+print("    ---- total matches printed:", found_overall)
 for x in sorted(frequencies, key=frequencies.get, reverse=True):
     if frequencies[x] < 1: continue
     print("    ---- {} match{} in {}".format(frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x)))
@@ -366,5 +370,7 @@ if len(temp_array):
 temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
 if len(temp_array):
     print("Left untested:", ', '.join(temp_array))
+
+write_history(history_file, my_text, create_new_history)
 
 mt.post_open()
