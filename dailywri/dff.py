@@ -297,12 +297,16 @@ def smart_section(my_line):
 
 def is_one_two_punch(l):
     if l.startswith("1") and (("2 " in l) or (" 2" in l)) and not l.startswith('12'): return True
-    if " 1 " in l and " 2 " in l: return True
+    if " 1 " in l:
+        l0 = l[l.index('1'):]
+        if " 2 " in l0: return True
     return False
 
 def is_repeated_text(l):
     l = l.lower()
-    if not l[0].isalpha(): return False
+    l = re.sub("[^a-z]", "", l, 0, re.IGNORECASE)
+    if not len(l):
+        return False
     y = len(l) // 2
     return l[:y] == l[y:]
 
