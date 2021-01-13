@@ -491,6 +491,9 @@ def sort_raw(raw_long):
                     os.system(raw_long)
                 print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
                 sys.exit()
+        if mt.is_npp_modified(raw_long):
+            print("BAILING because {} is unsaved in notepad.".format(raw_long))
+            sys.exit()
         copy(temp_out_file, raw_long)
         if copy_then_test:
             print("OK, copied one, now testing another.")
