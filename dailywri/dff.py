@@ -27,6 +27,7 @@ DAILY = DAILIES = 0
 DRIVE = 1
 KEEP = 2
 
+force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
 daily_strings = ['daily', 'drive', 'keep']
 
 what_to_sort = DEFAULT_SORT
@@ -492,8 +493,13 @@ def sort_raw(raw_long):
                 print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
                 sys.exit()
         if mt.is_npp_modified(raw_long):
-            print("BAILING because {} is unsaved in notepad.".format(raw_long))
-            sys.exit()
+            if force_copy:
+                print("Force-copying despite {} being unsaved in notepad++. I hope you know what you're doing, but you can always click <NO> and compare.")
+                print("Original file saved to {}.".format(force_backup))
+                copy(raw_long, force_backup)
+            else:
+                print("BAILING because {} is unsaved in notepad. You can copy over with -fc.".format(raw_long)) # do not put this option in usage, because I want to make sure I use it sparingly
+                sys.exit()
         copy(temp_out_file, raw_long)
         if copy_then_test:
             print("OK, copied one, now testing another.")
@@ -568,6 +574,8 @@ while cmd_count < len(sys.argv):
         read_recent_daily = True
         dir_search_flag = daily.ROOT
         daily_files_back = int(arg[2:])
+    elif arg == 'fc':
+        force_copy = True
     elif arg[0:2] == 'm=':
         my_min_file = arg[2:]
         print("Minfile is now", my_min_file)
