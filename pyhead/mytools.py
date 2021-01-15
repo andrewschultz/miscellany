@@ -59,6 +59,8 @@ def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
 def plur(a, choices=['s', '']):
+    if type(a) == list:
+        a = len(a)
     return choices[a == 1]
 
 def is_are(a):
