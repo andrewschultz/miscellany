@@ -260,7 +260,9 @@ if get_from_log:
     days -= 1
 
 if auto_date:
-    result=subprocess.run(["git", "show", "--summary"], stdout=subprocess.PIPE)
+    result = subprocess.run(["git", "show", "--summary"], stdout=subprocess.PIPE)
+    change_list = subprocess.run(["git", "status"], stdout=subprocess.PIPE)
+    valid_commit = 'to be committed' in change_list.stdout.decode('utf-8')
     lines = re.split("[\r\n]+", result.stdout.decode('utf-8'))
     for l in lines:
         if "Date:" in l:
@@ -270,7 +272,7 @@ if auto_date:
             if day_diff < 1:
                 check_bare_commit(bare_commit, files_to_add, bail=True)
                 sys.exit("LOGM has no use, since you already have a commit for today!\n    You can do a bare commit with -bc, no need for -r.\n    I'm making it a bit tricky for a reason, so you don't do so accidentally.")
-            days = day_diff - 1
+            days = day_diff - valid_commit
             if days == 0:
                 print("You don't need logm--you can commit with the current time to keep your streak going!")
                 bail_if_not_auto_ok()
