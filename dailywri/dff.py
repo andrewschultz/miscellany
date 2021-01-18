@@ -296,12 +296,29 @@ def smart_section(my_line):
             return section_words[sw]
     return ""
 
+def all_nums(l):
+    if '/' in l:
+        l = re.sub("[0-9]+/[0-9]+", "", l)
+    return re.findall(r'[0-9]+', l)
+
 def is_one_two_punch(l):
-    if l.startswith("1") and (("2 " in l) or (" 2" in l)) and not l.startswith('12'): return True
-    if " 1 " in l:
-        l0 = l[l.index('1'):]
-        if " 2 " in l0: return True
-    return False
+    if '1' not in l:
+        return ''
+    l = l.replace('1st ', 'first')
+    l = l.replace('1 of 2', 'one of two')
+    ret_string = ''
+    for x in all_nums(l):
+        if x == '1' and ret_string == '':
+            ret_string += '1'
+        elif x == '2' and ret_string == '1':
+            ret_string += '2'
+        elif x == '3' and ret_string == '12':
+            ret_string += '3'
+    if '#no12' in l:
+        return ''
+    if ret_string == '1':
+        return ''
+    return ret_string
 
 def is_repeated_text(l):
     l = l.lower()
@@ -332,7 +349,8 @@ def my_section(l):
     if temp:
         return temp
     if l.lower().startswith("if ") and "what a story" in l: return 'roo-was'
-    if is_one_two_punch(l): return '12'
+    otp = is_one_two_punch(l)
+    if otp: return otp
     if is_repeated_text(l): return 'py'
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
