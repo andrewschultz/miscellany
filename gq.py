@@ -17,10 +17,10 @@ import os
 
 max_overall = 100
 max_in_file = 25
+history_max = 100
 
 # constants
 
-history_max = 100
 my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 # options only on cmd line
@@ -290,7 +290,6 @@ while cmd_count < len(sys.argv):
             sys.exit("Found more than 2 text string to search. Bailing.")
         arg = arg.replace("`", "")
         my_text.append(arg)
-        print("String", len(my_text), arg)
     cmd_count += 1
 
 if not my_proj:
@@ -322,6 +321,8 @@ if not len(my_text):
 if len(my_text) == 1:
     print("No second word to search.")
     my_text.append('')
+
+print("Searching for string{}: {}".format(mt.plur(my_text), ' / '.join(my_text)))
 
 for proj in proj_umbrella:
     if proj not in i7.i7f:
