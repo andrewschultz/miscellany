@@ -43,6 +43,8 @@ i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
 i7trizmaps = defaultdict(lambda:defaultdict(str)) # trizbort map sub-naming, mainly for Roiling
+i7aux = {} # general auxiliary files outside the general formulae for projects. Currently only spopal.otl,
+i7gsn = {} # generic short names e.g. story.ni to source file
 i7gbx = {} # general binary extensions for debug, beta and release e.g. z6 goes to z8 z5 z5
 i7pbx = {} # project binary extensions for debug, beta and release
 i7binname = {} # binary nams e.g. roiling to A Roiling Original
@@ -72,6 +74,7 @@ beta_dir = "c:/games/inform/beta Materials/Release"
 # these are default values for binaries--debug is assumed to be most important
 # since it is the one I'll be using the most.
 # beta is used for automation.
+UNSPECIFIED = -1 # in case we demand a value
 DEBUG = 0
 BETA = 1
 RELEASE = 2
@@ -248,7 +251,7 @@ def allow_beta_code(my_file, making_beta_release):
     changed_beta_line = False
     temp_out_file = "c:/writing/temp/story-beta.ni"
     beta_line = "volume beta testing{}\n".format('' if making_beta_release else ' - not for release')
-    f = open(temp_out_file, "w")
+    f = open(temp_out_file, "w", newline="\n")
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if "volume beta testing" in line:
@@ -654,11 +657,11 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
 
 def inform_short_name(my_file):
     retval = os.path.basename(my_file)
-    if retval == 'story.ni':
-        return dir2proj(my_file) + " source"
-    if retval == 'notes.txt':
-        return dir2proj(my_file) + " notes file"
-    return retval.replace('.i7x', '')
+    if retval in i7gsn:
+        return "{} {}".format(dir2proj(my_file), i7gsn[retval])
+    if 'i7x' in retval:
+        return retval.replace('.i7x', '')
+    return '*' + retval
 
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
@@ -931,9 +934,16 @@ with open(i7_cfg_file) as file:
             i7gx[lla[1]] = lla[0]
             i7gxr[lla[0]] = lla[1]
             continue
+        if ll.startswith("genshort:"):
+            i7gsn[lla[0]] = lla[1]
+            continue
         if ll.startswith("binext:"):
             for temp in lla[0].split(","):
                 i7gbx[temp] = lla[1].split(",")
+            continue
+        if ll.startswith("auxfile:"):
+            for temp in lla[0].split(","):
+                i7aux[temp] = lla[1].split(",")
             continue
         if ll.startswith("compile-"):
             this_bin = i7gbx[re.sub(".*-", "", lli)]
