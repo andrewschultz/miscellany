@@ -128,16 +128,21 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     build_flags = '-kwSDG'
     if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
 
+    i7.go_proj(my_proj)
+    os.chdir("../build")
+
+    print("Creating auto.inf")
+
     mt.subproc_and_run(
       [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
       "-rules",
       "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
       "-package",
-      "C:\\games\\inform\\{}.inform".format(i7.i7x[this_proj], "-extension={}'".output_ext)
+      "C:\\games\\inform\\{}.inform".format(i7.i7x[this_proj]), "-extension={}".format(output_ext)
       ]
       )
 
-    print("Moved CWD to", os.getcwd())
+    print("Compiling auto.inf")
 
     mt.subproc_and_run(
     [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-632',
@@ -147,8 +152,6 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     "output.{}".format(output_ext)
     ]
     )
-
-    i7.go_proj(my_proj)
 
 read_icl_cfg()
 
@@ -202,8 +205,8 @@ if not my_proj:
 
 #sys.exit("Build: {} Projects: {}.".format(what_to_build, build_projects))
 
-for x in what_to_build:
-    if x:
+for x in range(0, 3):
+    if what_to_build[x]:
         tried_one = True
         try_to_build(my_proj, x)
 
