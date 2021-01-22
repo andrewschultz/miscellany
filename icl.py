@@ -112,7 +112,12 @@ def proj_modified_last_x_seconds(this_proj, time_since):
 
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
     output_ext = derive_extension(this_proj, this_build)
-    auto_file = i7.auto_file(this_proj)
+
+    if this_build == i7.BETA:
+        build_proj = 'beta'
+        i7.create_beta_source(this_proj)
+    else:
+        build_proj = this_proj
 
     bin_out = i7.bin_file(this_proj, this_build)
     bin_base = os.path.basename(bin_out)
@@ -128,21 +133,22 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     build_flags = '-kwSDG'
     if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
 
-    i7.go_proj(my_proj)
-    os.chdir("../build")
+    i7.go_proj(build_proj)
 
-    print("Creating auto.inf")
+    os.chdir("../Build")
+
+    print("Creating auto.inf in {}".format(os.getcwd()))
 
     mt.subproc_and_run(
       [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
       "-rules",
       "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
       "-package",
-      "C:\\games\\inform\\{}.inform".format(i7.i7x[this_proj]), "-extension={}".format(output_ext)
+      i7.proj2root(build_proj), "-extension={}".format(output_ext)
       ]
       )
 
-    print("Compiling auto.inf")
+    print("Compiling auto.inf in {}".format(os.getcwd()))
 
     mt.subproc_and_run(
     [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-632',
