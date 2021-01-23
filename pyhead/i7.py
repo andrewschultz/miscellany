@@ -246,34 +246,33 @@ def topics_to_array(x, div_char = "/"):
 
 topx2ary = topics_to_array
 
-def allow_beta_code(my_file, making_beta_release):
+def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "volume beta testing"):
     got_beta_line = False
     changed_beta_line = False
-    temp_out_file = "c:/writing/temp/story-beta.ni"
-    beta_line = "volume beta testing{}\n".format('' if making_beta_release else ' - not for release')
-    f = open(temp_out_file, "w", newline="\n")
-    with open(my_file) as file:
+    from_file = main_src(my_proj)
+    to_file = main_src(beta_proj)
+    f = open(to_file, "w", newline="\n")
+    with open(from_file) as file:
         for (line_count, line) in enumerate(file, 1):
-            if "volume beta testing" in line:
-                if line == beta_line:
-                    print("Found beta line {}, but it wasn't changed.".format(line.strip()))
-                else:
-                    changed_beta_line = True
-                f.write(beta_line)
+            if line.startswith(text_to_find):
                 got_beta_line = True
-            else:
-                f.write(line)
+                if "not for release" in line:
+                    changed_beta_line = True
+                    f.write(text_to_find + "\n")
+                    continue
+                else:
+                    print("Found beta line {}, but it was already marked for-release.".format(line.strip()))
+            f.write(line)
     f.close()
     if not got_beta_line:
-        print("Found no 'volume beta testing' line in {}, returning.".format(my_file))
+        print("WARNIING: Found no '{}' line in {}, returning.".format(text_to_find, my_file))
         os.remove(temp_out_file)
         return
     if not changed_beta_line:
-        print("Did not change 'volume beta testing' line in {}, returning.".format(my_file))
+        print("Did not change '{}' line in {}, returning.".format(text_to_find, my_file))
         os.remove(temp_out_file)
         return
-    move(temp_out_file, my_file)
-    print("Successfully toggled beta line to {}for release".format("" if making_beta_release else "not "))
+    print("Successfully toggled '{}' line in {} to {}".format(text_to_find, my_proj, beta_proj))
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
