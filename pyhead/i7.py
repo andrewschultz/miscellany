@@ -665,18 +665,18 @@ def inform_short_name(my_file):
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj()):
-    return "c:\\games\\inform\\{:s}.inform\\source".format(proj_exp(x))
+def proj2dir(x = dir2proj(), my_subdir = "source", materials = False):
+    return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", "\\" + my_subdir if my_subdir else "")
 
 sdir = p2d = proj2dir
 
 def proj2mat(x = dir2proj()):
-    return "c:\\games\\inform\\{:s} Materials".format(proj_exp(x))
+    return proj2dir(x, my_subdir = "", materials = True)
 
 matdir = proj2mat
 
 def proj2matr(x = dir2proj()):
-    return "c:\\games\\inform\\{:s} Materials\\Release".format(proj_exp(x))
+    return proj2dir(x, my_subdir = "Release", materials = True)
 
 matrel = proj2matr
 
@@ -694,8 +694,8 @@ def cover_art(x, small = False, bail = True):
 def small_cover_art(x):
     return cover_art(x, small = True)
 
-def go_proj(x):
-    os.chdir(proj2dir(x))
+def go_proj(x, my_subdir = "source", materials = False):
+    os.chdir(proj2dir(x, my_subdir, materials))
     return
 
 go_p = proj_dir = to_proj = go_proj
