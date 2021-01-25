@@ -630,10 +630,10 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
     ary = pathlib.PurePath(x).parts
     if " materials" in x0:
         for a in ary:
-            if 'materials' in a:
-                x2 = re.sub(" materials", "", x)
+            if 'materials' in a.lower():
+                x2 = re.sub(" Materials", "", a, re.IGNORECASE)
         if not x2:
-            sys.stderr.write("WARNING", x, "should've mapped to a project but didn't.")
+            sys.stderr.write("WARNING: {} should've mapped to a project but didn't.".format(x))
     elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
         for a in ary:
             if ".inform" in a:
