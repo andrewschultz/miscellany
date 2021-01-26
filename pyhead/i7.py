@@ -794,28 +794,27 @@ def ext2blorb(y):
         return 'zblorb'
     return 'gblorb'
 
-def bin_ext(x, file_type = BETA, to_blorb = False):
-    if not inish(x, i7pbx):
-        out_type = 'ulx'
-    else:
-        out_type = dictish(x, i7pbx)[file_type]
+def bin_ext(x, to_blorb = False):
     if to_blorb:
-        out_type = ext2blorb(out_type)
-    return out_type
+        return ext2blorb(x)
+    return x
 
-def bin_file(x, file_type = BETA, to_blorb = False):
-    if inish(x, i7binname):
-        my_file = i7binname[x]
+def bin_file(x, my_ext, file_type = RELEASE, to_blorb = False):
+    if file_type != DEBUG:
+        if inish(x, i7binname):
+            my_file = i7binname[x]
+        else:
+            my_file = proj_exp(x)
     else:
-        my_file = proj_exp(x).replace('-', ' ')
-    my_dir = beta_dir if file_type == BETA else "c:/games/inform/{} materials/Release".format(proj_exp(x))
+        my_file = "output"
+    my_file = my_file.replace('-', ' ')
+    my_dir = "c:/games/inform/{}{}/{}".format(proj_exp(x), ' Materials' if file_type == RELEASE else '.inform', 'Release' if file_type == RELEASE else 'Build')
     if file_type == BETA:
         my_file = "beta-" + my_file
     if not os.path.exists(my_dir):
         print("WARNING tried to find materials/release directory {} from {} and failed.".format(my_dir, x))
     x0 = main_abb(x)
-    my_ext = bin_ext(x0, file_type, to_blorb)
-    my_file += "." + my_ext
+    my_file += "." + bin_ext(my_ext, to_blorb)
     return os.path.normpath(os.path.join(my_dir, my_file))
 
 def all_proj_fi(x, bail = True):
