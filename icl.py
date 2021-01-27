@@ -5,8 +5,12 @@
 # list all files and see if you can re-compile or need to. If something is there, and no files have been modified, that is a PASS.
 # for x in (list of files): if date(link(x)) < date(compiled binary) then boom
 # i7 needs a function that determines a compiled binary as well.
+#   story.ni to auto.inf
 # "c:/program files (x86)/Inform 7\Compilers\ni" -release -rules "c:/program files (x86)/Inform 7\Inform7\Extensions" -package "c:\games\inform\beta.inform" -extension="glulx"
-#   C:\Program Files (x86)\Inform 7\Compilers\inform-633 -kwSDG +include_path=..\Source,.\ auto.inf output.ulx
+#   compiling auto.inf
+# "c:\Program Files (x86)\Inform 7\Compilers\inform-633" -kwSDG +include_path=..\Source,.\ auto.inf output.ulx
+#   making binary into blorb
+# "C:/Program Files (x86)/Inform 7/Compilers/cblorb" -windows Release.blurb Build/output.gblorb
 
 
 from collections import defaultdict
@@ -42,6 +46,12 @@ def usage(arg="USAGE FOR ICL.PY"):
     print("bl = force to blorb")
     print("use project name if necessary")
     exit()
+
+def blorb_ext_of(bin_ext):
+    if bin_ext == 'ulx':
+        return 'gblorb'
+    if bin_ext == 'z5' or bin_ext == 'z8':
+        return 'zblorb'
 
 def build_type(a):
     if a.startswith('b'): return i7.BETA
@@ -113,13 +123,20 @@ def proj_modified_last_x_seconds(this_proj, time_since):
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
     output_ext = derive_extension(this_proj, this_build)
 
+    if this_blorb and this_build != i7.RELEASE:
+        print("WARNING: blorb should probably only be for release.")
+
     if this_build == i7.BETA:
         build_proj = 'beta'
         i7.create_beta_source(this_proj)
     else:
         build_proj = this_proj
 
-    bin_out = i7.bin_file(this_proj, this_build)
+    this_ext = derive_extension(this_proj, this_build)
+
+    print("!!", this_proj, this_ext, this_blorb)
+    bin_out = i7.bin_file(this_proj, this_ext, this_build, this_blorb)
+    sys.exit(bin_out)
     bin_base = os.path.basename(bin_out)
     file_already_there = os.path.exists(bin_out)
     print("{} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
@@ -159,6 +176,20 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     ]
     )
 
+    if not this_blorb:
+        print("Not making blorb file.")
+        return
+
+    os.chdir("..")
+
+    mt.subproc_and_run(
+    [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\cblorb',
+    '-windows',
+    'Release.blurb',
+    'Build/output.{}'.format(blorb_ext_of(output_ext))
+    ]
+    )
+
 read_icl_cfg()
 
 while cmd_count < len(sys.argv):
@@ -189,6 +220,8 @@ while cmd_count < len(sys.argv):
             build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
         else:
             build_projects.append((y[0], build_type(y[1])))
+    elif arg == '?':
+        usage()
     else:
         usage("Bad argument {}".format(arg))
     cmd_count += 1
@@ -214,12 +247,12 @@ if not my_proj:
 for x in range(0, 3):
     if what_to_build[x]:
         tried_one = True
-        try_to_build(my_proj, x)
+        try_to_build(my_proj, x, to_blorb)
 
 for x in build_projects:
     tried_one = True
-    try_to_build(x[0], x[1])
+    try_to_build(x[0], x[1], to_blorb)
 
 if not tried_one:
     sys.exit("You need to specify a build: b/eta, d/ebug or r/elease.")
-    
+
