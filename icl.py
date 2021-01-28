@@ -136,7 +136,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
 
     print("!!", this_proj, this_ext, this_blorb)
     bin_out = i7.bin_file(this_proj, this_ext, this_build, this_blorb)
-    sys.exit(bin_out)
+
     bin_base = os.path.basename(bin_out)
     file_already_there = os.path.exists(bin_out)
     print("{} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
@@ -180,13 +180,16 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
         print("Not making blorb file.")
         return
 
+    blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
+    print("Creating blorb file", blorb_file)
+
     os.chdir("..")
 
     mt.subproc_and_run(
     [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\cblorb',
     '-windows',
     'Release.blurb',
-    'Build/output.{}'.format(blorb_ext_of(output_ext))
+    blorb_file
     ]
     )
 
