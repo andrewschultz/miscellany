@@ -542,6 +542,14 @@ no_comment = no_comments = zap_comments = zap_comment
 def uncommented_length(x):
     return len(zap_comment(x))
 
+def print_status_of(my_file):
+    if not os.path.exists(my_file):
+        print(my_file, "does not exist.")
+    elif os.stat(my_file).st_size == 0:
+        print(my_file, "is zero bytes.")
+    else:
+        print(my_file, "appears to have been created okay.")
+
 def is_posneg_int(x, allow_zero = False):
     try:
         q = int(x)
