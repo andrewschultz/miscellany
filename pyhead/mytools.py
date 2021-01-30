@@ -539,6 +539,9 @@ def zap_comment(my_line, zap_spaces_before = True):
 
 no_comment = no_comments = zap_comments = zap_comment
 
+def null_of(null_truth_state):
+    return subprocess.DEVNULL if null_truth_state else None
+
 def uncommented_length(x):
     return len(zap_comment(x))
 
@@ -567,7 +570,7 @@ def subproc_and_run(x, actually_print = True, check_it = False):
     if check_it:
         subprocess.check_call(x)
     else:
-        subprocess.call(x)
+        subprocess.call(x, stdout=null_of(null_stdout), stderr=null_of(null_stderr))
 
 def delete_task(my_cmd):
     my_cmd = "schtasks /delete /f /tn {}"
