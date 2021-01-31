@@ -165,16 +165,21 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
       ]
       )
 
+    mt.print_status_of("auto.inf")
+
     print("Compiling auto.inf in {}".format(os.getcwd()))
 
+    binary_out = "output.{}".format(output_ext)
     mt.subproc_and_run(
     [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-632',
     build_flags,
     "+include_path=..\\Source,.\\",
     "auto.inf",
-    "output.{}".format(output_ext)
+    binary_out
     ]
     )
+
+    mt.print_status_of(binary_out)
 
     if not this_blorb:
         print("Not making blorb file.")
@@ -192,6 +197,8 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     blorb_file
     ]
     )
+
+    mt.print_status_of(blorb_file)
 
 read_icl_cfg()
 
