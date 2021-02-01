@@ -118,7 +118,7 @@ def last_proj_modified(this_proj, verbose=False):
 
 def proj_modified_last_x_seconds(this_proj, time_since):
     proj_tuple = last_proj_modified(this_proj)
-    return time.time() - proj_tuple[0] < time_since
+    return (time.time() - proj_tuple[0] < time_since, time.time() - proj_tuple[0])
 
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
     output_ext = derive_extension(this_proj, this_build)
@@ -134,19 +134,18 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
 
     this_ext = derive_extension(this_proj, this_build)
 
-    print("!!", this_proj, this_ext, this_blorb)
     bin_out = i7.bin_file(this_proj, this_ext, this_build, this_blorb)
 
     bin_base = os.path.basename(bin_out)
     file_already_there = os.path.exists(bin_out)
-    print("{} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
-    modified_recently_enough = proj_modified_last_x_seconds(this_proj, file_change_time)
+    print("FINAL FILE {} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
+    (modified_recently_enough, modified_time_delta) = proj_modified_last_x_seconds(this_proj, file_change_time)
     if file_already_there:
         if not modified_recently_enough and not overwrite:
-            print("Not building {}/{}/{} -- no files modified recently enough.".format(this_proj, this_build, bin_base))
+            print("Not building {}/{}/{} -- last files modified {} seconds ago, outside {} second boundary.".format(this_proj, this_build, bin_base, modified_time_delta, file_change_time))
             return
         print(bin_base, "already there.")
-    print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
+    print("Project {} modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
     build_flags = '-kwSDG'
     if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
 
