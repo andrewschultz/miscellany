@@ -33,6 +33,8 @@ tried_one = False
 cmd_count = 1
 to_blorb = False
 
+file_change_threshold = 0
+
 what_to_build = [ False, False, False ]
 build_projects = []
 
@@ -44,6 +46,7 @@ def usage(arg="USAGE FOR ICL.PY"):
     print('=' * 50)
     print("b d r = beta debug release")
     print("bl = force to blorb")
+    print("#(wdmhs) = threshold time to check for modification")
     print("use project name if necessary")
     exit()
 
@@ -120,7 +123,7 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     proj_tuple = last_proj_modified(this_proj)
     return (time.time() - proj_tuple[0] < time_since, time.time() - proj_tuple[0])
 
-def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 86400):
+def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 0):
     output_ext = derive_extension(this_proj, this_build)
 
     if this_blorb and this_build != i7.RELEASE:
@@ -141,7 +144,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     print("FINAL FILE {} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
     (modified_recently_enough, modified_time_delta) = proj_modified_last_x_seconds(this_proj, file_change_time)
     if file_already_there:
-        if not modified_recently_enough and not overwrite:
+        if not modified_recently_enough and not overwrite and file_change_time:
             print("Not building {}/{}/{} -- last files modified {} seconds ago, outside {} second boundary.".format(this_proj, this_build, bin_base, modified_time_delta, file_change_time))
             return
         print(bin_base, "already there.")
@@ -209,6 +212,14 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.RELEASE] = True
     elif arg == 'release':
         what_to_build[i7.BETA] = True
+    elif arg[-1:] == 'h' and arg[:-1].isdigit():
+        file_change_threshold = 3600 * int(arg[:-1])
+    elif arg[-1:] == 'd' and arg[:-1].isdigit():
+        file_change_threshold = 86400 * int(arg[:-1])
+    elif arg[-1:] == 'm' and arg[:-1].isdigit():
+        file_change_threshold = 60 * int(arg[:-1])
+    elif arg[-1:] == 's' and arg[:-1].isdigit():
+        file_change_threshold = int(arg[:-1])
     elif mt.only_certain_letters("dbr", arg):
         what_to_build[i7.RELEASE] = 'r' in arg
         what_to_build[i7.DEBUG] = 'd' in arg
