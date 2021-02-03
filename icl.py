@@ -38,6 +38,9 @@ file_change_threshold = 0
 what_to_build = [ False, False, False ]
 build_projects = []
 
+hide_stderr = False
+hide_stdout = False
+
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
 
@@ -47,6 +50,7 @@ def usage(arg="USAGE FOR ICL.PY"):
     print("b d r = beta debug release")
     print("bl = force to blorb")
     print("#(wdmhs) = threshold time to check for modification")
+    print("-hs/he/eh/es = hide errors/std output for build")
     print("use project name if necessary")
     exit()
 
@@ -164,7 +168,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
       "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
       "-package",
       i7.proj2root(build_proj), "-extension={}".format(output_ext)
-      ]
+      ], null_stdout = hide_stdout, null_stderr = hide_stderr
       )
 
     mt.print_status_of("auto.inf")
@@ -178,7 +182,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     "+include_path=..\\Source,.\\",
     "auto.inf",
     binary_out
-    ]
+    ], null_stdout = hide_stdout, null_stderr = hide_stderr
     )
 
     mt.print_status_of(binary_out)
@@ -197,7 +201,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     '-windows',
     'Release.blurb',
     blorb_file
-    ]
+    ], null_stdout = hide_stdout, null_stderr = hide_stderr
     )
 
     mt.print_status_of(blorb_file)
@@ -212,10 +216,12 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.RELEASE] = True
     elif arg == 'release':
         what_to_build[i7.BETA] = True
-    elif arg[-1:] == 'h' and arg[:-1].isdigit():
-        file_change_threshold = 3600 * int(arg[:-1])
+    elif arg[-1:] == 'w' and arg[:-1].isdigit():
+        file_change_threshold = 604800 * int(arg[:-1])
     elif arg[-1:] == 'd' and arg[:-1].isdigit():
         file_change_threshold = 86400 * int(arg[:-1])
+    elif arg[-1:] == 'h' and arg[:-1].isdigit():
+        file_change_threshold = 3600 * int(arg[:-1])
     elif arg[-1:] == 'm' and arg[:-1].isdigit():
         file_change_threshold = 60 * int(arg[:-1])
     elif arg[-1:] == 's' and arg[:-1].isdigit():
@@ -226,6 +232,10 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.BETA] = 'b' in arg
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
+    elif arg == 'hs' or arg == 'sh':
+        hide_stdout = True
+    elif arg == 'eh' or arg == 'he':
+        hide_stderr = True
     elif arg == 'a' or arg == 'all':
         build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
     elif i7.main_abb(arg):
