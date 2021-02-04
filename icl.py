@@ -30,16 +30,15 @@ my_build = i7.UNSPECIFIED
 my_proj = ''
 tried_one = False
 
-cmd_count = 1
-to_blorb = False
-
-file_change_threshold = 0
-
 what_to_build = [ False, False, False ]
 build_projects = []
 
+# variables from cmd line
+file_change_threshold = 0
+to_blorb = False
 hide_stderr = False
 hide_stdout = False
+overwrite = True
 
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
@@ -51,6 +50,7 @@ def usage(arg="USAGE FOR ICL.PY"):
     print("bl = force to blorb")
     print("#(wdmhs) = threshold time to check for modification")
     print("-hs/he/eh/es = hide errors/std output for build")
+    print("-no/on/ow/wo = (no) overwrite")
     print("use project name if necessary")
     exit()
 
@@ -127,7 +127,7 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     proj_tuple = last_proj_modified(this_proj)
     return (time.time() - proj_tuple[0] < time_since, time.time() - proj_tuple[0])
 
-def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, file_change_time = 0):
+def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, file_change_time = 0):
     output_ext = derive_extension(this_proj, this_build)
 
     if this_blorb and this_build != i7.RELEASE:
@@ -148,7 +148,9 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
     print("FINAL FILE {} {}.".format(bin_out, "already exists" if file_already_there else "not present"))
     (modified_recently_enough, modified_time_delta) = proj_modified_last_x_seconds(this_proj, file_change_time)
     if file_already_there:
-        if not modified_recently_enough and not overwrite and file_change_time:
+        if not overwrite:
+            sys.exit("You need to get rid of the no-overwrite flag, since the final file is there.")
+        if not modified_recently_enough and file_change_time:
             print("Not building {}/{}/{} -- last files modified {} seconds ago, outside {} second boundary.".format(this_proj, this_build, bin_base, modified_time_delta, file_change_time))
             return
         print(bin_base, "already there.")
@@ -208,6 +210,8 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = False, f
 
 read_icl_cfg()
 
+cmd_count = 1
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'debug':
@@ -232,6 +236,10 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.BETA] = 'b' in arg
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
+    elif arg == 'no' or arg == 'on':
+        overwrite = False
+    elif arg == 'wo' or arg == 'ow':
+        overwrite = True
     elif arg == 'hs' or arg == 'sh':
         hide_stdout = True
     elif arg == 'eh' or arg == 'he':
@@ -277,7 +285,7 @@ if not my_proj:
 for x in range(0, 3):
     if what_to_build[x]:
         tried_one = True
-        try_to_build(my_proj, x, to_blorb)
+        try_to_build(my_proj, x, to_blorb, overwrite, file_change_threshold)
 
 for x in build_projects:
     tried_one = True
