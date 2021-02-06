@@ -67,4 +67,22 @@ def read_zup_txt():
                     zups[proj_candidate] = zip_project(proj_candidate)
     print(zup_cfg, "read successfully...")
 
+cmd_count = 1
+
+project_array = []
+
 read_zup_txt()
+
+while cmd_count < len(sys.argv):
+    my_proj = i7.proj_exp(sys.argv[cmd_count], return_nonblank = False)
+    if my_proj:
+        if my_proj in project_array:
+            print("Duplicate project", my_proj, "/", sys.argv[cmd_count])
+        else:
+            project_array.append(my_proj)
+        cmd_count += 1
+        continue
+    arg = mt.nohy(sys.argv[cmd_count])
+    cmd_count += 1
+
+print("Project(s):", ', '.join(project_array))
