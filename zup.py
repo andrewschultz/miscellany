@@ -47,11 +47,20 @@ def read_zup_txt():
             if not line.strip():
                 if cur_zip_proj: # maybe do something super verbose in here
                     cur_zip_proj = ''
+                    continue
             if line.startswith("!"):
                 print("Remove old artifact (!) from config file at line", line_count)
                 continue
-            if line.startswith("proj=") or line.startswith("projx="):
-                accept_alt_proj_name = line.startswith("projx")
+            if line.startswith(">>"):
+                zups[proj_candidate].command_buffer.append(line[2:].strip())
+                continue
+            try:
+                (prefix, data) = mt.cfg_data_split(line.strip())
+            except:
+                print("Badly formed data line {} {}".format(line_count, line.strip()))
+                continue
+            if prefix == 'proj' or prefix == 'projx':
+                accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
                     flag_cfg_error(line_count, "BAILING redefinition of current project at line")
                 proj_read_in = mt.chop_front(line.lower().strip())
