@@ -3,11 +3,16 @@
 #
 # zip up project utility, to bring all files into a zip file
 #
+# todo:
+# 1 zups[proj] -> something equivalent?
+# 2 switch statement in CFG reader
 
+import re
 import mytools as mt
 import i7
 import zipfile
 import sys
+import os
 
 from collections import defaultdict
 
@@ -15,10 +20,12 @@ class zip_project:
     def __init__(self, name):
         self.vertical = False
         self.file_map = defaultdict(str)
-        self.time_compare = defaultdict(tuple)
+        self.time_compare = []
         self.max_zip_size = 0
         self.min_zip_size = 0
         self.version = 1
+        self.max_specific_file_size = defaultdict(int)
+        self.min_specific_file_size = defaultdict(int)
         self.out_name = '{}.zip'.format(name)
         self.command_buffer = []
         self.dropbox_location = ''
@@ -52,6 +59,7 @@ def read_zup_txt():
                 print("Remove old artifact (!) from config file at line", line_count)
                 continue
             if line.startswith(">>"):
+                print("Deprecated >> should be converted to cmd: at line", line_count)
                 zups[proj_candidate].command_buffer.append(line[2:].strip())
                 continue
             try:
@@ -59,7 +67,24 @@ def read_zup_txt():
             except:
                 print("Badly formed data line {} {}".format(line_count, line.strip()))
                 continue
-            if prefix == 'proj' or prefix == 'projx':
+            prefix = prefix.lower()
+
+            # keep the below alphabetized
+
+            if prefix == 'cmd':
+                zups[proj_candidate].command_buffer.append(data)
+                continue
+            elif prefix == 'dl':
+                zups[proj_candidate].dropbox_location = data
+            elif prefix == 'f':
+                file_array = data.split("\t")
+                if len(file_array) == 1:
+                    zups[proj_candidate].file_map[file_array[0]] = os.path.basename(file_array[0])
+                elif len(file_array) == 2:
+                    zups[proj_candidate].file_map[file_array[0]] = file_array[1]
+                else:
+                    print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
+            elif prefix == 'proj' or prefix == 'projx':
                 accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
                     flag_cfg_error(line_count, "BAILING redefinition of current project at line")
@@ -74,6 +99,20 @@ def read_zup_txt():
                     flag_cfg_error(line_count, "BAILING redefining zip project at line {} with {}/{}.".format(line_count, proj_read_in, proj_candidate))
                 else:
                     zups[proj_candidate] = zip_project(proj_candidate)
+            elif prefix == 'time':
+                time_array = re.split("[<>]", data)
+                if len(time_array) != 2:
+                    print("Bad timing line {} needs exactly one < or >.".format(line_count))
+                    continue
+                if '>' in data:
+                    zups[proj_candidate].time_compare.append((time_array[0], time_array[1]))
+                else:
+                    zups[proj_candidate].time_compare.append((time_array[1], time_array[0]))
+                zups[proj_candidate] = zip_project(proj_candidate)
+            elif prefix == 'v':
+                zups[proj_candidate].version = int(data)
+            else:
+                print("Unknown prefix", prefix, "line", line_count)
     print(zup_cfg, "read successfully...")
 
 cmd_count = 1
