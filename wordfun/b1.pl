@@ -10,6 +10,8 @@
 
 # b1 if other already open - reject? Or say, delete file x?
 
+# .re.e.e sinltog = an example of what to do. We ignore a guess if no matches
+
 # bug can't add word that isn't in the dictionary in first place (omeprazole)
 
 use WWW::Mechanize;

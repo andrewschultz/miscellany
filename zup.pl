@@ -1,8 +1,10 @@
 ########################################################
 #
-#zup.pl
+# zup.pl
 #
-#given a manifest of files, this zips the latest version into, uh, a zip file
+# given a manifest of files, this zips the latest version into, uh, a zip file
+#
+# this is deprecated in favor of zup.py, though
 #
 
 use strict;
@@ -22,9 +24,9 @@ use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
 my $zip  = Archive::Zip->new();
 my $zupt = __FILE__;
 my $zupl = $zupt;
-$zupt =~ s/pl$/txt/gi;    # zupt = file to read, zupl = perl
-my $zupp = $zupt;
-$zupp =~ s/\.txt$/p\.txt/;
+$zupt =~ s/pl$/-old.txt/;    # zupt = file to read, zupl = perl
+my $zupp = $zupl;
+$zupp =~ s/\.pl$/p\.txt/;
 
 my $zipdir = "c:\\games\\inform\\zip";
 my $dbbin  = "c:\\users\\andrew\\dropbox\\bins";
@@ -266,7 +268,7 @@ sub readZupFile {
 	  die("Fix mistakes and try again.") if $bail;
 	}
 
-    if ( $a =~ /^name=/i ) {
+    if (( $a =~ /^name=/i ) || ($a =~ /^proj=/i)) {
       if ($needExclam) {
         die("$_[0] line $. needs exclamation mark before $a");
       }

@@ -2,6 +2,7 @@
 #
 # a.pl: goes through the daily files and makes sure they're arranged correctly
 #
+# obsolete now since dff.py and dgrab.py do the job better
 #
 
 use File::Copy;
