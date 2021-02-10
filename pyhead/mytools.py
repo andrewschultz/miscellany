@@ -206,10 +206,11 @@ def slash_to_limerick(x): # limerick converter
         else: retval += x0 + "\n"
     return retval.rstrip() + "\n"
 
-def chop_front(x, delimiter=":"):
+def chop_front(x, delimiter="[:=]"):
     return re.sub(r'^.*?{}'.format(delimiter), '', x)
 
-no_colon = chop_front
+def no_colon(x):
+    return chop_front(x, ':')
 
 def no_equals(x):
     return chop_front(x, '=')
@@ -561,13 +562,13 @@ def is_posneg_int(x, allow_zero = False):
         pass
     return False
 
-def print_and_run(x, actually_print = True):
-    if actually_print: print(x)
+def print_and_run(x, print_command_being_run = True):
+    if print_command_being_run: print(x)
     os.system(x)
 
-def subproc_and_run(x, actually_print = True, check_it = False):
-    if actually_print: print("RUNNING:", ' '.join(x))
-    if check_it:
+def subproc_and_run(x, print_command_being_run = True, need_successful_return = False, null_stdout = True, null_stderr = False):
+    if print_command_being_run: print("RUNNING:", ' '.join(x))
+    if need_successful_return:
         subprocess.check_call(x)
     else:
         subprocess.call(x, stdout=null_of(null_stdout), stderr=null_of(null_stderr))
