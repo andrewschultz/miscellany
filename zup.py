@@ -54,6 +54,7 @@ def read_zup_txt():
             if not line.strip():
                 if cur_zip_proj: # maybe do something super verbose in here
                     cur_zip_proj = ''
+                    current_file = ''
                     continue
             if line.startswith("!"):
                 print("Remove old artifact (!) from config file at line", line_count)
@@ -84,6 +85,17 @@ def read_zup_txt():
                     zups[proj_candidate].file_map[file_array[0]] = file_array[1]
                 else:
                     print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
+                current_file = file_array[0]
+            elif prefix == 'min':
+                if current_file:
+                    zups[proj_candidate].min_specific_file_size[current_file] = int(data)
+                else:
+                    zups[proj_candidate].min_zip_size = int(data)
+            elif prefix == 'max':
+                if current_file:
+                    zups[proj_candidate].max_specific_file_size[current_file] = int(data)
+                else:
+                    zups[proj_candidate].max_zip_size = int(data)
             elif prefix == 'proj' or prefix == 'projx':
                 accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
