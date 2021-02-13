@@ -18,17 +18,18 @@ from collections import defaultdict
 class zip_project:
     def __init__(self, name):
         self.vertical = False
-        self.file_map = defaultdict(str)
-        self.time_compare = []
-        self.max_zip_size = 0
-        self.min_zip_size = 0
-        self.version = 1
-        self.max_specific_file_size = defaultdict(int)
-        self.min_specific_file_size = defaultdict(int)
-        self.out_name = ''
         self.command_buffer = []
         self.dropbox_location = ''
+        self.file_map = defaultdict(str)
+        self.launch_files = []
+        self.max_zip_size = 0
+        self.max_specific_file_size = defaultdict(int)
+        self.min_zip_size = 0
+        self.min_specific_file_size = defaultdict(int)
+        self.out_name = ''
         self.size_compare = defaultdict(tuple)
+        self.time_compare = []
+        self.version = 1
 
 zups = defaultdict(zip_project)
 
@@ -85,6 +86,8 @@ def read_zup_txt():
                 else:
                     print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                 current_file = file_array[0]
+            elif prefix == 'lf':
+                curzip.launch_files.append(data)
             elif prefix == 'min':
                 if current_file:
                     curzip.min_specific_file_size[current_file] = int(data)
