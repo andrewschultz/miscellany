@@ -18,6 +18,7 @@ from collections import defaultdict
 class zip_project:
     def __init__(self, name):
         self.vertical = False
+        self.build_type = 'r'
         self.command_buffer = []
         self.dropbox_location = ''
         self.file_map = defaultdict(str)
@@ -35,6 +36,7 @@ zups = defaultdict(zip_project)
 
 zup_cfg = "c:/writing/scripts/zup.txt"
 
+build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
 
@@ -72,6 +74,8 @@ def read_zup_txt():
 
             # keep the below alphabetized
 
+            if prefix == 'build':
+                curzip.build_type = data
             if prefix == 'cmd':
                 curzip.command_buffer.append(data)
                 continue
@@ -146,6 +150,13 @@ while cmd_count < len(sys.argv):
         cmd_count += 1
         continue
     arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'b':
+        build_before_zipping = True
     cmd_count += 1
 
 print("Project(s):", ', '.join(project_array))
+
+if build_before_zipping:
+    for p in project_array:
+        print("Building", p)
+        subprocess.popen("icl.py", zups[p].build_type, p)
