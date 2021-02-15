@@ -36,6 +36,8 @@ zups = defaultdict(zip_project)
 
 zup_cfg = "c:/writing/scripts/zup.txt"
 
+default_from_cfg = ""
+
 build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
@@ -48,6 +50,7 @@ def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_ba
         sys.exit()
 
 def read_zup_txt():
+    global default_from_cfg
     cur_zip_proj = ''
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -78,7 +81,12 @@ def read_zup_txt():
                 curzip.build_type = data
             if prefix == 'cmd':
                 curzip.command_buffer.append(data)
-                continue
+            elif prefix == 'default':
+                if cur_zip_proj:
+                    flag_cfg_error("default project definition inside project block line {}.".format(line_count))
+                if default_from_cfg:
+                    flag_cfg_error("default project redefined line {}.".format(line_count))
+                default_from_cfg = data
             elif prefix == 'dl':
                 curzip.dropbox_location = data
             elif prefix == 'f':
