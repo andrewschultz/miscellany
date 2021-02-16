@@ -110,6 +110,10 @@ def read_zup_txt():
                     curzip.max_specific_file_size[current_file] = int(data)
                 else:
                     curzip.max_zip_size = int(data)
+            elif prefix == 'out':
+                if curzip.out_name:
+                    flag_cfg_error("Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
+                curzip.out_name = data
             elif prefix == 'proj' or prefix == 'projx':
                 accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
@@ -163,6 +167,12 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 print("Project(s):", ', '.join(project_array))
+
+for x in zups:
+    if zups[x].out_name:
+        zups[x].out_name = zups[x].out_name.replace("%", str(zups[x].version))
+    else:
+        zups[x].out_name = '{}.zip'.format(name)
 
 if build_before_zipping:
     for p in project_array:
