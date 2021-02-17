@@ -166,6 +166,18 @@ while cmd_count < len(sys.argv):
         build_before_zipping = True
     cmd_count += 1
 
+if not project_array:
+    temp_proj = i7.dir2proj()
+    if temp_proj:
+        print("Going with project from current directory, {}, since it was not specified.".format(temp_proj))
+        if default_from_cfg:
+            print("Move if you want to use the general default {}.".format(default_from_cfg))
+        project_array.append(temp_proj)
+    elif default_from_cfg:
+        print("Going with default from cfg file, {}.".format(default_from_cfg))
+    else:
+        sys.exit("Could not get a project from command line, current directory or config file. Bailing.")
+
 print("Project(s):", ', '.join(project_array))
 
 for x in zups:
