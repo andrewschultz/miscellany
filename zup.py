@@ -42,6 +42,13 @@ build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
 
+def usage(header="Usage for zup.py"):
+    print(header)
+    print("=" * 50)
+    print("b = build before zipping")
+    print("specify project(s) to zip on command line")
+    exit()
+
 def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_bail = True):
     print(bail_string)
     if open_config_on_error:
@@ -164,6 +171,12 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'b':
         build_before_zipping = True
+    elif arg == 'c' or arg == 'ce' or arg == 'ec':
+        mt.npo(zup_cfg)
+    elif arg == '?':
+        usage()
+    else:
+        usage("Bad argument {}".format(arg))
     cmd_count += 1
 
 if not project_array:
