@@ -28,6 +28,7 @@ class zip_project:
         self.min_zip_size = 0
         self.min_specific_file_size = defaultdict(int)
         self.out_name = ''
+        self.post_build = []
         self.size_compare = defaultdict(tuple)
         self.time_compare = []
         self.version = 1
@@ -41,11 +42,14 @@ default_from_cfg = ""
 build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
+verbose = False
 
 def usage(header="Usage for zup.py"):
     print(header)
     print("=" * 50)
     print("b = build before zipping")
+    print("c/ce/e = open config file for editing")
+    print("v = verbose")
     print("specify project(s) to zip on command line")
     exit()
 
@@ -67,7 +71,7 @@ def read_zup_txt():
                 if cur_zip_proj: # maybe do something super verbose in here
                     cur_zip_proj = ''
                     current_file = ''
-                    continue
+                continue
             if line.startswith("!"):
                 print("Remove old artifact (!) from config file at line", line_count)
                 continue
@@ -78,7 +82,7 @@ def read_zup_txt():
             try:
                 (prefix, data) = mt.cfg_data_split(line.strip())
             except:
-                print("Badly formed data line {} {}".format(line_count, line.strip()))
+                print("Badly formed data line {}: |{}|".format(line_count, line.strip()))
                 continue
             prefix = prefix.lower()
 
@@ -86,7 +90,7 @@ def read_zup_txt():
 
             if prefix == 'build':
                 curzip.build_type = data
-            if prefix == 'cmd':
+            elif prefix == 'cmd':
                 curzip.command_buffer.append(data)
             elif prefix == 'default':
                 if cur_zip_proj:
@@ -136,8 +140,11 @@ def read_zup_txt():
                     flag_cfg_error(line_count, "BAILING redefining zip project at line {} with {}/{}.".format(line_count, proj_read_in, proj_candidate))
                 else:
                     zups[proj_candidate] = zip_project(proj_candidate)
-                    print("Switching project to", proj_candidate)
+                    if verbose:
+                        print("Switching project to", proj_candidate)
                     curzip = zups[proj_candidate]
+            elif prefix == 'postbuild':
+                curzip.post_build.append(data)
             elif prefix == 'time':
                 time_array = re.split("[<>]", data)
                 if len(time_array) != 2:
@@ -173,6 +180,8 @@ while cmd_count < len(sys.argv):
         build_before_zipping = True
     elif arg == 'c' or arg == 'ce' or arg == 'ec':
         mt.npo(zup_cfg)
+    elif arg == 'v':
+        verbose = True
     elif arg == '?':
         usage()
     else:
@@ -188,6 +197,7 @@ if not project_array:
         project_array.append(temp_proj)
     elif default_from_cfg:
         print("Going with default from cfg file, {}.".format(default_from_cfg))
+        project_array.append(default_from_cfg)
     else:
         sys.exit("Could not get a project from command line, current directory or config file. Bailing.")
 
