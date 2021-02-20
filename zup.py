@@ -213,3 +213,26 @@ if build_before_zipping:
     for p in project_array:
         print("Building", p)
         subprocess.popen("icl.py", zups[p].build_type, p)
+
+for p in project_array:
+    my_zip_file = os.path.join(zip_dir, zups[x].out_name)
+    zip = zipfile.ZipFile(my_zip_file, 'w')
+    if p not in zups:
+        print("WARNING: {} did not have a manifesto defined in the cfg file.")
+        continue
+    for x in zups[p].file_map:
+        print("!", x, zups[p].file_map[x])
+        zip.write(x, zups[p].file_map[x])
+    for x in zups[p].max_specific_file_size:
+        if os.stat(x).st_size > zups[p].max_specific_file_size[x]:
+            print("SINGLE FILE OVER MAX SIZE", x, os.stat(x).st_size, ">", zups[p].max_specific_file_size[x])
+    for x in zups[p].min_specific_file_size:
+        if os.stat(x).st_size < zups[p].min_specific_file_size[x]:
+            print("SINGLE FILE UNDER MIN SIZE", x, os.stat(x).st_size, "<", zups[p].min_specific_file_size[x])
+    zip.close()
+    zip_size = os.stat(my_zip_file).st_size
+    if zip_size > zups[p].max_zip_size:
+        print("ARCHIVE OVER MAX SIZE", my_zip_file, zip_size, ">", zups[p].max_zip_size)
+    if zip_size < zups[p].min_zip_size:
+        print("ARCHIVE UNDER MIN SIZE", my_zip_file, zip_size, "<", zups[p].min_zip_size)
+    print("Wrote {} from {}.".format(my_zip_file, p))
