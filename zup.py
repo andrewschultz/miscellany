@@ -20,6 +20,7 @@ class zip_project:
         self.vertical = False
         self.build_type = 'r'
         self.command_buffer = []
+        self.dir_copy = []
         self.dropbox_location = ''
         self.file_map = defaultdict(str)
         self.launch_files = []
@@ -35,6 +36,7 @@ class zip_project:
 
 zups = defaultdict(zip_project)
 
+zip_dir = "c:/games/inform/zip"
 zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
@@ -52,6 +54,12 @@ def usage(header="Usage for zup.py"):
     print("v = verbose")
     print("specify project(s) to zip on command line")
     exit()
+
+def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory-in-python
+    for root, dirs, files in os.walk(path_from):
+        for file in files:
+            zip_handle.write(os.path.join(root, file),
+                       os.path.join(path_to, os.path.relpath(os.path.join(root, file), path_from)))
 
 def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_bail = True):
     print(bail_string)
@@ -98,6 +106,16 @@ def read_zup_txt():
                 if default_from_cfg:
                     flag_cfg_error("default project redefined line {}.".format(line_count))
                 default_from_cfg = data
+            elif prefix == 'dircopy':
+                temp_ary = data.split('=')
+                if not os.path.isabs(temp_ary[0]):
+                    print("Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
+                if '=' not in data:
+                    curzip.dir_copy = (temp_ary[0], temp_ary[0])
+                elif data.count('=') == 1:
+                    curzip.dir_copy = tuple(temp_ary)
+                else:
+                    print("Too many = in line {} for dircopy.".format(line_count))
             elif prefix == 'dl':
                 curzip.dropbox_location = data
             elif prefix == 'f':
