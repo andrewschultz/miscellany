@@ -41,6 +41,7 @@ zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
 
+bail_on_first_build_error = True
 build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
@@ -50,6 +51,8 @@ def usage(header="Usage for zup.py"):
     print(header)
     print("=" * 50)
     print("b = build before zipping")
+    print("bby/ybb bbn/nbb = bail on first build error, or not")
+    print("bcy/ybc bcn/nbc = bail on first cfg read error, or not")
     print("c/ce/e = open config file for editing")
     print("v = verbose")
     print("specify project(s) to zip on command line")
@@ -66,6 +69,13 @@ def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_ba
     if open_config_on_error:
         mt.npo(zup_cfg, line_count)
     if auto_bail_on_cfg_error:
+        print("Bailing after first error. To change this, set flag -bbn/nbb.")
+        sys.exit()
+
+def flag_zip_build_error(bail_string):
+    print(bail_string)
+    if bail_on_first_build_error:
+        print("Bailing after first error. To change this, set flag -bbn/nbb.")
         sys.exit()
 
 def read_zup_txt():
@@ -196,8 +206,16 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'b':
         build_before_zipping = True
+    elif arg == 'bby' or arg == 'ybb':
+        bail_on_first_build_error = True
+    elif arg == 'bbn' or arg == 'nbb':
+        bail_on_first_build_error = False
     elif arg == 'c' or arg == 'ce' or arg == 'ec':
         mt.npo(zup_cfg)
+    elif arg == 'bcy' or arg == 'ybc':
+        bail_on_first_build_error = True
+    elif arg == 'bcn' or arg == 'nbc':
+        bail_on_first_build_error = False
     elif arg == 'v':
         verbose = True
     elif arg == '?':
@@ -236,21 +254,20 @@ for p in project_array:
     my_zip_file = os.path.join(zip_dir, zups[x].out_name)
     zip = zipfile.ZipFile(my_zip_file, 'w')
     if p not in zups:
-        print("WARNING: {} did not have a manifesto defined in the cfg file.")
+        print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
         continue
     for x in zups[p].file_map:
-        print("!", x, zups[p].file_map[x])
         zip.write(x, zups[p].file_map[x])
     for x in zups[p].max_specific_file_size:
         if os.stat(x).st_size > zups[p].max_specific_file_size[x]:
-            print("SINGLE FILE OVER MAX SIZE", x, os.stat(x).st_size, ">", zups[p].max_specific_file_size[x])
+            flag_zip_build_error("SINGLE FILE OVER MAX SIZE {} {} > {}".format(x, os.stat(x).st_size, zups[p].max_specific_file_size[x]))
     for x in zups[p].min_specific_file_size:
         if os.stat(x).st_size < zups[p].min_specific_file_size[x]:
-            print("SINGLE FILE UNDER MIN SIZE", x, os.stat(x).st_size, "<", zups[p].min_specific_file_size[x])
+            flag_zip_build_error("SINGLE FILE UNDER MIN SIZE {} {} < {}".format(x, os.stat(x).st_size, zups[p].min_specific_file_size[x]))
     zip.close()
     zip_size = os.stat(my_zip_file).st_size
     if zip_size > zups[p].max_zip_size:
-        print("ARCHIVE OVER MAX SIZE", my_zip_file, zip_size, ">", zups[p].max_zip_size)
+        flag_zip_build_error("ARCHIVE OVER MAX SIZE {} {} > {}".format(my_zip_file, zip_size, zups[p].max_zip_size))
     if zip_size < zups[p].min_zip_size:
-        print("ARCHIVE UNDER MIN SIZE", my_zip_file, zip_size, "<", zups[p].min_zip_size)
+        flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(my_zip_file, zip_size, zups[p].min_zip_size))
     print("Wrote {} from {}.".format(my_zip_file, p))
