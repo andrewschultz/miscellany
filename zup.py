@@ -103,6 +103,9 @@ def read_zup_txt():
                 print("Badly formed data line {}: |{}|".format(line_count, line.strip()))
                 continue
             prefix = prefix.lower()
+            if not data:
+                print("WARNING blank data at line {}.".format(line_count))
+                continue
 
             # keep the below alphabetized
 
@@ -115,7 +118,7 @@ def read_zup_txt():
                     flag_cfg_error("default project definition inside project block line {}.".format(line_count))
                 if default_from_cfg:
                     flag_cfg_error("default project redefined line {}.".format(line_count))
-                default_from_cfg = data
+                default_from_cfg = i7.proj_exp(data)
             elif prefix == 'dircopy':
                 temp_ary = data.split('=')
                 if not os.path.isabs(temp_ary[0]):
@@ -163,7 +166,7 @@ def read_zup_txt():
                     cur_zip_proj = proj_candidate
                     #print("Reading:", cur_zip_proj)
                 else:
-                    flag_cfg_error(line_count, "BAILING bad project at line {} is {}.".format(line_count, proj_read_in))
+                    flag_cfg_error(line_count, "BAILING bad project at line {} is {}. Use PROJX if you want something not defined in i7p.txt".format(line_count, proj_read_in))
                 if proj_candidate in zups:
                     flag_cfg_error(line_count, "BAILING redefining zip project at line {} with {}/{}.".format(line_count, proj_read_in, proj_candidate))
                 else:
