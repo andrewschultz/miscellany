@@ -12,6 +12,7 @@ import i7
 import zipfile
 import sys
 import os
+import shutil
 
 from collections import defaultdict
 
@@ -41,6 +42,7 @@ zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
 
+skip_temp_out = False
 bail_on_first_build_error = True
 build_before_zipping = False
 open_config_on_error = True
@@ -221,6 +223,8 @@ while cmd_count < len(sys.argv):
         bail_on_first_build_error = False
     elif arg == 'v':
         verbose = True
+    elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
+        skip_temp_out = True
     elif arg == '?':
         usage()
     else:
@@ -253,9 +257,13 @@ if build_before_zipping:
         print("Building", p)
         subprocess.popen("icl.py", zups[p].build_type, p)
 
+out_temp = os.path.join(zip_dir, "temp.zip")
+
+print("Copying over. Failed creations will go to temp.zip.")
+
 for p in project_array:
     my_zip_file = os.path.join(zip_dir, zups[x].out_name)
-    zip = zipfile.ZipFile(my_zip_file, 'w')
+    zip = zipfile.ZipFile(my_zip_file if skip_temp_out else out_temp, 'w')
     if p not in zups:
         print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
         continue
@@ -269,8 +277,13 @@ for p in project_array:
             flag_zip_build_error("SINGLE FILE UNDER MIN SIZE {} {} < {}".format(x, os.stat(x).st_size, zups[p].min_specific_file_size[x]))
     zip.close()
     zip_size = os.stat(my_zip_file).st_size
-    if zip_size > zups[p].max_zip_size:
+    if zups[p].max_zip_size and zip_size > zups[p].max_zip_size:
         flag_zip_build_error("ARCHIVE OVER MAX SIZE {} {} > {}".format(my_zip_file, zip_size, zups[p].max_zip_size))
     if zip_size < zups[p].min_zip_size:
         flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(my_zip_file, zip_size, zups[p].min_zip_size))
+    if not skip_temp_out:
+        shutil.move(out_temp, my_zip_file)
     print("Wrote {} from {}.".format(my_zip_file, p))
+
+if os.path.exists(out_temp):
+    os.remove(out_temp)
