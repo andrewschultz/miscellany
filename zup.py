@@ -13,6 +13,7 @@ import zipfile
 import sys
 import os
 import shutil
+import pyperclip
 
 from collections import defaultdict
 
@@ -42,6 +43,8 @@ zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
 
+copy_link = False
+copy_link_only = False
 skip_temp_out = False
 bail_on_first_build_error = True
 build_before_zipping = False
@@ -56,9 +59,25 @@ def usage(header="Usage for zup.py"):
     print("bby/ybb bbn/nbb = bail on first build error, or not")
     print("bcy/ybc bcn/nbc = bail on first cfg read error, or not")
     print("c/ce/e = open config file for editing")
+    print("cl/clo = copy link/copy link only")
     print("v = verbose")
     print("specify project(s) to zip on command line")
     exit()
+
+def copy_first_link(project_array, bail = True):
+    for p in project_array:
+        if len(project_array) > 1:
+            print("Only copying first link from project")
+        if zups[p].dropbox_location:
+            pyperclip.copy(zups[p].dropbox_location)
+            print("Copied", p, "dropbox location to", zups[p].dropbox_location)
+            if bail:
+                sys.exit()
+        else:
+            print("Skipping", p, "as it has no dropbox location")
+    print("Found nothing to copy over.{}".format(" Bailing." if bail else ""))
+    if bail:
+        sys.exit()
 
 def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory-in-python
     for root, dirs, files in os.walk(path_from):
@@ -223,6 +242,10 @@ while cmd_count < len(sys.argv):
         bail_on_first_build_error = False
     elif arg == 'v':
         verbose = True
+    elif arg == 'cl':
+        copy_link = True
+    elif arg == 'clo':
+        copy_link_only = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
     elif arg == '?':
@@ -243,6 +266,9 @@ if not project_array:
         project_array.append(default_from_cfg)
     else:
         sys.exit("Could not get a project from command line, current directory or config file. Bailing.")
+
+if copy_link_only:
+    copy_first_link(project_array, bail = True)
 
 print("Project(s):", ', '.join(project_array))
 
@@ -284,6 +310,9 @@ for p in project_array:
     if not skip_temp_out:
         shutil.move(out_temp, my_zip_file)
     print("Wrote {} from {}.".format(my_zip_file, p))
+
+if copy_link:
+    copy_first_link(project_array, bail = False)
 
 if os.path.exists(out_temp):
     os.remove(out_temp)
