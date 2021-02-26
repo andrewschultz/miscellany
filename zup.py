@@ -39,6 +39,7 @@ class zip_project:
 zups = defaultdict(zip_project)
 
 zip_dir = "c:/games/inform/zip"
+dropbox_bin_dir = "c:/users/andrew/dropbox/bins"
 zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
@@ -51,6 +52,7 @@ build_before_zipping = False
 open_config_on_error = True
 auto_bail_on_cfg_error = True
 verbose = False
+copy_dropbox_after = False
 
 def usage(header="Usage for zup.py"):
     print(header)
@@ -59,6 +61,7 @@ def usage(header="Usage for zup.py"):
     print("bby/ybb bbn/nbb = bail on first build error, or not")
     print("bcy/ybc bcn/nbc = bail on first cfg read error, or not")
     print("c/ce/e = open config file for editing")
+    print("cd = copies to dropbox after")
     print("cl/clo = copy link/copy link only")
     print("v = verbose")
     print("specify project(s) to zip on command line")
@@ -246,6 +249,8 @@ while cmd_count < len(sys.argv):
         copy_link = True
     elif arg == 'clo':
         copy_link_only = True
+    elif arg == 'cd' or arg == 'dc':
+        copy_link_only = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
     elif arg == '?':
@@ -310,6 +315,12 @@ for p in project_array:
     if not skip_temp_out:
         shutil.move(out_temp, my_zip_file)
     print("Wrote {} from {}.".format(my_zip_file, p))
+    if copy_dropbox_after:
+        print("Copying", zups[p].out_name, "to dropbox.")
+        shutil.copy(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name))
+
+if not copy_dropbox_after:
+    pront("-cd copies to dropbox after.")
 
 if copy_link:
     copy_first_link(project_array, bail = False)
