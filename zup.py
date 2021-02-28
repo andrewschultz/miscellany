@@ -82,11 +82,15 @@ def copy_first_link(project_array, bail = True):
     if bail:
         sys.exit()
 
+def zip_write_nonzero_file(zip_handle, from_path, to_path):
+    if os.stat(from_path).st_size == 0:
+        sys.exit("Tried to write zero-byte file {} to zip. Bailing.".format(from_path))
+    zip_handle.write(from_path, to_path, zipfile.ZIP_DEFLATED)
+
 def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory-in-python
     for root, dirs, files in os.walk(path_from):
         for file in files:
-            zip_handle.write(os.path.join(root, file),
-                       os.path.join(path_to, os.path.relpath(os.path.join(root, file), path_from)))
+            zip_write_nonzero_file(zip_handle, os.path.join(root, file), os.path.join(path_to, os.path.relpath(os.path.join(root, file), path_from)))
 
 def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_bail = True):
     print(bail_string)
@@ -299,7 +303,7 @@ for p in project_array:
         print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
         continue
     for x in zups[p].file_map:
-        zip.write(x, zups[p].file_map[x])
+        zip_write_nonzero_file(zip, x, zups[p].file_map[x])
     for x in zups[p].max_specific_file_size:
         if os.stat(x).st_size > zups[p].max_specific_file_size[x]:
             flag_zip_build_error("SINGLE FILE OVER MAX SIZE {} {} > {}".format(x, os.stat(x).st_size, zups[p].max_specific_file_size[x]))
