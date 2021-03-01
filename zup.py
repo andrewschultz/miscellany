@@ -14,6 +14,7 @@ import sys
 import os
 import shutil
 import pyperclip
+import filecmp
 
 from collections import defaultdict
 
@@ -320,11 +321,15 @@ for p in project_array:
         shutil.move(out_temp, my_zip_file)
     print("Wrote {} from {}.".format(my_zip_file, p))
     if copy_dropbox_after:
-        print("Copying", zups[p].out_name, "to dropbox.")
+        if filecmp.cmp(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
+            print("No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name))
+            continue
+        target = os.path.join(dropbox_bin_dir, zups[p].out_name)
+        print("Copying {} to dropbox target {}".format(zups[p].out_name, target))
         shutil.copy(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name))
 
 if not copy_dropbox_after:
-    pront("-cd copies to dropbox after.")
+    print("-cd copies to dropbox after.")
 
 if copy_link:
     copy_first_link(project_array, bail = False)
