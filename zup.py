@@ -153,7 +153,7 @@ def read_zup_txt():
                 if not os.path.isabs(temp_ary[0]):
                     print("Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
                 if '=' not in data:
-                    curzip.dir_copy = (temp_ary[0], temp_ary[0])
+                    curzip.dir_copy = (temp_ary[0], '.')
                 elif data.count('=') == 1:
                     curzip.dir_copy = tuple(temp_ary)
                 else:
@@ -255,7 +255,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'clo':
         copy_link_only = True
     elif arg == 'cd' or arg == 'dc':
-        copy_link_only = True
+        copy_dropbox_after = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
     elif arg == '?':
@@ -298,7 +298,7 @@ out_temp = os.path.join(zip_dir, "temp.zip")
 print("Copying over. Failed creations will go to temp.zip.")
 
 for p in project_array:
-    my_zip_file = os.path.join(zip_dir, zups[x].out_name)
+    my_zip_file = os.path.join(zip_dir, zups[p].out_name)
     zip = zipfile.ZipFile(my_zip_file if skip_temp_out else out_temp, 'w')
     if p not in zups:
         print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
