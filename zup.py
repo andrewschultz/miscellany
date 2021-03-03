@@ -15,14 +15,16 @@ import os
 import shutil
 import pyperclip
 import filecmp
+import shlex
 
 from collections import defaultdict
 
 class zip_project:
-    def __init__(self, name):
+    def __init__(self, name): #alphabetical
         self.vertical = False
         self.build_type = 'r'
-        self.command_buffer = []
+        self.command_post_buffer = []
+        self.command_pre_buffer = []
         self.dir_copy = []
         self.dropbox_location = ''
         self.file_map = defaultdict(str)
@@ -123,7 +125,7 @@ def read_zup_txt():
                 print("Remove old artifact (!) from config file at line", line_count)
                 continue
             if line.startswith(">>"):
-                print("Deprecated >> should be converted to cmd: at line", line_count)
+                print("Deprecated >> should be converted to cmdpre: or cmdpost: at line", line_count)
                 curzip.command_buffer.append(line[2:].strip())
                 continue
             try:
@@ -140,8 +142,10 @@ def read_zup_txt():
 
             if prefix == 'build':
                 curzip.build_type = data
-            elif prefix == 'cmd':
-                curzip.command_buffer.append(data)
+            elif prefix == 'cmdpre':
+                curzip.command_pre_buffer.append(data)
+            elif prefix == 'cmdpost':
+                curzip.command_post_buffer.append(data)
             elif prefix == 'default':
                 if cur_zip_proj:
                     flag_cfg_error("default project definition inside project block line {}.".format(line_count))
@@ -298,6 +302,9 @@ out_temp = os.path.join(zip_dir, "temp.zip")
 print("Copying over. Failed creations will go to temp.zip.")
 
 for p in project_array:
+    for x in zups[p].command_pre_buffer:
+        print("Running pre-command", x)
+        subprocess.open(shlex.split(' ', x))
     my_zip_file = os.path.join(zip_dir, zups[p].out_name)
     zip = zipfile.ZipFile(my_zip_file if skip_temp_out else out_temp, 'w')
     if p not in zups:
@@ -320,6 +327,9 @@ for p in project_array:
     if not skip_temp_out:
         shutil.move(out_temp, my_zip_file)
     print("Wrote {} from {}.".format(my_zip_file, p))
+    for x in zups[p].command_post_buffer:
+        print("Running post-command", x)
+        subprocess.open(shlex.split(' ', x))
     if copy_dropbox_after:
         if filecmp.cmp(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
             print("No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name))
