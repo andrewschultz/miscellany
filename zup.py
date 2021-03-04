@@ -152,7 +152,7 @@ def read_zup_txt():
                 if default_from_cfg:
                     flag_cfg_error("default project redefined line {}.".format(line_count))
                 default_from_cfg = i7.proj_exp(data)
-            elif prefix == 'dircopy':
+            elif prefix == 'd' or prefix == 'dircopy':
                 temp_ary = data.split('=')
                 if not os.path.isabs(temp_ary[0]):
                     print("Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
@@ -162,9 +162,9 @@ def read_zup_txt():
                     curzip.dir_copy = tuple(temp_ary)
                 else:
                     print("Too many = in line {} for dircopy.".format(line_count))
-            elif prefix == 'dl':
+            elif prefix == 'dl' or prefix == 'dropbox':
                 curzip.dropbox_location = data
-            elif prefix == 'f':
+            elif prefix == 'f' or prefix == 'file':
                 file_array = data.split("\t")
                 if len(file_array) == 1:
                     curzip.file_map[file_array[0]] = os.path.basename(file_array[0])
@@ -177,15 +177,23 @@ def read_zup_txt():
                 curzip.launch_files.append(data)
             elif prefix == 'min':
                 if current_file:
+                    if current_file in curzip.min_specific_file_size:
+                        flag_cfg_error("Redefined minimum component file size line {}.".format(line_count))
                     curzip.min_specific_file_size[current_file] = int(data)
                 else:
+                    if curzip.min_zip_size:
+                        flag_cfg_error("Redefined maximum zipfile size line {}.".format(line_count))
                     curzip.min_zip_size = int(data)
             elif prefix == 'max':
                 if current_file:
+                    if current_file in curzip.max_specific_file_size:
+                        flag_cfg_error("Redefined maximum component file size line {}.".format(line_count))
                     curzip.max_specific_file_size[current_file] = int(data)
                 else:
+                    if curzip.max_zip_size:
+                        flag_cfg_error("Redefined maximum zipfile size line {}.".format(line_count))
                     curzip.max_zip_size = int(data)
-            elif prefix == 'out':
+            elif prefix == 'out' or prefix == 'outfile':
                 if curzip.out_name:
                     flag_cfg_error("Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
                 curzip.out_name = data
@@ -218,7 +226,7 @@ def read_zup_txt():
                     curzip.time_compare.append((time_array[0], time_array[1]))
                 else:
                     curzip.time_compare.append((time_array[1], time_array[0]))
-            elif prefix == 'v':
+            elif prefix == 'v' or prefix == 'version':
                 zups[proj_candidate].version = int(data)
             else:
                 print("Unknown prefix", prefix, "line", line_count)
@@ -227,8 +235,6 @@ def read_zup_txt():
 cmd_count = 1
 
 project_array = []
-
-read_zup_txt()
 
 while cmd_count < len(sys.argv):
     my_proj = i7.proj_exp(sys.argv[cmd_count], return_nonblank = False)
@@ -260,6 +266,8 @@ while cmd_count < len(sys.argv):
         copy_link_only = True
     elif arg == 'cd' or arg == 'dc':
         copy_dropbox_after = True
+    elif arg == 'oce':
+        open_config_on_error = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
     elif arg == '?':
@@ -267,6 +275,8 @@ while cmd_count < len(sys.argv):
     else:
         usage("Bad argument {}".format(arg))
     cmd_count += 1
+
+read_zup_txt()
 
 if not project_array:
     temp_proj = i7.dir2proj()
