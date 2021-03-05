@@ -39,8 +39,8 @@ my_twiddle_dir = "c:/writing/twiddle"
 
 from_and_to = []
 
-my_default_project = "spo"
-my_project = ""
+my_default_project = ''
+my_project = ''
 
 def usage(arg = "general usage"):
     print(arg)
@@ -55,15 +55,22 @@ def usage(arg = "general usage"):
 
 def get_twiddle_mappings():
     current_project = ""
+    global my_default_project
     with open(my_twiddle_config) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith(";"): break
             if line.startswith("#"): continue
+            if not line.strip(): continue
+            if line.startswith("default:"):
+                if my_default_project:
+                    sys.exit("Redefinition of default project at line {}.".format(line_count))
+                my_default_project = re.sub("^.*?:", "", line.strip())
+                continue
             if line.startswith("project:"):
                 current_project = re.sub("^.*?:", "", line.strip())
                 continue
             if not current_project:
-                sys.exit("Need current project defined.")
+                sys.exit("Need current project defined at line {}.".format(line_count))
             ary = line.strip().split(",")
             priority[current_project][ary[1]] = int(ary[0])
             from_file[current_project][ary[1]] = ary[2]
@@ -169,8 +176,11 @@ while cmd_count < len(sys.argv):
 get_twiddle_mappings()
 
 if not my_project:
-    print("Going with default project", my_default_project)
-    my_project = my_default_project
+    if my_default_project:
+        print("Going with default project", my_default_project)
+        my_project = my_default_project
+    else:
+        sys.exit("There is no default project in the config file. You need to specify one on the command line.")
 
 if my_project not in to_temp:
     sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(to_temp)))
