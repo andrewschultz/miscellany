@@ -30,7 +30,8 @@ priority = defaultdict(lambda:defaultdict(int))
 from_temp = defaultdict(lambda:defaultdict(str))
 to_temp = defaultdict(lambda:defaultdict(str))
 
-locked = defaultdict(lambda:defaultdict(int))
+read_locked = defaultdict(lambda:defaultdict(int))
+write_locked = defaultdict(lambda:defaultdict(int))
 
 before_lines = defaultdict(int)
 
@@ -76,10 +77,14 @@ def get_twiddle_mappings():
             from_file[current_project][ary[1]] = ary[2]
             to_file[current_project][ary[1]] = ary[3]
             regex_pattern[current_project][ary[1]] = ary[4]
-            try:
-                locked[current_project][ary[1]] = ary[5]
-            except:
-                pass
+            if len(ary) > 5:
+                write_status = ary[5].lower()
+                if write_status == 'readonly' or write_status == 'locked':
+                    read_locked[current_project][ary[1]] = True
+                elif write_status == 'writeonly' or write_status == 'locked':
+                    read_locked[current_project][ary[1]] = True
+                else:
+                    print("INVALID cfg entry 5 read/write at line {}.".format(line_count))
     global from_and_to
     for proj in priority:
         from_and_to = list(set(from_file[proj].values()) | set(to_file[proj].values()))
@@ -197,7 +202,7 @@ for x in to_temp[my_project]:
             temp = pattern_check(line)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not locked[my_project][current_section]:
+            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp]:
                 section_text[temp] += line
                 continue
             if current_section:
