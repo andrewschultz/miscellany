@@ -12,7 +12,7 @@ from collections import defaultdict
 from filecmp import cmp
 from shutil import copy
 
-copy_over = True
+copy_over = False
 secure_backup = True
 print_stats = False
 alphabetical_comparisons = True
@@ -131,10 +131,10 @@ def write_out_files(my_file):
     f.close()
     if cmp(my_file, twiddle_file):
         return
-    if overall_comparisons:
-        mt.wm(my_file, twiddle_file)
     if alphabetical_comparisons:
         mt.compare_alphabetized_lines(my_file, twiddle_file)
+    if overall_comparisons:
+        mt.wm(my_file, twiddle_file)
 
 def pattern_check(my_line):
     for x in sorted(regex_pattern[my_project], key=lambda x: (-priority[my_project][x])):
@@ -143,6 +143,8 @@ def pattern_check(my_line):
     return ""
 
 ################################### main file
+
+get_twiddle_mappings()
 
 cmd_count = 1
 
@@ -166,6 +168,10 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = True
     elif arg == 'c':
         overall_comparisons = True
+    elif arg == 'co':
+        copy_over = True
+    elif arg == 'nc':
+        copy_over = False
     elif arg == 'ld':
         track_line_delta = True
     elif arg == 'nld' or arg == 'ldn':
@@ -177,8 +183,6 @@ while cmd_count < len(sys.argv):
     else:
         usage("Bad parameter " + arg)
     cmd_count += 1
-
-get_twiddle_mappings()
 
 if not my_project:
     if my_default_project:
