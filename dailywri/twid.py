@@ -62,12 +62,19 @@ def get_twiddle_mappings():
             if line.startswith(";"): break
             if line.startswith("#"): continue
             if not line.strip(): continue
-            if line.startswith("default:"):
+            (prefix, data) = mt.cfg_data_split(line.strip())
+            prefix = prefix.lower()
+            if prefix == "copyover":
+                copy_over = mt.truth_state_of(data)
+                if copy_over == -1:
+                    sys.exit("Bad copyover value at line {}.".format(line_count))
+                continue
+            elif prefix == 'default':
                 if my_default_project:
                     sys.exit("Redefinition of default project at line {}.".format(line_count))
                 my_default_project = re.sub("^.*?:", "", line.strip())
                 continue
-            if line.startswith("project:"):
+            elif prefix == 'project':
                 current_project = re.sub("^.*?:", "", line.strip())
                 continue
             if not current_project:
@@ -80,7 +87,7 @@ def get_twiddle_mappings():
             if len(ary) > 5:
                 write_status = ary[5].lower()
                 if write_status == 'readonly' or write_status == 'locked':
-                    read_locked[current_project][ary[1]] = True
+                    write_locked[current_project][ary[1]] = True
                 elif write_status == 'writeonly' or write_status == 'locked':
                     read_locked[current_project][ary[1]] = True
                 else:
