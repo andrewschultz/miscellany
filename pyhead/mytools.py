@@ -55,6 +55,12 @@ np = '"{}"'.format(npnq)
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
 
+def truth_state_of(text_data):
+    tl = text_data.lower()
+    if tl == 'true' or tl == '1' or tl == 'yes': return True
+    if tl == 'false' or tl == '0' or tl == 'no': return True
+    return -1
+
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
