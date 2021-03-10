@@ -55,10 +55,12 @@ np = '"{}"'.format(npnq)
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
 
-def truth_state_of(text_data):
+def truth_state_of(text_data, print_warning = True):
     tl = text_data.lower()
     if tl == 'true' or tl == '1' or tl == 'yes': return True
     if tl == 'false' or tl == '0' or tl == 'no': return True
+    if print_warning:
+        print("Bad truth state:", text_data)
     return -1
 
 def bail_if_not(f, file_desc = ""):
