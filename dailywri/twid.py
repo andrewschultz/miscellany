@@ -12,6 +12,10 @@ from collections import defaultdict
 from filecmp import cmp
 from shutil import copy
 
+#####################start options
+
+max_changes_per_file = 0
+
 copy_over = False
 secure_backup = True
 print_stats = False
@@ -19,6 +23,8 @@ alphabetical_comparisons = True
 overall_comparisons = True
 
 track_line_delta = True
+
+#####################end options
 
 section_text = defaultdict(str)
 
@@ -185,6 +191,11 @@ while cmd_count < len(sys.argv):
         track_line_delta = False
     elif arg[:2] == 'p=' or arg[:2] == 'p:':
         my_project = arg[2:]
+    elif arg[:2] == 'mf' or arg[:2] == 'fm':
+        if arg[2:].isdigit():
+            max_changes_per_file = int(arg[2:])
+        else:
+            print("You need a number after fm/mf. {} doesn't work".format(arg[2:] if arg[2:] else 'A blank value'))
     elif arg == '?':
         usage()
     else:
@@ -202,6 +213,8 @@ if my_project not in to_temp:
     sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(to_temp)))
 
 for x in to_temp[my_project]:
+    max_file_reached = False
+    cur_file_changes = 0
     with open(x) as file:
         current_section = ""
         for (line_count, line) in enumerate (file, 1):
@@ -213,9 +226,15 @@ for x in to_temp[my_project]:
             temp = pattern_check(line)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp]:
-                section_text[temp] += line
-                continue
+            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp] and not max_file_reached:
+                if max_changes_per_file and cur_file_changes == max_changes_per_file and temp != current_section:
+                    print("You went over the maximum # of changes for", x)
+                    max_file_reached = True
+                else:
+                    if temp != current_section:
+                        cur_file_changes += 1
+                    section_text[temp] += line
+                    continue
             if current_section:
                 section_text[current_section] += line
                 continue
@@ -224,6 +243,7 @@ for x in to_temp[my_project]:
                 if re.search(regex_pattern[my_project][q], line):
                     section_text[q] += line
                     print(line, "matches with", q, "pattern", regex_pattern[my_project][q])
+    print("Total changes in {}: {}".format(x, cur_file_changes))
 
 for x in from_and_to:
     write_out_files(x)
