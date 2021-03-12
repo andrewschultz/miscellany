@@ -45,8 +45,7 @@ my $allBranches         = 0;
 my $mainBranchWarning = 0;
 
 chdir("c:\\writing\\scripts");
-my $siteFile = __FILE__;
-$siteFile =~ s/pl$/txt/i;
+my $siteFile = "c:\\writing\\scripts\\ghd.txt";
 
 while ( $count <= $#ARGV ) {
   my $arg = $ARGV[$count];
