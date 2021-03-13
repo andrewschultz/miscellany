@@ -82,6 +82,8 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'project':
                 current_project = re.sub("^.*?:", "", line.strip())
+                if current_project in priority:
+                    print("WARNING duplicate current project marker for {} at line {}.".format(current_project, line_count))
                 continue
             if not current_project:
                 sys.exit("Need current project defined at line {}.".format(line_count))
@@ -163,6 +165,13 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
+    argraw = sys.argv[cmd_count]
+    if argraw in priority:
+        if my_project:
+            print("Warning: redefining my project from {} to {}.".format(my_project, argraw))
+        my_project = argraw
+        cmd_count += 1
+        continue
     if arg == 'e':
         mt.npo(my_twiddle_config)
     elif arg == 'ps':
