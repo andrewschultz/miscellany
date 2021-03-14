@@ -14,6 +14,7 @@ from shutil import copy
 
 #####################start options
 
+max_changes_overall = 0
 max_changes_per_file = 0
 
 copy_over = False
@@ -57,6 +58,7 @@ def usage(arg = "general usage"):
     print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
     print("-e = edit config file")
     print("-ld = track line delta, nld/ldn = don't")
+    print("mf/fm/mo/om = max per file or overall")
     print("Specify project with p= or p:. Default is", my_default_project)
     exit()
 
@@ -205,6 +207,11 @@ while cmd_count < len(sys.argv):
             max_changes_per_file = int(arg[2:])
         else:
             print("You need a number after fm/mf. {} doesn't work".format(arg[2:] if arg[2:] else 'A blank value'))
+    elif arg[:2] == 'mo' or arg[:2] == 'om':
+        if arg[2:].isdigit():
+            max_changes_overall = int(arg[2:])
+        else:
+            print("You need a number after om/mo. {} doesn't work".format(arg[2:] if arg[2:] else 'A blank value'))
     elif arg == '?':
         usage()
     else:
@@ -221,6 +228,9 @@ if not my_project:
 if my_project not in to_temp:
     sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(to_temp)))
 
+max_overall_reached = False
+overall_changes = 0
+
 for x in to_temp[my_project]:
     max_file_reached = False
     cur_file_changes = 0
@@ -235,13 +245,17 @@ for x in to_temp[my_project]:
             temp = pattern_check(line)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp] and not max_file_reached:
+            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp] and not max_file_reached and not max_overall_reached:
+                if max_changes_overall and overall_changes == max_changes_overall and temp != current_section:
+                    print("You went over the maximum overall changes allowed in all files.")
+                    max_overall_reached = True
                 if max_changes_per_file and cur_file_changes == max_changes_per_file and temp != current_section:
-                    print("You went over the maximum # of changes for", x)
+                    print("You went over the maximum # of changes for {}.".format(x))
                     max_file_reached = True
-                else:
+                if not max_file_reached and not max_overall_reached:
                     if temp != current_section:
                         cur_file_changes += 1
+                        overall_changes += 1
                     section_text[temp] += line
                     continue
             if current_section:
