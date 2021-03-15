@@ -12,6 +12,27 @@ from collections import defaultdict
 from filecmp import cmp
 from shutil import copy
 
+#####################start classes
+
+class twiddle_project:
+    def __init__(self, name): #alphabetical, except when similar are lumped together
+        # this covers the regex pattern
+        self.regex_pattern = defaultdict(str)
+
+        # these two cover all the files that may be edited under a specific project.
+        self.from_file = defaultdict(str)
+        self.to_file = defaultdict(str)
+
+        # these two define the tempfiles we write to. Most of the times tempfile = basename(x) unless there is more than one with the same basename.
+        self.from_temp = defaultdict(str)
+        self.to_temp = defaultdict(str)
+
+        self.read_locked = defaultdict(str) # don't move anything from this section
+        self.write_locked = defaultdict(str) # don't move anything to this section
+
+        self.priority = defaultdict(int) # the higher, the more likely it is to go first
+#####################end classes
+
 #####################start options
 
 max_changes_overall = 0
@@ -27,19 +48,9 @@ track_line_delta = True
 
 #####################end options
 
+my_twiddle_projects = defaultdict(twiddle_project)
+
 section_text = defaultdict(str)
-
-regex_pattern = defaultdict(lambda:defaultdict(str))
-from_file = defaultdict(lambda:defaultdict(str))
-to_file = defaultdict(lambda:defaultdict(str))
-priority = defaultdict(lambda:defaultdict(int))
-
-from_temp = defaultdict(lambda:defaultdict(str))
-to_temp = defaultdict(lambda:defaultdict(str))
-
-read_locked = defaultdict(lambda:defaultdict(int))
-write_locked = defaultdict(lambda:defaultdict(int))
-
 before_lines = defaultdict(int)
 
 my_twiddle_config = "c:/writing/scripts/twid.txt"
@@ -84,35 +95,38 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'project':
                 current_project = re.sub("^.*?:", "", line.strip())
-                if current_project in priority:
+                if current_project in my_twiddle_projects:
                     print("WARNING duplicate current project marker for {} at line {}.".format(current_project, line_count))
+                else:
+                    my_twiddle_projects[current_project] = twiddle_project(current_project)
+                cur_twiddle = my_twiddle_projects[current_project]
                 continue
             if not current_project:
                 sys.exit("Need current project defined at line {}.".format(line_count))
             ary = line.strip().split(",")
-            priority[current_project][ary[1]] = int(ary[0])
-            from_file[current_project][ary[1]] = ary[2]
-            to_file[current_project][ary[1]] = ary[3]
-            regex_pattern[current_project][ary[1]] = ary[4]
+            cur_twiddle.priority[ary[1]] = int(ary[0])
+            cur_twiddle.from_file[ary[1]] = ary[2]
+            cur_twiddle.to_file[ary[1]] = ary[3]
+            cur_twiddle.regex_pattern[ary[1]] = ary[4]
             if len(ary) > 5:
                 write_status = ary[5].lower()
                 if write_status == 'readonly' or write_status == 'locked':
-                    write_locked[current_project][ary[1]] = True
+                    cur_twiddle.write_locked[ary[1]] = True
                 elif write_status == 'writeonly' or write_status == 'locked':
-                    read_locked[current_project][ary[1]] = True
+                    cur_twiddle.read_locked[ary[1]] = True
                 else:
                     print("INVALID cfg entry 5 read/write at line {}.".format(line_count))
     global from_and_to
-    for proj in priority:
-        from_and_to = list(set(from_file[proj].values()) | set(to_file[proj].values()))
+    for proj in my_twiddle_projects:
+        from_and_to = list(set(my_twiddle_projects[proj].from_file.values()) | set(my_twiddle_projects[proj].to_file.values()))
         for q in from_and_to:
             poss_temp = os.path.basename(q)
             dupe_index = 1
-            while poss_temp in from_temp[proj]:
+            while poss_temp in my_twiddle_projects[proj].from_temp:
                 poss_temp = "{}-{}".format(dupe_index, os.path.basename(q))
                 dupe_index += 1
-            to_temp[proj][q] = poss_temp
-            from_temp[proj][poss_temp] = q
+            my_twiddle_projects[proj].to_temp[q] = poss_temp
+            my_twiddle_projects[proj].from_temp[poss_temp] = q
 
 def twiddle_of(my_file):
     return os.path.join(my_twiddle_dir, os.path.basename(my_file))
@@ -120,7 +134,7 @@ def twiddle_of(my_file):
 def write_out_files(my_file):
     in_section = False
     current_section = ""
-    twiddle_file = twiddle_of(to_temp[my_project][my_file])
+    twiddle_file = twiddle_of(my_twiddle_projects[my_project].to_temp[my_file])
     f = open(twiddle_file, "w")
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -154,8 +168,8 @@ def write_out_files(my_file):
         mt.wm(my_file, twiddle_file)
 
 def pattern_check(my_line):
-    for x in sorted(regex_pattern[my_project], key=lambda x: (-priority[my_project][x])):
-        if re.search(regex_pattern[my_project][x], my_line, re.IGNORECASE):
+    for x in sorted(this_twiddle.regex_pattern, key=lambda x: (-this_twiddle.priority[x])):
+        if re.search(this_twiddle.regex_pattern[x], my_line, re.IGNORECASE):
             return x
     return ""
 
@@ -168,7 +182,7 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     argraw = sys.argv[cmd_count]
-    if argraw in priority:
+    if argraw in my_twiddle_projects:
         if my_project:
             print("Warning: redefining my project from {} to {}.".format(my_project, argraw))
         my_project = argraw
@@ -225,13 +239,15 @@ if not my_project:
     else:
         sys.exit("There is no default project in the config file. You need to specify one on the command line.")
 
-if my_project not in to_temp:
-    sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(to_temp)))
+if my_project not in my_twiddle_projects:
+    sys.exit("FATAL ERROR {} not in list of projects: {}".format(my_project, ', '.join(my_twiddle_projects)))
 
 max_overall_reached = False
 overall_changes = 0
 
-for x in to_temp[my_project]:
+this_twiddle = my_twiddle_projects[my_project]
+
+for x in this_twiddle.to_temp:
     max_file_reached = False
     cur_file_changes = 0
     with open(x) as file:
@@ -245,7 +261,7 @@ for x in to_temp[my_project]:
             temp = pattern_check(line)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not read_locked[my_project][current_section] and not write_locked[my_project][temp] and not max_file_reached and not max_overall_reached:
+            if temp and not this_twiddle.read_locked[current_section] and not this_twiddle.write_locked[temp] and not max_file_reached and not max_overall_reached:
                 if max_changes_overall and overall_changes == max_changes_overall and temp != current_section:
                     print("You went over the maximum overall changes allowed in all files.")
                     max_overall_reached = True
@@ -262,18 +278,19 @@ for x in to_temp[my_project]:
                 section_text[current_section] += line
                 continue
             section_text['blank'] += line
-            for q in regex_pattern[my_project]:
-                if re.search(regex_pattern[my_project][q], line):
+            for q in this_twiddle.regex_pattern:
+                if re.search(this_twiddle.regex_pattern[q], line):
                     section_text[q] += line
-                    print(line, "matches with", q, "pattern", regex_pattern[my_project][q])
+                    print(line, "matches with", q, "pattern", this_twiddle.regex_pattern[q])
     print("Total changes in {}: {}".format(x, cur_file_changes))
 
 for x in from_and_to:
     write_out_files(x)
-    print("TWIDDLY", twiddle_of(to_temp[my_project][x]), x)
+    to_of_x = this_twiddle.to_temp[x]
+    print("TWIDDLY", twiddle_of(to_of_x), x)
     if print_stats:
         print("Orig:", os.stat(x).st_size, x)
-        print("New:", os.stat(twiddle_of(to_temp[my_project][x])).st_size, twiddle_of(to_temp[my_project][x]))
+        print("New:", os.stat(twiddle_of(to_of_x)).st_size, twiddle_of(to_of_x))
 
 if not copy_over:
     sys.exit("-co to copy over")
