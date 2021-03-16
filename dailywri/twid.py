@@ -30,6 +30,9 @@ class twiddle_project:
         self.read_locked = defaultdict(str) # don't move anything from this section
         self.write_locked = defaultdict(str) # don't move anything to this section
 
+        self.flag_text_chunks = []
+        self.flag_regexes = []
+
         self.priority = defaultdict(int) # the higher, the more likely it is to go first
 #####################end classes
 
@@ -100,6 +103,12 @@ def get_twiddle_mappings():
                 else:
                     my_twiddle_projects[current_project] = twiddle_project(current_project)
                 cur_twiddle = my_twiddle_projects[current_project]
+                continue
+            elif prefix == 'regex':
+                cur_twiddle.flag_regexes.append(data)
+                continue
+            elif prefix == 'text':
+                cur_twiddle.flag_text_chunks.append(data)
                 continue
             if not current_project:
                 sys.exit("Need current project defined at line {}.".format(line_count))
@@ -250,6 +259,7 @@ this_twiddle = my_twiddle_projects[my_project]
 for x in this_twiddle.to_temp:
     max_file_reached = False
     cur_file_changes = 0
+    xb = os.path.basename(x)
     with open(x) as file:
         current_section = ""
         for (line_count, line) in enumerate (file, 1):
@@ -259,6 +269,13 @@ for x in this_twiddle.to_temp:
                     section_text[current_section] = ""
                 continue
             temp = pattern_check(line)
+            lcut = mt.no_comment(line.strip().lower())
+            for t_match in this_twiddle.flag_text_chunks:
+                if t_match in lcut:
+                    print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
+            for r_match in this_twiddle.flag_regexes:
+                if re.search(r_match, lcut, re.IGNORECASE):
+                    print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
             if current_section:
                 before_lines[current_section] += 1
             if temp and not this_twiddle.read_locked[current_section] and not this_twiddle.write_locked[temp] and not max_file_reached and not max_overall_reached:
@@ -298,7 +315,7 @@ if not copy_over:
 changed = unchanged = 0
 
 for x in from_and_to:
-    twid_from = twiddle_of(to_temp[my_project][x])
+    twid_from = twiddle_of(this_twiddle.to_temp[x])
     if cmp(x, twid_from):
         print("Skipping", x, twid_from, "no changes.")
         unchanged += 1
