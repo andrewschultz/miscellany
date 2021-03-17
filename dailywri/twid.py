@@ -36,6 +36,9 @@ class twiddle_project:
         self.priority = defaultdict(int) # the higher, the more likely it is to go first
 #####################end classes
 
+NO_CHANGES = 0
+CHANGED = 1
+
 #####################start options
 
 max_changes_overall = 0
@@ -169,12 +172,13 @@ def write_out_files(my_file):
             # if we are in a section, we already wrote the section text, so continue
             continue
     f.close()
-    if cmp(my_file, twiddle_file):
-        return
+    if cmp(my_file, twiddle_file): # just bail if nothing happened
+        return NO_CHANGES
     if alphabetical_comparisons:
         mt.compare_alphabetized_lines(my_file, twiddle_file)
     if overall_comparisons:
         mt.wm(my_file, twiddle_file)
+    return CHANGED
 
 def pattern_check(my_line):
     for x in sorted(this_twiddle.regex_pattern, key=lambda x: (-this_twiddle.priority[x])):
@@ -213,10 +217,16 @@ while cmd_count < len(sys.argv):
         overall_comparisons = False
     elif arg == 'a':
         alphabetical_comparisons = True
-    elif arg == 'c':
+    elif arg == 'ca':
         overall_comparisons = True
+        copy_over = True
+        alphabetical_comparisons = True
     elif arg == 'co':
         copy_over = True
+        alphabetical_comparisons = False
+    elif arg == 'cd':
+        copy_over = True
+        alphabetical_comparisons = True
     elif arg == 'nc':
         copy_over = False
     elif arg == 'ld':
@@ -302,7 +312,8 @@ for x in this_twiddle.to_temp:
     print("Total changes in {}: {}".format(x, cur_file_changes))
 
 for x in from_and_to:
-    write_out_files(x)
+    if write_out_files(x) == NO_CHANGES:
+        continue
     to_of_x = this_twiddle.to_temp[x]
     print("TWIDDLY", twiddle_of(to_of_x), x)
     if print_stats:
