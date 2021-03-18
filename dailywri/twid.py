@@ -43,6 +43,7 @@ CHANGED = 1
 
 max_changes_overall = 0
 max_changes_per_file = 0
+max_text_tweaks = 0
 
 copy_over = False
 secure_backup = True
@@ -75,7 +76,7 @@ def usage(arg = "general usage"):
     print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
     print("-e = edit config file")
     print("-ld = track line delta, nld/ldn = don't")
-    print("mf/fm/mo/om = max per file or overall")
+    print("mf/fm/mo/om = max shifts per file or overall, mt/tm = maximum tweaks")
     print("Specify project with p= or p:. Default is", my_default_project)
     exit()
 
@@ -224,6 +225,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'co':
         copy_over = True
         alphabetical_comparisons = False
+        overall_comparisons = False
     elif arg == 'cd':
         copy_over = True
         alphabetical_comparisons = True
@@ -235,6 +237,9 @@ while cmd_count < len(sys.argv):
         track_line_delta = False
     elif arg[:2] == 'p=' or arg[:2] == 'p:':
         my_project = arg[2:]
+    elif arg[:2] == 'mt' or arg[:2] == 'tm':
+        if arg[2:].isdigit():
+            max_text_tweaks = int(arg[2:])
     elif arg[:2] == 'mf' or arg[:2] == 'fm':
         if arg[2:].isdigit():
             max_changes_per_file = int(arg[2:])
@@ -269,6 +274,7 @@ this_twiddle = my_twiddle_projects[my_project]
 for x in this_twiddle.to_temp:
     max_file_reached = False
     cur_file_changes = 0
+    cur_text_tweaks = 0
     xb = os.path.basename(x)
     with open(x) as file:
         current_section = ""
@@ -280,12 +286,21 @@ for x in this_twiddle.to_temp:
                 continue
             temp = pattern_check(line)
             lcut = mt.no_comment(line.strip().lower())
-            for t_match in this_twiddle.flag_text_chunks:
-                if t_match in lcut:
-                    print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
-            for r_match in this_twiddle.flag_regexes:
-                if re.search(r_match, lcut, re.IGNORECASE):
-                    print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
+            if (not max_text_tweaks) or cur_text_tweaks <= max_text_tweaks:
+                for t_match in this_twiddle.flag_text_chunks:
+                    if t_match in lcut:
+                        cur_text_tweaks += 1
+                        if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
+                            print("Went over max text tweaks at line {} of {}. Increase with -mt.".format(line_count, xb))
+                            break
+                        print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
+                for r_match in this_twiddle.flag_regexes:
+                    if re.search(r_match, lcut, re.IGNORECASE):
+                        cur_text_tweaks += 1
+                        if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
+                            print("Went over max text tweaks at line {} of {}.".format(line_count, xb))
+                            break
+                        print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
             if current_section:
                 before_lines[current_section] += 1
             if temp and not this_twiddle.read_locked[current_section] and not this_twiddle.write_locked[temp] and not max_file_reached and not max_overall_reached:
