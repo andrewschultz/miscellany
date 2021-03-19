@@ -521,6 +521,8 @@ def text_in_browser(file_name, print_action = True, bail=False):
 tib = t_i_b = text_in_browser
 
 def comment_combine(my_lines, cr_at_end = True):
+    if type(cr_at_end) != bool and type(cr_at_end) != int:
+        raise ValueError('You probably sent a couple strings instead of an array of strings: <<{} / {}>>'.format(my_lines, cr_at_end)) from None
     uncomment = ""
     comment = ""
     any_comment = False
@@ -532,7 +534,8 @@ def comment_combine(my_lines, cr_at_end = True):
             continue
         comment_array = x.strip().split("#", 1)
         uncomment += " " + comment_array[0].strip()
-        comment += " / " + comment_array[1].strip()
+        if comment: comment += " / "
+        comment += comment_array[1].strip()
     if any_comment:
         uncomment += " # " + comment
     if cr_at_end:
