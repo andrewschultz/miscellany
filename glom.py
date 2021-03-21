@@ -4,18 +4,21 @@ import re
 import mytools as mt
 import shutil
 
-copy_back = True
+copy_back = False
 
+# constants
 my_project = "spo"
+
+# to become variable later
 my_file = "c:/writing/spopal.otl"
 my_file_temp = "c:/writing/temp/glom-spopal.otl"
 my_regex = r' +[0-9\*]{2} +'
 
+#cmd line variables
+
 max_changes = 1
 
-f = open(my_file, "r")
-line_array = f.readlines()
-f.close()
+# dictionaries
 
 so_far = defaultdict(int)
 delete_after = defaultdict(int)
@@ -41,6 +44,20 @@ def custom_array(x, go_lower = True):
     retval = re.split(my_regex, my_line)
     return retval
 
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg[0] == 'm':
+        max_changes = int(arg[1:])
+    cmd_count += 1
+
+f = open(my_file, "r")
+line_array = f.readlines()
+f.close()
+
+cur_changes = 0
+
 for line_count in range(0, len(line_array)):
     l = line_array[line_count]
     lb = l
@@ -56,6 +73,10 @@ for line_count in range(0, len(line_array)):
             else:
                 so_far[x] = line_count
         if len(after_array):
+            cur_changes += 1
+            if max_changes and cur_changes == max_changes + 1:
+                print("Went over max changes of", max_changes)
+                break
             for a in after_array:
                 print("Adding line", a)
                 l = mt.comment_combine([l, first_separator_of(l) + line_array[a]], cr_at_end = False)
@@ -69,7 +90,7 @@ for line_count in range(0, len(line_array)):
             for u in final_array:
                 if u.lower() not in final_dict.values():
                     final_dict[u] = u.lower()
-            final_text = hisep.join(sorted(final_dict))
+            final_text = hisep.join(sorted(final_dict, key=lambda x:x.lower()))
             if len(new_split) > 1:
                 final_text += " #" + new_split[1]
             #print(line_count, "from", ','.join([str(x) for x in after_array]), ":", final_array, "->", final_text)
@@ -77,12 +98,9 @@ for line_count in range(0, len(line_array)):
                 delete_after[q] = True
                 print("Zapping", q, line_array[q].strip())
             final_new_line = final_text.strip() + "\n"
-            print(len(final_new_line), final_new_line)
-            print(len(lb), lb)
             if len(final_new_line) == len(lb):
                 print("No length changed for line", line_count, "because of likely duplicate information.")
             line_array[line_count] = final_new_line
-            break
 
 f = open(my_file_temp, "w")
 
