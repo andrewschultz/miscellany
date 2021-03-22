@@ -16,7 +16,7 @@ my_regex = r' +[0-9\*]{2} +'
 
 #cmd line variables
 
-max_changes = 1
+max_changes = 10
 
 # dictionaries
 
@@ -50,6 +50,10 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'm':
         max_changes = int(arg[1:])
+    elif arg == 'c':
+        copy_back = True
+    elif arg == 'cn' or arg == 'nc':
+        copy_back = False
     cmd_count += 1
 
 f = open(my_file, "r")
@@ -68,7 +72,7 @@ for line_count in range(0, len(line_array)):
         for x in lary:
             if x in so_far:
                 if so_far[x] not in after_array:
-                    print(x, "was at line", so_far[x])
+                    #print(x, "was at line", so_far[x])
                     after_array.append(so_far[x])
             else:
                 so_far[x] = line_count
@@ -78,9 +82,8 @@ for line_count in range(0, len(line_array)):
                 print("Went over max changes of", max_changes)
                 break
             for a in after_array:
-                print("Adding line", a)
                 l = mt.comment_combine([l, first_separator_of(l) + line_array[a]], cr_at_end = False)
-            print("New combined line:", l)
+            #print("New combined line:", l)
             new_split = l.split('#')
             #print("new split", new_split)
             hisep = highest_separator_of(new_split[0])
@@ -96,10 +99,11 @@ for line_count in range(0, len(line_array)):
             #print(line_count, "from", ','.join([str(x) for x in after_array]), ":", final_array, "->", final_text)
             for q in after_array:
                 delete_after[q] = True
-                print("Zapping", q, line_array[q].strip())
+                #print("Zapping", q, line_array[q].strip())
             final_new_line = final_text.strip() + "\n"
+            print("    -> edited line:", final_new_line.strip())
             if len(final_new_line) == len(lb):
-                print("No length changed for line", line_count, "because of likely duplicate information.")
+                pass #print("No length changed for line", line_count, "because of likely duplicate information.")
             line_array[line_count] = final_new_line
 
 f = open(my_file_temp, "w")
@@ -113,7 +117,10 @@ f.close()
 
 mt.calf(my_file, my_file_temp)
 
+if cur_changes:
+    print(cur_changes, "total modifications")
+
 if copy_back:
-    pass #shutil.copy(my_file_temp, my_file)
+    shutil.copy(my_file_temp, my_file)
 else:
     mt.wm(my_file, my_file_temp)
