@@ -4,18 +4,24 @@ import re
 import mytools as mt
 import shutil
 
-copy_back = False
+cfg_file = "c:/writing/scripts/glom.txt"
+
+default_from_cfg = ''
 
 # constants
-my_project = "spo"
+my_project = ""
 
-# to become variable later
-my_file = "c:/writing/spopal.otl"
-my_file_temp = "c:/writing/temp/glom-spopal.otl"
-my_regex = r' +[0-9\*]{2} +'
+class glom_project:
+    def __init__(self, name): #alphabetical, except when similar are lumped together
+        self.file = ''
+        self.tempfile = ''
+        self.splitregex = ''
+
+my_gloms = defaultdict(glom_project)
 
 #cmd line variables
 
+copy_back = False
 max_changes = 10
 
 # dictionaries
@@ -30,19 +36,54 @@ def separator_value_of(x):
     return 0
 
 def first_separator_of(x):
-    sep_regex = r'({})'.format(my_regex)
+    sep_regex = r'({})'.format(this_glom.splitregex)
     return re.search(sep_regex, x)[0]
 
 def highest_separator_of(y):
-    sep_regex = r'({})'.format(my_regex)
+    sep_regex = r'({})'.format(this_glom.splitregex)
     f = re.findall(sep_regex, y)
     return max(f, key=lambda x:separator_value_of(x))
 
 def custom_array(x, go_lower = True):
     my_line = mt.zap_comment(x).strip()
     if go_lower: my_line = my_line.lower()
-    retval = re.split(my_regex, my_line)
+    retval = re.split(this_glom.splitregex, my_line)
     return retval
+
+def read_cfg_file():
+    global default_from_cfg
+    current_project = ''
+    with open(cfg_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith(";"): break
+            if line.startswith("#"): continue
+            if not line.strip(): continue
+            (prefix, data) = mt.cfg_data_split(line)
+            if prefix == 'default':
+                if default_from_cfg:
+                    print("WARNING default from cfg renamed at line", line_count)
+                default_from_cfg = data
+                continue
+            if prefix == 'project':
+                current_project = data
+                if current_project in my_gloms:
+                    print(current_project, "already in gloms.")
+                else:
+                    my_gloms[current_project] = glom_project(current_project)
+                this_glom = my_gloms[current_project]
+                continue
+            if not current_project:
+                sys.exit("Need a current project before actual options at line {}.".format(line_count))
+            if prefix == 'file':
+                this_glom.file = data
+            elif prefix == 'tempfile':
+                this_glom.tempfile = data
+            elif prefix == 'splitregex':
+                this_glom.splitregex = r'{}'.format(data)
+            else:
+                print("Bad prefix line", line_count, prefix)
+
+read_cfg_file()
 
 cmd_count = 1
 
@@ -56,7 +97,19 @@ while cmd_count < len(sys.argv):
         copy_back = False
     cmd_count += 1
 
-f = open(my_file, "r")
+if not my_project:
+    if default_from_cfg:
+        my_project = default_from_cfg
+        print("Going with default cfg project {}.".format(my_project))
+    else:
+        sys.exit("Could not find project {}.".format(my_project))
+
+if my_project not in my_gloms:
+    sys.exit("No glom project for {}.".format(my_project))
+
+this_glom = my_gloms[my_project]
+
+f = open(this_glom.file, "r")
 line_array = f.readlines()
 f.close()
 
@@ -106,7 +159,7 @@ for line_count in range(0, len(line_array)):
                 pass #print("No length changed for line", line_count, "because of likely duplicate information.")
             line_array[line_count] = final_new_line
 
-f = open(my_file_temp, "w")
+f = open(this_glom.tempfile, "w")
 
 for line_count in range(0, len(line_array)):
     if line_count in delete_after:
@@ -115,12 +168,12 @@ for line_count in range(0, len(line_array)):
 
 f.close()
 
-mt.calf(my_file, my_file_temp)
+mt.calf(this_glom.file, this_glom.tempfile)
 
 if cur_changes:
     print(cur_changes, "total modifications")
 
 if copy_back:
-    shutil.copy(my_file_temp, my_file)
+    shutil.copy(this_glom.tempfile, this_glom.file)
 else:
-    mt.wm(my_file, my_file_temp)
+    mt.wm(this_glom.file, this_glom.tempfile)
