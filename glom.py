@@ -1,3 +1,13 @@
+#
+# glom.py
+#
+# this gloms together similar/linked ideas.
+#
+# see flipflops for Buck The Past or ...
+#
+# ... welp haunted stuff, or otherwise
+#
+
 import sys
 from collections import defaultdict
 import re
@@ -91,7 +101,7 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'm':
         max_changes = int(arg[1:])
-    elif arg == 'c':
+    elif arg == 'c' or arg == 'co':
         copy_back = True
     elif arg == 'cn' or arg == 'nc':
         copy_back = False
@@ -154,7 +164,7 @@ for line_count in range(0, len(line_array)):
                 delete_after[q] = True
                 #print("Zapping", q, line_array[q].strip())
             final_new_line = final_text.strip() + "\n"
-            print("    -> edited line:", final_new_line.strip())
+            print("    -> edited line ({} from {}):".format(line_count, ', '.join([str(x) for x in after_array])), final_new_line.strip())
             if len(final_new_line) == len(lb):
                 pass #print("No length changed for line", line_count, "because of likely duplicate information.")
             line_array[line_count] = final_new_line
@@ -171,9 +181,13 @@ f.close()
 mt.calf(this_glom.file, this_glom.tempfile)
 
 if cur_changes:
-    print(cur_changes, "total modifications")
+    if max_changes and cur_changes > max_changes:
+        cur_changes = max_changes
+    print(cur_changes, "total modifications caught this run.")
 
 if copy_back:
     shutil.copy(this_glom.tempfile, this_glom.file)
+    print("Temp file copied back. Changes are permanent.")
 else:
     mt.wm(this_glom.file, this_glom.tempfile)
+    print("Use the -co flag to copy over when you're ready.")
