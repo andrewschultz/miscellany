@@ -60,6 +60,32 @@ def custom_array(x, go_lower = True):
     retval = re.split(this_glom.splitregex, my_line)
     return retval
 
+def get_all_ideas(my_file):
+    my_dict = defaultdict(int)
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            ca = custom_array(line)
+            if len(ca) > 1:
+                for idea in ca:
+                    my_dict[idea] = line_count
+    return my_dict
+
+def compare_idea_lists(file_1, file_2):
+    my_1 = get_all_ideas(file_1)
+    my_2 = get_all_ideas(file_2)
+    left = 0
+    right = 0
+    for x in sorted(set(list(my_1)) | set(list(my_2))):
+        if x not in my_1:
+            print(x, "not in", file_1, "but was at line", my_2[x], "for", file_2)
+            left += 1
+        if x not in my_2:
+            print(x, "not in", file_2, "but was at line", my_1[x], "for", file_1)
+            right += 1
+    if left or right:
+        sys.exit("Missing ideas. Bailing.")
+    print("No missing ideas on file rewrite.")
+
 def read_cfg_file():
     global default_from_cfg
     current_project = ''
@@ -134,7 +160,7 @@ for line_count in range(0, len(line_array)):
         after_array = []
         for x in lary:
             if x in so_far:
-                if so_far[x] not in after_array:
+                if so_far[x] not in after_array and so_far[x] not in delete_after:
                     #print(x, "was at line", so_far[x])
                     after_array.append(so_far[x])
             else:
@@ -164,7 +190,7 @@ for line_count in range(0, len(line_array)):
                 delete_after[q] = True
                 #print("Zapping", q, line_array[q].strip())
             final_new_line = final_text.strip() + "\n"
-            print("    -> edited line ({} from {}):".format(line_count, ', '.join([str(x) for x in after_array])), final_new_line.strip())
+            print("    -> edited line ({} from {}):".format(line_count+1, ', '.join([str(x+1) for x in after_array])), final_new_line.strip())
             if len(final_new_line) == len(lb):
                 pass #print("No length changed for line", line_count, "because of likely duplicate information.")
             line_array[line_count] = final_new_line
@@ -178,7 +204,9 @@ for line_count in range(0, len(line_array)):
 
 f.close()
 
-mt.calf(this_glom.file, this_glom.tempfile)
+#mt.calf(this_glom.file, this_glom.tempfile)
+
+compare_idea_lists(this_glom.file, this_glom.tempfile)
 
 if cur_changes:
     if max_changes and cur_changes > max_changes:
