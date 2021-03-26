@@ -230,7 +230,9 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def cfg_data_split(x, delimiter=":=", to_tuple = True):
+def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
+    if strip_line:
+        x = x.strip()
     ary = re.split("[{}]".format(delimiter), x, 1)
     if to_tuple:
         return(ary[0], ary[1])
