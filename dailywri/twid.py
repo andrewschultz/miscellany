@@ -279,6 +279,9 @@ for x in this_twiddle.to_temp:
     with open(x) as file:
         current_section = ""
         for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"):
+                section_text[current_section if current_section else 'blank'] += line
+                continue
             if line.startswith("\\"):
                 current_section = line.strip()
                 if current_section not in section_text:
@@ -349,7 +352,14 @@ for x in from_and_to:
     if secure_backup:
         print("Backing up", x, twid_from)
         copy(x, os.path.join(my_twiddle_dir, "bak", os.path.basename(x)))
+    temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False):
+    print("{} and {} {}have identical information.".format(x, twid_from, '' if temp else 'do not '))
+
+    if not temp:
+        print("Not copying back over due to possible meaningful data loss.")
+
     print("Copying", twid_from, x)
+    continue
     copy(twid_from, x)
     changed += 1
 
