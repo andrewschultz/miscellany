@@ -75,15 +75,18 @@ def compare_idea_lists(file_1, file_2):
     my_2 = get_all_ideas(file_2)
     left = 0
     right = 0
-    for x in sorted(set(list(my_1)) | set(list(my_2))):
-        if x not in my_1:
-            print(x, "not in", file_1, "but was at line", my_2[x], "for", file_2)
-            left += 1
+    my_both = sorted(set(list(my_1)) | set(list(my_2)))
+    for x in my_both: # less serious, so if there are too many mistakes, the next is seen first
         if x not in my_2:
             print(x, "not in", file_2, "but was at line", my_1[x], "for", file_1)
+            left += 1
+    for x in my_both: # legitimate data loss needs to be seen first, at the bottom, especially if there is more than one screen of it
+        if x not in my_1:
+            print(x, "not in", file_1, "but was at line", my_2[x], "for", file_2)
             right += 1
     if left or right:
-        sys.exit("Missing ideas. Bailing.")
+        print("Missing ideas. {} vanished from left, {} vanished from right. Bailing.".format(left, right))
+        sys.exit()
     print("No missing ideas on file rewrite.")
 
 def read_cfg_file():
@@ -187,7 +190,8 @@ for line_count in range(0, len(line_array)):
                 final_text += " #" + new_split[1]
             #print(line_count, "from", ','.join([str(x) for x in after_array]), ":", final_array, "->", final_text)
             for q in after_array:
-                delete_after[q] = True
+                if q != line_count:
+                    delete_after[q] = True
                 #print("Zapping", q, line_array[q].strip())
             final_new_line = final_text.strip() + "\n"
             print("    -> edited line ({} from {}):".format(line_count+1, ', '.join([str(x+1) for x in after_array])), final_new_line.strip())
