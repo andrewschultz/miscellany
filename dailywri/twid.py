@@ -46,6 +46,7 @@ max_changes_per_file = 0
 max_text_tweaks = 0
 
 copy_over = False
+force_copy = False
 secure_backup = True
 print_stats = False
 alphabetical_comparisons = True
@@ -74,6 +75,7 @@ def usage(arg = "general usage"):
     print("-ps = print stats, -nps/psn = don't print stats")
     print("-sb/bs = secure backup to my_twiddle_dir/bak directory, (n) negates it")
     print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
+    print("-co = copy over, -fc = force copy even with corrupted information")
     print("-e = edit config file")
     print("-ld = track line delta, nld/ldn = don't")
     print("mf/fm/mo/om = max shifts per file or overall, mt/tm = maximum tweaks")
@@ -229,6 +231,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'cd':
         copy_over = True
         alphabetical_comparisons = True
+    elif arg == 'fc':
+        force_copy = False
     elif arg == 'nc':
         copy_over = False
     elif arg == 'ld':
@@ -352,13 +356,17 @@ for x in from_and_to:
     if secure_backup:
         print("Backing up", x, twid_from)
         copy(x, os.path.join(my_twiddle_dir, "bak", os.path.basename(x)))
-    temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False):
+    temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False)
     print("{} and {} {}have identical information.".format(x, twid_from, '' if temp else 'do not '))
 
     if not temp:
-        print("Not copying back over due to possible meaningful data loss.")
-
-    print("Copying", twid_from, x)
+        if force_copy:
+            print("Force-copying {} back over {} despite significant information change.".format(twid_from, x))
+        else:
+            print("Not copying back over due to possible meaningful data loss. Use -fc to force-copy.")
+            continue
+    elseL
+        print("Copying", twid_from, x)
     continue
     copy(twid_from, x)
     changed += 1
