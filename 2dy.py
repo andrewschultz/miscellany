@@ -133,11 +133,21 @@ def get_init_sections():
             if line.startswith("file_header="):
                 file_header += line[12:].replace("\\", "\n")
                 continue
+            if "," not in line:
+                print("WARNING: unidentified line (no valid header or CSV of sections {}".format(line_count))
+                continue
             ary = line.lower().strip().split(",")
+            if len(sect_ary):
+                print("Adding to array of blank sections on line {}".format(line_count))
             for q in ary:
                 ary2 = q.split('=')
                 sect_ary.append(ary2[0])
                 # init_sect[ary2[0]] = ary2[1]
+    sect_ary_2 = sorted(sect_ary, key=lambda x:(x == 'nam', x))
+    if sect_ary_2 != sect_ary:
+        print("WARNING wobbly unsorted sections:")
+        print("    is: {}".format(', '.join(sect_ary)))
+        print("    best order: {}".format(', '.join(sect_ary_2)))
 
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
@@ -184,7 +194,6 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if latest_daily:
-    get_init_sections()
     found_done_file = False
     for x in range(0, max_days_new):
         day_file = see_back(d, daily, x)
@@ -199,6 +208,7 @@ if latest_daily:
         if os.path.exists(day_done_file): found_done_file = day_done_file
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
     print("Looking back", max_days_new, "days, daily file not found.")
+    get_init_sections()
     create_new_file(see_back(d, daily, 0))
     exit()
 
