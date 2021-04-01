@@ -3,6 +3,10 @@
 #
 # 2dy.txt is the CFG file
 #
+# note that this is a misnomer as I in fact only create a file once a week
+#
+# but it still creates the latest daily file, and the "daily" directory name is kept for posterity
+#
 
 import glob
 import xml.etree.ElementTree as ET

@@ -86,7 +86,8 @@ def per_day_metrics(days, end_goal = 'month'):
     commits_per_day_catchup = days / days_left
     if commits_per_day_total > 0:
         print("To get caught up by the end of the {}, you actually need {}-{} commits.".format(end_goal, int(days + days_left - 1), int(days + days_left)))
-        print("That makes {:.3f}/{:.3f} commits per day current/actual commits. {:.3f} days left in the {}.".format(commits_per_day_total, commits_per_day_catchup, days_left, end_goal))
+        print("That makes {:.3f}/{:.3f} commits per day current/actual commits. {:.3f} days left in the {}. Each commit shaves off {:.3f} per-day.".format(
+            commits_per_day_total, commits_per_day_catchup, days_left, end_goal, 1 / days_left))
     else:
         print("You don't need any specific goals.")
 

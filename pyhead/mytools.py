@@ -399,8 +399,7 @@ def alfcomp(x1, x2, bail = True, comments = True, spaces = False, show_winmerge 
         os.remove(a1)
         os.remove(a2)
         if bail: sys.exit()
-    else:
-        return cmp(a1, a2)
+    return cmp(a1, a2)
 
 def wm(x1, x2, ignore_if_identical = True):
     if ignore_if_identical and cmp(x1, x2):
