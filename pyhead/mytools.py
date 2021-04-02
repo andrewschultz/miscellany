@@ -137,6 +137,15 @@ def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
 
 nohyp = noh = nohy
 
+def decimal_only(val, digits = 3):
+    fmt = "%.{}f".format(digits)
+    ret = fmt % val
+    if ret.startswith("0."):
+        return ret[1:]
+    if ret.startswith("-0."):
+        return "-" + ret[2:]
+    return ret
+
 def is_npp_modified(my_file): # see if a file is unsaved in notepad++
     e = ET.parse(np_xml)
     for elem in e.iter('File'):
