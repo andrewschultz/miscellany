@@ -33,6 +33,7 @@ my_gloms = defaultdict(glom_project)
 
 copy_back = False
 max_changes = 10
+user_max_line = 0
 
 # dictionaries
 
@@ -128,8 +129,10 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg[0] == 'm':
+    if arg[0] == 'm' and arg[1:].isdigit():
         max_changes = int(arg[1:])
+    elif arg[0] == 'ml' and arg[2:].isdigit():
+        user_max_line = int(arg[2:])
     elif arg == 'c' or arg == 'co':
         copy_back = True
     elif arg == 'cn' or arg == 'nc':
@@ -154,7 +157,14 @@ f.close()
 
 cur_changes = 0
 
-for line_count in range(0, len(line_array)):
+max_line = len(line_array)
+if user_max_line:
+    if user_max_line > max_line:
+        print("user-defined maximum line to edit is greater than lines in {}.".format(this_glom_file))
+    else:
+        user_max_line = max_line
+
+for line_count in range(0, max_line):
     l = line_array[line_count]
     lb = l
     lary = custom_array(l)
