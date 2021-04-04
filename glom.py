@@ -40,6 +40,13 @@ user_max_line = 0
 so_far = defaultdict(int)
 delete_after = defaultdict(int)
 
+def usage(message = 'Usage for glom.py'):
+    print(message)
+    print('=' * 50)
+    print("m# = max changes, ml# = max line")
+    print("c/co = copy over, cn/nc = don't copy over")
+    exit()
+
 def separator_value_of(x):
     x = x.strip()
     if x == '00' or x == '**': return 100
@@ -131,12 +138,16 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'm' and arg[1:].isdigit():
         max_changes = int(arg[1:])
-    elif arg[0] == 'ml' and arg[2:].isdigit():
+    elif arg[:2] == 'ml' and arg[2:].isdigit():
         user_max_line = int(arg[2:])
     elif arg == 'c' or arg == 'co':
         copy_back = True
     elif arg == 'cn' or arg == 'nc':
         copy_back = False
+    elif arg == '?':
+        usage()
+    else:
+        usage("Unknown parameter {}".format(arg))
     cmd_count += 1
 
 if not my_project:
@@ -162,7 +173,7 @@ if user_max_line:
     if user_max_line > max_line:
         print("user-defined maximum line to edit is greater than lines in {}.".format(this_glom_file))
     else:
-        user_max_line = max_line
+        max_line = user_max_line
 
 for line_count in range(0, max_line):
     l = line_array[line_count]
