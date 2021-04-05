@@ -78,6 +78,13 @@ def get_all_ideas(my_file):
                     my_dict[idea] = line_count
     return my_dict
 
+def glom_modification_of(my_idea):
+    my_idea = my_idea.lower()
+    return my_idea
+    if my_idea.count(' ') == 1:
+        my_idea = ' '.join(sorted(my_idea.split(' ')))
+    return my_idea
+
 def compare_idea_lists(file_1, file_2):
     my_1 = get_all_ideas(file_1)
     my_2 = get_all_ideas(file_2)
@@ -204,8 +211,9 @@ for line_count in range(0, max_line):
             #print("Parsing", final_array)
             final_dict = defaultdict(bool)
             for u in final_array:
-                if u.lower() not in final_dict.values():
-                    final_dict[u] = u.lower()
+                u_mod = glom_modification_of(u)
+                if u_mod not in final_dict.values():
+                    final_dict[u] = u_mod
             final_text = hisep.join(sorted(final_dict, key=lambda x:x.lower()))
             if len(new_split) > 1:
                 final_text += " #" + new_split[1]
