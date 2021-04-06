@@ -75,11 +75,12 @@ def get_all_ideas(my_file):
             ca = custom_array(line)
             if len(ca) > 1:
                 for idea in ca:
-                    my_dict[idea] = line_count
+                    my_dict[glom_modification_of(idea)] = line_count
     return my_dict
 
 def glom_modification_of(my_idea):
     my_idea = my_idea.lower()
+    my_idea = my_idea.replace(',', '').replace('.', '').replace('-', ' ')
     return my_idea
     if my_idea.count(' ') == 1:
         my_idea = ' '.join(sorted(my_idea.split(' ')))
@@ -214,6 +215,10 @@ for line_count in range(0, max_line):
                 u_mod = glom_modification_of(u)
                 if u_mod not in final_dict.values():
                     final_dict[u] = u_mod
+                if u in so_far:
+                    so_far[u] = line_count
+            if len(final_dict) == 1:
+                print("WARNING line {} collapsed to just one argument: {}.".format(line_count + 1, list(final_dict)[0]))
             final_text = hisep.join(sorted(final_dict, key=lambda x:x.lower()))
             if len(new_split) > 1:
                 final_text += " #" + new_split[1]
