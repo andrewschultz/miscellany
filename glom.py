@@ -81,10 +81,19 @@ def get_all_ideas(my_file):
 def glom_modification_of(my_idea):
     my_idea = my_idea.lower()
     my_idea = my_idea.replace(',', '').replace('.', '').replace('-', ' ')
-    return my_idea
-    if my_idea.count(' ') == 1:
+    my_idea = ' '.join(my_idea.split(' '))
+    if my_idea.count(' '):
         my_idea = ' '.join(sorted(my_idea.split(' ')))
     return my_idea
+
+def show_vanishing_idea_lines(main_dict, compare_dict, file_1, file_2):
+    set_difference = sorted(set(list(main_dict)) - set(list(compare_dict)))
+    if not len(set_difference):
+        return 0
+    max_len = max([len(x) for x in set_difference])
+    for x in sorted(set_difference, key=lambda x: main_dict[x]):
+        print("{:{maxsize}s} not in {} but was at line {} for {}".format(x, file_2, main_dict[x], file_1, maxsize = max_len))
+    return len(set_difference)
 
 def compare_idea_lists(file_1, file_2):
     my_1 = get_all_ideas(file_1)
@@ -92,14 +101,8 @@ def compare_idea_lists(file_1, file_2):
     left = 0
     right = 0
     my_both = sorted(set(list(my_1)) | set(list(my_2)))
-    for x in my_both: # less serious, so if there are too many mistakes, the next is seen first
-        if x not in my_2:
-            print(x, "not in", file_2, "but was at line", my_1[x], "for", file_1)
-            left += 1
-    for x in my_both: # legitimate data loss needs to be seen first, at the bottom, especially if there is more than one screen of it
-        if x not in my_1:
-            print(x, "not in", file_1, "but was at line", my_2[x], "for", file_2)
-            right += 1
+    left = show_vanishing_idea_lines(my_1, my_2, file_1, file_2)
+    right = show_vanishing_idea_lines(my_2, my_1, file_2, file_1)
     if left or right:
         print("Missing ideas. {} vanished from left, {} vanished from right. Bailing.".format(left, right))
         sys.exit()
@@ -191,12 +194,13 @@ for line_count in range(0, max_line):
         #print(line_count, lary)
         after_array = []
         for x in lary:
-            if x in so_far:
-                if so_far[x] not in after_array and so_far[x] not in delete_after:
+            xg = glom_modification_of(x)
+            if xg in so_far:
+                if so_far[xg] not in after_array and so_far[xg] not in delete_after:
                     #print(x, "was at line", so_far[x])
-                    after_array.append(so_far[x])
+                    after_array.append(so_far[xg])
             else:
-                so_far[x] = line_count
+                so_far[xg] = line_count
         if len(after_array):
             cur_changes += 1
             if max_changes and cur_changes == max_changes + 1:

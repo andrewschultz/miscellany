@@ -243,6 +243,8 @@ while count < len(sys.argv):
         bare_commit = True
     elif arg == 'nv':
         no_verify = True
+    elif arg == 'ea':
+        by_end_of_week = by_end_of_month = by_end_of_year = True
     elif re.search(r'e(o?)[wmy]+', arg):
         by_end_of_week = 'w' in arg
         by_end_of_month = 'm' in arg
