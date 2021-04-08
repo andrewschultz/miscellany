@@ -34,6 +34,9 @@ class twiddle_project:
         self.flag_regexes = []
 
         self.priority = defaultdict(int) # the higher, the more likely it is to go first
+
+        self.shuffle_end = ''
+
 #####################end classes
 
 NO_CHANGES = 0
@@ -112,6 +115,9 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'regex':
                 cur_twiddle.flag_regexes.append(data)
+                continue
+            elif prefix == 'shufend':
+                cur_twiddle.shuffle_end = (data)
                 continue
             elif prefix == 'text':
                 cur_twiddle.flag_text_chunks.append(data)
@@ -275,14 +281,19 @@ overall_changes = 0
 
 this_twiddle = my_twiddle_projects[my_project]
 
-for x in this_twiddle.to_temp:
+for x in this_twiddle.from_temp:
     max_file_reached = False
     cur_file_changes = 0
     cur_text_tweaks = 0
     xb = os.path.basename(x)
+    past_ignore = False
     with open(x) as file:
         current_section = ""
         for (line_count, line) in enumerate (file, 1):
+            if not past_ignore and this_twiddle.shuffle_end:
+                if line.startswith(this_twiddle.shuffle_end):
+                    print("Found the end line", line_count)
+                    past_ignore = True
             if line.startswith("#"):
                 section_text[current_section if current_section else 'blank'] += line
                 continue
@@ -290,6 +301,9 @@ for x in this_twiddle.to_temp:
                 current_section = line.strip()
                 if current_section not in section_text:
                     section_text[current_section] = ""
+                continue
+            if past_ignore:
+                section_text['blank' if not current_section else current_section] += line
                 continue
             temp = pattern_check(line)
             lcut = mt.no_comment(line.strip().lower())
@@ -365,9 +379,9 @@ for x in from_and_to:
         else:
             print("Not copying back over due to possible meaningful data loss. Use -fc to force-copy.")
             continue
-    elseL
+    else:
         print("Copying", twid_from, x)
-    continue
+
     copy(twid_from, x)
     changed += 1
 
