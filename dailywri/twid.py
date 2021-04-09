@@ -195,6 +195,35 @@ def pattern_check(my_line):
             return x
     return ""
 
+def copy_back_from_temp(this_twiddle, from_and_to):
+    changed = unchanged = 0
+
+    for x in from_and_to:
+        twid_from = twiddle_of(this_twiddle.to_temp[x])
+        if cmp(x, twid_from):
+            print("Skipping", x, twid_from, "no changes.")
+            unchanged += 1
+            continue
+        if secure_backup:
+            print("Backing up", x, twid_from)
+            copy(x, os.path.join(my_twiddle_dir, "bak", os.path.basename(x)))
+        temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False)
+        print("{} and {} {}have identical information.".format(x, twid_from, '' if temp else 'do not '))
+
+        if not temp:
+            if force_copy:
+                print("Force-copying {} back over {} despite significant information change.".format(twid_from, x))
+            else:
+                print("Not copying back over due to possible meaningful data loss. Use -fc to force-copy.")
+                continue
+        else:
+            print("Copying", twid_from, x)
+
+        copy(twid_from, x)
+        changed += 1
+
+    print(changed, "changed", unchanged, "unchanged")
+
 ################################### main file
 
 get_twiddle_mappings()
@@ -281,7 +310,7 @@ overall_changes = 0
 
 this_twiddle = my_twiddle_projects[my_project]
 
-for x in this_twiddle.from_temp:
+for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, points TO the file in the temp directory, FROM an absolute path. 
     max_file_reached = False
     cur_file_changes = 0
     cur_text_tweaks = 0
@@ -315,6 +344,7 @@ for x in this_twiddle.from_temp:
                             print("Went over max text tweaks at line {} of {}. Increase with -mt.".format(line_count, xb))
                             break
                         print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
+                        mt.add_postopen(x, line_count)
                 for r_match in this_twiddle.flag_regexes:
                     if re.search(r_match, lcut, re.IGNORECASE):
                         cur_text_tweaks += 1
@@ -322,6 +352,7 @@ for x in this_twiddle.from_temp:
                             print("Went over max text tweaks at line {} of {}.".format(line_count, xb))
                             break
                         print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
+                        mt.add_postopen(x, line_count)
             if current_section:
                 before_lines[current_section] += 1
             if temp and not this_twiddle.read_locked[current_section] and not this_twiddle.write_locked[temp] and not max_file_reached and not max_overall_reached:
@@ -357,32 +388,8 @@ for x in from_and_to:
         print("New:", os.stat(twiddle_of(to_of_x)).st_size, twiddle_of(to_of_x))
 
 if not copy_over:
-    sys.exit("-co to copy over")
+    print("-co to copy over")
+else:
+    copy_back_from_temp()
 
-changed = unchanged = 0
-
-for x in from_and_to:
-    twid_from = twiddle_of(this_twiddle.to_temp[x])
-    if cmp(x, twid_from):
-        print("Skipping", x, twid_from, "no changes.")
-        unchanged += 1
-        continue
-    if secure_backup:
-        print("Backing up", x, twid_from)
-        copy(x, os.path.join(my_twiddle_dir, "bak", os.path.basename(x)))
-    temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False)
-    print("{} and {} {}have identical information.".format(x, twid_from, '' if temp else 'do not '))
-
-    if not temp:
-        if force_copy:
-            print("Force-copying {} back over {} despite significant information change.".format(twid_from, x))
-        else:
-            print("Not copying back over due to possible meaningful data loss. Use -fc to force-copy.")
-            continue
-    else:
-        print("Copying", twid_from, x)
-
-    copy(twid_from, x)
-    changed += 1
-
-print(changed, "changed", unchanged, "unchanged")
+mt.postopen_files()
