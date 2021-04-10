@@ -48,6 +48,8 @@ max_changes_overall = 0
 max_changes_per_file = 0
 max_text_tweaks = 0
 
+postopen_to_fix = True
+
 copy_over = False
 force_copy = False
 secure_backup = True
@@ -253,6 +255,10 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = False
     elif arg == 'cn' or arg == 'nc':
         overall_comparisons = False
+    elif arg == 'po' or arg == 'op':
+        postopen_to_fix = True
+    elif arg == 'pn' or arg == 'np':
+        postopen_to_fix = False
     elif arg == 'a':
         alphabetical_comparisons = True
     elif arg == 'ca':
@@ -392,4 +398,5 @@ if not copy_over:
 else:
     copy_back_from_temp()
 
-mt.postopen_files()
+if postopen_to_fix:
+    mt.postopen_files()
