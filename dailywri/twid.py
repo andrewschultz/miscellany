@@ -64,6 +64,7 @@ track_line_delta = True
 my_twiddle_projects = defaultdict(twiddle_project)
 
 section_text = defaultdict(str)
+post_text = defaultdict(str)
 before_lines = defaultdict(int)
 
 my_twiddle_config = "c:/writing/scripts/twid.txt"
@@ -175,7 +176,9 @@ def write_out_files(my_file):
                         pass
                     else:
                         print("Section text for", ls, "previously", before_lines[ls], "increased" if before_lines[ls] < section_text[ls].count("\n") else "decreased", "to", section_text[ls].count("\n"))
-                f.write(section_text[ls])
+                f.write(section_text[ls] + "\n")
+                if ls in post_text:
+                    f.write(post_text[ls])
                 continue
             if not current_section:
                 f.write(line)
@@ -323,19 +326,32 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
     xb = os.path.basename(x)
     past_ignore = False
     with open(x) as file:
-        current_section = ""
+        last_section = ''
+        current_section = ''
         for (line_count, line) in enumerate (file, 1):
             if not past_ignore and this_twiddle.shuffle_end:
                 if line.startswith(this_twiddle.shuffle_end):
                     print("Found the end line", line_count)
                     past_ignore = True
             if line.startswith("#"):
-                section_text[current_section if current_section else 'blank'] += line
+                if current_section:
+                    section_text[current_section] += line
+                elif last_section:
+                    post_text[last_section] += line
+                else:
+                    section_text['blank'] += line
                 continue
             if line.startswith("\\"):
                 current_section = line.strip()
                 if current_section not in section_text:
                     section_text[current_section] = ""
+                continue
+            if not line.strip():
+                if current_section:
+                    last_section = current_section
+                elif last_section:
+                    post_text[last_section] += line
+                current_section = ''
                 continue
             if past_ignore:
                 section_text['blank' if not current_section else current_section] += line
@@ -377,6 +393,8 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if current_section:
                 section_text[current_section] += line
                 continue
+            if last_section:
+                post_text[last_section] += line
             section_text['blank'] += line
             for q in this_twiddle.regex_pattern:
                 if re.search(this_twiddle.regex_pattern[q], line):
@@ -396,7 +414,7 @@ for x in from_and_to:
 if not copy_over:
     print("-co to copy over")
 else:
-    copy_back_from_temp()
+    copy_back_from_temp(this_twiddle, from_and_to)
 
 if postopen_to_fix:
     mt.postopen_files()
