@@ -27,8 +27,8 @@ class twiddle_project:
         self.from_temp = defaultdict(str)
         self.to_temp = defaultdict(str)
 
-        self.read_locked = defaultdict(str) # don't move anything from this section
-        self.write_locked = defaultdict(str) # don't move anything to this section
+        self.movefrom_locked = defaultdict(str) # don't move anything from this section
+        self.moveto_locked = defaultdict(str) # don't move anything to this section
 
         self.flag_text_chunks = []
         self.flag_regexes = []
@@ -134,10 +134,10 @@ def get_twiddle_mappings():
             cur_twiddle.regex_pattern[ary[1]] = ary[4]
             if len(ary) > 5:
                 write_status = ary[5].lower()
-                if write_status == 'readonly' or write_status == 'locked':
-                    cur_twiddle.write_locked[ary[1]] = True
-                elif write_status == 'writeonly' or write_status == 'locked':
-                    cur_twiddle.read_locked[ary[1]] = True
+                if write_status == 'fromonly' or write_status == 'blockto' or write_status == 'toblock' or write_status == 'locked':
+                    cur_twiddle.moveto_locked[ary[1]] = True
+                elif write_status == 'toonly' or write_status == 'blockfrom' or write_status == 'fromblock' or write_status == 'locked':
+                    cur_twiddle.movefrom_locked[ary[1]] = True
                 else:
                     print("INVALID cfg entry 5 read/write at line {}.".format(line_count))
     global from_and_to
@@ -377,7 +377,7 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                         mt.add_postopen(x, line_count)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not this_twiddle.read_locked[current_section] and not this_twiddle.write_locked[temp] and not max_file_reached and not max_overall_reached:
+            if temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
                 if max_changes_overall and overall_changes == max_changes_overall and temp != current_section:
                     print("You went over the maximum overall changes allowed in all files.")
                     max_overall_reached = True
