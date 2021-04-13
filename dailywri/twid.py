@@ -131,13 +131,16 @@ def get_twiddle_mappings():
             cur_twiddle.priority[ary[1]] = int(ary[0])
             cur_twiddle.from_file[ary[1]] = ary[2]
             cur_twiddle.to_file[ary[1]] = ary[3]
-            cur_twiddle.regex_pattern[ary[1]] = ary[4]
+            if ary[4]:
+                cur_twiddle.regex_pattern[ary[1]] = ary[4]
             if len(ary) > 5:
                 write_status = ary[5].lower()
-                if write_status == 'fromonly' or write_status == 'blockto' or write_status == 'toblock' or write_status == 'locked':
+                if write_status == 'fromonly' or write_status == 'blockto' or write_status == 'toblock':
                     cur_twiddle.moveto_locked[ary[1]] = True
-                elif write_status == 'toonly' or write_status == 'blockfrom' or write_status == 'fromblock' or write_status == 'locked':
+                elif write_status == 'toonly' or write_status == 'blockfrom' or write_status == 'fromblock':
                     cur_twiddle.movefrom_locked[ary[1]] = True
+                elif write_status == 'locked':
+                    cur_twiddle.movefrom_locked[ary[1]] = cur_twiddle.moveto_locked[ary[1]] = True
                 else:
                     print("INVALID cfg entry 5 read/write at line {}.".format(line_count))
     global from_and_to
