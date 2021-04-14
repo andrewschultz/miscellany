@@ -128,10 +128,20 @@ def get_twiddle_mappings():
             if not current_project:
                 sys.exit("Need current project defined at line {}.".format(line_count))
             ary = line.strip().split(",")
-            cur_twiddle.priority[ary[1]] = int(ary[0])
+            if len(ary) <= 3:
+                print("WARNING CSV file needs priority, from and to at line {}.".format(line_count))
+                continue
+            try:
+                cur_twiddle.priority[ary[1]] = int(ary[0])
+            except:
+                print("Need integer value of prioirity for {} at line {}. Defaulting to zero.".format(ary[1], line_count))
+                cur_twiddle.priority[ary[1]] = 0
             cur_twiddle.from_file[ary[1]] = ary[2]
-            cur_twiddle.to_file[ary[1]] = ary[3]
-            if ary[4]:
+            if ary[3] == '.':
+                cur_twiddle.to_file[ary[1]] = ary[2]
+            else:
+                cur_twiddle.to_file[ary[1]] = ary[3]
+            if len(ary) >= 5 and ary[4]:
                 cur_twiddle.regex_pattern[ary[1]] = ary[4]
             if len(ary) > 5:
                 write_status = ary[5].lower()
