@@ -16,8 +16,8 @@ from shutil import copy
 
 class twiddle_project:
     def __init__(self, name): #alphabetical, except when similar are lumped together
-        # this covers the regex pattern
-        self.regex_pattern = defaultdict(str)
+        # this covers the regex/text patterns that direct us to certain sections
+        self.match_pattern = defaultdict(tuple)
 
         # these two cover all the files that may be edited under a specific project.
         self.from_file = defaultdict(str)
@@ -33,14 +33,15 @@ class twiddle_project:
         self.flag_text_chunks = []
         self.flag_regexes = []
 
-        self.priority = defaultdict(int) # the higher, the more likely it is to go first
-
         self.shuffle_end = ''
 
 #####################end classes
 
 NO_CHANGES = 0
 CHANGED = 1
+
+REGEX = 0
+TEXT = 1
 
 #####################start options
 
@@ -132,27 +133,31 @@ def get_twiddle_mappings():
                 print("WARNING CSV file needs priority, from and to at line {}.".format(line_count))
                 continue
             try:
-                cur_twiddle.priority[ary[1]] = int(ary[0])
+                local_priority = int(ary[0])
             except:
                 print("Need integer value of prioirity for {} at line {}. Defaulting to zero.".format(ary[1], line_count))
-                cur_twiddle.priority[ary[1]] = 0
+                local_priority = 0
             cur_twiddle.from_file[ary[1]] = ary[2]
             if ary[3] == '.':
                 cur_twiddle.to_file[ary[1]] = ary[2]
             else:
                 cur_twiddle.to_file[ary[1]] = ary[3]
-            if len(ary) >= 5 and ary[4]:
-                cur_twiddle.regex_pattern[ary[1]] = ary[4]
-            if len(ary) > 5:
-                write_status = ary[5].lower()
+            for x in range(4, len(ary)):
+                write_status = ary[x].lower()
                 if write_status == 'fromonly' or write_status == 'blockto' or write_status == 'toblock':
                     cur_twiddle.moveto_locked[ary[1]] = True
+                    continue
                 elif write_status == 'toonly' or write_status == 'blockfrom' or write_status == 'fromblock':
                     cur_twiddle.movefrom_locked[ary[1]] = True
+                    continue
                 elif write_status == 'locked':
                     cur_twiddle.movefrom_locked[ary[1]] = cur_twiddle.moveto_locked[ary[1]] = True
+                    continue
+                if write_status.startswith("txt:"):
+                    cur_twiddle.match_pattern[ary[x][4:]] = (local_priority, TEXT)
                 else:
-                    print("INVALID cfg entry 5 read/write at line {}.".format(line_count))
+                    cur_twiddle.match_pattern[ary[x]] = (local_priority, REGEX)
+
     global from_and_to
     for proj in my_twiddle_projects:
         from_and_to = list(set(my_twiddle_projects[proj].from_file.values()) | set(my_twiddle_projects[proj].to_file.values()))
@@ -208,9 +213,13 @@ def write_out_files(my_file):
     return CHANGED
 
 def pattern_check(my_line):
-    for x in sorted(this_twiddle.regex_pattern, key=lambda x: (-this_twiddle.priority[x])):
-        if re.search(this_twiddle.regex_pattern[x], my_line, re.IGNORECASE):
-            return x
+    for x in sorted(this_twiddle.match_pattern, key=lambda x: (-this_twiddle.match_pattern[x][0])):
+        if x[1] == REGEX:
+            if re.search(this_twiddle.match_pattern[x], my_line, re.IGNORECASE):
+                return x
+        elif x[1] == TEXT:
+            if this_twiddle.match_pattern[x].lower() in my_line.lower:
+                return x
     return ""
 
 def copy_back_from_temp(this_twiddle, from_and_to):
