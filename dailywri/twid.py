@@ -399,17 +399,16 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                         mt.add_postopen(x, line_count)
             if current_section:
                 before_lines[current_section] += 1
-            if temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
-                if max_changes_overall and overall_changes == max_changes_overall and temp != current_section:
+            if temp and current_section != temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
+                if max_changes_overall and overall_changes == max_changes_overall:
                     print("You went over the maximum overall changes allowed in all files.")
                     max_overall_reached = True
-                if max_changes_per_file and cur_file_changes == max_changes_per_file and temp != current_section:
+                if max_changes_per_file and cur_file_changes == max_changes_per_file:
                     print("You went over the maximum # of changes for {}.".format(x))
                     max_file_reached = True
                 if not max_file_reached and not max_overall_reached:
-                    if temp != current_section:
-                        cur_file_changes += 1
-                        overall_changes += 1
+                    cur_file_changes += 1
+                    overall_changes += 1
                     section_text[temp] += line
                     continue
             if current_section:
@@ -418,10 +417,6 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if last_section:
                 post_text[last_section] += line
             section_text['blank'] += line
-            for q in this_twiddle.regex_pattern:
-                if re.search(this_twiddle.regex_pattern[q], line):
-                    section_text[q] += line
-                    print(line, "matches with", q, "pattern", this_twiddle.regex_pattern[q])
     print("Total changes in {}: {}".format(x, cur_file_changes))
 
 for x in from_and_to:
