@@ -358,6 +358,7 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if line.startswith("#"):
                 if current_section:
                     section_text[current_section] += line
+                    before_lines[current_section] += 1
                 elif last_section:
                     post_text[last_section] += line
                 else:
@@ -375,6 +376,8 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                     post_text[last_section] += line
                 current_section = ''
                 continue
+            if current_section:
+                before_lines[current_section] += 1
             if past_ignore:
                 section_text['blank' if not current_section else current_section] += line
                 continue
@@ -397,8 +400,6 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                             break
                         print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
                         mt.add_postopen(x, line_count)
-            if current_section:
-                before_lines[current_section] += 1
             if temp and current_section != temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
                 if max_changes_overall and overall_changes == max_changes_overall:
                     print("You went over the maximum overall changes allowed in all files.")
