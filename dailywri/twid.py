@@ -43,6 +43,9 @@ CHANGED = 1
 REGEX = 0
 TEXT = 1
 
+TO_LOCKED_FLAG = 1
+FROM_LOCKED_FLAG = 2
+
 #####################start options
 
 max_changes_overall = 0
@@ -142,6 +145,7 @@ def get_twiddle_mappings():
                 cur_twiddle.to_file[ary[1]] = ary[2]
             else:
                 cur_twiddle.to_file[ary[1]] = ary[3]
+            cur_twiddle.movefrom_locked[ary[1]] = cur_twiddle.moveto_locked[ary[1]] = False
             for x in range(4, len(ary)):
                 write_status = ary[x].lower()
                 if write_status == 'fromonly' or write_status == 'blockto' or write_status == 'toblock':
@@ -154,9 +158,9 @@ def get_twiddle_mappings():
                     cur_twiddle.movefrom_locked[ary[1]] = cur_twiddle.moveto_locked[ary[1]] = True
                     continue
                 if write_status.startswith("txt:"):
-                    cur_twiddle.match_pattern[ary[x][4:]] = (local_priority, TEXT)
+                    cur_twiddle.match_pattern[ary[x][4:]] = (local_priority, TEXT, ary[1])
                 else:
-                    cur_twiddle.match_pattern[ary[x]] = (local_priority, REGEX)
+                    cur_twiddle.match_pattern[ary[x]] = (local_priority, REGEX, ary[1])
 
     global from_and_to
     for proj in my_twiddle_projects:
@@ -214,12 +218,13 @@ def write_out_files(my_file):
 
 def pattern_check(my_line):
     for x in sorted(this_twiddle.match_pattern, key=lambda x: (-this_twiddle.match_pattern[x][0])):
-        if x[1] == REGEX:
-            if re.search(this_twiddle.match_pattern[x], my_line, re.IGNORECASE):
-                return x
-        elif x[1] == TEXT:
-            if this_twiddle.match_pattern[x].lower() in my_line.lower:
-                return x
+        this_match = this_twiddle.match_pattern[x]
+        if this_match[1] == REGEX:
+            if re.search(x, my_line, re.IGNORECASE):
+                return this_match[2]
+        elif this_match[1] == TEXT:
+            if x.lower() in my_line.lower:
+                return this_match[2]
     return ""
 
 def copy_back_from_temp(this_twiddle, from_and_to):
@@ -250,6 +255,13 @@ def copy_back_from_temp(this_twiddle, from_and_to):
         changed += 1
 
     print(changed, "changed", unchanged, "unchanged")
+
+def force_lock_wildcard(string_chunk, flags):
+    for l in my_twiddle_projects['spo'].moveto_locked:
+        if string_chunk in l:
+            print("Switching", l, flags)
+            my_twiddle_projects['spo'].moveto_locked[l] = flags & TO_LOCKED_FLAG
+            my_twiddle_projects['spo'].movefrom_locked[l] = flags & FROM_LOCKED_FLAG
 
 ################################### main file
 
@@ -299,6 +311,14 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = True
     elif arg == 'fc':
         force_copy = False
+    elif arg[:3] == 'fl:':
+        force_lock_wildcard(arg[3:], TO_LOCKED_FLAG | FROM_LOCKED_FLAG)
+    elif arg[:3] == 'fo:':
+        force_lock_wildcard(arg[3:], 0)
+    elif arg[:3] == 'ff:':
+        force_lock_wildcard(arg[3:], FROM_LOCKED_FLAG)
+    elif arg[:3] == 'ft:':
+        force_lock_wildcard(arg[3:], TO_LOCKED_FLAG)
     elif arg == 'nc':
         copy_over = False
     elif arg == 'ld':
