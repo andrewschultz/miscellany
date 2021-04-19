@@ -74,6 +74,8 @@ before_lines = defaultdict(int)
 my_twiddle_config = "c:/writing/scripts/twid.txt"
 my_twiddle_dir = "c:/writing/twiddle"
 
+force_locks = []
+
 from_and_to = []
 
 my_default_project = ''
@@ -256,12 +258,26 @@ def copy_back_from_temp(this_twiddle, from_and_to):
 
     print(changed, "changed", unchanged, "unchanged")
 
-def force_lock_wildcard(string_chunk, flags):
-    for l in my_twiddle_projects['spo'].moveto_locked:
+def force_lock_wildcard(string_to_process):
+    string_chunk = string_to_process[3:]
+    flag_char = string_to_process[1]
+    if flag_char == 'l':
+        flags = TO_LOCKED_FLAG | FROM_LOCKED_FLAG
+    elif flag_char == 'o':
+        flags = 0
+    elif flag_char == 'f':
+        flags = FROM_LOCKED_FLAG
+    elif flag_char == 't':
+        flags = TO_LOCKED_FLAG
+    else:
+        print("Unrecognized flag char in", string_to_process, "so ignoring.")
+        return
+
+    for l in my_twiddle_projects[my_project].moveto_locked:
         if string_chunk in l:
             print("Switching", l, flags)
-            my_twiddle_projects['spo'].moveto_locked[l] = flags & TO_LOCKED_FLAG
-            my_twiddle_projects['spo'].movefrom_locked[l] = flags & FROM_LOCKED_FLAG
+            my_twiddle_projects[my_project].moveto_locked[l] = flags & TO_LOCKED_FLAG
+            my_twiddle_projects[my_project].movefrom_locked[l] = flags & FROM_LOCKED_FLAG
 
 ################################### main file
 
@@ -311,14 +327,8 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = True
     elif arg == 'fc':
         force_copy = False
-    elif arg[:3] == 'fl:':
-        force_lock_wildcard(arg[3:], TO_LOCKED_FLAG | FROM_LOCKED_FLAG)
-    elif arg[:3] == 'fo:':
-        force_lock_wildcard(arg[3:], 0)
-    elif arg[:3] == 'ff:':
-        force_lock_wildcard(arg[3:], FROM_LOCKED_FLAG)
-    elif arg[:3] == 'ft:':
-        force_lock_wildcard(arg[3:], TO_LOCKED_FLAG)
+    elif arg[:3] == 'fl:' or arg[:3] == 'fo:' or arg[:3] == 'ff:' or arg[:3] == 'ft:':
+        force_locks.append(arg)
     elif arg == 'nc':
         copy_over = False
     elif arg == 'ld':
@@ -358,6 +368,9 @@ if my_project not in my_twiddle_projects:
 
 max_overall_reached = False
 overall_changes = 0
+
+for f in force_locks:
+    force_lock_wildcard(f)
 
 this_twiddle = my_twiddle_projects[my_project]
 
