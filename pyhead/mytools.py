@@ -247,6 +247,26 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
         return(ary[0], ary[1])
     return ary
 
+def is_properly_sectioned(my_file):
+    in_section = False
+    found_errors = False
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"): continue
+            if not line.strip():
+                in_section = False
+                continue
+            if line.startswith("\\"):
+                if in_section:
+                    print("Bad double-section at line {}.".format(line_count))
+                    found_errors += 1
+                in_section = True
+            else:
+                if not in_section:
+                    print("Line without section at line {}.".format(line_count))
+                    found_errors += 1
+    return found_errors
+
 def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
     with open(fpath1, 'r') as file1, open(fpath2, 'r') as file2:
         for linef1, linef2 in zip(file1, file2):
