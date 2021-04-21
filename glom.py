@@ -13,6 +13,7 @@ from collections import defaultdict
 import re
 import mytools as mt
 import shutil
+import filecmp
 
 cfg_file = "c:/writing/scripts/glom.txt"
 
@@ -31,6 +32,7 @@ my_gloms = defaultdict(glom_project)
 
 #cmd line variables
 
+check_sectioning = False
 copy_back = False
 max_changes = 10
 user_max_line = 0
@@ -45,6 +47,7 @@ def usage(message = 'Usage for glom.py'):
     print('=' * 50)
     print("m# = max changes, ml# = max line")
     print("c/co = copy over, cn/nc = don't copy over")
+    print("cs checks sections")
     exit()
 
 def separator_value_of(x):
@@ -155,6 +158,8 @@ while cmd_count < len(sys.argv):
         copy_back = True
     elif arg == 'cn' or arg == 'nc':
         copy_back = False
+    elif arg == 'cs':
+        check_sectioning = True
     elif arg == '?':
         usage()
     else:
@@ -172,6 +177,9 @@ if my_project not in my_gloms:
     sys.exit("No glom project for {}.".format(my_project))
 
 this_glom = my_gloms[my_project]
+
+if check_sectioning:
+    mt.check_properly_sectioned(this_glom.file)
 
 f = open(this_glom.file, "r")
 line_array = f.readlines()
@@ -246,8 +254,6 @@ for line_count in range(0, len(line_array)):
 
 f.close()
 
-#mt.calf(this_glom.file, this_glom.tempfile)
-
 compare_idea_lists(this_glom.file, this_glom.tempfile)
 
 if cur_changes:
@@ -256,8 +262,11 @@ if cur_changes:
     print(cur_changes, "total modifications caught this run.")
 
 if copy_back:
+    if check_sectioning:
+        mt.check_properly_sectioned(this_glom.tempfile)
     shutil.copy(this_glom.tempfile, this_glom.file)
     print("Temp file copied back. Changes are permanent.")
 else:
     mt.wm(this_glom.file, this_glom.tempfile)
-    print("Use the -co flag to copy over when you're ready.")
+    if not filecmp.cmp(this_glom.file, this_glom.tempfile):
+        print("Use the -co flag to copy over when you're ready.")
