@@ -247,7 +247,7 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
         return(ary[0], ary[1])
     return ary
 
-def is_properly_sectioned(my_file, allow_header = True):
+def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False
     found_errors = False
     ever_section = False
@@ -260,14 +260,26 @@ def is_properly_sectioned(my_file, allow_header = True):
             if line.startswith("\\"):
                 if in_section:
                     print("Bad double-section at line {}.".format(line_count))
+                    if open_first_error:
+                        add_postopen(my_file, line_count)
+                        if not show_all_errors:
+                            postopen()
                     found_errors += 1
                 in_section = True
                 ever_section = True
             else:
                 if not in_section:
-                    if allow_header and not ever_section:
+                    if ever_section or not allow_header:
                         print("Line without section at line {}.".format(line_count))
+                        if open_first_error:
+                            add_postopen(my_file, line_count)
+                            if not show_all_errors:
+                                postopen()
                         found_errors += 1
+    if open_first_error:
+        postopen()
+    if report_success:
+        print("{} is properly sectioned.".format(my_file))
     return found_errors
 
 def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
