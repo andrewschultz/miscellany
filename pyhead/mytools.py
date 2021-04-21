@@ -247,9 +247,10 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
         return(ary[0], ary[1])
     return ary
 
-def is_properly_sectioned(my_file):
+def is_properly_sectioned(my_file, allow_header = True):
     in_section = False
     found_errors = False
+    ever_section = False
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("#"): continue
@@ -261,10 +262,12 @@ def is_properly_sectioned(my_file):
                     print("Bad double-section at line {}.".format(line_count))
                     found_errors += 1
                 in_section = True
+                ever_section = True
             else:
                 if not in_section:
-                    print("Line without section at line {}.".format(line_count))
-                    found_errors += 1
+                    if allow_header and not ever_section:
+                        print("Line without section at line {}.".format(line_count))
+                        found_errors += 1
     return found_errors
 
 def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
@@ -432,7 +435,7 @@ def alfcomp(x1, x2, bail = True, comments = True, spaces = False, show_winmerge 
 
 def wm(x1, x2, ignore_if_identical = True):
     if ignore_if_identical and cmp(x1, x2):
-        print("Not comparing identical files", x1, "and", x2)
+        print("Not comparing identical files", x1, "and", x2, "in WinMerge.")
         return
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
