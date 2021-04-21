@@ -63,6 +63,8 @@ overall_comparisons = True
 
 track_line_delta = True
 
+check_sectioning = False
+
 #####################end options
 
 my_twiddle_projects = defaultdict(twiddle_project)
@@ -89,7 +91,7 @@ def usage(arg = "general usage"):
     print("-a/c/n combinations = alphabetical compare, winmerge compare toggles")
     print("-co = copy over, -fc = force copy even with corrupted information")
     print("-e = edit config file")
-    print("-ld = track line delta, nld/ldn = don't")
+    print("-ld = track line delta, nld/ldn = don't, -cs = check sections")
     print("mf/fm/mo/om = max shifts per file or overall, mt/tm = maximum tweaks")
     print("Specify project with p= or p:. Default is", my_default_project)
     exit()
@@ -327,6 +329,8 @@ while cmd_count < len(sys.argv):
         alphabetical_comparisons = True
     elif arg == 'fc':
         force_copy = False
+    elif arg == 'cs':
+        check_sectioning = True
     elif arg[:3] == 'fl:' or arg[:3] == 'fo:' or arg[:3] == 'ff:' or arg[:3] == 'ft:':
         force_locks.append(arg)
     elif arg == 'nc':
@@ -373,6 +377,10 @@ for f in force_locks:
     force_lock_wildcard(f)
 
 this_twiddle = my_twiddle_projects[my_project]
+
+if check_sectioning:
+    for x in this_twiddle.to_temp:
+        mt.check_properly_sectioned(x)
 
 for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, points TO the file in the temp directory, FROM an absolute path. 
     max_file_reached = False
@@ -451,12 +459,17 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if last_section:
                 post_text[last_section] += line
             section_text['blank'] += line
-    print("Total changes in {}: {}".format(x, cur_file_changes))
+    if cur_file_changes:
+        print("Total changes in {}: {}".format(x, cur_file_changes))
+    else:
+        print("No changes in", x)
 
 for x in from_and_to:
     if write_out_files(x) == NO_CHANGES:
         continue
     to_of_x = this_twiddle.to_temp[x]
+    if check_sectioning:
+        mt.check_properly_sectioned(to_of_x)
     print("TWIDDLY", twiddle_of(to_of_x), x)
     if print_stats:
         print("Orig:", os.stat(x).st_size, x)
