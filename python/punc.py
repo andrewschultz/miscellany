@@ -17,14 +17,13 @@ import mytools as mt
 
 from filecmp import cmp
 from collections import defaultdict
-import mytools
-from mytools import title_words
+import mytools as mt
 import shutil
 
 debug = False
 copy_over = False
 
-title_words.append("y")
+mt.title_words.append("y")
 
 cur_proj = ""
 default_proj = ""
@@ -40,6 +39,11 @@ ignored_yet = defaultdict(bool)
 rubric_yet = defaultdict(bool)
 
 cfg_synonyms = defaultdict(str)
+
+ALL_CAPS = 3
+TITLE_CASE = 2
+SENTENCE_CASE = 1
+ALL_LOWER = -1
 
 def usage():
     print("So far we only can allow one project at a time defined on the command line.")
@@ -65,7 +69,7 @@ def cfg_expand(x):
     return retval
 
 def word_to_title(this_word, force=False):
-    if this_word in title_words and force == False: return this_word
+    if this_word in mt.title_words and force == False: return this_word
     if this_word == this_word.lower() and force == False: return this_word.title()
     return this_word[0].upper() + this_word[1:]
 
@@ -73,7 +77,7 @@ def okay_title(w, force_first_letter):
     if "'" in w:
         w = re.sub("'.*", "", w)
     if w == w.upper(): return True
-    if w in title_words and not force_first_letter: return True
+    if w in mt.title_words and not force_first_letter: return True
     return w == w[0].title() + w[1:]
 
 def tack_on_table(x):
@@ -143,13 +147,13 @@ def good_rules(my_line, table_rubric, line_count):
                 print("Extraneous punctuation with {0}".format(text_to_check))
                 errs += 1
         text_to_check = re.sub("^(a|the|an) ", "", text_to_check, 0, re.IGNORECASE)
-        if capitalize_type == 3:
+        if capitalize_type == ALL_CAPS:
             if text_to_check.upper() != text_to_check:
                 print("Need ALL UPPER for {0}".format(text_to_check))
                 errs += 1
                 line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".upper(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n"
-        elif capitalize_type == 2:
+        elif capitalize_type == TITLE_CASE:
             word_ary = re.split("[ -]", text_to_check)
             for w in range(0, len(word_ary)):
                 first_last = (not w or w == len(word_ary) - 1)
@@ -159,14 +163,14 @@ def good_rules(my_line, table_rubric, line_count):
                     line_divs[col_num] = re.sub("([A-Za-z']+)", lambda x: word_to_title(x.group(), force=first_last), line_divs[col_num].strip())
                     print("New entry:", line_divs[col_num])
                     modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
-        elif capitalize_type == 1:
+        elif capitalize_type == SENTENCE_CASE:
             t2 = re.sub("^[a-zA-Z]*", "", text_to_check)
             if t2[0] != t2[0].upper():
                 errs += 1
                 print("Need STARTING UPPER for {0}".format(text_to_check))
                 line_divs[col_num] = re.sub("^\"(a|an|the )?([a-z])+", "\1" + "\2".upper(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
-        elif capitalize_type == -1:
+        elif capitalize_type == ALL_LOWER:
             if text_to_check.lower() != text_to_check:
                 print("Need ALL LOWER for {0}".format(text_to_check))
                 errs += 1
@@ -231,7 +235,7 @@ def process_file_punc(my_proj, this_file):
                     err_lines += (this_errs > 0)
                     total_errs += this_errs
                     out_file.write(to_write)
-                    if this_errs: mytools.add_postopen_file_line(this_file, line_count)
+                    if this_errs: mt.add_postopen_file_line(this_file, line_count)
                 continue
             out_file.write(line)
     out_file.close()
@@ -292,7 +296,7 @@ def process_punc_cfg(punc_file):
                 for l in left_ary:
                     if l in cfg_synonyms:
                         print("Redefining CFG synonym <{0}> at line {1} in {2}.".format(l.upper(), line_count, punc_file))
-                        mytools.npo(punc_file, line_count)
+                        mt.npo(punc_file, line_count)
                     cfg_synonyms[l] = lary[1]
                 continue
             if "\t" in line:
@@ -301,7 +305,7 @@ def process_punc_cfg(punc_file):
                 rubrics[proj_reading][table_name] = [cfg_expand(x) for x in lary[1:]]
                 if "!!!" in rubrics[proj_reading][table_name]:
                     print("Uh oh, bad CFG values at {0} line {1}.".format(punc_file, line_count))
-                    mytools.npo(punc_file, line_count)
+                    mt.npo(punc_file, line_count)
                 #print("Adding proj {0} rubric {1}".format(proj_reading, lary[0]))
                 continue
             if ll: print("CFG file has ignored line", line_count, ll)
@@ -312,7 +316,7 @@ suggest_apostrophes = True
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = mytools.nohy(sys.argv[cmd_count])
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg in i7.i7x:
         if cur_proj:
             sys.exit("Can't define 2 projects on the command line.")
@@ -347,4 +351,4 @@ if not cur_proj:
 
 process_project(cur_proj)
 
-mytools.postopen_files()
+mt.postopen_files()
