@@ -42,7 +42,8 @@ rubric_yet = defaultdict(bool)
 
 cfg_synonyms = defaultdict(str)
 
-ALL_CAPS = 3
+ALL_CAPS = 4
+TITLE_CASE_IGNORE_ARTICLES = 3
 TITLE_CASE = 2
 SENTENCE_CASE = 1
 ALL_LOWER = -1
@@ -101,10 +102,19 @@ def apostrophe_imbalance(my_txt):
 
 def caps_check(my_string, capitalize_type, line_count):
     if capitalize_type == ALL_CAPS:
-        if my_string.upper() != text_to_check:
-            print("Need ALL UPPER for {0}".format(text_to_check))
+        if my_string.upper() != my_string:
+            print("Need ALL UPPER for {0}".format(my_string))
             my_string = re.sub("^(\"[^\"]\")", "\1".upper(), my_string)
             return my_string
+    elif capitalize_type == TITLE_CASE_IGNORE_ARTICLES:
+        temp = quoted_to_title(my_string)
+        index = 1
+        index += (temp[0] == '"')
+        if re.search('^\"?(A |An |The )', temp):
+            temp = temp[:index].lower() + temp[index:]
+        if temp != my_string:
+            print(line_count, "Need TITLE CASE (ignoring leading article) for {0} -> {1}".format(my_string, temp))
+        return temp
     elif capitalize_type == TITLE_CASE:
         temp = quoted_to_title(my_string)
         if temp != my_string:
@@ -112,18 +122,18 @@ def caps_check(my_string, capitalize_type, line_count):
         return temp
     elif capitalize_type == SENTENCE_CASE:
         if my_string[0] != my_string[0].upper():
-            print("Need STARTING UPPER for {0}".format(text_to_check))
+            print("Need STARTING UPPER for {0}".format(my_string))
         return my_string[0].upper() + my_string[1:]
     elif capitalize_type == ALL_LOWER:
         if my_string.lower() != my_string.lower():
-            print("Need ALL LOWER for {0}".format(text_to_check))
+            print("Need ALL LOWER for {0}".format(my_string))
             my_string = my_string.upper()
     return my_string
 
 def apply_table_rules_to_line(my_line, table_rubric, line_count):
     errs = 0
     return_string = my_line
-    line_divs = my_line.split("\t")
+    line_divs = my_line.strip().split("\t")
     orig_string = modified_string = return_string
     for x in table_rubric:
         errs_this_time = 0
