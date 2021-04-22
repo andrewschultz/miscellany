@@ -99,7 +99,28 @@ def apostrophe_imbalance(my_txt):
     if lr < 0: return "{0}R".format(-lr)
     return "{0}L".format(lr)
 
-def good_rules(my_line, table_rubric, line_count):
+def caps_check(my_string, capitalize_type, line_count):
+    if capitalize_type == ALL_CAPS:
+        if my_string.upper() != text_to_check:
+            print("Need ALL UPPER for {0}".format(text_to_check))
+            my_string = re.sub("^(\"[^\"]\")", "\1".upper(), my_string)
+            return my_string
+    elif capitalize_type == TITLE_CASE:
+        temp = quoted_to_title(my_string)
+        if temp != my_string:
+            print(line_count, "Need TITLE CASE for {0}->{1}".format(my_string, temp))
+        return temp
+    elif capitalize_type == SENTENCE_CASE:
+        if my_string[0] != my_string[0].upper():
+            print("Need STARTING UPPER for {0}".format(text_to_check))
+        return my_string[0].upper() + my_string[1:]
+    elif capitalize_type == ALL_LOWER:
+        if my_string.lower() != my_string.lower():
+            print("Need ALL LOWER for {0}".format(text_to_check))
+            my_string = my_string.upper()
+    return my_string
+
+def apply_table_rules_to_line(my_line, table_rubric, line_count):
     errs = 0
     return_string = my_line
     line_divs = my_line.split("\t")
@@ -112,8 +133,8 @@ def good_rules(my_line, table_rubric, line_count):
         punc_needed = ary[2]
         quotes_needed = ary[3]
         orig_to_check = text_to_check = line_divs[col_num].strip()
-        if "[p]" in my_line: continue
-        ignore_punc = "[p]" in my_line.lower()
+        ignore_punc = "[puncok]" in my_line.lower()
+        ignore_caps = "[capsok]" in my_line.lower()
         error_printed_this_line_yet = False
         if not text_to_check.startswith("\""):
             print("Column", col_num, "failed to start with a quote")
@@ -148,31 +169,12 @@ def good_rules(my_line, table_rubric, line_count):
             elif punc_needed == -1 and ends_with_punc:
                 print("Extraneous punctuation with {0}".format(text_to_check))
                 errs += 1
-        text_to_check = re.sub("^(a|the|an) ", "", text_to_check, 0, re.IGNORECASE)
-        if capitalize_type == ALL_CAPS:
-            if text_to_check.upper() != text_to_check:
-                print("Need ALL UPPER for {0}".format(text_to_check))
-                errs += 1
-                line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".upper(), line_divs[col_num])
-                modified_string = "\t".join(line_divs).strip() + "\n"
-        elif capitalize_type == TITLE_CASE:
-            temp = quoted_to_title(line_divs[col_num])
+        if not ignore_caps:
+            temp = caps_check(line_divs[col_num], capitalize_type, line_count)
             if temp != line_divs[col_num]:
-                print(line_count, "Need TITLE CASE for {0}->{1}".format(line_divs[col_num], temp))
-                modified_string = temp
-        elif capitalize_type == SENTENCE_CASE:
-            t2 = re.sub("^[a-zA-Z]*", "", text_to_check)
-            if t2[0] != t2[0].upper():
-                errs += 1
-                print("Need STARTING UPPER for {0}".format(text_to_check))
-                line_divs[col_num] = re.sub("^\"(a|an|the )?([a-z])+", "\1" + "\2".upper(), line_divs[col_num])
-                modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
-        elif capitalize_type == ALL_LOWER:
-            if text_to_check.lower() != text_to_check:
-                print("Need ALL LOWER for {0}".format(text_to_check))
-                errs += 1
-                line_divs[col_num] = re.sub("^(\"[^\"]*\")", lambda x: x.group().lower(), line_divs[col_num])
+                line_divs[col_num] = temp
                 modified_string = "\t".join(line_divs).strip() + "\n"
+                errs += 1
         if this_apost and modified_string == orig_string and suggest_apostrophes:
             modified_string = this_apost + modified_string
     return (errs, modified_string, orig_string != modified_string)
@@ -227,7 +229,7 @@ def process_file_punc(my_proj, this_file):
                     continue
                 #print("Rubric for {0}/{1} is {2}".format(my_proj, current_table, current_rubric))
                 if current_rubric:
-                    (this_errs, to_write, sugg_change) = good_rules(line, current_rubric, line_count)
+                    (this_errs, to_write, sugg_change) = apply_table_rules_to_line(line, current_rubric, line_count)
                     diffable_lines += sugg_change
                     err_lines += (this_errs > 0)
                     total_errs += this_errs
