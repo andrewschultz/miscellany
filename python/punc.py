@@ -4,19 +4,25 @@
 # replaces punc.pl
 #
 # usage: so far only projects on the command line
+# with d/nd debug
+# ae/nae for extraneous apostrophe suggestions
+# c/nc for copy over or not
 #
 
 import i7
 import re
 import sys
 import os
+import mytools as mt
 
 from filecmp import cmp
 from collections import defaultdict
 import mytools
 from mytools import title_words
+import shutil
 
 debug = False
+copy_over = False
 
 title_words.append("y")
 
@@ -40,6 +46,7 @@ def usage():
     print("If nothing is defined, we look at the current directory, then look in punc.txt for the default project.")
     print("-nae/-ae disables/enables extraneous apostrophe suggestions")
     print("-d/-nd/-dn toggles debug")
+    print("-c/-nc/-cn toggles copy-back-over")
     exit()
 
 def cfg_expand(x):
@@ -101,6 +108,7 @@ def good_rules(my_line, table_rubric, line_count):
         orig_to_check = text_to_check = line_divs[col_num].strip()
         if "[p]" in my_line: continue
         ignore_punc = "[p]" in my_line.lower()
+        error_printed_this_line_yet = False
         if not text_to_check.startswith("\""):
             print("Column", col_num, "failed to start with a quote")
             errs += 1
@@ -229,10 +237,13 @@ def process_file_punc(my_proj, this_file):
     out_file.close()
     if diffable_lines:
         print(diffable_lines, "Diffable lines.")
-        i7.wm(this_file, temp_table_file)
+        mt.wm(this_file, temp_table_file)
     elif err_lines:
         print("Errors found, but there are no suggested edits, so not comparing with WinMerge.")
-    os.remove(temp_table_file)
+    if copy_over:
+        shutil.move(temp_table_file, this_file)
+    else:
+        os.remove(temp_table_file)
     print(err_lines, "line errors", total_errs, "total errors")
 
 def process_project(my_proj):
@@ -305,11 +316,15 @@ while cmd_count < len(sys.argv):
     if arg in i7.i7x:
         if cur_proj:
             sys.exit("Can't define 2 projects on the command line.")
+        else:
+            print("Cmd line parameter {} leads to project {}.".format(arg, cur_proj))
         cur_proj = i7.i7x[arg]
     elif arg == 'ae': suggest_apostrophes = True
     elif arg == 'nae': suggest_apostrophes = False
     elif arg == 'nd' or arg == 'dn': debug = False
     elif arg == 'd': debug = True
+    elif arg == 'c': copy_over = True
+    elif arg == 'nc' or arg == 'cn': copy_over = False
     else:
         print("Bad command line parameter", arg)
         usage()
