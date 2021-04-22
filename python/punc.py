@@ -20,6 +20,8 @@ from collections import defaultdict
 import mytools as mt
 import shutil
 
+import titlecase
+
 debug = False
 copy_over = False
 
@@ -68,10 +70,10 @@ def cfg_expand(x):
     retval = re.sub("^[0-9]+", my_num, x[0] + cfg_synonyms[x0])
     return retval
 
-def word_to_title(this_word, force=False):
-    if this_word in mt.title_words and force == False: return this_word
-    if this_word == this_word.lower() and force == False: return this_word.title()
-    return this_word[0].upper() + this_word[1:]
+def quoted_to_title(my_string): # this assumes "xxxx" [abc]
+    my_ary = my_string.split('"', 2)
+    my_ary[1] = titlecase.titlecase(my_ary[1])
+    return '"'.join(my_ary)
 
 def okay_title(w, force_first_letter):
     if "'" in w:
@@ -154,15 +156,10 @@ def good_rules(my_line, table_rubric, line_count):
                 line_divs[col_num] = re.sub("^(\"[^\"]\")", "\1".upper(), line_divs[col_num])
                 modified_string = "\t".join(line_divs).strip() + "\n"
         elif capitalize_type == TITLE_CASE:
-            word_ary = re.split("[ -]", text_to_check)
-            for w in range(0, len(word_ary)):
-                first_last = (not w or w == len(word_ary) - 1)
-                if not okay_title(word_ary[w], first_last):
-                    errs += 1
-                    print(line_count, "Need TITLE CASE for {0}->{1} in {2}".format(word_ary[w], word_ary[w].title(), text_to_check))
-                    line_divs[col_num] = re.sub("([A-Za-z']+)", lambda x: word_to_title(x.group(), force=first_last), line_divs[col_num].strip())
-                    print("New entry:", line_divs[col_num])
-                    modified_string = "\t".join(line_divs).strip() + "\n" #?? what about "a possible bug" needs a capitalized
+            temp = quoted_to_title(line_divs[col_num])
+            if temp != line_divs[col_num]:
+                print(line_count, "Need TITLE CASE for {0}->{1}".format(line_divs[col_num], temp))
+                modified_string = temp
         elif capitalize_type == SENTENCE_CASE:
             t2 = re.sub("^[a-zA-Z]*", "", text_to_check)
             if t2[0] != t2[0].upper():
