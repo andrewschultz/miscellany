@@ -80,8 +80,14 @@ while ( $a = <A> ) {
   chomp($a);
   if ( $a !~ /backupfilepath/i ) { next; }
   my @b          = split( /\"/, $a );
-  my $fileName   = $b[17];
-  my $fileBackup = $b[19];
+  my $fileName   = '';
+  my $fileBackup = '';
+  for my $x (0..scalar(@b)-1)
+  {  print($x . " of " . scalar(@b-1) . ":" . $b[$x] . "\n");
+	  if ($b[$x] =~ /backupfilepath/i) { $fileBackup = $b[$x+1]; }
+	  if ($b[$x] =~ /filename=/i) { $fileName = $b[$x+1]; }
+  }
+
   if ( $a =~ /^[ \t]*<File / ) {
     $totalFiles++;
     if ( $a =~ /\"new [0-9]+\"/ ) { $newFiles++; push( @newFiles, $fileName ); }
@@ -119,6 +125,7 @@ if ($toOutput) {
 }
 
 my @newFilesSort = sort { numVal($a) <=> numVal($b) } (@newFiles);
+
 if ($printNewFiles) { print join( ", ", @newFilesSort ) . "\n"; }
 
 if ($analyze) {
