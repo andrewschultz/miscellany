@@ -54,6 +54,7 @@ def usage():
     print("-nae/-ae disables/enables extraneous apostrophe suggestions")
     print("-d/-nd/-dn toggles debug")
     print("-c/-nc/-cn toggles copy-back-over")
+    print("-e = look in config file")
     exit()
 
 def cfg_expand(x):
@@ -89,6 +90,8 @@ def tack_on_table(x):
     return x
 
 def apostrophe_imbalance(my_txt):
+    if 'aposok' in my_txt:
+        return ''
     la = re.findall(r'[^a-zA-Z\.\?!]\'', my_txt)
     left_of_apos = len(la)
     ra = re.findall(r'\'[^a-zA-Z]', my_txt)
@@ -216,7 +219,6 @@ def process_file_punc(my_proj, this_file):
                     ignore_table = True
                     out_file.write(line)
                     continue
-                print('b', line_count, line.strip())
                 if current_table not in rubrics[my_proj]:
                     print("WARNING: no rubric for", current_table, "in", my_proj)
                     ignore_table = True
@@ -295,7 +297,7 @@ def process_punc_cfg(punc_file):
             if line.startswith("-"):
                 ary = line[1:].strip().split(",")
                 for itm in ary:
-                    table_name = tack_on_table(itm)
+                    table_name = tack_on_table(itm).strip()
                     ignores[proj_reading].append(table_name)
                 #print("Ignoring", ll[1:])
                 continue
@@ -337,6 +339,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nd' or arg == 'dn': debug = False
     elif arg == 'd': debug = True
     elif arg == 'c': copy_over = True
+    elif arg == 'e': mt.npo(punc_file)
     elif arg == 'nc' or arg == 'cn': copy_over = False
     else:
         print("Bad command line parameter", arg)
