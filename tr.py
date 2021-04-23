@@ -18,10 +18,10 @@ link_name = False
 my_triz = defaultdict(str)
 
 def usage():
-    print("Use a project name as an argument.")
+    print("Use a project name as an argument. You can also use a sub-map, such as roi-h, for a sub-map. In this case the 'others' area of A Roiling Original.")
     print("e = text editor")
     print("c = to clipboard")
-    exit()
+    sys.exit()
 
 cmd_count = 1
 my_editor = 'gui'
@@ -51,7 +51,7 @@ while cmd_count < len(sys.argv):
                 if arg in my_triz:
                     print("SKIP redefining", arg)
                     continue
-                my_triz[arg] = my_editor
+                my_triz[(x, arg)] = my_editor
                 got_one = True
         if not got_one:
             usage()
