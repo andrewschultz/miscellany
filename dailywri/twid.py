@@ -65,6 +65,9 @@ track_line_delta = True
 
 check_sectioning = False
 
+to_wildcard = ''
+from_wildcard = ''
+
 #####################end options
 
 my_twiddle_projects = defaultdict(twiddle_project)
@@ -93,6 +96,8 @@ def usage(arg = "general usage"):
     print("-e = edit config file")
     print("-ld = track line delta, nld/ldn = don't, -cs = check sections")
     print("mf/fm/mo/om = max shifts per file or overall, mt/tm = maximum tweaks")
+    print("to: = copy to a certain wildcard")
+    print("fr: = copy from a certain wildcard")
     print("Specify project with p= or p:. Default is", my_default_project)
     exit()
 
@@ -222,6 +227,8 @@ def write_out_files(my_file):
 
 def pattern_check(my_line):
     for x in sorted(this_twiddle.match_pattern, key=lambda x: (-this_twiddle.match_pattern[x][0])):
+        if this_twiddle.moveto_locked[this_twiddle.match_pattern[x][2]]:
+            continue
         this_match = this_twiddle.match_pattern[x]
         if this_match[1] == REGEX:
             if re.search(x, my_line, re.IGNORECASE):
@@ -354,6 +361,10 @@ while cmd_count < len(sys.argv):
             max_changes_overall = int(arg[2:])
         else:
             print("You need a number after om/mo. {} doesn't work".format(arg[2:] if arg[2:] else 'A blank value'))
+    elif arg[:3] == 'to:':
+        to_wildcard = arg[3:]
+        if not to_wildcard:
+            sys.exit("Need something after to:")
     elif arg == '?':
         usage()
     else:
@@ -373,10 +384,41 @@ if my_project not in my_twiddle_projects:
 max_overall_reached = False
 overall_changes = 0
 
-for f in force_locks:
-    force_lock_wildcard(f)
+if to_wildcard and from_wildcard:
+    sys.exit("Can't have focused to- and from- wildcards.")
 
 this_twiddle = my_twiddle_projects[my_project]
+
+if to_wildcard:
+    got_any = False
+    for m in this_twiddle.movefrom_locked:
+        if re.search(r'{}'.format(to_wildcard), m):
+            this_twiddle.moveto_locked[m] = False
+            this_twiddle.movefrom_locked[m] = True
+            got_any = True
+            print("Got match:", m, to_wildcard)
+        else:
+            this_twiddle.moveto_locked[m] = True
+            this_twiddle.movefrom_locked[m] = False
+    if not got_any:
+        sys.exit("Did not get any to_wildcard matches for {}. Check what sections it can match against.".format(to_wildcard))
+
+if from_wildcard:
+    got_any = False
+    for m in this_twiddle.movefrom_locked:
+        if re.search(r'{}'.format(from_wildcard), m):
+            this_twiddle.movefrom_locked[m] = False
+            this_twiddle.moveto_locked[m] = True
+            got_any = True
+            print("Got match:", m, from_wildcard)
+        else:
+            this_twiddle.movefrom_locked[m] = True
+            this_twiddle.moveto_locked[m] = False
+    if not got_any:
+        sys.exit("Did not get any to_wildcard matches for {}. Check what sections it can match against.".format(from_wildcard))
+
+for f in force_locks:
+    force_lock_wildcard(f)
 
 if check_sectioning:
     for x in this_twiddle.to_temp:
