@@ -3,8 +3,11 @@
 # replaces gq.pl
 #
 # usage gq.py as match_string_array (for alex smart)
-# usage gq.py `as to search for the word AS
-# can use one word or two
+#       gq.py `as to search for the word AS
+# can use any number of words. mn# specifices minimum matches needed, with some error checking
+# todo: plurals option (only when I can't think of anything else to do)
+#       speedup for allowed_misses
+#
 
 from collections import defaultdict
 import mytools as mt
@@ -25,6 +28,7 @@ my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 # options only on cmd line
 
+fast_match = True
 view_history = False
 post_open_matches = False
 all_similar_projects = True
@@ -82,6 +86,7 @@ def usage():
     print("v/q = verbose/quiet")
     print("nn/yn/ny = toggle searching notes file")
     print()
+    print("fm = fast match (on by default, no accuracy loss)")
     print("e/ec/ce = edit config file")
     print("qi/qo/qa = quotes inside/outside/all")
     print("ml/nml/mln = whether or not to modify line where search results are found")
@@ -148,6 +153,9 @@ def read_cfg():
                 elif lary[0] == "default_from_cfg":
                     global default_from_cfg
                     default_from_cfg = lary[1]
+                elif lary[0] == "fast_match":
+                    global fast_match
+                    fast_match = lary[1]
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -179,6 +187,8 @@ def find_text_in_file(match_string_array, projfile):
             line_out = line.strip()
             found_this_line = 0
             for x in individual_match_array:
+                if fast_match and not x in line: # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
+                    continue
                 if re.search(x, line, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
@@ -280,6 +290,10 @@ while cmd_count < len(sys.argv):
         include_notes = True
     elif arg == 'nn':
         include_notes = False
+    elif arg == 'fm':
+        fast_match = True
+    elif arg == 'nfm' or arg == 'fmn':
+        fast_match = False
     elif arg == '?':
         usage()
     else:
@@ -372,5 +386,4 @@ if len(temp_array):
     print("Left untested:", ', '.join(temp_array))
 
 write_history(history_file, ' '.join(sorted(match_string_array)), create_new_history)
-
 mt.post_open()
