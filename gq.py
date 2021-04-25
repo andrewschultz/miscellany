@@ -137,25 +137,25 @@ def read_cfg():
             if line.startswith(';'): break
             if line.startswith('#'): continue
             if '=' in line:
-                lary = line.strip().lower().split("=")
-                if lary[0] == "max_overall":
+                (prefix, data) = mt.cfg_data_split(line)
+                elif prefix == "all_similar_projects":
+                    global all_similar_projects
+                    all_similar_projects = mt.truth_state_of(data)
+                elif prefix == "default_from_cfg":
+                    global default_from_cfg
+                    default_from_cfg = data
+                elif prefix == "fast_match":
+                    global fast_match
+                    fast_match = mt.truth_state_of(data)
+                if prefix == "max_overall":
                     global max_overall
                     max_overall = int(lary[1])
-                elif lary[0] == "min_overall":
+                elif prefix == "min_overall":
                     global min_overall
                     min_overall = int(lary[1])
-                elif lary[0] == "verbose":
+                elif prefix == "verbose":
                     global verbose
-                    verbose = bool(int(lary[1]))
-                elif lary[0] == "all_similar_projects":
-                    global all_similar_projects
-                    all_similar_projects = bool(int(lary[1]))
-                elif lary[0] == "default_from_cfg":
-                    global default_from_cfg
-                    default_from_cfg = lary[1]
-                elif lary[0] == "fast_match":
-                    global fast_match
-                    fast_match = lary[1]
+                    verbose = mt.truth_state_of(data)
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -168,7 +168,6 @@ def find_text_in_file(match_string_array, projfile):
     found_so_far = 0
     current_table = ""
     current_table_line = 0
-    my_match_string = "avery.*slay"
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             if current_table:
