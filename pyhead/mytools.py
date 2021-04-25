@@ -245,7 +245,7 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
     ary = re.split("[{}]".format(delimiter), x, 1)
     if to_tuple:
         return(ary[0], ary[1])
-    return ary
+    return ary # (prefix, data) = general usage in programs
 
 def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False

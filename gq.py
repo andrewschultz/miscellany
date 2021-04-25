@@ -138,7 +138,7 @@ def read_cfg():
             if line.startswith('#'): continue
             if '=' in line:
                 (prefix, data) = mt.cfg_data_split(line)
-                elif prefix == "all_similar_projects":
+                if prefix == "all_similar_projects":
                     global all_similar_projects
                     all_similar_projects = mt.truth_state_of(data)
                 elif prefix == "default_from_cfg":
@@ -147,12 +147,12 @@ def read_cfg():
                 elif prefix == "fast_match":
                     global fast_match
                     fast_match = mt.truth_state_of(data)
-                if prefix == "max_overall":
+                elif prefix == "max_overall":
                     global max_overall
-                    max_overall = int(lary[1])
+                    max_overall = int(data)
                 elif prefix == "min_overall":
                     global min_overall
-                    min_overall = int(lary[1])
+                    min_overall = int(data)
                 elif prefix == "verbose":
                     global verbose
                     verbose = mt.truth_state_of(data)
