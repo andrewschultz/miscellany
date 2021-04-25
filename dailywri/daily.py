@@ -14,9 +14,15 @@ import glob
 import mytools as mt
 from pathlib import Path
 
+# number definitions. The value isn't important. We just need everything defined.
+
 TOPROC = 0
 ROOT = 1
 BACKUP = 2
+
+DAILY = 0
+DRIVE = 1
+KEEP = 2
 
 today_file = pendulum.now().format("YYYYMMDD") + ".txt"
 

@@ -21,11 +21,7 @@ from glob import glob
 from filecmp import cmp
 from shutil import copy
 
-DEFAULT_SORT = 0
-
-DAILY = DAILIES = 0
-DRIVE = 1
-KEEP = 2
+DEFAULT_SORT = daily.DAILY
 
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
 daily_strings = ['daily', 'drive', 'keep']
@@ -37,14 +33,14 @@ my_cwd = os.getcwd()
 dir_search_flag = daily.TOPROC
 
 if 'daily' in my_cwd:
-    print("Sorting DAILY stuff")
-    what_to_sort = DAILY
+    print("Sorting daily.DAILY stuff")
+    what_to_sort = daily.DAILY
 elif 'keep' in my_cwd:
-    print("Sorting KEEP stuff")
-    what_to_sort = KEEP
+    print("Sorting daily.KEEP stuff")
+    what_to_sort = daily.KEEP
 elif 'drive' in my_cwd:
-    print("Sorting DRIVE stuff")
-    what_to_sort = DRIVE
+    print("Sorting daily.DRIVE stuff")
+    what_to_sort = daily.DRIVE
 else:
     what_to_sort = DEFAULT_SORT
     print("The directory gives us a default of", daily_strings[what_to_sort])
@@ -548,11 +544,11 @@ while cmd_count < len(sys.argv):
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
     elif arg == 'k' or arg == 'dk':
-        what_to_sort = KEEP
+        what_to_sort = daily.KEEP
     elif arg == 'd' or arg == 'dr':
-        what_to_sort = DRIVE
+        what_to_sort = daily.DRIVE
     elif arg == 'a' or arg == 'da':
-        what_to_sort = DAILY
+        what_to_sort = daily.DAILY
     elif arg == 'p' or arg == 'sp':
         sort_proc = True
     elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
@@ -587,17 +583,17 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.TOSORT
     elif arg == 'ld':
         read_most_recent = True
-        what_to_sort = DAILIES
+        what_to_sort = daily.DAILIES
         dir_search_flag = daily.ROOT
     elif arg == 'rd':
         read_most_recent = True
-        what_to_sort = DAILIES
+        what_to_sort = daily.DAILIES
         dir_search_flag = daily.TOSORT
     elif arg == 'rf':
         read_most_recent = True
     elif arg[:2] == 'rd' and arg[2:].isdigit():
         read_most_recent = True
-        what_to_sort = DAILIES
+        what_to_sort = daily.DAILIES
         dir_search_flag = daily.TOSORT
         daily_files_back = int(arg[2:])
     elif arg[:2] == 'rf' and arg[2:].isdigit():
@@ -629,12 +625,12 @@ while cmd_count < len(sys.argv):
 
 if my_min_file > my_max_file: sys.exit("Min file specified >> max file specified. Bailing.")
 
-if what_to_sort == DAILIES:
+if what_to_sort == daily.DAILIES:
     dir_to_scour = raw_daily_dir
     sort_proc = True
-elif what_to_sort == DRIVE:
+elif what_to_sort == daily.DRIVE:
     dir_to_scour = raw_drive_dir
-elif what_to_sort == KEEP:
+elif what_to_sort == daily.KEEP:
     dir_to_scour = raw_keep_dir
 else:
     sys.exit("Unknown sorting type/directory.")
