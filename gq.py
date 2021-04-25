@@ -150,6 +150,7 @@ def read_cfg():
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(my_text, projfile):
+    lmt = len(my_text)
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -174,7 +175,7 @@ def find_text_in_file(my_text, projfile):
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
-            if not my_text[1]:
+            if lmt == 1:
                 reg_string = r'\b{}(s?)\b'.format(my_text[0])
                 if re.search(reg_string, line, flags=re.IGNORECASE):
                     found_one = True
@@ -318,10 +319,6 @@ if view_history:
 if not len(my_text):
     sys.exit("You need to specify text to find.")
 
-if len(my_text) == 1:
-    print("No second word to search.")
-    my_text.append('')
-
 print("Searching for string{}: {}".format(mt.plur(my_text), ' / '.join(my_text)))
 
 for proj in proj_umbrella:
@@ -356,8 +353,7 @@ for proj in proj_umbrella:
         frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(my_text, notes_file)
     elif os.path.exists(notes_file):
             print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
-
-if not found_overall: sys.exit("Nothing found.")
+    notes_file = i7.notes_file(proj)
 
 print("    ---- total matches printed:", found_overall)
 for x in sorted(frequencies, key=frequencies.get, reverse=True):
