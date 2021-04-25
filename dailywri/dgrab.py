@@ -8,6 +8,7 @@
 #
 # usage: dgrab.py -da -nd s=wh
 # usage: dgrab.py a # just analyzes
+# usage: dgrab.py ld s=critical pulls critical section from latest daily (lf from latest file in other directories)
 #
 # (don't show differences)
 #
@@ -16,6 +17,8 @@
 # daily.py has the main engine details
 # dgrab.txt has what maps where
 # todo: utf8 to ascii, open first nonorphan, open first bad header
+#
+# note: dga.bat (section name) copies the section name over
 
 import codecs
 import datetime
@@ -68,7 +71,7 @@ analyze_orphans = False
 look_for_orphan = False
 append_importants = False
 important_test = True
-latest_daily_only = False
+latest_file_only = False
 
 dir_search_flag = daily.TOPROC
 
@@ -102,6 +105,7 @@ def usage(header="GENERAL USAGE"):
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
     print("  dgrab.py -dr s=vvff for processing VVFF sections in Google Drive files")
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
+    print("  dga.bat s=my processes all sections labeled my for daily/drive/keep.")
     exit()
 
 def cmd_param_of(my_dir):
@@ -568,7 +572,10 @@ while cmd_count < len(sys.argv):
         append_importants = True
         important_test = True
     elif arg == 'l': list_it = True
-    elif arg == 'ld': latest_daily_only = True
+    elif arg == 'ld':
+        latest_file_only = True
+        dir_to_proc = daily_proc
+    elif arg == 'lf': latest_file_only = True
     elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
@@ -629,7 +636,11 @@ if not dir_to_proc:
         print("Trying current directory", my_cwd)
         dir_to_proc = my_cwd
     else:
-        sys.exit("Need to specify a directory with -da (daily) or -dr (drive) or go to either writing-daily or google drive dir.")
+        if latest_file_only:
+            print("Forcing to", daily_proc, "for last daily file")
+            dir_to_proc = daily_proc
+        else:
+            sys.exit("Need to specify a directory with -da (daily) or -dr (drive) or go to either writing-daily or google drive dir.")
 
 if "to-proc" not in dir_to_proc:
     dir_to_proc = os.path.join(dir_to_proc, "to-proc")
@@ -656,12 +667,14 @@ if just_analyze:
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
 
-if latest_daily_only:
-    the_glob = glob.glob("c:/writing/daily/20*.txt")
-    if os.path.exists("c:/writing/daily/to-proc/{}"):
-        sys.exit("Daily file {} exists in to-proc. Bailing.".format(the_glob[-1]))
-    dir_to_proc = "c:/writing/daily"
+if latest_file_only:
+    parent_dir = Path(dir_to_proc).parent.absolute()
+    print("ORIG:", parent_dir)
+    the_glob = glob.glob(str(parent_dir) + "/20*.txt")
+    if not len(my_file_list):
+        sys.exit("No valid files found in {}.".format(parent_dir))
     my_file_list = [the_glob[-1]]
+
 
 if analyze_orphans:
     find_all_blanks(the_glob)
@@ -724,7 +737,7 @@ if list_it:
     exit()
 
 if processed == 0:
-    print("Could not find anything to process for {:s}.".format(my_sect))
+    print("Could not find anything to process for {} in {}.".format(my_sect, dir_to_proc))
 else:
     print("Processed", processed, "total file(s)")
 
