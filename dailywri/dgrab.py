@@ -99,7 +99,7 @@ def usage(header="GENERAL USAGE"):
     print("1o/ao = first orphan or analyze orphans")
     print("noa = no open after")
     print("pc = print suggested commands")
-    print("ld = latest daily only")
+    print("ld = latest daily only (not to-proc), lf = latest file from this/chosen directory")
     print("")
     print("sample usage:")
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")

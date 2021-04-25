@@ -67,7 +67,7 @@ my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 verbose = True
 
-read_recent_daily = False
+read_most_recent = False
 
 bail_on_warnings = True
 
@@ -110,7 +110,7 @@ def usage(my_arg):
     print("-bu bails after unchanged. Used for testing.")
     print("-n1/1w toggles one-word names in lines.")
     print("-v/-q is verbose/quiet")
-    print("-rd# means go back # daily files, default is 1")
+    print("-rd# means go back # daily files, default is 1, -rf looks at files in current directory")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -585,12 +585,24 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.ROOT
     elif arg == 'st':
         dir_search_flag = daily.TOSORT
+    elif arg == 'ld':
+        read_most_recent = True
+        what_to_sort = DAILIES
+        dir_search_flag = daily.ROOT
     elif arg == 'rd':
-        read_recent_daily = True
-        dir_search_flag = daily.ROOT
+        read_most_recent = True
+        what_to_sort = DAILIES
+        dir_search_flag = daily.TOSORT
+    elif arg == 'rf':
+        read_most_recent = True
     elif arg[:2] == 'rd' and arg[2:].isdigit():
-        read_recent_daily = True
-        dir_search_flag = daily.ROOT
+        read_most_recent = True
+        what_to_sort = DAILIES
+        dir_search_flag = daily.TOSORT
+        daily_files_back = int(arg[2:])
+    elif arg[:2] == 'rf' and arg[2:].isdigit():
+        read_most_recent = True
+        dir_search_flag = daily.TOSORT
         daily_files_back = int(arg[2:])
     elif arg == 'fc':
         force_copy = True
@@ -650,7 +662,7 @@ if not len(file_list):
     file_list = glob(my_glob)
     print("Globbing", my_glob)
 
-if read_recent_daily:
+if read_most_recent:
     daily_count = 0
     for r in reversed(file_list):
         if not os.stat(r).st_size:
