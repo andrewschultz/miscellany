@@ -40,6 +40,8 @@ OUTSIDE=2
 
 quote_status = ALL
 
+user_specified_matches_needed = 0
+
 # Keep this false or you may overwrite something
 create_new_history = False
 
@@ -151,7 +153,6 @@ def read_cfg():
 
 def find_text_in_file(match_string_array, projfile):
     individual_match_array = [r'\b{}s?\b'.format(x) for x in match_string_array]
-    my_match_string = ''.join([r'(?=.*{})'.format(x) for x in individual_match_array])
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -162,7 +163,6 @@ def find_text_in_file(match_string_array, projfile):
     my_match_string = "avery.*slay"
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
-            found_one = False
             if current_table:
                 current_table_line += 1
                 if not line.strip():
@@ -177,12 +177,13 @@ def find_text_in_file(match_string_array, projfile):
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
-            if re.search(my_match_string, line, flags=re.IGNORECASE):
-                found_one = True
-                if modify_line:
-                    for reg_string in individual_match_array:
-                        line_out = re.sub(reg_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
-            if found_one:
+            found_this_line = 0
+            for x in individual_match_array:
+                if re.search(x, line, flags=re.IGNORECASE):
+                    found_this_line += 1
+                    if modify_line:
+                        line_out = re.sub(x, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
+            if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
                     return found_so_far
@@ -268,6 +269,13 @@ while cmd_count < len(sys.argv):
         modify_line = True
     elif sorted(arg) == 'lmn': #no modify line
         modify_line = False
+    elif arg[:2] == 'mn':
+        try:
+            user_specified_matches_needed = int(arg[2:])
+            if user_specified_matches_needed < 1:
+                sys.exit("-mn must define a positive number.")
+        except:
+            print("mn needs a valid number after it.")
     elif arg == 'ny' or arg == 'yn':
         include_notes = True
     elif arg == 'nn':
@@ -304,6 +312,15 @@ if view_history:
 
 if not len(match_string_array):
     sys.exit("You need to specify text to find.")
+
+matches_needed = len(match_string_array)
+if user_specified_matches_needed:
+    if user_specified_matches_needed > matches_needed:
+        print("mn was bigger than the number of matches.")
+    elif user_specified_matches_needed == matches_needed:
+        print("mn was bigger than the number of matches.")
+    else:
+        matches_needed = user_specified_matches_needed
 
 print("Searching for string{}: {}".format(mt.plur(match_string_array), ' / '.join(match_string_array)))
 
