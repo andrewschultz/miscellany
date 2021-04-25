@@ -2,7 +2,7 @@
 #
 # replaces gq.pl
 #
-# usage gq.py as my_text (for alex smart)
+# usage gq.py as match_string_array (for alex smart)
 # usage gq.py `as to search for the word AS
 # can use one word or two
 
@@ -50,7 +50,7 @@ found_overall = 0
 frequencies = defaultdict(int)
 
 cmd_count = 1
-my_text = []
+match_string_array = []
 default_from_cwd = i7.dir2proj()
 default_from_cfg =  ""
 my_proj = ""
@@ -149,8 +149,9 @@ def read_cfg():
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
-def find_text_in_file(my_text, projfile):
-    lmt = len(my_text)
+def find_text_in_file(match_string_array, projfile):
+    individual_match_array = [r'\b{}s?\b'.format(x) for x in match_string_array]
+    my_match_string = ''.join([r'(?=.*{})'.format(x) for x in individual_match_array])
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -158,6 +159,7 @@ def find_text_in_file(my_text, projfile):
     found_so_far = 0
     current_table = ""
     current_table_line = 0
+    my_match_string = "avery.*slay"
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             found_one = False
@@ -175,25 +177,11 @@ def find_text_in_file(my_text, projfile):
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
-            if lmt == 1:
-                reg_string = r'\b{}(s?)\b'.format(my_text[0])
-                if re.search(reg_string, line, flags=re.IGNORECASE):
-                    found_one = True
-                    if modify_line:
+            if re.search(my_match_string, line, flags=re.IGNORECASE):
+                found_one = True
+                if modify_line:
+                    for reg_string in individual_match_array:
                         line_out = re.sub(reg_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
-            else:
-                if re.search(r'\b({}{}|{}{})(s?)\b'.format(my_text[0], my_text[1], my_text[1], my_text[0]), line, flags=re.IGNORECASE):
-                    if modify_line:
-                        line_out = re.sub(r'(\b({}{}|{}{})(s?)\b)', lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
-                    found_one = True
-                else:
-                    first_string = r'\b{}(s?)\b'.format(my_text[0])
-                    second_string = r'\b{}(s?)\b'.format(my_text[1])
-                    if re.search(first_string, line, re.IGNORECASE) and re.search(second_string, line, re.IGNORECASE):
-                        if modify_line:
-                            line_out = re.sub(first_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
-                            line_out = re.sub(second_string, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
-                        found_one = True
             if found_one:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
@@ -287,10 +275,8 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     else:
-        if len(my_text) == 2:
-            sys.exit("Found more than 2 text string to search. Bailing.")
-        arg = arg.replace("`", "")
-        my_text.append(arg)
+        print("Adding searchable string", arg)
+        match_string_array.append(arg)
     cmd_count += 1
 
 if not my_proj:
@@ -316,10 +302,10 @@ if view_history:
     print(history_file)
     mt.npo(history_file)
 
-if not len(my_text):
+if not len(match_string_array):
     sys.exit("You need to specify text to find.")
 
-print("Searching for string{}: {}".format(mt.plur(my_text), ' / '.join(my_text)))
+print("Searching for string{}: {}".format(mt.plur(match_string_array), ' / '.join(match_string_array)))
 
 for proj in proj_umbrella:
     if proj not in i7.i7f:
@@ -342,7 +328,7 @@ for proj in proj_umbrella:
             continue
         if i7.inform_short_name(projfile) in frequencies:
             continue
-        frequencies[i7.inform_short_name(projfile)] = find_text_in_file(my_text, projfile)
+        frequencies[i7.inform_short_name(projfile)] = find_text_in_file(match_string_array, projfile)
     notes_file = i7.notes_file(proj)
     if include_notes:
         if not os.path.exists(notes_file):
@@ -350,7 +336,7 @@ for proj in proj_umbrella:
             continue
         if i7.inform_short_name(notes_file) in frequencies: # STS files overlap
             continue
-        frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(my_text, notes_file)
+        frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(match_string_array, notes_file)
     elif os.path.exists(notes_file):
             print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
     notes_file = i7.notes_file(proj)
@@ -368,6 +354,6 @@ temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 
 if len(temp_array):
     print("Left untested:", ', '.join(temp_array))
 
-write_history(history_file, my_text, create_new_history)
+write_history(history_file, ' '.join(sorted(match_string_array)), create_new_history)
 
 mt.post_open()
