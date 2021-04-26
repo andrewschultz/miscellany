@@ -18,6 +18,7 @@ my $tabMax = 25;
 my $newMax = 15;
 my $tabMin = 10;
 my $newMin = 5;
+my $br_htm = "<br />\n";
 
 #######################variable(s)
 my %sizes;
@@ -83,7 +84,7 @@ while ( $a = <A> ) {
   my $fileName   = '';
   my $fileBackup = '';
   for my $x (0..scalar(@b)-1)
-  {  print($x . " of " . scalar(@b-1) . ":" . $b[$x] . "\n");
+  {
 	  if ($b[$x] =~ /backupfilepath/i) { $fileBackup = $b[$x+1]; }
 	  if ($b[$x] =~ /filename=/i) { $fileName = $b[$x+1]; }
   }
@@ -154,11 +155,11 @@ if ($analyze) {
 
   my @errs;
   if ( $newOverStreak > 1 ) {
-    push( @errs, "NEW TABS too big $newOverStreak times in a row." );
+    push( @errs, "NEW TABS too big (>$newMax) $newOverStreak times in a row." );
   }
   if ( $newInc > 1 ) { push( @errs, "NEW TABS grew $newInc times in a row." ); }
   if ( $tabsOverStreak > 1 ) {
-    push( @errs, "OVERALL TABS too big $tabsOverStreak times in a row." );
+    push( @errs, "OVERALL TABS too big (>$tabMax) $tabsOverStreak times in a row." );
   }
   if ( $tabsInc > 1 ) {
     push( @errs, "OVERALL TABS grew $tabsInc times in a row." );
@@ -166,7 +167,7 @@ if ($analyze) {
   push( @errs, "No new file change since last run" ) if $newUnch;
   push( @errs, "No tab file change since last run" ) if $tabsUnch;
   if ( scalar @unsavedFiles > 1 ) {
-    print "Unsaved files: " . join( ", ", @unsavedFiles ) . "<br />\n";
+    print "Unsaved files: " . join( ", ", @unsavedFiles ) . $br_htm;
   }
   if ( $#errs > -1 ) {
     if ($htmlGen) {
@@ -176,18 +177,18 @@ if ($analyze) {
       for (@errs) { print B "<center><font size=+3>$_</font></center>\n"; }
       print B
         "<center><font size=+3>$lastNew new, $lastTabs tabs</font></center>\n";
-      print B join( ", ", @newFiles ) . "<br />\n" if ($newFiles);
+      print B join( ", ", @newFiles ) . $br_htm if ($newFiles);
 	  print B "<font size=+3>BCO.PY for unsaved files</font><br />\n";
       if ( scalar @newFiles > 5 ) {
-        print B "Smallest: " . smallest() . "<br />\n";
-        print B "Largest: " . largest() . "<br />\n";
-        print B "Leftest: " . join( ", ", @newFiles[ 0 .. 4 ] ) . "<br />\n";
+        print B smallest() . $br_htm;
+        print B largest() . $br_htm;
+        print B "Leftest: " . join( ", ", @newFiles[ 0 .. 4 ] ) . $br_htm;
         print B "Rightest: "
           . join( ", ", @newFiles[ $#newFiles - 4 .. $#newFiles ] )
-          . "<br />\n";
+          . $br_htm;
       }
       if ( scalar @unsavedFiles > 1 ) {
-        print B "Unsaved: " . join( ", ", @unsavedFiles ) . "<br />\n";
+        print B "Unsaved: " . join( ", ", @unsavedFiles ) . $br_htm;
       }
       print B "</body></html>\n";
       close(B);
