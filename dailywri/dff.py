@@ -580,7 +580,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'sr':
         dir_search_flag = daily.ROOT
     elif arg == 'st':
-        dir_search_flag = daily.TOSORT
+        dir_search_flag = daily.TOPROC
     elif arg == 'ld':
         read_most_recent = True
         what_to_sort = daily.DAILIES
@@ -588,17 +588,17 @@ while cmd_count < len(sys.argv):
     elif arg == 'rd':
         read_most_recent = True
         what_to_sort = daily.DAILIES
-        dir_search_flag = daily.TOSORT
+        dir_search_flag = daily.TOPROC
     elif arg == 'rf':
         read_most_recent = True
     elif arg[:2] == 'rd' and arg[2:].isdigit():
         read_most_recent = True
         what_to_sort = daily.DAILIES
-        dir_search_flag = daily.TOSORT
+        dir_search_flag = daily.TOPROC
         daily_files_back = int(arg[2:])
     elif arg[:2] == 'rf' and arg[2:].isdigit():
         read_most_recent = True
-        dir_search_flag = daily.TOSORT
+        dir_search_flag = daily.TOPROC
         daily_files_back = int(arg[2:])
     elif arg == 'fc':
         force_copy = True

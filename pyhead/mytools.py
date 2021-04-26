@@ -56,9 +56,9 @@ def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
 
 def truth_state_of(text_data, print_warning = True):
-    tl = text_data.lower()
+    tl = text_data.lower().strip()
     if tl == 'true' or tl == '1' or tl == 'yes': return True
-    if tl == 'false' or tl == '0' or tl == 'no': return True
+    if tl == 'false' or tl == '0' or tl == 'no': return False
     if print_warning:
         print("Bad truth state:", text_data)
     return -1
