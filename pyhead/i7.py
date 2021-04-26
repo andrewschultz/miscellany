@@ -638,29 +638,43 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
         for a in ary:
             if ".inform" in a:
                 x2 = re.sub("\.inform", "", a)
-        if not x2:
-            sys.stderr.write("WARNING", x, "should've mapped to a project but didn't.")
+            elif a.lower() in i7xr:
+                x2 = a.lower()
+            elif a.lower() in i7x:
+                x2 = i7x[a.lower()]
+        if not x2 and not x:
+            sys.stderr.write("WARNING: {} should've mapped to a project but didn't.\n".format(x))
     else:
         if 'github' in ary and ary.index('github') < len(ary) - 1:
             x2 = ary[ary.index('github') + 1]
-    if x2 in i7gxr: # this is for irregularly named projects that lead to story.ni, e.g. the-problems-compound/compound or the STS games
+    x2 = x2.lower()
+    if x2 in i7xr: # in some case, a double-reversal might not work e.g. compound -> pc -> the-problems-compound
+        x3 = i7xr[x2]
+        if to_abbrev:
+            return x3
+        if x3 in i7x:
+            return i7x[x3]
+    if x2 in i7gxr: # this is for irregularly named projects that lead to story.ni, e.g. stale-tales-slate/roiling to roiling
         x3 = i7gxr[x2]
         if to_abbrev:
             return x3
         if x3 in i7x:
             return i7x[x3]
-    if to_abbrev and x2 in i7xr: return i7xr[x2]
     if empty_if_unmatched and x2 not in i7xr:
         return ""
     return x2
 
 def inform_short_name(my_file):
     retval = os.path.basename(my_file)
-    if retval in i7gsn:
-        return "{} {}".format(dir2proj(my_file), i7gsn[retval])
     if 'i7x' in retval:
         return retval.replace('.i7x', '')
-    return '*' + retval
+    if retval in i7gsn:
+        temp_proj = dir2proj(my_file).replace('-', ' ').title()
+        if temp_proj:
+            return "{} {}".format(temp_proj, i7gsn[retval])
+        else:
+            return "{}".format(i7gsn[retval])
+    return '* ({})'.format(retval)
 
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
