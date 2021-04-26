@@ -185,13 +185,13 @@ def find_text_in_file(match_string_array, projfile):
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
             found_this_line = 0
-            for x in individual_match_array:
-                if fast_match and not x in line: # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
+            for x in range(0, len(match_string_array)):
+                if fast_match and not match_string_array[x] in line_out.lower(): # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
                     continue
-                if re.search(x, line, flags=re.IGNORECASE):
+                if re.search(individual_match_array[x], line, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
-                        line_out = re.sub(x, lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
+                        line_out = re.sub(individual_match_array[x], lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
@@ -296,7 +296,8 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     else:
-        print("Adding searchable string", arg)
+        if verbose:
+            print("Adding searchable string", arg)
         match_string_array.append(arg)
     cmd_count += 1
 
