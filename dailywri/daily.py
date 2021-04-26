@@ -16,11 +16,11 @@ from pathlib import Path
 
 # number definitions. The value isn't important. We just need everything defined.
 
-TOPROC = 0
+TOPROC = TOSORT = 0
 ROOT = 1
 BACKUP = 2
 
-DAILY = 0
+DAILY = DAILIES = 0
 DRIVE = 1
 KEEP = 2
 
@@ -55,6 +55,10 @@ dir_keywords = [ "daily", "from_drive", "from_keep" ]
 def is_true_string(x):
     if x == '0' or x == 'false': return False
     return True
+
+def last_daily_file(files_back = 1):
+    x = glob.glob("c:/writing/daily/20*.txt")
+    return x[-files_back]
 
 def read_main_daily_config():
     global lower_bound
