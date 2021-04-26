@@ -27,7 +27,7 @@ class glom_project:
     def __init__(self, name): #alphabetical, except when similar are lumped together
         self.file = ''
         self.tempfile = ''
-        self.splitregex = ''
+        self.splitregex = []
 
 my_gloms = defaultdict(glom_project)
 
@@ -57,26 +57,26 @@ def separator_value_of(x):
     if x.isdigit(): return int(x)
     return 0
 
-def first_separator_of(x):
-    sep_regex = r'({})'.format(this_glom.splitregex)
+def first_separator_of(my_regex, x):
+    sep_regex = r'({})'.format(my_regex, x)
     return re.search(sep_regex, x)[0]
 
-def highest_separator_of(y):
-    sep_regex = r'({})'.format(this_glom.splitregex)
+def highest_separator_of(my_regex, y):
+    sep_regex = r'({})'.format(my_regex)
     f = re.findall(sep_regex, y)
     return max(f, key=lambda x:separator_value_of(x))
 
-def custom_array(x, go_lower = True):
+def custom_array(x, my_regex, go_lower = True):
     my_line = mt.zap_comment(x).strip()
     if go_lower: my_line = my_line.lower()
-    retval = re.split(this_glom.splitregex, my_line)
+    retval = re.split(my_regex, my_line)
     return retval
 
-def get_all_ideas(my_file):
+def get_all_ideas(my_file, my_regex):
     my_dict = defaultdict(int)
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
-            ca = custom_array(line)
+            ca = custom_array(line, my_regex)
             if len(ca) > 1:
                 for idea in ca:
                     my_dict[glom_modification_of(idea)] = line_count
@@ -99,9 +99,9 @@ def show_vanishing_idea_lines(main_dict, compare_dict, file_1, file_2):
         print("{:{maxsize}s} not in {} but was at line {} for {}".format(x, file_2, main_dict[x], file_1, maxsize = max_len))
     return len(set_difference)
 
-def compare_idea_lists(file_1, file_2):
-    my_1 = get_all_ideas(file_1)
-    my_2 = get_all_ideas(file_2)
+def compare_idea_lists(file_1, file_2, my_regex):
+    my_1 = get_all_ideas(file_1, my_regex)
+    my_2 = get_all_ideas(file_2, my_regex)
     left = 0
     right = 0
     my_both = sorted(set(list(my_1)) | set(list(my_2)))
@@ -111,6 +111,60 @@ def compare_idea_lists(file_1, file_2):
         print("Missing ideas. {} vanished from left, {} vanished from right. Bailing.".format(left, right))
         sys.exit()
     print("No missing ideas on file rewrite.")
+
+def run_one_regex(line_array, my_regex):
+    global cur_changes
+    for line_count in range(0, max_line):
+        l = line_array[line_count]
+        lb = l
+        lary = custom_array(l, my_regex)
+        if len(lary) > 1:
+            #print(line_count, lary)
+            after_array = []
+            for x in lary:
+                xg = glom_modification_of(x)
+                if xg in so_far:
+                    if so_far[xg] not in after_array and so_far[xg] not in delete_after:
+                        #print(x, "was at line", so_far[x])
+                        after_array.append(so_far[xg])
+                else:
+                    so_far[xg] = line_count
+            if len(after_array):
+                cur_changes += 1
+                if max_changes and cur_changes == max_changes + 1:
+                    print("Went over max changes of", max_changes)
+                    break
+                for a in after_array:
+                    l = mt.comment_combine([l, first_separator_of(my_regex, l) + line_array[a]], cr_at_end = False)
+                #print("New combined line:", l)
+                new_split = l.split('#')
+                #print("new split", new_split)
+                hisep = highest_separator_of(my_regex, new_split[0])
+                final_array = custom_array(new_split[0], my_regex, go_lower = False)
+                #print("Parsing", final_array)
+                final_dict = defaultdict(bool)
+                for u in final_array:
+                    u_mod = glom_modification_of(u)
+                    if u_mod not in final_dict.values():
+                        final_dict[u] = u_mod
+                    if u in so_far:
+                        so_far[u] = line_count
+                if len(final_dict) == 1:
+                    print("WARNING line {} collapsed to just one argument: {}.".format(line_count + 1, list(final_dict)[0]))
+                final_text = hisep.join(sorted(final_dict, key=lambda x:x.lower()))
+                if len(new_split) > 1:
+                    final_text += " #" + new_split[1]
+                #print(line_count, "from", ','.join([str(x) for x in after_array]), ":", final_array, "->", final_text)
+                for q in after_array:
+                    if q != line_count:
+                        delete_after[q] = True
+                    #print("Zapping", q, line_array[q].strip())
+                final_new_line = final_text.strip() + "\n"
+                print("    -> edited line ({} from {}):".format(line_count+1, ', '.join([str(x+1) for x in after_array])), final_new_line.strip())
+                if len(final_new_line) == len(lb):
+                    pass #print("No length changed for line", line_count, "because of likely duplicate information.")
+                line_array[line_count] = final_new_line
+    return line_array
 
 def read_cfg_file():
     global default_from_cfg
@@ -141,7 +195,7 @@ def read_cfg_file():
             elif prefix == 'tempfile':
                 this_glom.tempfile = data
             elif prefix == 'splitregex':
-                this_glom.splitregex = r'{}'.format(data)
+                this_glom.splitregex.append(r'{}'.format(data))
             else:
                 print("Bad prefix line", line_count, prefix)
 
@@ -202,56 +256,8 @@ if user_max_line:
     else:
         max_line = user_max_line
 
-for line_count in range(0, max_line):
-    l = line_array[line_count]
-    lb = l
-    lary = custom_array(l)
-    if len(lary) > 1:
-        #print(line_count, lary)
-        after_array = []
-        for x in lary:
-            xg = glom_modification_of(x)
-            if xg in so_far:
-                if so_far[xg] not in after_array and so_far[xg] not in delete_after:
-                    #print(x, "was at line", so_far[x])
-                    after_array.append(so_far[xg])
-            else:
-                so_far[xg] = line_count
-        if len(after_array):
-            cur_changes += 1
-            if max_changes and cur_changes == max_changes + 1:
-                print("Went over max changes of", max_changes)
-                break
-            for a in after_array:
-                l = mt.comment_combine([l, first_separator_of(l) + line_array[a]], cr_at_end = False)
-            #print("New combined line:", l)
-            new_split = l.split('#')
-            #print("new split", new_split)
-            hisep = highest_separator_of(new_split[0])
-            final_array = custom_array(new_split[0], go_lower = False)
-            #print("Parsing", final_array)
-            final_dict = defaultdict(bool)
-            for u in final_array:
-                u_mod = glom_modification_of(u)
-                if u_mod not in final_dict.values():
-                    final_dict[u] = u_mod
-                if u in so_far:
-                    so_far[u] = line_count
-            if len(final_dict) == 1:
-                print("WARNING line {} collapsed to just one argument: {}.".format(line_count + 1, list(final_dict)[0]))
-            final_text = hisep.join(sorted(final_dict, key=lambda x:x.lower()))
-            if len(new_split) > 1:
-                final_text += " #" + new_split[1]
-            #print(line_count, "from", ','.join([str(x) for x in after_array]), ":", final_array, "->", final_text)
-            for q in after_array:
-                if q != line_count:
-                    delete_after[q] = True
-                #print("Zapping", q, line_array[q].strip())
-            final_new_line = final_text.strip() + "\n"
-            print("    -> edited line ({} from {}):".format(line_count+1, ', '.join([str(x+1) for x in after_array])), final_new_line.strip())
-            if len(final_new_line) == len(lb):
-                pass #print("No length changed for line", line_count, "because of likely duplicate information.")
-            line_array[line_count] = final_new_line
+for my_regex in this_glom.splitregex:
+    line_array = run_one_regex(line_array, my_regex)
 
 f = open(this_glom.tempfile, "w")
 
@@ -262,7 +268,8 @@ for line_count in range(0, len(line_array)):
 
 f.close()
 
-compare_idea_lists(this_glom.file, this_glom.tempfile)
+for my_regex in this_glom.splitregex:
+    compare_idea_lists(this_glom.file, this_glom.tempfile, my_regex)
 
 if cur_changes:
     if max_changes and cur_changes > max_changes:
