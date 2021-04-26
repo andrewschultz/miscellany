@@ -28,6 +28,7 @@ class glom_project:
         self.file = ''
         self.tempfile = ''
         self.splitregex = []
+        self.alphabetize = defaultdict(bool)
 
 my_gloms = defaultdict(glom_project)
 
@@ -79,16 +80,16 @@ def get_all_ideas(my_file, my_regex):
             ca = custom_array(line, my_regex)
             if len(ca) > 1:
                 for idea in ca:
-                    my_dict[glom_modification_of(idea)] = line_count
+                    my_dict[glom_modification_of(idea, this_glom.alphabetize[my_regex])] = line_count
     return my_dict
 
-def glom_modification_of(my_idea):
+def glom_modification_of(my_idea, alphabetize_this):
     my_idea = my_idea.lower()
     my_idea = my_idea.replace(',', '').replace('.', '').replace('-', ' ')
-    my_idea = ' '.join(my_idea.split(' '))
-    if my_idea.count(' '):
-        my_idea = ' '.join(sorted(my_idea.split(' ')))
-    return my_idea
+    word_array = my_idea.split(' ')
+    if alphabetize_this:
+        word_array = sorted(word_array)
+    return ' '.join(word_array)
 
 def show_vanishing_idea_lines(main_dict, compare_dict, file_1, file_2):
     set_difference = sorted(set(list(main_dict)) - set(list(compare_dict)))
@@ -114,6 +115,7 @@ def compare_idea_lists(file_1, file_2, my_regex):
 
 def run_one_regex(line_array, my_regex):
     global cur_changes
+    alphabetize_this = this_glom.alphabetize[my_regex]
     for line_count in range(0, max_line):
         l = line_array[line_count]
         lb = l
@@ -122,7 +124,7 @@ def run_one_regex(line_array, my_regex):
             #print(line_count, lary)
             after_array = []
             for x in lary:
-                xg = glom_modification_of(x)
+                xg = glom_modification_of(x, alphabetize_this)
                 if xg in so_far:
                     if so_far[xg] not in after_array and so_far[xg] not in delete_after:
                         #print(x, "was at line", so_far[x])
@@ -144,7 +146,7 @@ def run_one_regex(line_array, my_regex):
                 #print("Parsing", final_array)
                 final_dict = defaultdict(bool)
                 for u in final_array:
-                    u_mod = glom_modification_of(u)
+                    u_mod = glom_modification_of(u, alphabetize_this)
                     if u_mod not in final_dict.values():
                         final_dict[u] = u_mod
                     if u in so_far:
@@ -196,6 +198,10 @@ def read_cfg_file():
                 this_glom.tempfile = data
             elif prefix == 'splitregex':
                 this_glom.splitregex.append(r'{}'.format(data))
+                this_glom.alphabetize[data] = False
+            elif prefix == 'splitregexa':
+                this_glom.splitregex.append(r'{}'.format(data))
+                this_glom.alphabetize[data] = True
             else:
                 print("Bad prefix line", line_count, prefix)
 
