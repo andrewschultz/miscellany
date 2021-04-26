@@ -14,6 +14,7 @@ import re
 import mytools as mt
 import shutil
 import filecmp
+from daily import last_daily_file
 
 cfg_file = "c:/writing/scripts/glom.txt"
 
@@ -150,7 +151,11 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg[0] == 'm' and arg[1:].isdigit():
+    if arg in my_gloms:
+        my_project = arg
+    elif arg[:2] == 'p=' or arg[:2] == 'p:' or arg[:2] == 's=' or arg[:2] == 's:':
+        my_project = arg[2:]
+    elif arg[0] == 'm' and arg[1:].isdigit():
         max_changes = int(arg[1:])
     elif arg[:2] == 'ml' and arg[2:].isdigit():
         user_max_line = int(arg[2:])
@@ -180,6 +185,9 @@ this_glom = my_gloms[my_project]
 
 if check_sectioning:
     mt.check_properly_sectioned(this_glom.file)
+
+if this_glom.file == "last-daily":
+    this_glom.file = last_daily_file()
 
 f = open(this_glom.file, "r")
 line_array = f.readlines()
