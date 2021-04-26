@@ -115,7 +115,7 @@ def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = b
                 if popup_err:
                     messageBox = ctypes.windll.user32.MessageBoxW
                     messageBox(None, 'Did not sort\n{:s}\n{:d}'.format(a, err_line[a.lower()]), 'Problems sorting stuff', 0x0)
-                exit()
+                sys.exit()
             return("zz" + re.sub(".*\[na ", "", ary[b]))
         arb = re.sub("^.*?activation of ", "", ary[b])
         new_ary = re.split("activation of ", arb)
@@ -126,7 +126,7 @@ def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = b
         if not re.search("\[e[1-9]\]", ary[b]):
             if not re.search("\[na\]", ary[b]):
                 print("BAD LINE", orig)
-                exit()
+                sys.exit()
             ret = re.sub("\"", "", ary[b])
             return ret
         else:
@@ -375,7 +375,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     row_array = []
                     temp_out.write(line)
                 elif tabs_this_table > 1 and len(line.split("\t")) == 1 and not line.startswith("\""):
-                    print("It looks like you put in a non-table comment at line", line_count, ":", line.strip())
+                    print("It looks like you put in a non-table comment at line {}: {}".format(line_count, ":", line.strip()))
                     i7.npo(f, line_count)
                 else:
                     row_array.append(line.strip())
@@ -449,7 +449,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             print("Ignoring unaccessed tables.")
         else:
             print("You need to sort out the unaccessed tables in talf.txt before I copy back over.")
-            exit()
+            sys.exit()
     if total_tables:
         print("{0} table{1} shifted, {2} line{3} shifted in {4}.".format(total_tables, mt.plur(total_tables), total_shifts, mt.plur(total_shifts), fb))
     files_identical = cmp(f, f2)
