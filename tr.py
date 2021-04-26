@@ -44,6 +44,14 @@ while cmd_count < len(sys.argv):
         if arg in my_triz:
             print("SKIP redefining", arg)
         my_triz[arg] = my_editor
+    elif arg == '?':
+        usage()
+    elif '?' in arg:
+        a = arg.replace('?', '')
+        if a in i7.i7trizmaps:
+            for x in i7.i7trizmaps[a]:
+                print(x, "=>", i7.i7trizmaps[a][x])
+        sys.exit()
     else:
         got_one = False
         for x in i7.i7trizmaps:
@@ -64,14 +72,16 @@ if len(my_triz) == 0:
 clip_text = ""
 
 for x in my_triz:
+    exe = "c:/tech/trizbort/trizbort.exe"
     if type(x) == str:
         tf = i7.triz(x)
+        if x == 'txt':
+            exe = mt.npnq
     else:
         tf = i7.i7trizmaps[x[0]][x[1]]
     if not os.path.exists(tf):
         print("Uh oh. {0} is not a valid path for {1}.".format(tf, x))
         continue
-    exe = mt.npnq if my_triz[x] == 'txt' else "c:/tech/trizbort/trizbort.exe"
     tf2 = mt.follow_link(tf)
     if to_clipboard:
         if tf == tf2 or orig_name:
