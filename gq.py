@@ -115,10 +115,13 @@ def write_history(my_file, my_query, create_new_history = False):
         sys.exit()
     ary = [x.strip() for x in f.readlines()]
     f.close()
-    if first_line in ary:
-        print(first_line, "already in history.")
-        ary.remove(first_line)
-    ary.insert(0, first_line)
+    if my_query == ary[0]:
+        print("Not rewriting since {} is already the first element.".format(my_query))
+        return
+    if my_query in ary:
+        print(my_query, "already in history.")
+        ary.remove(my_query)
+    ary.insert(0, my_query)
     if len(ary) > history_max:
         print("Removing excess history",', '.join(ary[history_max:]))
         ary = ary[:history_max]
