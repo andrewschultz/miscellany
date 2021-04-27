@@ -34,6 +34,8 @@ daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
 daily_done = "c:/writing/daily/done"
 
+stats_file = "c:/writing/temp/daily-stats.txt"
+
 file_header = ""
 
 sect_ary = []
@@ -65,6 +67,18 @@ def check_unsaved():
     if not len(open_array): return
     for x in open_array:
         mt.npo(x, bail = False)
+
+def put_stats(bail = True):
+    os.chdir("c:/writing/daily")
+    f = open(stats_file, "a")
+    ld = mt.last_daily_of()
+    pn = pendulum.now()
+    out_string = "{}\t{}\t{}".format(ld, pendulum.now(), os.stat(ld).st_size)
+    f.write(out_string + "\n")
+    print(out_string)
+    f.close()
+    if bail:
+        sys.exit()
 
 def move_to_proc(my_dir = "c:/writing/daily"):
     import win32ui
@@ -118,6 +132,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
+    print("(-?)ps = put stats, (-?)gs = get stats")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
@@ -191,6 +206,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg == 'ps': put_stats()
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
     elif arg == '?': usage()

@@ -32,8 +32,13 @@ file_extra_edit = defaultdict(lambda: defaultdict(int))
 
 daily_wildcard = "20*.txt"
 
-def dailies_of(my_dir):
+def dailies_of(my_dir = "c:/writing/daily"):
     return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
+
+def last_daily_of(my_dir = "c:/writing/daily", full_path = False):
+    if full_path:
+        return os.path.normpath(os.path.join(my_dir, dailies_of()[-1]))
+    return dailies_of()[-1]
 
 def progfile_of(my_path):
     if os.path.exists(my_path):
