@@ -17,6 +17,8 @@ from collections import defaultdict
 from shutil import copy
 import mytools as mt
 from stat import S_IREAD, S_IRGRP, S_IROTH
+import matplotlib.pyplot as plt
+import numpy as np
 
 #init_sect = defaultdict(str)
 
@@ -67,6 +69,43 @@ def check_unsaved():
     if not len(open_array): return
     for x in open_array:
         mt.npo(x, bail = False)
+
+def get_stats():
+    f = open(stats_file, "r")
+    stat_lines = f.readlines()
+    stat_lines.reverse()
+    this_file = stat_lines[0].split("\t")[0]
+    this_idx = 0
+    while this_idx < len(stat_lines) and stat_lines[this_idx].split("\t")[0] == this_file:
+        this_idx += 1
+    relevant_stats = stat_lines[:this_idx]
+    relevant_stats.reverse()
+    f.close()
+
+    init_time = stat_lines[-1].split("\t")[1]
+    itp = pendulum.parse(init_time)
+
+    times = []
+    sizes = []
+
+    print(this_idx)
+    for r in relevant_stats:
+        ary = r.split("\t")
+        my_time = pendulum.parse(ary[1])
+        times.append((my_time - itp).seconds / 86400)
+        sizes.append(int(ary[2]))
+    times = np.array(times)
+    sizes = np.array(sizes)
+
+    (a, b) = np.polyfit(times, sizes, 1)
+
+    plt.scatter(times, sizes, label="bytes={:.2f}*days+{:.2f}".format(a, b))
+    plt.xlabel("days")
+    plt.ylabel("bytes")
+    plt.plot(times, a*times+b)
+    plt.legend(loc='upper left')
+    plt.show()
+    sys.exit()
 
 def put_stats(bail = True):
     os.chdir("c:/writing/daily")
@@ -167,6 +206,7 @@ def get_init_sections():
         print("WARNING wobbly unsorted sections:")
         print("    is: {}".format(', '.join(sect_ary)))
         print("    best order: {}".format(', '.join(sect_ary_2)))
+        sect_ary = sect_ary_2
 
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
@@ -206,6 +246,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg == 'gs': get_stats()
     elif arg == 'ps': put_stats()
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
