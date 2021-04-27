@@ -171,7 +171,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
-    print("(-?)ps = put stats, (-?)gs = get stats")
+    print("(-?)ps = put stats, (-?)gs = get stats, (-?)es = edit stats, (-?)ss = sift stats")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
@@ -248,6 +248,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
     elif arg == 'gs': get_stats()
     elif arg == 'ps': put_stats()
+    elif arg == 'es': mt.npo(stats_file)
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
     elif arg == '?': usage()
