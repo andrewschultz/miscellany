@@ -70,7 +70,7 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def get_stats():
+def get_stats(bail = True):
     my_graph_graphic = "c:/writing/temp/daily-size-chart.png"
 
     os.chdir("c:/writing/daily")
@@ -121,7 +121,7 @@ def get_stats():
     mt.text_in_browser(my_graph_graphic)
     sys.exit()
 
-def put_stats(bail = True):
+def put_stats(bail = True, print_on_over = 0):
     os.chdir("c:/writing/daily")
     f = open(stats_file, "a")
     ld = mt.last_daily_of()
@@ -130,6 +130,19 @@ def put_stats(bail = True):
     f.write(out_string + "\n")
     print(out_string)
     f.close()
+
+    if print_on_over:
+        f = open(stats_file)
+        ary = f.readlines()
+        before_last_bytes = int(ary[-2].split("\t")[2])
+        last_bytes = int(ary[-1].split("\t")[2])
+        byte_delta = last_bytes - before_last_bytes
+        if byte_delta >= print_on_over:
+            print(last_bytes, "increase at or over threshold of", byte_delta, "so I am opening a new graph")
+            get_stats()
+        else:
+            print(last_bytes, "is short of", byte_delta, "so I am not going to create a new graph")
+
     if bail:
         sys.exit()
 
@@ -262,6 +275,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
     elif arg == 'gs': get_stats()
     elif arg == 'ps': put_stats()
+    elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg == 'es': mt.npo(stats_file)
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
