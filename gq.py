@@ -102,7 +102,6 @@ def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
 def write_history(my_file, my_query, create_new_history = False):
-    first_line = ' '.join(my_query).strip()
     if create_new_history:
         if os.path.exists(my_file):
             print(my_file, "exists. If you can't write to it, check it manually.")
@@ -298,6 +297,8 @@ while cmd_count < len(sys.argv):
     else:
         if verbose:
             print("Adding searchable string", arg)
+        arg = arg.replace('/', '[^a-z]*')
+        arg = arg.replace('`', '')
         match_string_array.append(arg)
     cmd_count += 1
 
