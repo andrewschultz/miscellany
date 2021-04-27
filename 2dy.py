@@ -71,6 +71,8 @@ def check_unsaved():
         mt.npo(x, bail = False)
 
 def get_stats():
+    my_graph_graphic = "c:/writing/temp/daily-size-chart.png"
+
     os.chdir("c:/writing/daily")
     f = open(stats_file, "r")
     stat_lines = f.readlines()
@@ -96,7 +98,7 @@ def get_stats():
     for r in relevant_stats:
         ary = r.split("\t")
         my_time = pendulum.parse(ary[1])
-        times.append((my_time - itp).seconds / 86400)
+        times.append((my_time - itp).total_seconds() / 86400)
         sizes.append(int(ary[2]))
     times = np.array(times)
     sizes = np.array(sizes)
@@ -107,12 +109,16 @@ def get_stats():
     if current_size > last_size:
         my_label += "\n{} bytes since last data check".format(current_size - last_size)
 
+    if a:
+        my_label += "\n{:.2f} projected bytes".format(7 * a + b)
+
     plt.scatter(times, sizes, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
     plt.legend(loc='upper left')
-    plt.show()
+    plt.savefig(my_graph_graphic)
+    mt.text_in_browser(my_graph_graphic)
     sys.exit()
 
 def put_stats(bail = True):
