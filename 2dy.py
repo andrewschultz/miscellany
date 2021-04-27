@@ -71,10 +71,12 @@ def check_unsaved():
         mt.npo(x, bail = False)
 
 def get_stats():
+    os.chdir("c:/writing/daily")
     f = open(stats_file, "r")
     stat_lines = f.readlines()
     stat_lines.reverse()
-    this_file = stat_lines[0].split("\t")[0]
+    first_array = stat_lines[0].split("\t")
+    this_file = first_array[0]
     this_idx = 0
     while this_idx < len(stat_lines) and stat_lines[this_idx].split("\t")[0] == this_file:
         this_idx += 1
@@ -88,7 +90,9 @@ def get_stats():
     times = []
     sizes = []
 
-    print(this_idx)
+    current_size = os.stat(this_file).st_size
+    last_size = int(first_array[2])
+
     for r in relevant_stats:
         ary = r.split("\t")
         my_time = pendulum.parse(ary[1])
@@ -98,8 +102,12 @@ def get_stats():
     sizes = np.array(sizes)
 
     (a, b) = np.polyfit(times, sizes, 1)
+    my_label = "bytes={:.2f}*days{}{:.2f}".format(a, '+' if b > 0 else '', b)
 
-    plt.scatter(times, sizes, label="bytes={:.2f}*days+{:.2f}".format(a, b))
+    if current_size > last_size:
+        my_label += "\n{} bytes since last data check".format(current_size - last_size)
+
+    plt.scatter(times, sizes, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
