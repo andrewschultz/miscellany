@@ -8,6 +8,10 @@
 # todo: plurals option (only when I can't think of anything else to do)
 #       speedup for allowed_misses
 #
+# to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
+# I'd assume deleting this or changing it to zero would disable colors
+# os.system(" ") is necessary without this
+#
 
 from collections import defaultdict
 import mytools as mt
@@ -15,6 +19,7 @@ import re
 import i7
 import sys
 import os
+import colorama
 
 # variables in CFG file
 
@@ -94,10 +99,10 @@ def usage():
     exit()
 
 def left_highlight():
-    return highlight_types[my_highlight][0] * highlight_repeat
+    return f'{colorama.Fore.GREEN}{highlight_types[my_highlight][0] * highlight_repeat}'
 
 def right_highlight():
-    return highlight_types[my_highlight][1] * highlight_repeat
+    return f'{highlight_types[my_highlight][1] * highlight_repeat}{colorama.Style.RESET_ALL}'
 
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
