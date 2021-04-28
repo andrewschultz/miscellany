@@ -93,6 +93,8 @@ prefixes = defaultdict(str)
 delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
 
+block_move = defaultdict(set)
+
 def usage(my_arg):
     if (my_arg):
         print("Bad argument", my_arg)
@@ -172,6 +174,9 @@ def read_comment_cfg():
                         delete_marker[y] = True
             if l.startswith("keyword:"):
                 section_words[ary[0]] = ary[1]
+            elif l.startswith("block:"):
+                for x in ary[1].split(','):
+                    block_move[ary[0]].add(x)
             elif l.startswith("delmar:"):
                 for u in entries:
                     if u in delete_marker:
@@ -447,7 +452,11 @@ def sort_raw(raw_long):
                 continue
             temp = my_section(line)
             if temp:
-                if temp == 'nam':
+                if temp != current_section:
+                    print("Move from", current_section, "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
+                if temp in block_move[current_section]:
+                    sections[current_section] += line
+                elif temp == 'nam':
                     line = "\t" + line.strip()
                     sections[temp] += line
                 elif temp == 'lim':
