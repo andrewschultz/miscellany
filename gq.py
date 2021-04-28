@@ -33,6 +33,7 @@ my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 # options only on cmd line
 
+colors = True
 user_input = False
 fast_match = True
 view_history = False
@@ -95,6 +96,7 @@ def usage():
     print("fm = fast match (on by default, no accuracy loss)")
     print("e/ec/ce = edit config file")
     print("qi/qo/qa = quotes inside/outside/all")
+    print("con/coff = colors on/off")
     print("ml/nml/mln = whether or not to modify line where search results are found")
     exit()
 
@@ -149,6 +151,9 @@ def read_cfg():
                 if prefix == "all_similar_projects":
                     global all_similar_projects
                     all_similar_projects = mt.truth_state_of(data)
+                elif prefix == "colors":
+                    global colors
+                    colors = mt.truth_state_of(data)
                 elif prefix == "default_from_cfg":
                     global default_from_cfg
                     default_from_cfg = data
@@ -285,6 +290,10 @@ def read_args(my_arg_array):
             verbose = True
         elif arg == 'q':
             verbose = False
+        elif arg == 'con' or arg == 'onc':
+            colors = False
+        elif arg == 'coff' or arg == 'offc':
+            colors = False
         elif arg == 'qo' or arg == 'oq':
             quote_status = OUTSIDE
         elif arg == 'qi' or arg == 'iq':
