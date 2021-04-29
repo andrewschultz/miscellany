@@ -21,25 +21,28 @@ import sys
 import os
 import colorama
 
-# variables in CFG file
+# variables potentially in CFG file
 
 max_overall = 100
 max_in_file = 25
 history_max = 100
+colors = True
+fast_match = True
+verbose = False
+all_similar_projects = True
+my_proj = ""
 
 # constants
 
 my_cfg = "c:/writing/scripts/gqcfg.txt"
 
+color_ary = [ colorama.Fore.GREEN, colorama.Fore.BLUE, colorama.Fore.YELLOW, colorama.Fore.CYAN, colorama.Fore.MAGENTA, colorama.Fore.RED ]
+
 # options only on cmd line
 
-colors = True
 user_input = False
-fast_match = True
 view_history = False
 post_open_matches = False
-all_similar_projects = True
-verbose = False
 
 include_notes = True
 
@@ -66,7 +69,6 @@ frequencies = defaultdict(int)
 match_string_array = []
 default_from_cwd = i7.dir2proj()
 default_from_cfg =  ""
-my_proj = ""
 
 TAGS = 0
 PARENTHESES = 1
@@ -100,8 +102,8 @@ def usage():
     print("ml/nml/mln = whether or not to modify line where search results are found")
     exit()
 
-def left_highlight():
-    return f'{colorama.Fore.GREEN}{highlight_types[my_highlight][0] * highlight_repeat}'
+def left_highlight(color_idx):
+    return f'{color_ary[color_idx % len(color_ary)]}{highlight_types[my_highlight][0] * highlight_repeat}'
 
 def right_highlight():
     return f'{highlight_types[my_highlight][1] * highlight_repeat}{colorama.Style.RESET_ALL}'
@@ -198,13 +200,13 @@ def find_text_in_file(match_string_array, projfile):
                 line = ' '.join(ary[1::2])
             line_out = line.strip()
             found_this_line = 0
-            for x in range(0, len(match_string_array)):
-                if fast_match and not match_string_array[x] in line_out.lower(): # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
+            for match_idx in range(0, len(match_string_array)):
+                if fast_match and not match_string_array[match_idx] in line_out.lower(): # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
                     continue
-                if re.search(individual_match_array[x], line, flags=re.IGNORECASE):
+                if re.search(individual_match_array[match_idx], line, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
-                        line_out = re.sub(individual_match_array[x], lambda x: "{}{}{}".format(left_highlight(), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
+                        line_out = re.sub(individual_match_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
