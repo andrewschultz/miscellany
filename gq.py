@@ -84,7 +84,7 @@ highlight_types = {
 my_highlight = TAGS
 
 def usage():
-    print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, / means only nonalpha characters between matching words")
+    print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, ~ means negative lookahead, / means only nonalpha characters between matching words")
     print("    ! can also use \b if you want to demarcate word boundaries")
     print()
     print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
@@ -340,6 +340,11 @@ def read_args(my_arg_array):
                     sys.exit("Can't do double backreferences. At least not yet.")
                 ary = arg.split('!')
                 arg = "(?<!{} ){}".format(ary[0], ary[1])
+            if '~' in arg:
+                if arg.count('~') > 1:
+                    sys.exit("Can't do double fwd references. At least not yet.")
+                ary = arg.split('~')
+                arg = "{} (?!{})".format(ary[0], ary[1])
             match_string_array.append(arg)
         cmd_count += 1
 
