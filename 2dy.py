@@ -86,31 +86,44 @@ def get_stats(bail = True):
     relevant_stats.reverse()
     f.close()
 
-    init_time = stat_lines[-1].split("\t")[1]
-    itp = pendulum.parse(init_time)
 
     times = []
     sizes = []
 
     current_size = os.stat(this_file).st_size
-    last_size = int(first_array[2])
+
+    init_ary = relevant_stats[0].split("\t")
+    last_ary = relevant_stats[-1].split("\t")
+    first_size = int(init_ary[2])
+    first_time = pendulum.parse(init_ary[1])
+    last_size = int(last_ary[2])
+    last_time = pendulum.parse(last_ary[1])
+    print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
 
     for r in relevant_stats:
         ary = r.split("\t")
         my_time = pendulum.parse(ary[1])
-        times.append((my_time - itp).total_seconds() / 86400)
+        times.append((my_time - first_time).total_seconds() / 86400)
         sizes.append(int(ary[2]))
+
     times = np.array(times)
     sizes = np.array(sizes)
 
     (a, b) = np.polyfit(times, sizes, 1)
-    my_label = "bytes={:.2f}*days{}{:.2f}".format(a, '+' if b > 0 else '', b)
+    my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b > 0 else '', b)
 
-    if current_size > last_size:
+    mso = mt.modified_size_of(this_file)
+    if mso > current_size:
+        my_label += "\n{} bytes (unsaved) since last data check".format(current_size - last_size)
+    elif current_size > last_size:
         my_label += "\n{} bytes since last data check".format(current_size - last_size)
 
+    if current_size > first_size:
+        expected_kb = (current_size - first_size) * 86400 * 7 / (last_time - first_time).total_seconds() + first_size
+        my_label += "\nAverage from last exp bytes: {:.2f}".format(expected_kb)
+
     if a:
-        my_label += "\n{:.2f} projected bytes".format(7 * a + b)
+        my_label += "\nBest-fit exp bytes: {:.2f}".format(7 * a + b)
 
     plt.scatter(times, sizes, label=my_label)
     plt.xlabel("days")
