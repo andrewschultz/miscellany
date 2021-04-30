@@ -61,7 +61,7 @@ only_list_files = False
 show_differences = True
 my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
-verbose = True
+verbose = False
 
 read_most_recent = False
 
@@ -149,56 +149,56 @@ def read_comment_cfg():
                 else:
                     print("Bad short-prefix {} line {}.".format(l[0], line_count))
                 l = l[2:]
-            if ':' not in l:
+            (prefix, data) = mt.cfg_data_split(l)
+            if not prefix or not data:
                 print("Line", l, "needs main colon prefix.")
                 any_warnings = True
-            ary = mt.cfgary(l, delimiter='=')
-            if len(ary) != 2:
-                print("Bad comment/regex definition line", line_count, l)
-                any_warnings = True
                 continue
+            ary = data.split('=')
             entries = ary[0].split(",")
+            vals = ary[1].split(",")
             if fix_next:
-                for y in ary[0].split(','):
+                for y in entries:
                     if y in fixed_marker:
                         print("doubly fixed marker", y, "line", line_count)
                         any_warnings = True
                     else:
                         fixed_marker[y] = True
             if delete_next:
-                for y in ary[0].split(','):
+                for y in entries:
                     if y in delete_marker:
                         print("doubly deleted marker", y, "line", line_count)
                         any_warnings = True
                     else:
                         delete_marker[y] = True
-            if l.startswith("keyword:"):
-                section_words[ary[0]] = ary[1]
-            elif l.startswith("block:"):
-                for x in ary[1].split(','):
-                    block_move[ary[0]].add(x)
-            elif l.startswith("delmar:"):
+            if prefix == 'block':
+                for my_from in entries:
+                    for my_to in vals:
+                        block_move[my_from].add(my_to)
+            elif prefix == "delmar":
                 for u in entries:
                     if u in delete_marker:
                         print("Duplicate delete-marker", u, "line", line_count)
                         any_warnings = True
                         continue
                     delete_marker[u] = ary[1]
-            elif l.startswith("prefix:"):
+            elif prefix == 'keyword':
+                section_words[ary[0]] = ary[1]
+            elif prefix == "prefix":
                 for u in entries:
                     if u in prefixes:
                         print("Duplicate prefix", u, "line", line_count)
                         any_warnings = True
                         continue
                     prefixes[u] = ary[1]
-            elif l.startswith("suffix:"):
+            elif prefix == "suffix":
                 for u in entries:
                     if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
                         any_warnings = True
                         continue
                     suffixes[u] = ary[1]
-            elif l.startswith("presuf") or l.startswith("sufpre"):
+            elif prefix == "presuf" or prefix == "sufpre":
                 for u in entries:
                     if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
@@ -211,7 +211,7 @@ def read_comment_cfg():
                         any_warnings = True
                         continue
                     prefixes[u] = ary[1]
-            elif l.startswith("fixmar:"):
+            elif prefix == "fixmar":
                 for u in entries:
                     if u in fixed_marker:
                         print("Duplicate save-marker", u, "line", line_count)
@@ -344,6 +344,7 @@ def my_section(l):
         return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
+    if '=' in l and re.search('=[0-9]+=', l): return 'btp'
     if is_risque_spoonerism(l): return 'sw'
     if is_spoonerism_rated(l): return 'spo'
     temp = smart_section(l)
@@ -430,7 +431,7 @@ def sort_raw(raw_long):
             ll = line.strip().lower()
             if ll.startswith("\\"):
                 if current_section:
-                    print("WARNING: reassigning section at line {} of {}.".format(line_count, os.path.basename(raw_long)))
+                    print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
                 current_section = ll[1:]
                 continue
             if not ll:
@@ -452,8 +453,8 @@ def sort_raw(raw_long):
                 continue
             temp = my_section(line)
             if temp:
-                if temp != current_section:
-                    print("Move from", current_section, "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
+                if verbose and temp != current_section:
+                    print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
                 if temp in block_move[current_section]:
                     sections[current_section] += line
                 elif temp == 'nam':
