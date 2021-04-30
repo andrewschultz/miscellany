@@ -70,21 +70,22 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def get_stats(bail = True):
-    my_graph_graphic = "c:/writing/temp/daily-size-chart.png"
+def get_stats(bail = True, this_file = "", file_index = -1):
+    if not this_file:
+        g = glob.glob("c:/writing/daily/20*.txt")
+        this_file = os.path.basename(g[-abs(file_index)])
 
     os.chdir("c:/writing/daily")
     f = open(stats_file, "r")
-    stat_lines = f.readlines()
-    stat_lines.reverse()
-    first_array = stat_lines[0].split("\t")
-    this_file = first_array[0]
-    this_idx = 0
-    while this_idx < len(stat_lines) and stat_lines[this_idx].split("\t")[0] == this_file:
-        this_idx += 1
-    relevant_stats = stat_lines[:this_idx]
-    relevant_stats.reverse()
+    raw_stat_lines = f.readlines()
     f.close()
+
+    relevant_stats = []
+
+    for this_line in raw_stat_lines:
+        ary = this_line.split("\t")
+        if ary[0].lower() == this_file.lower():
+            relevant_stats.append(this_line)
 
 
     times = []
@@ -112,9 +113,11 @@ def get_stats(bail = True):
     (a, b) = np.polyfit(times, sizes, 1)
     my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b > 0 else '', b)
 
+    my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
+
     mso = mt.modified_size_of(this_file)
     if mso > current_size:
-        my_label += "\n{} bytes (unsaved) since last data check".format(current_size - last_size)
+        my_label += "\n{} bytes (unsaved) since last data check".format(mso - current_size)
     elif current_size > last_size:
         my_label += "\n{} bytes since last data check".format(current_size - last_size)
 
@@ -123,8 +126,9 @@ def get_stats(bail = True):
         my_label += "\nAverage from last exp bytes: {:.2f}".format(expected_kb)
 
     if a:
-        my_label += "\nBest-fit exp bytes: {:.2f}".format(7 * a + b)
+        my_label += "\nBest-fit exp bytes: {:.2f}/{:.2f}".format(7 * a + b, times[-1] * a + b )
 
+    plt.figure(figsize=(10, 8))
     plt.scatter(times, sizes, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
@@ -132,7 +136,8 @@ def get_stats(bail = True):
     plt.legend(loc='upper left')
     plt.savefig(my_graph_graphic)
     mt.text_in_browser(my_graph_graphic)
-    sys.exit()
+    if bail:
+        sys.exit()
 
 def put_stats(bail = True, print_on_over = 0):
     os.chdir("c:/writing/daily")
