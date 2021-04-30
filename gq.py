@@ -3,7 +3,7 @@
 # replaces gq.pl
 #
 # usage gq.py as match_string_array (for alex smart)
-#       gq.py `as to search for the word AS
+#       gq.py `as to search for the word AS, '/' = a bunch of non alpha words, '!' does negative lookbehind
 # can use any number of words. mn# specifices minimum matches needed, with some error checking
 # todo: plurals option (only when I can't think of anything else to do)
 #       speedup for allowed_misses
@@ -84,9 +84,10 @@ highlight_types = {
 my_highlight = TAGS
 
 def usage():
-    print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as.")
+    print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, / means only nonalpha characters between matching words")
+    print("    ! can also use \b if you want to demarcate word boundaries")
     print()
-    print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi.")
+    print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
     print("o = only this project, a = all similar projects")
     print()
     print("vh = view history file of a project, what you have searched")
@@ -175,7 +176,7 @@ def read_cfg():
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(match_string_array, projfile):
-    individual_match_array = [r'\b{}s?\b'.format(x) for x in match_string_array]
+    individual_match_array = [x if '<' in x else r'\b{}s?\b'.format(x) for x in match_string_array]
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -334,6 +335,11 @@ def read_args(my_arg_array):
                 print("Adding searchable string", arg)
             arg = arg.replace('/', '[^a-z]*')
             arg = arg.replace('`', '')
+            if '!' in arg:
+                if arg.count('!') > 1:
+                    sys.exit("Can't do double backreferences. At least not yet.")
+                ary = arg.split('!')
+                arg = "(?<!{} ){}".format(ary[0], ary[1])
             match_string_array.append(arg)
         cmd_count += 1
 
