@@ -12,6 +12,8 @@
 # I'd assume deleting this or changing it to zero would disable colors
 # os.system(" ") is necessary without this
 #
+# todo: try for a different plural than tacking on "s" e.g. fly to flies, mouse/mice, lunch/lunches
+#
 
 from collections import defaultdict
 import mytools as mt
@@ -85,7 +87,7 @@ my_highlight = TAGS
 
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, ~ means negative lookahead, / means only nonalpha characters between matching words")
-    print("    ! can also use \b if you want to demarcate word boundaries")
+    print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first")
     print()
     print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
     print("o = only this project, a = all similar projects")
@@ -336,15 +338,11 @@ def read_args(my_arg_array):
             arg = arg.replace('/', '[^a-z]*')
             arg = arg.replace('`', '')
             if '!' in arg:
-                if arg.count('!') > 1:
-                    sys.exit("Can't do double backreferences. At least not yet.")
                 ary = arg.split('!')
-                arg = "(?<!{} ){}".format(ary[0], ary[1])
+                arg = "(?<!{} ){}".format('|'.join(ary[:-1]), ary[-1])
             if '~' in arg:
-                if arg.count('~') > 1:
-                    sys.exit("Can't do double fwd references. At least not yet.")
                 ary = arg.split('~')
-                arg = "{} (?!{})".format(ary[0], ary[1])
+                arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
             match_string_array.append(arg)
         cmd_count += 1
 
