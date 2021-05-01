@@ -36,9 +36,13 @@ my_proj = ""
 
 # constants
 
+hdr_equals = '=' * 25
+
 my_cfg = "c:/writing/scripts/gqcfg.txt"
 
 color_ary = [ colorama.Fore.GREEN, colorama.Fore.BLUE, colorama.Fore.YELLOW, colorama.Fore.CYAN, colorama.Fore.MAGENTA, colorama.Fore.RED ]
+
+header_color = -1
 
 # options only on cmd line
 
@@ -218,7 +222,7 @@ def find_text_in_file(match_string_array, projfile):
                     print("Found maximum per file", max_in_file)
                     return found_so_far
                 if not found_so_far:
-                    print('=' * 25, bf, "found matches", '=' * 25)
+                    print('{}{} {} found matches {}{}'.format(color_ary[header_color - 1] if header_color else '', hdr_equals, bf, hdr_equals, colorama.Style.RESET_ALL if header_color else ''))
                 found_so_far += 1
                 found_overall += 1
                 print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
@@ -277,6 +281,8 @@ def read_args(my_arg_array):
         elif arg == 'r':
             print("Using super-shortcut 'r' for A Roiling Original.")
             my_proj = "roiling"
+        elif arg == '0':
+            os.system(" ")
         elif arg == 'npo' or arg == 'pon':
             post_open_matches = False
         elif arg == 'po':
