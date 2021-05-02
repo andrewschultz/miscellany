@@ -222,6 +222,15 @@ def is_palindrome(x, accept_comments = True):
 
 is_palindromey = is_palindromy = is_palindrome
 
+def print_centralized(my_string):
+    x = os.get_terminal_size()
+    if len(my_string) > x.columns:
+        padding = 0
+    else:
+        padding = (x.columns - len(my_string)) // 2
+    print(padding)
+    print(' ' * padding + my_string)
+
 def print_and_to_clip(my_str):
     print(my_str, end='')
     pyperclip.copy(my_str)
