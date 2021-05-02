@@ -151,6 +151,20 @@ def decimal_only(val, digits = 3):
         return "-" + ret[2:]
     return ret
 
+def modified_size_of(my_file):
+    e = ET.parse(np_xml)
+    for elem in e.iter('File'):
+        this_np_file = elem.get("filename")
+        if not os.path.exists(this_np_file): continue
+        if my_file.lower() not in this_np_file.lower(): continue # this speeds stuff up slightly
+        if os.path.samefile(this_np_file, os.path.abspath(my_file)):
+            mso = elem.get("backupFilePath")
+            if mso and os.path.exists(mso):
+                return os.stat(mso).st_size
+            else:
+                break
+    return os.stat(my_file).st_size
+
 def is_npp_modified(my_file): # see if a file is unsaved in notepad++
     e = ET.parse(np_xml)
     for elem in e.iter('File'):
