@@ -32,6 +32,7 @@ import re
 import calendar
 import time
 import pendulum
+import mytools as mt
 
 dupes = ['', 's']
 
@@ -70,6 +71,19 @@ verbose = False
 
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
+def find_in_one_checkfile(my_string, f):
+    with open(f) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if my_string in line.lower():
+                mt.npo(f, line_count)
+    return
+
+def find_in_checkfiles(my_string):
+    for x in [check_file, check_private, xtra_file]:
+        find_in_one_checkfile(my_string, x)
+    print("Nothing found.")
+    exit()
+
 def is_time(t, bail = False):
     x = t.count(":")
     if x != 1:
@@ -93,6 +107,7 @@ def usage():
     print("b= = bookmarks to run, bp prints bookmarks")
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     print("v = verbose")
+    print("f:(string) = find string in file")
     exit()
 
 def print_all_bookmarks():
@@ -428,6 +443,8 @@ while count < len(sys.argv):
         print_bookmarks = True
     elif arg == 'v':
         verbose = True
+    elif arg[:2] == 'f:':
+        find_in_checkfiles(arg[2:])
     elif arg == '?':
         usage()
         exit()
