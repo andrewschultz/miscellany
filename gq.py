@@ -449,16 +449,20 @@ while first_loop or user_input:
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
         notes_file = i7.notes_file(proj)
 
-    print("    {}---- total matches printed: {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, found_overall, colorama.Style.RESET_ALL))
-    for x in sorted(frequencies, key=frequencies.get, reverse=True):
-        if frequencies[x] < 1: continue
-        print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK))
+    if found_overall:
+        print("    {}---- total matches printed: {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, found_overall, colorama.Style.RESET_ALL))
+        for x in sorted(frequencies, key=frequencies.get, reverse=True):
+            if frequencies[x] < 1: continue
+            print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK))
 
-    temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0]
-    if len(temp_array):
-        my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
-        print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK)
-        #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
+        temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0]
+        if len(temp_array):
+            my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
+            print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK)
+            #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
+    else:
+        print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Style.RESET_ALL))
+
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
