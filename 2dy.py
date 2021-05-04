@@ -31,6 +31,7 @@ max_days_back = 1000
 
 os.chdir("c:/writing/daily")
 latest_daily = True
+write_base_stats = True
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -70,7 +71,7 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def get_stats(bail = True, this_file = "", file_index = -1):
+def graph_stats(bail = True, this_file = "", file_index = -1, overwrite = False):
     if not this_file:
         g = glob.glob("c:/writing/daily/20*.txt")
         this_file = os.path.basename(g[-abs(file_index)])
@@ -114,6 +115,12 @@ def get_stats(bail = True, this_file = "", file_index = -1):
     my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b > 0 else '', b)
 
     my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
+    
+    if not overwrite and os.path.exists(my_graph_graphic):
+        print(my_graph_graphic, "already exists. I am not recreating it.")
+        if bail:
+            sys.exit()
+        return
 
     mso = mt.modified_size_of(this_file)
     if mso > current_size:
@@ -157,7 +164,7 @@ def put_stats(bail = True, print_on_over = 0):
         byte_delta = last_bytes - before_last_bytes
         if byte_delta >= print_on_over:
             print(last_bytes, "increase at or over threshold of", byte_delta, "so I am opening a new graph")
-            get_stats()
+            graph_stats()
         else:
             print(last_bytes, "is short of", byte_delta, "so I am not going to create a new graph")
 
@@ -260,6 +267,8 @@ def create_new_file(my_file, launch = True):
         f.write(file_header)
     for s in sect_ary: f.write("\n\\{:s}\n".format(s))
     f.close()
+    if write_base_stats:
+        put_stats()
     if launch: os.system(my_file)
 
 #
@@ -291,8 +300,11 @@ while cmd_count < len(sys.argv):
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
-    elif arg == 'gs': get_stats()
+    elif arg == 'gs': graph_stats()
+    elif arg == 'gso': graph_stats(overwrite = True)
+    elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'ps': put_stats()
+    elif arg == 'bs': write_base_stats = False
     elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg == 'es': mt.npo(stats_file)
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
