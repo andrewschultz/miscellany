@@ -10,9 +10,8 @@
 #
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
-# os.system(" ") is necessary without this
 #
-# todo: try for a different plural than tacking on "s" e.g. fly to flies, mouse/mice, lunch/lunches
+# todo: revamp fast_match option as it is broken now that strings can look for multiple matches
 #
 
 from collections import defaultdict
@@ -92,7 +91,7 @@ my_highlight = TAGS
 
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, ~ means negative lookahead, / means only nonalpha characters between matching words")
-    print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first")
+    print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first. pon=y=ies searches for pony or ponies.")
     print()
     print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
     print("o = only this project, a = all similar projects")
@@ -183,7 +182,6 @@ def read_cfg():
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(match_string_array, projfile):
-    individual_match_array = [x if '<' in x else r'\b{}s?\b'.format(x) for x in match_string_array]
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -209,12 +207,10 @@ def find_text_in_file(match_string_array, projfile):
             line_out = line.strip()
             found_this_line = 0
             for match_idx in range(0, len(match_string_array)):
-                if fast_match and not match_string_array[match_idx] in line_out.lower(): # doing main searches before regex can save time. Of course, if a word is part of another one, we need to look for that.
-                    continue
-                if re.search(individual_match_array[match_idx], line, flags=re.IGNORECASE):
+                if re.search(match_string_array[match_idx], line, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
-                        line_out = re.sub(individual_match_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
+                        line_out = re.sub(match_string_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
                     print("Found maximum overall", max_overall)
@@ -342,13 +338,26 @@ def read_args(my_arg_array):
                 print("Adding searchable string", arg)
             arg = arg.replace('/', '[^a-z]*')
             arg = arg.replace('`', '')
+            if '#' in arg:
+                arg = arg.replace('#', '=')
+            if '=' in arg:
+                ary = arg.split('=')
+                if len(ary) == 2:
+                    match_string_array.append("({}|{})".format(ary[0], ary[0] + ary[1]))
+                else:
+                    temp_ary = []
+                    for x in ary[1:]:
+                        temp_ary.append(ary[0] + x)
+                    match_string_array.append("({})".format('|'.join(temp_ary)))
+                cmd_count += 1
+                continue
             if '!' in arg:
                 ary = arg.split('!')
                 arg = "(?<!{} ){}".format('|'.join(ary[:-1]), ary[-1])
             if '~' in arg:
                 ary = arg.split('~')
                 arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
-            match_string_array.append(arg)
+            match_string_array.append(arg + '(s)?')
         cmd_count += 1
 
 ######################################main file below
