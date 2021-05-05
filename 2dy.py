@@ -115,7 +115,7 @@ def graph_stats(bail = True, this_file = "", file_index = -1, overwrite = False)
     my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b > 0 else '', b)
 
     my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
-    
+
     if not overwrite and os.path.exists(my_graph_graphic):
         print(my_graph_graphic, "already exists. I am not recreating it.")
         if bail:
@@ -146,7 +146,7 @@ def graph_stats(bail = True, this_file = "", file_index = -1, overwrite = False)
     if bail:
         sys.exit()
 
-def put_stats(bail = True, print_on_over = 0):
+def put_stats(bail = True, print_on_over = 0, check_floor = False):
     os.chdir("c:/writing/daily")
     f = open(stats_file, "a")
     ld = mt.last_daily_of()
@@ -156,9 +156,22 @@ def put_stats(bail = True, print_on_over = 0):
     print(out_string)
     f.close()
 
+    if check_floor:
+        f = open(stats_file)
+        ary = f.readlines()
+        f.close()
+        before_last_bytes = int(ary[-2].split("\t")[2]) // 1000
+        last_bytes = int(ary[-1].split("\t")[2]) // 1000
+        byte_delta = last_bytes - before_last_bytes
+        if byte_delta:
+            print("Thousands-floor increased from {} to {}, so I am opening a new graph".format(before_last_bytes, last_bytes))
+            graph_stats()
+        else:
+            print("Thousands-floor stayed constant at {}, so I am not going to create a new graph".format(last_bytes))
     if print_on_over:
         f = open(stats_file)
         ary = f.readlines()
+        f.close()
         before_last_bytes = int(ary[-2].split("\t")[2])
         last_bytes = int(ary[-1].split("\t")[2])
         byte_delta = last_bytes - before_last_bytes
@@ -304,6 +317,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'ps': put_stats()
+    elif arg == 'psr': put_stats(check_floor = True)
     elif arg == 'bs': write_base_stats = False
     elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg == 'es': mt.npo(stats_file)
