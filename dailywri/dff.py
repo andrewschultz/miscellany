@@ -416,9 +416,10 @@ def sort_raw(raw_long):
                 if line.startswith("#"):
                     header_to_write += line
                     continue
-                in_header = False
-                if header_to_write:
-                    header_to_write += "\n"
+                if line.startswith("\\"):
+                    in_header = False
+                    if header_to_write:
+                        header_to_write += "\n"
             if important:
                 sections['important'] += line
                 continue
