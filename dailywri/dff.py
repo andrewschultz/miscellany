@@ -262,12 +262,15 @@ def probably_numerical(my_text):
     return False
 
 def is_spoonerism_rated(l):
+    if "#" in l and "nospoon" in l:
+        return False
     double_digits = re.findall(r'([^0-9]([1-9])\2[^0-9])', l)
     for dig in double_digits:
         if probably_numerical(dig[0]):
             return False
         if ' ' in dig[0]:
-            if mt.uncommented_length(l) > len(double_digits) * 40:
+            if mt.uncommented_length(l) > len(double_digits) * 60:
+                print("NOTE: possible spoonerism check for", l)
                 return False # this prevents odd cases where I just throw out the number 77
             return True
     return False
@@ -335,8 +338,6 @@ def my_section(l):
     l = l.strip()
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     if l.startswith('wfl'): return 'pc'
-    if l.startswith('mov:') or l.startswith('movie:') or l.startswith('movies:'): return 'mov'
-    if l.startswith('boo:') or l.startswith('book:') or l.startswith('books:'): return 'boo'
     temp = section_from_suffix(l, exact = True)
     if temp:
         return temp
