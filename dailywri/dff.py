@@ -95,6 +95,8 @@ fixed_marker = defaultdict(str)
 
 block_move = defaultdict(set)
 
+sect_move = defaultdict(lambda: defaultdict(int))
+
 def usage(my_arg):
     if (my_arg):
         print("Bad argument", my_arg)
@@ -454,8 +456,10 @@ def sort_raw(raw_long):
                 continue
             temp = my_section(line)
             if temp:
-                if verbose and temp != current_section:
-                    print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
+                if temp != current_section and temp not in block_move[current_section]:
+                    sect_move[temp][current_section] += 1
+                    if verbose >= 2:
+                        print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
                 if temp in block_move[current_section]:
                     sections[current_section] += line
                 elif temp == 'nam':
@@ -494,6 +498,9 @@ def sort_raw(raw_long):
     temp_out_file = "c:/writing/temp/drive-temp.txt"
     fout = open(temp_out_file, "w")
     fout.write(header_to_write)
+    if verbose:
+        for x in sorted(sect_move):
+            print("To {}: {}".format(x, ', '.join(["{} {}".format(a if a else '<blank>', sect_move[x][a]) for a in sect_move[x]])))
     for x in sorted(sections, key=lambda x:sort_priority(x)): # note this is a tuple that's used to push current hot projects to the bottom
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
@@ -578,10 +585,12 @@ while cmd_count < len(sys.argv):
         one_word_names = False
     elif arg == '1w' or arg == 'w1':
         one_word_names = True
+    elif arg == 'vv':
+        verbose = 2
     elif arg == 'v':
-        verbose = True
+        verbose = 1
     elif arg == 'q':
-        verbose = False
+        verbose = 0
     elif arg == 'bw' or arg == 'wb':
         bail_on_warning = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
