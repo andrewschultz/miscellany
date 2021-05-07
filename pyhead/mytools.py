@@ -32,6 +32,12 @@ file_extra_edit = defaultdict(lambda: defaultdict(int))
 
 daily_wildcard = "20*.txt"
 
+########################constants
+
+DASH_TO_UNDERSCORE = 1
+KEEP_DASH_UNDERSCORE = 0
+UNDERSCORE_TO_DASH = -1
+
 def dailies_of(my_dir = "c:/writing/daily"):
     return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
 
@@ -135,6 +141,9 @@ def num_value_from_text(my_line, my_index = 0):
         return int(nums[my_index])
     except:
         return 0
+
+def listnums(my_list, separator=', '):
+    return separator.join([str(x) for x in my_list])
 
 def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
@@ -274,9 +283,13 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True):
+def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE):
     if strip_line:
         x = x.strip()
+    if dash_to_underscore == DASH_TO_UNDERSCORE:
+        x = x.replace("-", "_")
+    if dash_to_underscore == UNDERSCORE_TO_DASH:
+        x = x.replace("_", "-")
     ary = re.split("[{}]".format(delimiter), x, 1)
     if to_tuple:
         return(ary[0], ary[1])
