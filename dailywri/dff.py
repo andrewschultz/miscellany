@@ -62,6 +62,7 @@ show_differences = True
 my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 verbose = False
+show_blank_to_blank = True
 
 read_most_recent = False
 
@@ -482,6 +483,8 @@ def sort_raw(raw_long):
                 if current_section:
                     sections[current_section] += line
                     continue
+            if current_section == '' and show_blank_to_blank:
+                print("BLANK-TO-DEFAULT:", line_count, line.strip())
             sections['sh'] += line
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
@@ -592,6 +595,10 @@ while cmd_count < len(sys.argv):
         verbose = 1
     elif arg == 'q':
         verbose = 0
+    elif arg == 'bb':
+        show_blank_to_blank = True
+    elif arg == 'nbb' or arg == 'bbn':
+        show_blank_to_blank = False
     elif arg == 'bw' or arg == 'wb':
         bail_on_warning = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
