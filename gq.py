@@ -91,7 +91,7 @@ my_highlight = TAGS
 
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, ~ means negative lookahead, / means only nonalpha characters between matching words")
-    print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first. pon=y=ies searches for pony or ponies.")
+    print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first. pon=y=ies searches for pony or ponies. # allows different words altogether.")
     print()
     print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
     print("o = only this project, a = all similar projects")
@@ -182,6 +182,7 @@ def read_cfg():
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(match_string_array, projfile):
+    match_string_array = [ r'\b' + x + r'\b' for x in match_string_array ]
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -339,7 +340,10 @@ def read_args(my_arg_array):
             arg = arg.replace('/', '[^a-z]*')
             arg = arg.replace('`', '')
             if '#' in arg:
-                arg = arg.replace('#', '=')
+                ary = arg.split('#')
+                match_string_array.append("{}({})".format(ary[0], '|'.join(ary[1:])))
+                cmd_count += 1
+                continue
             if '=' in arg:
                 ary = arg.split('=')
                 if len(ary) == 2:
