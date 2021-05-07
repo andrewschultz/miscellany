@@ -161,7 +161,10 @@ def read_comment_cfg():
                 continue
             ary = data.split('=')
             entries = ary[0].split(",")
-            vals = ary[1].split(",")
+            try:
+                vals = ary[1].split(",")
+            except:
+                vals = []
             if fix_next:
                 for y in entries:
                     if y in fixed_marker:
@@ -187,6 +190,17 @@ def read_comment_cfg():
                         any_warnings = True
                         continue
                     delete_marker[u] = ary[1]
+            elif prefix == 'edit-blank-to-blank':
+                edit_blank_to_blank = mt.truth_state_of(data)
+                if edit_blank_to_blank:
+                    show_blank_to_blank = edit_blank_to_blank
+            elif prefix == "fixmar":
+                for u in entries:
+                    if u in fixed_marker:
+                        print("Duplicate save-marker", u, "line", line_count)
+                        any_warnings = True
+                        continue
+                    fixed_marker[u] = ary[1]
             elif prefix == 'keyword':
                 section_words[ary[0]] = ary[1]
             elif prefix == "prefix":
@@ -216,13 +230,8 @@ def read_comment_cfg():
                         any_warnings = True
                         continue
                     prefixes[u] = ary[1]
-            elif prefix == "fixmar":
-                for u in entries:
-                    if u in fixed_marker:
-                        print("Duplicate save-marker", u, "line", line_count)
-                        any_warnings = True
-                        continue
-                    fixed_marker[u] = ary[1]
+            elif prefix == 'show-blank-to-blank':
+                show_blank_to_blank = mt.truth_state_of(data)
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
                 any_warnings = True
