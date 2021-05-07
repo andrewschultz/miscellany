@@ -50,6 +50,7 @@ resort_already_sorted = True
 sort_proc = False
 
 # this should go in a config file later
+edit_blank_to_blank = True
 one_word_names = True
 open_raw = False
 only_one = True
@@ -63,6 +64,7 @@ my_min_file = "20170000.txt"
 my_max_file = "21000000.txt"
 verbose = False
 show_blank_to_blank = True
+edit_blank_to_blank = True
 
 read_most_recent = False
 
@@ -412,6 +414,7 @@ def sort_raw(raw_long):
     in_header = True
     header_to_write = ""
     current_section = ''
+    blank_edit_lines = []
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -485,7 +488,11 @@ def sort_raw(raw_long):
                     continue
             if current_section == '' and show_blank_to_blank:
                 print("BLANK-TO-DEFAULT:", line_count, line.strip())
+                blank_edit_lines.append(line_count)
             sections['sh'] += line
+    if edit_blank_to_blank and len(blank_edit_lines):
+        print("Lines to edit:", ', '.format([str(x) for x in blank_edit_lines]))
+        mt.npo(raw_long, blank_edit_lines[0])
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
@@ -513,7 +520,7 @@ def sort_raw(raw_long):
     fout.close()
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
-        if verbose: print(raw_long, "was not changed since last run.")
+        if verbose or read_most_recent: print(raw_long, "was not changed since last run.")
         if bail_after_unchanged:
             if not verbose: print("Bailing after unchanged.")
             exit()
@@ -595,10 +602,15 @@ while cmd_count < len(sys.argv):
         verbose = 1
     elif arg == 'q':
         verbose = 0
+    elif arg == 'bbe':
+        show_blank_to_blank = True
+        edit_blank_to_blank = True
     elif arg == 'bb':
         show_blank_to_blank = True
+        edit_blank_to_blank = False
     elif arg == 'nbb' or arg == 'bbn':
         show_blank_to_blank = False
+        edit_blank_to_blank = False
     elif arg == 'bw' or arg == 'wb':
         bail_on_warning = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
