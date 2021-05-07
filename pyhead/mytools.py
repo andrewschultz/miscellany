@@ -213,9 +213,12 @@ def is_limerick(x, accept_comments = False): # quick and dirty limerick checker
 
 is_limericky = is_limerick
 
-def is_palindrome(x, accept_comments = True):
+def is_palindrome(x, accept_comments = True, fail_on_unusual = True):
     if accept_comments and "#pal" in x: return True
     if accept_comments: x = re.sub('#.*', '', x)
+    if fail_on_unusual:
+        if '=' in x or '~' in x:
+            return False
     let_only = re.sub("[^a-z]", "", x.lower())
     if not let_only: return False # blank strings don't work
     return let_only == let_only[::-1]
@@ -228,7 +231,6 @@ def print_centralized(my_string):
         padding = 0
     else:
         padding = (x.columns - len(my_string)) // 2
-    print(padding)
     print(' ' * padding + my_string)
 
 def print_and_to_clip(my_str):
@@ -415,9 +417,10 @@ def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, 
             count += 1
             if count < 0:
                 time.sleep(sleep_time)
+        if bail_after:
+            sys.exit()
     elif acknowledge_blank:
         print("There weren't any files slated for opening/editing.")
-    if bail_after: sys.exit()
 
 post_open = postopen = postopen_files
 
