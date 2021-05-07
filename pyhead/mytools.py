@@ -178,7 +178,7 @@ def is_npp_modified(my_file): # see if a file is unsaved in notepad++
                     return True
             return False
 
-def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True, ignore_leading_articles = True):
+def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True, ignore_leading_articles = True, wipe_inform_comments = True, need_all_sections = True):
     article_string = r'^(a|an|the) '
     if ignore_leading_articles and re.search(article_string, x):
         if is_anagram(re.sub(article_string, "", x, re.IGNORECASE), accept_comments, check_sections, wipe_author, ignore_leading_articles):
@@ -186,6 +186,8 @@ def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = T
     x = re.sub("#.*", "", x)
     if wipe_author: # for book titles for Roiling
         x = re.sub("\[r\], +by +", "", x, re.IGNORECASE)
+    if wipe_inform_comments: # for book titles for Roiling
+        x = re.sub("\[.*?\]", "", x)
     q = defaultdict(int)
     y = re.sub("[^a-z]", "", x.lower())
     if not y: return False
@@ -199,8 +201,11 @@ def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = T
     first_chunk = sorted(y[0:chunk_size])
     for x in range (1, gc):
         this_chunk = sorted(y[x * chunk_size:(x+1) * chunk_size])
-        if this_chunk != first_chunk:
-            return False
+        if need_all_sections:
+            if this_chunk != first_chunk:
+                return False
+        elif this_chunk == first_chunk:
+            return True
     return True
 
 is_anagramy = is_anagrammy = is_anagram
