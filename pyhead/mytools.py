@@ -142,8 +142,10 @@ def num_value_from_text(my_line, my_index = 0):
     except:
         return 0
 
-def listnums(my_list, separator=', '):
+def list_nums(my_list, separator=', '):
     return separator.join([str(x) for x in my_list])
+
+num_list = nums_list = listnums = listnum = list_nums
 
 def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]

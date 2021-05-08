@@ -495,12 +495,13 @@ def sort_raw(raw_long):
                 if current_section:
                     sections[current_section] += line
                     continue
-            if current_section == '' and show_blank_to_blank:
-                print("BLANK-TO-DEFAULT:", line_count, line.strip())
+            if current_section == '':
+                if show_blank_to_blank:
+                    print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
                 blank_edit_lines.append(line_count)
             sections['sh'] += line
     if edit_blank_to_blank and len(blank_edit_lines):
-        print("Lines to edit:", ', '.format([str(x) for x in blank_edit_lines]))
+        print("Lines to edit: {}".format(mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
