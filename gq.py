@@ -68,7 +68,6 @@ create_new_history = False
 # variables not in CFG file/cmd line
 
 first_loop = True
-found_overall = 0
 
 frequencies = defaultdict(int)
 
@@ -205,10 +204,10 @@ def find_text_in_file(match_string_array, projfile):
             elif quote_status == INSIDE:
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
-            line_out = line.strip()
+            line_out = line.strip().lower().replace("'", "")
             found_this_line = 0
             for match_idx in range(0, len(match_string_array)):
-                if re.search(match_string_array[match_idx], line, flags=re.IGNORECASE):
+                if re.search(match_string_array[match_idx], line_out, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
                         line_out = re.sub(match_string_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
@@ -339,6 +338,9 @@ def read_args(my_arg_array):
                 print("Adding searchable string", arg)
             arg = arg.replace('/', '[^a-z]*')
             arg = arg.replace('`', '')
+            if "'" in arg:
+                print("Removing apostrophes.")
+                arg = arg.replace("'", "")
             if '#' in arg:
                 ary = arg.split('#')
                 match_string_array.append("{}({})".format(ary[0], '|'.join(ary[1:])))
@@ -382,6 +384,7 @@ if not my_proj:
         my_proj = default_from_cwd
 
 while first_loop or user_input:
+    found_overall = 0
     if user_input:
         frequencies.clear()
         from_user = input("search string (current project {}) >>".format(my_proj))
@@ -457,20 +460,21 @@ while first_loop or user_input:
         print("    {}---- total matches printed: {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, found_overall, colorama.Style.RESET_ALL))
         for x in sorted(frequencies, key=frequencies.get, reverse=True):
             if frequencies[x] < 1: continue
-            print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK))
+            print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK + colorama.Style.RESET_ALL))
 
         temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0]
         if len(temp_array):
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
-            print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK)
+            print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
     else:
-        print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Style.RESET_ALL))
+        print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
+        print(frequencies)
 
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
     write_history(history_file, ' '.join(sorted(match_string_array)), create_new_history)
 
-    mt.post_open()
+    mt.post_open(bail_after = False)
     match_string_array = []
