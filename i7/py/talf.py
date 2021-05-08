@@ -295,12 +295,13 @@ def got_match(full_table_line, target_dict):
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
+    return_val = 0
     total_shifts = 0
     total_tables = 0
     if story_and_tables:
-        if 'story' not in f.lower() and 'table' not in f.lower(): return
-    elif story_only and 'story' not in f.lower(): return
-    elif table_only and 'table' not in f.lower(): return
+        if 'story' not in f.lower() and 'table' not in f.lower(): return 0
+    elif story_only and 'story' not in f.lower(): return 0
+    elif table_only and 'table' not in f.lower(): return 0
     global ignored_tables
     cur_table = ''
     match_table = ''
@@ -316,7 +317,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
         print("WARNING: no table sort keys/default sorts for {0}. Returning. If you are looking for something in this file, you may wish to check for slash directions.".format(fb.upper()))
         if ("/" in f and "\\" in f) or re.sub("\\\\", "/", f) in default_sort.keys() or re.sub("/", "\\\\", f) in default_sort.keys(): #?? this can be fixed
             print("NOTE: brief check shows", f, "very likely has slashes normalized badly.")
-        return
+        return 0
     files_read[f] = True
     row_array = []
     need_head = False
@@ -465,12 +466,14 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                 print("Total tables shifted: {0}. Total insertion shifts: {1}.".format(total_tables, total_shifts))
                 crude_check_line_shifts(f2, f)
             copy(f2, f)
+            return_val = 1
         elif override_source_size_differences:
             print("Copying over despite potential information loss.")
             copy(f2, f)
+            return_val = 1
         else:
             print("Potential information loss. Use -os to override this. {} kept for inspection.".format(f2b))
-            return
+            return_val = 1
         os.remove(f2)
     else:
         if identical_ignoring_eol:
@@ -491,6 +494,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
             else:
                 print("LAUNCHING DIFFERENCE:")
                 mt.wm(f, f2)
+    return return_val
 
 cmd_count = 1
 projects = []
@@ -558,12 +562,14 @@ if diff > 0:
 
 read_table_and_default_file()
 
+return_value = 0
+
 for x in projects:
     if x not in i7.i7f:
         print("WARNING for project {x}: you need to define which header files have tables in project", x, "via i7p.txt.")
         continue
     for y in i7.i7f[x]:
-        table_alf_one_file(y.lower(), launch_dif, copy_over)
+        return_value += table_alf_one_file(y.lower(), launch_dif, copy_over)
 
 if show_ignored:
     if ignored_tables:
@@ -572,4 +578,6 @@ if show_ignored:
     else:
         print("=====================NO IGNORED TABLES")
 
-mt.postopen_files()
+mt.postopen_files(bail_after=False)
+
+sys.exit(return_value)
