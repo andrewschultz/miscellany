@@ -74,12 +74,13 @@ def do_one_sort(sort_string, fout, prefix_second = False):
     return
 
 def main_sect_alf(my_proj, my_file):
+    return_val = 0
     if not my_file:
         print("WARNING no file to alphabetize. Maybe you put in the wrong section header.");
-        return
+        return 0
     if not os.path.exists(my_file):
         print("WARNING could not get". my_file, "to run.");
-        return
+        return 0
     my_bak = my_file + ".bak"
     fout = open(my_bak, "w", newline="\n")
     print("Alphabetizing sections in", my_file, "...")
@@ -148,9 +149,12 @@ def main_sect_alf(my_proj, my_file):
     fout.close()
     identical_ignoring_eol = mt.compare_unshuffled_lines(my_file, my_bak)
     if show_dif:
-        if cmp(my_file, my_bak): print(my_file, "and", my_bak, "are identical. Not showing.")
-        elif identical_ignoring_eol: print(my_file, "and", my_bak, "are identical except for line breaks. Not showing.")
-        else: i7.wm(my_file, my_bak)
+        if cmp(my_file, my_bak):
+            print(my_file, "and", my_bak, "are identical. Not showing.")
+        elif identical_ignoring_eol:
+            print(my_file, "and", my_bak, "are identical except for line breaks. Not showing.")
+        else:
+            i7.wm(my_file, my_bak)
     elif not cmp(my_file, my_bak):
         if identical_ignoring_eol:
             print(my_file, "and", my_bak, "are identical except for line breaks. Not showing.")
@@ -160,17 +164,19 @@ def main_sect_alf(my_proj, my_file):
         if cmp(my_file, my_bak) or identical_ignoring_eol:
             print("Sorting the rules changed nothing. Not copying {}.".format(os.path.basename(my_file)))
             os.remove(my_bak)
-            return
+            return 0
         elif not force_copy and not mt.compare_shuffled_lines(my_file, my_bak):
             print("Content may have been altered between {} and {}. Saved {} for inspection.{}".format(os.path.basename(my_file), my_bak, my_bak, " for inspection.{:s}".format("" if show_dif else " -d shows differences.")))
-            return
+            return 1
         print("Changes found, copying back {}.".format(os.path.basename(my_file)))
         copy(my_bak, my_file)
         print("-cn to avoid copying back.")
         os.remove(my_bak)
+        return 1
     else:
         print("Use -c to copy over.")
         print(my_bak, "kept for inspection.")
+        return 1
 
 # start main
 
@@ -242,8 +248,10 @@ if cmd_defined_proj not in sort_start: sys.exit("Could not find {:s} in projects
 for x in sort_start[cmd_defined_proj]: got_start_yet[x] = False
 for x in sort_end[cmd_defined_proj]: got_end_yet[x] = False
 
+program_return_val = 0
+
 if story_file_only:
-    main_sect_alf(cmd_defined_proj, i7.main_src(cmd_defined_proj))
+    program_return_val += main_sect_alf(cmd_defined_proj, i7.main_src(cmd_defined_proj))
 else:
     if cmd_defined_proj in include_dict:
         print("Going with include-dict of", ', '.join([os.path.basename(x) for x in include_dict[cmd_defined_proj]]), "for", cmd_defined_proj)
@@ -252,8 +260,11 @@ else:
         print("Going with exclude-dict of", ', '.join([os.path.basename(x) for x in exclude_dict[cmd_defined_proj]]), "for", cmd_defined_proj)
         my_files_ary = exclude_dict[cmd_defined_proj]
     else: my_files_ary = i7.i7f[cmd_defined_proj]
-    for x in my_files_ary: main_sect_alf(cmd_defined_proj, x)
+    for x in my_files_ary:
+        program_return_val += main_sect_alf(cmd_defined_proj, x)
     un_start = [x for x in got_start_yet if got_start_yet[x] == False]
     if len(un_start): print("Start tokens missed:", ', '.join(un_start))
     un_end = [x for x in got_end_yet if got_end_yet[x] == False]
     if len(un_end): print("End tokens missed:", ', '.join(un_end))
+
+sys.exit(program_return_val)
