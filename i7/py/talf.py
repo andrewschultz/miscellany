@@ -229,6 +229,7 @@ def read_table_and_default_file():
     cur_file = ""
     line_count = 0
     prev_def = defaultdict(int)
+    found_unknown = False
     with open(table_default_file) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower().strip()
@@ -236,41 +237,32 @@ def read_table_and_default_file():
             if line.startswith('#'): continue
             if line.startswith(';'): break
             if '=' in line:
-                if line != line.lower(): print("WARNING", table_default_file, "line", line_count, "has upper case letters but shouldn't.")
                 if '/' in line and "default" not in line: print("WARNING", table_default_file, "line", line_count, "has forward slashes but needs backward slashes.")
-                right_side = re.sub(".*=", "", ll)
-                right_side = re.sub("/", "\\\\", right_side)
-                right_side = right_side.lower()
+                (left_side, right_side) = mt.cfg_data_split(line)
+                right_side = re.sub("/", "\\\\", right_side).lower()
                 right_side_fwd = re.sub(r"\\", r"/", right_side)
-                if ll.startswith("f="):
+                if left_side == 'f' or left_side == 'file':
                     cur_file = right_side
-                    continue
-                if ll.startswith("file="):
-                    cur_file = right_side
-                    continue
-                if ll.startswith("okay="):
+                elif left_side == "okay":
                     if right_side in okay[cur_file].keys():
                         print("BAILING double assignment of okay for", right_side, "in", cur_file, "at line", line_count)
                         exit()
                     okay[cur_file][right_side] = True
                     need_to_catch[cur_file][right_side] = True
-                    continue
-                if ll.startswith("fixfirst="):
+                elif left_side == "fixfirst":
                     if right_side in fix_first_line[cur_file].keys():
                         print("BAILING double assignment of ignore for", right_side, "in", cur_file, "at line", line_count)
                         exit()
-                    print("Fixing first line for {} in {}.".format(right_side, cur_file))
+                    #print("Fixing first line for {} in {}.".format(right_side, cur_file))
                     fix_first_line[cur_file][right_side] = True
                     need_to_catch[cur_file][right_side] = True
-                    continue
-                if ll.startswith("ignore="):
+                elif left_side == "ignore":
                     if right_side in ignore_sort[cur_file].keys():
                         print("BAILING double assignment of ignore for", right_side, "in", cur_file, "at line", line_count)
                         exit()
                     ignore_sort[cur_file][right_side] = True
                     need_to_catch[cur_file][right_side] = True
-                    continue
-                if line.lower().startswith("default="):
+                elif left_side == "default":
                     if not cur_file:
                         print("WARNING defined default with no cur_file at line", line_count)
                         continue
@@ -279,9 +271,10 @@ def read_table_and_default_file():
                         continue
                     default_sort[cur_file] = right_side_fwd
                     prev_def[cur_file] = line_count
-                    continue
-                print("Unknown = at line", line_count, ll)
-                exit()
+                else:
+                    print("Unknown = at line", line_count, ll)
+                    found_unknown = True
+                continue
             if ':' in line:
                 ary = ll.split(':')
                 if ary[0] in table_sort[cur_file].keys():
@@ -292,6 +285,8 @@ def read_table_and_default_file():
                 # print(ary[0], "goes to", ary[1])
             else:
                 print("Line", line_count, "needs :")
+    if found_unknown:
+        sys.exit("Fix unknown prefixes in talf.txt and rerun.")
 
 def got_match(full_table_line, target_dict):
     for elt in target_dict.keys():
