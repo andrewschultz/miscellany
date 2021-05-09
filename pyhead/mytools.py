@@ -147,9 +147,11 @@ def list_nums(my_list, separator=', '):
 
 num_list = nums_list = listnums = listnum = list_nums
 
-def nohy(x): # mostly for command line argument usage, so -s is -S is s is S.
+def nohy(x, also_lower = True): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
-    return x.lower()
+    if also_lower:
+        return x.lower()
+    return x
 
 nohyp = noh = nohy
 
@@ -241,12 +243,16 @@ def is_palindrome(x, accept_comments = True, fail_on_unusual = True):
 
 is_palindromey = is_palindromy = is_palindrome
 
-def print_centralized(my_string):
+def print_centralized(my_string, eliminate_control_chars = True):
     x = os.get_terminal_size()
-    if len(my_string) > x.columns:
+    length_string = my_string
+    search_string = chr(0x1b) + "\[[0-9]+m"
+    if eliminate_control_chars:
+        length_string = re.sub(search_string, "", my_string)
+    if len(length_string) > x.columns:
         padding = 0
     else:
-        padding = (x.columns - len(my_string)) // 2
+        padding = (x.columns - len(length_string)) // 2
     print(' ' * padding + my_string)
 
 def print_and_to_clip(my_str):
