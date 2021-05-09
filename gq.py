@@ -354,6 +354,8 @@ def read_args(my_arg_array):
             fast_match = False
         elif arg == 'ui':
             user_input = True
+        elif ".py" in arg or ".pl" in arg:
+            return_value = -1
         elif arg == '?':
             usage()
         else:
@@ -388,12 +390,18 @@ def read_args(my_arg_array):
                 arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
             match_string_array.append(arg + '(s)?')
         cmd_count += 1
+    return 0
 
 ######################################main file below
 
 read_cfg()
 
-read_args(my_arg_array = sys.argv[1:])
+error_check = read_args(my_arg_array = sys.argv[1:])
+
+if error_check:
+    print("NOTE: you included .pl or .py in the input, strongly implying you meant to run a script instead.")
+    if not user_input:
+        sys.exit()
 
 if not my_proj:
     if not default_from_cwd:
@@ -408,12 +416,15 @@ if not my_proj:
 
 while first_loop or user_input:
     found_overall = 0
+    frequencies.clear()
+
     if user_input:
-        frequencies.clear()
         from_user = input("search string (current project {}) >>".format(my_proj))
         if not from_user:
             sys.exit("Ok, that's all.")
-        read_args(from_user.strip().split(" "))
+        error_check = read_args(from_user.strip().split(" "))
+        if error_check:
+            print("NOTE: you included .pl or .py in the input, strongly implying you meant to run a script instead.")
 
     first_loop = False
 
