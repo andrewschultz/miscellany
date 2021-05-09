@@ -13,6 +13,9 @@
 #
 # todo: revamp fast_match option as it is broken now that strings can look for multiple matches
 #
+# any_suffixes flag
+# main_suffixes flag
+# look for text in apostrophes or not (trickier than it seems. We need double matching for, say, yall vs y'all)
 
 from collections import defaultdict
 import mytools as mt
@@ -117,6 +120,14 @@ def right_highlight():
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
+def fast_string_of(my_regex):
+    for x in range(0, len(my_regex) - 1):
+        if my_regex[x].isalpha and my_regex[x+1].isalpha:
+            new_word = my_regex[x:]
+            new_word = re.sub(r"[^a-z].*", "", new_word, flags=re.IGNORECASE)
+            return new_word
+    return "NOTHING_FOUND"
+
 def write_history(my_file, my_query, create_new_history = False):
     if create_new_history:
         if os.path.exists(my_file):
@@ -181,6 +192,7 @@ def read_cfg():
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
 def find_text_in_file(match_string_array, projfile):
+    fast_string_array = [ fast_string_of(x) for x in match_string_array ]
     match_string_array = [ r'\b' + x + r'\b' for x in match_string_array ]
     global found_overall
     bf = i7.inform_short_name(projfile)
@@ -189,6 +201,7 @@ def find_text_in_file(match_string_array, projfile):
     found_so_far = 0
     current_table = ""
     current_table_line = 0
+    pbase = os.path.basename(projfile)
     with open(projfile) as file:
         for (line_count, line) in enumerate (file, 1):
             if current_table:
@@ -207,6 +220,8 @@ def find_text_in_file(match_string_array, projfile):
             line_out = line.strip().lower().replace("'", "")
             found_this_line = 0
             for match_idx in range(0, len(match_string_array)):
+                if fast_match and fast_string_array[match_idx] not in line_out:
+                    continue
                 if re.search(match_string_array[match_idx], line_out, flags=re.IGNORECASE):
                     found_this_line += 1
                     if modify_line:
