@@ -2,7 +2,7 @@
 #
 # replaces gq.pl
 #
-# usage gq.py as match_string_array (for alex smart)
+# usage gq.py as match_string_raw (for alex smart)
 #       gq.py `as to search for the word AS, '/' = a bunch of non alpha words, '!' does negative lookbehind
 # can use any number of words. mn# specifices minimum matches needed, with some error checking
 # todo: plurals option (only when I can't think of anything else to do)
@@ -75,7 +75,7 @@ first_loop = True
 
 frequencies = defaultdict(int)
 
-match_string_array = []
+match_string_raw = []
 default_from_cwd = i7.dir2proj()
 default_from_cfg =  ""
 
@@ -128,6 +128,10 @@ def fast_string_of(my_regex):
             new_word = re.sub(r"[^a-z].*", "", new_word, flags=re.IGNORECASE)
             return new_word
     return "NOTHING_FOUND"
+
+def match_string_of(my_regex):
+    my_regex = my_regex.replace('/', '.*?')
+    return r'\b{}\b'.format(my_regex)
 
 def update_history_file(my_file, my_query, create_new_history = False):
     if create_new_history:
@@ -195,9 +199,9 @@ def read_cfg():
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
-def find_text_in_file(match_string_array, projfile):
-    fast_string_array = [ fast_string_of(x) for x in match_string_array ]
-    match_string_array = [ r'\b' + x + r'\b' for x in match_string_array ]
+def find_text_in_file(match_string_raw, projfile):
+    fast_string_array = [ fast_string_of(x) for x in match_string_raw ]
+    match_string_array = [ match_string_of(x) for x in match_string_raw ]
     global found_overall
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
@@ -285,7 +289,7 @@ def read_args(my_arg_array):
     global modify_line
     global include_notes
     global fast_match
-    global match_string_array
+    global match_string_raw
     global my_proj
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
@@ -361,25 +365,25 @@ def read_args(my_arg_array):
         else:
             if verbose:
                 print("Adding searchable string", arg)
-            arg = arg.replace('/', '[^a-z]*')
+            arg = arg.replace('/', '[^a-z]*', arg.count('/') - (arg[-1] == '/'))
             arg = arg.replace('`', '')
             if "'" in arg:
                 print("Removing apostrophes.")
                 arg = arg.replace("'", "")
             if '#' in arg:
                 ary = arg.split('#')
-                match_string_array.append("{}({})?".format(ary[0], '|'.join(ary[1:])))
+                match_string_raw.append("{}({})?".format(ary[0], '|'.join(ary[1:])))
                 cmd_count += 1
                 continue
             if '=' in arg:
                 ary = arg.split('=')
                 if len(ary) == 2:
-                    match_string_array.append("({}|{})?".format(ary[0], ary[0] + ary[1]))
+                    match_string_raw.append("({}|{})?".format(ary[0], ary[0] + ary[1]))
                 else:
                     temp_ary = []
                     for x in ary[1:]:
                         temp_ary.append(ary[0] + x)
-                    match_string_array.append("({})".format('|'.join(temp_ary)))
+                    match_string_raw.append("({})".format('|'.join(temp_ary)))
                 cmd_count += 1
                 continue
             if '!' in arg:
@@ -388,7 +392,7 @@ def read_args(my_arg_array):
             if '~' in arg:
                 ary = arg.split('~')
                 arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
-            match_string_array.append(arg + '(s)?')
+            match_string_raw.append(arg if arg[-1] == '/' else arg + '(s)?')
         cmd_count += 1
     return 0
 
@@ -439,13 +443,13 @@ while first_loop or user_input:
         print(history_file)
         mt.npo(history_file)
 
-    if not len(match_string_array):
+    if not len(match_string_raw):
         if user_input:
             print("OK, you may only have changed options. If you wish to exit, enter a blank line.")
             continue
         sys.exit("You need to specify text to find.")
 
-    matches_needed = len(match_string_array)
+    matches_needed = len(match_string_raw)
     if user_specified_matches_needed:
         if user_specified_matches_needed > matches_needed:
             print("mn was bigger than the number of matches.")
@@ -454,7 +458,7 @@ while first_loop or user_input:
         else:
             matches_needed = user_specified_matches_needed
 
-    print("Searching for string{}: {}".format(mt.plur(match_string_array), ' / '.join(match_string_array)))
+    print("Searching for string{}: {}".format(mt.plur(match_string_raw), ' / '.join(match_string_raw)))
 
     for proj in proj_umbrella:
         if proj not in i7.i7f:
@@ -477,7 +481,7 @@ while first_loop or user_input:
                 continue
             if i7.inform_short_name(projfile) in frequencies:
                 continue
-            frequencies[i7.inform_short_name(projfile)] = find_text_in_file(match_string_array, projfile)
+            frequencies[i7.inform_short_name(projfile)] = find_text_in_file(match_string_raw, projfile)
         notes_file = i7.notes_file(proj)
         if include_notes:
             if not os.path.exists(notes_file):
@@ -485,7 +489,7 @@ while first_loop or user_input:
                 continue
             if i7.inform_short_name(notes_file) in frequencies: # STS files overlap
                 continue
-            frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(match_string_array, notes_file)
+            frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(match_string_raw, notes_file)
         elif os.path.exists(notes_file):
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
         notes_file = i7.notes_file(proj)
@@ -510,7 +514,7 @@ while first_loop or user_input:
         print("Left untested:", ', '.join(temp_array))
 
     if write_history:
-        update_history_file(history_file, ' '.join(sorted(match_string_array)), create_new_history)
+        update_history_file(history_file, ' '.join(sorted(match_string_raw)), create_new_history)
 
     mt.post_open(bail_after = False)
-    match_string_array = []
+    match_string_raw = []
