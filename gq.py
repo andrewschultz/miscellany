@@ -35,6 +35,7 @@ fast_match = True
 verbose = False
 all_similar_projects = True
 my_proj = ""
+write_history = True
 
 # constants
 
@@ -128,7 +129,7 @@ def fast_string_of(my_regex):
             return new_word
     return "NOTHING_FOUND"
 
-def write_history(my_file, my_query, create_new_history = False):
+def update_history_file(my_file, my_query, create_new_history = False):
     if create_new_history:
         if os.path.exists(my_file):
             print(my_file, "exists. If you can't write to it, check it manually.")
@@ -179,6 +180,9 @@ def read_cfg():
                 elif prefix == "fast_match":
                     global fast_match
                     fast_match = mt.truth_state_of(data)
+                elif prefix == "history" or prefix == "write_history":
+                    global write_history
+                    write_history = mt.truth_state_of(data)
                 elif prefix == "max_overall":
                     global max_overall
                     max_overall = int(data)
@@ -315,6 +319,10 @@ def read_args(my_arg_array):
             colors = False
         elif arg == 'coff' or arg == 'offc':
             colors = False
+        elif arg == 'wh' or arg == 'hw':
+            write_history = True
+        elif arg == 'nh' or arg == 'hn':
+            write_history = False
         elif arg == 'qo' or arg == 'oq':
             quote_status = OUTSIDE
         elif arg == 'qi' or arg == 'iq':
@@ -489,7 +497,9 @@ while first_loop or user_input:
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
-    write_history(history_file, ' '.join(sorted(match_string_array)), create_new_history)
+
+    if write_history:
+        update_history_file(history_file, ' '.join(sorted(match_string_array)), create_new_history)
 
     mt.post_open(bail_after = False)
     match_string_array = []
