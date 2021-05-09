@@ -424,6 +424,8 @@ def sort_raw(raw_long):
     header_to_write = ""
     current_section = ''
     blank_edit_lines = []
+    dupe_edit_lines = []
+    this_file_lines = defaultdict(int)
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -446,6 +448,12 @@ def sort_raw(raw_long):
                 important = False
                 continue
             ll = line.strip().lower()
+            no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=')
+            if no_punc and no_punc in this_file_lines:
+                print("WARNING duplicate line", ll, line_count, this_file_lines[no_punc])
+                dupe_edit_lines.append(line_count)
+            else:
+                this_file_lines[no_punc] = line_count
             if ll.startswith("\\"):
                 if current_section:
                     print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
@@ -501,8 +509,11 @@ def sort_raw(raw_long):
                 blank_edit_lines.append(line_count)
             sections['sh'] += line
     if edit_blank_to_blank and len(blank_edit_lines):
-        print("Lines to edit: {}".format(mt.listnums(blank_edit_lines)))
+        print("Lines to edit to put in section: {}".format(mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
+    if len(dupe_edit_lines):
+        print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
+        mt.npo(raw_long, dupe_edit_lines[0])
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
