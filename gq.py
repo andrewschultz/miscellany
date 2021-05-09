@@ -213,10 +213,10 @@ def find_text_in_file(match_string_array, projfile):
                         line_out = re.sub(match_string_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
-                    print("Found maximum overall", max_overall)
+                    mt.print_centralized('{}Found maximum overall at {} {}: {}. Increase with -mo#.{}'.format(colorama.Back.WHITE + colorama.Fore.CYAN, pbase, max_in_file, colorama.Style.RESET_ALL + colorama.Back.BLACK))
                     return found_so_far
                 if max_in_file and found_so_far == max_in_file:
-                    print("Found maximum per file", max_in_file)
+                    mt.print_centralized('{}Found maximum per file for {}: {}. Increase with -mf#.{}'.format(colorama.Back.WHITE + colorama.Fore.CYAN, pbase, max_in_file, colorama.Style.RESET_ALL + colorama.Back.BLACK))
                     return found_so_far
                 if not found_so_far:
                     mt.print_centralized('{}{} {} found matches {}{}'.format(color_ary[header_color - 1] if header_color else '', hdr_equals, bf, hdr_equals, colorama.Style.RESET_ALL if header_color else ''))
@@ -270,7 +270,7 @@ def read_args(my_arg_array):
     global my_proj
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
-        arg_orig = my_arg_array[cmd_count]
+        arg_orig = my_arg_array[cmd_count].lower()
         if arg_orig in i7.i7x:
             my_proj = i7.i7x[arg_orig]
         elif arg_orig in i7.i7xr: # this is because we may have a dash- flag going to the same as a project name, so let's have a way to look at any project
@@ -343,13 +343,13 @@ def read_args(my_arg_array):
                 arg = arg.replace("'", "")
             if '#' in arg:
                 ary = arg.split('#')
-                match_string_array.append("{}({})".format(ary[0], '|'.join(ary[1:])))
+                match_string_array.append("{}({})?".format(ary[0], '|'.join(ary[1:])))
                 cmd_count += 1
                 continue
             if '=' in arg:
                 ary = arg.split('=')
                 if len(ary) == 2:
-                    match_string_array.append("({}|{})".format(ary[0], ary[0] + ary[1]))
+                    match_string_array.append("({}|{})?".format(ary[0], ary[0] + ary[1]))
                 else:
                     temp_ary = []
                     for x in ary[1:]:
