@@ -117,7 +117,7 @@ def graph_stats(bail = True, this_file = "", file_index = -1, overwrite = False)
     my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
 
     if not overwrite and os.path.exists(my_graph_graphic):
-        print(my_graph_graphic, "already exists. I am not recreating it.")
+        print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.")
         if bail:
             sys.exit()
         return
@@ -314,6 +314,11 @@ while cmd_count < len(sys.argv):
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
     elif arg == 'gs': graph_stats()
+    elif arg[:2] == 'gs' and arg[2:].isdigit():
+        file_index = int(arg[2:])
+        if abs(file_index) == 1:
+            print("Note: this is not zero-based, so 1 is the most recent and the default.")
+        graph_stats(file_index = file_index, overwrite = True)
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'ps': put_stats()
