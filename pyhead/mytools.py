@@ -472,7 +472,7 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
-def strip_punctuation(q, zap_bounding_apostrophe = False):
+def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = ''):
     q = q.replace('"', '')
     if zap_bounding_apostrophe:
         q = re.sub("(\b'|'\b)", "", q)
@@ -481,6 +481,8 @@ def strip_punctuation(q, zap_bounding_apostrophe = False):
     q = q.replace('-', ' ')
     q = ' '.join(q.split(' '))
     q = re.sub("^(an|the|a) ", "", q).strip()
+    for x in other_chars_to_zap:
+        q = q.replace(x, '')
     return q
 
 def alphabetize_lines(x, ignore_punctuation_and_articles = True):
