@@ -29,13 +29,14 @@ d = pendulum.today()
 max_days_new = 7
 max_days_back = 1000
 
-os.chdir("c:/writing/daily")
 latest_daily = True
 write_base_stats = True
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
 daily_done = "c:/writing/daily/done"
+
+my_daily_dir = daily
 
 stats_file = "c:/writing/temp/daily-stats.txt"
 
@@ -71,9 +72,9 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def graph_stats(bail = True, this_file = "", file_index = -1, overwrite = False):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     if not this_file:
-        g = glob.glob("c:/writing/daily/20*.txt")
+        g = glob.glob(os.path.join(my_dir, "20*.txt"))
         this_file = os.path.basename(g[-abs(file_index)])
 
     os.chdir("c:/writing/daily")
@@ -280,8 +281,8 @@ def create_new_file(my_file, launch = True):
         f.write(file_header)
     for s in sect_ary: f.write("\n\\{:s}\n".format(s))
     f.close()
-    if write_base_stats:
-        put_stats()
+    if write_base_stats and my_daily_dir == daily:
+        put_stats(bail = False)
     if launch: os.system(my_file)
 
 #
@@ -326,17 +327,21 @@ while cmd_count < len(sys.argv):
     elif arg == 'bs': write_base_stats = False
     elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg == 'es': mt.npo(stats_file)
+    elif arg == 'gk' or arg == 'kg': my_daily_dir = "c:/coding/perl/proj/from_keep"
+    elif arg == 'gd' or arg == 'dg': my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
 
+os.chdir(my_daily_dir)
+
 if latest_daily:
     found_done_file = False
     for x in range(0, max_days_new):
-        day_file = see_back(d, daily, x)
-        day_done_file = see_back(d, daily_done, x)
+        day_file = see_back(d, my_daily_dir, x)
+        day_done_file = see_back(d, os.path.join(my_daily_dir, "done"), x)
         if os.path.exists(day_file):
             if os.stat(day_file).st_size == 0:
                 print("Ignoring blank file", day_file)
@@ -348,13 +353,13 @@ if latest_daily:
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
     print("Looking back", max_days_new, "days, daily file not found.")
     get_init_sections()
-    create_new_file(see_back(d, daily, 0))
+    create_new_file(see_back(d, my_daily_dir, 0))
     exit()
 
 files_back_in_dir = 0
 
 for x in range(0, max_days_back):
-    day_file = see_back(d, daily, x)
+    day_file = see_back(d, my_daily_dir, x)
     if os.path.exists(day_file):
         if os.stat(day_file).st_size == 0:
             print("Ignoring blank file", day_file)
