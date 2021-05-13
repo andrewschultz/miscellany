@@ -11,11 +11,9 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
-# todo: revamp fast_match option as it is broken now that strings can look for multiple matches
-#
-# any_suffixes flag
-# main_suffixes flag
+# todo:
 # look for text in apostrophes or not (trickier than it seems. We need double matching for, say, yall vs y'all)
+#
 
 from collections import defaultdict
 import mytools as mt
@@ -36,6 +34,7 @@ verbose = False
 all_similar_projects = True
 my_proj = ""
 write_history = True
+main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
 
 # constants
 
@@ -193,6 +192,9 @@ def read_cfg():
                 elif prefix == "min_overall":
                     global min_overall
                     min_overall = int(data)
+                elif prefix == "suffix" or prefix == "suffixes":
+                    global main_suffixes
+                    main_suffixes = data
                 elif prefix == "verbose":
                     global verbose
                     verbose = mt.truth_state_of(data)
@@ -370,6 +372,10 @@ def read_args(my_arg_array):
             if "'" in arg:
                 print("Removing apostrophes.")
                 arg = arg.replace("'", "")
+            if arg.endswith('#'):
+                match_string_raw.append("{}({})?".format(arg[:-1], '|'.join(main_suffixes.split(','))))
+                cmd_count += 1
+                continue
             if '#' in arg:
                 ary = arg.split('#')
                 match_string_raw.append("{}({})?".format(ary[0], '|'.join(ary[1:])))
