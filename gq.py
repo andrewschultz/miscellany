@@ -109,7 +109,7 @@ def usage():
     print("qi/qo/qa = quotes inside/outside/all")
     print("con/coff = colors on/off")
     print("ml/nml/mln = whether or not to modify line where search results are found")
-    exit()
+    sys.exit()
 
 def left_highlight(color_idx):
     return f'{color_ary[color_idx % len(color_ary)]}{highlight_types[my_highlight][0] * highlight_repeat}'
@@ -238,7 +238,7 @@ def find_text_in_file(match_string_raw, projfile):
                         line_out = re.sub(match_string_array[match_idx], lambda x: "{}{}{}".format(left_highlight(match_idx), x.group(0), right_highlight()), line_out, flags=re.IGNORECASE)
             if found_this_line >= matches_needed:
                 if max_overall and found_overall == max_overall:
-                    mt.print_centralized('{}Found maximum overall at {} {}: {}. Increase with -mo#.{}'.format(colorama.Back.WHITE + colorama.Fore.CYAN, pbase, max_in_file, colorama.Style.RESET_ALL + colorama.Back.BLACK))
+                    mt.print_centralized('{}Found maximum overall at {}: {}. Increase with -mo#.{}'.format(colorama.Back.WHITE + colorama.Fore.CYAN, pbase, max_overall, colorama.Style.RESET_ALL + colorama.Back.BLACK))
                     return found_so_far
                 if max_in_file and found_so_far == max_in_file:
                     mt.print_centralized('{}Found maximum per file for {}: {}. Increase with -mf#.{}'.format(colorama.Back.WHITE + colorama.Fore.CYAN, pbase, max_in_file, colorama.Style.RESET_ALL + colorama.Back.BLACK))
@@ -276,7 +276,7 @@ def related_projects(my_proj):
     except:
         return [my_proj]
 
-def read_args(my_arg_array):
+def read_args(my_arg_array, in_loop = False):
     cmd_count = 0
     global verbose
     global user_input
@@ -358,15 +358,24 @@ def read_args(my_arg_array):
             fast_match = True
         elif arg == 'nfm' or arg == 'fmn':
             fast_match = False
-        elif arg == 'ui':
+        elif arg == 'ui' or arg == 'in':
             user_input = True
+        elif 'gq' in arg and "`" not in arg:
+            mt.print_centralized(colorama.Back.RED + colorama.Fore.BLACK + "WARNING gq argument in user input. Use backtick to not ignore." + colorama.Back.BLACK + colorama.Style.RESET_ALL)
         elif ".py" in arg or ".pl" in arg:
             return_value = -1
         elif arg == '?':
             usage()
         else:
+            add_plural_suffix = True
             if verbose:
                 print("Adding searchable string", arg)
+            if arg.startswith("?"):
+                arg = arg[1:]
+                print("Finding definition for", arg)
+                os.system("start http://www.thefreedictionary.com/{}".format(arg))
+            if arg.endswith('/'):
+                add_plural_suffix = False
             arg = arg.replace('/', '[^a-z]*', arg.count('/') - (arg[-1] == '/'))
             arg = arg.replace('`', '')
             if "'" in arg:
@@ -432,7 +441,7 @@ while first_loop or user_input:
         from_user = input("search string (current project {}) >>".format(my_proj))
         if not from_user:
             sys.exit("Ok, that's all.")
-        error_check = read_args(from_user.strip().split(" "))
+        error_check = read_args(from_user.strip().split(" "), in_loop = True)
         if error_check:
             print("NOTE: you included .pl or .py in the input, strongly implying you meant to run a script instead.")
 
@@ -513,7 +522,7 @@ while first_loop or user_input:
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        print(frequencies)
+        print("    " + ", ".join(frequencies))
 
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
     if len(temp_array):
