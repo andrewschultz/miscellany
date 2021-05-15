@@ -11,9 +11,6 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
-# todo:
-# look for text in apostrophes or not (trickier than it seems. We need double matching for, say, yall vs y'all)
-#
 
 from collections import defaultdict
 import mytools as mt
@@ -121,6 +118,7 @@ def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
 def fast_string_of(my_regex):
+    my_regex = my_regex.replace("(')?", "")
     for x in range(0, len(my_regex) - 1):
         if my_regex[x].isalpha and my_regex[x+1].isalpha:
             new_word = my_regex[x:]
@@ -227,10 +225,11 @@ def find_text_in_file(match_string_raw, projfile):
             elif quote_status == INSIDE:
                 ary = line.split('"')
                 line = ' '.join(ary[1::2])
-            line_out = line.strip().lower().replace("'", "")
+            line_out = line.strip().lower()
+            line_out_noap = line_out.replace("'", "")
             found_this_line = 0
             for match_idx in range(0, len(match_string_array)):
-                if fast_match and fast_string_array[match_idx] not in line_out:
+                if fast_match and fast_string_array[match_idx] not in line_out.noap:
                     continue
                 if re.search(match_string_array[match_idx], line_out, flags=re.IGNORECASE):
                     found_this_line += 1
@@ -379,8 +378,7 @@ def read_args(my_arg_array, in_loop = False):
             arg = arg.replace('/', '[^a-z]*', arg.count('/') - (arg[-1] == '/'))
             arg = arg.replace('`', '')
             if "'" in arg:
-                print("Removing apostrophes.")
-                arg = arg.replace("'", "")
+                arg = arg.replace("'", "(')?")
             if arg.endswith('#'):
                 match_string_raw.append("{}({})?".format(arg[:-1], '|'.join(main_suffixes.split(','))))
                 cmd_count += 1
