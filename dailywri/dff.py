@@ -448,17 +448,17 @@ def sort_raw(raw_long):
                 important = False
                 continue
             ll = line.strip().lower()
+            if ll.startswith("\\"):
+                if current_section:
+                    print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
+                current_section = ll[1:]
+                continue
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=')
             if no_punc and no_punc in this_file_lines:
                 print("WARNING duplicate line", ll, line_count, this_file_lines[no_punc])
                 dupe_edit_lines.append(line_count)
             else:
                 this_file_lines[no_punc] = line_count
-            if ll.startswith("\\"):
-                if current_section:
-                    print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
-                current_section = ll[1:]
-                continue
             if not ll:
                 current_section = ''
                 important = False
@@ -504,9 +504,10 @@ def sort_raw(raw_long):
                     sections[current_section] += line
                     continue
             if current_section == '':
-                if show_blank_to_blank:
-                    print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
-                blank_edit_lines.append(line_count)
+                if not line.startswith('#'):
+                    if show_blank_to_blank:
+                        print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
+                    blank_edit_lines.append(line_count)
             sections['sh'] += line
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {}".format(mt.listnums(blank_edit_lines)))
