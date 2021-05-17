@@ -77,6 +77,12 @@ def truth_state_of(text_data, print_warning = True):
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
+def alpha_match(var1, var2, case_insensitive = True):
+    if case_insensitive:
+        var1 = var1.lower()
+        var2 = var2.lower()
+    return sorted(var1) == sorted(var2)
+
 def plur(a, choices=['s', '']):
     if type(a) == list:
         a = len(a)
