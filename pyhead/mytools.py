@@ -20,6 +20,7 @@ import subprocess
 from shutil import copy
 import xml.etree.ElementTree as ET
 import codecs
+import colorama
 
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
@@ -261,6 +262,9 @@ def print_centralized(my_string, eliminate_control_chars = True):
         padding = (x.columns - len(length_string)) // 2
     print(' ' * padding + my_string)
 
+def print_colored_centralized(my_string, color_string = colorama.Fore.GREEN, eliminate_control_chars = True):
+    print_centralized(color_string + my_string + colorama.Back.BLACK + colorama.Style.RESET_ALL, eliminate_control_chars)
+
 def print_and_to_clip(my_str):
     print(my_str, end='')
     pyperclip.copy(my_str)
@@ -308,6 +312,8 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
     if to_tuple:
         return(ary[0], ary[1])
     return ary # (prefix, data) = general usage in programs
+
+cfg_to_data = cfg_data_split
 
 def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False
