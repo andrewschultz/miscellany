@@ -9,8 +9,10 @@ import mytools as mt
 from collections import defaultdict
 import subprocess
 
-totals = 0
+this_header = "Daily Github commits"
+total_count = 0
 
+windows_popup_box = True
 only_today = True
 
 projects = defaultdict(list)
@@ -42,7 +44,7 @@ def process_result(output_text):
             read_next_line = False
             output_array.append(x.strip())
     return output_array
-    
+
 read_cfg_file()
 
 os.chdir(mt.gitbase)
@@ -64,18 +66,21 @@ for x in projects:
             continue
         output_array = process_result(result.decode())
         if output_array:
-            print("!", x, y, output_array)
             final_count[x][y] = output_array
 
 if not len(final_count):
-    print("No changes today")
-    sys.exit()
+    mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
 
-for f in final_count:
+out_string = ""
+
+for f in sorted(final_count):
     proj_ary = []
-    for g in final_count[f]:
-        proj_ary.append("{} {}".format(g, len(final_count[f][g])))
-        totals += len(final_count[f][g])
-    print(f.upper(), ', '.join(proj_ary))
+    for g in sorted(final_count[f]):
+        my_len = len(final_count[f][g])
+        proj_ary.append("{} ~ {}".format(g, my_len))
+        total_count += my_len
+    out_string += "{}: {}\n".format(f.upper(), ', '.join(proj_ary))
 
-print("TOTALS:", totals)
+out_string = "TOTALS: {}\n".format(total_count) + out_string
+out_string = out_string.rstrip()
+mt.win_or_print(out_string, this_header, windows_popup_box, bail = True)
