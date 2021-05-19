@@ -510,7 +510,7 @@ def sort_raw(raw_long):
                     blank_edit_lines.append(line_count)
             sections['sh'] += line
     if edit_blank_to_blank and len(blank_edit_lines):
-        print("Lines to edit to put in section: {}".format(mt.listnums(blank_edit_lines)))
+        print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
     if len(dupe_edit_lines):
         print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
@@ -645,12 +645,18 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.TOPROC
     elif arg == 'ld':
         read_most_recent = True
-        what_to_sort = daily.DAILIES
         dir_search_flag = daily.ROOT
     elif arg == 'rd':
         read_most_recent = True
-        what_to_sort = daily.DAILIES
         dir_search_flag = daily.TOPROC
+    elif mt.alpha_match(arg, 'lwd'):
+        read_most_recent = True
+        dir_search_flag = daily.ROOT
+        what_to_sort = daily.DAILIES
+    elif mt.alpha_match(arg, 'rwd'):
+        read_most_recent = True
+        dir_search_flag = daily.ROOT
+        what_to_sort = daily.DAILIES
     elif arg == 'rf':
         read_most_recent = True
     elif arg[:2] == 'rd' and arg[2:].isdigit():
