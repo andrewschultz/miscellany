@@ -16,6 +16,7 @@ import i7
 import sys
 import datetime
 from pathlib import Path # this forces us to use Python 3.4 but it's worth it
+import mytools as mt
 
 count = 1
 file_args = []
@@ -90,7 +91,7 @@ link_command = "mklink \"{}\" \"{}\"".format(nongit_file, git_file)
 if os.path.exists(git_file) and not overwrite:
     if not open_post_conversion: sys.exit("With open post conversion set to off, there is nothing to do here. Bailing.")
     print(nongit_file, "exists. Opening and not creating.")
-    os.system('"' + nongit_file + '"')
+    mt.npo(nongit_file)
 else:
     if overwrite:
         print(git_file, "exists but overwriting.")
