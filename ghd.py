@@ -4,6 +4,7 @@
 #
 #
 
+import sys
 import os
 import mytools as mt
 from collections import defaultdict
@@ -19,6 +20,7 @@ projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
 
 ghd = "c:/writing/scripts/ghd.txt"
+base_dir = mt.gitbase
 
 def read_cfg_file():
     with open(ghd) as file:
@@ -31,6 +33,18 @@ def read_cfg_file():
                 base_dir = data
                 continue
             projects[prefix] = data.split(",")
+
+def read_cmd_line():
+    cmd_count = 1
+    while cmd_count < len(sys.argv):
+        arg = mt.nohy(sys.argv[cmd_count])
+        if arg =='p':
+            windows_popup_box = True
+        elif arg == 'pn' or arg == 'np':
+            windows_popup_box = False
+        else:
+            sys.exit("Bad parameter {}.".format(arg))
+        cmd_count += 1
 
 def process_result(output_text):
     lines = output_text.splitlines()
@@ -45,9 +59,12 @@ def process_result(output_text):
             output_array.append(x.strip())
     return output_array
 
-read_cfg_file()
+#################################################
 
-os.chdir(mt.gitbase)
+os.chdir(base_dir)
+
+read_cfg_file()
+read_cmd_line()
 
 for x in projects:
     for y in projects[x]:
