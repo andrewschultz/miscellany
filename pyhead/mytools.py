@@ -743,6 +743,19 @@ def first_of(file_array, latest = True):
     if not new_ret: sys.exit("Can't get first of {}".format(', '.join(file_array)))
     return new_ret
 
+def win_or_print(string_to_print, header_to_print, windows_popup_box, bail = False):
+    if type(string_to_print) == list:
+        try:
+            string_to_print = "\n".join(string_to_print)
+        except:
+            print("Bad string-to-print passed to win-or-print.")
+            return
+    if windows_popup_box:
+        messageBox = ctypes.windll.user32.MessageBoxW
+        messageBox(None, string_to_print, header_to_print, 0x0)
+    else:
+        print(string_to_print)
+
 def isAdmin():
     try:
         is_admin = (os.getuid() == 0)
