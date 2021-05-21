@@ -13,7 +13,7 @@ import subprocess
 this_header = "Daily Github commits"
 total_count = 0
 
-windows_popup_box = True
+windows_popup_box = False
 only_today = True
 
 projects = defaultdict(list)
@@ -92,11 +92,13 @@ out_string = ""
 
 for f in sorted(final_count):
     proj_ary = []
+    local_count = 0
     for g in sorted(final_count[f]):
         my_len = len(final_count[f][g])
         proj_ary.append("{} ~ {}".format(g, my_len))
         total_count += my_len
-    out_string += "{}: {}\n".format(f.upper(), ', '.join(proj_ary))
+        local_count += my_len
+    out_string += "{}{}: {}\n".format(f.upper(), ' ({})'.format(local_count) if len(final_count) > 1 and len(final_count[f] > 1) else '', ', '.join(proj_ary))
 
 out_string = "TOTALS: {}\n".format(total_count) + out_string
 out_string = out_string.rstrip()
