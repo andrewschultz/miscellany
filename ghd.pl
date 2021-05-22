@@ -43,9 +43,13 @@ my $sum;
 my $daysAgo             = 0;
 my $allBranches         = 0;
 my $mainBranchWarning = 0;
+my $toBrowser = 0;
+my $totalCutDown = "";
 
 chdir("c:\\writing\\scripts");
 my $siteFile = "c:\\writing\\scripts\\ghd.txt";
+
+my $ghdResults = "c:\\writing\\temp\\ghd-results.txt";
 
 while ( $count <= $#ARGV ) {
   my $arg = $ARGV[$count];
@@ -80,6 +84,7 @@ next;
     /^-nmw$/   && do { $mainBranchWarning = 0; $count++; next; };
     /^-mw$/    && do { $mainBranchWarning = 1; $count++; next; };
     /^-?p$/    && do { $popup               = 1; $count++; next; };
+    /^-?tb$/    && do { $toBrowser               = 1; $count++; next; };
     /^-?ty$/    && do { $today_yday           = 1; $count++; next; };
     /^-?u$/    && do { $unchAfter           = 1; $count++; next; };
     /^-?(m|mm)$/    && do { show_shift_branch_name('<your project>'); exit(); };
@@ -192,7 +197,10 @@ for $r (@repos) {
     }
   }
   print getcwd() . ": $cmd\n" if $debug;
-  print cutDown( $thisLog, "$r/$branch" ) if $debug || $showLog;
+
+  my $theCutDown = cutDown( $thisLog, "$r/$branch" );
+  print $theCutDown if $debug || $showLog;
+  $totalCutDown .= $theCutDown;
   ( my $rbase = $r ) =~ s/\/.*//;
 
   # print "$r $rbase\n";
@@ -236,8 +244,12 @@ if ($overallSum) {
 if ($popup) {
   Win32::MsgBox( "$popupText", 0, "GHD.PL" );
 }
-else {
-  print "$popupText";
+elsif ($toBrowser) {
+  open(B, ">$ghdResults");
+  print B $popupText;
+  print B $totalCutDown;
+  close(B);
+  `start \"\" \"c:\\Program Files\\Mozilla Firefox\\Firefox.exe\" \"$ghdResults\"`;
 }
 
 if ($unchAfter) {
