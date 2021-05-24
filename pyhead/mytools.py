@@ -315,6 +315,19 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
 
 cfg_to_data = cfg_data_split
 
+def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '='):
+    temp_dict = defaultdict(str)
+    if not my_line.count(outer_separator) or not my_line.count(inner_separator):
+        return temp_dict
+    ary = my_line.strip().split(outer_separator)
+    for x in ary:
+        y = x.split(inner_separator)
+        if len(y) != 2:
+            print("Bad inner separator", my_line.strip(),x)
+            continue
+        temp_dict[y[0]] = y[1]
+    return temp_dict
+
 def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False
     found_errors = False
