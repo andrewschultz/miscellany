@@ -96,6 +96,8 @@ prefixes = defaultdict(str)
 delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
 
+protect_empty_section = defaultdict(bool)
+
 block_move = defaultdict(set)
 
 sect_move = defaultdict(lambda: defaultdict(int))
@@ -137,6 +139,15 @@ def sanitize(tabbed_names):
             new_ary.append(x)
             low_case_dict[x.lower()] = True
     return "\t".join(new_ary)
+
+def read_daily_cfg():
+    with open("c:/writing/scripts/2dy.txt") as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.count('=') - line.count(',') == 1 and line.count(','):
+                global protect_empty_section
+                protect_empty_section = mt.quick_dict_from_line(line)
+                return
+    print("WARNING: failed to read protected sections in daily cfg.")
 
 def read_comment_cfg():
     any_warnings = False
@@ -426,6 +437,8 @@ def sort_raw(raw_long):
     blank_edit_lines = []
     dupe_edit_lines = []
     this_file_lines = defaultdict(int)
+    for x in protect_empty_section:
+        sections[x] = ''
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -538,7 +551,10 @@ def sort_raw(raw_long):
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
-        if x != 'nam': fout.write("\n\n")
+        if not sections[x]:
+            fout.write("\n")
+        elif x != 'nam':
+            fout.write("\n\n")
     fout.close()
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
@@ -718,8 +734,8 @@ if not os.path.exists(dir_to_scour):
 
 os.chdir(dir_to_scour)
 
+read_daily_cfg()
 read_comment_cfg()
-
 
 if not len(file_list):
     my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
