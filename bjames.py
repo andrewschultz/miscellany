@@ -3,6 +3,8 @@ import sys
 cmd_count = 1
 deficit = 0
 game_time = 0
+our_score = 0
+their_score = 0
 
 def bill_james(deficit, game_time, has_possession):
     print("With{} possession:".format('' if has_possession else 'out'))
@@ -21,6 +23,8 @@ while cmd_count < len(sys.argv):
         try:
             scores = arg.split('-')
             deficit = abs(int(scores[0]) - int(scores[1]))
+            our_score = int(scores[0])
+            their_score = int(scores[1])
         except:
             sys.exit("Bad score")
     elif arg.isdigit():
@@ -44,3 +48,8 @@ while cmd_count < len(sys.argv):
 bill_james(deficit, game_time, True)
 print()
 bill_james(deficit, game_time, False)
+print()
+pace_ratio = 2400 / (2400 - game_time)
+
+if our_score:
+    print("Pace: {:.2f} to {:.2f}".format(our_score * pace_ratio, their_score * pace_ratio))
