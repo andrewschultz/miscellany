@@ -2,11 +2,8 @@
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
 #
-#
 # todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
-
-#TODO: Note if there were any changes if file already exists e.g. rewriting from raw to 2019333
-#also todo: -keep- files have special notes (?) / notifications. Is this in ld2?
+# todo: option to turn off section protection (VERY minor, only when I need a one-a-day commit)
 
 import daily
 import codecs
@@ -97,7 +94,9 @@ delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
 prority_sort = defaultdict(int)
 
-protect_empty_section = defaultdict(bool)
+empty_to_protect = defaultdict(bool)
+protect_yes_force = False
+protect_no_force = False
 
 block_move = defaultdict(set)
 
@@ -145,8 +144,8 @@ def read_daily_cfg():
     with open("c:/writing/scripts/2dy.txt") as file:
         for (line_count, line) in enumerate(file, 1):
             if line.count('=') - line.count(',') == 1 and line.count(','):
-                global protect_empty_section
-                protect_empty_section = mt.quick_dict_from_line(line)
+                global empty_to_protect
+                empty_to_protect = mt.quick_dict_from_line(line)
                 return
     print("WARNING: failed to read protected sections in daily cfg.")
 
@@ -376,7 +375,7 @@ def my_section(l):
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
     if '=' in l and re.search('=[0-9]+=', l): return 'btp'
-    if is_risque_spoonerism(l): return 'sw'
+    if is_risque_spoonerism(l): return 'cw'
     if is_spoonerism_rated(l): return 'spo'
     temp = smart_section(l)
     if temp:
@@ -436,8 +435,9 @@ def sort_raw(raw_long):
     blank_edit_lines = []
     dupe_edit_lines = []
     this_file_lines = defaultdict(int)
-    for x in protect_empty_section:
-        sections[x] = ''
+    if protect_empties:
+        for x in empty_to_protect:
+            sections[x] = ''
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -617,6 +617,10 @@ while cmd_count < len(sys.argv):
         what_to_sort = daily.DAILY
     elif arg == 'p' or arg == 'sp':
         sort_proc = True
+    elif arg == 'py' or arg == 'yp':
+        protect_yes_force = True
+    elif arg == 'pn' or arg == 'np':
+        protect_no_force = True
     elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
         only_list_files = True
     elif arg == '1a':
@@ -706,6 +710,9 @@ while cmd_count < len(sys.argv):
             print("WARNING", arg, "is not a readable file in any to-proc directory. Ignoring.")
     cmd_count += 1
 
+if protect_yes_force and protect_no_force:
+    sys.exit("Forced all protections on and off with the py/pn parameters. You can only choose one. Bailing.")
+
 if my_min_file > my_max_file: sys.exit("Min file specified >> max file specified. Bailing.")
 
 if what_to_sort == daily.DAILIES:
@@ -727,6 +734,13 @@ elif dir_search_flag == daily.BACKUP:
     dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "backup"))
 elif dir_search_flag == daily.ROOT:
     dir_to_scour = os.path.normpath(os.path.join(dir_to_scour, "."))
+
+if protect_yes_force:
+    protect_empties = True
+elif protect_no_force:
+    protect_empties = False
+else:
+    protect_empties = (dir_search_flag != daily.TOPROC)
 
 if not os.path.exists(dir_to_scour):
     sys.exit("Something went wrong after changing directories according to the dir-search-flags.\n\nI am bailing as I could not find {}.".format(dir_to_scour))
