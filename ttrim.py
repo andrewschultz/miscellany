@@ -67,7 +67,7 @@ def test_type(f):
     if suf == '.pl' or suf == 'pm': return "perltidy"
     if suf in good_extensions or suf[1:] in good_extensions: return "python/text/source end-whitespace strip"
     return "unknown"
-    
+
 def check_file(my_f):
     ''' runs the expected test on the file
     the return tuple has (# of files fixed) / (# of files looked at), usually (0/1, 1) '''
@@ -91,7 +91,7 @@ def check_file(my_f):
         return (not temp, 1)
     else:
         with open(tabtemp, "w") as out_file:
-            with open(my_f, "U") as in_file:
+            with open(my_f, newline=None) as in_file:
                 for (line_count, line) in enumerate(in_file, 1):
                     lr = re.sub("[ \t]+$", "", line)
                     if line != lr:
@@ -101,7 +101,7 @@ def check_file(my_f):
         # print(my_f, os.path.getsize(my_f), tabtemp, os.path.getsize(tabtemp))
     if win_merge_show: i7.wm(my_f, tabtemp)
     if lines_stripped:
-        print("Rstripping/copying" if copy_back else "flagging (use -c to copy back)", my_f, "of", lines_stripped, "lines", chars_stripped, "characters")
+        print("Stripping/copying" if copy_back else "flagging (use -c to copy back)", my_f, "of", lines_stripped, "line{}".format(mt.plur(lines_stripped)), chars_stripped, "characters{}".format(mt.plur(chars_stripped)))
         if copy_back: copy(tabtemp, my_f)
         return (1, 1)
     else:
