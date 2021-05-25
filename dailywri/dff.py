@@ -95,6 +95,7 @@ section_words = defaultdict(str)
 prefixes = defaultdict(str)
 delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
+prority_sort = defaultdict(int)
 
 protect_empty_section = defaultdict(bool)
 
@@ -221,6 +222,10 @@ def read_comment_cfg():
                         any_warnings = True
                         continue
                     prefixes[u] = ary[1]
+            elif prefix == 'prio' or prefix == 'priority':
+                global priority_sort
+                priority_sort = mt.quick_dict_from_line(line, use_ints = True)
+                continue
             elif prefix == "suffix":
                 for u in entries:
                     if u in suffixes:
@@ -388,12 +393,6 @@ def my_section(l):
         return temp
     return ""
 
-def sort_priority(x):
-    prio_num = 0
-    if x == 'nam': prio_num = 20
-    if x == 'vvff': prio_num = 15
-    return (prio_num, x)
-
 def is_locked(proc_file):
     if not os.path.exists(proc_file): return False
     with open(proc_file) as file:
@@ -547,7 +546,7 @@ def sort_raw(raw_long):
     if verbose:
         for x in sorted(sect_move):
             print("To {}: {}".format(x, ', '.join(["{} {}".format(a if a else '<blank>', sect_move[x][a]) for a in sect_move[x]])))
-    for x in sorted(sections, key=lambda x:sort_priority(x)): # note this is a tuple that's used to push current hot projects to the bottom
+    for x in sorted(sections, key=lambda x:(priority_sort[x], x)): # note this is a tuple that's used to push current hot projects to the bottom
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
