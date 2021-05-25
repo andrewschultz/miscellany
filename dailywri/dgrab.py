@@ -43,6 +43,7 @@ my_globs = []
 
 dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
+dg_preview = "c:/writing/temp/dgrab-preview.txt"
 flat_temp = os.path.basename(dg_temp)
 
 file_list = defaultdict(list)
@@ -72,6 +73,8 @@ look_for_orphan = False
 append_importants = False
 important_test = True
 latest_file_only = False
+preview_moved_text = False
+preview_any_yet = False
 
 dir_search_flag = daily.TOPROC
 
@@ -100,6 +103,7 @@ def usage(header="GENERAL USAGE"):
     print("noa = no open after")
     print("pc = print suggested commands")
     print("ld = latest daily only (not to-proc), lf = latest file from this/chosen directory")
+    print("pre = preview only")
     print("")
     print("sample usage:")
     print("  dgrab.py -da s=ut 5 for processing 5 Under They Thunder sections in daily files")
@@ -464,13 +468,26 @@ def send_mapping(sect_name, file_name, change_files = False):
     if not sect_text:
         if delete_empties:
             print("Empty section found. Deleting.")
+            return True
         else:
             print("Empty section found but not deleting.")
-            return
+            return False
     if not change_files:
         global change_list
         change_list.append(fn)
         return False
+    if preview_moved_text:
+        if sect_text:
+            global preview_any_yet
+            if preview_any_yet:
+                f = open(dg_preview, "a")
+            else:
+                f = open(dg_preview, "w")
+                preview_any_yet = True
+            f.write("======================={}\n".format(file_name))
+            f.write(sect_text)
+            f.close()
+            return True
     f = open(dg_temp, "w")
     f.write(file_remain_text)
     f.close()
@@ -576,6 +593,7 @@ while cmd_count < len(sys.argv):
         latest_file_only = True
         dir_to_proc = daily_proc
     elif arg == 'lf': latest_file_only = True
+    elif arg == 'pre': preview_moved_text = True
     elif arg[:2] == 's=': my_sect = arg[2:]
     elif arg[0] == 'l' and arg[1:].isdigit():
         list_it = True
@@ -723,6 +741,9 @@ for q in my_file_list:
         max_warning = True
         if max_process > 1: print("Reached maximum. Stopped at file " + q)
         continue
+
+if preview_moved_text:
+    mt.npo(dg_preview)
 
 if list_it:
     mins_ignored = 0
