@@ -143,7 +143,7 @@ def sanitize(tabbed_names):
 def read_daily_cfg():
     with open("c:/writing/scripts/2dy.txt") as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.count('=') - line.count(',') == 1 and line.count(','):
+            if line.startswith("defaults:")
                 global empty_to_protect
                 empty_to_protect = mt.quick_dict_from_line(line)
                 return

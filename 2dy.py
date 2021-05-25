@@ -260,13 +260,15 @@ def get_init_sections():
             if "," not in line:
                 print("WARNING: unidentified line (no valid header or CSV of sections {}".format(line_count))
                 continue
-            ary = line.lower().strip().split(",")
-            if len(sect_ary):
-                print("Adding to array of blank sections on line {}".format(line_count))
-            for q in ary:
-                ary2 = q.split('=')
-                sect_ary.append(ary2[0])
-                # init_sect[ary2[0]] = ary2[1]
+            if line.startswith("defaults:"):
+                ary = line.lower().strip().split(",")
+                if len(sect_ary):
+                    print("Adding to array of blank sections on line {}".format(line_count))
+                for q in ary:
+                    ary2 = q.split('=')
+                    sect_ary.append(ary2[0])
+                continue
+            print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
     sect_ary_2 = sorted(sect_ary, key=lambda x:(x == 'nam', x))
     if sect_ary_2 != sect_ary:
         print("WARNING wobbly unsorted sections:")
