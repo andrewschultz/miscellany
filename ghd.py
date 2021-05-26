@@ -10,11 +10,12 @@ import mytools as mt
 from collections import defaultdict
 import subprocess
 
+days_back = 0
+
 this_header = "Daily Github commits"
 total_count = 0
 
 windows_popup_box = False
-only_today = True
 
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
@@ -36,12 +37,18 @@ def read_cfg_file():
 
 def read_cmd_line():
     cmd_count = 1
+    global windows_popup_box
+    global days_back
     while cmd_count < len(sys.argv):
         arg = mt.nohy(sys.argv[cmd_count])
         if arg =='p':
             windows_popup_box = True
         elif arg == 'pn' or arg == 'np':
             windows_popup_box = False
+        elif arg[0] == 'd' and arg[1:].isdigit():
+            days_back = int(arg[1:])
+        elif arg.isdigit():
+            days_back = int(arg)
         else:
             sys.exit("Bad parameter {}.".format(arg))
         cmd_count += 1
@@ -74,10 +81,10 @@ for x in projects:
             print("Bad github subdir", y, "in", x)
             continue
         proc_array = [ 'git', 'log' ]
-        if only_today:
+        if days_back == 0:
             proc_array.append('--since="00:00:00"')
         else:
-            proc_array.append('--since="23 days ago"')
+            proc_array.append('--since="{} days ago 00:00" --until="{} days ago 00:00"'.format(days_back, days_back - 1))
         result = subprocess.check_output(proc_array)
         if not result:
             continue
@@ -98,7 +105,7 @@ for f in sorted(final_count):
         proj_ary.append("{} ~ {}".format(g, my_len))
         total_count += my_len
         local_count += my_len
-    out_string += "{}{}: {}\n".format(f.upper(), ' ({})'.format(local_count) if len(final_count) > 1 and len(final_count[f] > 1) else '', ', '.join(proj_ary))
+    out_string += "{}{}: {}\n".format(f.upper(), ' ({})'.format(local_count) if len(final_count) > 1 and len(final_count[f]) > 1 else '', ', '.join(proj_ary))
 
 out_string = "TOTALS: {}\n".format(total_count) + out_string
 out_string = out_string.rstrip()
