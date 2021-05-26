@@ -6,6 +6,12 @@ import sys
 
 def copy_source_to_github(d = os.getcwd(), copy_to_blank = False, copy_timestamps_misaligned = False):
     my_proj = i7.dir2proj(d)
+    if my_proj in i7.i7com and my_proj in i7.i7com[my_proj].split(","):
+        for x in i7.i7com[my_proj].split(","):
+            if x == my_proj:
+                continue
+            copy_source_to_github(os.path.join(d, x), copy_to_blank, copy_timestamps_misaligned)
+        return
     my_main = i7.main_src(my_proj)
     my_gh = i7.gh_src(my_proj)
     if filecmp.cmp(my_main, my_gh):
