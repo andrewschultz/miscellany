@@ -39,15 +39,19 @@ show_blanks = False
 bail_cfg_warnings = True
 any_warnings = False
 
+open_in_browser = False
+
 open_wildcard = ""
 max_wildcard = 25
 
 ses_cfg = "c:/writing/scripts/sescfg.txt"
+results_file = "c:/writing/temp/ses-results.txt"
 
 def usage(my_msg = "General usage"):
     print(my_msg)
     print("=" * 50)
     print("-b/-nb/-bn toggles whether to print blanks")
+    print("-ob/obn opens output as a text file in a web browser (or not)")
     print("A number changes the list max size")
     print("ow/oa := = wildcard of files to open")
     print("e/c = edit cfg file")
@@ -131,6 +135,8 @@ while cmd_count < len(sys.argv):
         show_blanks = False
     elif arg == 'nb' or arg == 'bn':
         show_blanks = True
+    elif arg == 'bo' or arg == 'ob':
+        open_in_browser = True
     elif arg == 'bw' or arg == 'wb':
         bail_cfg_warnings = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
@@ -188,6 +194,10 @@ if any_warnings and bail_cfg_warnings:
     print("Bailing on cfg warnings. -nbw/-bwn to disable this.")
     sys.exit()
 
+if open_in_browser:
+    temp = sys.stdout
+    sys.stdout = open(results_file, "w")
+
 print("{} earliest-timestamp files:".format(list_max_size))
 for x in sorted(made_date, key=made_date.get)[:list_max_size]:
     print("{:7} {} {:74} {}{}".format(x, made_date[x], orig_file[x], os.stat(orig_file[x]).st_size, desc_new(x)))
@@ -210,3 +220,8 @@ if len(slink):
         print("    " + y)
 
 print(link_warnings, "link warnings", unnamed, "unnamed/new files", named, "standard files", totals, "total tabs open in Notepad")
+
+if open_in_browser:
+    sys.stdout.close()
+    sys.stdout = temp
+    mt.file_in_browser(results_file)
