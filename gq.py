@@ -3,10 +3,11 @@
 # replaces gq.pl
 #
 # usage gq.py as match_string_raw (for alex smart)
-#       gq.py `as to search for the word AS, '/' = a bunch of non alpha words, '!' does negative lookbehind
-# can use any number of words. mn# specifices minimum matches needed, with some error checking
-# todo: plurals option (only when I can't think of anything else to do)
-#       speedup for allowed_misses
+#       gq.py `as                 (to search for the word AS, '/' = a bunch of non alpha words, '!' does negative lookbehind)
+#       gq.py o shelf             (to search for shelf ONLY in the current project)
+# this can use any number of words. It needs to find them all by default, but mn# specifices minimum matches needed, with some error checking
+#
+# note batch file shortcuts: gr tests STS, gs tests snooperism, ga tests Alec Smart
 #
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
@@ -306,7 +307,7 @@ def read_args(my_arg_array, in_loop = False):
             post_open_matches = False
         elif arg == 'po':
             post_open_matches = True
-        elif arg == 'o':
+        elif arg == 'o' or arg == '.':
             all_similar_projects = False
         elif arg == 'a':
             all_similar_projects = True
