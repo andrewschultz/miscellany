@@ -424,19 +424,27 @@ while count < len(sys.argv):
     elif is_time(arg):
         time_array = [int(q) for q in arg.split(":")]
     elif arg == 'e':
-        os.system(check_file)
+        mt.npo(check_file)
         exit()
     elif arg == 'ep':
-        os.system(check_private)
+        mt.npo(check_private)
         exit()
     elif arg == 'ex':
-        os.system(xtra_file)
+        mt.npo(xtra_file)
         exit()
     elif arg == 'ea':
-        os.system(check_file)
-        os.system(check_private)
-        os.system(xtra_file)
-        exit()
+        mt.npo(check_file, bail=False)
+        mt.npo(check_private, bail=False)
+        mt.npo(xtra_file, bail=False)
+        sys.exit()
+    elif re.search("^e[xpm]+", arg):
+        if 'x' in arg:
+            mt.npo(xtra_file, bail=False)
+        if 'p' in arg:
+            mt.npo(check_private, bail=False)
+        if 'm' in arg:
+            mt.npo(check_file, bail=False)
+        sys.exit()
     elif arg.startswith("b="):
         my_bookmarks += arg[2:].split(",")
     elif arg == "bp":
