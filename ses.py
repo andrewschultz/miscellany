@@ -53,7 +53,8 @@ def usage(my_msg = "General usage"):
     print("-b/-nb/-bn toggles whether to print blanks")
     print("-ob/obn opens output as a text file in a web browser (or not)")
     print("A number changes the list max size")
-    print("ow/oa := = wildcard of files to open")
+    print("ow/oa :/= wildcard of files to open")
+    print("bw/nbw or permutations = bail on warnings or not")
     print("e/c = edit cfg file")
     exit()
 
@@ -76,7 +77,7 @@ def open_in_notepad(my_wildcard):
     if not count:
         print("Found nothing to open.")
     mt.postopen()
-    exit()
+    sys.exit()
 
 def read_ses_cfg():
     cur_idx = 0
@@ -94,6 +95,17 @@ def read_ses_cfg():
                 any_warnings = True
                 continue
             ary = line.strip().split("=")
+            if "*" in ary[0]:
+                temp = pathlib.path(ary[0]).parent
+                if not os.path.exists(temp):
+                    print("WARNING:", ary[0], "does not exist as a directory for a glob. Please check line", line_count, "and try again.")
+                    any_warnings = True
+                    continue
+            else:
+                if not os.path.exists(ary[0]) and not "#bad path" in line:
+                    print("WARNING:", ary[0], "does not exist as a directory. Please check line", line_count, "and try again.")
+                    any_warnings = True
+                    continue
             ary[0] = os.path.normpath(ary[0]).lower()
             cur_idx += 1
             for x in shuf_name_dict:
@@ -102,7 +114,7 @@ def read_ses_cfg():
                 if ary[0].startswith(x):
                     print("WARNING: ordering of dictionary values means {} is overlapped by parent directory {}.".format(ary[0], x))
                     any_warnings = True
-            shuf_name_dict[ary[0]] = ary[1]
+            shuf_name_dict[ary[0]] = mt.zap_comment(ary[1])
             shuf_name_ord[ary[0]] = cur_idx
     if bail_cfg_warnings and any_warnings:
         print("Bailing on cfg warnings. -nbw/-bwn to disable this.")
