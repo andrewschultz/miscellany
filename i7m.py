@@ -129,11 +129,11 @@ if args.max_fix_line:
 if args.min_fix_line:
     min_fix_line = args.min_fix_line
 
-if args.copy_over is True:
+if args.copy_over:
     copy_over = True
     copy_save = False
 
-if args.copy_save is True:
+if args.copy_save:
     copy_save = True
     copy_over = True
 
@@ -221,7 +221,7 @@ with open(file_name) as file:
                 last_num = line_count
         big_string = big_string + line
 
-if func_begun is False and func_name:
+if not func_begun and func_name:
     print("Could not find function", func_begun)
     exit()
 
@@ -259,7 +259,7 @@ if cur_changes == 0 and func_collapse == 0 and trivial_punctuation == 0:
 if unix_endings:
     big_string.replace("\r\n", "\n")
 
-if went_over is True:
+if went_over:
     print(cur_changes, "total cur_changes, ended at line", last_num, "of", line_count)
 
 if max_changes == cur_changes:

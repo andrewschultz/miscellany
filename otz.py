@@ -80,14 +80,14 @@ def check_old_matches(x):
                         for j in specifics[m].keys():
                             if re.search(j, line, re.IGNORECASE):
                                 ignore = True
-                    if ignore is False:
+                    if not ignore:
                         incidents_dic[m] += 1
                         if not errs_yet[x]:
                             print("======", x, "======")
                             errs_yet[x] = 1
                     else:
                         incident_ig[m] += 1
-                    if ignore is False or show_whats_ignored:
+                    if not ignore or show_whats_ignored:
                         print("-->" if not ignore else "(IGNORED)", line_count, (abbrevs[m] if m in abbrevs.keys() else m) + ": " + line.strip())
             for r in regex_dic.keys():
                 if re.search(r, line, re.IGNORECASE):
@@ -99,7 +99,7 @@ def check_old_matches(x):
                         for j in specifics[r].keys():
                             if re.search(j, line, re.IGNORECASE):
                                 ignore = True
-                    if ignore is False:
+                    if not ignore:
                         incidents_dic[r] += 1
                         if not errs_yet[x]:
                             print("======", x, "======")
@@ -193,7 +193,7 @@ with open(otz) as file:
         if re.search("PROJEND", line):
             reading_project = False
             continue
-        if reading_project is False:
+        if not reading_project:
             continue
         if line.lower().startswith("f="):
             temp = re.sub("^f=", "", line.strip().lower(), re.IGNORECASE)
