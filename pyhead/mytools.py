@@ -339,8 +339,14 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
 
 cfg_to_data = cfg_data_split
 
-def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', use_ints = False, colon_before = True):
-    if colon_before:
+def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', use_ints = False, delete_before_colon = True, need_colon = True):
+    my_line = my_line.strip()
+    if need_colon and ':' not in line:
+        print("WARNING no colon in line", my_line, "so skipping, since we specified we need it.")
+        return
+    if delete_before_colon:
+        if ':' not in my_line:
+            print("WARNING no colon in line", my_line, "but still; processing.")
         my_line = re.sub("^.*?:", "", my_line)
     if use_ints:
         temp_dict = defaultdict(int)
@@ -348,11 +354,11 @@ def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', 
         temp_dict = defaultdict(str)
     if not my_line.count(outer_separator) or not my_line.count(inner_separator):
         return temp_dict
-    ary = my_line.strip().split(outer_separator)
+    ary = my_line.split(outer_separator)
     for x in ary:
         y = x.split(inner_separator)
         if len(y) != 2:
-            print("Bad inner separator", my_line.strip(),x)
+            print("Bad inner separator", my_line,x)
             continue
         if use_ints:
             temp_dict[y[0]] = int(y[1])
