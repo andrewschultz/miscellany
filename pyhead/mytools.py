@@ -209,6 +209,19 @@ def is_npp_modified(my_file): # see if a file is unsaved in notepad++
                     return True
             return False
 
+def conditional_notepad_open_my_file(my_file, open_if_already_there):
+    e = ET.parse(np_xml)
+    already_in_notepad = is_open_in_notepad(my_file)
+    n_t = "" if already_in_notepad else "n't"
+    print("Conditionally opening", my_file, "in notepad. Open if it is{} available.".format(n_t))
+    should_i_open = already_in_notepad != open_if_already_there
+    print("{} because {} is{}".format("Opening" if should_i_open else "Skipping", my_file, n_t), "already open in notepad")
+    if should_i_open:
+        npo(my_file)
+    else:
+        return
+    print("ERROR couldn't find", my_file)
+
 def is_anagram(x, accept_comments = True, check_sections = True, wipe_author = True, ignore_leading_articles = True, wipe_inform_comments = True, need_all_sections = True):
     article_string = r'^(a|an|the) '
     if ignore_leading_articles and re.search(article_string, x):
