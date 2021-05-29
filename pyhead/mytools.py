@@ -171,6 +171,17 @@ def decimal_only(val, digits = 3):
         return "-" + ret[2:]
     return ret
 
+def is_open_in_notepad(my_file):
+    my_norm = os.path.realpath(my_file)
+    my_base = os.path.basename(my_norm)
+    e = ET.parse(np_xml)
+    for elem in e.iter('File'):
+        this_np_file = elem.get("filename")
+        if my_base.lower() not in this_np_file.lower(): continue # this speeds stuff up slightly
+        if os.path.samefile(my_norm, this_np_file):
+            return True
+    return False
+
 def modified_size_of(my_file):
     e = ET.parse(np_xml)
     for elem in e.iter('File'):
