@@ -22,6 +22,7 @@ import xml.etree.ElementTree as ET
 import codecs
 import colorama
 
+gitbase = 'c:/users/andrew/documents/github'
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
 my_creds = "c:/coding/perl/proj/mycreds.txt"
@@ -184,10 +185,11 @@ def is_open_in_notepad(my_file):
 
 def modified_size_of(my_file):
     e = ET.parse(np_xml)
+    quick_basename = os.path.basename(my_file).lower()
     for elem in e.iter('File'):
         this_np_file = elem.get("filename")
         if not os.path.exists(this_np_file): continue
-        if my_file.lower() not in this_np_file.lower(): continue # this speeds stuff up slightly
+        if quick_basename not in this_np_file.lower(): continue # this speeds stuff up slightly
         if os.path.samefile(this_np_file, os.path.abspath(my_file)):
             mso = elem.get("backupFilePath")
             if mso and os.path.exists(mso):
@@ -197,11 +199,11 @@ def modified_size_of(my_file):
     return os.stat(my_file).st_size
 
 def is_npp_modified(my_file): # see if a file is unsaved in notepad++
+    quick_basename = os.path.basename(my_file).lower()
     e = ET.parse(np_xml)
     for elem in e.iter('File'):
         this_np_file = elem.get("filename")
-        if not os.path.exists(this_np_file): continue
-        if my_file.lower() not in this_np_file.lower(): continue # this speeds stuff up slightly
+        if quick_basename not in this_np_file.lower(): continue # this speeds stuff up slightly
         if os.path.samefile(this_np_file, os.path.abspath(my_file)):
             bfp = elem.get("backupFilePath")
             if bfp:
@@ -463,6 +465,8 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = 
         cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
         if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file if print_full_path else os.path.basename(my_file), my_line, " and bailing" if bail else ""))
         os.system(cmd)
+    else:
+        print("Unable to find", my_file)
     if bail: exit()
 
 def open_this(bail = True):
