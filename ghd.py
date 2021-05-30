@@ -20,11 +20,21 @@ windows_popup_box = False
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
 
-ghd = "c:/writing/scripts/ghd.txt"
+ghd_info = "c:/writing/scripts/ghd.txt"
 base_dir = mt.gitbase
 
+def usage(my_param):
+    if (my_param):
+        print("=================bad argument", my_param)
+    else:
+        print("USage for ghd.py")
+    print("p  = windows popup box")
+    print("d# = days back")
+    print("e/es/se edits main, ec/ce edits config")
+    sys.exit()
+
 def read_cfg_file():
-    with open(ghd) as file:
+    with open(ghd_info) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
@@ -49,8 +59,14 @@ def read_cmd_line():
             days_back = int(arg[1:])
         elif arg.isdigit():
             days_back = int(arg)
+        elif arg == 'e' or arg == 'es' or arg == 'se':
+            mt.npo(__main__)
+        elif arg == 'ec' or arg == 'ce':
+            mt.npo(ghd_info)
+        elif arg == '?':
+            usage()
         else:
-            sys.exit("Bad parameter {}.".format(arg))
+            usage(arg)
         cmd_count += 1
 
 def process_result(output_text):
