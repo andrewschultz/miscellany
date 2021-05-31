@@ -3,7 +3,9 @@ import shlex
 
 def bill_james(deficit, game_time, has_possession):
     print("With{} possession:".format('' if has_possession else 'out'))
-    coefficient = deficit - 3.5 + has_possession
+    coefficient = abs(deficit) - 3.5 + has_possession
+    if coefficient < 0:
+        coefficient = 0
     factor = coefficient ** 2 / game_time
     mins = "{}:{:02d}".format(game_time // 60, game_time % 60)
     print("{:.4f} % safe at {}".format(factor * 100, mins))
@@ -11,7 +13,7 @@ def bill_james(deficit, game_time, has_possession):
     print("Safe game_time: {}:{:02d}".format(deficit_safe_when//60, deficit_safe_when % 60))
 
 def read_params(my_ary):
-    ary_idx = 1
+    ary_idx = 0
     deficit = 0
     game_time = 0
     our_score = 0
@@ -38,11 +40,13 @@ def read_params(my_ary):
         elif ':' in arg:
             if arg[0] == ':':
                 arg = '0' + arg
+            elif arg[-1] == ':':
+                arg = arg + '0'
             if game_time:
                 sys.exit("Already have game_time.")
             try:
-                scores = arg.split(":")
-                game_time = int(scores[0]) * 60 + int(scores[1])
+                time_ary = arg.split(":")
+                game_time = int(time_ary[0]) * 60 + int(time_ary[1])
             except:
                 sys.exit("Bad game_time format.")
         else:
@@ -64,7 +68,7 @@ if 'i' not in sys.argv[1:]:
 
 if len(sys.argv) > 2:
     temp_ary = sys.argv.remove('i')
-    read_params(temp_ary)
+    read_params(temp_ary[1:])
 
 while 1:
     i = input("Input lead to evaluate >")
