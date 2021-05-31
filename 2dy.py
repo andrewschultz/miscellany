@@ -261,12 +261,10 @@ def get_init_sections():
                 print("WARNING: unidentified line (no valid header or CSV of sections {}".format(line_count))
                 continue
             if line.startswith("defaults:"):
-                ary = line.lower().strip().split(",")
-                if len(sect_ary):
+                sect_dict = mt.quick_dict_from_line(line)
+                if len(sect_dict):
                     print("Adding to array of blank sections on line {}".format(line_count))
-                for q in ary:
-                    ary2 = q.split('=')
-                    sect_ary.append(ary2[0])
+                    sect_ary.extend(sect_dict)
                 continue
             print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
     sect_ary_2 = sorted(sect_ary, key=lambda x:(x == 'nam', x))
