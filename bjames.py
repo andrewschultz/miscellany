@@ -17,6 +17,8 @@ def bill_james(deficit, game_time, has_possession):
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
+    if arg.endswith('h'):
+        arg = arg[:-1] + ":30"
     if '-' in arg:
         if deficit:
             sys.exit("Already have deficit.")
