@@ -343,7 +343,7 @@ cfg_to_data = cfg_data_split
 
 def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', use_ints = False, delete_before_colon = True, need_colon = True):
     my_line = my_line.strip()
-    if need_colon and ':' not in line:
+    if need_colon and ':' not in my_line:
         print("WARNING no colon in line", my_line, "so skipping, since we specified we need it.")
         return
     if delete_before_colon:
@@ -458,7 +458,7 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = 
     if not os.path.exists(my_file):
         print("WARNING:", my_file, "does not exist.")
     elif follow_open_link:
-        my_file = follow_link(my_file)
+        my_file = os.path.realpath(my_file)
         if not os.path.exists(my_file):
             print("WARNING: linked-to file", my_file, "does not exist.")
     if os.path.exists(my_file):
@@ -628,22 +628,11 @@ def print_ranges_of(x, default_thing = "numbers"): # given a list of integers, t
         the_string += "-{}".format(last_in_range)
     print("{} {} in {} ranges:".format(len(x), default_thing, num_ranges), the_string.strip())
 
-def follow_link(x):
-    temp = x
-    count = 0
-    while os.path.islink(temp):
-        if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
-        temp = os.readlink(temp)
-        count += 1
-    if temp.startswith("\\\\?\\"):
-        temp = temp[4:]
-    return temp
-
-fl = follow_link
-
-def last_mod(x):
-    x = follow_link(x)
-    return os.stat(x).st_mtime
+def last_mod(x, follow_links = True):
+    if follow_links:
+        return os.stat(os.path.abspath(x)).st_mtime
+    else:
+        return os.lstat(os.path.abspath(x)).st_mtime
 
 def add_quotes_if_space(x):
     if x.startswith('"'): return x
@@ -819,6 +808,18 @@ def isAdmin():
     return is_admin
 
 is_admin = admin = isadmin = Admin = isAdmin
+
+def follow_link(x):
+    sys.stderr.write("WARNING: follow_link is deprecated in favor of os.path.realpath.")
+    temp = x
+    count = 0
+    while os.path.islink(temp):
+        if count == 11: sys.exit("Failed to resolve symlink: {}".format(temp))
+        temp = os.readlink(temp)
+        count += 1
+    if temp.startswith("\\\\?\\"):
+        temp = temp[4:]
+    return temp
 
 #####################################################basic main-program checking stuff
 
