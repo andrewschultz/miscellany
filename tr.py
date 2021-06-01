@@ -82,7 +82,7 @@ for x in my_triz:
     if not os.path.exists(tf):
         print("Uh oh. {0} is not a valid path for {1}.".format(tf, x))
         continue
-    tf2 = mt.follow_link(tf)
+    tf2 = os.path.realpath(tf)
     if to_clipboard:
         if tf == tf2 or orig_name:
             clip_text += tf

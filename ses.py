@@ -187,7 +187,7 @@ for elem in e.iter('File'):
         continue
     else:
         named += 1
-    q = mt.follow_link(t).lower()
+    q = os.path.realpath(t).lower()
     if q in slink:
         link_warnings += 1
         print("LINK WARNING: {} file and symbolic link both in notepad:".format(link_warnings))
