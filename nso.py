@@ -127,16 +127,10 @@ def show_nonblanks(file_name):
             else: ideas += 1
     print("Ideas:", ideas, "Comments to shift:", comments_to_shift, "Comments:", comments, "Blank lines:", blanks, "Ready to shift:", ready_to, "from-to-del", froms, "Total non-header:", total)
 
-def copy_smart_ideas(pro):
-    notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
-    notes_out = os.path.join(i7.proj2dir(pro), "notes-temp.txt")
-    hdr_tmp = os.path.join(i7.extdir, "temp.i7x")
-    hdr_to_change = alpha_file(pro)
+def get_markers_and_name(my_hdr):
     markers = defaultdict(int)
     full_name = defaultdict(str)
-    bail = False
-    to_insert = defaultdict(str)
-    with open(hdr_to_change) as file:
+    with open(my_hdr) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("table of") and "[" in line and "\t" not in line:
                 x = re.findall("\[([^\]]*)\]", line)
@@ -148,6 +142,18 @@ def copy_smart_ideas(pro):
                     else:
                         markers[y] = line_count
                         full_name[y] = re.sub(" *\[.*", "", line.lower().strip())
+    return (markers, full_name)
+
+def copy_smart_ideas(pro):
+    notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
+    notes_out = os.path.join(i7.proj2dir(pro), "notes-temp.txt")
+    hdr_tmp = os.path.join(i7.extdir, "temp.i7x")
+    hdr_to_change = alpha_file(pro)
+    bail = False
+    to_insert = defaultdict(str)
+    markers = defaultdict(int)
+    full_name = defaultdict(str)
+    (markers, full_name) = get_markers_and_name(hdr_to_change)
     if bail: sys.exit()
     msort = sorted(markers)
     for y in range(0, len(msort)):
@@ -265,6 +271,38 @@ def move_old_ideas(pro):
         print("No ##'s found")
     os.remove(notes_temp)
 
+def ignore_input(my_line):
+    ml = my_line.strip().lower()
+    if '#' in ml:
+        ml = re.sub("#.*", "", ml).strip()
+    if not ml:
+        return True
+
+def input_notefile_changes(this_proj):
+    markers = defaultdict(int)
+    full_name = defaultdict(str)
+    groupings = defaultdict(list)
+    (markers, full_name) = get_markers_and_name(alpha_file(this_proj))
+    notes_in = i7.notes_file(this_proj)
+    notes_out = i7.notes_file(this_proj, "old")
+    notes_temp = i7.notes_file(this_proj, "temp")
+    for f in full_name:
+        groupings[full_name[f]].append(f)
+    count = 0
+    for q in groupings:
+        print("{} {:30s} {}".format(count if count < 10 else chr(ord('a') - 10 + count), q, ', '.join(groupings[q])))
+        count += 1
+    if not os.path.exists(notes_in):
+        sys.exit("Can't find {} for project {}. Bailing.".format(notes_in, this_proj))
+    temp_out = open(notes_temp, "w")
+    with open(notes_in) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if ignore_input(line):
+                temp_out.write(line)
+                continue
+            else:
+                raw = input("What to do with >> {}".format(line.strip()))
+    sys.exit()
 
 cmd_proj = ""
 default_proj = i7.dir2proj()
@@ -321,6 +359,10 @@ if not cmd_proj:
     if not i7.proj_exp(my_proj, return_nonblank = False):
         sys.exit("Uh oh. Default project {0} turned up nothing. Bailing.".format(my_proj))
 else: my_proj = cmd_proj
+
+if input_changes:
+    input_notefile_changes(my_proj)
+    sys.exit()
 
 if extract_table_subs:
     extract_table_from_file(my_proj, print_and_bail = True)
