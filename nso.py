@@ -9,7 +9,7 @@
 #
 # cs = copy smart
 # al = alphabetically sort afterwards
-# nc = noted-copy, in other words, show notes in a separate popup. Each OK runs and refreshes the popup.
+# cn/nc = noted-copy, in other words, show notes in a separate popup. Each OK runs and refreshes the popup.
 #
 
 import filecmp
@@ -20,7 +20,7 @@ import mytools as mt
 import os
 import i7
 import sys
-import win32ui
+import win32ui # note I usually used ctypes before but this fit better. I want to keep this comment in case I forget where to look in the future and search for ctypes.
 import win32con
 
 display_changes = False
@@ -29,6 +29,7 @@ copy_smart = True
 copy_with_notes_reference = False
 alphabetize_after = False
 extract_table_subs = False
+input_changes = False
 
 def usage(my_text="USAGE PRINTOUT"):
     print(my_text)
@@ -38,7 +39,7 @@ def usage(my_text="USAGE PRINTOUT"):
     print("dc = display changes, ndc/dcn = don't.")
     print("-al/-alf alphabetizes the tables after, nalf = don't. Alphabetization is off by default.")
     print("x = extract table substitution strings")
-    exit()
+    sys.exit()
 
 def alpha_header(my_proj):
     my_proj = i7.proj_exp(my_proj)
@@ -230,9 +231,9 @@ def copy_smart_ideas(pro):
     if display_changes: sys.exit()
 
 def move_old_ideas(pro):
-    notes_in = os.path.join(i7.proj2dir(pro), "notes.txt")
-    notes_out = os.path.join(i7.proj2dir(pro), "notes-old.txt")
-    notes_temp = os.path.join(i7.proj2dir(pro), "notes-temp.txt")
+    notes_in = i7.notes_file(pro)
+    notes_out = i7.notes_file(pro, "old")
+    notes_temp = i7.notes_file(pro, "temp")
     no = open(notes_out, "a")
     nt = open(notes_temp, "w")
     got_one = 0
@@ -303,6 +304,8 @@ while cmd_count < len(sys.argv):
         alphabetize_after = False
     elif arg == 'dcn' or arg == 'ndc' or arg == 'nc' or arg == 'nd':
         display_changes = False
+    elif arg == 'i':
+        input_changes = True
     elif arg == '?':
         usage()
     else:
@@ -321,7 +324,7 @@ else: my_proj = cmd_proj
 
 if extract_table_subs:
     extract_table_from_file(my_proj, print_and_bail = True)
-    exit()
+    sys.exit()
 
 if copy_with_notes_reference:
     main_message = extract_table_from_file(my_proj)
@@ -331,8 +334,6 @@ if copy_with_notes_reference:
             copy_smart_ideas(my_proj)
         if temp == win32con.IDCANCEL:
             sys.exit()
-    exit()
-
     sys.exit()
 
 if copy_smart or copy_to_old:
