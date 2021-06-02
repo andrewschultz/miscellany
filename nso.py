@@ -31,6 +31,10 @@ alphabetize_after = False
 extract_table_subs = False
 input_changes = False
 
+nso_table_file = "c:/writing/scripts/nso.txt"
+nso_to_include = defaultdict(list)
+nso_to_exclude = defaultdict(list)
+
 def usage(my_text="USAGE PRINTOUT"):
     print(my_text)
     print("=" * 60)
@@ -193,7 +197,7 @@ def copy_smart_ideas(pro):
                     last_header = uh
                 else:
                     if "#idea" not in line.lower():
-                        print("Unrecognized colon starting with", left_bit, "at line", line_count, "full(er) text", line.strip()[:50])
+                        print("Unrecognized colon starting with", left_bit, "at line", line_count, " (#idea to negate this warning) full(er) text", line.strip()[:50])
                 # print("Looking for uniques in {0}({1}): {2}".format(line.strip(), uh, print_this_line))
             if print_this_line: out_stream.write(line)
     out_stream.close()
@@ -278,30 +282,130 @@ def ignore_input(my_line):
     if not ml:
         return True
 
+def to_auto(my_int):
+    if my_int < 10:
+        return chr(ord('0') + my_int)
+    if my_int < 36:
+        return chr(ord('a') - 10 + my_int)
+    if my_int < 62:
+        return chr(ord('A') - 36 + my_int)
+
+def read_nso_include_exclude():
+    both_found_for_project = False
+    cur_project = ""
+    with open(nso_table_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('#'): continue
+            if line.startswith(';'): break
+            if not line.strip(): continue
+            if ':' not in line:
+                print("Line", line_count, "does not have colon.")
+                continue
+            (prefix, data) = mt.cfg_data_split(line)
+            if prefix == 'exclude':
+                if cur_project in nso_to_include:
+                    both_found_for_project = True
+                    print("Exclude/Include mixed at line", line_count)
+                nso_to_exclude[cur_project].extend(data.split(','))
+            elif prefix == 'include':
+                if cur_project in nso_to_exclude:
+                    both_found_for_project = True
+                    print("Exclude/Include mixed at line", line_count)
+                nso_to_include[cur_project].extend(data.split(','))
+            elif prefix == 'project':
+                cur_project = data
+                print("Current project", data)
+            else:
+                print("Unknown prefix {} line {}.".format(prefix, line_count))
+    if both_found_for_project:
+        sys.exit("Fix both-found errors before continuing.")
+
+def show_menu(keystrokes):
+    for k in keystrokes:
+        print(k, keystrokes[k])
+
 def input_notefile_changes(this_proj):
+    read_nso_include_exclude()
     markers = defaultdict(int)
     full_name = defaultdict(str)
     groupings = defaultdict(list)
-    (markers, full_name) = get_markers_and_name(alpha_file(this_proj))
+    keystrokes = defaultdict(str)
+    add_from_ui = defaultdict(str)
+    alpha_in = alpha_file(this_proj)
+    alpha_out = alpha_file(this_proj) + "2"    
+    (markers, full_name) = get_markers_and_name(alpha_in)
     notes_in = i7.notes_file(this_proj)
-    notes_out = i7.notes_file(this_proj, "old")
-    notes_temp = i7.notes_file(this_proj, "temp")
+    notes_out = i7.notes_file(this_proj, "temp")
+    notes_old = i7.notes_file(this_proj, "old")
     for f in full_name:
         groupings[full_name[f]].append(f)
     count = 0
     for q in groupings:
-        print("{} {:30s} {}".format(count if count < 10 else chr(ord('a') - 10 + count), q, ', '.join(groupings[q])))
+        if this_proj in nso_to_exclude:
+            if q in nso_to_exclude[this_proj]:
+                continue
+        elif this_proj in nso_to_include:
+            if q not in nso_to_include[this_proj]:
+                continue
+        keystrokes[to_auto(count)] = q
         count += 1
     if not os.path.exists(notes_in):
         sys.exit("Can't find {} for project {}. Bailing.".format(notes_in, this_proj))
-    temp_out = open(notes_temp, "w")
+    temp_out = open(notes_out, "w")
+    done_flag_set = False
     with open(notes_in) as file:
         for (line_count, line) in enumerate (file, 1):
-            if ignore_input(line):
+            if done_flag_set or ignore_input(line):
                 temp_out.write(line)
                 continue
             else:
-                raw = input("What to do with >> {}".format(line.strip()))
+                while 1:
+                    raw = input("What to do with {:4d} >> {}".format(line_count, line.strip()))
+                    if raw == '-':
+                        show_menu(keystrokes)
+                        continue
+                    if raw in keystrokes or raw == "\\" or not raw:
+                        break
+                    print("Didn't recognize", raw, " -- try - to show menu.")
+                if raw in keystrokes:
+                    add_from_ui[keystrokes[raw]] += line
+                    continue
+                temp_out.write(line)
+                if raw == "\\":
+                    print("OK, fast-forwarding the rest")
+                    done_flag_set = True
+                    continue
+                if not raw:
+                    print("OK, skipping")
+                else:
+                    print("Warning unrecognized character")
+    temp_out.close()
+    imminent_dump = False
+    fout = open(alpha_out, "w", newline="\n")
+    with open(alpha_in) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if not imminent_dump and not line.lower().startswith("table of"):
+                fout.write(line)
+                continue
+            if imminent_dump:
+                if line.startswith('"'):
+                    fout.write(add_from_ui[this_table])
+                    add_from_ui.pop(this_table)
+                    imminent_dump = False
+                fout.write(line)
+                continue
+            for x in add_from_ui:
+                if line.startswith(x):
+                    imminent_dump = True
+                    this_table = x
+                    continue
+            fout.write(line)
+    fout.close()
+    if len(add_from_ui):
+        print("Oh no: failed to delete:", list(add_from_ui))
+        sys.exit("Terminating.")
+    mt.wm(alpha_in, alpha_out)
+    mt.wm(notes_in, notes_out)
     sys.exit()
 
 cmd_proj = ""
