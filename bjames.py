@@ -53,6 +53,10 @@ def read_params(my_ary):
             sys.exit("Need a score or deficit, then time remaining. For under a minute you can use : not 0:.")
         ary_idx += 1
 
+    if not game_time:
+        print("You need to input a game time.")
+        return
+
     bill_james(deficit, game_time, True)
     print()
     bill_james(deficit, game_time, False)

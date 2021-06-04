@@ -296,7 +296,7 @@ def mister(a, my_file, do_standard):
                         continue
                     if ll != test_note:
                         if ll in need_test.keys():
-                            if found[ll] is False:
+                            if not found[ll]:
                                 err_count += 1
                                 if print_output:
                                     print("WARNING: potential false positive mistake {} {}. Insert #not a mistake if it is a legitimate command or #mistake test (or define [def=special test]) in case it is a duplicate command.".format(fi, line_count))

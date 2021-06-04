@@ -9,10 +9,11 @@ import os
 import mytools as mt
 from collections import defaultdict
 import subprocess
+import pendulum
 
 days_back = 0
 
-this_header = "Daily Github commits"
+this_header = "Daily Github commits "
 total_count = 0
 
 windows_popup_box = False
@@ -88,6 +89,8 @@ os.chdir(base_dir)
 
 read_cfg_file()
 read_cmd_line()
+
+this_header += pendulum.today().subtract(days=days_back).format("YYYY-MM-DD")
 
 for x in projects:
     for y in projects[x]:
