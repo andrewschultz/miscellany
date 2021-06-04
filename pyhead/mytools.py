@@ -327,7 +327,7 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE):
+def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE, array_splitter = ''):
     if strip_line:
         x = x.strip()
     if dash_to_underscore == DASH_TO_UNDERSCORE:
@@ -336,7 +336,7 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
         x = x.replace("_", "-")
     ary = re.split("[{}]".format(delimiter), x, 1)
     if to_tuple:
-        return(ary[0], ary[1])
+        return(ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
     return ary # (prefix, data) = general usage in programs
 
 cfg_to_data = cfg_data_split
@@ -714,11 +714,15 @@ def comment_combine(my_lines, cr_at_end = True):
 comcom = comment_combine
 
 def zap_comment(my_line, zap_spaces_before = True):
-    substring = "#.*"
-    if zap_spaces_before: substring = ' *' + substring
-    return re.sub(substring, "", my_line)
+    temp = re.sub("#.*", "", my_line)
+    if zap_spaces_before:
+        temp = temp.strip()
+    return temp
 
 no_comment = no_comments = zap_comments = zap_comment
+
+def is_comment_or_blank(my_line):
+    return not zap_comment(my_line).strip()
 
 def null_of(null_truth_state):
     return subprocess.DEVNULL if null_truth_state else None
