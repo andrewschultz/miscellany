@@ -67,6 +67,8 @@ read_most_recent = False
 
 bail_on_warnings = True
 
+ask_to_copy_back = False
+
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
 raw_keep_dir = "c:/coding/perl/proj/from_keep"
@@ -114,8 +116,9 @@ def usage(my_arg):
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print("-bu bails after unchanged. Used for testing.")
     print("-n1/1w toggles one-word names in lines.")
-    print("-v/-q is verbose/quiet")
-    print("-rd# means go back # daily files, default is 1, -rf looks at files in current directory")
+    print("-v/-q is verbose/quiet.")
+    print("-rd# means go back # daily files, default is 1, -rf looks at files in current directory.")
+    print("  adding Q to rd/ld allows you to say YES to changes.")
     print()
     print("You can also list files you wish to look up.")
     exit()
@@ -567,6 +570,10 @@ def sort_raw(raw_long):
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
+            if ask_to_copy_back:
+                x = input("Copy back? (Y does, anything else doesn't)")
+                if x.strip().lower()[0] == 'y':
+                    copy(temp_out_file, raw_long)
             if only_one:
                 if open_raw:
                     os.system(raw_long)
@@ -665,9 +672,25 @@ while cmd_count < len(sys.argv):
     elif arg == 'ld':
         read_most_recent = True
         dir_search_flag = daily.ROOT
+    elif mt.alpha_match(arg, 'ldc'):
+        read_most_recent = True
+        dir_search_flag = daily.ROOT
+        test_no_copy = False
+    elif mt.alpha_match(arg, 'ldq'):
+        read_most_recent = True
+        dir_search_flag = daily.ROOT
+        ask_to_copy_back = True
     elif arg == 'rd':
         read_most_recent = True
         dir_search_flag = daily.TOPROC
+    elif mt.alpha_match(arg, 'rdc'):
+        read_most_recent = True
+        dir_search_flag = daily.TOPROC
+        test_no_copy = False
+    elif mt.alpha_match(arg, 'rdq'):
+        read_most_recent = True
+        dir_search_flag = daily.TOPROC
+        ask_to_copy_back = True
     elif mt.alpha_match(arg, 'lwd'):
         read_most_recent = True
         dir_search_flag = daily.ROOT
