@@ -84,8 +84,11 @@ def get_all_ideas(my_file, my_regex):
     return my_dict
 
 def glom_modification_of(my_idea, alphabetize_this):
+    replace_no_space = ",.!':;"
     my_idea = my_idea.lower()
-    my_idea = my_idea.replace(',', '').replace('.', '').replace('-', ' ')
+    for r in replace_no_space:
+        my_idea = my_idea.replace(r, '')
+    my_idea = my_idea.replace('-', ' ')
     word_array = my_idea.split(' ')
     if alphabetize_this:
         word_array = sorted(word_array)
