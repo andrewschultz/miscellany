@@ -455,7 +455,7 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
-def gh_src(x, give_source = True):
+def gh_src(x = os.getcwd(), give_source = True):
     temp = proj_exp(x, to_github = True)
     retval = os.path.join(gh_dir, temp)
     if give_source: retval = os.path.join(retval, "story.ni")
@@ -500,7 +500,7 @@ uuid = uuid_file = uid_file
 def auto_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
 
-def main_src(x, return_nonexistent = True):
+def main_src(x = os.getcwd(), return_nonexistent = True):
     main_path = os.path.normpath(os.path.join(sdir(x), "story.ni"))
     if return_nonexistent or os.path.exists(main_path):
         return main_path
@@ -551,8 +551,9 @@ def invis_file(x, warning=False):
     if warning: print("WARNING no invisiclues file for", x)
     return ""
 
-def notes_file(x):
-    return sdir(x) + "/" + "notes.txt"
+def notes_file(x, suffix=''):
+    notes_local = "notes{}.txt".format('-' + suffix if suffix else '')
+    return os.path.join(sdir(x), notes_local)
 
 def walkthrough_file(x, extra_string = ""):
     if extra_string == 'base' or extra_string == 'wbase':
