@@ -111,6 +111,12 @@ def only_certain_letters(letter_list, string_to_search):
         return False
     return True
 
+def end_number_of(x):
+    match_list = re.match('.*?([0-9]+)$', x)
+    if not match_list:
+        return 0
+    return int(match_list.group(1))
+
 def is_basename(a):
     return not ('/' in a or '\\' in a)
 
@@ -339,7 +345,7 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
         return(ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
     return ary # (prefix, data) = general usage in programs
 
-cfg_to_data = cfg_data_split
+cfg_split = cfg_to_data = cfg_data_split
 
 def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', use_ints = False, delete_before_colon = True, need_colon = True):
     my_line = my_line.strip()
