@@ -104,17 +104,18 @@ block_move = defaultdict(set)
 
 sect_move = defaultdict(lambda: defaultdict(int))
 
-def usage(my_arg):
+def usage(my_arg = ''):
     if (my_arg):
         print("Bad argument", my_arg)
     print("=" * 50)
     print("DFF usage:")
     print()
-    print("-a/da, -d/dr, -k/-dk specifies dAily, google Drive or google Keep downloads. Default is daily. dAily is useful at the end of each week.")
+    print("-a/da, -d/dr, -k/-dk specifies d<A>ily, Google D<R>ive or Google <K>eep downloads. Default is daily. D<A>ily is useful at the end of each week.")
     print("co/te toggles the test-or-copy flag. 1a copies, then tests the next file in the directory.")
     print("-o/-fo/-of/-f only lists files.")
     print("-p/-sp forces sort-proc, meaning we sort a processed file. This is usually done only for daily files.")
     print("-bu bails after unchanged. Used for testing.")
+    print("m(in)= and ma(x)= set min and max ranges.")
     print("-n1/1w toggles one-word names in lines.")
     print("-v/-q is verbose/quiet.")
     print("-rd# means go back # daily files, default is 1, -rf looks at files in current directory.")
@@ -300,7 +301,7 @@ def is_spoonerism_rated(l):
             return False
         if ' ' in dig[0]:
             if mt.uncommented_length(l) > len(double_digits) * 60:
-                print("NOTE: possible spoonerism check for", l)
+                print("NOTE: possible but very unlikely spoonerism check for", l)
                 return False # this prevents odd cases where I just throw out the number 77
             return True
     return False
@@ -612,8 +613,9 @@ daily_files_back = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
+    num_of = mt.end_number_of(arg)
     if arg[0] == 'f' and arg[1:].isdigit():
-        max_files = int(arg[1:])
+        max_files = num_of
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
     elif arg == 'k' or arg == 'dk':
@@ -705,18 +707,18 @@ while cmd_count < len(sys.argv):
         read_most_recent = True
         what_to_sort = daily.DAILIES
         dir_search_flag = daily.TOPROC
-        daily_files_back = int(arg[2:])
+        daily_files_back = num_of
     elif arg[:2] == 'rf' and arg[2:].isdigit():
         read_most_recent = True
         dir_search_flag = daily.TOPROC
-        daily_files_back = int(arg[2:])
+        daily_files_back = num_of
     elif arg == 'fc':
         force_copy = True
-    elif arg[0:2] == 'm=':
-        my_min_file = arg[2:]
+    elif arg[:2] == 'm=' or arg[:3] == 'mi=' or arg[:3] == 'mn=' or arg[:4] == 'min=':
+        my_min_file = str(num_of)
         print("Minfile is now", my_min_file)
-    elif arg[0:2] == 'ma=':
-        my_max_file = arg[2:]
+    elif arg[0:2] == 'ma=' or arg[0:2] == 'max=':
+        my_max_file = str(num_of)
         print("Maxfile is now", my_max_file)
     elif arg == '?':
         usage()
