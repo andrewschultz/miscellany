@@ -1130,6 +1130,16 @@ def flat_header_list(my_file):
                     my_list.append(temp)
     return my_list
 
+def recursive_header_list(my_file, my_current_list = []):
+    temp = flat_header_list(my_file)
+    for x in temp:
+        x = os.path.realpath(x)
+        if x in my_current_list:
+            continue
+        my_current_list.append(x)
+        my_current_list = recursive_header_list(x, my_current_list)
+    return my_current_list
+
 #put unit tests for new functions here, then run i7.py
 #move them where needed for future reference
 
