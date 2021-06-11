@@ -1114,6 +1114,22 @@ def if_oneof_crude_convert(text_string):
         return_array.extend(all_oneof_fragments(x))
     return return_array
 
+def header_file_from_line(my_line):
+    temp = my_line.replace('.', '').split()
+    my_dir = os.path.join(ext_root, "{} {}".format(temp[-2], temp[-1]))
+    my_file = ' '.join(temp[1:-3]) + ".i7x"
+    return os.path.join(my_dir, my_file)
+
+def flat_header_list(my_file):
+    my_list = []
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("include") and " by " in line:
+                temp = header_file_from_line(line)
+                if temp not in my_list:
+                    my_list.append(temp)
+    return my_list
+
 #put unit tests for new functions here, then run i7.py
 #move them where needed for future reference
 
