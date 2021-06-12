@@ -72,16 +72,19 @@ verbose = False
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
 def find_in_one_checkfile(my_string, f):
+    base_name = os.path.basename(f)
     with open(f) as file:
         for (line_count, line) in enumerate (file, 1):
             if my_string in line.lower():
-                mt.npo(f, line_count)
+                print("Found instance of <<{}>> at line {} of {}.".format(my_string, line_count, base_name))
+                mt.add_postopen(f, line_count)
     return
 
 def find_in_checkfiles(my_string):
     for x in [check_file, check_private, xtra_file]:
         find_in_one_checkfile(my_string, x)
-    print("Nothing found.")
+    mt.postopen()
+    print("Nothing found for <<{}>>.".format(my_string))
     exit()
 
 def is_time(t, bail = False):
@@ -451,7 +454,7 @@ while count < len(sys.argv):
         print_bookmarks = True
     elif arg == 'v':
         verbose = True
-    elif arg[:2] == 'f:':
+    elif re.search('^[fs][:=]', arg):
         find_in_checkfiles(arg[2:])
     elif arg == '?':
         usage()
