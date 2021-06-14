@@ -827,6 +827,12 @@ def isAdmin():
 
 is_admin = admin = isadmin = Admin = isAdmin
 
+def has_toproc_duplicate(file_name):
+    file_full = os.path.realpath(file_name)
+    q = os.path.split(file_full)
+    q2 = os.path.join(q[0], 'to-proc', q[1])
+    return os.path.exists(q2)
+
 def follow_link(x):
     sys.stderr.write("WARNING: follow_link is deprecated in favor of os.path.realpath.")
     temp = x
