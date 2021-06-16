@@ -636,6 +636,8 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
                 x2 = re.sub(" Materials", "", a, re.IGNORECASE)
         if not x2:
             sys.stderr.write("WARNING: {} should've mapped to a project but didn't.".format(x))
+    elif 'github' in ary and ary.index('github') < len(ary) - 1:
+        x2 = ary[ary.index('github') + 1]
     elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
         for a in ary:
             if ".inform" in a:
@@ -646,9 +648,6 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
                 x2 = i7x[a.lower()]
         if not x2 and not x:
             sys.stderr.write("WARNING: {} should've mapped to a project but didn't.\n".format(x))
-    else:
-        if 'github' in ary and ary.index('github') < len(ary) - 1:
-            x2 = ary[ary.index('github') + 1]
     x2 = x2.lower()
     if x2 in i7xr: # in some case, a double-reversal might not work e.g. compound -> pc -> the-problems-compound
         x3 = i7xr[x2]
