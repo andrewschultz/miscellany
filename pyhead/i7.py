@@ -626,7 +626,7 @@ def has_ni(x):
     if os.path.exists(os.path.join(my_proj, "story.ni")): return True
     return False
 
-def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
+def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, return_first_subfind = False):
     x0 = x.lower()
     x2 = ""
     ary = pathlib.PurePath(x).parts
@@ -638,6 +638,11 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True):
             sys.stderr.write("WARNING: {} should've mapped to a project but didn't.".format(x))
     elif 'github' in ary and ary.index('github') < len(ary) - 1:
         x2 = ary[ary.index('github') + 1]
+        for x in range(ary.index('github') + 2, len(ary)):
+            if os.path.exists(os.path.join(pathlib.Path(*ary[:x]), "story.ni")):
+                x2 = ary[x]
+                if return_first_subfind:
+                    break;
     elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
         for a in ary:
             if ".inform" in a:
