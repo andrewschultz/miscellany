@@ -5,6 +5,7 @@ import i7
 import os
 import sys
 import mytools as mt
+import win32com.client
 
 #schtasks /create /f /tn "Test" /tr "\"c:\program files\test.bat\" arg1 'arg 2 with spaces' arg3" /sc Daily /st 00:00
 
@@ -13,6 +14,35 @@ my_files = ''
 my_msg = ''
 
 def delete_tasks_and_batches():
+    scheduler = win32com.client.Dispatch('Schedule.Service')
+    scheduler.Connect()
+
+    folders = [scheduler.GetFolder('\\')]
+
+    TASK_ENUM_HIDDEN = 1
+
+    prefix = "future-gfu-"
+    today_short = pendulum.now().add(days=1).format("MM/DD/YYYY").replace('/', '-')
+
+    delete_and_before = prefix + today_short
+
+    while folders:
+        folder = folders.pop(0)
+        folders += list(folder.GetFolders(0))
+        tasks = list(folder.GetTasks(TASK_ENUM_HIDDEN))
+        for task in tasks:
+            tpl = task.Path.lower()
+            if not 'future-gfu-' in tpl:
+                continue
+            if tpl > delete_and_before:
+                continue
+            del_sch = "schtasks /DELETE /F /TN {}".format(tpl)
+            del_bat = "c:\\writing\\temp\\sched-{}.bat".format(today_short)
+            print("Deleting", del_bat)
+            os.remove(del_bat)
+            print("Task remove command", del_sch)
+            os.system(del_sch)
+
     sys.exit()
 
 def usage():
