@@ -12,6 +12,7 @@ import win32com.client
 cmd_count = 1
 my_files = ''
 my_msg = ''
+days_ahead = 1
 
 def delete_tasks_and_batches():
     scheduler = win32com.client.Dispatch('Schedule.Service')
@@ -61,6 +62,8 @@ while cmd_count < len(sys.argv):
         my_files = sys.argv[cmd_count]
     elif arg == 'd':
         delete_tasks_and_batches()
+    elif arg.isdigit():
+        days_ahead = int(arg)
     else:
         usage()
     cmd_count += 1
@@ -76,7 +79,7 @@ if not my_proj:
 	sys.exit("To run gfu, you need a valid project directory, preferably on github.")
 
 tomorrow = pendulum.now()
-tomorrow = tomorrow.add(days = 1)
+tomorrow = tomorrow.add(days = days_ahead)
 tomorrow_date = tomorrow.format("MM/DD/YYYY")
 
 tomorrow_readable = tomorrow_date.replace("/", "-")
