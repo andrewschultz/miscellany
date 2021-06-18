@@ -150,6 +150,8 @@ def make_time_array(j, k, line_count):
             return
         else:
             hour_array = [my_time(x) for x in q.split(",")]
+    if not hour_array:
+        print("Uh oh, line {} does not define an hour array along with a month or day: {}".format(line_count, j))
     if len(monthday_array):
         for m in monthday_array:
             for h in hour_array:
@@ -179,10 +181,13 @@ def read_hourly_check(a):
     if show_warnings > -1: print("reading", ab)
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.startswith(";"): break
+            if line.startswith(";"):
+                if line_count < 10:
+                    print("WARNING: {} may have had a semicolon near the top (line {}) for testing/skipping purposes.".format(a, line_count))
+                break
             if line.startswith("#"): continue
             if line.count("|") > 1:
-                print("WARNING too many OR pipes line", line_count, line.strip())
+                print("WARNING too many OR pipes {} line {}: {}".format(ab, line_count, line.strip()))
             if line.startswith("="):
                 bookmark_past = bookmark_string
                 bookmark_string = re.sub("^=*", "", line.lower().strip())
@@ -215,7 +220,7 @@ def read_hourly_check(a):
             line = line.strip()
             if line[0] == '"':
                 line = old_cmd + line[1:]
-                print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, a, line.strip()))
+                print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, ab, line.strip()))
             a1 = line.split("|")
             if len(a1) > 2:
                 if show_warnings: print("WARNING too many variables, can't yet parse {0} line {1} (maybe you want a forward slahsh instead of |):\n    {:2}".format(bn, line_count, line))

@@ -46,6 +46,16 @@ def delete_tasks_and_batches():
 
     sys.exit()
 
+def next_from_batches():
+    currently_ahead = 1
+    while 1:
+        base = pendulum.now().add(days = currently_ahead)
+        base_date = base.format("MM-DD-YYYY")
+        base_file = "c:\\writing\\temp\\sched-{}.bat".format(base_date)
+        if not os.path.exists(base_file):
+            return currently_ahead
+        currently_ahead += 1
+
 def usage():
     print("d to delete stuff. Otherwise, you need entries for commit message and file selection.")
     sys.exit()
@@ -64,6 +74,10 @@ while cmd_count < len(sys.argv):
         delete_tasks_and_batches()
     elif arg.isdigit():
         days_ahead = int(arg)
+    elif arg == 'n':
+        days_ahead = next_from_batches()
+        print("First open day is", days_ahead, "day{} ahead".format(mt.plur(days_ahead)))
+        sys.exit()
     else:
         usage()
     cmd_count += 1
