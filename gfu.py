@@ -1,4 +1,7 @@
-# gfu.py : git commit in the future (12:01 AM the next day)
+# gfu.py : git commit in the future (12:01 AM the next day or day specified)
+#
+# sample usage: gfu.py FILESTUFF "COMMIT MESSAGE"
+#
 
 import pendulum
 import i7
@@ -58,6 +61,8 @@ def next_from_batches():
 
 def usage():
     print("d to delete stuff. Otherwise, you need entries for commit message and file selection.")
+    print("# number adds to a file (#) days ahead, n adds to next open day.")
+    print("EXAMPLE: gfu.py FILESTUFF \"COMMIT MESSAGE\" n <---commits 12:01 AM next available day.")
     sys.exit()
 
 while cmd_count < len(sys.argv):
@@ -77,7 +82,6 @@ while cmd_count < len(sys.argv):
     elif arg == 'n':
         days_ahead = next_from_batches()
         print("First open day is", days_ahead, "day{} ahead".format(mt.plur(days_ahead)))
-        sys.exit()
     else:
         usage()
     cmd_count += 1
