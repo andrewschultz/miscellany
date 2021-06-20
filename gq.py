@@ -489,7 +489,10 @@ while first_loop or user_input:
         for projfile in my_array:
             if not os.path.exists(projfile):
                 if 'story.ni' in projfile:
-                    print("Skipping nonexistent story file for {}, probably due to 'only' parameter.".format(proj))
+                    if proj in i7.i7com:
+                        print("Skipping nonexistent story file for umbrella project {}. We probably don't need one.".format(proj))
+                    else:
+                        print("Skipping nonexistent story file for {}. Maybe we should have one.".format(proj))
                     continue
                 print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
                 continue
@@ -499,7 +502,10 @@ while first_loop or user_input:
         notes_file = i7.notes_file(proj)
         if include_notes:
             if not os.path.exists(notes_file):
-                print("Skipping absent notes file for", proj)
+                if proj in i7.i7com:
+                    print("Skipping absent combo-project notes file for {}. However, we are scanning individual project notes files.".format(proj))
+                else:
+                    print("Skipping absent combo-project notes file for {}. Maybe we should have one?".format(proj))
                 continue
             if i7.inform_short_name(notes_file) in frequencies: # STS files overlap
                 continue
