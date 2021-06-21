@@ -1,5 +1,7 @@
 # gfu.py : git commit in the future (12:01 AM the next day or day specified)
 #
+# No, no, not gfY. gfu. Git future.
+#
 # sample usage: gfu.py FILESTUFF "COMMIT MESSAGE"
 #
 
@@ -16,6 +18,8 @@ cmd_count = 1
 my_files = ''
 my_msg = ''
 days_ahead = 1
+
+trim_files = True
 
 def delete_tasks_and_batches():
     scheduler = win32com.client.Dispatch('Schedule.Service')
@@ -77,6 +81,10 @@ while cmd_count < len(sys.argv):
         my_files = sys.argv[cmd_count]
     elif arg == 'd':
         delete_tasks_and_batches()
+    elif arg == 't':
+        trim_files = True
+    elif arg in ( 'nt', 'tn' ):
+        trim_files = False
     elif arg.isdigit():
         days_ahead = int(arg)
     elif arg == 'n':
@@ -117,6 +125,14 @@ f.write("echo GIT PUSH on your own time, especially if experimenting with this s
 f.close()
 
 system_cmd = "schtasks /create /f /tn {} /tr \"{}\" /sc Once /sd {} /st 00:01".format(task_name, batch_file, tomorrow_date)
+
+if trim_files:
+    print("Trimming whitespace...")
+    import subprocess
+    x = subprocess.check_output(['git', 'ls-files', my_files]).decode()
+    file_array = x.strip().split("\n")
+    for f in file_array:
+        os.system("ttrim \"{}\"".format(os.path.realpath(f)))
 
 print(system_cmd)
 os.system(system_cmd)
