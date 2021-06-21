@@ -21,6 +21,11 @@ days_ahead = 1
 
 trim_files = True
 
+def git_wildcard(my_files):
+    import subprocess
+    x = subprocess.check_output(['git', 'ls-files', my_files]).decode()
+    return x.strip().split("\n")
+
 def delete_tasks_and_batches():
     scheduler = win32com.client.Dispatch('Schedule.Service')
     scheduler.Connect()
@@ -63,9 +68,14 @@ def next_from_batches():
             return currently_ahead
         currently_ahead += 1
 
-def usage():
+def usage(my_msg = "Usage for gfu.py"):
+    print("================", my_msg)
     print("d to delete stuff. Otherwise, you need entries for commit message and file selection.")
+    print("nt/t toggles file trimming.")
     print("# number adds to a file (#) days ahead, n adds to next open day.")
+    print()
+    print("The path argument must have . or * in it. The commit must have a space.")
+    print()
     print("EXAMPLE: gfu.py FILESTUFF \"COMMIT MESSAGE\" n <---commits 12:01 AM next available day.")
     sys.exit()
 
@@ -79,6 +89,8 @@ while cmd_count < len(sys.argv):
         if my_files:
             sys.exit("Two file specs")
         my_files = sys.argv[cmd_count]
+        if len(git_wildcard(my_files)) == 0:
+            sys.exit("No wildcard found for file argument{}. Bailing.".format(my_files))
     elif arg == 'd':
         delete_tasks_and_batches()
     elif arg == 't':
@@ -90,8 +102,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'n':
         days_ahead = next_from_batches()
         print("First open day is", days_ahead, "day{} ahead".format(mt.plur(days_ahead)))
-    else:
+    elif arg == '?':
         usage()
+    else:
+        usage("Bad argument {}".format(sys.argv[cmd_count]))
     cmd_count += 1
 
 if not my_files:
@@ -128,9 +142,7 @@ system_cmd = "schtasks /create /f /tn {} /tr \"{}\" /sc Once /sd {} /st 00:01".f
 
 if trim_files:
     print("Trimming whitespace...")
-    import subprocess
-    x = subprocess.check_output(['git', 'ls-files', my_files]).decode()
-    file_array = x.strip().split("\n")
+    x = git_wildcard(my_files)
     for f in file_array:
         os.system("ttrim \"{}\"".format(os.path.realpath(f)))
 
