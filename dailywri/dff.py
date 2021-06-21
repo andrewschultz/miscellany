@@ -95,6 +95,7 @@ prefixes = defaultdict(str)
 delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
 prority_sort = defaultdict(int)
+header_tweak = defaultdict(str)
 
 empty_to_protect = defaultdict(bool)
 protect_yes_force = False
@@ -251,6 +252,22 @@ def read_comment_cfg():
                     prefixes[u] = ary[1]
             elif prefix == 'show-blank-to-blank':
                 show_blank_to_blank = mt.truth_state_of(data)
+            elif prefix == 'tweak':
+                for e in entries:
+                    if '~' not in e:
+                        print("We need a tilde for similarities in TWEAK.")
+                        continue
+                    eary = e.split("~")
+                    if e.count("~") > 1:
+                        print("WARNING line {} has more than one tilde in", e)
+                        any_warnings = True
+                    if eary[0] in header_tweak:
+                        print(eary[0], "already in header tweak keys, line", line_count)
+                        continue
+                    if eary[1] in header_tweak.values():
+                        print(eary[1], "already in header tweak values, line", line_count)
+                        continue
+                    header_tweak[eary[0]] = eary[1]
             else:
                 print("ERROR bad colon/cfg definition line", line_count, ary[0])
                 any_warnings = True
@@ -550,7 +567,7 @@ def sort_raw(raw_long):
     if verbose:
         for x in sorted(sect_move):
             print("To {}: {}".format(x, ', '.join(["{} {}".format(a if a else '<blank>', sect_move[x][a]) for a in sect_move[x]])))
-    for x in sorted(sections, key=lambda x:(priority_sort[x], x)): # note this is a tuple that's used to push current hot projects to the bottom
+    for x in sorted(sections, key=lambda x:(priority_sort[x], header_tweak[x] if x in header_tweak else x)): # note this is a tuple that's used to push current hot projects to the bottom
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
