@@ -1,5 +1,6 @@
 # rz.py: grabs text from rhymezone
 
+import re
 import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
@@ -34,14 +35,14 @@ any_syllables = False
 out_string = ''
 
 for x in chunks:
-    if "1 syllable" in x:
+    if re.search("^[0-9] syllable", x):
         read_syllables = True
         any_syllables = True
     if 'almost rhyme' in x.lower() or 'more ideas' in x.lower():
         read_syllables = False
+    if 'words and phrases that' in x.lower():
+        out_string += "\n" + x
     if read_syllables:
-        if not out_string:
-            out_string = '=========================Rhymes for {}========================='.format(my_word)
         if 'syllable' in x:
             out_string += "\n" + x
         else:
@@ -50,7 +51,9 @@ for x in chunks:
 if not any_syllables:
     sys.exit("Failed to read anything.")
 
+out_string = '=========================Rhymes for {}=========================\n'.format(my_word) + out_string.lstrip()
+
 f = open(rz_out, "w")
-f.write(out_string)
+f.write(out_string.strip())
 f.close()
 npo(rz_out)
