@@ -4,6 +4,10 @@
 #
 # sample usage: gfu.py FILESTUFF "COMMIT MESSAGE"
 #
+# todo:
+#   detect if batch file to be deleted is present
+#   detect if task to be deleted is present
+#
 
 import pendulum
 import i7
@@ -13,6 +17,7 @@ import mytools as mt
 import win32com.client
 import subprocess
 import ctypes
+import re
 
 #schtasks /create /f /tn "Test" /tr "\"c:\program files\test.bat\" arg1 'arg 2 with spaces' arg3" /sc Daily /st 00:00
 
@@ -20,7 +25,9 @@ cmd_count = 1
 my_files = ''
 my_msg = ''
 days_ahead = 1
+zappable = ''
 
+look_for_files = False
 trim_files = True
 
 def git_wildcard(my_files):
@@ -90,31 +97,26 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     (arg_prefix, arg) = mt.prefix_div(arg, '=')
     if arg_prefix == 'l':
+        look_for_files = True
         files_to_check = git_wildcard(sys.argv[cmd_count][2:])
-        staged_array = git_staged()
-        popup_string = ""
-        for x in files_to_check:
-            if x in staged_array:
-                popup_string += "{}\n".format(os.path.abspath(x))
-        if popup_string:
-            popup_string = pendulum.now().format("MM/DD/YYYY HH:mm:ss") + "\n\n" + popup_string
-            messageBox = ctypes.windll.user32.MessageBoxW
-            messageBox(None, popup_string, "Still staged after git commit {}".format(sys.argv[cmd_count][2:]), 0x0)
-        else:
-            print("Everything that should be committed, is.")
-        sys.exit()
     elif ' ' in arg or arg_prefix == 'm':
         if my_msg:
             sys.exit("Two messages.")
         my_msg = sys.argv[cmd_count]
-    elif '.' in arg or '*' or arg_prefix == 'f':
+    elif arg_prefix == 'z':
+        print("Got zappable")
+        zappable = arg
+        if not re.search("^[0-9]{2}-[0-9]{2}-[0-9]{4}$", zappable):
+            print("Zappable file/task must be of the form ##-##-####.")
+            sys.exit()
+    elif '.' in arg or '*' or arg_prefix == 'f': # place arg prefixes above this
         if my_files:
             sys.exit("Two file specs")
         my_files = sys.argv[cmd_count]
         if arg_prefix:
             my_files = my_files[2:]
         if len(git_wildcard(my_files)) == 0:
-            sys.exit("No wildcard found for file argument{}. Bailing.".format(my_files))
+            sys.exit("No wildcard found for file argument {}. Bailing.".format(my_files))
     elif arg == 'd':
         delete_tasks_and_batches()
     elif arg == 't':
@@ -133,6 +135,31 @@ while cmd_count < len(sys.argv):
     else:
         usage("Bad argument {}".format(sys.argv[cmd_count]))
     cmd_count += 1
+
+if look_for_files:
+    staged_array = git_staged()
+    popup_string = ""
+    for x in files_to_check:
+        if x in staged_array:
+            popup_string += "{}\n".format(os.path.abspath(x))
+    if popup_string:
+        popup_string = pendulum.now().format("MM/DD/YYYY HH:mm:ss") + "\n\n" + popup_string
+        messageBox = ctypes.windll.user32.MessageBoxW
+        messageBox(None, popup_string, "Still staged after git commit {}".format(sys.argv[cmd_count][2:]), 0x0)
+    else:
+        print("Everything that should be committed, is.")
+
+if zappable:
+    sched_bat = "c:\\writing\\temp\\sched-{}.bat".format(zappable)
+    print("Zapping {}".format(sched_bat))
+    os.system("erase {}".format(sched_bat))
+    sched_del = "schtasks /DELETE /F /TN {}".format(zappable)
+    print("Zapping task with {}".format(sched_del))
+    os.system(sched_del)
+    sys.exit()
+
+if look_for_files:
+    sys.exit()
 
 if not my_files:
     sys.exit("No files defined.")
@@ -158,6 +185,8 @@ file_array = git_wildcard(my_files)
 
 full_file_array = [os.path.realpath(x) for x in file_array]
 
+zap_cmd = "gfu.py \"l={}\" \"z={}\"".format(my_files, tomorrow_date)
+
 if trim_files:
     print("Trimming whitespace...")
     for f in file_array:
@@ -172,7 +201,8 @@ fout.write("\necho off\n\n")
 fout.write("cd {}\\{}\n\n".format(i7.gh_dir, my_proj))
 fout.write("git add {}\n\n".format(my_files))
 fout.write("git commit -m \"{}\"\n\n".format(my_msg))
-fout.write("gfu.py \"l={}\"\n\n".format(my_files))
+
+fout.write("{}\n\n".format(zap_cmd))
 fout.write("echo GIT PUSH on your own time, especially if experimenting with this script and its products!\n\n")
 
 for f in full_file_array:
@@ -191,4 +221,4 @@ os.system(system_cmd)
 print("To undo this, try:")
 print("    schtasks /DELETE /F /TN {}".format(task_name))
 print("    erase {}".format(batch_file))
-
+print(" or {}".format(zap_cmd))
