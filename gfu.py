@@ -171,21 +171,21 @@ my_proj = i7.dir2proj(empty_if_unmatched = False)
 if not my_proj:
 	sys.exit("To run gfu, you need a valid project directory, preferably on github.")
 
-tomorrow = pendulum.now()
-tomorrow = tomorrow.add(days = days_ahead)
-tomorrow_date = tomorrow.format("MM/DD/YYYY")
+future_date = pendulum.now()
+future_date = future_date.add(days = days_ahead)
+future_date_date = future_date.format("MM/DD/YYYY")
 
-tomorrow_readable = tomorrow_date.replace("/", "-")
+future_date_readable = future_date_date.replace("/", "-")
 #future-add
-task_name = "\"future-gfu-{}\"".format(tomorrow_readable)
+task_name = "\"future-gfu-{}\"".format(future_date_readable)
 
-batch_file = "c:\\writing\\temp\\sched-{}.bat".format(tomorrow_readable)
+batch_file = "c:\\writing\\temp\\sched-{}.bat".format(future_date_readable)
 
 file_array = git_wildcard(my_files)
 
 full_file_array = [os.path.realpath(x) for x in file_array]
 
-zap_cmd = "gfu.py \"l={}\" \"z={}\"".format(my_files, tomorrow_date)
+zap_cmd = "gfu.py \"l={}\" \"z={}\"".format(my_files, future_date_date)
 
 if trim_files:
     print("Trimming whitespace...")
@@ -214,7 +214,7 @@ mt.npo(batch_file)
 
 sys.exit()
 
-system_cmd = "schtasks /create /f /tn {} /tr \"{}\" /sc Once /sd {} /st 00:01".format(task_name, batch_file, tomorrow_date)
+system_cmd = "schtasks /create /f /tn {} /tr \"{}\" /sc Once /sd {} /st 00:01".format(task_name, batch_file, future_date_date)
 
 print(system_cmd)
 os.system(system_cmd)
