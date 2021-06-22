@@ -18,6 +18,7 @@ import win32com.client
 import subprocess
 import ctypes
 import re
+import glob
 
 #schtasks /create /f /tn "Test" /tr "\"c:\program files\test.bat\" arg1 'arg 2 with spaces' arg3" /sc Daily /st 00:00
 
@@ -30,6 +31,9 @@ zappable = ''
 look_for_files = False
 trim_files = True
 
+prefix = "future-gfu-"
+gfu_temp = "c:/writing/temp/gfu-temp.txt"
+
 def git_wildcard(my_files):
     x = subprocess.check_output(['git', 'ls-files', my_files]).decode()
     return [y.strip() for y in x.split("\n") if y.strip()]
@@ -39,7 +43,7 @@ def git_staged():
     x = subprocess.check_output(['git', 'diff', '--name-only', '--cached']).decode()
     return [y.strip() for y in x.split("\n") if y.strip()]
 
-def delete_tasks_and_batches():
+def get_future_tasks(prefix):
     scheduler = win32com.client.Dispatch('Schedule.Service')
     scheduler.Connect()
 
@@ -47,10 +51,7 @@ def delete_tasks_and_batches():
 
     TASK_ENUM_HIDDEN = 1
 
-    prefix = "future-gfu-"
-    today_short = pendulum.now().add(days=1).format("MM/DD/YYYY").replace('/', '-')
-
-    delete_and_before = prefix + today_short
+    my_array = ''
 
     while folders:
         folder = folders.pop(0)
@@ -58,16 +59,27 @@ def delete_tasks_and_batches():
         tasks = list(folder.GetTasks(TASK_ENUM_HIDDEN))
         for task in tasks:
             tpl = task.Path.lower()
-            if not 'future-gfu-' in tpl:
+            if not tpl.startswith(prefix):
                 continue
-            if tpl > delete_and_before:
-                continue
-            del_sch = "schtasks /DELETE /F /TN {}".format(tpl)
-            del_bat = "c:\\writing\\temp\\sched-{}.bat".format(today_short)
+            my_array.append(task)
+
+    return my_array
+
+def delete_tasks_and_batches():
+    today_short = pendulum.now().add(days=1).format("MM/DD/YYYY").replace('/', '-')
+    delete_and_before = prefix + today_short
+    for x in my_future_tasks:
+        if x > delete_and_before:
+            continue
+        del_sch = "schtasks /DELETE /F /TN {}".format(tpl)
+        del_bat = "c:\\writing\\temp\\sched-{}.bat".format(today_short)
+        if os.path.exists(del_bat):
             print("Deleting", del_bat)
             os.remove(del_bat)
-            print("Task remove command", del_sch)
-            os.system(del_sch)
+        else:
+            print("No batch file corresponding to", today_short)
+        print("Task remove command", del_sch)
+        os.system(del_sch)
 
     sys.exit()
 
@@ -81,6 +93,21 @@ def next_from_batches():
             return currently_ahead
         currently_ahead += 1
 
+def print_tasks_and_batches():
+    g1 = sorted(glob.glob("c:/writing/temp/sched-*.bat"))
+    if not len(g1):
+        print("No batch files.")
+    else:
+        print("Batch files")
+        for g in g1:
+            print("    --->", g)
+    if not len(my_future_tasks):
+        print("No scheduled tasks.")
+    else:
+        print("Scheduled tasks")
+        for g in my_future_tasks:
+            print("    --->", g)
+
 def usage(my_msg = "Usage for gfu.py"):
     print("================", my_msg)
     print("d to delete stuff. Otherwise, you need entries for commit message and file selection.")
@@ -93,10 +120,12 @@ def usage(my_msg = "Usage for gfu.py"):
     print("EXAMPLE: gfu.py FILESTUFF \"COMMIT MESSAGE\" n <---commits 12:01 AM next available day.")
     sys.exit()
 
+my_future_tasks = get_future_tasks('future-gfu')
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     (arg_prefix, arg) = mt.prefix_div(arg, '=')
-    if arg_prefix == 'l':
+    if arg_prefix == 'l' and arg:
         look_for_files = True
         files_to_check = git_wildcard(sys.argv[cmd_count][2:])
     elif ' ' in arg or arg_prefix == 'm':
@@ -109,7 +138,7 @@ while cmd_count < len(sys.argv):
         if not re.search("^[0-9]{2}-[0-9]{2}-[0-9]{4}$", zappable):
             print("Zappable file/task must be of the form ##-##-####.")
             sys.exit()
-    elif '.' in arg or '*' or arg_prefix == 'f': # place arg prefixes above this
+    elif '.' in arg or '*' in arg or arg_prefix == 'f': # place arg prefixes above this
         if my_files:
             sys.exit("Two file specs")
         my_files = sys.argv[cmd_count]
@@ -119,6 +148,14 @@ while cmd_count < len(sys.argv):
             sys.exit("No wildcard found for file argument {}. Bailing.".format(my_files))
     elif arg == 'd':
         delete_tasks_and_batches()
+    elif arg in ('l', 'lo'):
+        if arg == 'lo':
+            sys.stdout = open(gfu_temp, "w")
+        print_tasks_and_batches()
+        sys.stdout = sys.__stdout__
+        if arg == 'lo':
+            mt.npo(gfu_temp)
+        sys.exit()
     elif arg == 't':
         trim_files = True
     elif arg in ( 'nt', 'tn' ):
@@ -177,7 +214,7 @@ future_date_date = future_date.format("MM/DD/YYYY")
 
 future_date_readable = future_date_date.replace("/", "-")
 #future-add
-task_name = "\"future-gfu-{}\"".format(future_date_readable)
+task_name = "\"{}-{}\"".format(prefix,future_date_readable)
 
 batch_file = "c:\\writing\\temp\\sched-{}.bat".format(future_date_readable)
 
