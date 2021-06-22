@@ -341,6 +341,8 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
     if dash_to_underscore == UNDERSCORE_TO_DASH:
         x = x.replace("_", "-")
     ary = re.split("[{}]".format(delimiter), x, 1)
+    if strip_line:
+        ary[1] = ary[1].strip()
     if to_tuple:
         return(ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
     return ary # (prefix, data) = general usage in programs
@@ -373,6 +375,12 @@ def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', 
         else:
             temp_dict[y[0]] = y[1]
     return temp_dict
+
+def prefix_div(my_arg, delimiters = ":="):
+    r = re.compile(r'[{}]'.format(delimiters))
+    if not r.search(my_arg):
+        return('', my_arg)
+    return r.split(my_arg, 1)
 
 def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False
@@ -497,7 +505,7 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1, show_unopened = True):
+def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False):
     if len(file_post_list):
         got_yet = defaultdict(bool)
         l = len(file_post_list)
@@ -520,7 +528,7 @@ def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, 
             el = len(file_post_list[x])
             if el > 1:
                 print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
-            npo(x, file_post_list[x][m], bail = False)
+            npo(x, file_post_list[x][m], bail = False, print_full_path = full_file_paths)
             count += 1
             if count < 0:
                 time.sleep(sleep_time)
