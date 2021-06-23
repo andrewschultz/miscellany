@@ -19,6 +19,8 @@ import mytools as mt
 from stat import S_IREAD, S_IRGRP, S_IROTH
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.dates as mdates
+import matplotlib
 
 #init_sect = defaultdict(str)
 
@@ -76,6 +78,8 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     if not this_file:
         g = glob.glob(os.path.join(my_dir, "20*.txt"))
         this_file = os.path.basename(g[-abs(file_index)])
+
+    matplotlib.rcParams['timezone'] = 'US/Central'
 
     os.chdir("c:/writing/daily")
     f = open(stats_file, "r")
@@ -146,7 +150,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
-    plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6))
+    plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
     plt.legend(loc='upper left')
     plt.savefig(my_graph_graphic)
     mt.text_in_browser(my_graph_graphic)
