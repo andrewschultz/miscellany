@@ -8,8 +8,10 @@ from bs4 import BeautifulSoup
 from mytools import npo, nohy
 
 rz_out = "c:/writing/temp/rz-out.txt"
+rz_cache = "c:/writing/temp/rz-cache.txt"
 urls = []
 
+use_cache = False
 to_web = False
 
 cmd_count = 1
@@ -18,35 +20,52 @@ while cmd_count < len(sys.argv):
     arg = nohy(sys.argv[cmd_count])
     if arg == 'w':
         to_web = True
+    elif arg == 'c':
+        use_cache = True
     else:
         urls.append(arg)
     cmd_count += 1
 
-try:
-    my_word = urls[0]
-    url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(my_word)
-except:
-    sys.exit("I need a word to rhyme.")
-
-if len(urls) == 0:
-    sys.exit("No rhymes given.")
-
 if to_web:
-    os.system("start {}".format(url.replace("&", "^&")))
+    for u in urls:
+        url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(u)
+        os.system("start {}".format(url.replace("&", "^&")))
     sys.exit()
 
-html = urlopen(url[0]).read()
-soup = BeautifulSoup(html, features="html.parser")
+if use_cache:
+    f = open(rz_cache, "r")
+    text = f.read()
+    f.close()
+    for x in text.split("\n"):
+        if x.startswith("RhymeZone: "):
+            my_word = ' '.join(x.split(' ')[1:-1])
+            print("Found rhymable word {} in cache.".format(my_word))
+            break
+    if not my_word:
+        print("Warning could not find rhymable word in cache.")
+        my_word = "UNDEFINED"
+else:
+    try:
+        my_word = urls[0]
+        url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(my_word)
+    except:
+        sys.exit("I need a word to rhyme.")
 
-# kill all script and style elements
-for script in soup(["script", "style"]):
-    script.extract()    # rip it out
+    if len(urls) == 0:
+        sys.exit("No rhymes given.")
 
-# get text
-text = soup.get_text()
-f = open(cache_file, "w")
-f.write(text)
-f.close()
+    html = urlopen(url).read()
+    soup = BeautifulSoup(html, features="html.parser")
+
+    # kill all script and style elements
+    for script in soup(["script", "style"]):
+        script.extract()    # rip it out
+
+    # get text
+    text = soup.get_text()
+    f = open(rz_cache, "w")
+    f.write(text)
+    f.close()
 
 # break into lines and remove leading and trailing space on each
 lines = (line.strip() for line in text.splitlines())
