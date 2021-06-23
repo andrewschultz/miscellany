@@ -17,6 +17,13 @@ append_text = False
 
 cmd_count = 1
 
+def usage():
+    print("a appends to the output file. Otherwise, we overwrite it.")
+    print("c uses cache file already present, shortcircuiting other options.")
+    print("o opens output, oc/co opens cache.")
+    print("w opens the URL on the web for rhymes/almost-rhymes.")
+    print("Otherwise, you can type in as many words as you want.")
+    print
 def url_of(this_word, batch_convert = False):
     my_url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(this_word)
     if batch_convert:
@@ -84,6 +91,12 @@ while cmd_count < len(sys.argv):
         use_cache = True
     elif arg == 'a':
         append_text = True
+    elif arg == 'o':
+        npo(rz_out)
+    elif arg in ('co', 'oc'):
+        npo(rz_cache)
+    elif arg == '?':
+        usage()
     else:
         words_to_rhyme.append(arg)
     cmd_count += 1
@@ -104,7 +117,7 @@ if use_cache:
             print("Found rhymable word {} in cache.".format(my_word))
             break
     if not my_word:
-        print("Warning could not find rhymable word in cache.")
+        print("WARNING: could not find rhymable word in cache. Going with UNDEFINED.")
         my_word = "UNDEFINED"
     process_cache(my_word, reset = not append_text)
     sys.exit()
