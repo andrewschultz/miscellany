@@ -9,12 +9,18 @@ from mytools import npo, nohy
 
 rz_out = "c:/writing/temp/rz-out.txt"
 rz_cache = "c:/writing/temp/rz-cache.txt"
-urls = []
+words_to_rhyme = []
 
 use_cache = False
 to_web = False
 
 cmd_count = 1
+
+def url_of(this_word, batch_convert = False):
+    my_url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(this_word)
+    if batch_convert:
+        my_url = my_url.replace("&", "^&")
+    return my_url
 
 while cmd_count < len(sys.argv):
     arg = nohy(sys.argv[cmd_count])
@@ -23,13 +29,13 @@ while cmd_count < len(sys.argv):
     elif arg == 'c':
         use_cache = True
     else:
-        urls.append(arg)
+        words_to_rhyme.append(arg)
     cmd_count += 1
 
 if to_web:
-    for u in urls:
-        url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(u)
-        os.system("start {}".format(url.replace("&", "^&")))
+    for w in words_to_rhyme:
+        url = url_of(w, batch_convert = True)
+        os.system("start {}".format(url))
     sys.exit()
 
 if use_cache:
@@ -46,12 +52,12 @@ if use_cache:
         my_word = "UNDEFINED"
 else:
     try:
-        my_word = urls[0]
-        url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(my_word)
+        my_word = words_to_rhyme[0]
+        url = url_of(my_word)
     except:
         sys.exit("I need a word to rhyme.")
 
-    if len(urls) == 0:
+    if len(words_to_rhyme) == 0:
         sys.exit("No rhymes given.")
 
     html = urlopen(url).read()
