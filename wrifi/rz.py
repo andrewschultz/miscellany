@@ -1,20 +1,41 @@
 # rz.py: grabs text from rhymezone
 
+import os
 import re
 import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-from mytools import npo
+from mytools import npo, nohy
 
 rz_out = "c:/writing/temp/rz-out.txt"
+urls = []
+
+to_web = False
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = nohy(sys.argv[cmd_count])
+    if arg == 'w':
+        to_web = True
+    else:
+        urls.append(arg)
+    cmd_count += 1
 
 try:
-    my_word = sys.argv[1]
+    my_word = urls[0]
     url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(my_word)
 except:
     sys.exit("I need a word to rhyme.")
 
-html = urlopen(url).read()
+if len(urls) == 0:
+    sys.exit("No rhymes given.")
+
+if to_web:
+    os.system("start {}".format(url.replace("&", "^&")))
+    sys.exit()
+
+html = urlopen(url[0]).read()
 soup = BeautifulSoup(html, features="html.parser")
 
 # kill all script and style elements
@@ -23,6 +44,9 @@ for script in soup(["script", "style"]):
 
 # get text
 text = soup.get_text()
+f = open(cache_file, "w")
+f.write(text)
+f.close()
 
 # break into lines and remove leading and trailing space on each
 lines = (line.strip() for line in text.splitlines())
