@@ -101,19 +101,22 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     first_time = pendulum.parse(init_ary[1])
     last_size = int(last_ary[2])
     last_time = pendulum.parse(last_ary[1])
-    print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
+    # print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
 
     for r in relevant_stats:
         ary = r.split("\t")
         my_time = pendulum.parse(ary[1])
-        times.append((my_time - first_time).total_seconds() / 86400)
+        times.append((my_time - pendulum.from_timestamp(0)).total_seconds() / 86400)
         sizes.append(int(ary[2]))
+
+    init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
 
     times = np.array(times)
     sizes = np.array(sizes)
 
     (a, b) = np.polyfit(times, sizes, 1)
-    my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b > 0 else '', b)
+    b0 = b + a * init_from_epoch
+    my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b0 > 0 else '', b0)
 
     my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
 
@@ -134,13 +137,16 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         my_label += "\nAverage from last exp bytes: {:.2f}".format(expected_kb)
 
     if a:
-        my_label += "\nBest-fit exp bytes: {:.2f}/{:.2f}".format(7 * a + b, times[-1] * a + b )
+        my_label += "\nBest-fit exp bytes: {:.2f}/{:.2f}".format(7 * a + b0, times[-1] * a + b)
 
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(15, 12))
+    plt.xticks(rotation=45, ha='right')
     plt.scatter(times, sizes, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
+    plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6))
     plt.legend(loc='upper left')
     plt.savefig(my_graph_graphic)
     mt.text_in_browser(my_graph_graphic)
@@ -371,5 +377,5 @@ for x in range(0, max_days_back):
         os.system(day_file)
         exit()
 
-print("Failed to get a file in the last", max_days_back, "days")
+print("Failed to get a file in the last", max_days_back, "every 6 hours")
 
