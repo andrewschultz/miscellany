@@ -13,6 +13,7 @@ words_to_rhyme = []
 
 use_cache = False
 to_web = False
+append_text = False
 
 cmd_count = 1
 
@@ -81,6 +82,8 @@ while cmd_count < len(sys.argv):
         to_web = True
     elif arg == 'c':
         use_cache = True
+    elif arg == 'a':
+        append_text = True
     else:
         words_to_rhyme.append(arg)
     cmd_count += 1
@@ -103,14 +106,15 @@ if use_cache:
     if not my_word:
         print("Warning could not find rhymable word in cache.")
         my_word = "UNDEFINED"
-    process_cache(my_word, reset = True)
+    process_cache(my_word, reset = not append_text)
     sys.exit()
 
 if len(words_to_rhyme) == 0:
     sys.exit("No rhymes given.")
 
-f = open(rz_out, "w")
-f.close()
+if not append_text:
+    f = open(rz_out, "w")
+    f.close()
 
 for w in words_to_rhyme:
     send_to_cache(w)
