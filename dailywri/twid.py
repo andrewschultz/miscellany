@@ -3,6 +3,8 @@
 #
 # twiddles sections internal to a file
 #
+# mostly for spoonerisms but also for BTP
+#
 
 import mytools as mt
 import sys
@@ -104,6 +106,7 @@ def usage(arg = "general usage"):
 def get_twiddle_mappings():
     current_project = ""
     global my_default_project
+    global track_line_delta
     with open(my_twiddle_config) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith(";"): break
@@ -137,6 +140,9 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'text':
                 cur_twiddle.flag_text_chunks.append(data)
+                continue
+            elif prefix == 'track_line_delta':
+                track_line_delta = mt.truth_state_of(data)
                 continue
             if not current_project:
                 sys.exit("Need current project defined at line {}.".format(line_count))
@@ -191,6 +197,7 @@ def write_out_files(my_file):
     current_section = ""
     twiddle_file = twiddle_of(my_twiddle_projects[my_project].to_temp[my_file])
     f = open(twiddle_file, "w")
+    got_line_delta = False
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("\\"):
@@ -206,6 +213,7 @@ def write_out_files(my_file):
                     if before_lines[ls] == section_text[ls].count("\n"):
                         pass
                     else:
+                        got_line_delta = True
                         print("Section text for", ls, "previously", before_lines[ls], "increased" if before_lines[ls] < section_text[ls].count("\n") else "decreased", "to", section_text[ls].count("\n"))
                 f.write(section_text[ls] + "\n")
                 if ls in post_text:
@@ -217,6 +225,8 @@ def write_out_files(my_file):
             # if we are in a section, we already wrote the section text, so continue
             continue
     f.close()
+    if got_line_delta:
+        print("    ----> nld/ldn will remove section text line delta notifications.")
     if cmp(my_file, twiddle_file): # just bail if nothing happened
         return NO_CHANGES
     if alphabetical_comparisons:
@@ -424,7 +434,7 @@ if check_sectioning:
     for x in this_twiddle.to_temp:
         mt.check_properly_sectioned(x)
 
-for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, points TO the file in the temp directory, FROM an absolute path. 
+for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, points TO the file in the temp directory, FROM an absolute path.
     max_file_reached = False
     cur_file_changes = 0
     cur_text_tweaks = 0
