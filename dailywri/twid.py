@@ -436,7 +436,7 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
         for (line_count, line) in enumerate (file, 1):
             if not past_ignore and this_twiddle.shuffle_end:
                 if line.startswith(this_twiddle.shuffle_end):
-                    print("Found the end line", line_count)
+                    print("Found the end line {} starting with text {}".format(line_count, this_twiddle.shuffle_end))
                     past_ignore = True
             if line.startswith("#"):
                 if current_section:
@@ -467,22 +467,23 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             temp = pattern_check(line)
             lcut = mt.no_comment(line.strip().lower())
             if (not max_text_tweaks) or cur_text_tweaks <= max_text_tweaks:
-                for t_match in this_twiddle.flag_text_chunks:
-                    if t_match in lcut:
-                        cur_text_tweaks += 1
-                        if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
-                            print("Went over max text tweaks at line {} of {}. Increase with -mt.".format(line_count, xb))
-                            break
-                        print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
-                        mt.add_postopen(x, line_count)
-                for r_match in this_twiddle.flag_regexes:
-                    if re.search(r_match, lcut, re.IGNORECASE):
-                        cur_text_tweaks += 1
-                        if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
-                            print("Went over max text tweaks at line {} of {}.".format(line_count, xb))
-                            break
-                        print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
-                        mt.add_postopen(x, line_count)
+                if "#ignore-regex" not in line:
+                    for t_match in this_twiddle.flag_text_chunks:
+                        if t_match in lcut:
+                            cur_text_tweaks += 1
+                            if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
+                                print("Went over max text tweaks at line {} of {}. Increase with -mt.".format(line_count, xb))
+                                break
+                            print("Flagged exact bad-text match <{}> at line {} of {}: {}".format(t_match, line_count, xb, line.strip()))
+                            mt.add_postopen(x, line_count)
+                    for r_match in this_twiddle.flag_regexes:
+                        if re.search(r_match, lcut, re.IGNORECASE):
+                            cur_text_tweaks += 1
+                            if max_text_tweaks and cur_text_tweaks > max_text_tweaks:
+                                print("Went over max text tweaks at line {} of {}.".format(line_count, xb))
+                                break
+                            print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
+                            mt.add_postopen(x, line_count)
             if temp and current_section != temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
                 if max_changes_overall and overall_changes == max_changes_overall:
                     print("You went over the maximum overall changes allowed in all files.")
@@ -501,6 +502,10 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if last_section:
                 post_text[last_section] += line
             section_text['blank'] += line
+    if cur_text_tweaks:
+        print("{} suggested lines to tweak based on crude regexes.".format(cur_text_tweaks))
+    else:
+        print("All lines passed crude regex checks.")
     if cur_file_changes:
         print("Total changes in {}: {}".format(x, cur_file_changes))
     else:
