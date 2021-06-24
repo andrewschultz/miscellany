@@ -249,13 +249,14 @@ def pattern_check(my_line):
     return ""
 
 def copy_back_from_temp(this_twiddle, from_and_to):
-    changed = unchanged = 0
+    changed = []
+    unchanged = []
 
     for x in from_and_to:
         twid_from = twiddle_of(this_twiddle.to_temp[x])
         if cmp(x, twid_from):
             print("Skipping", x, twid_from, "no changes.")
-            unchanged += 1
+            unchanged.append(x)
             continue
         if secure_backup:
             print("Backing up", x, twid_from)
@@ -273,9 +274,11 @@ def copy_back_from_temp(this_twiddle, from_and_to):
             print("Copying", twid_from, x)
 
         copy(twid_from, x)
-        changed += 1
 
-    print(changed, "changed", unchanged, "unchanged")
+    if len(changed):
+        print("Files changed: {} {}".format(len(changed), ', '.join(changed)))
+    if len(unchanged):
+        print("Files unchanged: {} {}".format(len(unchanged), ', '.join(unchanged)))
 
 def force_lock_wildcard(string_to_process):
     string_chunk = string_to_process[3:]
