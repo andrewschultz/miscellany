@@ -236,8 +236,11 @@ cmd_count = 1
 
 project_array = []
 
+read_zup_txt()
+
 while cmd_count < len(sys.argv):
-    my_proj = i7.proj_exp(sys.argv[cmd_count], return_nonblank = False)
+    arg = sys.argv[cmd_count]
+    my_proj = i7.proj_exp(arg, return_nonblank = (arg in zups))
     if my_proj:
         if my_proj in project_array:
             print("Duplicate project", my_proj, "/", sys.argv[cmd_count])
@@ -276,8 +279,6 @@ while cmd_count < len(sys.argv):
         usage("Bad argument {}".format(arg))
     cmd_count += 1
 
-read_zup_txt()
-
 if not project_array:
     temp_proj = i7.dir2proj()
     if temp_proj:
@@ -312,11 +313,15 @@ out_temp = os.path.join(zip_dir, "temp.zip")
 print("Copying over. Failed creations will go to temp.zip.")
 
 for p in project_array:
+    if p not in zups:
+        print("WARNING potentially valid project {} not in zup.txt.".format(p))
+        continue
     for x in zups[p].command_pre_buffer:
         print("Running pre-command", x)
         subprocess.open(shlex.split(' ', x))
-    my_zip_file = os.path.join(zip_dir, zups[p].out_name)
-    zip = zipfile.ZipFile(my_zip_file if skip_temp_out else out_temp, 'w')
+    final_zip_file = os.path.join(zip_dir, zups[p].out_name)
+    init_zip_file = final_zip_file if skip_temp_out else out_temp
+    zip = zipfile.ZipFile(init_zip_file, 'w')
     if p not in zups:
         print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
         continue
@@ -329,24 +334,27 @@ for p in project_array:
         if os.stat(x).st_size < zups[p].min_specific_file_size[x]:
             flag_zip_build_error("SINGLE FILE UNDER MIN SIZE {} {} < {}".format(x, os.stat(x).st_size, zups[p].min_specific_file_size[x]))
     zip.close()
-    zip_size = os.stat(my_zip_file).st_size
+    zip_size = os.stat(init_zip_file).st_size
     if zups[p].max_zip_size and zip_size > zups[p].max_zip_size:
-        flag_zip_build_error("ARCHIVE OVER MAX SIZE {} {} > {}".format(my_zip_file, zip_size, zups[p].max_zip_size))
+        flag_zip_build_error("ARCHIVE OVER MAX SIZE {} {} > {}".format(final_zip_file, zip_size, zups[p].max_zip_size))
     if zip_size < zups[p].min_zip_size:
-        flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(my_zip_file, zip_size, zups[p].min_zip_size))
+        flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(final_zip_file, zip_size, zups[p].min_zip_size))
     if not skip_temp_out:
-        shutil.move(out_temp, my_zip_file)
-    print("Wrote {} from {}.".format(my_zip_file, p))
+        shutil.move(out_temp, final_zip_file)
+    print("Wrote {} from {}.".format(final_zip_file, p))
     for x in zups[p].command_post_buffer:
         print("Running post-command", x)
         subprocess.open(shlex.split(' ', x))
     if copy_dropbox_after:
-        if filecmp.cmp(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
-            print("No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name))
-            continue
+        if os.path.exists(os.path.join(dropbox_bin_dir, zups[p].out_name)):
+            if filecmp.cmp(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
+                print("No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name))
+                continue
+        else:
+            print("No dropbox file yet. This is the first copy-over.")
         target = os.path.join(dropbox_bin_dir, zups[p].out_name)
         print("Copying {} to dropbox target {}".format(zups[p].out_name, target))
-        shutil.copy(my_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name))
+        shutil.copy(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name))
 
 if not copy_dropbox_after:
     print("-cd copies to dropbox after.")
