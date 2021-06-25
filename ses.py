@@ -7,6 +7,7 @@ import sys
 import os
 import re
 import mytools as mt
+import pathlib
 
 from collections import defaultdict
 import xml.etree.ElementTree as ET
@@ -96,7 +97,7 @@ def read_ses_cfg():
                 continue
             ary = line.strip().split("=")
             if "*" in ary[0]:
-                temp = pathlib.path(ary[0]).parent
+                temp = pathlib.PurePath(ary[0]).parent
                 if not os.path.exists(temp):
                     print("WARNING:", ary[0], "does not exist as a directory for a glob. Please check line", line_count, "and try again.")
                     any_warnings = True
