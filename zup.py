@@ -22,7 +22,7 @@ from collections import defaultdict
 class zip_project:
     def __init__(self, name): #alphabetical
         self.vertical = False
-        self.build_type = 'r'
+        self.build_type = 'b' if is_beta(name) else 'r'
         self.command_post_buffer = []
         self.command_pre_buffer = []
         self.dir_copy = []
@@ -98,6 +98,20 @@ def project_or_beta_name(proj_read_in, accept_alt_proj_name):
     if temp_project:
         return temp_project + "b"
     return i7.proj_exp(proj_read_in, return_nonblank = False)
+
+def is_beta(proj_read_in):
+    temp_project = i7.proj_exp(proj_read_in, return_nonblank = False)
+    if temp_project:
+        return False
+    if proj_read_in[-2:] == '-b':
+        temp_project = i7.proj_exp(proj_read_in[:-2], return_nonblank = False)
+        if temp_project:
+            return True
+    if proj_read_in[-1:] == 'b':
+        temp_project = i7.proj_exp(proj_read_in[:-1], return_nonblank = False)
+        if temp_project:
+            return True
+    return False
 
 def zip_write_nonzero_file(zip_handle, from_path, to_path):
     if os.stat(from_path).st_size == 0:
@@ -274,6 +288,8 @@ while cmd_count < len(sys.argv):
         bail_on_first_build_error = True
     elif arg == 'bbn' or arg == 'nbb':
         bail_on_first_build_error = False
+    elif arg == 'b':
+        build_before = True
     elif arg == 'c' or arg == 'ce' or arg == 'ec':
         mt.npo(zup_cfg)
     elif arg == 'bcy' or arg == 'ybc':
@@ -322,11 +338,6 @@ for x in zups:
     else:
         zups[x].out_name = '{}.zip'.format(name)
 
-if build_before_zipping:
-    for p in project_array:
-        print("Building", p)
-        subprocess.popen("icl.py", zups[p].build_type, p)
-
 out_temp = os.path.join(zip_dir, "temp.zip")
 
 print("Copying over. Failed creations will go to temp.zip.")
@@ -338,6 +349,10 @@ for p in project_array:
     for x in zups[p].command_pre_buffer:
         print("Running pre-command", x)
         subprocess.open(shlex.split(' ', x))
+    if build_before_zipping:
+        is_beta = p.endswith("-b")
+        p2 = p[:-2] if zups[p].build_type == "b" else p
+        tempcmd = "icl.py {} {}".format(zups[p].build_type, p2)
     final_zip_file = os.path.join(zip_dir, zups[p].out_name)
     init_zip_file = final_zip_file if skip_temp_out else out_temp
     zip = zipfile.ZipFile(init_zip_file, 'w')
