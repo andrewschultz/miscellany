@@ -85,6 +85,20 @@ def copy_first_link(project_array, bail = True):
     if bail:
         sys.exit()
 
+def project_or_beta_name(proj_read_in, accept_alt_proj_name):
+    if accept_alt_proj_name:
+        return proj_read_in
+    temp_project = i7.proj_exp(proj_read_in, return_nonblank = False)
+    if temp_project:
+        return temp_project
+    temp_project = i7.proj_exp(proj_read_in[:-2], return_nonblank = False)
+    if temp_project:
+        return temp_project + "-b"
+    temp_project = i7.proj_exp(proj_read_in[:-1], return_nonblank = False)
+    if temp_project:
+        return temp_project + "b"
+    return i7.proj_exp(proj_read_in, return_nonblank = False)
+
 def zip_write_nonzero_file(zip_handle, from_path, to_path):
     if os.stat(from_path).st_size == 0:
         sys.exit("Tried to write zero-byte file {} to zip. Bailing.".format(from_path))
@@ -202,7 +216,7 @@ def read_zup_txt():
                 if cur_zip_proj:
                     flag_cfg_error(line_count, "BAILING redefinition of current project at line")
                 proj_read_in = mt.chop_front(line.lower().strip())
-                proj_candidate = i7.proj_exp(proj_read_in, return_nonblank = accept_alt_proj_name)
+                proj_candidate = project_or_beta_name(proj_read_in, accept_alt_proj_name)
                 if proj_candidate:
                     cur_zip_proj = proj_candidate
                     #print("Reading:", cur_zip_proj)
@@ -240,12 +254,17 @@ read_zup_txt()
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
-    my_proj = i7.proj_exp(arg, return_nonblank = (arg in zups))
+    my_proj = project_or_beta_name(arg, False)
     if my_proj:
         if my_proj in project_array:
             print("Duplicate project", my_proj, "/", sys.argv[cmd_count])
         else:
             project_array.append(my_proj)
+        cmd_count += 1
+        continue
+    elif arg in zups:
+        print("Likely custom project {} that you specified is added to project array.".format(my_proj))
+        project_array.append(arg)
         cmd_count += 1
         continue
     arg = mt.nohy(sys.argv[cmd_count])
@@ -276,7 +295,7 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     else:
-        usage("Bad argument {}".format(arg))
+        usage("Bad command line argument {}".format(arg))
     cmd_count += 1
 
 if not project_array:
