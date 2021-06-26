@@ -22,6 +22,7 @@ import sys
 import mytools as mt
 import subprocess
 import re
+from shutil import copy
 
 icl_cfg = "c:/writing/scripts/icl.txt"
 default_proj_from_cfg = ''
@@ -66,6 +67,16 @@ def build_type(a):
     if a.startswith('r'): return i7.RELEASE
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
+def title_from_blurb(my_proj):
+    blurb_file = "c:/games/inform/{}.inform/Release.blurb".format(my_proj)
+    with open(blurb_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if "[TITLE]" in line:
+                (prefix, data) = mt.cfg_data_split(line)
+                return data.replace('"', '')
+    print("WARNING could not read blurb file", my_blurb)
+    return ''
+
 def read_icl_cfg():
     with open(icl_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -102,8 +113,10 @@ def derive_extension(this_project, this_build = i7.RELEASE):
     return build_states[build_state_of_proj[this_project]][this_build]
 
 def last_proj_modified(this_proj, verbose=False):
-    my_files = i7.dictish(this_proj,i7.i7f)
-    if not my_files:
+    this_proj = i7.dictish(this_proj,i7.i7x)
+    if this_proj in i7.i7f:
+        my_files = i7.i7f[this_proj]
+    else:
         print("Could not find file list for {}--going with just story.ni.".format(this_proj))
         ms = i7.main_src(this_proj)
         if os.path.exists(ms):
@@ -154,9 +167,10 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
             print("Not building {}/{}/{} -- last files modified {} seconds ago, outside {} second boundary.".format(this_proj, this_build, bin_base, modified_time_delta, file_change_time))
             return
         print(bin_base, "already there.")
-    print("Project {} modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
-    build_flags = '-kwSDG'
-    if this_build == i7.RELEASE: build_flags = "-kw~S~DG"
+    print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
+    
+    ext_flags = 'G' if this_ext == 'ulx' else this_ext.replace('z', 'v').upper()
+    build_flags = '-kw{}{}'.format('~S~D' if this_build == i7.RELEASE else '~S~D', ext_flags)
 
     i7.go_proj(build_proj)
 
@@ -187,7 +201,10 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     ], null_stdout = hide_stdout, null_stderr = hide_stderr
     )
 
-    mt.print_status_of(binary_out)
+    if this_build == i7.BETA:
+        beta_out = "c:/games/inform/beta Materials/Release/beta-{}.{}".format(title_from_blurb('beta'), output_ext)
+        print("Copying from", os.path.abspath(binary_out), "to", beta_out)
+        copy(binary_out, beta_out)
 
     if not this_blorb:
         print("Not making blorb file.")
