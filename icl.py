@@ -108,9 +108,9 @@ def read_icl_cfg():
             print("Unknown prefix", prefix, "line", line_count)
 
 def derive_extension(this_project, this_build = i7.RELEASE):
-    if this_project not in build_state_of_proj:
-        return 'ulx'
-    return build_states[build_state_of_proj[this_project]][this_build]
+    if this_project in build_state_of_proj:
+        return build_states[build_state_of_proj[this_project]][this_build]
+    return 'ulx'
 
 def last_proj_modified(this_proj, verbose=False):
     this_proj = i7.dictish(this_proj,i7.i7x)
@@ -141,6 +141,8 @@ def proj_modified_last_x_seconds(this_proj, time_since):
     return (time.time() - proj_tuple[0] < time_since, time.time() - proj_tuple[0])
 
 def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, file_change_time = 0):
+    if this_proj in i7.i7xr:
+        this_proj = i7.i7xr[this_proj]
     output_ext = derive_extension(this_proj, this_build)
 
     if this_blorb and this_build != i7.RELEASE:
@@ -168,7 +170,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
             return
         print(bin_base, "already there.")
     print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
-    
+
     ext_flags = 'G' if this_ext == 'ulx' else this_ext.replace('z', 'v').upper()
     build_flags = '-kw{}{}'.format('~S~D' if this_build == i7.RELEASE else '~S~D', ext_flags)
 
