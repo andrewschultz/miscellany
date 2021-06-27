@@ -171,27 +171,33 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
         print(bin_base, "already there.")
     print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
 
-    ext_flags = 'G' if this_ext == 'ulx' else this_ext.replace('z', 'v').upper()
-    build_flags = '-kw{}{}'.format('~S~D' if this_build == i7.RELEASE else '~S~D', ext_flags)
+    ext_flags = 'G' if this_ext == 'ulx' else this_ext.replace('z', 'v')
+    build_flags = '-kw{}{}'.format('SD' if this_build == i7.DEBUG else '~S~D', ext_flags)
+    # build flags need to be in RELEASE for Beta, since for Beta we just chop off a "not for release"
 
     i7.go_proj(build_proj)
 
     os.chdir("../Build")
 
-    print("Creating auto.inf in {}".format(os.getcwd()))
-
-    mt.subproc_and_run(
-      [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
+    print("(ICL.PY) Creating auto.inf in {}".format(os.getcwd()))
+    
+    i7_to_i6 = [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
       "-rules",
       "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
       "-package",
       i7.proj2root(build_proj), "-extension={}".format(output_ext)
-      ], null_stdout = hide_stdout, null_stderr = hide_stderr
-      )
+      ]
+
+    print(1)
+
+    if this_build != i7.DEBUG:
+        i7_to_i6.insert(1, "-release")
+
+    mt.subproc_and_run( i7_to_i6, null_stdout = hide_stdout, null_stderr = hide_stderr )
 
     mt.print_status_of("auto.inf")
 
-    print("Compiling auto.inf in {}".format(os.getcwd()))
+    print("(ICL.PY) Compiling auto.inf in {}".format(os.getcwd()))
 
     binary_out = "output.{}".format(output_ext)
     mt.subproc_and_run(
