@@ -24,8 +24,10 @@ def usage():
     print("c uses cache file already present, shortcircuiting other options.")
     print("o opens output, oc/co opens cache.")
     print("w opens the URL on the web for rhymes/almost-rhymes.")
+    print()
     print("Otherwise, you can type in as many words as you want.")
-    print
+    sys.exit()
+
 def url_of(this_word, batch_convert = False):
     my_url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(this_word)
     if batch_convert:
@@ -99,6 +101,8 @@ while cmd_count < len(sys.argv):
         npo(rz_cache)
     elif arg == '?':
         usage()
+    elif len(arg) == 1:
+        usage("Bad argument {}".format(arg))
     else:
         words_to_rhyme.append(arg)
     cmd_count += 1
