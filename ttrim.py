@@ -141,7 +141,16 @@ while cmd_count < len(sys.argv):
     else: to_edit.append(arg)
     cmd_count += 1
 
-if len(to_edit) == 0: sys.exit("You need an argument -- directory, file or glob -- to trim.")
+if len(to_edit) == 0:
+    if os.path.exists('story.ni'):
+        print("No argument given. I will assume it is story.ni.")
+        if 'github' in os.getcwd():
+            to_edit = [i7.main_src(i7.dir2proj())]
+            print("But I am going to the main directory, since it needs to be copied over.")
+        else:
+            to_edit = [ 'story.ni' ]
+    else:
+        sys.exit("You need an argument -- directory, file or glob -- to trim.")
 
 done_yet = defaultdict(bool)
 
@@ -152,16 +161,18 @@ for my_f in to_edit:
         print(my_f, "done already.")
         continue
     done_yet[my_f] = True
-    if os.path.isdir(my_f): check_directory(my_f)
-    elif os.path.isfile(my_f):
-        cfa = check_file(my_f)
+    my_f_real = os.path.realpath(my_f)
+    if os.path.isdir(my_f_real):
+        check_directory(my_f_real)
+    elif os.path.isfile(my_f_real):
+        cfa = check_file(my_f_real)
         cf = cfa[0]
         if cf:
-            print(my_f, "needed {0}s.".format(test_type(my_f)))
+            print(my_f_real, "needed {0}s.".format(test_type(my_f_real)))
             total_tweaks += 1
         elif not quiet_mode:
-            print(my_f, "needed no {0}s.".format(test_type(my_f)))
+            print(my_f_real, "needed no {0}s.".format(test_type(my_f_real)))
     else:
-        print(my_f, "is neither a directory nor a file.")
+        print(my_f_real, "is neither a directory nor a file.")
 
 sys.exit(total_tweaks)
