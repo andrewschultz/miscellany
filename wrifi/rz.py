@@ -11,6 +11,8 @@ rz_out = "c:/writing/temp/rz-out.txt"
 rz_cache = "c:/writing/temp/rz-cache.txt"
 words_to_rhyme = []
 
+my_word = ''
+
 use_cache = False
 to_web = False
 append_text = False
@@ -41,7 +43,7 @@ def send_to_cache(w):
         script.extract()    # rip it out
 
     # get text
-    text = soup.get_text()
+    text = soup.get_text().encode('ascii', 'ignore').decode('ascii')
     f = open(rz_cache, "w")
     f.write(text)
     f.close()
