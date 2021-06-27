@@ -96,6 +96,8 @@ def project_or_beta_name(proj_read_in, accept_alt_proj_name):
         return temp_project + "-b"
     temp_project = i7.proj_exp(proj_read_in[:-1], return_nonblank = False)
     if temp_project:
+        if temp_project + '-b' in zups:
+            return temp_project + '-b'
         return temp_project + "b"
     return i7.proj_exp(proj_read_in, return_nonblank = False)
 
@@ -226,6 +228,9 @@ def read_zup_txt():
                     flag_cfg_error("Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
                 curzip.out_name = data
             elif prefix == 'proj' or prefix == 'projx':
+                if data.endswith('b') and not data.endswith('-b'):
+                    if data[:-1] in i7.i7x and data not in i7.i7x:
+                        flag_cfg_error(line_count, "WARNING: likely beta build {} should end in -b, not just b.".format(data), auto_bail = False)
                 accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
                     flag_cfg_error(line_count, "BAILING redefinition of current project at line")
