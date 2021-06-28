@@ -5,7 +5,7 @@ import re
 import sys
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
-from mytools import npo, nohy
+import mytools as mt
 
 rz_out = "c:/writing/temp/rz-out.txt"
 rz_backup = "c:/writing/temp/rz-back.txt"
@@ -25,7 +25,7 @@ def usage():
     print("a appends to the output file. Otherwise, we overwrite it.")
     print("b backs up, nb/bn disables backup. Default is backup.")
     print("c uses cache file already present, shortcircuiting other options.")
-    print("o opens output, oc/co opens cache.")
+    print("o/ol/lo opens last output, oc/co opens cache, ob/bo opens backup. Combine to open multiple files.")
     print("w opens the URL on the web for rhymes/almost-rhymes.")
     print()
     print("Otherwise, you can type in as many words as you want.")
@@ -91,7 +91,7 @@ def process_cache(my_word, reset = False):
     f.close()
 
 while cmd_count < len(sys.argv):
-    arg = nohy(sys.argv[cmd_count])
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'w':
         to_web = True
     elif arg == 'c':
@@ -100,12 +100,22 @@ while cmd_count < len(sys.argv):
         append_text = True
     elif arg == 'b':
         backup_prev = True
-    elif arg == ( 'nb', 'bn' ):
+    elif arg in ( 'nb', 'bn' ):
         backup_prev = False
-    elif arg == 'o':
-        npo(rz_out)
-    elif arg in ('co', 'oc'):
-        npo(rz_cache)
+    elif arg in ( 'o', 'ol', 'lo' ):
+        mt.npo(rz_out)
+    elif arg in ( 'ob', 'bo' ):
+        mt.npo(rz_backup)
+    elif arg in ( 'co', 'oc' ):
+        mt.npo(rz_cache)
+    elif re.search('^[obcl]{2,}$', arg):
+        if 'b' in arg:
+            mt.npo(rz_backup, bail=False)
+        if 'c' in arg:
+            mt.npo(rz_cache, bail=False)
+        if 'l' in arg:
+            mt.npo(rz_out, bail=False)
+        sys.exit()
     elif arg == '?':
         usage()
     elif len(arg) == 1:
