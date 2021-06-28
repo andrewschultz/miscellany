@@ -22,6 +22,7 @@ total_count = 0
 
 windows_popup_box = False
 look_for_cmd = False
+look_for_cmd_force = False
 
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
@@ -74,7 +75,6 @@ def check_prestored_command():
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
-    mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
 
 def read_cfg_file():
     with open(ghd_info) as file:
@@ -104,6 +104,8 @@ def read_cmd_line():
             days_back = int(arg)
         elif arg == 'l':
             look_for_cmd = True
+        elif arg == 'lf':
+            look_for_cmd_force = True
         elif arg == 'e' or arg == 'es' or arg == 'se':
             mt.npo(__main__)
         elif arg == 'ec' or arg == 'ce':
@@ -155,8 +157,13 @@ for x in projects:
         if output_array:
             final_count[x][y] = output_array
 
-if 1 or not len(final_count): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
-    check_prestored_command()
+if look_for_cmd_force or not len(final_count): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
+    my_dir_pushedcheck_prestored_command()
+    if not len(final_count):
+        mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
+    else:
+        mt.win_or_print("Pushed a commit to the {} repository.\n\nReset with:\n\ngit reset HEAD~1", "Pushed a late-night commit", True, bail = True)
+    sys.exit()
 
 out_string = ""
 
