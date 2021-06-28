@@ -696,7 +696,9 @@ def first_word_of(x, allow_dashes = False, additional_chars = ""):
 
 first_word = first_word_of
 
-def file_in_browser(file_name, print_action = True, bail = False, return_to_orig = True): # was text in browser but we can also view PNGs there
+def file_in_browser(file_name, print_action = True, bail = False, return_to_orig = True, open_natively = False): # was text in browser but we can also view PNGs there
+    if open_natively:
+        os.system(file_name)
     import win32gui
     #obsolete -- subprocess launches Firefox without hogging the command line
     # cmd = 'start \"\" \"{}\" \"file:///{}\"'.format(default_browser_exe, file_name)
@@ -709,7 +711,7 @@ def file_in_browser(file_name, print_action = True, bail = False, return_to_orig
         win32gui.SetForegroundWindow(old_window)
     if bail: sys.exit()
 
-tib = t_i_b = text_in_browser = fib = f_i_b = file_in_browser
+file_in_browser_conditional = gib = g_i_b = graphics_in_browser = tib = t_i_b = text_in_browser = fib = f_i_b = file_in_browser
 
 def comment_combine(my_lines, cr_at_end = True):
     if type(cr_at_end) != bool and type(cr_at_end) != int:
