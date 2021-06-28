@@ -42,9 +42,14 @@ def usage(my_param):
     print("e/es/se edits main, ec/ce edits config")
     sys.exit()
 
+def last_commit_data():
+    temp = subprocess.check_output([ 'git', 'log', '-1' ]).decode()
+    return temp # we can do better than this, because we just want the exact log message, but right now, this is good enough.
+
 def check_prestored_command():
     look_for_cmd = True
     new_file_string = ""
+    return_val = ''
     if look_for_cmd:
         got_any = False
         with open(ghd_cmd) as file:
@@ -62,19 +67,28 @@ def check_prestored_command():
                     dary = data.split(";")
                     gh_files = dary[0].split(",")
                     for gh_file in gh_files:
+                        print(gh_file)
                         os.system("ttrim.py -c {}".format(gh_file))
+                        print(gh_file)
                     gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
-                    os.system(gitadd_cmd)
                     gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
+                    check_log_prev = last_commit_data()
+                    if dary[1] in check_log_prev:
+                        print("It looks like your commit message is already in the previous commit. So you are likely duplicating your efforts.")
+                        return ''
+                    os.system(gitadd_cmd)
                     os.system(gitcommit_cmd)
-                    check_log = subprocess.check_output([ 'git', 'log', '-1' ]).decode()
-                    if dary[1] in check_log:
-                        print("Everything worked!")
+                    check_log = last_commit_data()
+                    if check_log == check_log_prev:
+                        print("Oops! The commit failed.")
+                        return_val = ''
                     else:
-                        print("Oops! Something failed.")
+                        print("Everything worked!")
+                        return_val = my_dir
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
+    return return_val
 
 def read_cfg_file():
     with open(ghd_info) as file:
@@ -92,6 +106,8 @@ def read_cmd_line():
     cmd_count = 1
     global windows_popup_box
     global days_back
+    global look_for_cmd
+    global look_for_cmd_force
     while cmd_count < len(sys.argv):
         arg = mt.nohy(sys.argv[cmd_count])
         if arg =='p':
@@ -158,12 +174,11 @@ for x in projects:
             final_count[x][y] = output_array
 
 if look_for_cmd_force or not len(final_count): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
-    my_dir_pushedcheck_prestored_command()
-    if not len(final_count):
+    my_dir_pushed = check_prestored_command()
+    if my_dir_pushed:
+        mt.win_or_print("Pushed a commit to the {} repository.\n\nReset with:\n\ngit reset HEAD~1".format(my_dir_pushed), "Pushed a late-night commit", True, bail = True)
+    elif not len(final_count):
         mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
-    else:
-        mt.win_or_print("Pushed a commit to the {} repository.\n\nReset with:\n\ngit reset HEAD~1", "Pushed a late-night commit", True, bail = True)
-    sys.exit()
 
 out_string = ""
 
