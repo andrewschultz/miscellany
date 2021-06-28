@@ -29,6 +29,8 @@ final_count = defaultdict(lambda: defaultdict(list))
 
 ghd_info = "c:/writing/scripts/ghd.txt"
 ghd_cmd = "c:/writing/scripts/ghd-cmd.txt"
+ghd_results = "c:/writing/temp/ghd-results.txt"
+
 base_dir = mt.gitbase
 
 def usage(my_param):
@@ -54,7 +56,7 @@ def check_prestored_command():
         got_any = False
         with open(ghd_cmd) as file:
             for (line_count, line) in enumerate (file, 1):
-                if got_any or line.startswith("#"):
+                if got_any or line.startswith("#") or not line.strip():
                     new_file_string += line
                     continue
                 got_any = True
@@ -65,7 +67,13 @@ def check_prestored_command():
                 else:
                     os.chdir(os.path.join(i7.gh_dir, my_dir))
                     dary = data.split(";")
-                    gh_files = dary[0].split(",")
+                    gh_files_wild = dary[0].split(",")
+                    gh_files = []
+                    for g in gh_files_wild:
+                        result = subprocess.check_output( [ 'git', 'ls-files', g ] ).decode().split("\n")
+                        gh_files.extend(result)
+                    gh_files = sorted(list(set(gh_files)))
+                    sys.exit(gh_files)
                     for gh_file in gh_files:
                         print(gh_file)
                         os.system("ttrim.py -c {}".format(gh_file))
@@ -84,6 +92,13 @@ def check_prestored_command():
                         return_val = ''
                     else:
                         print("Everything worked!")
+                        f = open(ghd_results, "w")
+                        f.write("NOTE: successfully pushed commit automatically with ghd.py\n\n")
+                        f.write("It went to the {} repository.\n\n".format(my_dir))
+                        f.write("The files committed were {}.\n\n".format(', '.join(file_array)))
+                        f.write("The commit message was >>{}<<\n\n".format(dary[1]))
+                        f.close()
+                        mt.file_in_browser(gh_results)
                         return_val = my_dir
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
