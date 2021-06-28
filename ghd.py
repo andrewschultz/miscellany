@@ -2,14 +2,18 @@
 # ghd.py
 # perl github daily checker
 #
+# todo: put ignorables to CFG file
 #
 
 import sys
 import os
+import i7
 import mytools as mt
 from collections import defaultdict
 import subprocess
 import pendulum
+
+ignorables = [ 'misc', 'writing', 'configs' ]
 
 days_back = 0
 
@@ -17,11 +21,13 @@ this_header = "Daily Github commits "
 total_count = 0
 
 windows_popup_box = False
+look_for_cmd = False
 
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
 
 ghd_info = "c:/writing/scripts/ghd.txt"
+ghd_cmd = "c:/writing/scripts/ghd-cmd.txt"
 base_dir = mt.gitbase
 
 def usage(my_param):
@@ -31,8 +37,44 @@ def usage(my_param):
         print("USage for ghd.py")
     print("p  = windows popup box")
     print("d# = days back")
+    print("l = look for command")
     print("e/es/se edits main, ec/ce edits config")
     sys.exit()
+
+def check_prestored_command():
+    look_for_cmd = True
+    new_file_string = ""
+    if look_for_cmd:
+        got_any = False
+        with open(ghd_cmd) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if got_any or line.startswith("#"):
+                    new_file_string += line
+                    continue
+                got_any = True
+                (proj, data) = mt.cfg_data_split(line)
+                my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
+                if not my_dir:
+                    mt.win_or_print("OH NO! BAD COMMAND", "Check {} for commands.", windows_popup_box, bail = False)
+                else:
+                    os.chdir(os.path.join(i7.gh_dir, my_dir))
+                    dary = data.split(";")
+                    gh_files = dary[0].split(",")
+                    for gh_file in gh_files:
+                        os.system("ttrim.py -c {}".format(gh_file))
+                    gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
+                    os.system(gitadd_cmd)
+                    gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
+                    os.system(gitcommit_cmd)
+                    check_log = subprocess.check_output([ 'git', 'log', '-1' ]).decode()
+                    if dary[1] in check_log:
+                        print("Everything worked!")
+                    else:
+                        print("Oops! Something failed.")
+        f = open(ghd_cmd, "w")
+        f.write(new_file_string)
+        f.close()
+    mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
 
 def read_cfg_file():
     with open(ghd_info) as file:
@@ -60,6 +102,8 @@ def read_cmd_line():
             days_back = int(arg[1:])
         elif arg.isdigit():
             days_back = int(arg)
+        elif arg == 'l':
+            look_for_cmd = True
         elif arg == 'e' or arg == 'es' or arg == 'se':
             mt.npo(__main__)
         elif arg == 'ec' or arg == 'ce':
@@ -111,8 +155,8 @@ for x in projects:
         if output_array:
             final_count[x][y] = output_array
 
-if not len(final_count):
-    mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
+if 1 or not len(final_count): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
+    check_prestored_command()
 
 out_string = ""
 
