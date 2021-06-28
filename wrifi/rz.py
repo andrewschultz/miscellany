@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from mytools import npo, nohy
 
 rz_out = "c:/writing/temp/rz-out.txt"
+rz_backup = "c:/writing/temp/rz-back.txt"
 rz_cache = "c:/writing/temp/rz-cache.txt"
 words_to_rhyme = []
 
@@ -16,11 +17,13 @@ my_word = ''
 use_cache = False
 to_web = False
 append_text = False
+backup_prev = True
 
 cmd_count = 1
 
 def usage():
     print("a appends to the output file. Otherwise, we overwrite it.")
+    print("b backs up, nb/bn disables backup. Default is backup.")
     print("c uses cache file already present, shortcircuiting other options.")
     print("o opens output, oc/co opens cache.")
     print("w opens the URL on the web for rhymes/almost-rhymes.")
@@ -95,6 +98,10 @@ while cmd_count < len(sys.argv):
         use_cache = True
     elif arg == 'a':
         append_text = True
+    elif arg == 'b':
+        backup_prev = True
+    elif arg == ( 'nb', 'bn' ):
+        backup_prev = False
     elif arg == 'o':
         npo(rz_out)
     elif arg in ('co', 'oc'):
@@ -130,6 +137,14 @@ if use_cache:
 
 if len(words_to_rhyme) == 0:
     sys.exit("No rhymes given.")
+
+if backup_prev:
+    f = open(rz_out, "r")
+    my_text = f.read()
+    f.close()
+    f = open(rz_backup, "w")
+    f.write(my_text)
+    f.close()
 
 if not append_text:
     f = open(rz_out, "w")
