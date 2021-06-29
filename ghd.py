@@ -41,7 +41,7 @@ def usage(my_param):
     print("p  = windows popup box")
     print("d# = days back")
     print("l = look for command")
-    print("e/es/se edits main, ec/ce edits config")
+    print("e/es/se edits main, ei/ie edits config, ec/ce edits command file, er/re edits results file")
     sys.exit()
 
 def last_commit_data():
@@ -137,10 +137,14 @@ def read_cmd_line():
             look_for_cmd = True
         elif arg == 'lf':
             look_for_cmd_force = True
-        elif arg == 'e' or arg == 'es' or arg == 'se':
+        elif arg in ( 'e', 'es', 'se'):
             mt.npo(__main__)
-        elif arg == 'ec' or arg == 'ce':
+        elif arg in ( 'ei', 'ie' ):
             mt.npo(ghd_info)
+        elif arg in ( 'ec', 'ce' ):
+            mt.npo(ghd_cmd)
+        elif arg in ( 'er', 're' ):
+            mt.npo(ghd_results)
         elif arg == '?':
             usage()
         else:
