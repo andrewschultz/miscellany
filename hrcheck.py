@@ -71,18 +71,20 @@ verbose = False
 
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
-def find_in_one_checkfile(my_string, f):
+def find_in_one_checkfile(my_string, f, find_comments):
     base_name = os.path.basename(f)
     with open(f) as file:
         for (line_count, line) in enumerate (file, 1):
+            if not find_comments and line.startswith("#"):
+                continue
             if my_string in line.lower():
                 print("Found instance of <<{}>> at line {} of {}.".format(my_string, line_count, base_name))
                 mt.add_postopen(f, line_count)
     return
 
-def find_in_checkfiles(my_string):
+def find_in_checkfiles(my_string, find_comments):
     for x in [check_file, check_private, xtra_file]:
-        find_in_one_checkfile(my_string, x)
+        find_in_one_checkfile(my_string, x, find_comments)
     mt.postopen()
     print("Nothing found for <<{}>>.".format(my_string))
     exit()
@@ -110,7 +112,7 @@ def usage():
     print("b= = bookmarks to run, bp prints bookmarks")
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     print("v = verbose")
-    print("f:(string) = find string in file")
+    print("f/s(c):(string) = find string in file, c = look in comments too")
     exit()
 
 def print_all_bookmarks():
@@ -459,8 +461,8 @@ while count < len(sys.argv):
         print_bookmarks = True
     elif arg == 'v':
         verbose = True
-    elif re.search('^[fs][:=]', arg):
-        find_in_checkfiles(arg[2:])
+    elif re.search('^[fs](c?)[:=]', arg):
+        find_in_checkfiles(re.sub("^[a-z]+[:=]", "", arg), 'c' in arg)
     elif arg == '?':
         usage()
         exit()
