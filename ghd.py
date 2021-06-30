@@ -41,6 +41,7 @@ def usage(my_param):
     print("p  = windows popup box")
     print("d# = days back")
     print("l = look for command")
+    print("cv = checks commit validity")
     print("e/es/se edits main, ei/ie edits config, ec/ce edits command file, er/re edits results file")
     sys.exit()
 
@@ -48,7 +49,32 @@ def last_commit_data():
     temp = subprocess.check_output([ 'git', 'log', '-1' ]).decode()
     return temp # we can do better than this, because we just want the exact log message, but right now, this is good enough.
 
-def check_prestored_command():
+def check_commit_validity():
+    with open(ghd_cmd) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#") or not line.strip():
+                continue
+            (proj, data) = mt.cfg_data_split(line)
+            my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
+            if not my_dir:
+                mt.win_or_print("OH NO! BAD COMMAND", "Check {} for commands.", windows_popup_box, bail = False)
+                continue
+            os.chdir(os.path.join(i7.gh_dir, my_dir))
+            dary = data.split(";")
+            gh_files_wild = dary[0].split(",")
+            gh_files = []
+            for g in gh_files_wild:
+                result = subprocess.run( [ 'git', 'diff', '--cached', '--name-only', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
+                gh_files.extend(result)
+                result = subprocess.run( [ 'git', 'diff', '--name-only', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
+            gh_files = sorted(list(set([x for x in gh_files if x])))
+            if len(gh_files) == 0:
+                print("WARNING no-longer-valid line {}: {}".format(line_count, line.strip()))
+            else:
+                print("Okay line {}: {}".format(line_count, line.strip()))
+    sys.exit()
+
+def check_prestored_command(run_cmd = True):
     look_for_cmd = True
     new_file_string = ""
     return_val = ''
@@ -59,7 +85,6 @@ def check_prestored_command():
                 if got_any or line.startswith("#") or not line.strip():
                     new_file_string += line
                     continue
-                got_any = True
                 (proj, data) = mt.cfg_data_split(line)
                 my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
                 if not my_dir:
@@ -73,11 +98,9 @@ def check_prestored_command():
                         result = subprocess.check_output( [ 'git', 'ls-files', g ] ).decode().split("\n")
                         gh_files.extend(result)
                     gh_files = sorted(list(set(gh_files)))
-                    sys.exit(gh_files)
                     for gh_file in gh_files:
-                        print(gh_file)
+                        print("Trimming", gh_file)
                         os.system("ttrim.py -c {}".format(gh_file))
-                        print(gh_file)
                     gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
                     gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
                     check_log_prev = last_commit_data()
@@ -100,6 +123,7 @@ def check_prestored_command():
                         f.close()
                         mt.file_in_browser(gh_results)
                         return_val = my_dir
+                        got_any = True
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
@@ -145,6 +169,8 @@ def read_cmd_line():
             mt.npo(ghd_cmd)
         elif arg in ( 'er', 're' ):
             mt.npo(ghd_results)
+        elif arg == 'cv':
+            check_commit_validity()
         elif arg == '?':
             usage()
         else:
@@ -192,7 +218,7 @@ for x in projects:
         if output_array:
             final_count[x][y] = output_array
 
-if look_for_cmd_force or not len(final_count): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
+if look_for_cmd_force or (look_for_cmd and not len(final_count)): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
     my_dir_pushed = check_prestored_command()
     if my_dir_pushed:
         mt.win_or_print("Pushed a commit to the {} repository.\n\nReset with:\n\ngit reset HEAD~1".format(my_dir_pushed), "Pushed a late-night commit", True, bail = True)
