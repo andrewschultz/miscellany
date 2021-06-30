@@ -67,6 +67,7 @@ def check_commit_validity():
                 result = subprocess.run( [ 'git', 'diff', '--cached', '--name-only', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
                 gh_files.extend(result)
                 result = subprocess.run( [ 'git', 'diff', '--name-only', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
+                gh_files.extend(result)
             gh_files = sorted(list(set([x for x in gh_files if x])))
             if len(gh_files) == 0:
                 print("WARNING no-longer-valid line {}: {}".format(line_count, line.strip()))
@@ -74,7 +75,7 @@ def check_commit_validity():
                 print("Okay line {}: {}".format(line_count, line.strip()))
     sys.exit()
 
-def check_prestored_command(run_cmd = True):
+def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
     look_for_cmd = True
     new_file_string = ""
     return_val = ''
@@ -95,9 +96,9 @@ def check_prestored_command(run_cmd = True):
                     gh_files_wild = dary[0].split(",")
                     gh_files = []
                     for g in gh_files_wild:
-                        result = subprocess.check_output( [ 'git', 'ls-files', g ] ).decode().split("\n")
+                        result = subprocess.run( [ 'git', 'ls-files', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
                         gh_files.extend(result)
-                    gh_files = sorted(list(set(gh_files)))
+                    gh_files = sorted(list(set([x for x in gh_files if x])))
                     for gh_file in gh_files:
                         print("Trimming", gh_file)
                         os.system("ttrim.py -c {}".format(gh_file))
@@ -111,17 +112,18 @@ def check_prestored_command(run_cmd = True):
                     os.system(gitcommit_cmd)
                     check_log = last_commit_data()
                     if check_log == check_log_prev:
-                        print("Oops! The commit failed.")
+                        print("Oops! The commit from line {} failed: {}".format(line_count, dary[1]))
                         return_val = ''
+                        new_file_string += line
                     else:
-                        print("Everything worked!")
+                        print("Everything worked on line {}: {}".format(line_count, dary[1]))
                         f = open(ghd_results, "w")
                         f.write("NOTE: successfully pushed commit automatically with ghd.py\n\n")
                         f.write("It went to the {} repository.\n\n".format(my_dir))
-                        f.write("The files committed were {}.\n\n".format(', '.join(file_array)))
+                        f.write("The {} {}.\n\n".format('file committed was' if len(gh_files) == 1 else 'files committed were', ', '.join(gh_files)))
                         f.write("The commit message was >>{}<<\n\n".format(dary[1]))
                         f.close()
-                        mt.file_in_browser(gh_results)
+                        mt.file_in_browser(ghd_results)
                         return_val = my_dir
                         got_any = True
         f = open(ghd_cmd, "w")
