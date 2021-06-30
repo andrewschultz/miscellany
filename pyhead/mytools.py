@@ -473,7 +473,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False):
+def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False):
     if not os.path.exists(my_file):
         print("WARNING:", my_file, "does not exist.")
     elif follow_open_link:
@@ -481,7 +481,8 @@ def npo(my_file, my_line = 1, print_cmd = True, bail = True, follow_open_link = 
         if not os.path.exists(my_file):
             print("WARNING: linked-to file", my_file, "does not exist.")
     if os.path.exists(my_file):
-        cmd = "start \"\" {:s} \"{:s}\" -n{:d}".format(np, my_file, my_line)
+        line_to_open = "" if my_line == -1 else " -n{}".format(my_line)
+        cmd = "start \"\" {:s} \"{:s}\"{}".format(np, my_file, line_to_open)
         if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file if print_full_path else os.path.basename(my_file), my_line, " and bailing" if bail else ""))
         os.system(cmd)
     else:
