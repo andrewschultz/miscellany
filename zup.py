@@ -262,7 +262,14 @@ def read_zup_txt():
             elif prefix == 'v' or prefix == 'version':
                 zups[proj_candidate].version = int(data)
             else:
-                print("Unknown prefix", prefix, "line", line_count)
+                if line.startswith("/") or line.startswith("\\"):
+                    print("WARNING we probably need F= before a relative file path at line", line_count)
+                elif re.match("[a-z0-9 \-]+[\\\/]", line, flags=re.IGNORECASE):
+                    print("WARNING we probably need F= before a Unix-type file path at line", line_count)
+                elif re.match("[a-z]:[\\\/]", line, flags=re.IGNORECASE):
+                    print("WARNING we probably need F= before a Windows-type file path at line", line_count)
+                else:
+                    print("Unknown prefix", prefix, "line", line_count)
     print(zup_cfg, "read successfully...")
 
 cmd_count = 1
