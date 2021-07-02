@@ -157,20 +157,20 @@ def read_zup_txt():
                     file_base_dir = ''
                 continue
             if line.startswith("!"):
-                print("Remove old artifact (!) from config file at line", line_count)
+                flag_cfg_error(line_count, "Remove old artifact (!) from config file at line", line_count)
                 continue
             if line.startswith(">>"):
-                print("Deprecated >> should be converted to cmdpre: or cmdpost: at line", line_count)
+                flag_cfg_error(line_count, "Deprecated >> should be converted to cmdpre: or cmdpost: at line", line_count)
                 curzip.command_buffer.append(line[2:].strip())
                 continue
             try:
                 (prefix, data) = mt.cfg_data_split(line.strip())
             except:
-                print("Badly formed data line {}: |{}|".format(line_count, line.strip()))
+                flag_cfg_error(line_count, "Badly formed data line {}: |{}|".format(line_count, line.strip()))
                 continue
             prefix = prefix.lower()
             if not data:
-                print("WARNING blank data at line {}.".format(line_count))
+                flag_cfg_error(line_count, "WARNING blank data at line {}.".format(line_count))
                 continue
 
             # keep the below alphabetized
@@ -190,13 +190,13 @@ def read_zup_txt():
             elif prefix == 'd' or prefix == 'dircopy':
                 temp_ary = data.split('=')
                 if not os.path.isabs(temp_ary[0]):
-                    print("Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
+                    flag_cfg_error(line_count, "Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
                 if '=' not in data:
                     curzip.dir_copy = (temp_ary[0], '.')
                 elif data.count('=') == 1:
                     curzip.dir_copy = tuple(temp_ary)
                 else:
-                    print("Too many = in line {} for dircopy.".format(line_count))
+                    flag_cfg_error(line_count, "Too many = in line {} for dircopy.".format(line_count))
             elif prefix == 'dl' or prefix == 'dropbox':
                 curzip.dropbox_location = data
             elif prefix == 'f' or prefix == 'file':
@@ -214,7 +214,7 @@ def read_zup_txt():
                 elif len(file_array) == 2:
                     curzip.file_map[file_array[0]] = file_array[1]
                 else:
-                    print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
+                    flag_cfg_error(line_count, "Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                 if '*' not in data:
                     current_file = file_array[0]
                     continue
@@ -228,13 +228,12 @@ def read_zup_txt():
                     continue
                 if '*' not in data:
                     file_array = data.split("\t")
-                    print(os.path.join(file_base_dir, data))
                     if len(file_array) == 1:
                         to_file = data
                     elif len(file_array) == 2:
                         to_file = file_array[1]
                     else:
-                        print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
+                        flag_cfg_error(line_count, "Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                     if file_to_dir:
                         to_file = "{}/{}".format(file_to_dir, to_file)
                     curzip.file_map[os.path.join(file_base_dir, data)] = to_file
@@ -295,7 +294,7 @@ def read_zup_txt():
             elif prefix == 'time':
                 time_array = re.split("[<>]", data)
                 if len(time_array) != 2:
-                    print("Bad timing line {} needs exactly one < or >.".format(line_count))
+                    flag_cfg_error(line_count, "Bad timing line {} needs exactly one < or >.".format(line_count))
                     continue
                 if '>' in data:
                     curzip.time_compare.append((time_array[0], time_array[1]))
@@ -305,13 +304,13 @@ def read_zup_txt():
                 zups[proj_candidate].version = int(data)
             else:
                 if line.startswith("/") or line.startswith("\\"):
-                    print("WARNING we probably need F= before a relative file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line", line_count)
                 elif re.match("[a-z0-9 \-]+[\\\/]", line, flags=re.IGNORECASE):
-                    print("WARNING we probably need F= before a Unix-type file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Unix-type file path at line", line_count)
                 elif re.match("[a-z]:[\\\/]", line, flags=re.IGNORECASE):
-                    print("WARNING we probably need F= before a Windows-type file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line", line_count)
                 else:
-                    print("Unknown prefix", prefix, "line", line_count)
+                    flag_cfg_error(line_count, "Unknown prefix", prefix, "line", line_count)
     print(zup_cfg, "read successfully...")
 
 cmd_count = 1
