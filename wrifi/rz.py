@@ -1,5 +1,6 @@
 # rz.py: grabs text from rhymezone
 
+import glob
 import os
 import re
 import sys
@@ -19,6 +20,8 @@ to_web = False
 append_text = False
 backup_prev = True
 
+from_local = to_local = False
+
 cmd_count = 1
 
 def usage():
@@ -31,13 +34,53 @@ def usage():
     print("Otherwise, you can type in as many words as you want.")
     sys.exit()
 
+def see_about_local(word_array, file_name):
+    return_list = []
+    with open(file_name) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if 'syllable' not in line:
+                continue
+            l0 = re.sub(".*syllable(s):", "", line.strip().lower())
+            ary = re.split(", +", l0)
+            return_list.extend(list(set(word_array) & set(ary)))
+    if len(return_list) > 0:
+        print(', '.join(return_list), "in", file_name)
+        mt.npo(file_name, bail = False)
+    return return_list
+
 def url_of(this_word, batch_convert = False):
     my_url = "https://rhymezone.com/r/rhyme.cgi?Word={}&typeofrhyme=perfect&org1=syl&org2=l&org3=y".format(this_word)
     if batch_convert:
         my_url = my_url.replace("&", "^&")
     return my_url
 
-def send_to_cache(w):
+def org_raw_rhyme_text(my_text, my_word):
+    my_lines = my_text.splitlines()
+
+    read_syllables = False
+    any_syllables = False
+    out_string = ''
+
+    for x in my_lines:
+        if re.search("^[0-9] syllable", x):
+            read_syllables = True
+            any_syllables = True
+        x = x.strip()
+        if 'almost rhyme' in x.lower() or 'more ideas' in x.lower():
+            read_syllables = False
+        if 'words and phrases that' in x.lower():
+            out_string += "\n" + x
+        if read_syllables:
+            if 'syllable' in x:
+                out_string += "\n" + x + " "
+            else:
+                out_string += x.replace(',', ', ')
+
+    out_string = '=========================Rhymes for {}=========================\n'.format(my_word) + out_string.lstrip()
+
+    return out_string
+
+def send_to_cache(w, out_file = rz_cache, straighten_before_caching = True):
     url = url_of(w)
 
     html = urlopen(url).read()
@@ -49,45 +92,22 @@ def send_to_cache(w):
 
     # get text
     text = soup.get_text().encode('ascii', 'ignore').decode('ascii')
-    f = open(rz_cache, "w")
+    if straighten_before_caching:
+        text = org_raw_rhyme_text(text, w)
+    f = open(out_file, "w")
     f.write(text)
     f.close()
 
 def process_cache(my_word, reset = False):
     outputting = "w" if reset else "a"
     f = open(rz_cache, "r")
-    text = f.read()
-    # break into lines and remove leading and trailing space on each
-    lines = (line.strip() for line in text.splitlines())
-    # break multi-headlines into a line each
-    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    # drop blank lines
+    text = org_raw_rhyme_text(f.read(), my_word)
 
-    read_syllables = False
-    any_syllables = False
-    out_string = ''
-
-    for x in chunks:
-        if re.search("^[0-9] syllable", x):
-            read_syllables = True
-            any_syllables = True
-        if 'almost rhyme' in x.lower() or 'more ideas' in x.lower():
-            read_syllables = False
-        if 'words and phrases that' in x.lower():
-            out_string += "\n" + x
-        if read_syllables:
-            if 'syllable' in x:
-                out_string += "\n" + x
-            else:
-                out_string += x.replace(',', ', ')
-
-    if not any_syllables:
+    if not text:
         sys.exit("Failed to read anything.")
 
-    out_string = '=========================Rhymes for {}=========================\n'.format(my_word) + out_string.lstrip()
-
     f = open(rz_out, outputting)
-    f.write(out_string.strip() + "\n")
+    f.write(text.strip() + "\n")
     f.close()
 
 while cmd_count < len(sys.argv):
@@ -100,6 +120,18 @@ while cmd_count < len(sys.argv):
         append_text = True
     elif arg == 'b':
         backup_prev = True
+    elif arg == 'l':
+        to_local = True
+        from_local = True
+    elif arg in ( 'lf', 'fl' ):
+        from_local = True
+        to_local = False
+    elif arg in ( 'lt', 'tl' ):
+        to_local = True
+        from_local = False
+    elif arg in ( 'ln', 'nl' ):
+        to_local = False
+        from_local = False
     elif arg in ( 'nb', 'bn' ):
         backup_prev = False
     elif arg in ( 'o', 'ol', 'lo' ):
@@ -130,6 +162,17 @@ if to_web:
         os.system("start {}".format(url))
     sys.exit()
 
+if from_local:
+    x = glob.glob("c:/writing/temp/rz-locals-*")
+    for file in x:
+        temp = see_about_local(words_to_rhyme, file)
+        if temp:
+            for t in temp:
+                words_to_rhyme.remove(t)
+    if len(words_to_rhyme) == 0:
+        sys.exit("All rhymes were found locally.")
+    sys.exit("!")
+
 if use_cache:
     f = open(rz_cache, "r")
     text = f.read()
@@ -156,12 +199,26 @@ if backup_prev:
     f.write(my_text)
     f.close()
 
-if not append_text:
-    f = open(rz_out, "w")
-    f.close()
-
 for w in words_to_rhyme:
-    send_to_cache(w)
-    process_cache(w, reset = False)
+    if to_local:
+        my_file = "c:/writing/temp/rz-locals-{}.txt".format(w)
+        if os.path.exists(my_file):
+            print(my_file, "exists. Launching.")
+            mt.npo(my_file)
+            continue
+        for q in glob.glob("c:/writing/temp/rz-locals-{}.txt"):
+            temp = see_about_local(words_to_rhyme, my_file)
+            if temp:
+                for t in temp:
+                    words_to_rhyme.remove(t)
+                continue
+        send_to_cache(w, my_file, straighten_before_caching = True)
+    else:
+        if not append_text:
+            f = open(rz_out, "w")
+            f.close()
+            append_text = True
+        send_to_cache(w)
+        process_cache(w, reset = False)
 
-npo(rz_out)
+mt.npo(rz_out)
