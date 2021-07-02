@@ -30,12 +30,17 @@ def usage():
     print("c uses cache file already present, shortcircuiting other options.")
     print("o/ol/lo opens last output, oc/co opens cache, ob/bo opens backup. Combine to open multiple files.")
     print("w opens the URL on the web for rhymes/almost-rhymes.")
+    print("l tries to do things locally. lf/fl reads from local files, and lt/tl writes to them. L combines them.")
     print()
-    print("Otherwise, you can type in as many words as you want.")
+    print("You can type in as many potential-rhyme words as you want.")
     sys.exit()
 
 def see_about_local(word_array, file_name):
     return_list = []
+    word_from_file = re.sub(".*-", "", file_name)
+    word_from_file = re.sub("\..*", "", word_from_file)
+    if word_from_file in word_array:
+        return_list.append(word_from_file)
     with open(file_name) as file:
         for (line_count, line) in enumerate (file, 1):
             if 'syllable' not in line:
@@ -171,7 +176,6 @@ if from_local:
                 words_to_rhyme.remove(t)
     if len(words_to_rhyme) == 0:
         sys.exit("All rhymes were found locally.")
-    sys.exit("!")
 
 if use_cache:
     f = open(rz_cache, "r")
@@ -203,10 +207,15 @@ for w in words_to_rhyme:
     if to_local:
         my_file = "c:/writing/temp/rz-locals-{}.txt".format(w)
         if os.path.exists(my_file):
-            print(my_file, "exists. Launching.")
-            mt.npo(my_file)
+            print(my_file, "exists.")
+            words_to_rhyme.remove(t)
+            temp = see_about_local(words_to_rhyme, my_file)
+            if temp:
+                for t in temp:
+                    words_to_rhyme.remove(t)
+                continue
             continue
-        for q in glob.glob("c:/writing/temp/rz-locals-{}.txt"):
+        for q in glob.glob("c:/writing/temp/rz-locals-*.txt"):
             temp = see_about_local(words_to_rhyme, my_file)
             if temp:
                 for t in temp:
@@ -221,4 +230,5 @@ for w in words_to_rhyme:
         send_to_cache(w)
         process_cache(w, reset = False)
 
+print(3)
 mt.npo(rz_out)
