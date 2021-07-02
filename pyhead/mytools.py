@@ -483,7 +483,10 @@ def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link =
     if os.path.exists(my_file):
         line_to_open = "" if my_line == -1 else " -n{}".format(my_line)
         cmd = "start \"\" {:s} \"{:s}\"{}".format(np, my_file, line_to_open)
-        if print_cmd: print("Launching {:s} at line {:d} in notepad++{:s}.".format(my_file if print_full_path else os.path.basename(my_file), my_line, " and bailing" if bail else ""))
+        if print_cmd: print("Launching {:s} {} in notepad++{:s}.".format(
+            my_file if print_full_path else os.path.basename(my_file),
+            'at the start' if my_line < 0 else "at line {}".format(my_line),
+            " and bailing" if bail else ""))
         os.system(cmd)
     else:
         print("Unable to find", my_file)
