@@ -6,6 +6,7 @@
 # todo:
 # 2 switch statement in CFG reader (if possible)
 
+import glob
 import re
 import mytools as mt
 import i7
@@ -182,9 +183,9 @@ def read_zup_txt():
                 curzip.command_post_buffer.append(data)
             elif prefix == 'default':
                 if cur_zip_proj:
-                    flag_cfg_error("default project definition inside project block line {}.".format(line_count))
+                    flag_cfg_error(line_count, "default project definition inside project block line {}.".format(line_count))
                 if default_from_cfg:
-                    flag_cfg_error("default project redefined line {}.".format(line_count))
+                    flag_cfg_error(line_count, "default project redefined line {}.".format(line_count))
                 default_from_cfg = i7.proj_exp(data)
             elif prefix == 'd' or prefix == 'dircopy':
                 temp_ary = data.split('=')
@@ -200,20 +201,30 @@ def read_zup_txt():
                 curzip.dropbox_location = data
             elif prefix == 'f' or prefix == 'file':
                 file_array = data.split("\t")
+                if "*" in file_array[0]:
+                    wild_cards = glob.glob(file_array[0])
+                    if len(wild_cards) == 0:
+                        flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
+                        continue
+                    for x in wild_cards:
+                        curzip.file_map[x] = os.path.join(file_to_dir, os.path.join(file_array[1], x) if len(file_array) > 1 else os.path.basename(x))
+                    continue
                 if len(file_array) == 1:
                     curzip.file_map[file_array[0]] = os.path.basename(file_array[0])
                 elif len(file_array) == 2:
                     curzip.file_map[file_array[0]] = file_array[1]
                 else:
                     print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
-                current_file = file_array[0]
+                if '*' not in data:
+                    current_file = file_array[0]
+                    continue
             elif prefix == 'fb':
                 dir_array = data.split("\t")
                 file_base_dir = dir_array[0]
                 file_to_dir = dir_array[1] if len(dir_array) > 0 else ''
             elif prefix == 'fn':
                 if not file_base_dir:
-                    flag_cfg_error("fn file-nested has no base dir for project {} at line {}.".format(cur_proj, line_count))
+                    flag_cfg_error(line_count, "fn file-nested has no base dir for project {} at line {}.".format(cur_zip_proj, line_count))
                     continue
                 if '*' not in data:
                     file_array = data.split("\t")
@@ -228,30 +239,35 @@ def read_zup_txt():
                         to_file = "{}/{}".format(file_to_dir, to_file)
                     curzip.file_map[os.path.join(file_base_dir, data)] = to_file
                     continue
-                print("Can't use wildcards ... yet.")
+                wild_cards = glob.glob(os.path.join(file_base_dir, data))
+                if len(wild_cards) == 0:
+                    flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
+                    continue
+                for x in wild_cards:
+                    curzip.file_map[x] = os.path.join(file_to_dir, os.path.basename(x))
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
                 if current_file:
                     if current_file in curzip.min_specific_file_size:
-                        flag_cfg_error("Redefined minimum component file size line {}.".format(line_count))
+                        flag_cfg_error(line_count, "Redefined minimum component file size line {}.".format(line_count))
                     curzip.min_specific_file_size[current_file] = int(data)
                 else:
                     if curzip.min_zip_size:
-                        flag_cfg_error("Redefined maximum zipfile size line {}.".format(line_count))
+                        flag_cfg_error(line_count, "Redefined maximum zipfile size line {}.".format(line_count))
                     curzip.min_zip_size = int(data)
             elif prefix == 'max':
                 if current_file:
                     if current_file in curzip.max_specific_file_size:
-                        flag_cfg_error("Redefined maximum component file size line {}.".format(line_count))
+                        flag_cfg_error(line_count, "Redefined maximum component file size line {}.".format(line_count))
                     curzip.max_specific_file_size[current_file] = int(data)
                 else:
                     if curzip.max_zip_size:
-                        flag_cfg_error("Redefined maximum zipfile size line {}.".format(line_count))
+                        flag_cfg_error(line_count, "Redefined maximum zipfile size line {}.".format(line_count))
                     curzip.max_zip_size = int(data)
             elif prefix == 'out' or prefix == 'outfile':
                 if curzip.out_name:
-                    flag_cfg_error("Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
+                    flag_cfg_error(line_count, "Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
                 curzip.out_name = data
             elif prefix == 'proj' or prefix == 'projx':
                 if data.endswith('b') and not data.endswith('-b'):
