@@ -117,6 +117,8 @@ def is_beta(proj_read_in):
     return False
 
 def zip_write_nonzero_file(zip_handle, from_path, to_path):
+    if not os.path.exists(from_path):
+        sys.exit("Could not find file {}. Bailing.".format(from_path))
     if os.stat(from_path).st_size == 0:
         sys.exit("Tried to write zero-byte file {} to zip. Bailing.".format(from_path))
     zip_handle.write(from_path, to_path, zipfile.ZIP_DEFLATED)
@@ -139,6 +141,13 @@ def flag_zip_build_error(bail_string):
     if bail_on_first_build_error:
         print("Bailing after first error. To change this, set flag -bbn/nbb.")
         sys.exit()
+
+def add_to_file_map(this_map, from_file, to_file, line_count):
+    from_file_mod = os.path.normpath(from_file)
+    if from_file_mod in this_map:
+        flag_cfg_error(line_count, "Line {} has duplicate file {} to {}.".format(line_count, from_file, to_file))
+        return
+    this_map[from_file_mod] = to_file
 
 def read_zup_txt():
     global default_from_cfg
@@ -207,12 +216,12 @@ def read_zup_txt():
                         flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
                         continue
                     for x in wild_cards:
-                        curzip.file_map[x] = os.path.join(file_to_dir, os.path.join(file_array[1], x) if len(file_array) > 1 else os.path.basename(x))
+                        add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.join(file_array[1], x) if len(file_array) > 1 else os.path.basename(x)), line_count)
                     continue
                 if len(file_array) == 1:
-                    curzip.file_map[file_array[0]] = os.path.basename(file_array[0])
+                    add_to_file_map(curzip.file_map, file_array[0], os.path.basename(file_array[0]), line_count)
                 elif len(file_array) == 2:
-                    curzip.file_map[file_array[0]] = file_array[1]
+                    add_to_file_map(curzip.file_map, file_array[0], file_array[1], line_count)
                 else:
                     flag_cfg_error(line_count, "Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                 if '*' not in data:
@@ -236,14 +245,14 @@ def read_zup_txt():
                         flag_cfg_error(line_count, "Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                     if file_to_dir:
                         to_file = "{}/{}".format(file_to_dir, to_file)
-                    curzip.file_map[os.path.join(file_base_dir, data)] = to_file
+                    add_to_file_map(curzip.file_map, os.path.join(file_base_dir, data), to_file, line_count)
                     continue
                 wild_cards = glob.glob(os.path.join(file_base_dir, data))
                 if len(wild_cards) == 0:
                     flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
                     continue
                 for x in wild_cards:
-                    curzip.file_map[x] = os.path.join(file_to_dir, os.path.basename(x))
+                    add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.basename(x)), line_count)
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
