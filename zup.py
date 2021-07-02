@@ -142,6 +142,9 @@ def flag_zip_build_error(bail_string):
 def read_zup_txt():
     global default_from_cfg
     cur_zip_proj = ''
+    file_base_dir = ''
+    file_to_dir = ''
+    current_file = ''
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
@@ -150,6 +153,7 @@ def read_zup_txt():
                 if cur_zip_proj: # maybe do something super verbose in here
                     cur_zip_proj = ''
                     current_file = ''
+                    file_base_dir = ''
                 continue
             if line.startswith("!"):
                 print("Remove old artifact (!) from config file at line", line_count)
@@ -203,6 +207,28 @@ def read_zup_txt():
                 else:
                     print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                 current_file = file_array[0]
+            elif prefix == 'fb':
+                dir_array = data.split("\t")
+                file_base_dir = dir_array[0]
+                file_to_dir = dir_array[1] if len(dir_array) > 0 else ''
+            elif prefix == 'fn':
+                if not file_base_dir:
+                    flag_cfg_error("fn file-nested has no base dir for project {} at line {}.".format(cur_proj, line_count))
+                    continue
+                if '*' not in data:
+                    file_array = data.split("\t")
+                    print(os.path.join(file_base_dir, data))
+                    if len(file_array) == 1:
+                        to_file = data
+                    elif len(file_array) == 2:
+                        to_file = file_array[1]
+                    else:
+                        print("Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
+                    if file_to_dir:
+                        to_file = "{}/{}".format(file_to_dir, to_file)
+                    curzip.file_map[os.path.join(file_base_dir, data)] = to_file
+                    continue
+                print("Can't use wildcards ... yet.")
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
