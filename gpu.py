@@ -4,15 +4,17 @@
 # todo: git diff --name-only --cached
 #       git ls-files --modified
 
+import sys
 import os
-import mytools as mt
+import re
 import subprocess
 import glob
 from collections import defaultdict
+import mytools as mt
 
 master_to_main = []
 note_nongit = False
-push_everything = False
+run_push_command = False
 
 check_pushes = check_modified = check_staged = False
 
@@ -25,7 +27,7 @@ valid_git = []
 
 def usage():
     print("a = try all options")
-    print("m/p/s = check modified/pushes/staged.")
+    print("m/p/s = check modified/pushes/staged. R = run don't print. You can combine any or all of these.")
     sys.exit()
 
 def check_all_pushes(valid_git):
@@ -38,7 +40,7 @@ def check_all_pushes(valid_git):
             x = subprocess.check_output(cmd_array, stderr = subprocess.PIPE).strip().decode()
             if int(x) > 0:
                 print(x, "Unpushed commit{} in".format(mt.plur(int(x))), bn)
-                if push_everything:
+                if run_push_command:
                     os.system("git push")
                 continue
         except:
@@ -67,7 +69,7 @@ def check_modified_unadded(valid_git):
                 print("    ----> {}".format(x))
         except:
             pass
-    return count = 0
+    return count
 
 def check_staged_uncommitted(valid_git):
     count = 0
@@ -86,7 +88,7 @@ def check_staged_uncommitted(valid_git):
                 print("    ----> {}".format(x))
         except:
             pass
-    return count = 0
+    return count
 
 def get_ignores():
     with open(ignores_file) as file:
@@ -102,14 +104,17 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'a':
-        check_modified = check_pushes = check_staged = True
-    elif re.match("[mps]+$", arg):
+        run_push_command = check_modified = check_pushes = check_staged = True
+    elif re.match("[mprs]+$", arg):
         check_modified |= 'm' in arg
         check_pushes |= 'p' in arg
+        run_push_command |= 'r' in arg
         check_staged |= 's' in arg
     else:
-        usage()        
+        usage()
     cmd_count += 1
+
+get_ignores()
 
 for d in x:
     bn = os.path.basename(d)
@@ -123,17 +128,23 @@ for d in x:
         continue
     valid_git.append(d)
 
-if not (check_modified = check_pushes = check_staged):
+if not (check_modified or check_pushes or check_staged):
     sys.exit("Must specify one of modified/pushes/staged, or a for all.")
 
 if check_modified:
-    check_modified_unadded(valid_git)
+    temp = check_modified_unadded(valid_git)
+    if not temp:
+        print("Hooray! No repos with modified/unadded files.")
 
 if check_pushes:
-    check_all_pushes(valid_git)
+    temp = check_all_pushes(valid_git)
+    if not temp:
+        print("Hooray! No repos that need a push.")
 
 if check_staged:
-    check_staged_uncommitted(valid_git)
+    temp = check_staged_uncommitted(valid_git)
+    if not temp:
+        print("Hooray! No repos with staged/uncommitted files.")
 
 if len(master_to_main):
     print("RENAME MASTER TO MAIN FOR {}:".format(', '.join(master_to_main)))
