@@ -86,6 +86,8 @@ def alpha_match(var1, var2, case_insensitive = True):
     return sorted(var1) == sorted(var2)
 
 def plur(a, choices=['s', '']):
+    if type(a) == str and a.isdigit():
+        a = int(a)
     if type(a) == list:
         a = len(a)
     return choices[a == 1]
