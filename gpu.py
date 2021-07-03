@@ -15,6 +15,7 @@ import mytools as mt
 master_to_main = []
 note_nongit = False
 run_push_command = False
+master_main_check = False
 
 check_pushes = check_modified = check_staged = False
 
@@ -28,9 +29,27 @@ valid_git = []
 def usage():
     print("a = try all options")
     print("m/p/s = check modified/pushes/staged. R = run don't print. You can combine any or all of these.")
+    print("mm = master-to-main check")
     sys.exit()
 
+def check_master_main(valid_git):
+    global master_to_main
+    count = 0
+    cmd_array_2 = [ 'git', 'rev-list', 'master', '--not', 'origin/master', '--count' ]
+    for d in valid_git:
+        bn = os.path.basename(d)
+        os.chdir(d)
+        try:
+            x = subprocess.check_output(cmd_array_2, stderr = subprocess.PIPE).strip().decode()
+            master_to_main.append(bn)
+            count += 1
+        except:
+            pass
+        continue
+    return count
+
 def check_all_pushes(valid_git):
+    count = 0
     cmd_array = [ 'git', 'rev-list', 'main', '--not', 'origin/main', '--count' ]
     cmd_array_2 = [ 'git', 'rev-list', 'master', '--not', 'origin/master', '--count' ]
     for d in valid_git:
@@ -40,17 +59,14 @@ def check_all_pushes(valid_git):
             x = subprocess.check_output(cmd_array, stderr = subprocess.PIPE).strip().decode()
             if int(x) > 0:
                 print(x, "Unpushed commit{} in".format(mt.plur(int(x))), bn)
+                count += 1
                 if run_push_command:
                     os.system("git push")
                 continue
         except:
             pass
-        try:
-            x = subprocess.check_output(cmd_array_2, stderr = subprocess.PIPE).strip().decode()
-            master_to_main.append(bn)
-        except:
-            pass
         continue
+    return count
 
 def check_modified_unadded(valid_git):
     count = 0
@@ -104,7 +120,9 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'a':
-        run_push_command = check_modified = check_pushes = check_staged = True
+        run_push_command = check_modified = check_pushes = check_staged = master_main_check = True
+    elif arg == 'mm':
+        master_main_check = True
     elif re.match("[mprs]+$", arg):
         check_modified |= 'm' in arg
         check_pushes |= 'p' in arg
@@ -128,8 +146,8 @@ for d in x:
         continue
     valid_git.append(d)
 
-if not (check_modified or check_pushes or check_staged):
-    sys.exit("Must specify one of modified/pushes/staged, or a for all.")
+if not (check_modified or check_pushes or check_staged or master_main_check):
+    sys.exit("Must specify one of modified/pushes/staged/master-main check, or a for all.")
 
 if check_modified:
     temp = check_modified_unadded(valid_git)
@@ -146,9 +164,14 @@ if check_staged:
     if not temp:
         print("Hooray! No repos with staged/uncommitted files.")
 
-if len(master_to_main):
-    print("RENAME MASTER TO MAIN FOR {}:".format(', '.join(master_to_main)))
-    print("<FIX ON GITHUB IF NECESSARY: https://github.com/andrewschultz/SAMPLE-REPO-NAME/settings/branches>")
-    print("git branch -m master main")
-    print("git push -u origin main")
-    print("git push origin --delete master")
+if master_main_check:
+    temp = check_master_main(valid_git)
+    print(master_to_main)
+    if temp:
+        print("RENAME MASTER TO MAIN FOR {}:".format(', '.join(master_to_main)))
+        print("<FIX ON GITHUB IF NECESSARY: https://github.com/andrewschultz/SAMPLE-REPO-NAME/settings/branches>")
+        print("    git branch -m master main")
+        print("    git push -u origin main")
+        print("    git push origin --delete master")
+    else:
+        print("Hooray! No master/main changes needed.")
