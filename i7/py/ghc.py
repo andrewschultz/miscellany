@@ -32,19 +32,17 @@ def check_valid_git_path():
     if not os.path.exists(root_path):
         sys.exit("This github directory does not have a .git subdirectory. You may need to fetch it from somewhere.")
 
-def copy_source_to_github(d, copy_timestamps_misaligned = False):
-    if not d:
-        d = os.getcwd()
-        print("Getting project from current directory.", d)
-    my_proj = i7.dir2proj(d, empty_if_unmatched = need_abbreviation)
+def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
+    if not my_proj:
+        my_proj = i7.dir2proj(empty_if_unmatched = need_abbreviation)
+    if not my_proj:
+        sys.exit("Could not find project for the current directory. Bailing.")
     if my_proj in i7.i7com and my_proj in i7.i7com[my_proj].split(","):
         for x in i7.i7com[my_proj].split(","):
             if x == my_proj:
                 continue
             copy_source_to_github(os.path.join(d, x), copy_to_blank, copy_timestamps_misaligned)
         return
-    if not my_proj:
-        sys.exit("Could not find project for the current directory. Bailing.")
     my_main = i7.main_src(my_proj)
     if trim_before:
         os.system("ttrim.py c {}".format(my_main))
@@ -91,8 +89,11 @@ while cmd_count < len(sys.argv):
     else:
         if cmd_line_proj:
             sys.exit("Duplicate projects specified.")
-        cmd_line_proj = arg
-        usage(message = "UNRECOGNIZED PARAMETER {}".format(arg))
+        cmd_line_proj = i7.proj_exp(arg, return_nonblank = not need_abbreviation, to_github = True)
+        if not cmd_line_proj:
+            usage(message = "UNRECOGNIZED PARAMETER {}".format(arg))
+        else:
+            print("Current project is", cmd_line_proj)
     cmd_count += 1
 
 copy_source_to_github(cmd_line_proj)
