@@ -14,12 +14,19 @@ master_to_main = []
 note_nongit = False
 push_everything = False
 
+check_pushes = check_modified = check_staged = False
+
 x = glob.glob(mt.gitbase + "/*")
 
 ignores_file = "c:/writing/scripts/gpu.txt"
 ignores_dict = defaultdict(bool)
 
 valid_git = []
+
+def usage():
+    print("a = try all options")
+    print("m/p/s = check modified/pushes/staged.")
+    sys.exit()
 
 def check_all_pushes(valid_git):
     cmd_array = [ 'git', 'rev-list', 'main', '--not', 'origin/main', '--count' ]
@@ -91,6 +98,19 @@ def get_ignores():
                     continue
                 ignores_dict[q] = True
 
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'a':
+        check_modified = check_pushes = check_staged = True
+    elif re.match("[mps]+$", arg):
+        check_modified |= 'm' in arg
+        check_pushes |= 'p' in arg
+        check_staged |= 's' in arg
+    else:
+        usage()        
+    cmd_count += 1
+
 for d in x:
     bn = os.path.basename(d)
     if not os.path.isdir(d):
@@ -103,9 +123,17 @@ for d in x:
         continue
     valid_git.append(d)
 
-check_all_pushes(valid_git)
-check_modified_unadded(valid_git)
-check_staged_uncommitted(valid_git)
+if not (check_modified = check_pushes = check_staged):
+    sys.exit("Must specify one of modified/pushes/staged, or a for all.")
+
+if check_modified:
+    check_modified_unadded(valid_git)
+
+if check_pushes:
+    check_all_pushes(valid_git)
+
+if check_staged:
+    check_staged_uncommitted(valid_git)
 
 if len(master_to_main):
     print("RENAME MASTER TO MAIN FOR {}:".format(', '.join(master_to_main)))
