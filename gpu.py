@@ -43,7 +43,8 @@ def check_all_pushes(valid_git):
             pass
         continue
 
-def check_staged_uncommitted(valid_git):
+def check_modified_unadded(valid_git):
+    count = 0
     for d in valid_git:
         bn = os.path.basename(d)
         os.chdir(d)
@@ -53,11 +54,32 @@ def check_staged_uncommitted(valid_git):
             if not cmd_out:
                 continue
             ary = cmd_out.split("\n")
-            print("Git repo {} has {} staged/uncommitted file{}.".format(bn, len(ary), mt.plur(len(ary))))
+            print("Git repo {} has {} modified/unadded file{}.".format(bn, len(ary), mt.plur(len(ary))))
+            count += 1
             for x in ary:
                 print("    ----> {}".format(x))
         except:
             pass
+    return count = 0
+
+def check_staged_uncommitted(valid_git):
+    count = 0
+    for d in valid_git:
+        bn = os.path.basename(d)
+        os.chdir(d)
+        try:
+            cmd_array = [ 'git', 'diff', '--name-only', '--cached']
+            cmd_out = subprocess.check_output(cmd_array, stderr = subprocess.PIPE).strip().decode()
+            if not cmd_out:
+                continue
+            ary = cmd_out.split("\n")
+            print("Git repo {} has {} staged/uncommitted file{}.".format(bn, len(ary), mt.plur(len(ary))))
+            count += 1
+            for x in ary:
+                print("    ----> {}".format(x))
+        except:
+            pass
+    return count = 0
 
 def get_ignores():
     with open(ignores_file) as file:
@@ -82,6 +104,7 @@ for d in x:
     valid_git.append(d)
 
 check_all_pushes(valid_git)
+check_modified_unadded(valid_git)
 check_staged_uncommitted(valid_git)
 
 if len(master_to_main):
