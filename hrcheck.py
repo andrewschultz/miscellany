@@ -55,6 +55,8 @@ check_file  = "c:\\writing\\scripts\\hrcheck.txt";
 check_private = "c:\\writing\\scripts\\hrcheckp.txt";
 xtra_file   = "c:\\writing\\scripts\\hrcheckx.txt";
 
+hr_files = [ check_file, check_private, xtra_file ]
+
 lock_file   = "c:\\writing\\scripts\\hrchecklock.txt";
 queue_file   = "c:\\writing\\scripts\\hrcheckqueue.txt";
 
@@ -82,12 +84,17 @@ def find_in_one_checkfile(my_string, f, find_comments):
                 mt.add_postopen(f, line_count)
     return
 
-def find_in_checkfiles(my_string, find_comments):
+def find_in_checkfiles(my_string, find_comments_first_pass, ignore_comments):
+    if find_comments_first_pass and ignore_comments:
+        print("WARNING: conflicting options C and I to both find comments and ignore them. Finding comments (C) overrides ignoring comments (I).")
     for x in [check_file, check_private, xtra_file]:
-        find_in_one_checkfile(my_string, x, find_comments)
+        find_in_one_checkfile(my_string, x, find_comments_first_pass)
+    if not find_comments_first_pass and not ignore_comments: # second pass through, this time looking for comments, assuming we ignored them first time
+        for x in [check_file, check_private, xtra_file]:
+            find_in_one_checkfile(my_string, x, find_comments_first_pass)
     mt.postopen()
     print("Nothing found for <<{}>>.".format(my_string))
-    exit()
+    sys.exit()
 
 def is_time(t, bail = False):
     x = t.count(":")
@@ -461,8 +468,8 @@ while count < len(sys.argv):
         print_bookmarks = True
     elif arg == 'v':
         verbose = True
-    elif re.search('^[fs](c?)[:=]', arg):
-        find_in_checkfiles(re.sub("^[a-z]+[:=]", "", arg), 'c' in arg)
+    elif re.search('^[fs]([ci]?)[:=]', arg):
+        find_in_checkfiles(re.sub("^[a-z]+[:=]", "", arg), 'c' in arg, 'i' in arg)
     elif arg == '?':
         usage()
         exit()
