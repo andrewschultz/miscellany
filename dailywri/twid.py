@@ -36,6 +36,7 @@ class twiddle_project:
         self.flag_regexes = []
 
         self.shuffle_end = ''
+        self.shuffle_start = ''
 
 #####################end classes
 
@@ -137,6 +138,9 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'shufend':
                 cur_twiddle.shuffle_end = (data)
+                continue
+            elif prefix == 'shufstart':
+                cur_twiddle.shuffle_start = (data)
                 continue
             elif prefix == 'text':
                 cur_twiddle.flag_text_chunks.append(data)
@@ -443,10 +447,16 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
     cur_text_tweaks = 0
     xb = os.path.basename(x)
     past_ignore = False
+    past_start = False
+    if not this_twiddle.shuffle_start:
+        past_start = True
     with open(x) as file:
         last_section = ''
         current_section = ''
         for (line_count, line) in enumerate (file, 1):
+            if not past_start:
+                if line.startswith(this_twiddle.shuffle_start):
+                    past_start = True
             if not past_ignore and this_twiddle.shuffle_end:
                 if line.startswith(this_twiddle.shuffle_end):
                     print("Found the end line {} starting with text {}".format(line_count, this_twiddle.shuffle_end))
@@ -474,7 +484,7 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                 continue
             if current_section:
                 before_lines[current_section] += 1
-            if past_ignore:
+            if past_ignore or not past_start:
                 section_text['blank' if not current_section else current_section] += line
                 continue
             temp = pattern_check(line)
