@@ -196,7 +196,7 @@ def read_zup_txt():
                 if default_from_cfg:
                     flag_cfg_error(line_count, "default project redefined line {}.".format(line_count))
                 default_from_cfg = i7.proj_exp(data)
-            elif prefix == 'd' or prefix == 'dircopy':
+            elif prefix in ( 'd', 'dircopy' ):
                 temp_ary = data.split('=')
                 if not os.path.isabs(temp_ary[0]):
                     flag_cfg_error(line_count, "Line {} {} must be absolute path.".format(line_count, temp_ary[0]))
@@ -206,9 +206,9 @@ def read_zup_txt():
                     curzip.dir_copy = tuple(temp_ary)
                 else:
                     flag_cfg_error(line_count, "Too many = in line {} for dircopy.".format(line_count))
-            elif prefix == 'dl' or prefix == 'dropbox':
+            elif prefix in ( 'dl', 'dropbox' ):
                 curzip.dropbox_location = data
-            elif prefix == 'f' or prefix == 'file':
+            elif prefix in ( 'f', 'file' ):
                 file_array = data.split("\t")
                 if "*" in file_array[0]:
                     wild_cards = glob.glob(file_array[0])
@@ -227,11 +227,11 @@ def read_zup_txt():
                 if '*' not in data:
                     current_file = file_array[0]
                     continue
-            elif prefix == 'fb':
+            elif prefix in ( 'fb', 'b' ):
                 dir_array = data.split("\t")
                 file_base_dir = dir_array[0]
                 file_to_dir = dir_array[1] if len(dir_array) > 1 else ''
-            elif prefix == 'fn':
+            elif prefix in ( 'fn', 'n' ):
                 if not file_base_dir:
                     flag_cfg_error(line_count, "fn file-nested has no base dir for project {} at line {}.".format(cur_zip_proj, line_count))
                     continue
@@ -273,11 +273,11 @@ def read_zup_txt():
                     if curzip.max_zip_size:
                         flag_cfg_error(line_count, "Redefined maximum zipfile size line {}.".format(line_count))
                     curzip.max_zip_size = int(data)
-            elif prefix == 'out' or prefix == 'outfile':
+            elif prefix in ( 'out', 'outfile' ):
                 if curzip.out_name:
                     flag_cfg_error(line_count, "Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
                 curzip.out_name = data
-            elif prefix == 'proj' or prefix == 'projx':
+            elif prefix in ( 'proj', 'projx' ):
                 if data.endswith('b') and not data.endswith('-b'):
                     if data[:-1] in i7.i7x and data not in i7.i7x:
                         flag_cfg_error(line_count, "WARNING: likely beta build {} should end in -b, not just b.".format(data), auto_bail = False)
@@ -309,17 +309,17 @@ def read_zup_txt():
                     curzip.time_compare.append((time_array[0], time_array[1]))
                 else:
                     curzip.time_compare.append((time_array[1], time_array[0]))
-            elif prefix == 'v' or prefix == 'version':
+            elif prefix in ( 'v', 'version' ):
                 zups[proj_candidate].version = int(data)
             else:
                 if line.startswith("/") or line.startswith("\\"):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line".format(line_count))
                 elif re.match("[a-z0-9 \-]+[\\\/]", line, flags=re.IGNORECASE):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a Unix-type file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Unix-type file path at line".format(line_count))
                 elif re.match("[a-z]:[\\\/]", line, flags=re.IGNORECASE):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line", line_count)
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line".format(line_count))
                 else:
-                    flag_cfg_error(line_count, "Unknown prefix", prefix, "line", line_count)
+                    flag_cfg_error(line_count, "Unknown prefix {} line {}".format(prefix, line_count))
     print(zup_cfg, "read successfully...")
 
 cmd_count = 1
@@ -346,17 +346,17 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'b':
         build_before_zipping = True
-    elif arg == 'bby' or arg == 'ybb':
+    elif arg in ( 'bby', 'ybb' ):
         bail_on_first_build_error = True
-    elif arg == 'bbn' or arg == 'nbb':
+    elif arg in ( 'bbn', 'nbb' ):
         bail_on_first_build_error = False
     elif arg == 'b':
         build_before = True
-    elif arg == 'c' or arg == 'ce' or arg == 'ec':
+    elif arg in ( 'c', 'ce', 'ec' ):
         mt.npo(zup_cfg)
-    elif arg == 'bcy' or arg == 'ybc':
+    elif arg in ( 'bcy', 'ybc' ):
         bail_on_first_build_error = True
-    elif arg == 'bcn' or arg == 'nbc':
+    elif arg in ( 'bcn', 'nbc' ):
         bail_on_first_build_error = False
     elif arg == 'v':
         verbose = True
@@ -364,7 +364,7 @@ while cmd_count < len(sys.argv):
         copy_link = True
     elif arg == 'clo':
         copy_link_only = True
-    elif arg == 'cd' or arg == 'dc':
+    elif arg in ( 'cd', 'dc' ):
         copy_dropbox_after = True
     elif arg == 'oce':
         open_config_on_error = True
