@@ -685,7 +685,16 @@ def inform_short_name(my_file):
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj(), my_subdir = "source", materials = False):
+def proj2dir(x = dir2proj(), my_subdir = "source", to_github = False, materials = False):
+    if to_github:
+        temp = main_abb(x)
+        if not temp:
+            temp = x
+        if temp in i7gx:
+            temp = i7gx[temp]
+        else:
+            temp = i7x[temp]
+        return os.path.join(gh_dir, temp)
     return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", "\\" + my_subdir if my_subdir else "")
 
 sdir = p2d = proj2dir
