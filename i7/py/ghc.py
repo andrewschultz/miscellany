@@ -32,12 +32,15 @@ def check_valid_git_path():
     if not os.path.exists(root_path):
         sys.exit("This github directory does not have a .git subdirectory. You may need to fetch it from somewhere.")
 
-def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
+def cmd_line_sniffer(my_proj):
     if not my_proj:
         my_proj = i7.dir2proj(empty_if_unmatched = need_abbreviation)
     if not my_proj:
         sys.exit("Could not find project for the current directory. Bailing.")
-    if my_proj in i7.i7com and my_proj in i7.i7com[my_proj].split(","):
+    return my_proj
+
+def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
+    if my_proj in i7.i7com and my_proj in i7.i7com[my_proj].split(","): # recursive stuff like Stale Tales Slate
         for x in i7.i7com[my_proj].split(","):
             if x == my_proj:
                 continue
@@ -68,8 +71,6 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
     print("Copying", my_main, "to", my_gh)
     shutil.copy(my_main, my_gh)
 
-check_valid_git_path()
-
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
@@ -96,7 +97,13 @@ while cmd_count < len(sys.argv):
             print("Current project is", cmd_line_proj)
     cmd_count += 1
 
+cmd_line_proj = cmd_line_sniffer(cmd_line_proj)
 copy_source_to_github(cmd_line_proj)
 
 if do_diff_after:
+    from_dir = os.getcwd()
+    to_dir = i7.proj2dir(cmd_line_proj, to_github = True)
+    if to_dir != from_dir:
+        print("Switching to {} in-script. You may wish to do so in your shell.".format(to_dir))
+    os.chdir(to_dir)
     os.system("git diff --word-diff")

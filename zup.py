@@ -230,7 +230,7 @@ def read_zup_txt():
             elif prefix == 'fb':
                 dir_array = data.split("\t")
                 file_base_dir = dir_array[0]
-                file_to_dir = dir_array[1] if len(dir_array) > 0 else ''
+                file_to_dir = dir_array[1] if len(dir_array) > 1 else ''
             elif prefix == 'fn':
                 if not file_base_dir:
                     flag_cfg_error(line_count, "fn file-nested has no base dir for project {} at line {}.".format(cur_zip_proj, line_count))
@@ -339,7 +339,7 @@ while cmd_count < len(sys.argv):
         cmd_count += 1
         continue
     elif arg in zups:
-        print("Likely custom project {} that you specified is added to project array.".format(my_proj))
+        print("Likely custom project {} that you specified is added to project array.".format(my_proj if my_proj else arg))
         project_array.append(arg)
         cmd_count += 1
         continue
@@ -402,7 +402,7 @@ for x in zups:
 
 out_temp = os.path.join(zip_dir, "temp.zip")
 
-print("Copying over. Failed creations will go to temp.zip.")
+print("Failed creations will go to temp.zip.")
 
 for p in project_array:
     if p not in zups:
@@ -437,7 +437,7 @@ for p in project_array:
         flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(final_zip_file, zip_size, zups[p].min_zip_size))
     if not skip_temp_out:
         shutil.move(out_temp, final_zip_file)
-    print("Wrote {} from {}.".format(final_zip_file, p))
+    print("    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p))
     for x in zups[p].command_post_buffer:
         print("Running post-command", x)
         subprocess.open(shlex.split(' ', x))
