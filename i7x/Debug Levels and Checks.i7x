@@ -30,4 +30,21 @@ carry out dlaing:
 	now current-debug-level is the number understood;
 	the rule succeeds;
 
+volume debug checks
+
+debug-count is a number that varies.
+
+to dc-say (t - text):
+	increment debug-count;
+	say "[debug-count]. [t]";
+
+to dcr:
+	debug-count-reset;
+
+to dc0:
+	debug-count-reset;
+
+to debug-count-reset:
+	now debug-count is 0;
+
 Debug Levels and Checks ends here.
