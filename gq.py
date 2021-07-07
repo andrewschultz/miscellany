@@ -374,40 +374,44 @@ def read_args(my_arg_array, in_loop = False):
                 arg = arg[1:]
                 print("Finding definition for", arg)
                 os.system("start http://www.thefreedictionary.com/{}".format(arg))
+            temp_replace = '{}[^a-z]*'.format('' if arg.endswith('/') else '(s)?')
             if arg.endswith('/'):
+                arg = arg[:-1]
                 add_plural_suffix = False
-            arg = arg.replace('/', '[^a-z]*', arg.count('/') - (arg[-1] == '/'))
+            arg = arg.replace('/', temp_replace, arg.count('/') - (arg[-1] == '/')) # possible separate words with no other text between them
             arg = arg.replace('`', '')
-            if "'" in arg:
+            if "'" in arg: # optional apostrophes E.g. Yall or Y'all
                 arg = arg.replace("'", "(')?")
-            if arg.endswith('#'):
+            if arg.endswith('#'): # ending with pound sign adds the main suffixes to a word
                 match_string_raw.append("{}({})?".format(arg[:-1], '|'.join(main_suffixes.split(','))))
                 cmd_count += 1
                 continue
-            if '#' in arg:
+            if '#' in arg: # multiple possibilities after a word chunk e.g. cand#y#ies#idate
                 ary = arg.split('#')
                 match_string_raw.append("{}({})?".format(ary[0], '|'.join(ary[1:])))
                 cmd_count += 1
                 continue
-            if '=' in arg:
+            if '=' in arg: # multiple possibilities after a word chunk e.g. cand=y=ies=idate but don't want the base word
                 ary = arg.split('=')
                 if len(ary) == 2:
-                    match_string_raw.append("({}|{})?".format(ary[0], ary[0] + ary[1]))
+                    match_string_raw.append("({}|{})".format(ary[0], ary[0] + ary[1]))
                 else:
                     temp_ary = []
                     for x in ary[1:]:
                         temp_ary.append(ary[0] + x)
                     match_string_raw.append("({})".format('|'.join(temp_ary)))
                 cmd_count += 1
+                sys.exit(match_string_raw)
                 continue
-            if '!' in arg:
+            if '!' in arg: # don't have most words behind last
                 ary = arg.split('!')
                 arg = "(?<!{} ){}".format('|'.join(ary[:-1]), ary[-1])
-            if '~' in arg:
+            if '~' in arg: # don't have 2nd+ words ahead of first
                 ary = arg.split('~')
                 arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
-            match_string_raw.append(arg if arg[-1] == '/' else arg + '(s)?')
+            match_string_raw.append(arg + ('(s)?' if add_plural_suffix else ''))
         cmd_count += 1
+    sys.exit(match_string_raw)
     return 0
 
 ######################################main file below
