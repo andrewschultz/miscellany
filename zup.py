@@ -38,7 +38,7 @@ class zip_project:
         self.post_build = []
         self.size_compare = defaultdict(tuple)
         self.time_compare = []
-        self.version = 1
+        self.version = '1'
 
 zups = defaultdict(zip_project)
 
@@ -310,14 +310,16 @@ def read_zup_txt():
                 else:
                     curzip.time_compare.append((time_array[1], time_array[0]))
             elif prefix in ( 'v', 'version' ):
-                zups[proj_candidate].version = int(data)
+                if re.search("[^0-9\.]", data):
+                    flag_cfg_error(line_count, "WARNING version must only contain integers or decimals at line {}".format(line_count))
+                zups[proj_candidate].version = data
             else:
                 if line.startswith("/") or line.startswith("\\"):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line".format(line_count))
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line {}".format(line_count))
                 elif re.match("[a-z0-9 \-]+[\\\/]", line, flags=re.IGNORECASE):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a Unix-type file path at line".format(line_count))
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Unix-type file path at line {}".format(line_count))
                 elif re.match("[a-z]:[\\\/]", line, flags=re.IGNORECASE):
-                    flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line".format(line_count))
+                    flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line {}".format(line_count))
                 else:
                     flag_cfg_error(line_count, "Unknown prefix {} line {}".format(prefix, line_count))
     print(zup_cfg, "read successfully...")
@@ -396,7 +398,7 @@ print("Project(s):", ', '.join(project_array))
 
 for x in zups:
     if zups[x].out_name:
-        zups[x].out_name = zups[x].out_name.replace("%", str(zups[x].version))
+        zups[x].out_name = zups[x].out_name.replace("%", zups[x].version)
     else:
         zups[x].out_name = '{}.zip'.format(name)
 
