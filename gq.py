@@ -211,7 +211,7 @@ def find_text_in_file(match_string_raw, projfile):
     current_table = ""
     current_table_line = 0
     pbase = os.path.basename(projfile)
-    with open(projfile) as file:
+    with open(projfile, encoding='utf8') as file:
         for (line_count, line) in enumerate (file, 1):
             if current_table:
                 current_table_line += 1
@@ -411,7 +411,6 @@ def read_args(my_arg_array, in_loop = False):
                 arg = "{} (?!{})".format(ary[0], '|'.join(ary[1:]))
             match_string_raw.append(arg + ('(s)?' if add_plural_suffix else ''))
         cmd_count += 1
-    sys.exit(match_string_raw)
     return 0
 
 ######################################main file below
