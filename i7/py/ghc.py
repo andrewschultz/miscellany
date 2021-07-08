@@ -15,12 +15,15 @@ copy_to_blank = False
 need_abbreviation = False
 cmd_line_proj = ''
 trim_before = True
+ignore_misaligned_timestamps = False
+reverse_copy = False
 
 def usage(message = "USAGE"):
     print(message)
     print("a na an = need abbreviation in directory e.g. btp vs buck-the-past")
     print("d nd dn = diff after or not")
     print("c = copy to blank e.g. if there is no story.ni in the destination, do this")
+    print("r = reverse-copy (useful for branches)")
     sys.exit()
 
 def check_valid_git_path():
@@ -58,14 +61,20 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
             print("Cannot find", my_gh)
             print("If this is new, you may wish to copy it manually with c/-c or set copy_to_blank = True in the code.")
         else:
+            if reverse_copy:
+                sys.exit("Can't reverse copy if {} doesn't exist.".format(my_gh))
             print("Copying", my_main, "to new file", my_gh)
             shutil.copy(my_main, my_gh)
         return
     if filecmp.cmp(my_main, my_gh):
         print(my_main, "and", my_gh, "are equivalent. Not copying.")
         return
+    if reverse_copy:
+        (my_main, my_gh) = (my_gh, my_main)
     if os.stat(my_main).st_mtime < os.stat(my_gh).st_mtime:
-        print("WARNING timezone for the two files is messed up.")
+        print("WARNING timestamp for from-file is after timestamp for to-file.")
+        print("    ----> from: {}".format(my_main))
+        print("    ---->   to: {}".format(my_gh))
         if not copy_timestamps_misaligned:
             return
     print("Copying", my_main, "to", my_gh)
@@ -85,6 +94,10 @@ while cmd_count < len(sys.argv):
         do_diff_after = True
     elif arg in ('dn', 'nd', 'n'):
         do_diff_after = False
+    elif arg == 'i':
+        ignore_misaligned_timestamps = True
+    elif arg == 'r':
+        reverse_copy = True
     elif arg == '?':
         usage()
     else:
@@ -98,7 +111,7 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 cmd_line_proj = cmd_line_sniffer(cmd_line_proj)
-copy_source_to_github(cmd_line_proj)
+copy_source_to_github(cmd_line_proj, ignore_misaligned_timestamps)
 
 if do_diff_after:
     from_dir = os.getcwd()
