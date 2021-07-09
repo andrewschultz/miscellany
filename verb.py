@@ -7,6 +7,8 @@ verb_types = defaultdict(str)
 copy_text = True
 print_text = False
 
+verb_data = "c:/writing/scripts/verbdata.txt"
+
 def add_clipboard_text(prefix, data):
     ary = data.split(",")
     if '~' in ary[0]:
@@ -35,7 +37,7 @@ def add_clipboard_text(prefix, data):
     this_string += "carry out {}:\n\tthe rule succeeds;\n\n".format(my_action)
     return this_string
 
-with open("c:/writing/scripts/verbdata.txt") as file:
+with open(verb_data) as file:
     for (line_count, line) in enumerate (file, 1):
         (prefix, data) = mt.cfg_data_split(line)
         ary = prefix.split(",")
@@ -59,6 +61,9 @@ while cmd_count < len(sys.argv):
     elif arg == 'p':
         copy_text = False
         print_text = True
+    elif arg == 'e':
+        mt.npo(verb_data)
+        sys.exit()
     elif arg == '?':
         print("Verb types and results:")
         for x in verb_types:
