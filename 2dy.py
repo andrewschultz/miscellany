@@ -74,6 +74,28 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
+def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
+    os.chdir(my_dir)
+    if not this_file:
+        g = glob.glob(os.path.join(my_dir, "20*.txt"))
+        this_file = os.path.basename(g[-1])
+    my_size = os.stat(this_file).st_size
+
+    os.chdir(my_dir)
+    f = open(stats_file, "r")
+    raw_stat_lines = [x for x in f.readlines() if x.strip()]
+    f.close()
+    
+    ary = raw_stat_lines[-1].split("\t")
+    last_size = int(ary[-1])
+    print("{} vs {}, {} vs {}.".format(my_size, last_size, my_size // 1000, last_size // 1000))
+    thousands = my_size // 1000 - last_size // 1000
+    if thousands == 0:
+        print("No new graph at the top of the hour. You need {} bytes.".format(1000 - (my_size % 1000)))
+    else:
+        print("There will be a new graph at the top of the hour. You eclipsed {} thousand{}.".format(thousands, mt.plur(thousands)))
+    sys.exit()
+
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     if not this_file:
         g = glob.glob(os.path.join(my_dir, "20*.txt"))
@@ -81,7 +103,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     matplotlib.rcParams['timezone'] = 'US/Central'
 
-    os.chdir("c:/writing/daily")
+    os.chdir(my_dir)
     f = open(stats_file, "r")
     raw_stat_lines = f.readlines()
     f.close()
@@ -323,7 +345,11 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
+    elif arg == 'em': mt.npo(__file__)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg == 'ct':
+        compare_thousands()
+        exit()
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
