@@ -20,6 +20,7 @@ import i7
 import sys
 import os
 import colorama
+import codecs
 
 # variables potentially in CFG file
 
@@ -211,8 +212,10 @@ def find_text_in_file(match_string_raw, projfile):
     current_table = ""
     current_table_line = 0
     pbase = os.path.basename(projfile)
-    with open(projfile, encoding='utf8') as file:
+    with codecs.open(projfile, encoding='utf8', errors='replace') as file:
         for (line_count, line) in enumerate (file, 1):
+            if chr(65533) in line:
+                print("WARNING line {} of {} had a character or characters unmappable in UTF-8, likely ellipses.".format(line_count, pbase))
             if current_table:
                 current_table_line += 1
                 if not line.strip():
