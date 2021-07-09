@@ -51,6 +51,7 @@ header_color = -1
 user_input = False
 view_history = False
 post_open_matches = False
+post_open_warnings = True
 
 include_notes = True
 
@@ -216,6 +217,8 @@ def find_text_in_file(match_string_raw, projfile):
         for (line_count, line) in enumerate (file, 1):
             if chr(65533) in line:
                 print("WARNING line {} of {} had a character or characters unmappable in UTF-8, likely ellipses.".format(line_count, pbase))
+                if post_open_warnings:
+                    mt.add_postopen(projfile, line_count, priority = 12) # this is something we want to fix ASAP, so any post_open_matches can wait a minute.
             if current_table:
                 current_table_line += 1
                 if not line.strip():
@@ -284,6 +287,7 @@ def read_args(my_arg_array, in_loop = False):
     global verbose
     global user_input
     global post_open_matches
+    global post_open_warnings
     global all_similar_projects
     global max_in_file
     global max_overall
@@ -310,6 +314,10 @@ def read_args(my_arg_array, in_loop = False):
             post_open_matches = False
         elif arg == 'po':
             post_open_matches = True
+        elif arg in ( 'nw', 'wn'): # NOW or OWN or so forth are actual words, hence why it's different from above.
+            post_open_warnings = False
+        elif arg in ( 'ow', 'wo'):
+            post_open_warnings = True
         elif arg == 'o' or arg == '.':
             all_similar_projects = False
         elif arg == 'a':
