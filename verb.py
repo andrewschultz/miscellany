@@ -9,8 +9,13 @@ print_text = False
 
 def add_clipboard_text(prefix, data):
     ary = data.split(",")
+    if '~' in ary[0]:
+        a2 = ary[0].split("~")
+        ary[0] = a2[1]
+        my_action = a2[0] + "ing"
+    else:
+        my_action = ary[0] + "ing"
     this_string = "chapter {}\n\n".format(ary[0])
-    my_action = ary[0] + "ing"
     if verb_types[prefix] == "out of world":
         action_type = "out of world"
     else:
@@ -20,7 +25,12 @@ def add_clipboard_text(prefix, data):
         this_string += 'understand the command "{}" as something new.\n'.format(x)
     this_string += "\n"
     for x in ary:
-        this_string += 'understand "{}" as {}.\n'.format(x, my_action)
+        print(x, prefix, verb_types[prefix])
+        if verb_types[prefix] == "out of world":
+            second_arg = ''
+        else:
+            second_arg = " [{}]".format(verb_types[prefix])
+        this_string += 'understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
     this_string += "\n"
     this_string += "carry out {}:\n\tthe rule succeeds;\n\n".format(my_action)
     return this_string
