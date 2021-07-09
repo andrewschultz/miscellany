@@ -4,6 +4,7 @@ from collections import defaultdict
 import sys
 
 verb_types = defaultdict(str)
+bracket_text = defaultdict(str)
 copy_text = True
 print_text = False
 
@@ -17,21 +18,17 @@ def add_clipboard_text(prefix, data):
         my_action = a2[0] + "ing"
     else:
         my_action = ary[0] + "ing"
-    this_string = "chapter {}\n\n".format(ary[0])
+    this_string = "chapter {}\n\n".format(my_action)
     if verb_types[prefix] == "out of world":
         action_type = "out of world"
     else:
-        action_type = "applying to one {}".format(verb_types[prefix])
+        action_type = "applying to {}".format(verb_types[prefix])
     this_string += "{} is an action {}.\n\n".format(my_action, action_type)
     for x in ary:
         this_string += 'understand the command "{}" as something new.\n'.format(x)
     this_string += "\n"
     for x in ary:
-        print(x, prefix, verb_types[prefix])
-        if verb_types[prefix] == "out of world":
-            second_arg = ''
-        else:
-            second_arg = " [{}]".format(verb_types[prefix])
+        second_arg = '' if not bracket_text[prefix] else " [{}]".format(bracket_text[prefix])
         this_string += 'understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
     this_string += "\n"
     this_string += "carry out {}:\n\tthe rule succeeds;\n\n".format(my_action)
@@ -44,7 +41,9 @@ with open(verb_data) as file:
         for a in ary:
             if a in verb_types:
                 sys.exit("verb_type {} redefined at line {}.".format(a, line_count))
-            verb_types[a] = data
+            ary = data.split(",")
+            verb_types[a] = ary[0]
+            bracket_text[a] = ary[1] if len(ary) > 1 else ''
 
 clip_text = ""
 
