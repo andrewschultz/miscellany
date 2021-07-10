@@ -24,6 +24,8 @@ import matplotlib
 
 #init_sect = defaultdict(str)
 
+glob_string = "20*.txt"
+
 #d = pendulum.now()
 d = pendulum.today()
 
@@ -77,7 +79,7 @@ def check_unsaved():
 def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
     if not this_file:
-        g = glob.glob(my_dir + "/202*.txt")
+        g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-1])
     my_size = os.stat(this_file).st_size
 
@@ -98,14 +100,14 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     except:
         print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
         rate_for_next = 1
-    if thousands > 0:
-        print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute, for the next plateau. Or you need to get just under that, to sandbag.".format(until_next, rate_for_next))
+    if thousands == 0:
+        print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute (including seconds) for the next plateau.".format(until_next, rate_for_next))
     else:
-        print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute for next.".format(thousands, mt.plur(thousands), rate_for_next))
+        print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next))
 
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     if not this_file:
-        g = glob.glob(os.path.join(my_dir + "/202*.txt"))
+        g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
 
     matplotlib.rcParams['timezone'] = 'US/Central'
@@ -287,25 +289,22 @@ def get_init_sections():
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
-            if line.startswith("maxnew="):
-                max_days_new = int(line[7:])
-                continue
-            if line.startswith("maxback="):
-                min_days_new = int(line[8:])
-                continue
-            if line.startswith("file_header="):
-                file_header += line[12:].replace("\\", "\n")
-                continue
-            if "," not in line:
-                print("WARNING: unidentified line (no valid header or CSV of sections {}".format(line_count))
-                continue
-            if line.startswith("defaults:"):
+            (prefix, data) = mt.cfg_data_split(line)
+            if prefix == 'maxnew':
+                max_days_new = int(data)
+            elif prefix == 'maxback':
+                min_days_new = int(data)
+            elif prefix == 'glob':
+                glob_string = data
+            elif prefix == 'file_header':
+                file_header += data.replace("\\", "\n")
+            elif prefix == 'defaults:':
                 sect_dict = mt.quick_dict_from_line(line)
                 if len(sect_dict):
                     print("Adding to array of blank sections on line {}".format(line_count))
                     sect_ary.extend(sect_dict)
-                continue
-            print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
+            else:
+                print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
     sect_ary_2 = sorted(sect_ary, key=lambda x:(x == 'nam', x))
     if sect_ary_2 != sect_ary:
         print("WARNING wobbly unsorted sections:")
