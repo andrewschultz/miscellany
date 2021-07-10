@@ -85,15 +85,22 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     f = open(stats_file, "r")
     raw_stat_lines = [x for x in f.readlines() if x.strip()]
     f.close()
-    
+
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
     print("{} vs {}, {} vs {}.".format(my_size, last_size, my_size // 1000, last_size // 1000))
     thousands = my_size // 1000 - last_size // 1000
-    if thousands == 0:
-        print("No new graph at the top of the hour. You need {} bytes.".format(1000 - (my_size % 1000)))
+    until_next = (1000 - (my_size % 1000))
+    right_now = pendulum.now()
+    try:
+        rate_for_next = until_next * 60 / (3600 - right_now.minute * 60 - right_now.second)
+    except:
+        print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
+        rate_for_next = 1
+    if thousands > 0:
+        print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute, for the next plateau. Or you need to get just under that, to sandbag.".format(until_next, rate_for_next))
     else:
-        print("There will be a new graph at the top of the hour. You eclipsed {} thousand{}.".format(thousands, mt.plur(thousands)))
+        print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute for next.".format(thousands, mt.plur(thousands), rate_for_next))
     sys.exit()
 
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
