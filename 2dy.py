@@ -77,7 +77,7 @@ def check_unsaved():
 def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
     if not this_file:
-        g = glob.glob(os.path.join(my_dir, "20*.txt"))
+        g = glob.glob(my_dir + "/202*.txt")
         this_file = os.path.basename(g[-1])
     my_size = os.stat(this_file).st_size
 
@@ -92,8 +92,9 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     thousands = my_size // 1000 - last_size // 1000
     until_next = (1000 - (my_size % 1000))
     right_now = pendulum.now()
+    minutes_adjusted = (right_now.minute + 57) % 60
     try:
-        rate_for_next = until_next * 60 / (3600 - right_now.minute * 60 - right_now.second)
+        rate_for_next = until_next * 60 / (3600 - minutes_adjusted * 60 - right_now.second)
     except:
         print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
         rate_for_next = 1
@@ -101,11 +102,10 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute, for the next plateau. Or you need to get just under that, to sandbag.".format(until_next, rate_for_next))
     else:
         print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute for next.".format(thousands, mt.plur(thousands), rate_for_next))
-    sys.exit()
 
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     if not this_file:
-        g = glob.glob(os.path.join(my_dir, "20*.txt"))
+        g = glob.glob(os.path.join(my_dir + "/202*.txt"))
         this_file = os.path.basename(g[-abs(file_index)])
 
     matplotlib.rcParams['timezone'] = 'US/Central'
@@ -354,9 +354,11 @@ while cmd_count < len(sys.argv):
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'em': mt.npo(__file__)
     elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg == 'cto':
+        compare_thousands()
+        sys.exit()
     elif arg == 'ct':
         compare_thousands()
-        exit()
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
