@@ -11,6 +11,7 @@ import mytools as mt
 rz_out = "c:/writing/temp/rz-out.txt"
 rz_backup = "c:/writing/temp/rz-back.txt"
 rz_cache = "c:/writing/temp/rz-cache.txt"
+rz_cfg = "c:/writing/scripts/rz-cfg.txt"
 words_to_rhyme = []
 
 my_word = ''
@@ -34,6 +35,30 @@ def usage():
     print()
     print("You can type in as many potential-rhyme words as you want.")
     sys.exit()
+
+def read_cfg_defaults():
+    global backup_prev
+    global use_cache
+    global from_local
+    global to_local
+    global to_web
+    with open(rz_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
+            (prefix, data) = mt.cfg_to_data(line)
+            if prefix == 'backup':
+                backup_prev = mt.truth_state_of(data)
+            elif prefix == 'cache':
+                use_cache = mt.truth_state_of(data)
+            elif prefix == 'from_local':
+                from_local = mt.truth_state_of(data)
+            elif prefix == 'to_local':
+                to_local = mt.truth_state_of(data)
+            elif prefix in ( 'web', 'to_web' ):
+                to_web = mt.truth_state_of(data)
+            else:
+                print("CFG bad data line {}: {}".format(line_count, line.strip()))
 
 def see_about_local(word_array, file_name):
     return_list = []
@@ -115,6 +140,8 @@ def process_cache(my_word, reset = False):
     f.write(text.strip() + "\n")
     f.close()
 
+read_cfg_defaults()
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'w':
@@ -164,6 +191,7 @@ while cmd_count < len(sys.argv):
 if to_web:
     for w in words_to_rhyme:
         url = url_of(w, batch_convert = True)
+        print("Hunting for rhymes of", w)
         os.system("start {}".format(url))
     sys.exit()
 
@@ -230,5 +258,4 @@ for w in words_to_rhyme:
         send_to_cache(w)
         process_cache(w, reset = False)
 
-print(3)
 mt.npo(rz_out)
