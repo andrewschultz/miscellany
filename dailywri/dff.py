@@ -98,6 +98,7 @@ delete_marker = defaultdict(str)
 fixed_marker = defaultdict(str)
 prority_sort = defaultdict(int)
 header_tweak = defaultdict(str)
+no_names = defaultdict(bool)
 
 empty_to_protect = defaultdict(bool)
 protect_yes_force = False
@@ -221,6 +222,11 @@ def read_comment_cfg():
                     fixed_marker[u] = ary[1]
             elif prefix == 'keyword':
                 section_words[ary[0]] = ary[1]
+            elif prefix in ( 'noname', 'nonames' ):
+                for x in ary[1].split(","):
+                    if x in no_names:
+                        print("Duplicate no-name {} line {}".format(x, count))
+                    no_names[x] = True
             elif prefix == "prefix":
                 for u in entries:
                     if u in prefixes:
@@ -292,7 +298,7 @@ def is_in_procs(my_file):
 def is_likely_name(my_line, my_sec):
     if ' ' in my_line or '=' in my_line: return False
     if '/' in my_line and '(' not in my_line: return False
-    if my_sec == 'lim' or my_sec == 'por' or my_sec == 'oro' or my_sec == 'q': return False
+    if my_sec in no_names: return False
     return True
 
 def in_important_file(x, y):
