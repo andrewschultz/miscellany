@@ -42,6 +42,8 @@ else:
     what_to_sort = DEFAULT_SORT
     print("The directory gives us a default of", daily_strings[what_to_sort])
 
+force_copy = False
+
 resort_already_sorted = True
 
 sort_proc = False
@@ -290,7 +292,7 @@ def is_in_procs(my_file):
 def is_likely_name(my_line, my_sec):
     if ' ' in my_line or '=' in my_line: return False
     if '/' in my_line and '(' not in my_line: return False
-    if my_sec == 'por' or my_sec == 'oro' or my_sec == 'q': return False
+    if my_sec == 'lim' or my_sec == 'por' or my_sec == 'oro' or my_sec == 'q': return False
     return True
 
 def in_important_file(x, y):
@@ -530,6 +532,8 @@ def sort_raw(raw_long):
                     sections[temp] += line
                 continue
             if one_word_names and is_likely_name(line, current_section):
+                if current_section:
+                    print("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section, line_count, line.strip()))
                 sections['nam'] += "\t" + line.strip()
                 continue
             if resort_already_sorted:

@@ -102,6 +102,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         rate_for_next = 1
     if thousands == 0:
         print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute (including seconds) for the next plateau.".format(until_next, rate_for_next))
+    elif thousands < 0:
+        print("Somehow, you dropped down a thousands-plateau from the top of the hour. Hooray, compaction scripts? At any rate you need {} bytes, or {:.2f} per minute (including seconds) for the next distant step up.".format(until_next, rate_for_next))
     else:
         print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next))
 
@@ -297,7 +299,7 @@ def get_init_sections():
             elif prefix == 'glob':
                 glob_string = data
             elif prefix == 'file_header':
-                file_header += data.replace("\\", "\n")
+                file_header += data.replace("\\", "\n") + "\n"
             elif prefix == 'defaults:':
                 sect_dict = mt.quick_dict_from_line(line)
                 if len(sect_dict):
@@ -321,7 +323,7 @@ def create_new_file(my_file, launch = True):
     f.close()
     if write_base_stats and my_daily_dir == daily:
         put_stats(bail = False)
-    if launch: os.system(my_file)
+    if launch: mt.npo(my_file, my_line = 500)
 
 #
 # main coding block
@@ -352,7 +354,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'nv' or arg == 'vn': verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'em': mt.npo(__file__)
-    elif arg == 'p' or arg == 'tp' or arg == 't': move_to_proc()
+    elif arg in ( 'p', 'tp', 'pt', 't' ): move_to_proc()
     elif arg == 'cto':
         compare_thousands()
         sys.exit()
