@@ -17,6 +17,7 @@ import shutil
 import pyperclip
 import filecmp
 import shlex
+import colorama
 
 from collections import defaultdict
 
@@ -129,11 +130,11 @@ def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/q
             zip_write_nonzero_file(zip_handle, os.path.join(root, file), os.path.join(path_to, os.path.relpath(os.path.join(root, file), path_from)))
 
 def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_bail = True):
-    print(bail_string)
+    print(colorama.Fore.MAGENTA + colorama.Back.WHITE + bail_string + colorama.Style.RESET_ALL)
     if open_config_on_error:
         mt.npo(zup_cfg, line_count)
     if auto_bail_on_cfg_error:
-        print("Bailing after first error. To change this, set flag -bbn/nbb.")
+        print(colorama.Fore.RED + "Bailing after first error. To change this, set flag -bbn/nbb." + colorama.Style.RESET_ALL)
         sys.exit()
 
 def flag_zip_build_error(bail_string):
@@ -424,6 +425,8 @@ for p in project_array:
         print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
         continue
     for x in zups[p].file_map:
+        if not is_beta(p) and ('beta-' in x or 'beta ' in x):
+            print(colorama.Fore.MAGENTA + colorama.Back.WHITE + "WARNING: beta-named file {} in non-beta assembly {}.".format(x, p) + colorama.Style.RESET_ALL)
         zip_write_nonzero_file(zip, x, zups[p].file_map[x])
     for x in zups[p].max_specific_file_size:
         if os.stat(x).st_size > zups[p].max_specific_file_size[x]:
