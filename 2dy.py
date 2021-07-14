@@ -129,6 +129,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     times = []
     sizes = []
+    color_array = []
 
     current_size = os.stat(this_file).st_size
 
@@ -145,6 +146,26 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         my_time = pendulum.parse(ary[1])
         times.append((my_time - pendulum.from_timestamp(0)).total_seconds() / 86400)
         sizes.append(int(ary[2]))
+        if len(sizes) == 1:
+            color_array.append('black')
+            continue
+        size_delta = sizes[-1] - sizes[-2]
+        if size_delta == 0:
+            color_array.append('red')
+        elif size_delta < 200:
+            color_array.append('orange')
+        elif size_delta < 500:
+            color_array.append('yellow')
+        elif size_delta < 1000:
+            color_array.append('grey')
+        elif size_delta < 2000:
+            color_array.append('green')
+        elif size_delta < 4000:
+            color_array.append('blue')
+        elif size_delta < 8000:
+            color_array.append('purple')
+        else:
+            color_array.append('black')
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
 
@@ -178,7 +199,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     plt.figure(figsize=(15, 12))
     plt.xticks(rotation=45, ha='right')
-    plt.scatter(times, sizes, label=my_label)
+    plt.scatter(times, sizes, color = color_array, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
