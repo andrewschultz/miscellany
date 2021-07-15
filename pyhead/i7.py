@@ -640,9 +640,9 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
         x2 = ary[ary.index('github') + 1]
         for x in range(ary.index('github') + 2, len(ary)):
             if os.path.exists(os.path.join(pathlib.Path(*ary[:x]), "story.ni")):
-                x2 = ary[x]
+                x2 = ary[x-1]
                 if return_first_subfind:
-                    break;
+                    break
     elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
         for a in ary:
             if ".inform" in a:
@@ -685,15 +685,19 @@ def inform_short_name(my_file):
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj(), my_subdir = "source", to_github = False, materials = False):
+def proj2dir(x = dir2proj(), my_subdir = "source", to_github = False, materials = False, bail_if_nothing = False):
     if to_github:
         temp = main_abb(x)
         if not temp:
             temp = x
         if temp in i7gx:
             temp = i7gx[temp]
-        else:
+        elif temp in i7x:
             temp = i7x[temp]
+        elif bail_if_nothing:
+            sys.exit("Didn't find github repo to dir2proj for {}. Bailing.".format(x))
+        else:
+            return ''
         return os.path.join(gh_dir, temp)
     return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", "\\" + my_subdir if my_subdir else "")
 

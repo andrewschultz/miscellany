@@ -72,7 +72,7 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
     if reverse_copy:
         (my_main, my_gh) = (my_gh, my_main)
     if os.stat(my_main).st_mtime < os.stat(my_gh).st_mtime:
-        print("WARNING timestamp for from-file is after timestamp for to-file.")
+        print("WARNING timestamp for from-file is after timestamp for to-file. Ignore with -i or reverse with -r.")
         print("    ----> from: {}".format(my_main))
         print("    ---->   to: {}".format(my_gh))
         if not copy_timestamps_misaligned:
@@ -115,7 +115,7 @@ copy_source_to_github(cmd_line_proj, ignore_misaligned_timestamps)
 
 if do_diff_after:
     from_dir = os.getcwd()
-    to_dir = i7.proj2dir(cmd_line_proj, to_github = True)
+    to_dir = i7.proj2dir(cmd_line_proj, to_github = True, bail_if_nothing = True)
     if to_dir != from_dir:
         print("Switching to {} in-script. You may wish to do so in your shell.".format(to_dir))
     os.chdir(to_dir)
