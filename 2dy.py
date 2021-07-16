@@ -46,6 +46,7 @@ stats_file = "c:/writing/temp/daily-stats.txt"
 
 file_header = ""
 
+color_dict = defaultdict(int)
 sect_ary = []
 
 files_back_wanted = 1
@@ -150,22 +151,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
             color_array.append('black')
             continue
         size_delta = sizes[-1] - sizes[-2]
-        if size_delta == 0:
-            color_array.append('red')
-        elif size_delta < 200:
-            color_array.append('orange')
-        elif size_delta < 500:
-            color_array.append('yellow')
-        elif size_delta < 1000:
-            color_array.append('grey')
-        elif size_delta < 2000:
-            color_array.append('green')
-        elif size_delta < 4000:
-            color_array.append('blue')
-        elif size_delta < 8000:
-            color_array.append('purple')
-        else:
-            color_array.append('black')
+        color_array.append(mt.text_from_values(color_dict, size_delta))
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
 
@@ -305,7 +291,7 @@ def usage(param = 'Cmd line usage'):
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
     exit()
 
-def get_init_sections():
+def read_2dy_cfg():
     global sect_ary
     global file_header
     with open(my_sections_file) as file:
@@ -321,19 +307,18 @@ def get_init_sections():
                 glob_string = data
             elif prefix == 'file_header':
                 file_header += data.replace("\\", "\n") + "\n"
-            elif prefix == 'defaults:':
+            elif prefix in ( 'color', 'colors' ):
+                global color_dict
+                color_dict = mt.quick_dict_from_line(line, use_ints = True)
+            elif prefix in ( 'defaults', 'sect', 'section', 'sections' ):
                 sect_dict = mt.quick_dict_from_line(line)
                 if len(sect_dict):
-                    print("Adding to array of blank sections on line {}".format(line_count))
-                    sect_ary.extend(sect_dict)
+                    print("Adding to non-blank sections array on line {}".format(line_count))
+                sect_ary.extend(sect_dict)
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
-    sect_ary_2 = sorted(sect_ary, key=lambda x:(x == 'nam', x))
-    if sect_ary_2 != sect_ary:
-        print("WARNING wobbly unsorted sections:")
-        print("    is: {}".format(', '.join(sect_ary)))
-        print("    best order: {}".format(', '.join(sect_ary_2)))
-        sect_ary = sect_ary_2
+    if len(sect_dict) == 0:
+        print("WARNING", my_sections_file, "has no default sections.")
 
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
@@ -355,6 +340,8 @@ os.chdir("c:/writing/scripts")
 
 cmd_count = 1
 
+read_2dy_cfg()
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg[0] == 'f' and arg[1:].isdigit():
@@ -366,16 +353,16 @@ while cmd_count < len(sys.argv):
     elif arg[0] == 'm' and arg[1:].isdigit():
         max_days_back = int(arg[1:])
         latest_daily = False
-    elif (arg[:2] == 'mn' or arg[:2] == 'nm') and arg[2:].isdigit():
+    elif arg[:2] in ( 'mn', 'nm' ) and arg[2:].isdigit():
         max_days_new = int(arg[2:])
         latest_daily = False
     elif arg == 'l': latest_daily = True
-    elif arg == 'nl' or arg == 'ln': latest_daily = False
+    elif arg in ( 'nl', 'ln' ): latest_daily = False
     elif arg == 'v': verbose = True
-    elif arg == 'nv' or arg == 'vn': verbose = False
+    elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'em': mt.npo(__file__)
-    elif arg in ( 'p', 'tp', 'pt', 't' ): move_to_proc()
+    elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'cto':
         compare_thousands()
         sys.exit()
@@ -394,10 +381,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'bs': write_base_stats = False
     elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg == 'es': mt.npo(stats_file)
-    elif arg == 'gk' or arg == 'kg': my_daily_dir = "c:/coding/perl/proj/from_keep"
-    elif arg == 'gd' or arg == 'dg': my_daily_dir = "c:/coding/perl/proj/from_drive"
-    elif arg == 'tk' or arg == 'kt': move_to_proc("c:/coding/perl/proj/from_keep")
-    elif arg == 'td' or arg == 'dt': move_to_proc("c:/coding/perl/proj/from_drive")
+    elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
+    elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
+    elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
+    elif arg in ( 'td', 'dt' ): move_to_proc("c:/coding/perl/proj/from_drive")
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
@@ -419,7 +406,6 @@ if latest_daily:
         if os.path.exists(day_done_file): found_done_file = day_done_file
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
     print("Looking back", max_days_new, "days, daily file not found.")
-    get_init_sections()
     create_new_file(see_back(d, my_daily_dir, 0))
     exit()
 
