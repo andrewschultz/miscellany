@@ -10,6 +10,7 @@ import glob
 
 debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
+open_after = False
 
 regv_ignore = "c:/writing/scripts/regvi.txt"
 
@@ -17,6 +18,7 @@ def usage(my_message = "USAGE"):
     print("=" * 40 + my_message)
     print("L = look up cases, P = print cases. Mutually exclusive but can be combined with D=debug.")
     print("E = edit ignore file.")
+    print("O = open source after.")
     print("You can also specify a project name on the command line.")
     sys.exit()
 
@@ -58,8 +60,8 @@ def verbs_from_line(my_line):
     return ret_ary
 
 def find_verbs(file_list):
-    argless = defaultdict(bool)
-    witharg = defaultdict(bool)
+    argless = defaultdict(str)
+    witharg = defaultdict(str)
     for f in file_list:
         bn = os.path.basename(f)
         with open(f) as file:
@@ -69,18 +71,22 @@ def find_verbs(file_list):
                 for q in verbs_from_line(line):
                     if '[' in q:
                         q = re.sub(" *\[.*", "", q)
-                        witharg[q] = False
+                        witharg[q] = "{}={}".format(f, line_count)
                     else:
-                        argless[q] = False
+                        argless[q] = "{}={}".format(f, line_count)
     return (argless, witharg)
 
 def process_misses(my_dict, list_desc):
-    this_list = sorted([x for x in my_dict if not my_dict[x] and not x in ignores[my_proj]])
+    this_list = sorted([x for x in my_dict if my_dict[x] != "found" and not x in ignores[my_proj]])
     if len(this_list) == 0:
         print("Hooray! Nothing missing in {}.".format(list_desc))
     else:
         print("Missing {} entries in {}.".format(len(this_list), list_desc))
         print(' / '.join(this_list))
+        for t in this_list:
+            temp = my_dict[t].split("=")
+            print("Adding", temp[0], temp[1])
+            mt.add_postopen(temp[0], int(temp[1]))
     return len(this_list)
 
 def look_up_test_cases(my_proj, my_list):
@@ -100,19 +106,18 @@ def look_up_test_cases(my_proj, my_list):
                     if len(ary) == 1:
                         if debug and not argless[verb_candidate]:
                             print("Found argless", verb_candidate, tb, line_count)
-                        argless[verb_candidate] = True
+                        argless[verb_candidate] = "found"
                 if verb_candidate in witharg:
                     if len(ary) == 2:
                         if debug and not witharg[verb_candidate]:
                             print("Found with-arg", verb_candidate, tb, line_count)
-                        witharg[verb_candidate] = True
+                        witharg[verb_candidate] = "found"
     x = process_misses(argless, "verbs without arguments")
     y = process_misses(witharg, "verbs with arguments")
     if not x + y:
         print("Total success!")
     else:
         print("If you want to ignore some verbs, look in {}.".format(regv_ignore))
-    sys.exit()
 
 def crank_out_verb_tests(this_file):
     next_break = False
@@ -169,6 +174,8 @@ while cmd_count < len(sys.argv):
         debug = True
     elif arg == 'e':
         os.system(regv_ignore)
+    elif arg == 'o':
+        open_after = True
     elif arg == '?':
         usage()
     else:
@@ -187,6 +194,10 @@ project_file_list = i7.i7f[my_proj] if my_proj in i7.i7f else [ i7.main_src(my_p
 
 if lookup_cases:
     look_up_test_cases(my_proj, project_file_list)
+    if open_after:
+        mt.post_open()
+    else:
+        print("Set o to open source after at the first ignored verb(s) in each file.")
     sys.exit()
 
 for x in project_file_list:
