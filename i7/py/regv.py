@@ -13,6 +13,13 @@ ignores = defaultdict(lambda: defaultdict(bool))
 
 regv_ignore = "c:/writing/scripts/regvi.txt"
 
+def usage(my_message = "USAGE"):
+    print("=" * 40 + my_message)
+    print("L = look up cases, P = print cases. Mutually exclusive but can be combined with D=debug.")
+    print("E = edit ignore file.")
+    print("You can also specify a project name on the command line.")
+    sys.exit()
+
 def read_regv_ignores():
     with open(regv_ignore) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -149,14 +156,23 @@ while cmd_count < len(sys.argv):
         if user_project:
             sys.exit("Redefining user project from {} to {}.".format(user_project, arg))
         user_project = i7.i7x[arg]
-    elif arg == 'l':
-        lookup_cases = True
     elif arg == 'd':
         debug = True
+    elif arg == 'l':
+        lookup_cases = True
     elif arg in ( 'ld', 'dl' ):
         lookup_cases = debug = True
+    elif arg == 'p':
+        lookup_cases = False
+    elif arg in ( 'pd', 'dp' ):
+        lookup_cases = False
+        debug = True
+    elif arg == 'e':
+        os.system(regv_ignore)
+    elif arg == '?':
+        usage()
     else:
-        sys.exit("Could not find project for {}.".format(arg))
+        usage("Could not find project for {}.".format(arg))
     cmd_count += 1
 
 if not user_project:
