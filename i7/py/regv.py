@@ -53,11 +53,30 @@ def crank_out_verb_tests(this_file):
             for a in ary:
                 big_ary.extend(expand_verbs(a))
 
-my_proj = "fourbyfourian-quarryin"
+user_project = ''
+cmd_count = 1
 
-for x in i7.i7f:
-    print(x)
-    print(i7.i7f[x])
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg in i7.i7x:
+        if user_project:
+            sys.exit("Redefining user project from {} to {}.".format(user_project, arg))
+        user_project = i7.i7x[arg]
+    else:
+        sys.exit("Could not find project for {}.".format(arg))
+    cmd_count += 1
+
+if not user_project:
+    my_proj = i7.dir2proj(empty_if_unmatched = True)
+    if not my_proj:
+        sys.exit("Could not get project from current directory. Bailing.")
+    print("Pulling", my_proj, "from current directory.")
+else:
+    my_proj = user_project
+
+if my_proj not in i7.i7f:
+    crank_out_verb_tests(i7.main_src(my_proj))
+    sys.exit()
 
 for x in i7.i7f[my_proj]:
     crank_out_verb_tests(x)
