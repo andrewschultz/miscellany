@@ -9,6 +9,20 @@ import mytools as mt
 import glob
 
 debug = False
+ignores = defaultdict(lambda: defaultdict(bool))
+
+regv_ignore = "c:/writing/scripts/regvi.txt"
+
+def read_regv_ignores():
+    with open(regv_ignore) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"): continue
+            if line.startswith(";"): break
+            (prefix, data) = mt.cfg_data_split(line)
+            prefix = i7.long_name(prefix, debug=True)
+            for x in data.split(","):
+                ignores[prefix][x] = True
+
 
 def valid_understand(my_line):
     if not my_line.startswith('understand'): return False
@@ -54,13 +68,14 @@ def find_verbs(file_list):
     return (argless, witharg)
 
 def process_misses(my_dict, list_desc):
-    this_list = sorted([x for x in my_dict if not my_dict[x]])
+    this_list = sorted([x for x in my_dict if not my_dict[x] and not x in ignores[my_proj]])
     if len(this_list) == 0:
         print("Hooray! Nothing missing in {}.".format(list_desc))
     else:
         print("Missing {} entries in {}.".format(len(this_list), list_desc))
         print(' / '.join(this_list))
-                
+    return len(this_list)
+
 def look_up_test_cases(my_proj, my_list):
     regs = i7.proj2dir(my_proj)
     reg_glob = os.path.normpath(os.path.join(regs, "reg-*.txt"))
@@ -84,8 +99,12 @@ def look_up_test_cases(my_proj, my_list):
                         if debug and not witharg[verb_candidate]:
                             print("Found with-arg", verb_candidate, tb, line_count)
                         witharg[verb_candidate] = True
-    process_misses(argless, "verbs without arguments")
-    process_misses(witharg, "verbs with arguments")
+    x = process_misses(argless, "verbs without arguments")
+    y = process_misses(witharg, "verbs with arguments")
+    if not x + y:
+        print("Total success!")
+    else:
+        print("If you want to ignore some verbs, look in {}.".format(regv_ignore))
     sys.exit()
 
 def crank_out_verb_tests(this_file):
@@ -121,6 +140,8 @@ def crank_out_verb_tests(this_file):
 user_project = ''
 cmd_count = 1
 lookup_cases = False
+
+read_regv_ignores()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
