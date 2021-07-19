@@ -96,7 +96,7 @@ for $v (@verbs) {
     $applyTo = "applying to one person";
     $inBrax  = " [person]";
   }
-  elsif ( $vo =~ /\b#-/ ) {
+  elsif ( $vo =~ /\b[n#]-/ ) {
     $applyTo = "applying to one number";
     $inBrax  = " [number]";
   }

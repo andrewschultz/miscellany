@@ -9,15 +9,18 @@ copy_text = True
 print_text = False
 
 verb_data = "c:/writing/scripts/verbdata.txt"
+sample_data = []
 
 def add_clipboard_text(prefix, data):
     ary = data.split(",")
     if '~' in ary[0]:
         a2 = ary[0].split("~")
         ary[0] = a2[1]
-        my_action = a2[0] + "ing"
+        my_action = a2[0]
     else:
-        my_action = ary[0] + "ing"
+        my_action = ary[0]
+    if not my_action.endswith("ing"):
+        my_action += "ing"
     this_string = "chapter {}\n\n".format(my_action)
     if verb_types[prefix] == "out of world":
         action_type = "out of world"
@@ -37,6 +40,9 @@ def add_clipboard_text(prefix, data):
 with open(verb_data) as file:
     for (line_count, line) in enumerate (file, 1):
         (prefix, data) = mt.cfg_data_split(line)
+        if prefix == "sample":
+            sample_data.append(data)
+            continue
         ary = prefix.split(",")
         for a in ary:
             if a in verb_types:
@@ -64,9 +70,16 @@ while cmd_count < len(sys.argv):
         mt.npo(verb_data)
         sys.exit()
     elif arg == '?':
-        print("Verb types and results:")
+        print("{:35} {:30}".format("Verb abbreviation and type", "Action text"))
         for x in verb_types:
-            print(x, verb_types[x])
+            print("{:>4} {:30s} {:30s}".format(x, verb_types[x], bracket_text[x]))
+        if len(sample) > 0:
+            print()
+            print("        SAMPLE USAGE")
+            for s in sample:
+                print("   ---->", s)
+        else:
+            print("No samples. Maybe you should add some in the config file with sample:?")
         sys.exit()
     elif not prefix:
         sys.exit("Badly formed argument {}: there is no default prefix, so we need to specify w= for out of world, etc.".format(arg))
