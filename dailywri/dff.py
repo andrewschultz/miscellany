@@ -18,6 +18,7 @@ import mytools as mt
 from glob import glob
 from filecmp import cmp
 from shutil import copy
+import colorama
 
 DEFAULT_SORT = daily.DAILY
 
@@ -28,6 +29,7 @@ daily_strings = ['daily', 'drive', 'keep']
 what_to_sort = DEFAULT_SORT
 
 my_cwd = os.getcwd()
+colorama.init()
 
 dir_search_flag = daily.TOPROC
 
@@ -131,6 +133,9 @@ def usage(my_arg = ''):
     print("You can also list files you wish to look up.")
     exit()
 
+def blue_print(my_str):
+    print(colorama.Fore.YELLOW + my_str + colorama.Style.RESET_ALL)
+
 def conditional_bail():
     if bail_on_warnings:
         sys.exit("Bailing on warning. Set -nbw to change this.")
@@ -145,7 +150,7 @@ def sanitize(tabbed_names):
     new_ary = []
     for x in tabbed_names.split("\t"):
         if x.lower() in low_case_dict:
-            print("WARNING deleting duplicate name (case-insensitive)", x)
+            blue_print("WARNING deleting duplicate name (case-insensitive) {}".format(x))
         else:
             new_ary.append(x)
             low_case_dict[x.lower()] = True
@@ -460,12 +465,14 @@ def sort_raw(raw_long):
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
         return 0
+    section_change = from_blank = to_names = 0
     important = False
     in_header = True
     header_to_write = ""
     current_section = ''
     blank_edit_lines = []
     dupe_edit_lines = []
+    old_names = []
     this_file_lines = defaultdict(int)
     if protect_empties:
         for x in empty_to_protect:
@@ -514,11 +521,15 @@ def sort_raw(raw_long):
                 if current_section:
                     sections[current_section] += line
                     continue
+            if current_section == 'nam':
+                old_names.extend(line.lower().strip().split('\t'))
             temp = section_from_prefix(ll)
             if temp:
                 if temp in prefixes and temp in delete_marker:
                     line = re.sub("^.*?:", "", line).lstrip()
                 sections[temp] += line
+                if temp != current_section:
+                    section_change += 1
                 continue
             temp = my_section(line)
             if temp:
@@ -539,11 +550,17 @@ def sort_raw(raw_long):
                         if sfs:
                             line = re.sub(r'( zz| *#).*'.format(sfs), "", line, re.IGNORECASE)
                     sections[temp] += line
+                if temp != current_section:
+                    if current_section:
+                        section_change += 1
+                    else:
+                        from_blank += 1
                 continue
             if one_word_names and is_likely_name(line, current_section):
                 if current_section:
                     print("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section, line_count, line.strip()))
                 sections['nam'] += "\t" + line.strip()
+                to_names += 1
                 continue
             if resort_already_sorted:
                 if current_section:
@@ -554,13 +571,27 @@ def sort_raw(raw_long):
                     if show_blank_to_blank:
                         print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
                     blank_edit_lines.append(line_count)
+            if temp != current_section:
+                if current_section:
+                    section_change += 1
+                else:
+                    from_blank += 1
             sections['sh'] += line
+    print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
     if len(dupe_edit_lines):
         print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
         mt.npo(raw_long, dupe_edit_lines[0])
+    if len(old_names):
+        new_names = sections['nam'].lower().strip().split("\t")
+        t1 = sorted(list(set(new_names) - set(old_names)))
+        t2 = sorted(list(set(old_names) - set(new_names)))
+        if len(t1) > 0:
+            print(colorama.Fore.GREEN + "New names: {}".format(t1) + colorama.Style.RESET_ALL)
+        if len(t2) > 0:
+            print(colorama.Fore.GREEN + "Old names deleted: {}".format(t2) + colorama.Style.RESET_ALL)
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
@@ -589,7 +620,7 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
-    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
         if bail_after_unchanged:
