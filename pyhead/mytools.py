@@ -48,6 +48,14 @@ def last_daily_of(my_dir = "c:/writing/daily", full_path = False):
         return os.path.normpath(os.path.join(my_dir, dailies_of()[-1]))
     return dailies_of()[-1]
 
+def github_root_of(my_path = os.getcwd()):
+    ary = pathlib.PurePath(my_path).parts
+    try:
+        github_index = ary.index('github')
+    except:
+        return ''
+    return os.path.join(pathlib.Path(*ary[:github_index+2]))
+
 def progfile_of(my_path):
     if os.path.exists(my_path):
         return my_path
