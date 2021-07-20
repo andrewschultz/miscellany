@@ -4,6 +4,7 @@
 #
 # todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
 # todo: option to turn off section protection (VERY minor, only when I need a one-a-day commit)
+# todo: option to map certain sections into others (ALLOW and FORBID dicts)
 
 import daily
 import codecs
@@ -21,6 +22,7 @@ from shutil import copy
 DEFAULT_SORT = daily.DAILY
 
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
+test_file = "c:/writing/temp/test-file.txt"
 daily_strings = ['daily', 'drive', 'keep']
 
 what_to_sort = DEFAULT_SORT
@@ -64,6 +66,7 @@ my_max_file = "21000000.txt"
 verbose = False
 show_blank_to_blank = True
 edit_blank_to_blank = True
+run_test_file = False
 
 read_most_recent = False
 
@@ -223,7 +226,7 @@ def read_comment_cfg():
             elif prefix == 'keyword':
                 section_words[ary[0]] = ary[1]
             elif prefix in ( 'noname', 'nonames' ):
-                for x in ary[1].split(","):
+                for x in vals:
                     if x in no_names:
                         print("Duplicate no-name {} line {}".format(x, count))
                     no_names[x] = True
@@ -588,7 +591,7 @@ def sort_raw(raw_long):
     fout.close()
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
-        if verbose or read_most_recent: print(raw_long, "was not changed since last run.")
+        if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
         if bail_after_unchanged:
             if not verbose: print("Bailing after unchanged.")
             exit()
@@ -679,6 +682,8 @@ while cmd_count < len(sys.argv):
         verbose = 1
     elif arg == 'q':
         verbose = 0
+    elif arg == 'tf':
+        run_test_file = True
     elif arg == 'bbe':
         show_blank_to_blank = True
         edit_blank_to_blank = True
@@ -801,6 +806,10 @@ os.chdir(dir_to_scour)
 
 read_daily_cfg()
 read_comment_cfg()
+
+if run_test_file:
+    sort_raw(test_file)
+    sys.exit()
 
 if not len(file_list):
     my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
