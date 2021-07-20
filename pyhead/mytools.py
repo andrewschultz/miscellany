@@ -397,6 +397,16 @@ def prefix_div(my_arg, delimiters = ":="):
         return('', my_arg)
     return r.split(my_arg, 1)
 
+def text_from_values(my_dict, my_num):
+    descending = sorted(my_dict, key=my_dict.get, reverse = True)
+    for q in sorted(my_dict, key=my_dict.get, reverse = True):
+        if my_num > my_dict[q]:
+            return q
+    try:
+        return descending[-1]
+    except:
+        return 'black'
+
 def check_properly_sectioned(my_file, allow_header = True, open_first_error = True, show_all_errors = True, report_success = True):
     in_section = False
     found_errors = False
