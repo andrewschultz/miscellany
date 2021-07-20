@@ -453,7 +453,7 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True): # true if identical, false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0): # returns true if identical, false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     freq = defaultdict(int)
@@ -477,7 +477,10 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             else: right += 1
             totals += 1
             if not max or totals <= max:
-                print(">>>>RIGHT FILE" if freq[j] > 0 else "LEFT FILE<<<<", 'Extra line', "<blank>" if not j else j, "/", "{:d} of {:d} in {:s}".format(abs(freq[j]), total[j], os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2)))
+                j2 = j
+                if max_chars and len(j) > abs(max_chars):
+                    j2 = j[:max_chars] + " ..." if max_chars > 0 else "... " + j[max_chars:]
+                print(">>>RIGHT FILE" if freq[j] > 0 else "LEFT FILE<<<<", 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2))) # different # of >>/<< to make eyeball comparisons (if necessary) easier
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
