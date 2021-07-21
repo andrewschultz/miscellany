@@ -131,6 +131,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     times = []
     sizes = []
     color_array = []
+    shape_array = []
 
     current_size = os.stat(this_file).st_size
 
@@ -149,7 +150,12 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         sizes.append(int(ary[2]))
         if len(sizes) == 1:
             color_array.append('black')
+            shape_array.append(30)
             continue
+        if (sizes[-1] // 1000) - (sizes[-2] // 1000) > 0:
+            shape_array.append(50)
+        else:
+            shape_array.append(30)
         size_delta = sizes[-1] - sizes[-2]
         color_array.append(mt.text_from_values(color_dict, size_delta))
 
@@ -185,7 +191,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     plt.figure(figsize=(15, 12))
     plt.xticks(rotation=45, ha='right')
-    plt.scatter(times, sizes, color = color_array, label=my_label)
+    plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
     plt.plot(times, a*times+b)
