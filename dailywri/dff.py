@@ -2,9 +2,6 @@
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
 #
-# todo: MAKE SURE THAT COMMENTS ARE SORTED TOO
-# todo: option to turn off section protection (VERY minor, only when I need a one-a-day commit)
-# todo: option to map certain sections into others (ALLOW and FORBID dicts)
 
 import daily
 import codecs
@@ -109,7 +106,9 @@ empty_to_protect = defaultdict(bool)
 protect_yes_force = False
 protect_no_force = False
 
-block_move = defaultdict(set)
+block_move_from_cfg = defaultdict(set)
+local_block_move = set()
+local_unblock_move = set()
 
 sect_move = defaultdict(lambda: defaultdict(int))
 
@@ -209,7 +208,7 @@ def read_comment_cfg():
             if prefix == 'block':
                 for my_from in entries:
                     for my_to in vals:
-                        block_move[my_from].add(my_to)
+                        block_move_from_cfg[my_from].add(my_to)
             elif prefix == "delmar":
                 for u in entries:
                     if u in delete_marker:
@@ -533,11 +532,11 @@ def sort_raw(raw_long):
                 continue
             temp = my_section(line)
             if temp:
-                if temp != current_section and temp not in block_move[current_section]:
+                if temp != current_section and (temp not in block_move_from_cfg[current_section] or temp in local_unblock_move) and (current_section not in local_block_move):
                     sect_move[temp][current_section] += 1
                     if verbose >= 2:
-                        print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move[current_section], 'block?', temp in block_move[current_section])
-                if temp in block_move[current_section]:
+                        print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move_from_cfg[current_section], 'block?', temp in block_move_from_cfg[current_section])
+                if temp in block_move_from_cfg[current_section]:
                     sections[current_section] += line
                 elif temp == 'nam':
                     line = "\t" + line.strip()
@@ -556,7 +555,7 @@ def sort_raw(raw_long):
                     else:
                         from_blank += 1
                 continue
-            if one_word_names and is_likely_name(line, current_section):
+            if one_word_names and is_likely_name(line, current_section) and 'nam' not in local_block_move:
                 if current_section:
                     print("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section, line_count, line.strip()))
                 sections['nam'] += "\t" + line.strip()
@@ -697,6 +696,10 @@ while cmd_count < len(sys.argv):
         copy_then_test = True
         test_no_copy = False
         max_files = 2
+    elif arg[:2] == 'lb':
+        local_block_move.update(arg[3:].split(","))
+    elif arg[:2] == 'lu':
+        local_unblock_move.update(arg[3:].split(","))
     elif arg == 'co':
         test_no_copy = False
     elif arg == 'te':
@@ -797,6 +800,10 @@ while cmd_count < len(sys.argv):
         else:
             print("WARNING", arg, "is not a readable file in any to-proc directory. Ignoring.")
     cmd_count += 1
+
+temp_set = local_block_move.intersection(local_unblock_move)
+if len(temp_set) > 0:
+    sys.exit("User-enforced block/unblock arrays share element{} {}. Bailing.".format(mt.plur(len(temp_set)), ', '.join(temp_set)))
 
 if protect_yes_force and protect_no_force:
     sys.exit("Forced all protections on and off with the py/pn parameters. You can only choose one. Bailing.")
