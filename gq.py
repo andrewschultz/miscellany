@@ -52,6 +52,7 @@ user_input = False
 view_history = False
 post_open_matches = False
 post_open_warnings = True
+hide_results = False
 
 include_notes = True
 
@@ -300,6 +301,7 @@ def read_args(my_arg_array, in_loop = False):
     global fast_match
     global match_string_raw
     global my_proj
+    global hide_results
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
         arg_orig = my_arg_array[cmd_count].lower()
@@ -326,6 +328,8 @@ def read_args(my_arg_array, in_loop = False):
             max_in_file = int(arg[2:])
         elif arg[:2] == 'mo' and arg[2:].isdigit():
             max_overall = int(arg[2:])
+        elif arg == 'hr':
+            hide_results = True
         elif arg == 'vh':
             view_history = True
         elif arg == 'v':
@@ -528,7 +532,9 @@ while first_loop or user_input:
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
         notes_file = i7.notes_file(proj)
 
-    if found_overall:
+    if hide_results:
+       pass 
+    elif found_overall:
         print("    {}---- total matches printed: {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, found_overall, colorama.Style.RESET_ALL))
         for x in sorted(frequencies, key=frequencies.get, reverse=True):
             if frequencies[x] < 1: continue
