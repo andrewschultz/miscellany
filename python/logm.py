@@ -41,6 +41,15 @@ def commit_maybe_push(cmd):
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
 
+def is_valid_time(my_string):
+    ary = my_string.split(":")
+    if len(ary) not in (2, 3):
+        return False
+    for x in ary:
+        if not x.isdigit():
+            return False
+    return True
+
 def usage(arg = ""):
     if arg: print("Invalid command", arg)
     else: print("USAGE")
@@ -165,6 +174,7 @@ bare_commit = False
 files_to_add = []
 get_from_log = False
 add_commands = []
+force_time = []
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -203,6 +213,10 @@ while count < len(sys.argv):
         min_before = 0
         sec_before = int(random.random() * 600) + 1
         print("Random seconds before =", sec_before)
+    elif is_valid_time(arg):
+        force_time = [int(x) for x in arg.split(":")]
+        if len(force_time) == 2:
+            force_time.append(0)
     elif arg == 'p':
         push_after_commit = True
     elif arg == 'np' or arg == 'pn':
@@ -308,6 +322,9 @@ mod_date = my_time.subtract(days=days-1)
 sec_before += 60 * min_before
 mod_date = mod_date.subtract(seconds=sec_before)
 if days_back: mod_date = mod_date.subtract(days=days_back)
+
+if force_time:
+    mod_date = mod_date.set(hour = force_time[0], minute = force_time[1], second = force_time[2])
 
 date_string = mod_date.format("ddd MMM DD YYYY HH:mm:ss ZZ")
 
