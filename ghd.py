@@ -23,6 +23,7 @@ total_count = 0
 windows_popup_box = False
 look_for_cmd = False
 look_for_cmd_force = False
+run_cmd = True
 
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
@@ -40,13 +41,13 @@ def usage(my_param):
         print("USage for ghd.py")
     print("p  = windows popup box")
     print("d# = days back")
-    print("l = look for command")
+    print("l = look for command, lf = force command, nr = don't run command")
     print("cv = checks commit validity")
     print("e/es/se edits main, ei/ie edits config, ec/ce edits command file, er/re edits results file")
     sys.exit()
 
 def last_commit_data():
-    temp = subprocess.check_output([ 'git', 'log', '-1' ]).decode()
+    temp = subprocess.check_output([ 'git', 'log' ]).decode()
     return temp # we can do better than this, because we just want the exact log message, but right now, this is good enough.
 
 def check_commit_validity():
@@ -81,61 +82,69 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
     return_val = ''
     commits_left = 0
     stored_commit_message = "<NO COMMIT MESSAGE>"
-    if look_for_cmd:
-        got_any = False
-        with open(ghd_cmd) as file:
-            for (line_count, line) in enumerate (file, 1):
-                if got_any or line.startswith("#") or not line.strip():
-                    new_file_string += line
-                    if not line.startswith("#"):
-                        commits_left += 1
-                    continue
-                (proj, data) = mt.cfg_data_split(line)
-                my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
-                if not my_dir:
-                    mt.win_or_print("OH NO! BAD COMMAND", "Check {} for commands.", windows_popup_box, bail = False)
-                else:
-                    os.chdir(os.path.join(i7.gh_dir, my_dir))
-                    dary = data.split(";")
-                    gh_files_wild = dary[0].split(",")
-                    gh_files = []
-                    for g in gh_files_wild:
-                        result = subprocess.run( [ 'git', 'ls-files', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
-                        gh_files.extend(result)
-                    gh_files = sorted(list(set([x for x in gh_files if x])))
-                    for gh_file in gh_files:
-                        print("Trimming", gh_file)
-                        os.system("ttrim.py -c {}".format(gh_file))
-                    gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
-                    gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
-                    stored_commit_message = dary[1]
-                    check_log_prev = last_commit_data()
-                    if dary[1] in check_log_prev:
-                        print("It looks like your commit message is already in the previous commit. So you are likely duplicating your efforts.")
-                        return ''
+    got_any = False
+    with open(ghd_cmd) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if got_any or line.startswith("#") or not line.strip():
+                new_file_string += line
+                if not line.startswith("#"):
+                    commits_left += 1
+                continue
+            (proj, data) = mt.cfg_data_split(line)
+            my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
+            if not my_dir:
+                mt.win_or_print("OH NO! BAD COMMAND", "Check {} for commands.", windows_popup_box, bail = False)
+            else:
+                os.chdir(os.path.join(i7.gh_dir, my_dir))
+                dary = data.split(";")
+                gh_files_wild = dary[0].split(",")
+                gh_files = []
+                for g in gh_files_wild:
+                    result = subprocess.run( [ 'git', 'ls-files', g ], stdout=subprocess.PIPE ).stdout.decode().split("\n")
+                    gh_files.extend(result)
+                gh_files = sorted(list(set([x for x in gh_files if x])))
+                for gh_file in gh_files:
+                    print("Trimming", gh_file)
+                    os.system("ttrim.py -c {}".format(gh_file))
+                gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
+                gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
+                stored_commit_message = dary[1]
+                check_log_prev = last_commit_data()
+                if dary[1] in check_log_prev:
+                    print("It looks like your commit message is already in the previous commit. So you are likely duplicating your efforts.")
+                    return ''
+                if run_cmd:
                     os.system(gitadd_cmd)
                     os.system(gitcommit_cmd)
-                    check_log = last_commit_data()
-                    if check_log == check_log_prev:
-                        print("Oops! The commit from line {} failed: {}".format(line_count, dary[1]))
-                        return_val = ''
-                        new_file_string += line
-                    else:
-                        print("Everything worked on line {}: {}".format(line_count, dary[1]))
-                        f = open(ghd_results, "w")
-                        f.write("NOTE: successfully created commit automatically with ghd.py\n\n")
-                        f.write("It went to the {} repository.\n\n".format(my_dir))
-                        f.write("The {} {}.\n\n".format('file committed was' if len(gh_files) == 1 else 'files committed were', ', '.join(gh_files)))
-                        f.write("The commit message was >>{}<<\n\n".format(dary[1]))
-                        f.write("The time of day was >>{}<<\n\n".format(pendulum.now().format("YYYY MM DD HH:mm:ss"))
-                        f.close()
-                        mt.file_in_browser(ghd_results)
-                        return_val = my_dir
-                        got_any = True
+                else:
+                    print("Would've run:")
+                    print("    ", gitadd_cmd)
+                    print("    ", gitcommit_cmd)
+                check_log = last_commit_data()
+                if run_cmd and check_log == check_log_prev:
+                    print("Oops! The commit from line {} failed: {}".format(line_count, dary[1]))
+                    return_val = ''
+                    new_file_string += line
+                else:
+                    print("Everything worked on line {}: {}".format(line_count, dary[1]))
+                    f = open(ghd_results, "w")
+                    f.write("NOTE: successfully created commit automatically with ghd.py\n\n")
+                    if run_cmd:
+                        f.write("NOTE 2: this is actually a test run. Here's what would've been printed:\n\n")
+                    f.write("It went to the {} repository.\n\n".format(my_dir))
+                    f.write("The {} {}.\n\n".format('file committed was' if len(gh_files) == 1 else 'files committed were', ', '.join(gh_files)))
+                    f.write("The commit message was >>{}<<\n\n".format(dary[1]))
+                    f.write("The time of day was >>{}<<\n\n".format(pendulum.now().format("YYYY MM DD HH:mm:ss")))
+                    f.close()
+                    mt.file_in_browser(ghd_results)
+                    return_val = my_dir
+                    got_any = True
+    if run_cmd:
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
-    print(gh_files)
+    else:
+        print("Not rewriting", ghd_cmd, "since this is a test run.")
     if got_any:
         mt.win_or_print("Created a commit in the {} repository.\n\Commit text={}.\n\nFiles={}.\n\n{} commit{} left.\n\nReset with:\n\ngit reset HEAD~1".format(
             my_dir, stored_commit_message, '!', commits_left, mt.plur(commits_left)), "Pushed a late-night commit", True, bail = True)
@@ -161,6 +170,7 @@ def read_cmd_line():
     global days_back
     global look_for_cmd
     global look_for_cmd_force
+    global run_cmd
     while cmd_count < len(sys.argv):
         arg = mt.nohy(sys.argv[cmd_count])
         if arg =='p':
@@ -185,6 +195,8 @@ def read_cmd_line():
             mt.npo(ghd_results)
         elif arg == 'cv':
             check_commit_validity()
+        elif arg == 'nr':
+            run_cmd = False
         elif arg == '?':
             usage()
         else:
@@ -233,7 +245,7 @@ for x in projects:
             final_count[x][y] = output_array
 
 if look_for_cmd_force or (look_for_cmd and not len(final_count)): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
-    check_prestored_command()
+    check_prestored_command(run_cmd)
 
 out_string = ""
 
