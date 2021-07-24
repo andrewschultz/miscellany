@@ -64,7 +64,7 @@ def is_okay(f):
 
 def test_type(f):
     suf = Path(f).suffix.lower()
-    if suf == '.pl' or suf == 'pm': return "perltidy"
+    if suf == '.pl' or suf == '.pm': return "perltidy"
     if suf in good_extensions or suf[1:] in good_extensions: return "python/text/source end-whitespace strip"
     return "unknown"
 
