@@ -79,12 +79,16 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
     look_for_cmd = True
     new_file_string = ""
     return_val = ''
+    commits_left = 0
+    stored_commit_message = "<NO COMMIT MESSAGE>"
     if look_for_cmd:
         got_any = False
         with open(ghd_cmd) as file:
             for (line_count, line) in enumerate (file, 1):
                 if got_any or line.startswith("#") or not line.strip():
                     new_file_string += line
+                    if not line.startswith("#"):
+                        commits_left += 1
                     continue
                 (proj, data) = mt.cfg_data_split(line)
                 my_dir = i7.proj_exp(proj, return_nonblank = (proj in ignorables), to_github = True)
@@ -104,6 +108,7 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
                         os.system("ttrim.py -c {}".format(gh_file))
                     gitadd_cmd = "git add {}".format(' '.join(dary[0].split(",")))
                     gitcommit_cmd = "git commit -m \"{}\"".format(dary[1])
+                    stored_commit_message = dary[1]
                     check_log_prev = last_commit_data()
                     if dary[1] in check_log_prev:
                         print("It looks like your commit message is already in the previous commit. So you are likely duplicating your efforts.")
@@ -118,10 +123,11 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
                     else:
                         print("Everything worked on line {}: {}".format(line_count, dary[1]))
                         f = open(ghd_results, "w")
-                        f.write("NOTE: successfully pushed commit automatically with ghd.py\n\n")
+                        f.write("NOTE: successfully created commit automatically with ghd.py\n\n")
                         f.write("It went to the {} repository.\n\n".format(my_dir))
                         f.write("The {} {}.\n\n".format('file committed was' if len(gh_files) == 1 else 'files committed were', ', '.join(gh_files)))
                         f.write("The commit message was >>{}<<\n\n".format(dary[1]))
+                        f.write("The time of day was >>{}<<\n\n".format(pendulum.now().format("YYYY MM DD HH:mm:ss"))
                         f.close()
                         mt.file_in_browser(ghd_results)
                         return_val = my_dir
@@ -129,7 +135,13 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
-    return return_val
+    print(gh_files)
+    if got_any:
+        mt.win_or_print("Created a commit in the {} repository.\n\Commit text={}.\n\nFiles={}.\n\n{} commit{} left.\n\nReset with:\n\ngit reset HEAD~1".format(
+            my_dir, stored_commit_message, '!', commits_left, mt.plur(commits_left)), "Pushed a late-night commit", True, bail = True)
+    elif not len(final_count):
+        mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
+    sys.exit()
 
 def read_cfg_file():
     with open(ghd_info) as file:
@@ -164,7 +176,7 @@ def read_cmd_line():
         elif arg == 'lf':
             look_for_cmd_force = True
         elif arg in ( 'e', 'es', 'se'):
-            mt.npo(__main__)
+            mt.npo(__file__)
         elif arg in ( 'ei', 'ie' ):
             mt.npo(ghd_info)
         elif arg in ( 'ec', 'ce' ):
@@ -221,11 +233,7 @@ for x in projects:
             final_count[x][y] = output_array
 
 if look_for_cmd_force or (look_for_cmd and not len(final_count)): # usage here is misc:x.pl,y.pl;COMMIT MESSAGE
-    my_dir_pushed = check_prestored_command()
-    if my_dir_pushed:
-        mt.win_or_print("Pushed a commit to the {} repository.\n\nReset with:\n\ngit reset HEAD~1".format(my_dir_pushed), "Pushed a late-night commit", True, bail = True)
-    elif not len(final_count):
-        mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
+    check_prestored_command()
 
 out_string = ""
 
