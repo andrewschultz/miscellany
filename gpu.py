@@ -170,15 +170,15 @@ for d in x:
         continue
     valid_git.append(d)
 
-if not (check_modified or check_pushes or check_staged or master_main_check or check_uuid):
-    sys.exit("Must specify one of modified/pushes/staged/master-main check, or a for all.")
+if not (check_modified or check_pushes or run_push_command or check_staged or master_main_check or check_uuid):
+    sys.exit("You must specify one of modified/pushes/staged/master-main check, or a for all.\nThe simplest choice is r, to run push commands, but since it's hard to reverse, I don't want to make it the default.")
 
 if check_modified:
     temp = check_modified_unadded(valid_git)
     if not temp:
         print("Hooray! No repos with modified/unadded files.")
 
-if check_pushes:
+if check_pushes or run_push_command:
     temp = check_all_pushes(valid_git)
     if not temp:
         print("Hooray! No repos that need a push.")

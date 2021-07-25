@@ -34,16 +34,17 @@ ghd_results = "c:/writing/temp/ghd-results.txt"
 
 base_dir = mt.gitbase
 
-def usage(my_param):
+def usage(my_param = ""):
     if (my_param):
         print("=================bad argument", my_param)
     else:
-        print("USage for ghd.py")
+        print("=================Usage for ghd.py")
     print("p  = windows popup box")
     print("d# = days back")
     print("l = look for command, lf = force command, nr = don't run command")
     print("cv = checks commit validity")
     print("e/es/se edits main, ei/ie edits config, ec/ce edits command file, er/re edits results file")
+    print("NOTE: to add to {}, run gfu.py instead.".format(os.path.basename(ghd_cmd)))
     sys.exit()
 
 def last_commit_data():
