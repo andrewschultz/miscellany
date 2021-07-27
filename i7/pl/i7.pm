@@ -110,6 +110,10 @@ while ($i7p_line = <A>)
   {
 	next;
   }
+  elsif ($i7p_line =~ /^(auxfile|genshort)/i)
+  {
+	next;
+  }
   elsif ($i7p_line =~ /:/)
   {
     next if ($i7p_line =~ /^HEADNAME/); # HEADNAME not processed by Perl. It is for my python functions.
