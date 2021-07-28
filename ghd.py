@@ -140,13 +140,17 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
                     mt.file_in_browser(ghd_results)
                     return_val = my_dir
                     got_any = True
-    if run_cmd:
+    if not run_cmd:
+        print("Not rewriting", ghd_cmd, "since this is a test run.")
+    elif not got_any:
+        print("Not rewriting", ghd_cmd, "since we didn't find any commits to create.")
+    else:
+        print("Rewriting", ghd_cmd, "removing the commit we created.")
+    if run_cmd and got_any:
         f = open(ghd_cmd, "w")
         f.write(new_file_string)
         f.close()
-    else:
-        print("Not rewriting", ghd_cmd, "since this is a test run.")
-    if got_any:
+    elif got_any:
         mt.win_or_print("Created a commit in the {} repository.\n\Commit text={}.\n\nFiles={}.\n\n{} commit{} left.\n\nReset with:\n\ngit reset HEAD~1".format(
             my_dir, stored_commit_message, '!', commits_left, mt.plur(commits_left)), "Pushed a late-night commit", True, bail = True)
     elif not len(final_count):
