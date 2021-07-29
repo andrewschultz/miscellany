@@ -191,12 +191,14 @@ def read_hourly_check(a):
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"):
-                if line_count < 10:
+                if line_count < 6:
                     print("WARNING: {} may have had a semicolon near the top (line {}) for testing/skipping purposes.".format(a, line_count))
+                    mt.add_post(a, line_count)
                 break
             if line.startswith("#"): continue
             if line.count("|") > 1:
-                print("WARNING too many OR pipes {} line {}: {}".format(ab, line_count, line.strip()))
+                print("WARNING too many OR pipes (replace with slash?) {} line {}: {}".format(ab, line_count, line.strip()))
+                mt.add_post(a, line_count)
             if line.startswith("="):
                 bookmark_past = bookmark_string
                 bookmark_string = re.sub("^=*", "", line.lower().strip())
@@ -232,7 +234,9 @@ def read_hourly_check(a):
                 print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, ab, line.strip()))
             a1 = line.split("|")
             if len(a1) > 2:
-                if show_warnings: print("WARNING too many variables, can't yet parse {0} line {1} (maybe you want a forward slahsh instead of |):\n    {:2}".format(bn, line_count, line))
+                if show_warnings:
+                    print("WARNING too many variables, can't yet parse {0} line {1} (maybe you want a forward slash instead of |):\n    {:2}".format(bn, line_count, line))
+                    mt.add_post(a, line_count)
                 continue
             a3 = re.sub("\t", "\n", a1[-1])
             make_time_array(a1[0].lower(), a3, line_count)
@@ -246,6 +250,7 @@ def read_hourly_check(a):
             old_cmd = re.sub("\|[^\|]*$", "", old_line)
     if bookmark_string:
         print("WARNING file {} ends with bookmark string {} invoked at line {}.".format(a, bookmark_string, bookmark_line))
+        mt.add_post(a, bookmark_last_line)
 
 def check_print_run(x, msg="(no message)"):
     if not x: return 0
@@ -531,3 +536,5 @@ if queue_run == 1:
 else:
     print("Running", time_index)
     see_what_to_run(time_index, wkday, mday, half_hour)
+
+mt.post_open()
