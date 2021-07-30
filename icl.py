@@ -113,9 +113,13 @@ def read_icl_cfg():
                 continue
             print("Unknown prefix", prefix, "line", line_count)
 
-def derive_extension(this_project, this_build = i7.RELEASE):
+def derive_extension(this_project, this_build = i7.RELEASE, warn_default = True):
     if this_project in build_state_of_proj:
         return build_states[build_state_of_proj[this_project]][this_build]
+    if warn_default:
+        print("WARNING: defaulting to ulx extension because {} is not defined in {}.".format(this_project, icl_cfg))
+        print("    This is okay for most large projects, but smaller projects may want a z8 definition.")
+        print("    If the size seems bloated compared to building in the IDE, this might be why.")
     return 'ulx'
 
 def last_proj_modified(this_proj, verbose=False):
@@ -160,9 +164,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     else:
         build_proj = this_proj
 
-    this_ext = derive_extension(this_proj, this_build)
-
-    bin_out = i7.bin_file(this_proj, this_ext, this_build, this_blorb)
+    bin_out = i7.bin_file(this_proj, output_ext, this_build, this_blorb)
 
     bin_base = os.path.basename(bin_out)
     file_already_there = os.path.exists(bin_out)
@@ -177,7 +179,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
         print(bin_base, "already there.")
     print("Project {}modified last {} seconds.".format("" if modified_recently_enough else "not ", file_change_time))
 
-    ext_flags = 'G' if this_ext == 'ulx' else this_ext.replace('z', 'v')
+    ext_flags = 'G' if output_ext == 'ulx' else output_ext.replace('z', 'v')
     build_flags = '-kw{}{}'.format('SD' if this_build == i7.DEBUG else '~S~D', ext_flags)
     # build flags need to be in RELEASE for Beta, since for Beta we just chop off a "not for release"
 
