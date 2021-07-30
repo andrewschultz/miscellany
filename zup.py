@@ -165,6 +165,7 @@ def read_zup_txt():
                     cur_zip_proj = ''
                     current_file = ''
                     file_base_dir = ''
+                    file_to_dir = ''
                 continue
             if line.startswith("!"):
                 flag_cfg_error(line_count, "Remove old artifact (!) from config file at line", line_count)
@@ -232,6 +233,8 @@ def read_zup_txt():
                 dir_array = data.split("\t")
                 file_base_dir = dir_array[0]
                 file_to_dir = dir_array[1] if len(dir_array) > 1 else ''
+                if file_to_dir == '.':
+                    file_to_dir = ''
             elif prefix in ( 'fn', 'n' ):
                 if not file_base_dir:
                     flag_cfg_error(line_count, "fn file-nested has no base dir for project {} at line {}.".format(cur_zip_proj, line_count))
