@@ -20,7 +20,7 @@ import colorama
 DEFAULT_SORT = daily.DAILY
 
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
-test_file = "c:/writing/temp/test-file.txt"
+test_file_index = 0
 daily_strings = ['daily', 'drive', 'keep']
 
 what_to_sort = DEFAULT_SORT
@@ -718,6 +718,12 @@ while cmd_count < len(sys.argv):
         verbose = 0
     elif arg == 'tf':
         run_test_file = True
+    elif arg[:2] == 'tf':
+        run_test_file = True
+        if arg[2:].isdigit():
+            test_file_index = int(arg[2:])
+        elif len(arg) > 2:
+            print("Test file index must be a digit, so I couldn't translate {}. Going with default of 0.".format(arg[2:]))
     elif arg == 'bbe':
         show_blank_to_blank = True
         edit_blank_to_blank = True
@@ -846,7 +852,8 @@ read_daily_cfg()
 read_comment_cfg()
 
 if run_test_file:
-    sort_raw(test_file)
+    test_file_name = "c:/writing/temp/dff-test-file-{}.txt".format(test_file_index)
+    sort_raw(test_file_name)
     sys.exit()
 
 if not len(file_list):

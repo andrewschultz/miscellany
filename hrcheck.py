@@ -474,7 +474,8 @@ while count < len(sys.argv):
     elif arg == 'v':
         verbose = True
     elif re.search('^[fs]([ci]?)[:=]', arg):
-        find_in_checkfiles(re.sub("^[a-z]+[:=]", "", arg), 'c' in arg, 'i' in arg)
+        this_array = re.split("[:=]", arg, 1)
+        find_in_checkfiles(this_array[1], 'c' in this_array[0], 'i' in this_array[0])
     elif arg == '?':
         usage()
         exit()
