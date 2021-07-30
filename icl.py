@@ -40,6 +40,7 @@ to_blorb = False
 hide_stderr = False
 hide_stdout = False
 overwrite = True
+compiler_version = '633'
 
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
@@ -49,6 +50,7 @@ def usage(arg="USAGE FOR ICL.PY"):
     print('=' * 50)
     print("b d r = beta debug release")
     print("bl = force to blorb")
+    print("c# = use compiler version #")
     print("#(wdmhs) = threshold time to check for modification")
     print("-hs/he/eh/es = hide errors/std output for build")
     print("-no/on/ow/wo = (no) overwrite")
@@ -78,6 +80,7 @@ def title_from_blurb(my_proj):
     return ''
 
 def read_icl_cfg():
+    global compiler_version
     with open(icl_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#") or not line.strip(): continue
@@ -104,6 +107,9 @@ def read_icl_cfg():
             if prefix == 'type':
                 for x in my_data.split(','):
                     build_state_of_proj[x] = my_varname
+                continue
+            if prefix == 'compver':
+                compiler_version = data
                 continue
             print("Unknown prefix", prefix, "line", line_count)
 
@@ -180,7 +186,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     os.chdir("../Build")
 
     print("(ICL.PY) Creating auto.inf in {}".format(os.getcwd()))
-    
+
     i7_to_i6 = [ "C:\\Program Files (x86)\\Inform 7\\Compilers\\ni",
       "-rules",
       "C:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions",
@@ -201,7 +207,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
 
     binary_out = "output.{}".format(output_ext)
     mt.subproc_and_run(
-    [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-632',
+    [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\inform-{}'.format(compiler_version),
     build_flags,
     "+include_path=..\\Source,.\\",
     "auto.inf",
@@ -269,6 +275,8 @@ while cmd_count < len(sys.argv):
         hide_stdout = True
     elif arg == 'eh' or arg == 'he':
         hide_stderr = True
+    elif arg[0] == 'c' and arg[1].isdigit():
+        compiler_version = arg[1:]
     elif arg == 'a' or arg == 'all':
         build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
     elif i7.main_abb(arg):
