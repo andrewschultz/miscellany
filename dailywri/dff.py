@@ -16,6 +16,7 @@ from glob import glob
 from filecmp import cmp
 from shutil import copy
 import colorama
+import pathlib
 
 DEFAULT_SORT = daily.DAILY
 
@@ -30,13 +31,15 @@ colorama.init()
 
 dir_search_flag = daily.TOPROC
 
-if 'daily' in my_cwd:
+cwd_parts = [ x.lower() for x in pathlib.PurePath(my_cwd).parts ]
+
+if 'daily' in cwd_parts:
     print("Sorting daily.DAILY stuff")
     what_to_sort = daily.DAILY
-elif 'keep' in my_cwd:
+elif 'keep' in cwd_parts:
     print("Sorting daily.KEEP stuff")
     what_to_sort = daily.KEEP
-elif 'drive' in my_cwd:
+elif 'drive' in cwd_parts:
     print("Sorting daily.DRIVE stuff")
     what_to_sort = daily.DRIVE
 else:
@@ -137,7 +140,7 @@ def blue_print(my_str):
 
 def conditional_bail():
     if bail_on_warnings:
-        sys.exit("Bailing on warning. Set -nbw to change this.")
+        sys.exit(colorama.Fore.RED + "Bailing on warning. Set -nbw to change this." + colorama.Style.RESET_ALL)
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
