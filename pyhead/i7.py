@@ -37,8 +37,8 @@ i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<
 i7com = {} # combos e.g. opo = 3d and 4d
 i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
 i7hfx = {} # header mappings e.g. ta to tables
-i7f = {} # which header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
-i7fg = {} # which github header files apply to which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7f = {} # which program files (x86)\inform header files are included by which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
+i7fg = {} # which users\documents\github header files are included by which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
 i7nonhdr = {} # non header files e.g. story.ni, walkthrough.txt, notes.txt
 i7triz = {} # there may be trizbort file name shifts e.g. shuffling -> shuffling-around
@@ -108,6 +108,13 @@ def strip_name_punc(x, remove_apostrophe = True, space_dash = True):
     return temp
 
 strip_name = name_strip = strip_name_punc
+
+def long_name(x, debug = False):
+    if x in i7x:
+        return i7x[x]
+    if x not in i7xr:
+        print("Warning: finding long name for", x," failed.")
+    return x
 
 def main_abb(x):
     if x in i7xr:
