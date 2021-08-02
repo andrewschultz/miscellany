@@ -219,8 +219,9 @@ def read_hourly_check(a):
                         bookmark_ary.append(b)
                 if len(bookmark_ary) > 1:
                     bookmark_string = re.sub(",.*", "", bookmark_string)
-                    print(bookmark_ary[0])
-                    print(bookmark_ary[1:])
+                    if verbose:
+                        print(bookmark_ary[0])
+                        print(bookmark_ary[1:])
                     extra_bookmark[bookmark_ary[0]] = bookmark_ary[1:]
                     for u in bookmark_ary[1:]:
                         backbkmk[u] = bookmark_ary[0]
@@ -231,7 +232,8 @@ def read_hourly_check(a):
             line = line.strip()
             if line[0] == '"':
                 line = old_cmd + line[1:]
-                print("Line {:d} of {:s} copies previous line and is {:s}.".format(line_count, ab, line.strip()))
+                if verbose:
+                    print("Line {:d} of {:s} uses quotes to copy previous line and is {:s}.".format(line_count, ab, line.strip()))
             a1 = line.split("|")
             if len(a1) > 2:
                 if show_warnings:
@@ -277,7 +279,8 @@ def carve_neg(ti):
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
-    print(ti, "= time index", wd, "= weekday index", md, "=monthday index", hh, "=whether to go in same half hour")
+    print(ti, "= time index", wd, "= weekday index", md, "= monthday index")
+    print(hh, "= whether to cover the full half-hour or just the fifteen-minute sector")
     totals = 0
     totals += carve_neg(ti ^ hh)
     totals += carve_up(of_day[ti ^ hh], "daily run on")
@@ -535,7 +538,7 @@ if init_delay: time.sleep(init_delay)
 if queue_run == 1:
     run_queue_file()
 else:
-    print("Running", time_index)
+    print("Running time-index", time_index)
     see_what_to_run(time_index, wkday, mday, half_hour)
 
 mt.post_open()
