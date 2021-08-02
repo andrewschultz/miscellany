@@ -87,10 +87,10 @@ def find_in_one_checkfile(my_string, f, find_comments):
 def find_in_checkfiles(my_string, find_comments_first_pass, ignore_comments):
     if find_comments_first_pass and ignore_comments:
         print("WARNING: conflicting options C and I to both find comments and ignore them. Finding comments (C) overrides ignoring comments (I).")
-    for x in [check_file, check_private, xtra_file]:
+    for x in hr_files:
         find_in_one_checkfile(my_string, x, find_comments_first_pass)
     if not find_comments_first_pass and not ignore_comments: # second pass through, this time looking for comments, assuming we ignored them first time
-        for x in [check_file, check_private, xtra_file]:
+        for x in hr_files:
             find_in_one_checkfile(my_string, x, find_comments_first_pass)
     mt.postopen()
     print("Nothing found for <<{}>>.".format(my_string))
@@ -448,6 +448,11 @@ while count < len(sys.argv):
         wkday = int(arg[1:])
     elif is_time(arg):
         time_array = [int(q) for q in arg.split(":")]
+    elif arg in ( 'ra', 'ar' ):
+        if retired_file in hr_files:
+            print("Tried to add retired file twice.")
+        else:
+            hr_files.append(retired_file)
     elif arg == 'e':
         mt.npo(check_file)
         exit()
@@ -457,18 +462,24 @@ while count < len(sys.argv):
     elif arg == 'ex':
         mt.npo(xtra_file)
         exit()
+    elif arg == 'er':
+        mt.npo(retired_file)
+        exit()
     elif arg == 'ea':
         mt.npo(check_file, bail=False)
         mt.npo(check_private, bail=False)
         mt.npo(xtra_file, bail=False)
+        mt.npo(retired_file, bail=False)
         sys.exit()
-    elif re.search("^e[xpm]+", arg):
+    elif re.search("^e[xpmr]+", arg):
         if 'x' in arg:
             mt.npo(xtra_file, bail=False)
         if 'p' in arg:
             mt.npo(check_private, bail=False)
         if 'm' in arg:
             mt.npo(check_file, bail=False)
+        if 'r' in arg:
+            mt.npo(retired_file, bail=False)
         sys.exit()
     elif arg.startswith("b="):
         my_bookmarks += arg[2:].split(",")
