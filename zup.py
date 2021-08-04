@@ -72,6 +72,22 @@ def usage(header="Usage for zup.py"):
     print("specify project(s) to zip on command line")
     exit()
 
+def dict_reverse(my_dict, my_val, bail = True):
+    temp_key = ''
+    for x in my_dict:
+        if my_dict[x] == my_val:
+            if temp_key:
+                my_str = "Double keys for value {}: {} or {}.".format(my_val, temp_key, x)
+                print(my_str)
+                if bail:
+                    sys.exit()
+            temp_key = x
+    if not temp_key:
+        print("No keys found for value", my_val)
+        if bail:
+            sys.exit()
+    return temp_key
+
 def copy_first_link(project_array, bail = True):
     for p in project_array:
         if len(project_array) > 1:
@@ -257,6 +273,24 @@ def read_zup_txt():
                     continue
                 for x in wild_cards:
                     add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.basename(x)), line_count)
+            elif prefix in ( 'fsm', 'fsmo' ):
+                ary = data.split("\t")
+                if ary[0] in curzip.file_map:
+                    if ary[1] in curzip.file_map:
+                        if prefix == 'fsm':
+                            sys.exit("Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count))
+                        curzip.file_map.delete(ary[1])
+                    curzip.file_map[ary[1]] = curzip.file_map[ary[0]]
+                    curzip.file_map.pop(ary[0])
+                elif ary[0] in curzip.file_map.values():
+                    if ary[1] in curzip.file_map.values() and prefix == 'fsm':
+                        sys.exit("Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count))
+                    a0 = dict_reverse(curzip.file_map, ary[0])
+                    a1 = dict_reverse(curzip.file_map, ary[1])
+                    curzip.file_map[a0] = curzip.file_map[a1]
+                    curzip.file_map.pop(a1)
+                else:
+                    sys.exit("Oops! Need item or value.")
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
