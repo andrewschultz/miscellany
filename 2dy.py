@@ -108,7 +108,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     else:
         print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next))
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False):
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
@@ -171,7 +171,9 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
 
     if not overwrite and os.path.exists(my_graph_graphic):
-        print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.")
+        print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.{}".format("" if launch_present else " -gsl launches."))
+        if launch_present:
+            mt.text_in_browser(my_graph_graphic)
         if bail:
             sys.exit()
         return
