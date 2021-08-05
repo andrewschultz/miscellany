@@ -15,7 +15,8 @@ debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
 open_after = False
 check_for_commons = True
-use_github_paths = True
+use_github_paths = True # this shouldn't make a difference, but github is likely more up to date (?)
+# for use_github_paths, we also may wish to define the copy-over directory as the github directory
 
 regv_ignore = "c:/writing/scripts/regvi.txt"
 
@@ -95,7 +96,9 @@ def process_misses(my_dict, list_desc):
     return len(this_list)
 
 def look_up_test_cases(my_proj, my_list):
-    regs = i7.proj2dir(my_proj)
+    regs = i7.proj2dir(my_proj, to_github = use_github_paths)
+    if use_github_paths:
+        regs = os.path.join(regs, "testing")
     reg_glob = os.path.normpath(os.path.join(regs, "reg-*.txt"))
     g = glob.glob(regs + "/reg-*.txt")
     (argless, witharg) = find_verbs(my_list)
@@ -166,12 +169,20 @@ while cmd_count < len(sys.argv):
         if user_project:
             sys.exit("Redefining user project from {} to {}.".format(user_project, arg))
         user_project = i7.i7x[arg]
+    elif arg in ( 'c', 'cy', 'yc' ):
+        check_for_commons = True
+    elif arg in ( 'cn', 'nc' ):
+        check_for_commons = False
     elif arg == 'd':
         debug = True
     elif arg == 'l':
         lookup_cases = True
     elif arg in ( 'ld', 'dl' ):
         lookup_cases = debug = True
+    elif arg in ( 'g', 'gy', 'yg' ):
+        use_github_paths = True
+    elif arg in ( 'gn', 'ng' ):
+        use_github_paths = False
     elif arg == 'p':
         lookup_cases = False
     elif arg in ( 'pd', 'dp' ):
