@@ -1,4 +1,7 @@
 # regv.py : (crude) regex testing verb generator
+#
+# to do: flag ignores (maybe)
+#        also, maybe have a list of meta files for each project e.g. files:fourbyfouria=x.txt,y.txt,etc
 
 from collections import defaultdict
 import os
@@ -11,6 +14,8 @@ import glob
 debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
 open_after = False
+check_for_commons = True
+use_github_paths = True
 
 regv_ignore = "c:/writing/scripts/regvi.txt"
 
@@ -191,6 +196,12 @@ else:
     my_proj = user_project
 
 project_file_list = i7.i7f[my_proj] if my_proj in i7.i7f else [ i7.main_src(my_proj) ]
+
+if check_for_commons:
+    for x in i7.i7com:
+        if my_proj in i7.i7com[x]:
+            if x in i7.i7f:
+                project_file_list.extend(i7.i7f[x])
 
 if lookup_cases:
     look_up_test_cases(my_proj, project_file_list)
