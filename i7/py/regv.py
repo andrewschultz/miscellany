@@ -44,6 +44,8 @@ def read_regv_ignores():
 def valid_understand(my_line):
     if not my_line.startswith('understand'): return False
     if ' as something new' in my_line: return False
+    if ' as a mistake' in my_line: return False
+    if not re.search(r' as [^ ]+ing\b', my_line): return False
     return True
 
 def expand_verbs(my_string):
@@ -84,8 +86,18 @@ def find_verbs(file_list):
                         argless[q] = "{}={}".format(f, line_count)
     return (argless, witharg)
 
+def file_and_line(my_string):
+    ary = my_string.split('=')
+    if len(ary) != 1:
+        return(ary[0], 99999)
+    try:
+        t2 = int(ary[1])
+    except:
+        t2 = 99999
+    return(ary[0], t2)
+
 def process_misses(my_dict, list_desc):
-    this_list = sorted([x for x in my_dict if my_dict[x] != "found" and not x in ignores[my_proj]])
+    this_list = sorted([x for x in my_dict if my_dict[x] != "found" and not x in ignores[my_proj]], key = lambda y: file_and_line(my_dict[y]))
     if len(this_list) == 0:
         print("Hooray! Nothing missing in {}.".format(list_desc))
     else:
