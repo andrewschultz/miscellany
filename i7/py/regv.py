@@ -109,17 +109,22 @@ def look_up_test_cases(my_proj, my_list):
                 if not line.startswith(">"):
                     continue
                 ary = line[1:].strip().lower().split(' ')
-                verb_candidate = ary[0].lower()
-                if verb_candidate in argless:
-                    if len(ary) == 1:
-                        if debug and not argless[verb_candidate]:
-                            print("Found argless", verb_candidate, tb, line_count)
-                        argless[verb_candidate] = "found"
-                if verb_candidate in witharg:
-                    if len(ary) == 2:
-                        if debug and not witharg[verb_candidate]:
-                            print("Found with-arg", verb_candidate, tb, line_count)
-                        witharg[verb_candidate] = "found"
+                got_candidate = False
+                for x in range(len(ary), -1, -1):
+                    if got_candidate: continue
+                    verb_candidate = ' '.join(ary[0:x]).lower()
+                    if verb_candidate in argless:
+                        if len(ary) == x:
+                            if debug and not argless[verb_candidate]:
+                                print("Found argless", verb_candidate, tb, line_count)
+                            argless[verb_candidate] = "found"
+                            got_candidate = True
+                    if verb_candidate in witharg:
+                        if len(ary) > x:
+                            if debug and not witharg[verb_candidate]:
+                                print("Found with-arg", verb_candidate, tb, line_count)
+                            witharg[verb_candidate] = "found"
+                            got_candidate = True
     x = process_misses(argless, "verbs without arguments")
     y = process_misses(witharg, "verbs with arguments")
     if not x + y:
