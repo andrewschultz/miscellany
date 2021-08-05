@@ -14,7 +14,7 @@ import glob
 debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
 open_after = False
-check_for_commons = True
+include_include_file_verbs = True
 use_github_paths = True # this shouldn't make a difference, but github is likely more up to date (?)
 # for use_github_paths, we also may wish to define the copy-over directory as the github directory
 
@@ -25,6 +25,8 @@ def usage(my_message = "USAGE"):
     print("L = look up cases, P = print cases. Mutually exclusive but can be combined with D=debug.")
     print("E = edit ignore file.")
     print("O = open source after.")
+    print("G = use Github path, GN/NG/GY/YG toggles.")
+    print("I = include (heh) includes, IN/NI/IY/YI toggle.")
     print("You can also specify a project name on the command line.")
     sys.exit()
 
@@ -88,10 +90,10 @@ def process_misses(my_dict, list_desc):
         print("Hooray! Nothing missing in {}.".format(list_desc))
     else:
         print("Missing {} entries in {}.".format(len(this_list), list_desc))
-        print(' / '.join(this_list))
         for t in this_list:
+            print("  ---->", t, "~", my_dict[t])
             temp = my_dict[t].split("=")
-            print("Adding", temp[0], temp[1])
+            if debug: print("Adding", temp[0], temp[1])
             mt.add_postopen(temp[0], int(temp[1]))
     return len(this_list)
 
@@ -137,6 +139,7 @@ def crank_out_verb_tests(this_file):
     big_ary = []
     look_for_say = False
     wrongo_verb = ''
+    print("###################verb tests for", this_file)
     with open(this_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if not line.strip():
@@ -174,10 +177,10 @@ while cmd_count < len(sys.argv):
         if user_project:
             sys.exit("Redefining user project from {} to {}.".format(user_project, arg))
         user_project = i7.i7x[arg]
-    elif arg in ( 'c', 'cy', 'yc' ):
-        check_for_commons = True
-    elif arg in ( 'cn', 'nc' ):
-        check_for_commons = False
+    elif arg in ( 'i', 'iy', 'yi' ):
+        include_include_file_verbs = True
+    elif arg in ( 'in', 'ni' ):
+        include_include_file_verbs = False
     elif arg == 'd':
         debug = True
     elif arg == 'l':
@@ -213,7 +216,7 @@ else:
 
 project_file_list = i7.i7f[my_proj] if my_proj in i7.i7f else [ i7.main_src(my_proj) ]
 
-if check_for_commons:
+if include_include_file_verbs:
     for x in i7.i7com:
         if my_proj in i7.i7com[x]:
             if x in i7.i7f:
@@ -223,7 +226,7 @@ if lookup_cases:
     look_up_test_cases(my_proj, project_file_list)
     if open_after:
         mt.post_open()
-    else:
+    elif len(mt.file_post_list) > 0:
         print("Set o to open source after at the first ignored verb(s) in each file.")
     sys.exit()
 
