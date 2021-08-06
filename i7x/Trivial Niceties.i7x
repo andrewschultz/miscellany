@@ -71,6 +71,32 @@ to force-rules: (- debug_Rules = 1; -)
 
 to force-all-rules: (- debug_Rules = 2; -)
 
+[to decide which number is game-state:
+	(- deadflag -) ;
+
+to decide whether game-over:
+	if game-state is 0, no;
+	yes;
+
+to decide whether game-on:
+	if game-state is 0, yes;
+	no;
+]
+
+to decide whether game-on:
+	(- GameOn() -);
+
+to decide whether game-over:
+	(- GameOn() == false -);
+
+Include (-
+
+[ GameOn ;
+	return (deadflag == 0);
+];
+
+-)
+
 book waiting stubs
 
 waited-yet is a truth state that varies.
