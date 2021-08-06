@@ -9,11 +9,13 @@ import re
 import sys
 import i7
 import mytools as mt
+import pathlib
 import glob
 
 debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
 open_after = False
+use_recursive = True
 include_include_file_verbs = True
 use_github_paths = True # this shouldn't make a difference, but github is likely more up to date (?)
 # for use_github_paths, we also may wish to define the copy-over directory as the github directory
@@ -25,8 +27,9 @@ def usage(my_message = "USAGE"):
     print("L = look up cases, P = print cases. Mutually exclusive but can be combined with D=debug.")
     print("E = edit ignore file.")
     print("O = open source after.")
-    print("G = use Github path, GN/NG/GY/YG toggles.")
-    print("I = include (heh) includes, IN/NI/IY/YI toggle.")
+    print("G = use Github path, GN/NG/GY/YG toggles. Default = off.")
+    print("I = include (heh) includes, IN/NI/IY/YI toggle. Default = on.")
+    print("R = recursively search files, RN/NR/RY/YR toggle. Default = on.")
     print("You can also specify a project name on the command line.")
     sys.exit()
 
@@ -109,12 +112,15 @@ def process_misses(my_dict, list_desc):
             mt.add_postopen(temp[0], int(temp[1]))
     return len(this_list)
 
+def regs_of(my_path):
+    return os.path.normpath(os.path.join(my_path, "reg-*.txt"))
+
 def look_up_test_cases(my_proj, my_list):
     regs = i7.proj2dir(my_proj, to_github = use_github_paths)
-    if use_github_paths:
-        regs = os.path.join(regs, "testing")
-    reg_glob = os.path.normpath(os.path.join(regs, "reg-*.txt"))
-    g = glob.glob(regs + "/reg-*.txt")
+    if use_recursive:
+        g = pathlib.Path(regs).rglob("reg-*txt")
+    else:
+        g = glob.glob(os.path.normpath(os.path.join(regs, "reg-*.txt")))
     (argless, witharg) = find_verbs(my_list)
     for testfile in g:
         tb = os.path.basename(testfile)
@@ -189,10 +195,6 @@ while cmd_count < len(sys.argv):
         if user_project:
             sys.exit("Redefining user project from {} to {}.".format(user_project, arg))
         user_project = i7.i7x[arg]
-    elif arg in ( 'i', 'iy', 'yi' ):
-        include_include_file_verbs = True
-    elif arg in ( 'in', 'ni' ):
-        include_include_file_verbs = False
     elif arg == 'd':
         debug = True
     elif arg == 'l':
@@ -203,6 +205,14 @@ while cmd_count < len(sys.argv):
         use_github_paths = True
     elif arg in ( 'gn', 'ng' ):
         use_github_paths = False
+    elif arg in ( 'i', 'iy', 'yi' ):
+        include_include_file_verbs = True
+    elif arg in ( 'in', 'ni' ):
+        include_include_file_verbs = False
+    elif arg in ( 'r', 'ry', 'yr' ):
+        use_recursive = True
+    elif arg in ( 'rn', 'nr' ):
+        use_recursive = False
     elif arg == 'p':
         lookup_cases = False
     elif arg in ( 'pd', 'dp' ):
