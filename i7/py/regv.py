@@ -16,6 +16,7 @@ debug = False
 ignores = defaultdict(lambda: defaultdict(bool))
 open_after = False
 use_recursive = True
+search_branches = True
 include_include_file_verbs = True
 use_github_paths = True # this shouldn't make a difference, but github is likely more up to date (?)
 # for use_github_paths, we also may wish to define the copy-over directory as the github directory
@@ -30,6 +31,7 @@ def usage(my_message = "USAGE"):
     print("G = use Github path, GN/NG/GY/YG toggles. Default = off.")
     print("I = include (heh) includes, IN/NI/IY/YI toggle. Default = on.")
     print("R = recursively search files, RN/NR/RY/YR toggle. Default = on.")
+    print("B = recursively search files, BN/NB/BY/YB toggle. Default = on.")
     print("You can also specify a project name on the command line.")
     sys.exit()
 
@@ -112,15 +114,19 @@ def process_misses(my_dict, list_desc):
             mt.add_postopen(temp[0], int(temp[1]))
     return len(this_list)
 
-def regs_of(my_path):
-    return os.path.normpath(os.path.join(my_path, "reg-*.txt"))
+def regs_of(my_path, wild_card):
+    full_wild_card = wild_card + "-*.txt"
+    if use_recursive:
+        temp = pathlib.Path(my_path).rglob(full_wild_card)
+    else:
+        temp = glob.glob(os.path.normpath(os.path.join(my_path, full_wild_card)))
+    return list(temp)
 
 def look_up_test_cases(my_proj, my_list):
-    regs = i7.proj2dir(my_proj, to_github = use_github_paths)
-    if use_recursive:
-        g = pathlib.Path(regs).rglob("reg-*txt")
-    else:
-        g = glob.glob(os.path.normpath(os.path.join(regs, "reg-*.txt")))
+    my_path = i7.proj2dir(my_proj, to_github = use_github_paths)
+    g = regs_of(my_path, "reg")
+    if search_branches:
+        g.extend(regs_of(my_path, "rbr"))
     (argless, witharg) = find_verbs(my_list)
     for testfile in g:
         tb = os.path.basename(testfile)
@@ -213,6 +219,10 @@ while cmd_count < len(sys.argv):
         use_recursive = True
     elif arg in ( 'rn', 'nr' ):
         use_recursive = False
+    elif arg in ( 'b', 'by', 'yb' ):
+        search_branches = True
+    elif arg in ( 'bn', 'nb' ):
+        search_branches = False
     elif arg == 'p':
         lookup_cases = False
     elif arg in ( 'pd', 'dp' ):
