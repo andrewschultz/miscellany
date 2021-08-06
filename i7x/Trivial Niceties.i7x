@@ -8,13 +8,21 @@ debug-state is a truth state that varies.
 
 in-beta is a truth state that varies.
 
-to say this-game: (- print (string) Story; -)
+to say this-game-noi: (- print (string) Story; -)
+
+to say this-game: say "[i][this-game-noi][r]"
 
 to say fill-in-here: say "!!!!" [This is something that should never be in a game's release. At times I want to be able to compile the game but still reliably note when something needs to be implemented. I track this with a script elsewhere.]
 
 definition: a thing (called qvc) is qv:
 	if qvc is enclosed by location of player, yes;
 	no;
+
+section debug state - not for release
+
+when play begins (this is the TN debug true rule):
+	say "The TN debug true rule sets debug-state to true. It does not appear in release mode. Disable with 'the TN debug true rule does not appear in any rulebook.'";
+	now debug-state is true;
 
 book screen effects [I always do something silly with the status line, or try a creative wait for any key, because that's fun]
 
@@ -134,7 +142,7 @@ to decide what number is abs of (n - a number):
 	if n < 0, decide on 0 - n;
 	decide on n;
 
-to decide which number is boolval of (ts - a truth state): [boolval of x + boolval of y simplifies "to decide what number is quests-solved"]
+to decide which number is boolval of (ts - a truth state): [boolval of x + boolval of y simplifies "to decide what number is quests-solved"] [binval or binary also ... put this in so I can search easily if I forget]
 	if ts is true, decide on 1;
 	decide on 0;
 
@@ -403,7 +411,9 @@ carry out fging:
 	move player to the room noun of location of player;
 	the rule succeeds.
 
-volume debug printing (for Glulx only)
+volume debug printing
+
+chapter Glulx d/dl/dn (for Glulx only)
 
 to d (myt - indexed text):
 	if debug-state is true:
@@ -417,25 +427,32 @@ to dn (myt - indexed text):
 	if debug-state is true:
 		say "[myt]";
 
-debug-count is a number that varies;
+chapter Z-Machine d/dl/dn (for Z-Machine only)
 
-to d1:
-	now debug-count is 1;
-	say "[debug-count].";
+to d (myt - text):
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
 
-to dn:
-	increment debug-count;
-	say "[debug-count]";
+to dl (myt - text): [this is for stuff you really want to delete]
+	if debug-state is true:
+		say "DEBUG: [myt][line break]";
+
+to dn (myt - text):
+	if debug-state is true:
+		say "[myt]";
+
+chapter ital-txt
 
 to ital-txt (x - indexed text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]".
 
 volume trivial rules and cases
 
 to decide whether always-no: decide no;
-to decide whether always-yes: decide no;
+to decide whether always-yes: decide yes;
 
 this is the trivially false rule: the rule fails;
 this is the trivially true rule: the rule succeeds;
+this is the trivially ignorable rule: continue the action;
 
 Trivial Niceties ends here.
 
