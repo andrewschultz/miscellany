@@ -2,6 +2,11 @@
 #
 # to do: flag ignores (maybe)
 #        also, maybe have a list of meta files for each project e.g. files:fourbyfouria=x.txt,y.txt,etc
+#
+# to do: allow for different testing subdirs when syncing, not just "testing"
+#        allow for reg- and rbr- when syncing
+#        allow for to-clipboard options
+#
 
 from collections import defaultdict
 import os
@@ -203,7 +208,21 @@ def write_sync_commands(github_tests = "testing"):
     inform_base = [ os.path.basename(x) for x in inform_reg ]
     github_base = [ os.path.basename(x) for x in github_reg ]
     link_to = [ x for x in inform_reg if os.path.basename(x) not in github_base ]
+    link_check = [ x for x in inform_reg if os.path.basename(x) in github_base ]
     link_from = [ x for x in github_reg if os.path.basename(x) not in inform_base ]
+    total_unlinked = 0
+    for x in link_check:
+        if not os.path.islink(x):
+            to_link_to = [ y for y in github_reg if os.path.basename(y) == os.path.basename(x) ]
+            print("Link check...")
+            if len(to_link_to) > 1:
+                print("WARNING duplicately named files ... check before linking")
+            print("  erase {}".format(x))
+            for y in to_link_to:
+                print("  mklink {} {}".format(x, y))
+            total_unlinked += 1
+    if total_unlinked == 0:
+        print("All games/inform reg-* files are linked.")
     if len(link_to) > 0:
         print("Make links to github for:")
         for l in link_to:
@@ -216,7 +235,7 @@ def write_sync_commands(github_tests = "testing"):
             print("mklink {} {}".format(os.path.join(inform_path, os.path.basename(l)), l))
     else:
         print("All games/inform regex testfiles are linked from.")
-    
+
 
 user_project = ''
 cmd_count = 1
