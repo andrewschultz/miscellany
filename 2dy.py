@@ -151,13 +151,19 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         if len(sizes) == 1:
             color_array.append('black')
             shape_array.append(30)
+            last_time = my_time
             continue
         if (sizes[-1] // 1000) - (sizes[-2] // 1000) > 0:
-            shape_array.append(50)
+            shape_array.append(60)
         else:
             shape_array.append(30)
         size_delta = sizes[-1] - sizes[-2]
         color_array.append(mt.text_from_values(color_dict, size_delta))
+        if my_time.hour == last_time.hour:
+            print("WARNING line", ary, "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.".format(last_time.minute, my_time.minute))
+        elif my_time.hour - last_time.hour > 1:
+            print("WARNING line", ary, "skipped at least one hour. You probably deleted data. It's not a big deal, but O Lost and all that sort of thing.".format(last_time.minute, my_time.minute))
+        last_time = my_time
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
 
@@ -168,7 +174,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     b0 = b + a * init_from_epoch
     my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b0 > 0 else '', b0)
 
-    my_graph_graphic = "c:/writing/temp/daily-{}".format(my_time.format("YYYY-MM-DD-HH.png"))
+    my_graph_graphic = "c:/writing/temp/daily-{}{}".format('past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
 
     if not overwrite and os.path.exists(my_graph_graphic):
         print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.{}".format("" if launch_present else " -gsl launches."))
@@ -296,7 +302,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)v or vn/nv = toggle verbosity")
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
     print("(-?)ps = put stats, (-?)gs = get stats, (-?)es = edit stats, (-?)ss = sift stats")
-    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new")
+    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec = edit code, es = edit stats")
     exit()
 
 def read_2dy_cfg():
@@ -370,6 +376,7 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg == 'em': mt.npo(__file__)
+    elif arg == 'es': mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'cto':
         compare_thousands()
@@ -382,13 +389,13 @@ while cmd_count < len(sys.argv):
         if abs(file_index) == 1:
             print("Note: this is not zero-based, so 1 is the most recent and the default.")
         graph_stats(file_index = file_index, overwrite = True)
+    elif arg == 'gsl': graph_stats(overwrite = True, launch_present = True)
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'ps': put_stats()
     elif arg == 'psr': put_stats(check_floor = True)
     elif arg == 'bs': write_base_stats = False
     elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
-    elif arg == 'es': mt.npo(stats_file)
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
