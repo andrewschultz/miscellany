@@ -20,6 +20,7 @@ search_branches = True
 include_include_file_verbs = True
 use_github_paths = True # this shouldn't make a difference, but github is likely more up to date (?)
 # for use_github_paths, we also may wish to define the copy-over directory as the github directory
+sync_between = False
 
 regv_ignore = "c:/writing/scripts/regvi.txt"
 
@@ -114,9 +115,12 @@ def process_misses(my_dict, list_desc):
             mt.add_postopen(temp[0], int(temp[1]))
     return len(this_list)
 
-def regs_of(my_path, wild_card):
-    full_wild_card = wild_card + "-*.txt"
-    if use_recursive:
+def regs_of(my_path, wild_card, recursive_check = use_recursive):
+    if wild_card.endswith(".txt"):
+        full_wild_card = wild_card
+    else:
+        full_wild_card = wild_card + "-*.txt"
+    if recursive_check:
         temp = pathlib.Path(my_path).rglob(full_wild_card)
     else:
         temp = glob.glob(os.path.normpath(os.path.join(my_path, full_wild_card)))
@@ -189,6 +193,31 @@ def crank_out_verb_tests(this_file):
             look_for_say = True
             big_ary.extend(verbs_from_line(line))
 
+def write_sync_commands(github_tests = "testing"):
+    inform_path = i7.proj2dir(my_proj, to_github = False)
+    github_path = i7.proj2dir(my_proj, to_github = True)
+    if github_tests:
+        github_path = os.path.join(github_path, "testing")
+    inform_reg = regs_of(inform_path, "reg-*.txt", False)
+    github_reg = regs_of(github_path, "reg-*.txt", True)
+    inform_base = [ os.path.basename(x) for x in inform_reg ]
+    github_base = [ os.path.basename(x) for x in github_reg ]
+    link_to = [ x for x in inform_reg if os.path.basename(x) not in github_base ]
+    link_from = [ x for x in github_reg if os.path.basename(x) not in inform_base ]
+    if len(link_to) > 0:
+        print("Make links to github for:")
+        for l in link_to:
+            print("move {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
+            print("mklink {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
+    else:
+        print("All github regex testfiles are linked to.")
+    if len(link_from) > 0:
+        for l in link_from:
+            print("mklink {} {}".format(os.path.join(inform_path, os.path.basename(l)), l))
+    else:
+        print("All games/inform regex testfiles are linked from.")
+    
+
 user_project = ''
 cmd_count = 1
 lookup_cases = False
@@ -228,6 +257,8 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'pd', 'dp' ):
         lookup_cases = False
         debug = True
+    elif arg == 's':
+        sync_between = True
     elif arg == 'e':
         os.system(regv_ignore)
     elif arg == 'o':
@@ -245,6 +276,10 @@ if not user_project:
     print("Pulling", my_proj, "from current directory.")
 else:
     my_proj = user_project
+
+if sync_between:
+    write_sync_commands()
+    sys.exit()
 
 project_file_list = i7.i7f[my_proj] if my_proj in i7.i7f else [ i7.main_src(my_proj) ]
 
