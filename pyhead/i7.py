@@ -116,10 +116,13 @@ def long_name(x, debug = False):
         print("Warning: finding long name for", x," failed.")
     return x
 
-def main_abb(x):
+def main_abb(x, use_given = False):
     if x in i7xr:
         return i7xr[x]
-    if x not in i7x: return ""
+    if x not in i7x:
+        if use_given:
+            return x
+        return ""
     if i7x[x] not in i7xr:
         print("    **** I7.PY WARNING {}/{} does not have reverse abbreviation.".format(x, i7x[x]))
         return ""
