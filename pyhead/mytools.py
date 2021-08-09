@@ -343,7 +343,7 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
-def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE, array_splitter = '', blank_second = False):
+def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE, array_splitter = '', blank_second = False, lowercase_prefix = True, lowercase_data = True):
     if strip_line:
         x = x.strip()
     if dash_to_underscore == DASH_TO_UNDERSCORE:
@@ -351,6 +351,11 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
     if dash_to_underscore == UNDERSCORE_TO_DASH:
         x = x.replace("_", "-")
     ary = re.split("[{}]".format(delimiter), x, 1)
+    if lowercase_prefix:
+        ary[0] = ary[0].lower()
+    if lowercase_data:
+        for x in range(1, len(ary)):
+            ary[x] = ary[x].lower()
     if len(ary) == 1:
         if blank_second:
             return (ary[0], '')
