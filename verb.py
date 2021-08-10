@@ -1,7 +1,15 @@
+#################################################################################
+#
+# verb.py: allows you to create inform 7 verb code from a single line of input
+#
+# ? gives usage
+#
+
 import mytools as mt
 import pyperclip
 from collections import defaultdict
 import sys
+import re
 
 verb_types = defaultdict(str)
 bracket_text = defaultdict(str)
@@ -13,8 +21,8 @@ sample_data = []
 
 def add_clipboard_text(prefix, data):
     ary = data.split(",")
-    if '~' in ary[0]:
-        a2 = ary[0].split("~")
+    if '~' in ary[0] or '=' in ary[0]:
+        a2 = re.split("[~=]", ary[0])
         ary[0] = a2[1]
         my_action = a2[0]
     else:
@@ -73,10 +81,10 @@ while cmd_count < len(sys.argv):
         print("{:35} {:30}".format("Verb abbreviation and type", "Action text"))
         for x in verb_types:
             print("{:>4} {:30s} {:30s}".format(x, verb_types[x], bracket_text[x]))
-        if len(sample) > 0:
+        if len(sample_data) > 0:
             print()
             print("        SAMPLE USAGE")
-            for s in sample:
+            for s in sample_data:
                 print("   ---->", s)
         else:
             print("No samples. Maybe you should add some in the config file with sample:?")
