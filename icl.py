@@ -54,6 +54,7 @@ def usage(arg="USAGE FOR ICL.PY"):
     print("#(wdmhs) = threshold time to check for modification")
     print("-hs/he/eh/es = hide errors/std output for build")
     print("-no/on/ow/wo = (no) overwrite")
+    print("l launches the newly built binary")
     print("use project name if necessary")
     exit()
 
@@ -218,29 +219,43 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     ], null_stdout = hide_stdout, null_stderr = hide_stderr
     )
 
+    to_run_after = os.path.abspath(binary_out)
+
     if this_build == i7.BETA:
         beta_out = "c:/games/inform/beta Materials/Release/beta-{}.{}".format(title_from_blurb('beta'), output_ext)
         print("Copying from", os.path.abspath(binary_out), "to", beta_out)
         copy(binary_out, beta_out)
+        to_run_after = beta_out
 
     if not this_blorb:
         print("Not making blorb file.")
-        return
 
-    blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
-    print("Creating blorb file", blorb_file)
+    else:
 
-    os.chdir("..")
+        blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
+        print("Creating blorb file", blorb_file)
 
-    mt.subproc_and_run(
-    [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\cblorb',
-    '-windows',
-    'Release.blurb',
-    blorb_file
-    ], null_stdout = hide_stdout, null_stderr = hide_stderr
-    )
+        os.chdir("..")
 
-    mt.print_status_of(blorb_file)
+        mt.subproc_and_run(
+        [ 'C:\\Program Files (x86)\\Inform 7\\Compilers\\cblorb',
+        '-windows',
+        'Release.blurb',
+        blorb_file
+        ], null_stdout = hide_stdout, null_stderr = hide_stderr
+        )
+
+        mt.print_status_of(blorb_file)
+
+    if launch_after:
+        if not os.path.exists(to_run_after):
+            print("Can't find", to_run_after, " so I won't launch it.")
+            return
+        if os.stat(to_run_after).st_size == 0:
+            print(to_run_after, "is zero-byte, so I won't launch it.")
+            return
+        print("Launching", to_run_after)
+        os.startfile(to_run_after)
 
 read_icl_cfg()
 
@@ -254,6 +269,8 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.RELEASE] = True
     elif arg == 'release':
         what_to_build[i7.BETA] = True
+    elif arg == 'l':
+        launch_after = True
     elif arg[-1:] == 'w' and arg[:-1].isdigit():
         file_change_threshold = 604800 * int(arg[:-1])
     elif arg[-1:] == 'd' and arg[:-1].isdigit():
