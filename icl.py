@@ -106,7 +106,7 @@ def read_icl_cfg():
                 continue
             if prefix == 'type':
                 for x in my_data.split(','):
-                    build_state_of_proj[x] = my_varname
+                    build_state_of_proj[i7.main_abb(x, use_given = True)] = my_varname
                 continue
             if prefix == 'compver':
                 compiler_version = data
@@ -114,6 +114,7 @@ def read_icl_cfg():
             print("Unknown prefix", prefix, "line", line_count)
 
 def derive_extension(this_project, this_build = i7.RELEASE, warn_default = True):
+    this_project = i7.main_abb(this_project, use_given = True)
     if this_project in build_state_of_proj:
         return build_states[build_state_of_proj[this_project]][this_build]
     if warn_default:
