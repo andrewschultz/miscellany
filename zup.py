@@ -290,7 +290,7 @@ def read_zup_txt():
                     curzip.file_map[a0] = curzip.file_map[a1]
                     curzip.file_map.pop(a1)
                 else:
-                    sys.exit("Oops! Need item or value.")
+                    sys.exit("Oops! It looks like a {} command at line {} tried to move a file that wasn't in the current list of long or short values. Please fix or comment before continuing.".format(prefix, line_count))
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
@@ -433,6 +433,12 @@ if copy_link_only:
     copy_first_link(project_array, bail = True)
 
 print("Project(s):", ', '.join(project_array))
+
+for x in project_array:
+    if is_beta(x):
+        print(colorama.Fore.GREEN + "{} is a beta project and likely has a regular project, so this is a nag to make sure you want the beta and not the release.".format(x) + colorama.Style.RESET_ALL)
+    elif x + '-b' in zups or x + 'b' in zups:
+        print(colorama.Fore.GREEN + "{} likely has a beta project, so this is just a nag to check you want the release and not the beta.".format(x) + colorama.Style.RESET_ALL)
 
 for x in zups:
     if zups[x].out_name:
