@@ -135,9 +135,9 @@ def is_beta(proj_read_in):
 
 def zip_write_nonzero_file(zip_handle, from_path, to_path):
     if not os.path.exists(from_path):
-        sys.exit("Could not find file {}. Bailing.".format(from_path))
+        sys.exit(colorama.Fore.RED + "Could not find file {}. Bailing.".format(from_path) + colorama.Style.RESET_ALL)
     if os.stat(from_path).st_size == 0:
-        sys.exit("Tried to write zero-byte file {} to zip. Bailing.".format(from_path))
+        sys.exit(colorama.Fore.RED + "Tried to write zero-byte file {} to zip. Bailing.".format(from_path) + colorama.Style.RESET_ALL)
     zip_handle.write(from_path, to_path, zipfile.ZIP_DEFLATED)
 
 def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/questions/1855095/how-to-create-a-zip-archive-of-a-directory-in-python
@@ -156,7 +156,7 @@ def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_ba
 def flag_zip_build_error(bail_string):
     print(bail_string)
     if bail_on_first_build_error:
-        print("Bailing after first error. To change this, set flag -bbn/nbb.")
+        print(colorama.Fore.RED + "Bailing after first error. To change this, set flag -bbn/nbb." + colorama.Style.RESET_ALL)
         sys.exit()
 
 def add_to_file_map(this_map, from_file, to_file, line_count):
@@ -278,19 +278,19 @@ def read_zup_txt():
                 if ary[0] in curzip.file_map:
                     if ary[1] in curzip.file_map:
                         if prefix == 'fsm':
-                            sys.exit("Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count))
+                            sys.exit(colorama.Fore.YELLOW + "Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count) + colorama.Style.RESET_ALL)
                         curzip.file_map.delete(ary[1])
                     curzip.file_map[ary[1]] = curzip.file_map[ary[0]]
                     curzip.file_map.pop(ary[0])
                 elif ary[0] in curzip.file_map.values():
                     if ary[1] in curzip.file_map.values() and prefix == 'fsm':
-                        sys.exit("Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count))
+                        sys.exit(colorama.Fore.YELLOW + "Line {}: you are overwriting a file-map already in the project. Override with fsmo.".format(line_count) + colorama.Style.RESET_ALL)
                     a0 = dict_reverse(curzip.file_map, ary[0])
                     a1 = dict_reverse(curzip.file_map, ary[1])
                     curzip.file_map[a0] = curzip.file_map[a1]
                     curzip.file_map.pop(a1)
                 else:
-                    sys.exit("Oops! It looks like a {} command at line {} tried to move a file that wasn't in the current list of long or short values. Please fix or comment before continuing.".format(prefix, line_count))
+                    sys.exit(colorama.Fore.RED + "Oops! It looks like a {} command at line {} tried to move a file that wasn't in the current list of long or short values. Please fix or comment before continuing.".format(prefix, line_count) + colorama.Style.RESET_ALL)
             elif prefix == 'lf':
                 curzip.launch_files.append(data)
             elif prefix == 'min':
@@ -465,7 +465,7 @@ for p in project_array:
     init_zip_file = final_zip_file if skip_temp_out else out_temp
     zip = zipfile.ZipFile(init_zip_file, 'w')
     if p not in zups:
-        print("WARNING: {} did not have a manifesto defined in the cfg file.".format(p))
+        print(colorama.Fore.YELLOW + "WARNING: {} did not have a manifesto defined in the cfg file.".format(p) + colorama.Style.RESET_ALL)
         continue
     for x in zups[p].file_map:
         if not is_beta(p) and ('beta-' in x or 'beta ' in x):
@@ -473,26 +473,26 @@ for p in project_array:
         zip_write_nonzero_file(zip, x, zups[p].file_map[x])
     for x in zups[p].max_specific_file_size:
         if os.stat(x).st_size > zups[p].max_specific_file_size[x]:
-            flag_zip_build_error("SINGLE FILE OVER MAX SIZE {} {} > {}".format(x, os.stat(x).st_size, zups[p].max_specific_file_size[x]))
+            flag_zip_build_error(colorama.Fore.CYAN + "SINGLE FILE OVER MAX SIZE {} {} > {}".format(x, os.stat(x).st_size, zups[p].max_specific_file_size[x]) + colorama.Style.RESET_ALL)
     for x in zups[p].min_specific_file_size:
         if os.stat(x).st_size < zups[p].min_specific_file_size[x]:
-            flag_zip_build_error("SINGLE FILE UNDER MIN SIZE {} {} < {}".format(x, os.stat(x).st_size, zups[p].min_specific_file_size[x]))
+            flag_zip_build_error(colorama.Fore.CYAN + "SINGLE FILE UNDER MIN SIZE {} {} < {}".format(x, os.stat(x).st_size, zups[p].min_specific_file_size[x]) + colorama.Style.RESET_ALL)
     zip.close()
     zip_size = os.stat(init_zip_file).st_size
     if zups[p].max_zip_size and zip_size > zups[p].max_zip_size:
-        flag_zip_build_error("ARCHIVE OVER MAX SIZE {} {} > {}".format(final_zip_file, zip_size, zups[p].max_zip_size))
+        flag_zip_build_error(colorama.Fore.CYAN + "ARCHIVE OVER MAX SIZE {} {} > {}".format(final_zip_file, zip_size, zups[p].max_zip_size) + colorama.Style.RESET_ALL)
     if zip_size < zups[p].min_zip_size:
-        flag_zip_build_error("ARCHIVE UNDER MIN SIZE {} {} < {}".format(final_zip_file, zip_size, zups[p].min_zip_size))
+        flag_zip_build_error(colorama.Fore.CYAN + "ARCHIVE UNDER MIN SIZE {} {} < {}".format(final_zip_file, zip_size, zups[p].min_zip_size) + colorama.Style.RESET_ALL)
     if not skip_temp_out:
         shutil.move(out_temp, final_zip_file)
-    print("    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p))
+    print(colorama.Fore.GREEN + "    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p) + colorama.Style.RESET_ALL)
     for x in zups[p].command_post_buffer:
         print("Running post-command", x)
         subprocess.open(shlex.split(' ', x))
     if copy_dropbox_after:
         if os.path.exists(os.path.join(dropbox_bin_dir, zups[p].out_name)):
             if filecmp.cmp(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
-                print("No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name))
+                print(colorama.Fore.YELLOW + "No changes between current dropbox file and recreated zip file {}. Skipping.".format(zups[p].out_name) + colorama.Style.RESET_ALL)
                 continue
         else:
             print("No dropbox file yet. This is the first copy-over.")
