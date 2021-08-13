@@ -144,7 +144,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     # print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
 
     for r in relevant_stats:
-        ary = r.split("\t")
+        ary = r.strip().split("\t")
         my_time = pendulum.parse(ary[1])
         times.append((my_time - pendulum.from_timestamp(0)).total_seconds() / 86400)
         sizes.append(int(ary[2]))
@@ -154,15 +154,15 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
             last_time = my_time
             continue
         if (sizes[-1] // 1000) - (sizes[-2] // 1000) > 0:
-            shape_array.append(60)
+            shape_array.append(30 + 30 * (sizes[-1] // 1000 - sizes[-2] // 1000))
         else:
             shape_array.append(30)
         size_delta = sizes[-1] - sizes[-2]
         color_array.append(mt.text_from_values(color_dict, size_delta))
         if my_time.hour == last_time.hour:
-            print("WARNING line", ary, "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.".format(last_time.minute, my_time.minute))
+            print("WARNING line", ' / '.join(ary), "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.\n    Run 2dy.py es to do so.".format(last_time.minute, my_time.minute))
         elif my_time.hour - last_time.hour > 1:
-            print("WARNING line", ary, "skipped at least one hour. You probably deleted data. It's not a big deal, but O Lost and all that sort of thing.".format(last_time.minute, my_time.minute))
+            print("WARNING line", ' / '.join(ary), "skipped at least one hour. You probably deleted data. It's not a big deal, but O Lost and all that sort of thing.\n    Run 2dy.py es to see the line.".format(last_time.minute, my_time.minute))
         last_time = my_time
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
