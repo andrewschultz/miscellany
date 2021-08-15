@@ -178,11 +178,15 @@ Func FindProjHeaderFiles($p)
 EndFunc
 
 Func see_time_diff($x, $h)
-    Local $fileTimeA = FileGetTime($x, $FT_MODIFIED, $FT_ARRAY)
-	$fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
-	Local $nowTime = _NowCalc()
-	Local $dd = _DateDiff('h', $fileTime, $nowTime)
-	return $dd < $h
+  if not FileExists($x) Then
+    MsgBox($MB_OK, "File does not exist.", $x)
+    return True
+  endif
+  Local $fileTimeA = FileGetTime($x, $FT_MODIFIED, $FT_ARRAY)
+  $fileTime = $fileTimeA[0] & "/" & $fileTimeA[1] & "/" & $fileTimeA[2] & " " & $fileTimeA[3] & ":" & $fileTimeA[4] & ":" & $fileTimeA[5]
+  Local $nowTime = _NowCalc()
+  Local $dd = _DateDiff('h', $fileTime, $nowTime)
+  return $dd < $h
 EndFunc
 
 Func OpenIDE($project)

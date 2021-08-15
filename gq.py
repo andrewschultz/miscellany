@@ -533,7 +533,7 @@ while first_loop or user_input:
         notes_file = i7.notes_file(proj)
 
     if hide_results:
-       pass 
+       pass
     elif found_overall:
         print("    {}---- total matches printed: {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, found_overall, colorama.Style.RESET_ALL))
         for x in sorted(frequencies, key=frequencies.get, reverse=True):

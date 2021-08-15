@@ -41,6 +41,7 @@ hide_stderr = False
 hide_stdout = False
 overwrite = True
 compiler_version = '633'
+launch_after = False
 
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
