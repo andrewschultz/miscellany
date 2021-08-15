@@ -75,6 +75,7 @@ read_most_recent = False
 bail_on_warnings = True
 
 ask_to_copy_back = False
+show_stat_numbers = False
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
@@ -479,8 +480,11 @@ def sort_raw(raw_long):
     if protect_empties:
         for x in empty_to_protect:
             sections[x] = ''
+    lines_raw = 0
+    size_of = os.stat(raw_long).st_size
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
+            lines_raw += 1
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if in_header:
@@ -580,6 +584,8 @@ def sort_raw(raw_long):
                     from_blank += 1
             sections['sh'] += line
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
+    if show_stat_numbers:
+        print("    BEFORE: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_raw, size_of / lines_raw))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
@@ -622,6 +628,10 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
+    lines_post = sum(1 for _ in open(temp_out_file))
+    size_of = os.stat(temp_out_file).st_size
+    if show_stat_numbers:
+        print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
@@ -721,6 +731,8 @@ while cmd_count < len(sys.argv):
         verbose = 0
     elif arg == 'tf':
         run_test_file = True
+    elif arg == 'n':
+        show_stat_numbers = True
     elif arg[:2] == 'tf':
         run_test_file = True
         if arg[2:].isdigit():
