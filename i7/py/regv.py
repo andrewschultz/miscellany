@@ -38,6 +38,7 @@ def usage(my_message = "USAGE"):
     print("I = include (heh) includes, IN/NI/IY/YI toggle. Default = on.")
     print("R = recursively search files, RN/NR/RY/YR toggle. Default = on.")
     print("B = recursively search files, BN/NB/BY/YB toggle. Default = on.")
+    print("S = sync between GitHub and Inform directories e.g. mklink commands.")
     print("You can also specify a project name on the command line.")
     sys.exit()
 
@@ -224,17 +225,18 @@ def write_sync_commands(github_tests = "testing"):
     if total_unlinked == 0:
         print("All games/inform reg-* files are linked.")
     if len(link_to) > 0:
-        print("Make links to github for:")
+        print("Move to GitHub and relink:")
         for l in link_to:
-            print("move {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
-            print("mklink {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
+            print("  move {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
+            print("  mklink {} {}".format(l, os.path.join(github_path, os.path.basename(l))))
     else:
-        print("All github regex testfiles are linked to.")
+        print("All games/inform regtest scripts are linked to a GitHub test script.")
     if len(link_from) > 0:
+        print("Make links to github for:")
         for l in link_from:
-            print("mklink {} {}".format(os.path.join(inform_path, os.path.basename(l)), l))
+            print("  mklink {} {}".format(os.path.join(inform_path, os.path.basename(l)), l))
     else:
-        print("All games/inform regex testfiles are linked from.")
+        print("All GitHub regtest scripts are linked to from games/inform.")
 
 
 user_project = ''
