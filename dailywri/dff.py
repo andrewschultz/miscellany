@@ -613,7 +613,10 @@ def sort_raw(raw_long):
             fout.write(sections['important'])
             fout.close()
         sections.pop('important')
-    temp_out_file = "c:/writing/temp/drive-temp.txt"
+    temp_out_file = "c:/writing/temp/dff-temp.txt"
+    for x in daily_strings:
+        if x in raw_long:
+            temp_out_file = "c:/writing/temp/{}-temp.txt".format(x)
     fout = open(temp_out_file, "w")
     fout.write(header_to_write)
     if verbose:
@@ -630,8 +633,6 @@ def sort_raw(raw_long):
     fout.close()
     lines_post = sum(1 for _ in open(temp_out_file))
     size_of = os.stat(temp_out_file).st_size
-    if show_stat_numbers:
-        print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
@@ -640,6 +641,8 @@ def sort_raw(raw_long):
             exit()
         return 0
     else:
+        if show_stat_numbers:
+            print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
             if show_differences:
@@ -819,7 +822,7 @@ while cmd_count < len(sys.argv):
         elif is_in_procs(arg):
             file_list.append(arg)
         else:
-            print("WARNING", arg, "is not a readable file in any to-proc directory. Ignoring.")
+            sys.exit("WARNING: {} is not a readable file in any to-proc directory. Treating as command and bailing. Use ? to see usage.".format(arg))
     cmd_count += 1
 
 temp_set = local_block_move.intersection(local_unblock_move)
