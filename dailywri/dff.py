@@ -75,7 +75,15 @@ read_most_recent = False
 bail_on_warnings = True
 
 ask_to_copy_back = False
+
 show_stat_numbers = False
+
+STATS_EXT_OFF = 0
+STATS_EXT_ALPHABETICALLY = 1
+STATS_EXT_BY_SECTION_SIZE = 2
+STATS_EXT_BY_LINES = 3
+STATS_EXT_BY_AVERAGE = 4
+show_ext_stats = STATS_EXT_OFF
 
 raw_drive_dir = "c:/coding/perl/proj/from_drive"
 proc_drive_dir = "c:/coding/perl/proj/from_drive/to-proc"
@@ -137,11 +145,19 @@ def usage(my_arg = ''):
     exit()
 
 def blue_print(my_str):
-    print(colorama.Fore.YELLOW + my_str + colorama.Style.RESET_ALL)
+    print(colorama.Fore.CYAN + my_str + colorama.Style.RESET_ALL)
 
 def conditional_bail():
     if bail_on_warnings:
         sys.exit(colorama.Fore.RED + "Bailing on warning. Set -nbw to change this." + colorama.Style.RESET_ALL)
+
+def mod_length(text_chunk):
+    if '\n' in text_chunk:
+        return text_chunk.count('\n')
+    elif '\t' in text_chunk:
+        return text_chunk.count('\t')
+    else:
+        return 1
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
@@ -586,6 +602,22 @@ def sort_raw(raw_long):
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if show_stat_numbers:
         print("    BEFORE: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_raw, size_of / lines_raw))
+        if show_ext_stats == STATS_EXT_OFF:
+            pass
+        elif show_ext_stats == STATS_EXT_ALPHABETICALLY:
+            ary = sorted(sections)
+            blue_print("    SIZES: {}".format(' / '.join(['{} {} {}'.format(x, len(sections[x]), mod_length(sections[x])) for x in ary])))
+        elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
+            ary = sorted(sections, key=lambda x:len(sections[x]), reverse=True)
+            blue_print("    SECTION SIZE IN BYTES: {}".format(' / '.join(['{} {}'.format(x, len(sections[x])) for x in ary])))
+        elif show_ext_stats == STATS_EXT_BY_LINES:
+            ary = sorted(sections, key=lambda x:mod_length(sections[x]), reverse=True)
+            blue_print("    SECTION SIZE BY LINES: {}".format(' / '.join(['{} {}'.format(x, mod_length(sections[x])) for x in ary])))
+        elif show_ext_stats == STATS_EXT_BY_AVERAGE:
+            ary = sorted(sections, key=lambda x:len(sections[x]) / mod_length(sections[x]), reverse=True)
+            blue_print("    SECTION AVG SIZE: {}".format(' / '.join(['{} {:.2f}'.format(x, len(sections[x]) / mod_length(sections[x])) for x in ary])))
+        else:
+            blue_print("    SECTION SIZE: {}".format(' / '.join(['{} {} {}'.format(x, len(sections[x]), mod_length(sections[x])) for x in ary])))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
@@ -736,6 +768,18 @@ while cmd_count < len(sys.argv):
         run_test_file = True
     elif arg == 'n':
         show_stat_numbers = True
+    elif arg in ( 'na', 'an' ):
+        show_stat_numbers = True
+        show_ext_stats = STATS_EXT_ALPHABETICALLY
+    elif arg in ( 'ns', 'sn' ):
+        show_stat_numbers = True
+        show_ext_stats = STATS_EXT_BY_SECTION_SIZE
+    elif arg in ( 'nl', 'ln' ):
+        show_stat_numbers = True
+        show_ext_stats = STATS_EXT_BY_LINES
+    elif arg in ( 'nv', 'vn' ):
+        show_stat_numbers = True
+        show_ext_stats = STATS_EXT_BY_AVERAGE
     elif arg[:2] == 'tf':
         run_test_file = True
         if arg[2:].isdigit():
