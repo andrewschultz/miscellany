@@ -153,11 +153,35 @@ def conditional_bail():
 
 def mod_length(text_chunk):
     if '\n' in text_chunk:
-        return text_chunk.count('\n')
+        return text_chunk.count('\n') + 1
     elif '\t' in text_chunk:
-        return text_chunk.count('\t')
+        return text_chunk.count('\t') + 1
     else:
         return 1
+
+def show_the_stats(my_sections, trailer = ''):
+    if show_ext_stats == STATS_EXT_OFF:
+        return
+    if len(my_sections) == 0:
+        return
+    if trailer:
+        trailer = trailer.strip() + ' '
+    for m in my_sections:
+        my_sections[m] = my_sections[m].strip()
+    if show_ext_stats == STATS_EXT_ALPHABETICALLY:
+        ary = sorted(my_sections)
+        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(x, len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
+    elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
+        ary = sorted(my_sections, key=lambda x:len(my_sections[x]), reverse=True)
+        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {}'.format(x, len(my_sections[x])) for x in ary])))
+    elif show_ext_stats == STATS_EXT_BY_LINES:
+        ary = sorted(my_sections, key=lambda x:mod_length(my_sections[x]), reverse=True)
+        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {}'.format(x, mod_length(my_sections[x])) for x in ary])))
+    elif show_ext_stats == STATS_EXT_BY_AVERAGE:
+        ary = sorted(my_sections, key=lambda x:len(my_sections[x]) / mod_length(my_sections[x]), reverse=True)
+        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(x, len(my_sections[x]) / mod_length(my_sections[x])) for x in ary])))
+    else:
+        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(x, len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
@@ -481,6 +505,7 @@ def sort_raw(raw_long):
     global copy_then_test
     global open_raw
     sections = defaultdict(str)
+    raw_sections = defaultdict(str)
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
         return 0
@@ -526,6 +551,8 @@ def sort_raw(raw_long):
                     print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
                 current_section = ll[1:]
                 continue
+            if line:
+                raw_sections[current_section] += line
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=')
             if no_punc and no_punc in this_file_lines:
                 print("WARNING duplicate line", ll, line_count, this_file_lines[no_punc])
@@ -602,22 +629,7 @@ def sort_raw(raw_long):
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if show_stat_numbers:
         print("    BEFORE: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_raw, size_of / lines_raw))
-        if show_ext_stats == STATS_EXT_OFF:
-            pass
-        elif show_ext_stats == STATS_EXT_ALPHABETICALLY:
-            ary = sorted(sections)
-            blue_print("    SIZES: {}".format(' / '.join(['{} {} {}'.format(x, len(sections[x]), mod_length(sections[x])) for x in ary])))
-        elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
-            ary = sorted(sections, key=lambda x:len(sections[x]), reverse=True)
-            blue_print("    SECTION SIZE IN BYTES: {}".format(' / '.join(['{} {}'.format(x, len(sections[x])) for x in ary])))
-        elif show_ext_stats == STATS_EXT_BY_LINES:
-            ary = sorted(sections, key=lambda x:mod_length(sections[x]), reverse=True)
-            blue_print("    SECTION SIZE BY LINES: {}".format(' / '.join(['{} {}'.format(x, mod_length(sections[x])) for x in ary])))
-        elif show_ext_stats == STATS_EXT_BY_AVERAGE:
-            ary = sorted(sections, key=lambda x:len(sections[x]) / mod_length(sections[x]), reverse=True)
-            blue_print("    SECTION AVG SIZE: {}".format(' / '.join(['{} {:.2f}'.format(x, len(sections[x]) / mod_length(sections[x])) for x in ary])))
-        else:
-            blue_print("    SECTION SIZE: {}".format(' / '.join(['{} {} {}'.format(x, len(sections[x]), mod_length(sections[x])) for x in ary])))
+        show_the_stats(raw_sections)
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
@@ -675,6 +687,17 @@ def sort_raw(raw_long):
     else:
         if show_stat_numbers:
             print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
+            sectdif = defaultdict(str)
+            sectnew = defaultdict(str)
+            for x in sections:
+                if x in raw_sections and raw_sections[x].strip() == sections[x].strip():
+                    continue
+                if x in raw_sections:
+                    sectdif[x] = sections[x]
+                else:
+                    sectnew[x] = sections[x]
+            show_the_stats(sectdif, "CHANGES")
+            show_the_stats(sectnew, "NEW")
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
             if show_differences:
