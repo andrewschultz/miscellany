@@ -2,6 +2,7 @@
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
 #
+# todo: sections that disappear, color based section delta, section delta in bytes?
 
 import daily
 import codecs
@@ -159,6 +160,13 @@ def mod_length(text_chunk):
     else:
         return 1
 
+def title_tweak(my_title):
+    if my_title.isdigit():
+        return colorama.Fore.GREEN + '#' + my_title + colorama.Fore.CYAN
+    if not my_title:
+        return colorama.Fore.RED + '<NONE>' + my_title + colorama.Fore.CYAN
+    return my_title
+
 def show_the_stats(my_sections, trailer = ''):
     if show_ext_stats == STATS_EXT_OFF:
         return
@@ -170,18 +178,18 @@ def show_the_stats(my_sections, trailer = ''):
         my_sections[m] = my_sections[m].strip()
     if show_ext_stats == STATS_EXT_ALPHABETICALLY:
         ary = sorted(my_sections)
-        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(x, len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
         ary = sorted(my_sections, key=lambda x:len(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {}'.format(x, len(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {}'.format(title_tweak(x), len(my_sections[x])) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_LINES:
         ary = sorted(my_sections, key=lambda x:mod_length(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {}'.format(x, mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {}'.format(title_tweak(x), mod_length(my_sections[x])) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_AVERAGE:
         ary = sorted(my_sections, key=lambda x:len(my_sections[x]) / mod_length(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(x, len(my_sections[x]) / mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(title_tweak(x), len(my_sections[x]) / mod_length(my_sections[x])) for x in ary])))
     else:
-        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(x, len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
