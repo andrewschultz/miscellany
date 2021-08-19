@@ -109,6 +109,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print("Somehow, you dropped down a thousands-plateau from the top of the hour. Hooray, compaction scripts? At any rate you need {} bytes, or {:.2f} per minute (including seconds) for the next distant step up.".format(until_next, rate_for_next))
     else:
         print(colorama.Fore.GREEN + "There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next) + colorama.Style.RESET_ALL)
+    if bail:
+        sys.exit()
 
 def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
@@ -124,6 +126,8 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     current_size = os.stat(this_file).st_size
     print("... calculating notes size vs. goals ...")
     print(colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN + "Right now you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(current_size, goal_per_file, current_goal, 'behind' if current_size < current_goal else 'ahead', abs(current_goal - current_size)) + colorama.Style.RESET_ALL)
+    if bail:
+        sys.exit()
 
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False):
     if not this_file:
@@ -320,6 +324,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
     print("(-?)ps = put stats, (-?)gs = get stats, (-?)es = edit stats, (-?)ss = sift stats")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec = edit code, es = edit stats")
+    print("(-)ct(o) checks thousands, (-)wr(o) checks weekly writing goals based on current document size. O = only do this")
     exit()
 
 def read_2dy_cfg():
@@ -403,12 +408,13 @@ while cmd_count < len(sys.argv):
     elif arg == 'es': mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'cto':
-        compare_thousands()
-        sys.exit()
+        compare_thousands(bail = True)
     elif arg == 'ct':
-        compare_thousands()
+        compare_thousands(bail = False)
     elif arg == 'wr':
-        check_weekly_rate()
+        check_weekly_rate(bail = False)
+    elif arg == 'wro':
+        check_weekly_rate(bail = True)
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
