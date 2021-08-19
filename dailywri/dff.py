@@ -2,7 +2,6 @@
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
 #
-# todo: sections that disappear, color based section delta, section delta in bytes?
 
 import daily
 import codecs
@@ -154,11 +153,11 @@ def conditional_bail():
 
 def div_results_of(a_tuple):
     try:
-        return a_tuple[1] // a_tuple[0]
+        return a_tuple[0] / a_tuple[1]
     except:
         return 0
 
-def mod_length(text_chunk):
+def idea_count(text_chunk):
     if '\n' in text_chunk:
         return text_chunk.count('\n') + 1 # sections' CRs cut off at end
     elif '\t' in text_chunk:
@@ -194,22 +193,20 @@ def show_size_stats(my_sections, trailer = ''):
         return
     if trailer:
         trailer = trailer.strip() + ' '
-    for m in my_sections:
-        my_sections[m] = my_sections[m].rstrip()
     if show_ext_stats == STATS_EXT_ALPHABETICALLY:
         ary = sorted(my_sections)
-        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
         ary = sorted(my_sections, key=lambda x:len(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {}'.format(title_tweak(x), len(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_LINES:
-        ary = sorted(my_sections, key=lambda x:mod_length(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {}'.format(title_tweak(x), mod_length(my_sections[x])) for x in ary])))
+        ary = sorted(my_sections, key=lambda x:idea_count(my_sections[x]), reverse=True)
+        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_AVERAGE:
-        ary = sorted(my_sections, key=lambda x:len(my_sections[x]) / mod_length(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(title_tweak(x), len(my_sections[x]) / mod_length(my_sections[x])) for x in ary])))
+        ary = sorted(my_sections, key=lambda x:len(my_sections[x]) / idea_count(my_sections[x]), reverse=True)
+        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(title_tweak(x), div_results_of(my_sections[x])) for x in ary])))
     else:
-        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
+        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
@@ -717,32 +714,26 @@ def sort_raw(raw_long):
     else:
         if show_stat_numbers:
             print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
-            sectdif = defaultdict(str)
-            sectnew = defaultdict(str)
+            sectdif = defaultdict(tuple)
+            sectnew = defaultdict(tuple)
+            raw_nums = defaultdict(tuple)
+            for x in raw_sections:
+                raw_nums[x] = ( len(raw_sections[x]), idea_count(raw_sections[x]) )
+            if '' in raw_nums:
+                print(colorama.Fore.YELLOW + "    Got rid of {}/{} characters/line{} from unsectioned.".format(raw_nums[''][0], raw_nums[''][1], mt.plur(raw_nums[''][1])) + colorama.Style.RESET_ALL) # no PLUR for characters since we can assume an idea has more than one character
             for x in sections:
                 if x in raw_sections and raw_sections[x].strip() == sections[x].strip():
                     continue
                 if x in raw_sections:
-                    sectdif[x] = sections[x]
+                    sectdif[x] = (len(sections[x]), idea_count(sections[x]))
                 else:
-                    sectnew[x] = sections[x]
+                    sectnew[x] = (len(sections[x]), idea_count(sections[x]))
             show_size_stats(sectdif, "CHANGED SECT")
             show_size_stats(sectnew, "NEW")
             change_amounts = defaultdict(tuple)
             for x in sectdif:
-                print(x, len(sectdif[x]), len(raw_sections[x]), mod_length(sectdif[x]), mod_length(raw_sections[x]))
-                change_amounts[x] = ( len(sectdif[x]) - len(raw_sections[x]), mod_length(sectdif[x]) - mod_length(raw_sections[x]) )
-            if show_ext_stats == STATS_EXT_ALPHABETICALLY:
-                camt = sorted(change_amounts)
-            elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
-                camt = sorted(change_amounts, key=lambda x:change_amounts[x][0], reverse=True)
-            elif show_ext_stats == STATS_EXT_BY_LINES:
-                camt = sorted(change_amounts, key=lambda x:change_amounts[x][1], reverse=True)
-            elif show_ext_stats == STATS_EXT_BY_AVERAGE:
-                ary = sorted(change_amounts, key=lambda x:div_results_of(change_amounts[x]), reverse=True)
-            else:
-                camt = change_amounts
-            print("    NET SECTION DELTAS:", ' / '.join([change_string_of(x, change_amounts) for x in camt]))
+                change_amounts[x] = ( sectdif[x][0] - raw_nums[x][0], sectdif[x][1] - raw_nums[x][1] )
+            show_size_stats(change_amounts, "NET SECTION DELTAS")
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
             if show_differences:
