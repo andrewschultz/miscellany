@@ -308,12 +308,19 @@ def usage(param = 'Cmd line usage'):
 def read_2dy_cfg():
     global sect_ary
     global file_header
+    global max_days_new
+    global min_days_new
+    global glob_string
+    global file_header
+    global color_dict
     with open(my_sections_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
             (prefix, data) = mt.cfg_data_split(line)
-            if prefix == 'maxnew':
+            if prefix == 'goalperfile':
+                goal_per_file = int(data)
+            elif prefix == 'maxnew':
                 max_days_new = int(data)
             elif prefix == 'maxback':
                 min_days_new = int(data)
@@ -322,16 +329,15 @@ def read_2dy_cfg():
             elif prefix == 'file_header':
                 file_header += data.replace("\\", "\n") + "\n"
             elif prefix in ( 'color', 'colors' ):
-                global color_dict
                 color_dict = mt.quick_dict_from_line(line, use_ints = True)
             elif prefix in ( 'defaults', 'sect', 'section', 'sections' ):
                 sect_dict = mt.quick_dict_from_line(line)
-                if len(sect_dict):
+                if len(sect_ary):
                     print("Adding to non-blank sections array on line {}".format(line_count))
                 sect_ary.extend(sect_dict)
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
-    if len(sect_dict) == 0:
+    if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
 def create_new_file(my_file, launch = True):
