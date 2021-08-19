@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.dates as mdates
 import matplotlib
+import colorama
 
 #init_sect = defaultdict(str)
 
@@ -32,6 +33,7 @@ d = pendulum.today()
 #these are covered in the config file, but keep them here to make sure
 max_days_new = 7
 max_days_back = 1000
+goal_per_file = 7000 # deliberately low but will be changed a lot
 
 latest_daily = True
 write_base_stats = True
@@ -81,7 +83,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     os.chdir(my_dir)
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
-        this_file = os.path.basename(g[-1])
+        this_file = os.path.basename(g[file_index])
     my_size = os.stat(this_file).st_size
 
     os.chdir(my_dir)
@@ -91,7 +93,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
-    print("{} vs {}, {} vs {}.".format(my_size, last_size, my_size // 1000, last_size // 1000))
+    print(colorama.Fore.YELLOW + "HOURLY BYTE/THOUSANDS NOW/BEFORE COUNT: {} vs {}, {} vs {}.".format(my_size, last_size, my_size // 1000, last_size // 1000) + colorama.Style.RESET_ALL)
     thousands = my_size // 1000 - last_size // 1000
     until_next = (1000 - (my_size % 1000))
     right_now = pendulum.now()
@@ -102,11 +104,26 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
         rate_for_next = 1
     if thousands == 0:
-        print("No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute (including seconds) for the next plateau.".format(until_next, rate_for_next))
+        print(colorama.Fore.CYAN + "No new graph at the top of the hour+3. You need {} bytes, or {:.2f} per minute (including seconds) for the next plateau.".format(until_next, rate_for_next) + colorama.Style.RESET_ALL)
     elif thousands < 0:
         print("Somehow, you dropped down a thousands-plateau from the top of the hour. Hooray, compaction scripts? At any rate you need {} bytes, or {:.2f} per minute (including seconds) for the next distant step up.".format(until_next, rate_for_next))
     else:
-        print("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next))
+        print(colorama.Fore.GREEN + "There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next) + colorama.Style.RESET_ALL)
+
+def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
+    os.chdir(my_dir)
+    if not this_file:
+        g = glob.glob(my_dir + "/" + glob_string)
+        this_file = os.path.basename(g[file_index])
+    t_base = pendulum.local(int(this_file[:4]), int(this_file[4:6]), int(this_file[6:8]))
+    t_now = pendulum.now()
+    t_goal = t_base.add(days=max_days_new)
+    i1 = (t_now - t_base).in_seconds()
+    i2 = (t_goal - t_base).in_seconds()
+    current_goal = goal_per_file * i1 // i2
+    current_size = os.stat(this_file).st_size
+    print("... calculating notes size vs. goals ...")
+    print(colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN + "Right now you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(current_size, goal_per_file, current_goal, 'behind' if current_size < current_goal else 'ahead', abs(current_goal - current_size)) + colorama.Style.RESET_ALL)
 
 def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False):
     if not this_file:
@@ -308,6 +325,7 @@ def usage(param = 'Cmd line usage'):
 def read_2dy_cfg():
     global sect_ary
     global file_header
+    global goal_per_file
     global max_days_new
     global min_days_new
     global glob_string
@@ -389,6 +407,8 @@ while cmd_count < len(sys.argv):
         sys.exit()
     elif arg == 'ct':
         compare_thousands()
+    elif arg == 'wr':
+        check_weekly_rate()
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
