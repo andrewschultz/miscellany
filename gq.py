@@ -21,6 +21,7 @@ import sys
 import os
 import colorama
 import codecs
+import glob
 
 # variables potentially in CFG file
 
@@ -33,9 +34,13 @@ all_similar_projects = True
 my_proj = ""
 write_history = True
 main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
+search_to_proc = False
 
 verbose = False
 quiet_procedural_notes = False
+
+proc_dir = "c:/writing/daily/to-proc"
+proc_glob = "202*.txt"
 
 # constants
 
@@ -211,7 +216,10 @@ def read_cfg():
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
-def find_text_in_file(match_string_raw, projfile):
+def find_text_in_file(match_string_raw, projfile, header_needed = []):
+    should_search_header = len(header_needed) > 0
+    if should_search_header and not projfile.endswith(".txt"):
+        return -1
     fast_string_array = [ fast_string_of(x) for x in match_string_raw ]
     match_string_array = [ match_string_of(x) for x in match_string_raw ]
     global found_overall
@@ -222,8 +230,18 @@ def find_text_in_file(match_string_raw, projfile):
     current_table = ""
     current_table_line = 0
     pbase = os.path.basename(projfile)
+    current_daily_section = ''
     with codecs.open(projfile, encoding='utf8', errors='replace') as file:
         for (line_count, line) in enumerate (file, 1):
+            if should_search_header:
+                if not line:
+                    current_daily_section = ''
+                    continue
+                elif line.startswith("\\"):
+                    current_daily_section = line[1:].lower().strip()
+                    continue
+                elif current_daily_section not in header_needed:
+                    continue
             if chr(65533) in line:
                 print("WARNING line {} of {} had a character or characters unmappable in UTF-8, likely ellipses.".format(line_count, pbase))
                 if post_open_warnings:
@@ -311,6 +329,7 @@ def read_args(my_arg_array, in_loop = False):
     global match_string_raw
     global my_proj
     global hide_results
+    global search_to_proc
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
         arg_orig = my_arg_array[cmd_count].lower()
@@ -341,6 +360,8 @@ def read_args(my_arg_array, in_loop = False):
             hide_results = True
         elif arg == 'vh':
             view_history = True
+        elif arg == 'tp':
+            search_to_proc = True
         elif arg == 'v':
             verbose = True
         elif arg == 'b':
@@ -546,7 +567,10 @@ while first_loop or user_input:
             frequencies[i7.inform_short_name(notes_file)] = find_text_in_file(match_string_raw, notes_file)
         elif os.path.exists(notes_file):
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
-        notes_file = i7.notes_file(proj)
+
+    if search_to_proc:
+        for x in glob.glob(os.path.join(proc_dir, proc_glob)):
+            frequencies[x] = find_text_in_file(match_string_raw, x, header_needed = ['utt'])
 
     if hide_results:
        pass
@@ -556,7 +580,7 @@ while first_loop or user_input:
             if frequencies[x] < 1: continue
             print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK + colorama.Style.RESET_ALL))
 
-        temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0]
+        temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0 and not mt.is_daily(x)]
         if len(temp_array):
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
