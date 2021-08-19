@@ -29,11 +29,13 @@ max_in_file = 25
 history_max = 100
 colors = True
 fast_match = True
-verbose = False
 all_similar_projects = True
 my_proj = ""
 write_history = True
 main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
+
+verbose = False
+quiet_procedural_notes = False
 
 # constants
 
@@ -149,14 +151,17 @@ def update_history_file(my_file, my_query, create_new_history = False):
     ary = [x.strip() for x in f.readlines()]
     f.close()
     if my_query == ary[0]:
-        print("Not rewriting since {} is already the first element.".format(my_query))
+        if not quiet_procedural_notes:
+            print("Not rewriting since {} is already the first element.".format(my_query))
         return
     if my_query in ary:
-        print(my_query, "already in history.")
+        if not quiet_procedural_notes:
+            print(my_query, "already in history.")
         ary.remove(my_query)
     ary.insert(0, my_query)
     if len(ary) > history_max:
-        print("Removing excess history",', '.join(ary[history_max:]))
+        if not quiet_procedural_notes:
+            print("Removing excess history",', '.join(ary[history_max:]))
         ary = ary[:history_max]
     f = open(my_file, "w")
     f.write("\n".join(ary))
@@ -200,6 +205,9 @@ def read_cfg():
                 elif prefix == "verbose":
                     global verbose
                     verbose = mt.truth_state_of(data)
+                elif prefix == "quiet":
+                    global quiet_procedural_notes
+                    quiet = mt.truth_state_of(data)
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -294,6 +302,7 @@ def read_args(my_arg_array, in_loop = False):
     global max_overall
     global view_history
     global verbose
+    global quiet_procedural_notes
     global quote_status
     global create_new_history
     global modify_line
@@ -334,8 +343,14 @@ def read_args(my_arg_array, in_loop = False):
             view_history = True
         elif arg == 'v':
             verbose = True
+        elif arg == 'b':
+            verbose = False
+            quiet_procedural_notes = False
+            hide_results = False
         elif arg == 'q':
             verbose = False
+            quiet_procedural_notes = True
+            hide_results = True
         elif arg == 'con' or arg == 'onc':
             colors = False
         elif arg == 'coff' or arg == 'offc':
@@ -490,7 +505,8 @@ while first_loop or user_input:
         else:
             matches_needed = user_specified_matches_needed
 
-    print("Searching for string{}: {}".format(mt.plur(match_string_raw), ' / '.join(match_string_raw)))
+    if not quiet_procedural_notes:
+        print("Searching for string{}: {}".format(mt.plur(match_string_raw), ' / '.join(match_string_raw)))
 
     for proj in proj_umbrella:
         if proj not in i7.i7f:
