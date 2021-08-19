@@ -12,6 +12,10 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
+# todo: look for duplicate matches especially in notes files
+#     arrays for glob and daily dirs
+#     de-hard-code the sections to look for with sectioned searching (tp)
+#     option to look for most recent daily file in directory above as well
 
 from collections import defaultdict
 import mytools as mt
@@ -183,34 +187,43 @@ def read_cfg():
             if line.startswith('#'): continue
             if '=' in line:
                 (prefix, data) = mt.cfg_data_split(line)
-                if prefix == "all_similar_projects":
+                if prefix == 'all_similar_projects':
                     global all_similar_projects
                     all_similar_projects = mt.truth_state_of(data)
-                elif prefix == "colors":
+                elif prefix == 'colors':
                     global colors
                     colors = mt.truth_state_of(data)
-                elif prefix == "default_from_cfg":
+                elif prefix == 'default_from_cfg':
                     global default_from_cfg
                     default_from_cfg = data
-                elif prefix == "fast_match":
+                elif prefix == 'fast_match':
                     global fast_match
                     fast_match = mt.truth_state_of(data)
-                elif prefix == "history" or prefix == "write_history":
+                elif prefix in ( 'history', 'write_history' ):
                     global write_history
                     write_history = mt.truth_state_of(data)
-                elif prefix == "max_overall":
+                elif prefix == 'max_overall':
                     global max_overall
                     max_overall = int(data)
-                elif prefix == "min_overall":
+                elif prefix == 'min_overall':
                     global min_overall
                     min_overall = int(data)
-                elif prefix == "suffix" or prefix == "suffixes":
+                elif prefix == 'search_to_proc':
+                    global search_to_proc
+                    search_to_proc = mt.truth_state_of(data)
+                elif prefix == 'proc-dir':
+                    global proc_dir
+                    proc_dir = os.path.normpath(data)
+                elif prefix == 'proc-glob':
+                    global proc_glob
+                    proc_glob = os.path.normpath(data)
+                elif prefix in ( 'suffix', 'suffixes' ):
                     global main_suffixes
                     main_suffixes = data
-                elif prefix == "verbose":
+                elif prefix == 'verbose':
                     global verbose
                     verbose = mt.truth_state_of(data)
-                elif prefix == "quiet":
+                elif prefix == 'quiet':
                     global quiet_procedural_notes
                     quiet = mt.truth_state_of(data)
                 else:
