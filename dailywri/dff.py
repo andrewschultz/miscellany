@@ -152,6 +152,12 @@ def conditional_bail():
     if bail_on_warnings:
         sys.exit(colorama.Fore.RED + "Bailing on warning. Set -nbw to change this." + colorama.Style.RESET_ALL)
 
+def div_results_of(a_tuple):
+    try:
+        return a_tuple[1] // a_tuple[0]
+    except:
+        return 0
+
 def mod_length(text_chunk):
     if '\n' in text_chunk:
         return text_chunk.count('\n') + 1
@@ -167,7 +173,21 @@ def title_tweak(my_title):
         return colorama.Fore.RED + '<NONE>' + my_title + colorama.Fore.CYAN
     return my_title
 
-def show_the_stats(my_sections, trailer = ''):
+def color_of(my_num):
+    if my_num == 0:
+        return colorama.Fore.WHITE
+    if my_num < 0:
+        return colorama.Fore.RED
+    if my_num > 0:
+        return colorama.Fore.GREEN
+
+def change_string_of(my_val, change_dict):
+    return_string = colorama.Fore.CYAN + title_tweak(my_val)
+    return_string += ' ' + color_of(change_dict[my_val][0]) + str(change_dict[my_val][0]) + ' ' + color_of(change_dict[my_val][1]) + str(change_dict[my_val][1])
+    return_string += colorama.Style.RESET_ALL
+    return return_string
+
+def show_size_stats(my_sections, trailer = ''):
     if show_ext_stats == STATS_EXT_OFF:
         return
     if len(my_sections) == 0:
@@ -514,6 +534,7 @@ def sort_raw(raw_long):
     global open_raw
     sections = defaultdict(str)
     raw_sections = defaultdict(str)
+    blank_dict = defaultdict(str)
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
         return 0
@@ -559,7 +580,7 @@ def sort_raw(raw_long):
                     print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
                 current_section = ll[1:]
                 continue
-            if line:
+            if line.strip():
                 raw_sections[current_section] += line
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=')
             if no_punc and no_punc in this_file_lines:
@@ -637,7 +658,6 @@ def sort_raw(raw_long):
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if show_stat_numbers:
         print("    BEFORE: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_raw, size_of / lines_raw))
-        show_the_stats(raw_sections)
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
@@ -686,6 +706,8 @@ def sort_raw(raw_long):
     lines_post = sum(1 for _ in open(temp_out_file))
     size_of = os.stat(temp_out_file).st_size
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
+    for r in raw_sections:
+        raw_sections[r] = raw_sections[r].strip()
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
         if bail_after_unchanged:
@@ -704,8 +726,25 @@ def sort_raw(raw_long):
                     sectdif[x] = sections[x]
                 else:
                     sectnew[x] = sections[x]
-            show_the_stats(sectdif, "CHANGES")
-            show_the_stats(sectnew, "NEW")
+            show_size_stats(sectdif, "CHANGED SECT")
+            show_size_stats(sectnew, "NEW")
+            change_amounts = defaultdict(tuple)
+            for x in sectdif:
+                print(x, len(sectdif[x]), len(raw_sections[x]), mod_length(sectdif[x]), mod_length(raw_sections[x]))
+                change_amounts[x] = ( len(sectdif[x]) - len(raw_sections[x]), mod_length(sectdif[x]) - mod_length(raw_sections[x]) )
+            print(change_amounts)
+            if show_ext_stats == STATS_EXT_ALPHABETICALLY:
+                camt = sorted(change_amounts)
+            elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
+                camt = sorted(change_amounts, key=lambda x:change_amounts[x][0], reverse=True)
+            elif show_ext_stats == STATS_EXT_BY_LINES:
+                camt = sorted(change_amounts, key=lambda x:change_amounts[x][1], reverse=True)
+            elif show_ext_stats == STATS_EXT_BY_AVERAGE:
+                ary = sorted(change_amounts, key=lambda x:div_results_of(change_amounts[x]), reverse=True)
+            else:
+                camt = change_amounts
+            print(camt, change_amounts)
+            print("    NET SECTION DELTAS:", ' / '.join([change_string_of(x, change_amounts) for x in camt]))
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
             if show_differences:
