@@ -160,7 +160,7 @@ def div_results_of(a_tuple):
 
 def mod_length(text_chunk):
     if '\n' in text_chunk:
-        return text_chunk.count('\n') + 1
+        return text_chunk.count('\n') + 1 # sections' CRs cut off at end
     elif '\t' in text_chunk:
         return text_chunk.count('\t') + 1
     else:
@@ -195,7 +195,7 @@ def show_size_stats(my_sections, trailer = ''):
     if trailer:
         trailer = trailer.strip() + ' '
     for m in my_sections:
-        my_sections[m] = my_sections[m].strip()
+        my_sections[m] = my_sections[m].rstrip()
     if show_ext_stats == STATS_EXT_ALPHABETICALLY:
         ary = sorted(my_sections)
         blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), len(my_sections[x]), mod_length(my_sections[x])) for x in ary])))
@@ -707,7 +707,7 @@ def sort_raw(raw_long):
     size_of = os.stat(temp_out_file).st_size
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
     for r in raw_sections:
-        raw_sections[r] = raw_sections[r].strip()
+        raw_sections[r] = raw_sections[r].rstrip()
     if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
         if bail_after_unchanged:
@@ -732,7 +732,6 @@ def sort_raw(raw_long):
             for x in sectdif:
                 print(x, len(sectdif[x]), len(raw_sections[x]), mod_length(sectdif[x]), mod_length(raw_sections[x]))
                 change_amounts[x] = ( len(sectdif[x]) - len(raw_sections[x]), mod_length(sectdif[x]) - mod_length(raw_sections[x]) )
-            print(change_amounts)
             if show_ext_stats == STATS_EXT_ALPHABETICALLY:
                 camt = sorted(change_amounts)
             elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
@@ -743,7 +742,6 @@ def sort_raw(raw_long):
                 ary = sorted(change_amounts, key=lambda x:div_results_of(change_amounts[x]), reverse=True)
             else:
                 camt = change_amounts
-            print(camt, change_amounts)
             print("    NET SECTION DELTAS:", ' / '.join([change_string_of(x, change_amounts) for x in camt]))
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
