@@ -680,7 +680,7 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
         return ""
     return x2
 
-def inform_short_name(my_file):
+def inform_short_name(my_file, acknowledge_dailies = True):
     retval = os.path.basename(my_file)
     if 'i7x' in retval:
         return retval.replace('.i7x', '')
@@ -690,6 +690,15 @@ def inform_short_name(my_file):
             return "{} {}".format(temp_proj, i7gsn[retval])
         else:
             return "{}".format(i7gsn[retval])
+    if acknowledge_dailies and mt.is_daily(my_file):
+        if 'keep' in my_file:
+            return "(keep) {}".format(retval)
+        elif 'drive' in my_file:
+            return "(drive) {}".format(retval)
+        elif 'daily' in my_file:
+            return "(daily) {}".format(retval)
+        else:
+            return "(YYYYMMDD notes) {}".format(retval)
     return '* ({})'.format(retval)
 
 def proj2root(x = dir2proj()):
