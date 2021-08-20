@@ -130,10 +130,17 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
     if current_size > goal_per_file:
         print(colorama.Fore.GREEN + 'Hooray! You hit your weekly goal!')
-    print(colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN + "Right now you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-    print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {}d{}h{}m{}s away.".format(seconds_delta, time_dir_string, equivalent_time, abs(seconds_delta)//86400, abs(seconds_delta)//3600 % 24, abs(seconds_delta)//60 % 60, abs(seconds_delta)//86400 % 60) + colorama.Style.RESET_ALL)
+    else:
+        print(colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN + "Right now you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {}d{}h{}m{}s away.".format(seconds_delta, time_dir_string, equivalent_time, abs(seconds_delta)//86400, abs(seconds_delta)//3600 % 24, abs(seconds_delta)//60 % 60, abs(seconds_delta)//86400 % 60) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     print(colorama.Fore.YELLOW + "               Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
+    if current_size < goal_per_file:
+        seconds_remaining = full_weekly_interval - weekly_interval_so_far
+        bytes_remaining = goal_per_file - current_size
+        bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
+        bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
+        print(colorama.Fore.CYAN + "        Bytes per hour to hit end-of-week goal: {:.2f}. Bytes so far: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
 
