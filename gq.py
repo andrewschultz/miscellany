@@ -12,8 +12,7 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
-# todo: look for duplicate matches especially in notes files
-#     arrays for glob and daily dirs
+# todo:
 #     de-hard-code the sections to look for with sectioned searching (tp)
 #     option to look for most recent daily file in directory above as well
 
@@ -43,8 +42,8 @@ search_to_proc = False
 verbose = False
 quiet_procedural_notes = False
 
-proc_dir = "c:/writing/daily/to-proc"
-proc_glob = "202*.txt"
+proc_dirs = [ "c:/writing/daily/to-proc" ]
+proc_globs = [ "202*.txt" ]
 
 # constants
 
@@ -213,11 +212,11 @@ def read_cfg():
                     global search_to_proc
                     search_to_proc = mt.truth_state_of(data)
                 elif prefix == 'proc-dir':
-                    global proc_dir
-                    proc_dir = os.path.normpath(data)
+                    global proc_dirs
+                    proc_dirs = [ os.path.normpath(x) for x in data.split(',') ]
                 elif prefix == 'proc-glob':
-                    global proc_glob
-                    proc_glob = os.path.normpath(data)
+                    global proc_globs
+                    proc_globs = [ os.path.normpath(x) for x in data.split(',') ]
                 elif prefix in ( 'suffix', 'suffixes' ):
                     global main_suffixes
                     main_suffixes = data
@@ -588,8 +587,10 @@ while first_loop or user_input:
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
 
     if search_to_proc:
-        for x in glob.glob(os.path.join(proc_dir, proc_glob)):
-            frequencies[x] = find_text_in_file(match_string_raw, x, header_needed = ['utt'])
+        for x in proc_dirs:
+            for y in proc_globs:
+                for z in glob.glob(os.path.join(x, y)):
+                    frequencies[x] = find_text_in_file(match_string_raw, x, header_needed = ['utt'])
 
     if hide_results:
        pass
