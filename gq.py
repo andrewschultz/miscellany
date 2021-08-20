@@ -85,6 +85,7 @@ create_new_history = False
 first_loop = True
 
 frequencies = defaultdict(int)
+match_duplicates = defaultdict(int)
 
 match_string_raw = []
 default_from_cwd = i7.dir2proj()
@@ -291,9 +292,14 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     return found_so_far
                 if not found_so_far:
                     mt.print_centralized('{}{} {} found matches {}{}'.format(color_ary[header_color - 1] if header_color else '', hdr_equals, bf, hdr_equals, colorama.Style.RESET_ALL if header_color else ''))
-                found_so_far += 1
-                found_overall += 1
-                print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
+                is_duplicate = mt.strip_punctuation(line, remove_comments = True) in match_duplicates
+                if not is_duplicate:
+                    found_so_far += 1
+                    found_overall += 1
+                    print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
+                    match_duplicates[mt.strip_punctuation(line, remove_comments = True)] = 1
+                else:
+                    print(colorama.Back.RED + "    ({:5d}) DUPLICATE:".format(line_count) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
@@ -602,7 +608,7 @@ while first_loop or user_input:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
         print("    " + ", ".join(frequencies))
 
-    temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1]
+    temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not mt.is_daily(x)]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
 
