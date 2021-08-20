@@ -14,7 +14,6 @@
 #
 # todo:
 #     de-hard-code the sections to look for with sectioned searching (tp)
-#     option to look for most recent daily file in directory above as well
 
 from collections import defaultdict
 import mytools as mt
@@ -25,6 +24,7 @@ import os
 import colorama
 import codecs
 import glob
+from pathlib import Path
 
 # variables potentially in CFG file
 
@@ -44,6 +44,7 @@ quiet_procedural_notes = False
 
 proc_dirs = [ "c:/writing/daily/to-proc" ]
 proc_globs = [ "202*.txt" ]
+most_recent_daily = True
 
 # constants
 
@@ -208,15 +209,18 @@ def read_cfg():
                 elif prefix == 'min_overall':
                     global min_overall
                     min_overall = int(data)
-                elif prefix == 'search_to_proc':
-                    global search_to_proc
-                    search_to_proc = mt.truth_state_of(data)
+                elif prefix == 'most_recent_daily':
+                    global most_recent_daily
+                    most_recent_daily = mt.truth_state_of(data)
                 elif prefix == 'proc-dir':
                     global proc_dirs
                     proc_dirs = [ os.path.normpath(x) for x in data.split(',') ]
                 elif prefix == 'proc-glob':
                     global proc_globs
                     proc_globs = [ os.path.normpath(x) for x in data.split(',') ]
+                elif prefix == 'search_to_proc':
+                    global search_to_proc
+                    search_to_proc = mt.truth_state_of(data)
                 elif prefix in ( 'suffix', 'suffixes' ):
                     global main_suffixes
                     main_suffixes = data
@@ -550,7 +554,8 @@ while first_loop or user_input:
     for proj in proj_umbrella:
         if proj not in i7.i7f:
             if os.path.exists(i7.main_src(proj)):
-                print("No project exists for {}. But there is a story file. So I am using that.".format(proj))
+                if not quiet_procedural_notes:
+                    print("No project exists for {}. But there is a story file. So I am using that.".format(proj))
                 my_array = [ i7.main_src(proj) ]
             else:
                 print("WARNING", proj, "does not have a project file array associated with it. It may not be a valid inform project.")
@@ -591,6 +596,17 @@ while first_loop or user_input:
             for y in proc_globs:
                 for z in glob.glob(os.path.join(x, y)):
                     frequencies[x] = find_text_in_file(match_string_raw, x, header_needed = ['utt'])
+
+        if most_recent_daily:
+            for x in proc_dirs:
+                all_files = []
+                the_parent = Path(x).parent.absolute()
+                all_files.extend(glob.glob(os.path.join(the_parent, y)))
+                all_files = sorted(all_files)
+                last_daily = all_files[-1]
+                if os.path.exists(os.path.join(x, os.path.basename(last_daily))):
+                    continue
+                frequencies[last_daily] = find_text_in_file(match_string_raw, last_daily, header_needed = ['utt'])
 
     if hide_results:
        pass
