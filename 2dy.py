@@ -126,13 +126,14 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     current_size = os.stat(this_file).st_size
     seconds_delta = (current_size - current_goal) * full_weekly_interval // goal_per_file
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // goal_per_file).format("YYYY-MM-DD HH:mm:ss")
+    cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
     if current_size > goal_per_file:
         print(colorama.Fore.GREEN + 'Hooray! You hit your weekly goal!')
     else:
-        print(colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN + "Right now you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {}d{}h{}m{}s away.".format(seconds_delta, time_dir_string, equivalent_time, abs(seconds_delta)//86400, abs(seconds_delta)//3600 % 24, abs(seconds_delta)//60 % 60, abs(seconds_delta)//86400 % 60) + colorama.Style.RESET_ALL)
+        print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {}d{}h{}m{}s away.".format(seconds_delta, time_dir_string, equivalent_time, abs(seconds_delta)//86400, abs(seconds_delta)//3600 % 24, abs(seconds_delta)//60 % 60, abs(seconds_delta) % 60) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     print(colorama.Fore.YELLOW + "               Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
     if current_size < goal_per_file:
@@ -430,10 +431,13 @@ while cmd_count < len(sys.argv):
         compare_thousands(bail = True)
     elif arg == 'ct':
         compare_thousands(bail = False)
-    elif arg == 'wr':
-        check_weekly_rate(bail = False)
-    elif arg == 'wro':
-        check_weekly_rate(bail = True)
+    elif arg.startswith('wr'):
+        bail_val = arg.startswith('wro')
+        temp = arg[2 + bail_val:]
+        if temp.isdigit():
+            goal_per_file = 1000 * int(temp)
+            print("Adjusting goal to", goal_per_file)
+        check_weekly_rate(bail = bail_val)
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
