@@ -12,8 +12,7 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
-# todo:
-#     de-hard-code the sections to look for with sectioned searching (tp)
+# todo: (all caught up for now. No cool ideas ... yet)
 
 from collections import defaultdict
 import mytools as mt
@@ -68,6 +67,9 @@ hide_results = False
 include_notes = True
 
 modify_line = True
+
+section_maps = defaultdict(list)
+dgrab_prompt = defaultdict(bool)
 
 ALL=0
 INSIDE=1
@@ -221,6 +223,11 @@ def read_cfg():
                 elif prefix == 'search_to_proc':
                     global search_to_proc
                     search_to_proc = mt.truth_state_of(data)
+                elif prefix == 'section_maps':
+                    temp = data.split(';')
+                    for x in temp:
+                        temp2 = x.split('=')
+                        section_maps[temp2[0]] = temp2[1].split(',')
                 elif prefix in ( 'suffix', 'suffixes' ):
                     global main_suffixes
                     main_suffixes = data
@@ -236,6 +243,8 @@ def read_cfg():
 def find_text_in_file(match_string_raw, projfile, header_needed = []):
     should_search_header = len(header_needed) > 0
     if should_search_header and not projfile.endswith(".txt"):
+        return -1
+    if mt.is_daily(projfile) and not should_search_header:
         return -1
     fast_string_array = [ fast_string_of(x) for x in match_string_raw ]
     match_string_array = [ match_string_of(x) for x in match_string_raw ]
@@ -295,12 +304,15 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     return found_so_far
                 if not found_so_far:
                     mt.print_centralized('{}{} {} found matches {}{}'.format(color_ary[header_color - 1] if header_color else '', hdr_equals, bf, hdr_equals, colorama.Style.RESET_ALL if header_color else ''))
-                is_duplicate = mt.strip_punctuation(line, remove_comments = True) in match_duplicates
+                sanitized_line = mt.strip_punctuation(line, remove_comments = True)
+                is_duplicate = sanitized_line in match_duplicates
                 if not is_duplicate:
                     found_so_far += 1
                     found_overall += 1
                     print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
-                    match_duplicates[mt.strip_punctuation(line, remove_comments = True)] = 1
+                    match_duplicates[sanitized_line] = 1
+                    if current_daily_section:
+                        dgrab_prompt[current_daily_section] = True
                 else:
                     print(colorama.Back.RED + "    ({:5d}) DUPLICATE:".format(line_count) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
@@ -508,6 +520,8 @@ if not my_proj:
         print("Using default project", default_from_cwd, "from current directory")
         my_proj = default_from_cwd
 
+daily_sections = section_maps[my_proj]
+
 while first_loop or user_input:
     found_overall = 0
     frequencies.clear()
@@ -595,7 +609,7 @@ while first_loop or user_input:
         for x in proc_dirs:
             for y in proc_globs:
                 for z in glob.glob(os.path.join(x, y)):
-                    frequencies[x] = find_text_in_file(match_string_raw, x, header_needed = ['utt'])
+                    frequencies[x] = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
 
         if most_recent_daily:
             for x in proc_dirs:
@@ -606,7 +620,7 @@ while first_loop or user_input:
                 last_daily = all_files[-1]
                 if os.path.exists(os.path.join(x, os.path.basename(last_daily))):
                     continue
-                frequencies[last_daily] = find_text_in_file(match_string_raw, last_daily, header_needed = ['utt'])
+                frequencies[last_daily] = find_text_in_file(match_string_raw, last_daily, header_needed = daily_sections)
 
     if hide_results:
        pass
@@ -621,6 +635,11 @@ while first_loop or user_input:
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
+        temp = [x for x in dgrab_prompt if dgrab_prompt[x]]
+        if len(temp):
+            print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands (ld if VERY latest daily):" + colorama.Style.RESET_ALL)
+            for dp in temp:
+                print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
         print("    " + ", ".join(frequencies))
