@@ -231,7 +231,11 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
-    plt.plot(times, a*times+b)
+
+    plt.plot(times, a*times+b) # line of best fit
+    per_day = goal_per_file // max_days_new
+    plt.plot(times, per_day * times - per_day * init_from_epoch) # general pacing line assuming consistent output
+
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
     plt.legend(loc='upper left')
