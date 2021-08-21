@@ -432,12 +432,20 @@ while cmd_count < len(sys.argv):
     elif arg == 'ct':
         compare_thousands(bail = False)
     elif arg.startswith('wr'):
-        bail_val = arg.startswith('wro')
-        temp = arg[2 + bail_val:]
+        run_weekly_check = True
+        weekly_bail = arg.startswith('wro')
+        temp = arg[2 + weekly_bail:]
         if temp.isdigit():
             goal_per_file = 1000 * int(temp)
             print("Adjusting goal to", goal_per_file)
-        check_weekly_rate(bail = bail_val)
+    elif arg.startswith('g=') or (arg.startswith('g') and arg[1:].isdigit()):
+        if arg[1] == '=':
+            try:
+                goal_per_file = 1000 * int(arg[2:])
+            except:
+                sys.exit("Need a number after g=")
+        else:
+            goal_per_file = 1000 * int(arg[1:])
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
@@ -458,6 +466,9 @@ while cmd_count < len(sys.argv):
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
+
+if run_weekly_check:
+    check_weekly_rate(bail = weekly_bail)
 
 os.chdir(my_daily_dir)
 
