@@ -347,6 +347,12 @@ def usage(param = 'Cmd line usage'):
     print("(-)ct(o) checks thousands, (-)wr(o) checks weekly writing goals based on current document size. O = only do this")
     exit()
 
+def poss_thousands(my_int):
+    my_int = int(my_int)
+    if my_int < 1000:
+        return my_int * 1000
+    return my_int
+
 def read_2dy_cfg():
     global sect_ary
     global file_header
@@ -356,13 +362,15 @@ def read_2dy_cfg():
     global glob_string
     global file_header
     global color_dict
+    this_weeks_goal = 0
+    temp_glob = []
     with open(my_sections_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
             if line.startswith(";"): break
             (prefix, data) = mt.cfg_data_split(line)
             if prefix == 'goalperfile':
-                goal_per_file = int(data)
+                goal_per_file = poss_thousands(data)
             elif prefix == 'maxnew':
                 max_days_new = int(data)
             elif prefix == 'maxback':
@@ -378,8 +386,18 @@ def read_2dy_cfg():
                 if len(sect_ary):
                     print("Adding to non-blank sections array on line {}".format(line_count))
                 sect_ary.extend(sect_dict)
+            elif prefix.isdigit() and len(prefix) == 8:
+                file_name = prefix + ".txt"
+                if not len(temp_glob):
+                    temp_glob = glob.glob("c:/writing/daily/20*.txt")
+                if file_name != os.path.basename(temp_glob[-1]):
+                    print("WARNING line {} has outdated custom goal {}. Comment it out or delete it.".format(line_count, file_name))
+                else:
+                    this_weeks_goal = poss_thousands(data)
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
+    if this_weeks_goal > 0:
+        goal_per_file = this_weeks_goal
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
