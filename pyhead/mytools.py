@@ -68,7 +68,9 @@ def progfile_of(my_path):
         return os.sep.join(path_array)
     return my_path
 
-default_browser_exe = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+default_browser_exe = firefox_browser = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+chrome_browser_exe = progfile_of("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
+opera_browser_exe = "C:\\Users\\Andrew\\AppData\\Local\\Programs\\Opera\\78.0.4093.147\\opera.exe"
 
 npnq = progfile_of("c:\\program files\\notepad++\\notepad++.exe")
 np = '"{}"'.format(npnq)
@@ -733,18 +735,25 @@ def first_word_of(x, allow_dashes = False, additional_chars = ""):
 
 first_word = first_word_of
 
-def browser_or_native(file_name, print_action = True, bail = False, return_to_orig = True, open_in_web = True): # was text in browser but we can also view PNGs there
+def browser_or_native(file_name, print_action = True, bail = False, return_to_orig = True, open_in_web = True, my_browser = ''): # was text in browser but we can also view PNGs there
+    file_name = os.path.abspath(file_name)
     if not open_in_web:
         os.system(file_name)
     else:
+        browser_path = default_browser_exe
+        if my_browser == 'c' or my_browser == 'chrome':
+            browser_path = chrome_browser_exe
+        elif my_browser == 'f' or my_browser == 'firefox':
+            browser_path = firefox_browser_exe
+        elif my_browser == 'o' or my_browser == 'opera':
+            browser_path = opera_browser_exe
         import win32gui
         #obsolete -- subprocess launches Firefox without hogging the command line
         # cmd = 'start \"\" \"{}\" \"file:///{}\"'.format(default_browser_exe, file_name)
         if print_action:
-            print("Opening {} with {}.".format(file_name, default_browser_exe))
-        print(default_browser_exe, pathlib.Path(file_name).as_uri())
+            print("Opening {} with {}.".format(file_name, browser_path))
         old_window = win32gui.GetForegroundWindow()
-        subprocess.call([default_browser_exe, pathlib.Path(file_name).as_uri()])
+        subprocess.call([browser_path, pathlib.Path(file_name).as_uri()])
     if return_to_orig:
         time.sleep(.05) # for whatever reason, we need a fraction of a second before this comes back
         win32gui.SetForegroundWindow(old_window)
