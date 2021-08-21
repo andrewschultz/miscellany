@@ -236,7 +236,7 @@ def read_cfg():
                     verbose = mt.truth_state_of(data)
                 elif prefix == 'quiet':
                     global quiet_procedural_notes
-                    quiet = mt.truth_state_of(data)
+                    quiet_procedural_notes = mt.truth_state_of(data)
                 else:
                     print("Unknown = reading CFG, line", line_count, line.strip())
 
@@ -569,7 +569,7 @@ while first_loop or user_input:
         if proj not in i7.i7f:
             if os.path.exists(i7.main_src(proj)):
                 if not quiet_procedural_notes:
-                    print("No project exists for {}. But there is a story file. So I am using that.".format(proj))
+                    print("No project filemap exists for {}. But there is a story file. So I am using that.".format(proj))
                 my_array = [ i7.main_src(proj) ]
             else:
                 print("WARNING", proj, "does not have a project file array associated with it. It may not be a valid inform project.")
@@ -578,7 +578,12 @@ while first_loop or user_input:
             my_array = i7.i7f[proj]
             if proj in i7.i7aux:
                 my_array.extend(i7.i7aux[proj])
+        my_array = [os.path.realpath(x) for x in my_array]
         for projfile in my_array:
+            if projfile in frequencies:
+                if not quiet_procedural_notes:
+                    print(projfile, "or a symbolically linked file was already read. Skipping.")
+                continue
             if not os.path.exists(projfile):
                 if 'story.ni' in projfile:
                     if proj in i7.i7com:
@@ -591,8 +596,12 @@ while first_loop or user_input:
             if i7.inform_short_name(projfile) in frequencies:
                 continue
             frequencies[i7.inform_short_name(projfile)] = find_text_in_file(match_string_raw, projfile)
-        notes_file = i7.notes_file(proj)
+        notes_file = os.path.realpath(i7.notes_file(proj))
         if include_notes:
+            if notes_file in frequencies:
+                if not quiet_procedural_notes:
+                    print(notes_file, "or a symbolically linked file was already read. Skipping.")
+                continue
             if not os.path.exists(notes_file):
                 if proj in i7.i7com:
                     print("Skipping absent combo-project notes file for {}. However, we are scanning individual project notes files.".format(proj))
