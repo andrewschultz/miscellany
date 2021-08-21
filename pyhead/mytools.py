@@ -600,17 +600,26 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
-def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = ''):
+def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = '', lowercase_it = True, remove_comments = False):
+    if remove_comments and '#' in q:
+        q = zap_comment(q)
     q = q.replace('"', '')
     if zap_bounding_apostrophe:
         q = re.sub("(\b'|'\b)", "", q)
     q = q.replace('.', '')
     q = q.replace(',', '')
     q = q.replace('-', ' ')
+    q = q.replace('!', '')
+    q = q.replace('?', '')
+    q = q.replace("'", '')
+    if '  ' in q:
+        q = re.sub(" {2,}", " ", q)
     q = ' '.join(q.split(' '))
     q = re.sub("^(an|the|a) ", "", q).strip()
     for x in other_chars_to_zap:
         q = q.replace(x, '')
+    if lowercase_it:
+        q = q.lower()
     return q
 
 def alphabetize_lines(x, ignore_punctuation_and_articles = True):
