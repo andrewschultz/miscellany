@@ -7,6 +7,8 @@
 #
 # but it still creates the latest daily file, and the "daily" directory name is kept for posterity
 #
+# todo: map line of best fit of hourly deltas, then assume average is the value of the trendline at the most recent hour
+#
 
 import glob
 import xml.etree.ElementTree as ET
@@ -93,7 +95,26 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
-    print(colorama.Fore.YELLOW + "HOURLY BYTE/THOUSANDS NOW/BEFORE COUNT: {} vs {}, {} vs {}.".format(my_size, last_size, my_size // 1000, last_size // 1000) + colorama.Style.RESET_ALL)
+    hour_delta = my_size - last_size
+    header_color = colorama.Back.WHITE
+    if hour_delta < 0:
+        header_color += colorama.Fore.RED
+    elif hour_delta < 200:
+        header_color += colorama.Back.RED
+    elif hour_delta < 500:
+        header_color += colorama.Fore.YELLOW
+    elif hour_delta < 1000:
+        header_color += colorama.Fore.BLACK
+    elif hour_delta < 2000:
+        header_color += colorama.Fore.GREEN
+    elif hour_delta < 3000:
+        header_color += colorama.Fore.BLUE
+    elif hour_delta < 4000:
+        header_color += colorama.Fore.CYAN
+    else:
+        header_color += colorama.Fore.MAGENTA
+    my_string = header_color + "HOURLY BYTE/THOUSANDS NOW/BEFORE COUNT: {} vs {}, {} vs {}, +{}.".format(my_size, last_size, my_size // 1000, last_size // 1000, my_size - last_size) + colorama.Style.RESET_ALL
+    mt.center(my_string)
     thousands = my_size // 1000 - last_size // 1000
     until_next = (1000 - (my_size % 1000))
     right_now = pendulum.now()
@@ -112,6 +133,10 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
+def dhms(my_int):
+    my_int = abs(my_int)
+    return '{}d{}h{}m{}s'.format(my_int // 86400, (my_int // 3600) % 24, (my_int // 60) % 60, my_int % 60)
+
 def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
     if not this_file:
@@ -124,24 +149,28 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     full_weekly_interval = (t_goal - t_base).in_seconds()
     current_goal = goal_per_file * weekly_interval_so_far // full_weekly_interval
     current_size = os.stat(this_file).st_size
-    seconds_delta = (current_size - current_goal) * full_weekly_interval // goal_per_file
+    seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // goal_per_file
+    current_pace_seconds_delta = weekly_interval_so_far * goal_per_file / current_size
+    t_eta = t_base.add(seconds = current_pace_seconds_delta)
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // goal_per_file).format("YYYY-MM-DD HH:mm:ss")
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
     if current_size > goal_per_file:
-        print(colorama.Fore.GREEN + 'Hooray! You hit your weekly goal!')
+        mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit your weekly goal!' + colorama.Style.RESET_ALL)
     else:
         print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {}d{}h{}m{}s away.".format(seconds_delta, time_dir_string, equivalent_time, abs(seconds_delta)//86400, abs(seconds_delta)//3600 % 24, abs(seconds_delta)//60 % 60, abs(seconds_delta) % 60) + colorama.Style.RESET_ALL)
+        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(seconds_delta_from_pace, time_dir_string, equivalent_time, dhms(seconds_delta_from_pace) + colorama.Style.RESET_ALL))
     projection = current_size * full_weekly_interval // weekly_interval_so_far
-    print(colorama.Fore.YELLOW + "               Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
+    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
     if current_size < goal_per_file:
+        mt.center(colorama.Fore.YELLOW + "ETA to achieve goal: {}, {} away.".format(t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
         bytes_remaining = goal_per_file - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
-        print(colorama.Fore.CYAN + "        Bytes per hour to hit end-of-week goal: {:.2f}. Bytes so far: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
+        bytes_per_hour_overall = goal_per_file * 3600 / full_weekly_interval
+        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f}. Bytes overall: {:.2f}. Bytes so far: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_overall, bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
 
