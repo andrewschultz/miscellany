@@ -553,7 +553,7 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False):
+def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False):
     if len(file_post_list):
         got_yet = defaultdict(bool)
         l = len(file_post_list)
@@ -576,9 +576,12 @@ def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, 
             el = len(file_post_list[x])
             if el > 1:
                 print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
-            npo(x, file_post_list[x][m], bail = False, print_full_path = full_file_paths)
+            if test_run:
+                print("Would've opened", x, "at line", file_post_list[x][m])
+            else:
+                npo(x, file_post_list[x][m], bail = False, print_full_path = full_file_paths)
             count += 1
-            if count < 0:
+            if count < len(file_post_list):
                 time.sleep(sleep_time)
         if bail_after:
             sys.exit()
