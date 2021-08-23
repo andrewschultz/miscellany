@@ -97,10 +97,10 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     last_size = int(ary[-1])
     hour_delta = my_size - last_size
     header_color = colorama.Back.WHITE
-    if hour_delta < 0:
-        header_color += colorama.Fore.RED
-    elif hour_delta < 200:
+    if hour_delta <= 0:
         header_color += colorama.Back.RED
+    elif hour_delta < 200:
+        header_color += colorama.Fore.RED
     elif hour_delta < 500:
         header_color += colorama.Fore.YELLOW
     elif hour_delta < 1000:
@@ -160,7 +160,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit your weekly goal!' + colorama.Style.RESET_ALL)
     else:
         print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(seconds_delta_from_pace, time_dir_string, equivalent_time, dhms(seconds_delta_from_pace) + colorama.Style.RESET_ALL))
+        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(seconds_delta_from_pace, time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
     if current_size < goal_per_file:
@@ -372,7 +372,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)v or vn/nv = toggle verbosity")
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
     print("(-?)ps = put stats, (-?)gs = get stats, (-?)es = edit stats, (-?)ss = sift stats")
-    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec = edit code, es = edit stats")
+    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec/em = edit code, es = edit stats")
     print("(-)ct(o) checks thousands, (-)wr(o) checks weekly writing goals based on current document size. O = only do this")
     exit()
 
@@ -471,7 +471,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'v': verbose = True
     elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
-    elif arg == 'em': mt.npo(__file__)
+    elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
     elif arg == 'es': mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'cto':
