@@ -282,13 +282,22 @@ def is_limerick(x, accept_comments = False): # quick and dirty limerick checker
 
 is_limericky = is_limerick
 
-def is_palindrome(x, accept_comments = True, fail_on_unusual = True):
+def is_palindrome(x, accept_comments = True, fail_on_unusual = True, decipher_asterisks = True):
     if accept_comments and "#pal" in x: return True
     if accept_comments: x = re.sub('#.*', '', x)
     if fail_on_unusual:
         if '=' in x or '~' in x:
             return False
-    let_only = re.sub("[^a-z]", "", x.lower())
+    let_only = re.sub("[^a-z\*]", "", x.lower())
+    if '*' in x:
+        if decipher_asterisks:
+            z = list(let_only)
+            for y in range(0, len(z)):
+                if z[y] == '*':
+                    z[y] = z[len(z)-y-1]
+            let_only = ''.join(z)
+        else:
+            let_only = let_only.replace('*', '')
     if not let_only: return False # blank strings don't work
     return let_only == let_only[::-1]
 
