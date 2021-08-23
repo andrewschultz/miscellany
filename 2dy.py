@@ -24,6 +24,7 @@ import numpy as np
 import matplotlib.dates as mdates
 import matplotlib
 import colorama
+import re
 
 #init_sect = defaultdict(str)
 
@@ -39,6 +40,7 @@ goal_per_file = 7000 # deliberately low but will be changed a lot
 
 latest_daily = True
 write_base_stats = True
+run_weekly_check = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -61,6 +63,9 @@ my_sections_file = "c:/writing/scripts/2dy.txt"
 def see_back(this_file = d, my_dir = "", days_back = 7):
     my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
     return os.path.join(my_dir, my_file)
+
+def digits_only(my_string):
+    return int(re.sub("[^0-9]", "", my_string))
 
 def check_unsaved():
     open_array = []
@@ -159,10 +164,10 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if current_size > goal_per_file:
         mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit your weekly goal!' + colorama.Style.RESET_ALL)
     else:
-        print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {}.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(seconds_delta_from_pace, time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
+        print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
-    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', projection - goal_per_file, 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
+    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', abs(projection - goal_per_file), 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
     if current_size < goal_per_file:
         mt.center(colorama.Fore.YELLOW + "ETA to achieve goal: {}, {} away.".format(t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
@@ -485,14 +490,11 @@ while cmd_count < len(sys.argv):
         if temp.isdigit():
             goal_per_file = 1000 * int(temp)
             print("Adjusting goal to", goal_per_file)
-    elif arg.startswith('g=') or (arg.startswith('g') and arg[1:].isdigit()):
-        if arg[1] == '=':
-            try:
-                goal_per_file = 1000 * int(arg[2:])
-            except:
-                sys.exit("Need a number after g=")
+    elif arg.startswith('g=') or (arg.startswith('g') and arg[1:].isdigit()) or (arg.endswith('k') and arg[:-1].isdigit()):
+        if 1:
+            goal_per_file = 1000 * int(digits_only(arg))
         else:
-            goal_per_file = 1000 * int(arg[1:])
+            sys.exit("You need a number after g/g= or before k.")
     elif arg == 'gs': graph_stats()
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
