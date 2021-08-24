@@ -8,7 +8,7 @@
 # but it still creates the latest daily file, and the "daily" directory name is kept for posterity
 #
 # todo: map line of best fit of hourly deltas, then assume average is the value of the trendline at the most recent hour
-#
+# todo: "L" batch file that goes back X files should see if there is a to-proc, and if current is read-only and X is not, go to it
 
 import glob
 import xml.etree.ElementTree as ET
@@ -66,6 +66,13 @@ def see_back(this_file = d, my_dir = "", days_back = 7):
 
 def digits_only(my_string):
     return int(re.sub("[^0-9]", "", my_string))
+
+def open_latest_daily_from_glob(arg):
+    file_wildcard = "2*" + arg + ".txt"
+    g = glob.glob(os.path.join(daily_proc, file_wildcard))
+    if len(g) == 0:
+        sys.exit("No dailies in the glob {}.".format(file_wildcard))
+    mt.npo(g[-1])
 
 def check_unsaved():
     open_array = []
@@ -372,6 +379,7 @@ def usage(param = 'Cmd line usage'):
     print('=' * 50)
     print("(-?)f (#) = # files back (or # without f)")
     print("(-?)m (#) = # max days back")
+    print("single number = wildcard to search e.g. 0726, g=# g# #k sets goals at # thousand")
     print("(-?)mn/n/nm (#) = # max new days back")
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
@@ -462,9 +470,6 @@ while cmd_count < len(sys.argv):
     if arg[0] == 'f' and arg[1:].isdigit():
         files_back_wanted = int(arg[1:])
         latest_daily = False
-    elif arg.isdigit():
-        files_back_wanted = int(arg)
-        latest_daily = False
     elif arg[0] == 'm' and arg[1:].isdigit():
         max_days_back = int(arg[1:])
         latest_daily = False
@@ -512,6 +517,11 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg in ( 'td', 'dt' ): move_to_proc("c:/coding/perl/proj/from_drive")
+    elif re.match('[0-9]{3}', arg): # if this causes problems, use [0-1][0-9]{3} or [0-9]{5}
+        open_latest_daily_from_glob(arg)
+    elif arg.isdigit(): # this should be at the end since we have other digit wildcard checks
+        files_back_wanted = int(arg)
+        latest_daily = False
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
