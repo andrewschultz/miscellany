@@ -71,6 +71,9 @@ show_warnings = False
 
 verbose = False
 
+only_check_expired = False
+found_expiry = False
+
 # thanks to https://stackoverflow.com/questions/42950/get-last-day-of-the-month-in-python
 
 def find_in_one_checkfile(my_string, f, find_comments):
@@ -181,6 +184,7 @@ def make_time_array(j, k, line_count):
     return
 
 def read_hourly_check(a):
+    global found_expiry
     old_line = ""
     old_cmd = ""
     one_line_only = False
@@ -196,8 +200,23 @@ def read_hourly_check(a):
                     mt.add_post(a, line_count)
                 break
             if line.startswith("#"): continue
+            line = line.strip()
+            if line.startswith("X:"):
+                l2 = re.sub("\|.*", "", line[2:])
+                line = re.sub("^.*?\|", "", line)
+                try:
+                    expiry_date = pendulum.from_format(l2, 'YYYY-MM-DD', tz = pendulum.now().timezone_name).add(days = 1)
+                    print("Expiry date from file", expiry_date)
+                    #expiry_date = pendulum.now().add(hours=30)
+                except:
+                    print("Invalid expiry date {} after X: in {} at line {}. ".format(l2, a, line_count))
+                    expiry_date = pendulum.now(pendulum.now()).add(days = 1)
+                if pendulum.now() >= expiry_date:
+                    print("WARNING: daily task at line {} of {} has expired as of {}.".format(line_count, a, l2))
+                    mt.add_post(a, line_count, priority = 8)
+                    found_expiry = True
             if line.count("|") > 1:
-                print("WARNING too many OR pipes (replace with slash?) {} line {}: {}".format(ab, line_count, line.strip()))
+                print("WARNING: too many OR pipes (replace with slash?) {} line {}: {}".format(ab, line_count, line.strip()))
                 mt.add_post(a, line_count)
             if line.startswith("="):
                 bookmark_past = bookmark_string
@@ -440,6 +459,8 @@ while count < len(sys.argv):
     elif arg == 'qe':
         os.system(queue_file)
         exit()
+    elif arg == 'cx':
+        only_check_expired = True
     elif arg[:2] == 'id':
         init_delay = int(arg[2:])
     elif arg[0] == 'm':
@@ -501,9 +522,15 @@ while count < len(sys.argv):
 
 n = pendulum.now()
 
-read_hourly_check(check_file)
-read_hourly_check(check_private)
-read_hourly_check(xtra_file)
+for f in hr_files:
+    read_hourly_check(f)
+
+if only_check_expired:
+    if found_expiry:
+        mt.post_open()
+    else:
+        print("No expired dates found.")
+    sys.exit()
 
 if len(my_bookmarks):
     ran_any = False
