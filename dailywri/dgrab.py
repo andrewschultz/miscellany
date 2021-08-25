@@ -34,6 +34,7 @@ import filecmp
 import daily
 import mytools as mt
 from pathlib import Path
+import pendulum
 
 delete_empties = True
 
@@ -44,6 +45,7 @@ my_globs = []
 dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 dg_preview = "c:/writing/temp/dgrab-preview.txt"
+dg_backup_log = "c:/writing/temp/dgrab-backup-log.txt"
 flat_temp = os.path.basename(dg_temp)
 
 file_list = defaultdict(list)
@@ -75,6 +77,7 @@ important_test = True
 latest_file_only = False
 preview_moved_text = False
 preview_any_yet = False
+launch_backup_log = True
 
 dir_search_flag = daily.TOPROC
 
@@ -504,6 +507,10 @@ def send_mapping(sect_name, file_name, change_files = False):
         sys.exit()
     if open_to_after:
         mt.add_post_open(to_file, file_len(to_file))
+    g = open(dg_backup_log, "a")
+    g.write("Results of {} section dump from {} to {}:\n".format(sect_name, file_name, to_file))
+    g.write(sect_text + "\n")
+    g.close()
     if daily.where_to_insert[sect_name]:
         print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, to_file))
         write_next_blank = False
@@ -589,6 +596,10 @@ while cmd_count < len(sys.argv):
         append_importants = True
         important_test = True
     elif arg == 'l': list_it = True
+    elif arg in ( 'bl', 'lb' ):
+        launch_backup_log = True
+    elif mt.alpha_match(arg, 'bln'):
+        launch_backup_log = False
     elif arg == 'ld':
         latest_file_only = True
         dir_to_proc = daily_proc
@@ -725,6 +736,10 @@ if max_process == -1: print("Running test to cull all eligible files.")
 
 print("REMINDER: -di means to do diff. -ndi means not to. The default is not to do differences. You can break during differences after seeing stuff is added.")
 
+g = open(dg_backup_log, "w")
+g.write("BACKUP LOG (disable with -bln)\n\nResults of dump for section {} on {}:\n\n".format(my_sect, pendulum.now().format("YYYY/MM/DD HH:mm:ss")))
+g.close()
+
 for q in my_file_list:
     qbase = os.path.basename(q)
     temp_file = os.path.join(daily.wri_temp, qbase)
@@ -765,6 +780,9 @@ else:
 if len(change_list):
     print("Files still to process:", ', '.join(change_list))
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
+
+if launch_backup_log:
+    mt.file_in_browser(dg_backup_log)
 
 if open_to_after:
     mt.postopen_files()
