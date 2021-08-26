@@ -47,7 +47,7 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
         for x in i7.i7com[my_proj].split(","):
             if x == my_proj:
                 continue
-            copy_source_to_github(os.path.join(d, x), copy_to_blank, copy_timestamps_misaligned)
+            copy_source_to_github(os.path.join(i7.gh_src(my_proj), x), copy_timestamps_misaligned)
         return
     my_main = i7.main_src(my_proj)
     if trim_before:
