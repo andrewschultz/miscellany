@@ -12,7 +12,8 @@
 # to enable colors by default: REG ADD HKCU\CONSOLE /f /v VirtualTerminalLevel /t REG_DWORD /d 1
 # I'd assume deleting this or changing it to zero would disable colors
 #
-# todo: (all caught up for now. No cool ideas ... yet)
+# todo: print out duplicates vs actual count, determine which is relevant
+# todo (stretch): if we have / in a line, look at individual slashes ... but ONLY if it is a notes file
 
 from collections import defaultdict
 import mytools as mt
@@ -70,6 +71,7 @@ modify_line = True
 
 section_maps = defaultdict(list)
 dgrab_prompt = defaultdict(bool)
+congruences = defaultdict(lambda:defaultdict(str))
 
 ALL=0
 INSIDE=1
@@ -135,6 +137,11 @@ def right_highlight():
 def hist_file_of(my_proj):
     return os.path.normpath(os.path.join("c:/writing/scripts/gqfiles", "gq-{}.txt".format(i7.combo_of(my_proj))))
 
+def match_similar_words(my_line, my_dict):
+    for d in my_dict:
+        my_line = my_line.replace(d, my_dict[d])
+    return my_line
+
 def fast_string_of(my_regex):
     my_regex = my_regex.replace("(')?", "")
     for x in range(0, len(my_regex) - 1):
@@ -196,6 +203,13 @@ def read_cfg():
                 elif prefix == 'colors':
                     global colors
                     colors = mt.truth_state_of(data)
+                elif prefix == 'congruences':
+                    temp = data.split(';')
+                    for t in temp:
+                        ary = t.split('=')
+                        for t2 in ary[1].split(','):
+                            t3 = t2.split('/')
+                            congruences[ary[0]][t3[0]] = t3[1]
                 elif prefix == 'default_from_cfg':
                     global default_from_cfg
                     default_from_cfg = data
@@ -249,10 +263,12 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
     fast_string_array = [ fast_string_of(x) for x in match_string_raw ]
     match_string_array = [ match_string_of(x) for x in match_string_raw ]
     global found_overall
+    global overall_nonduplicate
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
         return -1
     found_so_far = 0
+    local_nonduplicate = 0
     current_table = ""
     current_table_line = 0
     pbase = os.path.basename(projfile)
@@ -304,17 +320,21 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     return found_so_far
                 if not found_so_far:
                     mt.print_centralized('{}{} {} found matches {}{}'.format(color_ary[header_color - 1] if header_color else '', hdr_equals, bf, hdr_equals, colorama.Style.RESET_ALL if header_color else ''))
+                found_so_far += 1
+                found_overall += 1
                 sanitized_line = mt.strip_punctuation(line, remove_comments = True)
+                if len(congruences[my_proj]):
+                    sanitized_line = match_similar_words(sanitized_line, congruences[my_proj])
                 is_duplicate = sanitized_line in match_duplicates
                 if not is_duplicate:
-                    found_so_far += 1
-                    found_overall += 1
+                    local_nonduplicate += 1
+                    overall_nonduplicate += 1
                     print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
-                    match_duplicates[sanitized_line] = 1
+                    match_duplicates[sanitized_line] = "{} {}".format(pbase, line_count)
                     if current_daily_section:
                         dgrab_prompt[current_daily_section] = True
                 else:
-                    print(colorama.Back.RED + "    ({:5d}) DUPLICATE:".format(line_count) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
+                    print(colorama.Back.RED + "    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
@@ -524,6 +544,7 @@ daily_sections = section_maps[my_proj]
 
 while first_loop or user_input:
     found_overall = 0
+    overall_nonduplicate = 0
     frequencies.clear()
 
     if user_input:
@@ -626,6 +647,8 @@ while first_loop or user_input:
                 the_parent = Path(x).parent.absolute()
                 all_files.extend(glob.glob(os.path.join(the_parent, y)))
                 all_files = sorted(all_files)
+                if len(all_files) == 0:
+                    continue
                 last_daily = all_files[-1]
                 if os.path.exists(os.path.join(x, os.path.basename(last_daily))):
                     continue
