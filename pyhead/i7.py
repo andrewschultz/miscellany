@@ -238,22 +238,31 @@ def quoted_text_array_of(my_line, erase_brackets = True, get_inside = True, as_l
     else:
         return ' '.join(ary)
 
+def one_topic_to_array(x, div_char = "/"): # a/b c/d to a c, a d, 
+    if div_char not in ''.join(x):
+        return [x]
+    return_array = []
+    for y in range(0, len(x)):
+        if div_char in x[y]:
+            for z in x[y].split(div_char):
+                new_array = list(x)
+                new_array.pop(y)
+                new_array.insert(y, z)
+                temp = one_topic_to_array(new_array)
+                return_array.extend(temp)
+            return return_array
+    return return_array
+
 def topics_to_array(x, div_char = "/"):
-    x = re.sub("^\"*", "", x)
-    my_topic_array = zap_end_brax(x).split('"')[0::2] # every other quoted thing, minus comments at the end
-    overall_array = []
-    for myt in my_topic_array:
-        base_array = ['']
-        tary = myt.split(" ")
-        for g in tary:
-            temp_stuff = g.split(div_char)
-            new_base_array = []
-            for t in temp_stuff:
-                for x in base_array:
-                    new_base_array.append((x + " " if x else "") + t)
-            base_array = list(new_base_array)
-        overall_array.extend(base_array)
-    return overall_array
+    ret_ary = []
+    if '"' in x:
+        all_topics = x.split('"')
+    else:
+        all_topics = [x]
+    for temp in all_topics[1::2]:
+        temp2 = one_topic_to_array(temp.split(' '))
+        ret_ary.extend(temp2)
+    return ret_ary
 
 topx2ary = topics_to_array
 
