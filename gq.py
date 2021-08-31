@@ -228,10 +228,10 @@ def read_cfg():
                 elif prefix == 'most_recent_daily':
                     global most_recent_daily
                     most_recent_daily = mt.truth_state_of(data)
-                elif prefix == 'proc-dir':
+                elif prefix == 'proc_dirs':
                     global proc_dirs
                     proc_dirs = [ os.path.normpath(x) for x in data.split(',') ]
-                elif prefix == 'proc-glob':
+                elif prefix == 'proc_globs':
                     global proc_globs
                     proc_globs = [ os.path.normpath(x) for x in data.split(',') ]
                 elif prefix == 'search_to_proc':
@@ -467,7 +467,7 @@ def read_args(my_arg_array, in_loop = False):
             user_input = True
         elif 'gq' in arg and "`" not in arg:
             mt.print_centralized(colorama.Back.RED + colorama.Fore.BLACK + "WARNING gq argument in user input. Use backtick to not ignore." + colorama.Back.BLACK + colorama.Style.RESET_ALL)
-        elif ".py" in arg or ".pl" in arg:
+        elif arg.endswith(".py") or arg.endswith(".pl"):
             return_value = -1
         elif arg == '?':
             usage()
@@ -524,10 +524,9 @@ read_cfg()
 
 error_check = read_args(my_arg_array = sys.argv[1:])
 
-if error_check:
-    print("NOTE: you included .pl or .py in the input, strongly implying you meant to run a script instead.")
-    if not user_input:
-        sys.exit()
+if not len(match_string_raw) and not user_input:
+    print("I didn't register any text to search for. Perhaps some text is an option in the code. If so, you can start a parameter with backticks to make sure it is seen as text to search.")
+    sys.exit()
 
 if not my_proj:
     if not default_from_cwd:
@@ -552,8 +551,6 @@ while first_loop or user_input:
         if not from_user:
             sys.exit("Ok, that's all.")
         error_check = read_args(from_user.strip().split(" "), in_loop = True)
-        if error_check:
-            print("NOTE: you included .pl or .py in the input, strongly implying you meant to run a script instead.")
 
     first_loop = False
 
