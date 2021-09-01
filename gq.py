@@ -408,8 +408,22 @@ def read_args(my_arg_array, in_loop = False):
             all_similar_projects = True
         elif arg[:2] == 'mf' and arg[2:].isdigit():
             max_in_file = int(arg[2:])
+        elif arg == 'mf':
+            try:
+                max_in_file = int(my_arg_array[cmd_count + 1])
+                print("Trivial warning: mf and a number don't need a space between them.")
+                cmd_count += 1
+            except:
+                sys.exit("MF needs a number after it.")
         elif arg[:2] == 'mo' and arg[2:].isdigit():
             max_overall = int(arg[2:])
+        elif arg == 'mo':
+            try:
+                max_overall = int(my_arg_array[cmd_count + 1])
+                print("Trivial warning: mo and a number don't need a space between them.")
+                cmd_count += 1
+            except:
+                sys.exit("MO needs a number after it.")
         elif arg == 'hr':
             hide_results = True
         elif arg == 'vh':
