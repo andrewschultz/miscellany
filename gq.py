@@ -398,7 +398,7 @@ def read_args(my_arg_array, in_loop = False):
         elif arg == 'r':
             print("Using super-shortcut 'r' for A Roiling Original.")
             my_proj = "roiling"
-        elif arg == 'npo' or arg == 'pon':
+        elif arg in ( 'npo', 'pon' ):
             post_open_matches = False
         elif arg == 'po':
             post_open_matches = True
@@ -406,7 +406,7 @@ def read_args(my_arg_array, in_loop = False):
             post_open_warnings = False
         elif arg in ( 'ow', 'wo'):
             post_open_warnings = True
-        elif arg == 'o' or arg == '.':
+        elif arg in ( 'o', '.' ):
             all_similar_projects = False
         elif arg == 'a':
             all_similar_projects = True
@@ -444,25 +444,25 @@ def read_args(my_arg_array, in_loop = False):
             verbose = False
             quiet_procedural_notes = True
             hide_results = True
-        elif arg == 'con' or arg == 'onc':
+        elif arg in ( 'con', 'onc' ):
             colors = False
-        elif arg == 'coff' or arg == 'offc':
+        elif arg in ( 'coff', 'offc' ):
             colors = False
-        elif arg == 'wh' or arg == 'hw':
+        elif arg in ( 'wh', 'hw' ):
             write_history = True
-        elif arg == 'nh' or arg == 'hn':
+        elif arg in ( 'nh', 'hn' ):
             write_history = False
-        elif arg == 'qo' or arg == 'oq':
+        elif arg in ( 'qo', 'oq' ):
             quote_status = OUTSIDE
-        elif arg == 'qi' or arg == 'iq':
+        elif arg in ( 'qi', 'iq' ):
             quote_status = INSIDE
-        elif arg == 'qa' or arg == 'aq':
+        elif arg in ( 'qa', 'aq' ):
             quote_status = ALL
         elif arg == 'newhist':
             create_new_history = True
-        elif arg == 'e' or arg == 'ec' or arg == 'ce':
+        elif arg in ( 'e', 'ec', 'ce' ):
             mt.npo(my_cfg)
-        elif arg == 'ml' or arg == 'lm':
+        elif arg in ( 'ml', 'lm' ):
             modify_line = True
         elif sorted(arg) == 'lmn': #no modify line
             modify_line = False
@@ -473,15 +473,15 @@ def read_args(my_arg_array, in_loop = False):
                     sys.exit("-mn must define a positive number.")
             except:
                 print("mn needs a valid number after it.")
-        elif arg == 'ny' or arg == 'yn':
+        elif arg in ( 'ny', 'yn' ):
             include_notes = True
         elif arg == 'nn':
             include_notes = False
         elif arg == 'fm':
             fast_match = True
-        elif arg == 'nfm' or arg == 'fmn':
+        elif arg in ( 'nfm', 'fmn' ):
             fast_match = False
-        elif arg == 'ui' or arg == 'in':
+        elif arg in ( 'ui', 'in' ):
             user_input = True
         elif 'gq' in arg and "`" not in arg:
             mt.print_centralized(colorama.Back.RED + colorama.Fore.BLACK + "WARNING gq argument in user input. Use backtick to not ignore." + colorama.Back.BLACK + colorama.Style.RESET_ALL)
@@ -654,7 +654,9 @@ while first_loop or user_input:
         for x in proc_dirs:
             for y in proc_globs:
                 for z in glob.glob(os.path.join(x, y)):
-                    frequencies[x] = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
+                    if not mt.is_daily(z):
+                        continue
+                    frequencies[z] = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
 
         if most_recent_daily:
             for x in proc_dirs:
@@ -682,8 +684,6 @@ while first_loop or user_input:
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        print(dgrab_latest_prompt)
-        print(dgrab_general_prompt)
         if len(dgrab_latest_prompt) or len(dgrab_general_prompt):
             print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands:" + colorama.Style.RESET_ALL)
         for dp in dgrab_general_prompt:
