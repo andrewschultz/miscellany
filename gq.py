@@ -70,7 +70,8 @@ include_notes = True
 modify_line = True
 
 section_maps = defaultdict(list)
-dgrab_prompt = defaultdict(bool)
+dgrab_latest_prompt = defaultdict(bool)
+dgrab_general_prompt = defaultdict(bool)
 congruences = defaultdict(lambda:defaultdict(str))
 
 ALL=0
@@ -332,7 +333,10 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     print("    ({:5d}):".format(line_count), line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                     match_duplicates[sanitized_line] = "{} {}".format(pbase, line_count)
                     if current_daily_section:
-                        dgrab_prompt[current_daily_section] = True
+                        if 'current' in i7.inform_short_name(projfile):
+                            dgrab_latest_prompt[current_daily_section] = True
+                        else:
+                            dgrab_general_prompt[current_daily_section] = True
                 else:
                     print(colorama.Back.RED + "    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
@@ -678,11 +682,14 @@ while first_loop or user_input:
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        temp = [x for x in dgrab_prompt if dgrab_prompt[x]]
-        if len(temp):
-            print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands (ld if VERY latest daily):" + colorama.Style.RESET_ALL)
-            for dp in temp:
-                print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
+        print(dgrab_latest_prompt)
+        print(dgrab_general_prompt)
+        if len(dgrab_latest_prompt) or len(dgrab_general_prompt):
+            print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands:" + colorama.Style.RESET_ALL)
+        for dp in dgrab_general_prompt:
+            print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
+        for dp in dgrab_latest_prompt:
+            print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
         print("    " + ", ".join(frequencies))
