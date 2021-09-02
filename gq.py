@@ -38,6 +38,7 @@ my_proj = ""
 write_history = True
 main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
 search_to_proc = False
+run_commands_after = False
 
 verbose = False
 quiet_procedural_notes = False
@@ -127,6 +128,7 @@ def usage():
     print("qi/qo/qa = quotes inside/outside/all")
     print("con/coff = colors on/off")
     print("ml/nml/mln = whether or not to modify line where search results are found")
+    print("rc = run suggested commands after")
     sys.exit()
 
 def left_highlight(color_idx):
@@ -398,6 +400,8 @@ def read_args(my_arg_array, in_loop = False):
         elif arg == 'r':
             print("Using super-shortcut 'r' for A Roiling Original.")
             my_proj = "roiling"
+        elif arg == 'cr' or arg == 'rc':
+            run_commands_after = True
         elif arg in ( 'npo', 'pon' ):
             post_open_matches = False
         elif arg == 'po':
@@ -685,11 +689,20 @@ while first_loop or user_input:
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
             #print("{}No matches for: {}{}".format(colorama.Back.RED + colorama.Fore.BLACK, , colorama.Back.BLACK + colorama.Style.RESET_ALL))
         if len(dgrab_latest_prompt) or len(dgrab_general_prompt):
-            print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands:" + colorama.Style.RESET_ALL)
-        for dp in dgrab_general_prompt:
-            print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
-        for dp in dgrab_latest_prompt:
-            print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
+            if run_commands_after:
+                for dp in dgrab_general_prompt:
+                    cmds.append("dgrab.py s={}".format(dp))
+                for dp in dgrab_latest_prompt:
+                    cmds.append("dgrab.py ld s={}".format(dp))
+                for c in cmds:
+                    print("Running command", c)
+                    os.system(c)
+            else:
+                print(colorama.Back.MAGENTA + "Some stuff should be shifted from daily files. Use these commands:" + colorama.Style.RESET_ALL)
+                for dp in dgrab_general_prompt:
+                    print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
+                for dp in dgrab_latest_prompt:
+                    print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
         print("    " + ", ".join(frequencies))
