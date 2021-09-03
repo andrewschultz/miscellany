@@ -18,11 +18,12 @@ cmd_line_proj = ''
 trim_before = True
 ignore_misaligned_timestamps = False
 reverse_copy = False
-show_diff_after = False
 
 NO_DIFFS = 0
 MAIN_DIFFS = 1
 ALL_DIFFS = 2
+
+show_diff_after = MAIN_DIFFS
 
 def usage(message = "USAGE"):
     print(message)
@@ -31,6 +32,7 @@ def usage(message = "USAGE"):
     print("d nd dn = diff after or not")
     print("c = copy to blank e.g. if there is no story.ni in the destination, do this")
     print("r = reverse-copy (useful for branches)")
+    print("s/sa/as = show all, sn/ns = show none, sm/ms = show main story.ni")
     sys.exit()
 
 def check_valid_git_path():
@@ -118,6 +120,12 @@ while cmd_count < len(sys.argv):
         ignore_misaligned_timestamps = True
     elif arg == 'r':
         reverse_copy = True
+    elif arg in ( 's', 'sa', 'as' ):
+        show_diff_after = ALL_DIFFS
+    elif arg in ( 'ms', 'sm' ):
+        show_diff_after = MAIN_DIFFS
+    elif arg in ( 'sn', 'ns' ):
+        show_diff_after = NO_DIFFS
     elif arg == '?':
         usage()
     else:
@@ -139,4 +147,10 @@ if do_diff_after:
     if to_dir != from_dir:
         print("Switching to {} in-script. You may wish to do so in your shell.".format(to_dir))
     os.chdir(to_dir)
-    os.system("git diff --word-diff")
+    if show_diff_after == ALL_DIFFS:
+        os.system("git diff --word-diff")
+    elif show_diff_after == MAIN_DIFFS:
+        os.system("git diff --word-diff **story.ni")
+        print("-s to show all difference(s) after, -sn for none")
+    else:
+        print("-s to show all difference(s) after, -sm for main")
