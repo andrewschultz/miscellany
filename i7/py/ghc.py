@@ -10,6 +10,7 @@ import os
 import i7
 import sys
 
+bail_on_error = True
 do_diff_after = True
 copy_to_blank = False
 need_abbreviation = False
@@ -17,10 +18,16 @@ cmd_line_proj = ''
 trim_before = True
 ignore_misaligned_timestamps = False
 reverse_copy = False
+show_diff_after = False
+
+NO_DIFFS = 0
+MAIN_DIFFS = 1
+ALL_DIFFS = 2
 
 def usage(message = "USAGE"):
     print(message)
     print("a na an = need abbreviation in directory e.g. btp vs buck-the-past")
+    print("b nb bn = toggles bail")
     print("d nd dn = diff after or not")
     print("c = copy to blank e.g. if there is no story.ni in the destination, do this")
     print("r = reverse-copy (useful for branches)")
@@ -47,7 +54,7 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
         for x in i7.i7com[my_proj].split(","):
             if x == my_proj:
                 continue
-            copy_source_to_github(os.path.join(i7.gh_src(my_proj), x), copy_timestamps_misaligned)
+            copy_source_to_github(x, copy_timestamps_misaligned)
         return
     my_main = i7.main_src(my_proj)
     if trim_before:
@@ -55,7 +62,10 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
     my_gh = i7.gh_src(my_proj)
     if not os.path.exists(my_main):
         print("Cannot find", my_main)
-        return
+        if bail_on_error:
+            sys.exit()
+        else:
+            return
     if not os.path.exists(my_gh):
         if not copy_to_blank:
             print("Cannot find", my_gh)
@@ -65,10 +75,13 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
                 sys.exit("Can't reverse copy if {} doesn't exist.".format(my_gh))
             print("Copying", my_main, "to new file", my_gh)
             shutil.copy(my_main, my_gh)
-        return
+        if bail_on_error:
+            sys.exit()
+        else:
+            return
     if filecmp.cmp(my_main, my_gh):
         print(my_main, "and", my_gh, "are equivalent. Not copying.")
-        return
+        return # not an error, so no bail-on-error
     if reverse_copy:
         (my_main, my_gh) = (my_gh, my_main)
     if os.stat(my_main).st_mtime < os.stat(my_gh).st_mtime:
@@ -76,7 +89,10 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
         print("    ----> from: {}".format(my_main))
         print("    ---->   to: {}".format(my_gh))
         if not copy_timestamps_misaligned:
-            return
+            if bail_on_error:
+                sys.exit()
+            else:
+                return
     print("Copying", my_main, "to", my_gh)
     shutil.copy(my_main, my_gh)
 
@@ -90,6 +106,10 @@ while cmd_count < len(sys.argv):
         need_abbreviation = True
     elif arg in ('na', 'an'):
         need_abbreviation = False
+    elif arg == 'b':
+        bail_on_error = True
+    elif arg in ('bn', 'nb'):
+        bail_on_error = False
     elif arg == 'd':
         do_diff_after = True
     elif arg in ('dn', 'nd', 'n'):
