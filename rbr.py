@@ -138,7 +138,7 @@ def is_rbr_bookmark(x): # a bookmark is usually ##newloc or ##newthing, and we d
 def should_be_nudge(x):
     if not x.startswith('#'): return False
     if x.startswith('##'): return False
-    if re.search("(spechelp|mistake|nudge)", x): return True
+    if re.search("^#(spechelp|mistake|nudge)", x): return True
     return False
 
 def fill_vars(my_line, file_idx, line_count, print_errs):
@@ -275,7 +275,11 @@ def replace_mapping(x, my_f, my_l):
             print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
             mt.npo(my_f, my_l)
             continue
-        my_matches.append(to_match[q].replace('t', ''))
+        to_append = to_match[q].replace('t', '')
+        if to_append in my_matches:
+            print("WARNING duplicate add-to line {} file {}".format(my_l, my_f))
+        else:
+            my_matches.append(to_match[q].replace('t', ''))
     return "==t{}{}".format("!" if add_negation else "", ",".join(my_matches))
 
 def search_for(x):
