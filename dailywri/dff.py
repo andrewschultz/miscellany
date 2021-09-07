@@ -78,6 +78,8 @@ ask_to_copy_back = False
 
 show_stat_numbers = False
 
+last_file_first = True
+
 STATS_EXT_OFF = 0
 STATS_EXT_ALPHABETICALLY = 1
 STATS_EXT_BY_SECTION_SIZE = 2
@@ -374,6 +376,7 @@ def is_in_procs(my_file):
 def is_likely_name(my_line, my_sec):
     if ' ' in my_line or '=' in my_line: return False
     if '/' in my_line and '(' not in my_line: return False
+    if ':' in my_line: return False
     if my_sec in no_names: return False
     return True
 
@@ -807,6 +810,8 @@ while cmd_count < len(sys.argv):
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
         local_unblock_move.update(arg[3:].split(","))
+    elif arg == 'c':
+        sys.exit("While C is the natural command-line parameter for copy, we want to avoid accidents, so you need to type co.")
     elif arg == 'co':
         test_no_copy = False
     elif arg == 'te':
@@ -817,6 +822,10 @@ while cmd_count < len(sys.argv):
         one_word_names = False
     elif arg == '1w' or arg == 'w1':
         one_word_names = True
+    elif arg in ( 'l1', '1l' ):
+        last_file_first = True
+    elif arg in ( 'f1', '1f' ):
+        last_file_first = False
     elif arg == 'vv':
         verbose = 2
     elif arg == 'v':
@@ -999,6 +1008,10 @@ if read_most_recent:
     sys.exit()
 
 list_count = 0
+
+if last_file_first:
+    file_list.reverse()
+
 for fi in file_list:
     list_count += 1
     fbn = os.path.basename(fi)
