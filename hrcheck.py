@@ -206,15 +206,14 @@ def read_hourly_check(a):
                 line = re.sub("^.*?\|", "", line)
                 try:
                     expiry_date = pendulum.from_format(l2, 'YYYY-MM-DD', tz = pendulum.now().timezone_name).add(days = 1)
-                    print("Expiry date from file", expiry_date)
-                    #expiry_date = pendulum.now().add(hours=30)
                 except:
                     print("Invalid expiry date {} after X: in {} at line {}. ".format(l2, a, line_count))
                     expiry_date = pendulum.now(pendulum.now()).add(days = 1)
                 if pendulum.now() >= expiry_date:
                     print("WARNING: daily task at line {} of {} has expired as of {}.".format(line_count, a, l2))
-                    mt.add_post(a, line_count, priority = 8)
-                    found_expiry = True
+                    if only_check_expired:
+                        mt.add_post(a, line_count, priority = 8)
+                        found_expiry = True
             if line.count("|") > 1:
                 print("WARNING: too many OR pipes (replace with slash?) {} line {}: {}".format(ab, line_count, line.strip()))
                 mt.add_post(a, line_count)
@@ -526,10 +525,7 @@ for f in hr_files:
     read_hourly_check(f)
 
 if only_check_expired:
-    if found_expiry:
-        mt.post_open()
-    else:
-        print("No expired dates found.")
+    mt.post_open(blank_message = 'No expired dates found in hrcheck.txt.')
     sys.exit()
 
 if len(my_bookmarks):
