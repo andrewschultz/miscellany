@@ -1185,6 +1185,20 @@ def recursive_header_list(my_file, my_current_list = []):
         my_current_list = recursive_header_list(x, my_current_list)
     return my_current_list
 
+def open_table(this_proj = dir2proj(), table_name = '', bail = True):
+    if not this_proj:
+        print("Tried to open table {} in {} but failed.".format(table_name, this_proj))
+        return
+    full_table = "table of " + table_name
+    this_proj = long_name(this_proj)
+    for my_file in i7f[this_proj]:
+        with open(my_file) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if line.startswith(full_table) and "\t" not in line:
+                    mt.npo(my_file, my_line = line_count, bail = bail)
+                    return
+    print("Unable to find {} in any {} files.".format(full_table, this_proj))
+
 #put unit tests for new functions here, then run i7.py
 #move them where needed for future reference
 
