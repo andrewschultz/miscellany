@@ -238,7 +238,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     if '[if' in line or '[unless' in line or '[one of]' in line:
         print(cur_pot+1, "Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
         return True
-    if '[' in line and ']' in line and not line.startswith('#') and not ignore_next_bracket:
+    if '[' in line and ']' in line and not line.startswith('#') and not ignore_next_bracket and not line.lower().startswith("[note"):
         lmod = re.sub("^[^\[]*\[", "", line.strip())
         lmod = re.sub("\].*", "", lmod)
         lmod = "{:d} {:s}".format(line_count, lmod)
@@ -278,6 +278,7 @@ def replace_mapping(x, my_f, my_l):
         to_append = to_match[q].replace('t', '')
         if to_append in my_matches:
             print("WARNING duplicate add-to line {} file {}".format(my_l, my_f))
+            mt.add_post(my_f, my_l, priority=8)
         else:
             my_matches.append(to_match[q].replace('t', ''))
     return "==t{}{}".format("!" if add_negation else "", ",".join(my_matches))
@@ -293,7 +294,7 @@ def search_for(x):
                     got_count += 1
                     print(got_count, a2, line_count, line.strip())
     if not got_count: print("Found nothing for", x)
-    exit()
+    sys.exit()
 
 def post_copy(file_array, in_file): #todo: move this to postproc function
     if copy_over_post:
@@ -318,7 +319,7 @@ def examples():
     print("#-- is a comment only for the branch file, with a few flags:")
     print("  #--stable means the main file should be kept stable.")
     print("  #--strict means strict section referencing (no magic numbers)")
-    exit()
+    sys.exit()
 
 def usage():
     print("-er = edit branch file (default = for directory you are in)")
@@ -331,7 +332,7 @@ def usage():
     print("-np = no copy over post, -p = copy over post (default)")
     print("-x = list examples")
     print("shorthand or longterm project names accepted")
-    exit()
+    sys.exit()
 
 def all_false(a):
     for x in a:
@@ -432,6 +433,7 @@ def get_file(fname):
     track_balance_undos = False
     ignore_extra_undos = False
     temp_diverge_warned = False
+    ignore_next_balance = False
     fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -441,6 +443,8 @@ def get_file(fname):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
+            if line.startswith("##nobalance"):
+                ignore_next_balance = True
             if line.startswith("##balance undo"):
                 if balance_undos:
                     print("WARNING {} line {}: another balance-undo block is already operational.".format(fb, line_count))
@@ -484,6 +488,9 @@ def get_file(fname):
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "", line.strip())
                 very_temp_array = abbrevs_to_ints(vta_before[3:].split(","))
+                if "\\n" in line:
+                    print("WARNING {} line {} needs \\\\ and not \\n for line-changes for temporary one-line edit.".format(fname, line_count))
+                    mt.add_post(fname, line_count)
                 u = vta_after.replace("\\\\", "\n") + "\n"
                 for q in very_temp_array:
                     file_list[q].write(u)
@@ -650,6 +657,8 @@ def get_file(fname):
                                 print("Uh oh, too many undos at file {} line {} in block starting at line {}".format(fname, line_count, balance_start))
                                 mt.add_postopen(fname, line_count)
                                 balance_error_yet = True
+                    elif ignore_next_balance:
+                        ignore_next_balance = False
                     else:
                         balance_trace.append(line[1:].strip())
                         if track_balance_undos:
@@ -722,7 +731,7 @@ def get_file(fname):
                         if x.isdigit(): actives[int(x)] = not towhich
                     except:
                         print("uh oh went out of array bounds trying to load file", x, "at line", line_count, "with only", len(actives) - 1, "as max")
-                        exit()
+                        sys.exit()
                 continue
             if line.startswith("==c-"):
                 old_actives = list(actives)
@@ -781,7 +790,7 @@ def get_file(fname):
     for ct in range(0, len(file_array)):
         file_list[ct].close()
     if len(untested_commands):
-        print("POTENTIALLY UNTESTED COMMANDS for {}: (remove with ###skip test checking (optional explanation) below the command, or ALSO_IGNORE:x or x*)".format(fname))
+        print("POTENTIALLY UNTESTED COMMANDS for {}: (remove with ###skip test checking (optional explanation) below the command, or ALSO_IGNORE:x or x* or IGNOREGLOBAL in rbr.txt)".format(fname))
         cmd_count = 0
         total_count = 0
         for u in sorted(untested_commands, key=untested_commands.get):
@@ -969,12 +978,12 @@ while count < len(sys.argv):
     arg = mt.nohy(sys.argv[count].lower())
     if arg == 'c':
         i7.open_source()
-        exit()
+        sys.exit()
     elif arg == 'e':
         print("Editing the rbr.txt project configuration file.")
         print("If you meant to edit the main rbr file, you can use -er. But it may be easier to type rbr<TAB>.")
         os.system("rbr.txt")
-        exit()
+        sys.exit()
     elif arg[:2] == 'e:':
         edit_individual_files = True
     elif arg == 'er': edit_main_branch = True
@@ -1010,7 +1019,7 @@ while count < len(sys.argv):
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
         usage()
-        exit()
+        sys.exit()
     count += 1
 
 if strict_name_force_on and strict_name_force_off:
@@ -1045,7 +1054,7 @@ if in_file:
         get_file(in_file)
         internal_postproc_stuff()
         postopen_stub()
-    exit()
+    sys.exit()
 
 if not exe_proj:
     myd = os.getcwd()
@@ -1077,7 +1086,7 @@ if verify_nudges:
                     nudge_overall += 1
                     nudge_this += 1
                     print(nudge_overall, nudge_this, q1, line_count, "mis-assigned nudge-check:", line.strip())
-    exit()
+    sys.exit()
 
 for pa in poss_abbrev:
     proj2 = i7.i7xr[exe_proj] if exe_proj in i7.i7xr.keys() else exe_proj
@@ -1089,7 +1098,7 @@ for pa in poss_abbrev:
 
 if edit_individual_files:
     for mf in my_file_list: os.system(mf)
-    exit()
+    sys.exit()
 
 if not len(my_file_list):
     my_file_list = list(branch_list[exe_proj])
