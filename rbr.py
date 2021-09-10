@@ -1067,6 +1067,13 @@ if not exe_proj:
         print("Going with default", def_proj)
         exe_proj = def_proj
 
+old_dir = os.getcwd()
+new_dir = i7.proj2dir(exe_proj)
+os.chdir(new_dir)
+
+if os.path.normpath(old_dir) != os.path.normpath(new_dir):
+    print("We changed PWD from {} to {}.".format(old_dir, new_dir))
+
 if verify_nudges:
     q = glob.glob("reg-*.txt")
     nudge_overall = 0
@@ -1114,12 +1121,12 @@ if not len(my_file_list):
         else:
             sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
-        print("No valid files specified on comand line. Going with default", ', '.join(branch_list[exe_proj]))
+        print("No valid files specified on command line. Going with default", ', '.join(branch_list[exe_proj]))
 
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
     if os.path.exists(x): my_file_list_valid.append(x)
     else:
-        print("Ignoring bad branch file", x)
+        print("Ignoring bad/nonexistent branch file", x)
 
 if len(my_file_list_valid) == 0:
     sys.exit("Uh oh, no valid files left after initial check. Bailing.")
