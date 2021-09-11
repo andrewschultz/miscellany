@@ -45,7 +45,6 @@ my_globs = []
 dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 dg_preview = "c:/writing/temp/dgrab-preview.txt"
-dg_backup_log = "c:/writing/temp/dgrab-backup-log.txt"
 flat_temp = os.path.basename(dg_temp)
 
 file_list = defaultdict(list)
@@ -78,6 +77,7 @@ latest_file_only = False
 preview_moved_text = False
 preview_any_yet = False
 launch_backup_log = True
+section_dump_yet = False
 
 dir_search_flag = daily.TOPROC
 
@@ -429,6 +429,7 @@ def file_len(fname):
     return i
 
 def send_mapping(sect_name, file_name, change_files = False):
+    global section_dump_yet
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_mtime
@@ -507,6 +508,11 @@ def send_mapping(sect_name, file_name, change_files = False):
         sys.exit()
     if open_to_after:
         mt.add_post_open(to_file, file_len(to_file))
+    if not section_dump_yet:
+        g = open(dg_backup_log, "w")
+        g.write("BACKUP LOG (disable with -bln)\n\nResults of dump for section {} on {}:\n\n".format(my_sect, my_date))
+        g.close()
+        section_dump_yet = True
     g = open(dg_backup_log, "a")
     g.write("Results of {} section dump from {} to {}:\n".format(sect_name, file_name, to_file))
     g.write(sect_text + "\n")
@@ -736,9 +742,9 @@ if max_process == -1: print("Running test to cull all eligible files.")
 
 print("REMINDER: -di means to do diff. -ndi means not to. The default is not to do differences. You can break during differences after seeing stuff is added.")
 
-g = open(dg_backup_log, "w")
-g.write("BACKUP LOG (disable with -bln)\n\nResults of dump for section {} on {}:\n\n".format(my_sect, pendulum.now().format("YYYY/MM/DD HH:mm:ss")))
-g.close()
+my_date = pendulum.now().format("YYYY/MM/DD HH:mm:ss")
+my_date_for_file = pendulum.now().format("YYYY-MM-DD-HH-mm-ss")
+dg_backup_log = "c:/writing/temp/dgrab-backup-log-{}-{}.txt".format(my_sect, my_date_for_file)
 
 for q in my_file_list:
     qbase = os.path.basename(q)
@@ -782,7 +788,10 @@ if len(change_list):
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
 if launch_backup_log:
-    mt.file_in_browser(dg_backup_log)
+    if section_dump_yet:
+        mt.file_in_browser(dg_backup_log)
+    else:
+        print("No backup log file written, since nothing was extracted from daily files.")
 
 if open_to_after:
     mt.postopen_files()
