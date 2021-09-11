@@ -660,7 +660,9 @@ while first_loop or user_input:
                 for z in glob.glob(os.path.join(x, y)):
                     if not mt.is_daily(z):
                         continue
-                    frequencies[z] = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
+                    temp = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
+                    if temp != -1:
+                        frequencies[z] = temp
 
         if most_recent_daily:
             for x in proc_dirs:
@@ -673,7 +675,9 @@ while first_loop or user_input:
                 last_daily = all_files[-1]
                 if os.path.exists(os.path.join(x, os.path.basename(last_daily))):
                     continue
-                frequencies[last_daily] = find_text_in_file(match_string_raw, last_daily, header_needed = daily_sections)
+                temp = find_text_in_file(match_string_raw, last_daily, header_needed = daily_sections)
+                if temp != -1:
+                    frequencies[last_daily] = temp
 
     if hide_results:
        pass
@@ -705,7 +709,7 @@ while first_loop or user_input:
                     print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        print("    " + ", ".join(frequencies))
+        print("    " + ", ".join([x for x in frequencies if not x.startswith('20')]))
 
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not mt.is_daily(x)]
     if len(temp_array):
