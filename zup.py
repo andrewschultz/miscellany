@@ -44,6 +44,7 @@ class zip_project:
 zups = defaultdict(zip_project)
 
 zip_dir = "c:/games/inform/zip"
+extract_dir = "c:/games/inform/zip/ext"
 dropbox_bin_dir = "c:/users/andrew/dropbox/bins"
 zup_cfg = "c:/writing/scripts/zup.txt"
 
@@ -58,6 +59,8 @@ open_config_on_error = True
 auto_bail_on_cfg_error = True
 verbose = False
 copy_dropbox_after = False
+extract_after = False
+extract_only = False
 
 def usage(header="Usage for zup.py"):
     print(header)
@@ -69,8 +72,22 @@ def usage(header="Usage for zup.py"):
     print("cd = copies to dropbox after")
     print("cl/clo = copy link/copy link only")
     print("v = verbose")
+    print("x = extract after, xo/ox = extract only")
     print("specify project(s) to zip on command line")
     exit()
+
+def open_zips():
+    if len(project_array) == 0:
+        sys.exit("No zips specified to open.")
+    shutil.rmtree(extract_dir)
+    os.mkdir(extract_dir)
+    for p in project_array:
+        print("Opening", zups[p].out_name)
+        to_open = os.path.join(zip_dir, zups[p].out_name)
+        with zipfile.ZipFile(to_open, 'r') as zip_ref:
+            zip_ref.extractall(extract_dir)
+    os.startfile(extract_dir)
+    sys.exit()
 
 def dict_reverse(my_dict, my_val, bail = True):
     temp_key = ''
@@ -410,6 +427,10 @@ while cmd_count < len(sys.argv):
         open_config_on_error = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
+    elif arg == 'x':
+        extract_after = True
+    elif arg in ( 'xo', 'ox' ):
+        extract_only = True
     elif arg == '?':
         usage()
     else:
@@ -450,6 +471,8 @@ out_temp = os.path.join(zip_dir, "temp.zip")
 
 print("Failed creations will go to temp.zip.")
 
+if extract_only:
+    open_zips()
 for p in project_array:
     if p not in zups:
         print("WARNING potentially valid project {} not in zup.txt.".format(p))
@@ -499,6 +522,9 @@ for p in project_array:
         target = os.path.join(dropbox_bin_dir, zups[p].out_name)
         print("Copying {} to dropbox target {}".format(zups[p].out_name, target))
         shutil.copy(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name))
+
+if extract_after:
+    open_zips()
 
 if not copy_dropbox_after:
     print("-cd copies to dropbox after.")
