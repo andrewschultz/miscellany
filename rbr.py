@@ -65,6 +65,7 @@ force_all_regs = False
 strict_name_force_on = False
 strict_name_force_off = False
 wrong_check = False
+show_unchanged = False
 
 max_flag_brackets = 0
 cur_flag_brackets = 0
@@ -798,12 +799,13 @@ def get_file(fname):
             cmd_count += 1
             total_count += len(untested_commands[u])
             print("{} ({}): {} at line{} {}.".format(cmd_count, total_count, u, mt.plur(len(untested_commands[u])), ", ".join([str(x) for x in untested_commands[u]])))
-    else:
-        print("No potentially untested commands.")
+    elif not quiet:
+        print("No potentially untested commands in {}.".format(fname))
     if dupe_file_name:
         dupe_file.close()
         file_array.append(dupe_file_name)
-    if warns > 0: print(warns, "potential bad commands.")
+    if warns > 0 and not quiet:
+        print(warns, "potential bad commands in {}.".format(fname))
     if monty_process:
         print(file_array)
         for x in file_array:
@@ -852,7 +854,9 @@ def show_csv(my_dict, my_msg):
     return ret_val
 
 def internal_postproc_stuff():
-    total_csv = show_csv(new_files, "new file") + show_csv(changed_files, "changed file") + show_csv(unchanged_files, "unchanged file")
+    total_csv = show_csv(new_files, "new file") + show_csv(changed_files, "changed file")
+    if show_unchanged:
+        total_csv += show_csv(unchanged_files, "unchanged file")
     if total_csv or force_postproc:
         run_postproc = defaultdict(bool)
         if not total_csv: print("Forcing postproc even though nothing changed.")
@@ -994,6 +998,8 @@ while count < len(sys.argv):
     elif arg == 'nf' or arg == 'fn': flag_all_brackets = False
     elif arg == 'm': monty_process = True
     elif arg == 'q': quiet = True
+    elif arg == 'su': show_unchanged = True
+    elif arg in ( 'nsu', 'sun') : show_unchanged = False
     elif arg == 'nq' or arg == 'qn': quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
