@@ -296,7 +296,7 @@ def search_for(x):
     if not got_count: print("Found nothing for", x)
     sys.exit()
 
-def post_copy(file_array, in_file): #todo: move this to postproc function
+def post_copy(file_array, in_file):
     if copy_over_post:
         if force_all_regs:
             print("Copying all files over to PRT directory.")
@@ -307,6 +307,7 @@ def post_copy(file_array, in_file): #todo: move this to postproc function
                 print(q, "=>", ', '.join(changed_files[q]))
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
+            changed_files.clear()
         elif len(my_file_list_valid) == 1:
             print("No files copied over to PRT directory. Try -fp or -pf to force copying of all files encompassed by", in_file)
 
