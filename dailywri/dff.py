@@ -144,7 +144,7 @@ def usage(my_arg = ''):
     print("  adding Q to rd/ld allows you to say YES to changes.")
     print()
     print("You can also list files you wish to look up.")
-    exit()
+    sys.exit()
 
 def blue_print(my_str):
     print(colorama.Fore.CYAN + my_str + colorama.Style.RESET_ALL)
@@ -527,6 +527,23 @@ def lock_it(proc_file):
         f.write(m)
     f.close()
 
+def process_blank_details(temp_out_file):
+    print(" NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)))
+    print("NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)))
+
+def stats_of(text_file, count_blanks = True, count_headings = True):
+    f = open(text_file, "r")
+    my_lines = f.readlines()
+    xtra_bytes = len(my_lines) - 1
+    f.close()
+    if not count_headings:
+        my_lines = [x for x in my_lines if not x.startswith("\\")]
+    if not count_blanks:
+        my_lines = [x for x in my_lines if x.strip()]
+    total_bytes = sum([len(x) for x in my_lines]) + xtra_bytes
+    return_string = "{} bytes, {} lines, {:.2f} average.".format(total_bytes, len(my_lines), total_bytes / len(my_lines))
+    return return_string
+
 def sort_raw(raw_long):
     raw_long = os.path.normpath(raw_long)
     global test_no_copy
@@ -550,11 +567,8 @@ def sort_raw(raw_long):
     if protect_empties:
         for x in empty_to_protect:
             sections[x] = ''
-    lines_raw = 0
-    size_of = os.stat(raw_long).st_size
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
-            lines_raw += 1
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if in_header:
@@ -656,8 +670,6 @@ def sort_raw(raw_long):
                     from_blank += 1
             sections['sh'] += line
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
-    if show_stat_numbers:
-        print("    BEFORE: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_raw, size_of / lines_raw))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
@@ -703,20 +715,24 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
-    lines_post = sum(1 for _ in open(temp_out_file))
-    size_of = os.stat(temp_out_file).st_size
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
-    if os.path.exists(raw_long) and cmp(raw_long, temp_out_file):
+    no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
+    if no_changes:
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
+    if show_stat_numbers:
+        print("    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)))
+        if not no_changes:
+            print("     AFTER: {}".format(stats_of(temp_out_file)))
+        process_blank_details(temp_out_file)
+    if no_changes:
         if bail_after_unchanged:
             if not verbose: print("Bailing after unchanged.")
-            exit()
+            sys.exit()
         return 0
     else:
         if show_stat_numbers:
-            print("     AFTER: {} bytes, {} lines, {:.2f} average.".format(size_of, lines_post, size_of / lines_post))
             sectdif = defaultdict(tuple)
             sectnew = defaultdict(tuple)
             raw_nums = defaultdict(tuple)
