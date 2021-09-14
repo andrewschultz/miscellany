@@ -268,14 +268,20 @@ def mister(a, my_file, do_standard):
                 retest = False
                 if "\\#mistake " in line or line.startswith("#mistake "):
                     last_mistake = line
-                    test_note = re.sub(".*#mistake test for ", "", line.strip().lower())
+                    test_note = re.sub(".*#mistake test (for )?", "", line.strip().lower())
                     test_note = re.sub("\\\\.*", "", test_note)
                     if test_note not in comment_found.keys():
                         print('Superfluous(?) mistake test', test_note, 'at line', line_count, 'of', short_fi)
+                        print("!", line.strip())
                         if '/' in test_note:
                             slashes.append(test_note)
                         superfluous += 1
+                        for x in comment_found.keys():
+                            if x.startswith(test_note + "/"):
+                                print("    NOTE: this can be fixed by adding a slash after {}. There will probably be another superfluous false-flag that throws something out.".format(test_note))
                     else:
+                        if 'for ' not in line:
+                            print("Stupid warning for line {}: MISTAKE TEST FOR is the super-strict format for mistake test comments".format(line_count))
                         if comment_found[test_note]:
                             if comment_file[test_note] == fs:
                                 print('Duplicate mistake test for', test_note, 'at line', line_count, fs, 'original', comment_line[test_note], 'Delta=', line_count - comment_line[test_note], '(reroute to mistake retest?)')
@@ -485,7 +491,7 @@ if len(added.keys()) == 0:
         print("Going with default", x)
         added[x] = True
     else:
-        print("No mistake file in default directory.")
+        print("No default mistake file in current directory. You may wish to specify a project.")
 
 if edit_branches:
     for a in added.keys():
@@ -495,7 +501,8 @@ if edit_branches:
     if not run_check: exit()
 
 for e in sorted(added.keys()):
-    mist_file = "c:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/{:s} mistakes.i7x".format(e)
+    mist_file = i7.hdr(e, 'mi')
+    print(mist_file)
     if e in smallfiles.keys():
         print(e, "smallfile check:", ', '.join(smallfiles[e]))
         mister(e, mist_file, False)
