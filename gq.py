@@ -709,7 +709,7 @@ while first_loop or user_input:
                     print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        print("    " + ", ".join([x for x in frequencies if not x.startswith('20')]))
+        print("    " + ", ".join([x for x in frequencies if not re.search("[0-9]{8}", x)]))
 
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not mt.is_daily(x)]
     if len(temp_array):

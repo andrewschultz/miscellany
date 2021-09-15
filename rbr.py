@@ -1078,7 +1078,7 @@ old_dir = os.getcwd()
 new_dir = i7.proj2dir(exe_proj)
 os.chdir(new_dir)
 
-if os.path.normpath(old_dir) != os.path.normpath(new_dir):
+if os.path.normpath(old_dir).lower() != os.path.normpath(new_dir).lower():
     print("We changed PWD from {} to {}.".format(old_dir, new_dir))
 
 if verify_nudges:
