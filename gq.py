@@ -47,6 +47,11 @@ proc_dirs = [ "c:/writing/daily/to-proc" ]
 proc_globs = [ "202*.txt" ]
 most_recent_daily = True
 
+SEARCH_TEST_NONE = 0
+SEARCH_TEST_RBR = 1
+SEARCH_TEST_REG = 2
+search_test_scripts = SEARCH_TEST_NONE
+
 # constants
 
 hdr_equals = '=' * 25
@@ -128,6 +133,7 @@ def usage():
     print("qi/qo/qa = quotes inside/outside/all")
     print("con/coff = colors on/off")
     print("ml/nml/mln = whether or not to modify line where search results are found")
+    print("tn/tb/t/ta = toggle testfiles to search. Default is off. ta=all, t=reg, tb=rbr, tn=none")
     print("rc = run suggested commands after")
     sys.exit()
 
@@ -157,6 +163,13 @@ def fast_string_of(my_regex):
 def match_string_of(my_regex):
     my_regex = my_regex.replace('/', '.*?')
     return r'\b{}\b'.format(my_regex)
+
+def ignore_in_log(file_string):
+    if file_string.startswith('reg-') or file_string.startswith('rbr-'):
+        return True
+    if re.search("[0-9]{8}", file_string):
+        return True
+    return False
 
 def update_history_file(my_file, my_query, create_new_history = False):
     if create_new_history:
@@ -287,7 +300,7 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     continue
                 elif current_daily_section not in header_needed:
                     continue
-            if chr(65533) in line:
+            if chr(65533) in line and not ignore_in_log(pbase):
                 print("WARNING line {} of {} had a character or characters unmappable in UTF-8, likely ellipses.".format(line_count, pbase))
                 if post_open_warnings:
                     mt.add_postopen(projfile, line_count, priority = 12) # this is something we want to fix ASAP, so any post_open_matches can wait a minute.
@@ -481,6 +494,14 @@ def read_args(my_arg_array, in_loop = False):
             include_notes = True
         elif arg == 'nn':
             include_notes = False
+        elif arg == 't':
+            search_test_scripts = SEARCH_TEST_REG
+        elif arg == 'ta':
+            search_test_scripts = SEARCH_TEST_REG | SEARCH_TEST_RBR
+        elif arg == 'tb':
+            search_test_scripts = SEARCH_TEST_RBR
+        elif arg == 'tn':
+            search_test_scripts = SEARCH_TEST_NONE
         elif arg == 'fm':
             fast_match = True
         elif arg in ( 'nfm', 'fmn' ):
@@ -654,6 +675,15 @@ while first_loop or user_input:
         elif os.path.exists(notes_file):
                 print("Ignoring notes file {}. Toggle with yn/ny.".format(notes_file))
 
+        if search_test_scripts != SEARCH_TEST_NONE:
+            scripts_to_find = []
+            if search_test_scripts & SEARCH_TEST_RBR:
+                scripts_to_find.extend(glob.glob(os.path.join(i7.proj2dir(my_proj), "rbr-*.txt")))
+            if search_test_scripts & SEARCH_TEST_REG:
+                scripts_to_find.extend(glob.glob(os.path.join(i7.proj2dir(my_proj), "reg-*.txt")))
+            for x in scripts_to_find:
+                frequencies[os.path.basename(x)] = find_text_in_file(match_string_raw, x)
+
     if search_to_proc:
         for x in proc_dirs:
             for y in proc_globs:
@@ -662,7 +692,7 @@ while first_loop or user_input:
                         continue
                     temp = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
                     if temp != -1:
-                        frequencies[z] = temp
+                        frequencies[os.path.basename(z)] = temp
 
         if most_recent_daily:
             for x in proc_dirs:
@@ -687,7 +717,7 @@ while first_loop or user_input:
             if frequencies[x] < 1: continue
             print("    {}---- {} match{} in {}{}".format(colorama.Back.GREEN + colorama.Fore.BLACK, frequencies[x], 'es' if frequencies[x] > 1 else '', i7.inform_short_name(x), colorama.Back.BLACK + colorama.Style.RESET_ALL))
 
-        temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0 and not mt.is_daily(x)]
+        temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == 0 and not ignore_in_log(x)]
         if len(temp_array):
             my_join = ', '.join(temp_array).strip() # currently this creates extra red as there will probably be more than one line
             print("{}No matches for: {}".format(colorama.Back.RED + colorama.Fore.BLACK, my_join) + colorama.Back.BLACK + colorama.Style.RESET_ALL)
@@ -709,9 +739,9 @@ while first_loop or user_input:
                     print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
-        print("    " + ", ".join([x for x in frequencies if not re.search("[0-9]{8}", x)]))
+        print("    " + ", ".join([x for x in frequencies if not ignore_in_log(x)]))
 
-    temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not mt.is_daily(x)]
+    temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not ignore_in_log(x)]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
 
