@@ -66,7 +66,7 @@ header_color = -1
 # options only on cmd line
 
 user_input = False
-view_history = False
+view_history = view_history_only = False
 post_open_matches = False
 post_open_warnings = True
 hide_results = False
@@ -122,7 +122,7 @@ def usage():
     print("You may also specify a project or combinations e.g. sts and roi do the same thing by default. r is a shortcut for roi")
     print("o = only this project, a = all similar projects")
     print()
-    print("vh = view history file of a project, what you have searched")
+    print("vh = view history file of a project, what you have searched. vho = view history only")
     print("mf/mo=# sets maximum file/overall matches")
     print("po postopens matches, npo/opn kills it")
     print("v/q = verbose/quiet")
@@ -449,6 +449,8 @@ def read_args(my_arg_array, in_loop = False):
             hide_results = True
         elif arg == 'vh':
             view_history = True
+        elif arg == 'vho':
+            view_history = view_history_only = True
         elif arg == 'tp':
             search_to_proc = True
         elif mt.alpha_match(arg, 'npt'):
@@ -570,8 +572,11 @@ read_cfg()
 error_check = read_args(my_arg_array = sys.argv[1:])
 
 if not len(match_string_raw) and not user_input:
-    print("I didn't register any text to search for. Perhaps some text is an option in the code. If so, you can start a parameter with backticks to make sure it is seen as text to search.")
-    sys.exit()
+    if view_history:
+        view_history_only = True
+    else:
+        print("I didn't register any text to search for. Perhaps some text is an option in the code. If so, you can start a parameter with backticks to make sure it is seen as text to search.")
+        sys.exit()
 
 if not my_proj:
     if not default_from_cwd:
@@ -605,10 +610,6 @@ while first_loop or user_input:
         proj_umbrella = [my_proj]
 
     history_file = hist_file_of(my_proj)
-
-    if view_history:
-        print(history_file)
-        mt.npo(history_file)
 
     if not len(match_string_raw):
         if user_input:
@@ -749,6 +750,9 @@ while first_loop or user_input:
 
     if write_history:
         update_history_file(history_file, ' '.join(sorted(match_string_raw)), create_new_history)
+
+    if view_history:
+        mt.npo(history_file, bail=view_history_only)
 
     mt.post_open(bail_after = False)
     match_string_raw = []
