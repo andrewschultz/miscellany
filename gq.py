@@ -185,7 +185,7 @@ def update_history_file(my_file, my_query, create_new_history = False):
         sys.exit()
     ary = [x.strip() for x in f.readlines()]
     f.close()
-    if my_query == ary[0]:
+    if len(ary) > 0 and my_query == ary[0]:
         if not quiet_procedural_notes:
             print("Not rewriting since {} is already the first element.".format(my_query))
         return
@@ -451,6 +451,8 @@ def read_args(my_arg_array, in_loop = False):
             view_history = True
         elif arg == 'tp':
             search_to_proc = True
+        elif mt.alpha_match(arg, 'npt'):
+            search_to_proc = False
         elif arg == 'v':
             verbose = True
         elif arg == 'b':
