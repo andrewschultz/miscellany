@@ -1192,20 +1192,24 @@ def open_table(this_proj = dir2proj(), table_name = '', special_text = '', speci
     full_table = "table of " + table_name
     this_proj = long_name(this_proj)
     table_start_line = table_end_line = table_detail_line = 0
+    got_one = False
     for my_file in i7f[this_proj]:
+        fb = os.path.basename(my_file)
         in_my_table = False
+        table_start_line = 0
         with open(my_file) as file:
             for (line_count, line) in enumerate (file, 1):
-                if line.startswith(full_table) and "\t" not in line:
+                if line.startswith(full_table):
+                    if "\t" in line:
+                        print("Table name found with tabs at {} line {}.".format(fb, line_count))
+                        continue
                     table_start_line = line_count
                     in_my_table = True
-                    continue
-                if not line.strip():
+                elif not line.strip():
                     if in_my_table:
                         table_end_line = line_count
                     in_my_table = False
-                    continue
-                if in_my_table and special_text:
+                elif in_my_table and special_text:
                     if special_column == -1:
                         if special_text in line.lower():
                             table_detail_line = line_count
@@ -1215,14 +1219,20 @@ def open_table(this_proj = dir2proj(), table_name = '', special_text = '', speci
                         if special_text in ary[special_column].lower():
                             table_detail_line = line_count
                             break
-        if table_detail_line > 0:
-            mt.npo(my_file, table_detail_line)
         if table_start_line > 0 and table_end_line == 0:
             table_end_line = line_count
-        if special_text and table_start_line > 0 and table_end_line > 0:
+        if table_detail_line > 0:
+            mt.npo(my_file, table_detail_line)
+            got_one = True
+        elif special_text and table_start_line > 0 and table_end_line > 0:
             print("Opening the middle of the table since I couldn't find", special_text)
             mt.npo(my_file, (table_start_line + table_end_line) / 2)
-    print("Unable to find {} in any {} files.".format(full_table, this_proj))
+            got_one = True
+        elif table_start_line > 0:
+            mt.npo(my_file, table_start_line)
+            got_one = True
+    if not got_one:
+        print("Unable to find {} in any {} files.".format(full_table, this_proj))
 
 #put unit tests for new functions here, then run i7.py
 #move them where needed for future reference
