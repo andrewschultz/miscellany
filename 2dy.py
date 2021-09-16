@@ -167,12 +167,12 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // goal_per_file).format("YYYY-MM-DD HH:mm:ss")
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
-    time_dir_string = 'behind' if current_size < current_goal else 'ahead'
+    time_dir_string = 'behind' if current_size < current_goal else 'ahead of'
     if current_size > goal_per_file:
         mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit your weekly goal!' + colorama.Style.RESET_ALL)
     else:
         print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
-        print("That equates to {} second(s) {} of the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
+        print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', abs(projection - goal_per_file), 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
     if current_size < goal_per_file:
