@@ -521,7 +521,7 @@ def get_file(fname):
                     untested_ignore = list(untested_default)
                 else:
                     if "\t" in x:
-                        print("WARNING split with commas and not tabs line {}.".format(line_count))
+                        print("WARNING you need to split with commas and not tabs line {}.".format(line_count))
                     for x in l.split(","):
                         if x in untested_ignore:
                             print("Warning ALSO-IGNORE re-adds {} at line {}.".format(x, line_count))
@@ -530,15 +530,33 @@ def get_file(fname):
                 continue
             if line.startswith("~\t"):
                 eq_array = line.strip().lower().split("\t")
-                if len(eq_array) != 3: sys.exit("Bad equivalence array at line {} of file {}: needs exactly two tabs.".format(line_count, fname))
+                if len(eq_array) != 3:
+                    print("Bad equivalence array at line {} of file {}: needs exactly two tabs.".format(line_count, fb))
+                    mt.npo(fname, line_count)
                 ary2 = eq_array[1].split(",")
-                final_digit = int(eq_array[2][1:])
-                if final_digit >= len(actives):
-                    print("WARNING ~ maps to nonexistent file at line {}. {} should not be more than {}.".format(line_count, final_digit, len(actives)-1))
+                if eq_array[2][1:].isdigit(): # t0, t1, t2
+                    final_digit = int(eq_array[2][1:])
+                    if final_digit >= len(actives):
+                        print("FATAL ERROR: ~ maps to nonexistent file at line {} of {}. {} should not be more than {}.".format(line_count, fb, final_digit, len(actives)-1))
+                        mt.npo(fname, line_count)
+                    this_abbrev = eq_array[2]
+                else: # "verbs" when one file is, say, reg-roi-others-verbs.txt
+                    candidate = -1
+                    temp_array = [os.path.basename(x) for x in file_array]
+                    for t in range(0, len(temp_array)):
+                        if eq_array[2] in temp_array[t]:
+                            if candidate > -1:
+                                print("Two possible file name candidates for {} at line {}. Bailing.".format(eq_array[2], t))
+                                mt.npo(fname, line_count)
+                            candidate = t
+                    if candidate == -1:
+                        print("Found no text-to-number candidates at {} line {}'s right tab. Check that {} matches a file name.".format(fb, line_count, eq_array[2]))
+                        mt.npo(fname, line_count)
+                    this_abbrev = "t{}".format(candidate)
                 for a in ary2:
                     if a in to_match:
-                        print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fname))
-                    to_match[a] = eq_array[2]
+                        print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fb))
+                    to_match[a] = this_abbrev
                 continue
             if line.startswith("#brackets ok") or line.startswith("#ignore next bracket") or line.startswith("#ignore bracket"):
                 ignore_next_bracket = True
