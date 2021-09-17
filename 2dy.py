@@ -37,6 +37,7 @@ d = pendulum.today()
 max_days_new = 7
 max_days_back = 1000
 goal_per_file = 7000 # deliberately low but will be changed a lot
+minimum_seconds_between = 3000
 
 latest_daily = True
 write_base_stats = True
@@ -102,7 +103,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     os.chdir(my_dir)
     f = open(stats_file, "r")
-    raw_stat_lines = [x for x in f.readlines() if x.strip()]
+    raw_stat_lines = mt.filelines_no_comments(f)
     f.close()
 
     ary = raw_stat_lines[-1].split("\t")
@@ -182,7 +183,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
         bytes_per_hour_overall = goal_per_file * 3600 / full_weekly_interval
-        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f}. Bytes overall: {:.2f}. Bytes so far: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_overall, bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
+        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f}. Bytes overall: {:.2f}. Bytes so far: {:.2f} Catchup ratio: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_overall, bytes_per_hour_so_far, bytes_per_hour_to_go / bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
 
@@ -298,14 +299,24 @@ def put_stats(bail = True, print_on_over = 0, check_floor = False):
     f = open(stats_file, "a")
     ld = mt.last_daily_of()
     pn = pendulum.now()
-    out_string = "{}\t{}\t{}".format(ld, pendulum.now(), os.stat(ld).st_size)
+    if minimum_seconds_between > 0:
+        f2 = open(stats_file, "r")
+        my_stuff = mt.filelines_no_comments(f2)
+        try:
+            last_time = pendulum.parse(my_stuff[-1].split("\t")[1])
+            cur_diff = pn.diff(last_time).in_seconds()
+            if cur_diff < minimum_seconds_between:
+                sys.exit("It's been too soon since the last time I looked at the daily file size. {} seconds and minimum is {}. Use -fs to override this.".format(cur_diff, minimum_seconds_between))
+        except:
+            print("No readable data in {}, so I can't check if it's being run too soon. It probably isn't.".format(stats_file))
+    out_string = "{}\t{}\t{}".format(ld, pn, os.stat(ld).st_size)
     f.write(out_string + "\n")
     print(out_string)
     f.close()
 
     if check_floor:
         f = open(stats_file)
-        ary = f.readlines()
+        ary = mt.filelines_no_comments(f)
         f.close()
         before_last_bytes = int(ary[-2].split("\t")[2]) // 1000
         last_bytes = int(ary[-1].split("\t")[2]) // 1000
@@ -404,6 +415,7 @@ def read_2dy_cfg():
     global glob_string
     global file_header
     global color_dict
+    global minimum_seconds_between
     this_weeks_goal = 0
     temp_glob = []
     with open(my_sections_file) as file:
@@ -417,6 +429,8 @@ def read_2dy_cfg():
                 max_days_new = int(data)
             elif prefix == 'maxback':
                 min_days_new = int(data)
+            elif prefix == 'minimum_seconds_between':
+                minimum_seconds_between = int(data)
             elif prefix == 'glob':
                 glob_string = data
             elif prefix == 'file_header':
