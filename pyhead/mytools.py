@@ -315,10 +315,22 @@ def print_centralized(my_string, eliminate_control_chars = True):
         padding = (x.columns - len(length_string)) // 2
     print(' ' * padding + my_string)
 
+center = centralized = print_center = print_centralized
+
 def print_colored_centralized(my_string, color_string = colorama.Fore.GREEN, eliminate_control_chars = True):
     print_centralized(color_string + my_string + colorama.Back.BLACK + colorama.Style.RESET_ALL, eliminate_control_chars)
 
-def print_and_to_clip(my_str):
+def green_red_comp(num_to_be_greater, num_to_be_lesser, yellow_on_equals = True):
+    if num_to_be_greater > num_to_be_lesser:
+        return colorama.Fore.GREEN
+    elif yellow_on_equals and num_to_be_lesser == num_to_be_greater:
+        return colorama.Fore.YELLOW
+    else:
+        return colorama.Fore.RED
+
+green_red = green_red_comp
+
+def print_and_to_clip(my_str): # deprecated by how I can just use | CLIP but still useful if I only want 1-2 strings from the file
     print(my_str, end='')
     pyperclip.copy(my_str)
 
