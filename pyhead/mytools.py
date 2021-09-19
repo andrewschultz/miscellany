@@ -603,10 +603,15 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
             count += 1
             if count < len(file_post_list):
                 time.sleep(sleep_time)
-        if bail_after:
+    else:
+        if empty_flags & NOTE_EMPTY:
+            print(blank_message)
+        if empty_flags & BAIL_ON_EMPTY:
             sys.exit()
-    elif acknowledge_blank:
-        print("There weren't any files slated for opening/editing.")
+        else:
+            return
+    if bail_after:
+        sys.exit()
     file_post_list.clear()
 
 post_open = postopen = postopen_files
