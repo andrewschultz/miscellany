@@ -565,12 +565,20 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
-def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False):
+NOTE_EMPTY = 1
+BAIL_ON_EMPTY = 2
+
+def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, min_priority = 0, empty_flags = 0):
+    files_to_post = [x for x in file_post_list if max(file_post_list[x]) >= min_priority]
+    if sort_type == SORT_ALPHA_FORWARD:
+        files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x))
+    elif sort_type == SORT_ALPHA_BACKWARD:
+        files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x), reverse = True)
     if len(file_post_list):
         got_yet = defaultdict(bool)
-        l = len(file_post_list)
+        l = len(files_to_post)
         count = 0
-        for x in file_post_list:
+        for x in files_to_post:
             if max_opens and count == max_opens and l > max_opens:
                 print("Reached max_opens of", max_opens, "so I am cutting it off here.")
                 if show_unopened:
@@ -599,6 +607,7 @@ def postopen_files(bail_after = True, acknowledge_blank = False, max_opens = 0, 
             sys.exit()
     elif acknowledge_blank:
         print("There weren't any files slated for opening/editing.")
+    file_post_list.clear()
 
 post_open = postopen = postopen_files
 
