@@ -168,11 +168,13 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // goal_per_file).format("YYYY-MM-DD HH:mm:ss")
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
-    time_dir_string = 'behind' if current_size < current_goal else 'ahead of'
+    time_dir_string = 'behind' if current_size < current_goal else 'ahead'
     if current_size > goal_per_file:
         mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit your weekly goal!' + colorama.Style.RESET_ALL)
     else:
-        print((colorama.Fore.RED if current_size < current_goal else colorama.Fore.GREEN) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+        print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+        if time_dir_string == 'ahead':
+            time_dir_string += 'of'
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', abs(projection - goal_per_file), 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
@@ -183,7 +185,11 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
         bytes_per_hour_overall = goal_per_file * 3600 / full_weekly_interval
-        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f}. Bytes overall: {:.2f}. Bytes so far: {:.2f} Catchup ratio: {:.2f}.".format(bytes_per_hour_to_go, bytes_per_hour_overall, bytes_per_hour_so_far, bytes_per_hour_to_go / bytes_per_hour_so_far) + colorama.Style.RESET_ALL)
+        so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
+        to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
+        catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
+        catchup_inverse = 1 / catchup_ratio
+        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes overall: {:.2f}. Bytes so far: {:.2f} {:.2f}%. Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct, bytes_per_hour_overall, bytes_per_hour_so_far, so_far_pct, mt.green_red_comp(bytes_per_hour_so_far, bytes_per_hour_to_go), catchup_ratio, catchup_inverse) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
 
@@ -490,6 +496,8 @@ while cmd_count < len(sys.argv):
     elif arg[:2] in ( 'mn', 'nm' ) and arg[2:].isdigit():
         max_days_new = int(arg[2:])
         latest_daily = False
+    elif arg[:2] == 'ms' and arg[2:].isdigit():
+        minimum_seconds_between = int(arg[2:])
     elif arg == 'l': latest_daily = True
     elif arg in ( 'nl', 'ln' ): latest_daily = False
     elif arg == 'v': verbose = True
