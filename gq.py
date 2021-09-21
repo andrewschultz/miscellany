@@ -633,7 +633,7 @@ while first_loop or user_input:
         if proj not in i7.i7f:
             if os.path.exists(i7.main_src(proj)):
                 if not quiet_procedural_notes:
-                    print("No project filemap exists for {}. But there is a story file. So I am using that.".format(proj))
+                    print("No project header-file exists for {}. But there is a story file. So I am using that.".format(proj))
                 my_array = [ i7.main_src(proj) ]
             else:
                 print("WARNING", proj, "does not have a project file array associated with it. It may not be a valid inform project.")
