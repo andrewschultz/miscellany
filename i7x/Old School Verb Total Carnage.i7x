@@ -51,6 +51,10 @@ understand the command "wave" as something new.
 
 chapter other stuff
 
+os2ing is an action out of world.
+
+oldschooling is an action out of world.
+
 [these are ones we may want to include]
 [
 understand the command "push" as something new. understand "push" as oldschooling. understand "push [text]" as os2ing.

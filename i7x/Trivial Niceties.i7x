@@ -234,7 +234,7 @@ chapter complex consents
 
 debug-auto-yes is a truth state that varies.
 
-yn-auto is a number that varies.
+yn-auto is a number that varies. yn-auto is 1.
 
 to decide whether the player dir-consents:
 	if debug-state is true:
@@ -369,9 +369,8 @@ understand the command "au" as something new.
 understand "au [number]" as auing.
 
 carry out auing:
-	if number understood > 2 or number understood < -1, say "1 = auto-yes 0 = auto-off -1 = auto-no." instead;
+	if number understood > 2 or number understood < -1, say "2 = auto-yes 1 = auto-off 0 = auto-no." instead;
 	let temp be number understood;
-	if temp is 2, now temp is -1;
 	if temp is yn-auto, say "It's already set to [auto-set]." instead;
 	say "Y/N responses changed from [auto-set] to ";
 	now yn-auto is temp;
