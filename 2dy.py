@@ -28,6 +28,9 @@ import re
 
 #init_sect = defaultdict(str)
 
+TOTAL_BYTES = 1
+HOURLY_BYTES = 2
+
 glob_string = "20*.txt"
 
 #d = pendulum.now()
@@ -60,6 +63,13 @@ files_back_wanted = 1
 verbose = False
 
 my_sections_file = "c:/writing/scripts/2dy.txt"
+
+def isfloat(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 def see_back(this_file = d, my_dir = "", days_back = 7):
     my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
@@ -193,7 +203,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5):
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
@@ -211,7 +221,6 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         ary = this_line.split("\t")
         if ary[0].lower() == this_file.lower():
             relevant_stats.append(this_line)
-
 
     times = []
     sizes = []
@@ -263,11 +272,10 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     if not overwrite and os.path.exists(my_graph_graphic):
         print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.{}".format("" if launch_present else " -gsl launches."))
-        if launch_present:
+        if launch_present and TOTAL_BYTES:
             mt.text_in_browser(my_graph_graphic)
-        if bail:
+        if bail and not (graph_type and HOURLY_BYTES):
             sys.exit()
-        return
 
     mso = mt.modified_size_of(this_file)
     if mso > current_size:
@@ -295,8 +303,82 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
     plt.legend(loc='upper left')
+
+    if graph_type & TOTAL_BYTES:
+        plt.savefig(my_graph_graphic)
+        mt.text_in_browser(my_graph_graphic)
+
+    if not (graph_type & HOURLY_BYTES):
+        if bail:
+            sys.exit()
+        return
+
+    hour_delt = []
+    for x in range (0, len(sizes) - 1):
+        hour_delt.append(sizes[x+1] - sizes[x])
+    hour_delt = np.array(hour_delt)
+
+
+    diffs = []
+    for x in range(0, len(sizes) - 1):
+        diffs.append(sizes[x+1] - sizes[x])
+    diffs = np.array(diffs)
+    times2 = np.array(times[1:])
+
+    plt.cla()
+    plt.clf()
+    plt.figure(figsize=(15, 12))
+    plt.xticks(rotation=45, ha='right')
+    plt.xlabel("days")
+    plt.ylabel("bytes")
+
+    per_day = goal_per_file // max_days_new
+
+    (a, b) = np.polyfit(times2, hour_delt, 1)
+    hourly_average = (sizes[-1] - first_size) * 3600 / (last_time - first_time).total_seconds()
+
+    a1 = a * weight
+    b1 = b
+    b1 = b * weight - hourly_average * weight + hourly_average
+    b2 = b1 + a1 * init_from_epoch
+
+    plt.plot(times2, a1 * times2 + b1)
+
+    count = len(times2)
+    projection_time = times2[-1]
+    more_bytes = 0
+
+    zero_at_end = ( - hourly_average) / (7 * a + a * init_from_epoch + b - hourly_average)
+    current_expected = a1 * (count / 24) + b2
+
+    while count < 168:
+        projection_time += 1 / 24
+        #this_delta = a * projection_time + b
+        #this_delta = weight * this_delta + (1 - weight) * hourly_average
+        this_delta = a1 * projection_time + b1
+        if this_delta < 0:
+            print("Trendline hit zero at {} of 168.".format(count+1))
+            break
+        more_bytes += this_delta
+        count += 1
+
+    label_2 = "Bytes={:.2f}*days+{:.2f}\nTotal expected bytes:{:.2f}+{:.2f}={:.2f}{}".format(a1, b2, sizes[-1], more_bytes, sizes[-1] + more_bytes, "\n(trendline hit zero at {})".format(count) if this_delta < 0 else '')
+
+    label_2 += "\nCurrent expected={:.2f}\n"
+
+    label_2 += "Zero at end={:.2f}".format(current_expected, zero_at_end)
+
+    #plt.scatter(times2, hour_delt, color = color_array, s = shape_array, label=my_label)
+    plt.scatter(times2, hour_delt, label=label_2)
+
+    my_graph_graphic = "c:/writing/temp/daily-delta-{}{}".format('past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
+
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
+    plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
+    plt.legend(loc='upper left')
     plt.savefig(my_graph_graphic)
     mt.text_in_browser(my_graph_graphic)
+
     if bail:
         sys.exit()
 
@@ -317,7 +399,6 @@ def put_stats(bail = True, print_on_over = 0, check_floor = False):
             print("No readable data in {}, so I can't check if it's being run too soon. It probably isn't.".format(stats_file))
     out_string = "{}\t{}\t{}".format(ld, pn, os.stat(ld).st_size)
     f.write(out_string + "\n")
-    print(out_string)
     f.close()
 
     if check_floor:
@@ -528,6 +609,18 @@ while cmd_count < len(sys.argv):
         if abs(file_index) == 1:
             print("Note: this is not zero-based, so 1 is the most recent and the default.")
         graph_stats(file_index = file_index, overwrite = True)
+    elif arg == 'gsd': graph_stats(graph_type = HOURLY_BYTES)
+    elif arg[:3] == 'gsd':
+        if isfloat(arg[3:]):
+            graph_stats(graph_type = HOURLY_BYTES, weight = float(arg[3:]))
+        else:
+            graph_stats(graph_type = HOURLY_BYTES)
+    elif arg == 'gsb': graph_stats(graph_type = HOURLY_BYTES)
+    elif arg[:3] == 'gsd':
+        if isfloat(arg[3:]):
+            graph_stats(graph_type = HOURLY_BYTES | TOTAL_BYTES, weight = float(arg[3:]))
+        else:
+            graph_stats(graph_type = HOURLY_BYTES | TOTAL_BYTES)
     elif arg == 'gsl': graph_stats(overwrite = True, launch_present = True)
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
