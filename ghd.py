@@ -2,7 +2,14 @@
 # ghd.py
 # perl github daily checker
 #
-# todo: put ignorables to CFG file
+# ghd_info sorts results by type (current, past, etc.)
+# ghd_cmd has future commands that fire at 23:30 with hrcheck.py. It can be edited by hand.
+#    EXAMPLE: misc:x.pl,y.pl;COMMIT MESSAGE e.g. repository:wildcards or files;commit message
+#    USE ghd.py lf nr to check things
+# ghd_results is the log file
+#
+# todo: add colors to various messages for user
+# todo: put ignorable types or repos to CFG file
 #
 
 import sys
@@ -44,7 +51,7 @@ def usage(my_param = ""):
     print("l = look for command, lf = force command, nr = don't run command")
     print("cv = checks commit validity")
     print("e/es/se edits main, ei/ie edits config, ec/ce edits command file, er/re edits results file")
-    print("NOTE: to add to {}, run gfu.py instead.".format(os.path.basename(ghd_cmd)))
+    print("NOTE: to add daily if-I-forget commits to {}, misc:x.pl,y.pl;COMMIT MESSAGE is a sample line.".format(os.path.basename(ghd_cmd)))
     sys.exit()
 
 def last_commit_data():
@@ -129,9 +136,9 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
                 else:
                     print("Everything worked on line {}: {}".format(line_count, dary[1]))
                     f = open(ghd_results, "w")
+                    if not run_cmd:
+                        f.write("PRE-NOTE: this is actually a test run. Here's what would've been printed:\n\n")
                     f.write("NOTE: successfully created commit automatically with ghd.py\n\n")
-                    if run_cmd:
-                        f.write("NOTE 2: this is actually a test run. Here's what would've been printed:\n\n")
                     f.write("It went to the {} repository.\n\n".format(my_dir))
                     f.write("The {} {}.\n\n".format('file committed was' if len(gh_files) == 1 else 'files committed were', ', '.join(gh_files)))
                     f.write("The commit message was >>{}<<\n\n".format(dary[1]))
