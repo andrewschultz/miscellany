@@ -364,9 +364,9 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     label_2 = "Bytes={:.2f}*days+{:.2f}\nTotal expected bytes:{:.2f}+{:.2f}={:.2f}{}".format(a1, b2, sizes[-1], more_bytes, sizes[-1] + more_bytes, "\n(trendline hit zero at {})".format(count) if this_delta < 0 else '')
 
-    label_2 += "\nCurrent expected={:.2f}\n"
+    label_2 += "\nCurrent expected={:.2f}\n".format(current_expected)
 
-    label_2 += "Zero at end={:.2f}".format(current_expected, zero_at_end)
+    label_2 += "Ratio for zero at end={:.2f}".format(zero_at_end) if zero_at_end > 0 else "Bytes-per-hour has positive uptrend\nNo zero-hour ratio is meaningful"
 
     #plt.scatter(times2, hour_delt, color = color_array, s = shape_array, label=my_label)
     plt.scatter(times2, hour_delt, label=label_2)
