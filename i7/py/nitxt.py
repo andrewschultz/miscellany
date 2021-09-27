@@ -87,7 +87,7 @@ def get_text(file_name, get_include):
 count = 1
 file_name = ""
 rub_brackets_from_file = True
-project_only = False
+project_only = True
 author_only = False
 my_title = i7.dir2proj()
 print_tables = True
@@ -103,6 +103,8 @@ while count < len(sys.argv):
         rub_brackets_from_file = False
     elif arg == 'o':
         project_only = True
+    elif arg in ( 'on', 'no' ):
+        project_only = False
     elif arg in ( 'pt', 'tp' ):
         print_tables = True
     elif mt.alfmatch(arg, 'npt'):
