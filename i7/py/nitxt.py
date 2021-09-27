@@ -5,12 +5,17 @@
 # usage: optional file name (e.g. for escape.xvn)
 # -nr / -rn / -rb = toggles whether or not to rub what is between brackets, which overrides extension settings
 #
+# for STS nitxt.py -tests,random +sts
+#
 
 from collections import defaultdict
+import i7
 import os
 import sys
 import codecs
 import re
+import mytools as mt
+
 count = 0
 
 already_got = defaultdict(bool)
@@ -18,6 +23,10 @@ already_got = defaultdict(bool)
 rub_brackets = True
 
 include_files = []
+ignores = []
+accepts = []
+
+forbidden_words = []
 
 my_name = "Andrew Schultz"
 my_dir = "c:/program files (x86)/inform 7/inform7/Extensions/Andrew Schultz"
@@ -40,11 +49,6 @@ def get_text(file_name, get_include):
     # with open(file_name) as file:
         cur_line = ""
         for (line_count, line) in enumerate(file, 1):
-            if line_count == 1 and 'story.ni' in file_name:
-                global my_title
-                my_title = line.strip().split('"')[1]
-                print("Game title:", my_title)
-                continue
             if "understand" in line and "mistake" not in line:
                 continue
             if line.startswith("test ") and " with " in line:
@@ -82,6 +86,11 @@ def get_text(file_name, get_include):
                 temp = re.sub(r'\\n', " ", temp)
                 if re.search("[A-Za-z]", temp):
                     print("Line {}{}: {}".format(line_count, ' ({})'.format(this_table) if print_tables and this_table else '', temp))
+                if line_count == 1:
+                    continue
+                for f in forbidden_words:
+                    if f.lower() in temp.lower():
+                        sys.stderr.write("Forbidden word {} present in {} at line {}: {}.\n".format(f, fb, line_count, y))
             cur_line = ""
 
 count = 1
@@ -94,8 +103,11 @@ print_tables = True
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
-    if arg[0] == '-': arg = arg[1:]
-    if arg == 'rb':
+    if arg.startswith('-'):
+        ignores.extend(arg[1:].split(','))
+    elif arg.startswith('+'):
+        accepts.extend(arg[1:].split(','))
+    elif arg == 'rb':
         rub_brackets = True
         rub_brackets_from_file = False
     elif arg == 'nr' or arg == 'rn':
@@ -111,8 +123,10 @@ while count < len(sys.argv):
         print_tables = False
     elif arg == 'a':
         author_only = True
-    elif arg[:2] == 'n':
+    elif arg[:2] == 'n=':
         author_name = arg[2:]
+    elif arg[:2] == 'w=':
+        forbidden_words.extend(arg[2:].split(','))
     else:
         if file_name: sys.exit("Tried to define 2 file names or a bad flag.")
         file_name = arg
@@ -120,7 +134,7 @@ while count < len(sys.argv):
 
 if not file_name: file_name = "story.ni" # could search for a bunch of different names ... or not
 
-if not os.path.exists(file_name): sys.exit("Can't find file", file_name)
+if not os.path.exists(file_name): sys.exit("Can't find file {}".format(file_name))
 
 if rub_brackets_from_file:
     rub_brackets = ext_2_brax(file_name)
@@ -128,10 +142,23 @@ if rub_brackets_from_file:
 get_text(file_name, True)
 
 for x in include_files:
+    xb = os.path.basename(x)
     if author_only and my_name.lower() not in x.lower():
-        print("Skipping not-by-author", os.path.basename(x))
+        print("Skipping not-by-author", xb)
         continue
     if project_only and my_title.lower() not in x.lower():
-        print("Skipping non-specific header", os.path.basename(x))
+        force_accept = False
+        for a in accepts:
+            if a in x.lower():
+                force_accept = True
+        if not force_accept:
+            print("Skipping non-specific header", xb, "as it is missing", my_title)
+            continue
+    ignore_skip = False
+    for i in ignores:
+        if i in x.lower():
+            print("Skipping {} since ignorable string {} is in it.".format(x, i))
+            ignore_skip = True
+    if ignore_skip:
         continue
     get_text(x, False)
