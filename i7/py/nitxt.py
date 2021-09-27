@@ -34,6 +34,8 @@ def get_text(file_name, get_include):
     already_got[file_name] = True
     print(("=" * 60) + "Looking at", file_name)
     global include_files
+    this_table = ''
+    fb = os.path.basename(file_name)
     with codecs.open(file_name, "r", "utf-8") as file:
     # with open(file_name) as file:
         cur_line = ""
@@ -47,6 +49,10 @@ def get_text(file_name, get_include):
                 continue
             if line.startswith("test ") and " with " in line:
                 continue
+            if line.startswith("table of") and "\t" not in line:
+                this_table = re.sub("\[.*", "", line).strip()
+            if not line.strip():
+                this_table = ''
             if '  ' in line:
                 lq = ''.join(line.split('"')[1:2:])
                 if '  ' in lq:
@@ -75,7 +81,7 @@ def get_text(file_name, get_include):
                 temp = re.sub(" +", " ", temp)
                 temp = re.sub(r'\\n', " ", temp)
                 if re.search("[A-Za-z]", temp):
-                    print("Line", line_count, temp)
+                    print("Line {}{}: {}".format(line_count, ' ({})'.format(this_table) if print_tables and this_table else '', temp))
             cur_line = ""
 
 count = 1
@@ -83,7 +89,8 @@ file_name = ""
 rub_brackets_from_file = True
 project_only = False
 author_only = False
-my_title = ""
+my_title = i7.dir2proj()
+print_tables = True
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
@@ -96,6 +103,10 @@ while count < len(sys.argv):
         rub_brackets_from_file = False
     elif arg == 'o':
         project_only = True
+    elif arg in ( 'pt', 'tp' ):
+        print_tables = True
+    elif mt.alfmatch(arg, 'npt'):
+        print_tables = False
     elif arg == 'a':
         author_only = True
     elif arg[:2] == 'n':
