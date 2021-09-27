@@ -531,11 +531,28 @@ def process_blank_details(temp_out_file):
     print(" NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)))
     print("NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)))
 
-def stats_of(text_file, count_blanks = True, count_headings = True):
+def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude = []):
     f = open(text_file, "r")
     my_lines = f.readlines()
     xtra_bytes = len(my_lines) - 1
     f.close()
+    my_lines_2 = []
+    get_next = True
+    if type(to_exclude) == str:
+        to_exclude = [to_exclude]
+    for x in my_lines:
+        if not x.strip():
+            get_next = True
+        if x.startswith("\\"):
+            for y in to_exclude:
+                if x.startswith("\\" + y):
+                    print("EXCLUDE START WITH", x)
+                    get_next = False
+        if get_next:
+            my_lines_2.append(x)
+        else:
+            print("IGNORING", x)
+    my_lines = list(my_lines_2)
     if not count_headings:
         my_lines = [x for x in my_lines if not x.startswith("\\")]
     if not count_blanks:
@@ -723,6 +740,8 @@ def sort_raw(raw_long):
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
     if show_stat_numbers:
         print("    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)))
+        without_names = os.stat(temp_out_file).st_size - len(sections['nam'])
+        print("  NO NAMES: {}".format(stats_of(temp_out_file, to_exclude = 'nam')))
         if not no_changes:
             print("     AFTER: {}".format(stats_of(temp_out_file)))
         process_blank_details(temp_out_file)
