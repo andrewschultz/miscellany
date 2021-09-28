@@ -780,6 +780,8 @@ def get_file(fname):
             if last_atted_command and not line.startswith("#") and not line.startswith(">"):
                 last_atted_command = ""
             first_file = True
+            if line.startswith("~="):
+                line = line.replace("~", "=") # hack to allow ==== headers
             for ct in range(0, len(file_list)):
                 if actives[ct]:
                     line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
