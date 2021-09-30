@@ -42,6 +42,7 @@ hide_stdout = False
 overwrite = True
 compiler_version = '633'
 launch_after = False
+generic_blorb = False
 
 build_states = defaultdict(list)
 build_state_of_proj = defaultdict(str)
@@ -97,6 +98,10 @@ def read_icl_cfg():
                 if default_proj_from_cfg:
                     print("WARNING: redefining default project from CFG on line {}: {}")
                 default_proj_from_cfg = data
+                continue
+            elif prefix == 'generic_blorb':
+                global generic_blorb
+                generic_blorb = mt.truth_state_of(data)
                 continue
             try:
                 (my_varname, my_data) = mt.cfg_data_split(data)
@@ -199,8 +204,6 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
       i7.proj2root(build_proj), "-extension={}".format(output_ext)
       ]
 
-    print(1)
-
     if this_build != i7.DEBUG:
         i7_to_i6.insert(1, "-release")
 
@@ -229,11 +232,15 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
         to_run_after = beta_out
 
     if not this_blorb:
-        print("Not making blorb file.")
+        print("Not making blorb file. Toggle with bl.")
 
     else:
 
-        blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
+        if generic_blorb:
+            blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
+        else:
+            other_blorb = "{}/{}.{}".format(i7.proj2dir(this_proj, materials = True), title_from_blurb(this_proj), blorb_ext_of(output_ext))
+
         print("Creating blorb file", blorb_file)
 
         os.chdir("..")
@@ -288,6 +295,10 @@ while cmd_count < len(sys.argv):
         what_to_build[i7.BETA] = 'b' in arg
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
+    elif arg in ( 'bg', 'gb' ):
+        generic_blorb = True
+    elif alpha_match(arg, 'bgn'):
+        generic_blorb = False
     elif arg == 'no' or arg == 'on':
         overwrite = False
     elif arg == 'wo' or arg == 'ow':
