@@ -64,6 +64,8 @@ verbose = False
 
 my_sections_file = "c:/writing/scripts/2dy.txt"
 
+default_weight = .5
+
 def isfloat(value):
     try:
         float(value)
@@ -184,7 +186,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     else:
         print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
         if time_dir_string == 'ahead':
-            time_dir_string += 'of'
+            time_dir_string += ' of'
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goal_per_file else '', abs(projection - goal_per_file), 'ahead' if projection > goal_per_file else 'behind') + colorama.Style.RESET_ALL)
@@ -203,7 +205,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0):
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
@@ -350,16 +352,23 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     zero_at_end = ( - hourly_average) / (7 * a + a * init_from_epoch + b - hourly_average)
     current_expected = a1 * (count / 24) + b2
+    floor_hit_yet = False
 
     while count < 168:
         projection_time += 1 / 24
         #this_delta = a * projection_time + b
         #this_delta = weight * this_delta + (1 - weight) * hourly_average
         this_delta = a1 * projection_time + b1
-        if this_delta < 0:
+        if floor_hourly > 0 and this_delta < floor_hourly:
+            this_delta = floor_hourly
+            if not floor_hit_yet:
+                print("Floor of {} hit at {} of 168.".format(floor_hourly, count + 1))
+                floor_hit_yet = True
+        elif this_delta <= 0:
             print("Trendline hit zero at {} of 168.".format(count+1))
             break
         more_bytes += this_delta
+        print(floor_hourly, this_delta, more_bytes)
         count += 1
 
     label_2 = "Bytes={:.2f}*days+{:.2f}\nTotal expected bytes:{:.2f}+{:.2f}={:.2f}{}".format(a1, b2, sizes[-1], more_bytes, sizes[-1] + more_bytes, "\n(trendline hit zero at {})".format(count) if this_delta < 0 else '')
@@ -611,10 +620,25 @@ while cmd_count < len(sys.argv):
         graph_stats(file_index = file_index, overwrite = True)
     elif arg == 'gsd': graph_stats(graph_type = HOURLY_BYTES)
     elif arg[:3] == 'gsd':
+        my_floor = 0
+        if 'w' in arg[3:]:
+            my_ary = arg.split('f')
+            try:
+                my_floor = int(my_ary[1])
+            except:
+                sys.exit("gsd/f(floor) requires a number after.")
+            arg = my_ary[0]
         if isfloat(arg[3:]):
-            graph_stats(graph_type = HOURLY_BYTES, weight = float(arg[3:]))
+            my_float = float(arg[3:])
+            if my_float > 100:
+                print("ASSUMING float > 100 is actually an integer for floor hourly production.")
+                my_floor = int(my_float)
+                my_weight = default_weight
+            else:
+                my_weight = my_float
+            graph_stats(graph_type = HOURLY_BYTES, weight = my_weight, floor_hourly = my_floor)
         else:
-            graph_stats(graph_type = HOURLY_BYTES)
+            graph_stats(graph_type = HOURLY_BYTES, floor_hourly = my_floor)
     elif arg == 'gsb': graph_stats(graph_type = HOURLY_BYTES)
     elif arg[:3] == 'gsd':
         if isfloat(arg[3:]):
