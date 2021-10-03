@@ -780,6 +780,8 @@ def sort_raw(raw_long):
                 x = input("Copy back? (Y does, anything else doesn't)")
                 if x.strip().lower()[0] == 'y':
                     copy(temp_out_file, raw_long)
+            else:
+                print("Add q or g to question/get copy-back.")
             if only_one:
                 if open_raw:
                     os.system(raw_long)
@@ -915,7 +917,7 @@ while cmd_count < len(sys.argv):
         read_most_recent = True
         dir_search_flag = daily.ROOT
         test_no_copy = False
-    elif mt.alpha_match(arg, 'ldq'):
+    elif mt.alpha_match(arg, 'ldq') or mt.alpha_match(arg, 'ldg') or arg == 'lq' or arg == 'lg':
         read_most_recent = True
         dir_search_flag = daily.ROOT
         ask_to_copy_back = True
@@ -926,7 +928,7 @@ while cmd_count < len(sys.argv):
         read_most_recent = True
         dir_search_flag = daily.TOPROC
         test_no_copy = False
-    elif mt.alpha_match(arg, 'rdq'):
+    elif mt.alpha_match(arg, 'rdq') or mt.alpha_match(arg, 'rdg') or arg == 'rq' or arg == 'rg':
         read_most_recent = True
         dir_search_flag = daily.TOPROC
         ask_to_copy_back = True
