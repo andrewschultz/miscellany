@@ -144,8 +144,19 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     until_next = (1000 - (my_size % 1000))
     right_now = pendulum.now()
     minutes_adjusted = (right_now.minute + 57) % 60
+
+    seconds_so_far = minutes_adjusted * 60 + right_now.second
+    seconds_to_go = 3600 - seconds_so_far
+
     try:
-        rate_for_next = until_next * 60 / (3600 - minutes_adjusted * 60 - right_now.second)
+        projected_hourly = (my_size - last_size) * 3600 / seconds_so_far
+        my_string = header_color + "Projected bytes this hour: {:.2f}".format(projected_hourly) + colorama.Style.RESET_ALL
+        mt.center(my_string)
+    except:
+        print("Oops! Synchronicity. There are no projections to make for this hour.")
+
+    try:
+        rate_for_next = until_next * 60 / seconds_to_go
     except:
         print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
         rate_for_next = 1
