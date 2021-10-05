@@ -106,6 +106,26 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
+def num_to_text_color(my_num):
+    retval = colorama.Back.WHITE
+    if my_num <= 0:
+        retval += colorama.Back.RED
+    elif my_num < 200:
+        retval += colorama.Fore.RED
+    elif my_num < 500:
+        retval += colorama.Fore.YELLOW
+    elif my_num < 1000:
+        retval += colorama.Fore.BLACK
+    elif my_num < 2000:
+        retval += colorama.Fore.GREEN
+    elif my_num < 3000:
+        retval += colorama.Fore.BLUE
+    elif my_num < 4000:
+        retval += colorama.Fore.CYAN
+    else:
+        retval += colorama.Fore.MAGENTA
+    return retval
+
 def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
     if not this_file:
@@ -121,23 +141,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
     hour_delta = my_size - last_size
-    header_color = colorama.Back.WHITE
-    if hour_delta <= 0:
-        header_color += colorama.Back.RED
-    elif hour_delta < 200:
-        header_color += colorama.Fore.RED
-    elif hour_delta < 500:
-        header_color += colorama.Fore.YELLOW
-    elif hour_delta < 1000:
-        header_color += colorama.Fore.BLACK
-    elif hour_delta < 2000:
-        header_color += colorama.Fore.GREEN
-    elif hour_delta < 3000:
-        header_color += colorama.Fore.BLUE
-    elif hour_delta < 4000:
-        header_color += colorama.Fore.CYAN
-    else:
-        header_color += colorama.Fore.MAGENTA
+    header_color = num_to_text_color(hour_delta)
     my_string = header_color + "HOURLY BYTE/THOUSANDS NOW/BEFORE COUNT: {} vs {}, {} vs {}, +{}.".format(my_size, last_size, my_size // 1000, last_size // 1000, my_size - last_size) + colorama.Style.RESET_ALL
     mt.center(my_string)
     thousands = my_size // 1000 - last_size // 1000
@@ -150,6 +154,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     try:
         projected_hourly = (my_size - last_size) * 3600 / seconds_so_far
+        header_color = num_to_text_color(projected_hourly)
         my_string = header_color + "Projected bytes this hour: {:.2f}".format(projected_hourly) + colorama.Style.RESET_ALL
         mt.center(my_string)
     except:
