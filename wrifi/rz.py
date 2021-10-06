@@ -146,6 +146,8 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'w':
         to_web = True
+    elif arg in ('nw', 'wn'):
+        to_web = False
     elif arg == 'c':
         use_cache = True
     elif arg == 'a':

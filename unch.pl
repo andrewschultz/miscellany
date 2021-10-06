@@ -18,7 +18,7 @@ use List::MoreUtils qw(uniq);
 
 use POSIX;
 
-my $wtFile     = tx(__FILE__);
+my $wtFile     = "c:\\writing\\scripts\\unch.txt";
 my $sourceFile = __FILE__;
 
 #######################

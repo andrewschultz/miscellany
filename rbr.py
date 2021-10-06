@@ -550,7 +550,7 @@ def get_file(fname):
                                 mt.npo(fname, line_count)
                             candidate = t
                     if candidate == -1:
-                        print("Found no text-to-number candidates at {} line {}'s right tab. Check that {} matches a file name.".format(fb, line_count, eq_array[2]))
+                        print("Found no text-to-number candidates at {} line {}'s right tab. Check that {} matches a file name in a files= line.".format(fb, line_count, eq_array[2]))
                         mt.npo(fname, line_count)
                     this_abbrev = "t{}".format(candidate)
                 for a in ary2:
