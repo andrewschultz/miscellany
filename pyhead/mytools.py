@@ -41,7 +41,8 @@ KEEP_DASH_UNDERSCORE = 0
 UNDERSCORE_TO_DASH = -1
 
 def dailies_of(my_dir = "c:/writing/daily"):
-    return [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
+    try_1 = [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
+    return [x for x in try_1 if re.search("^[0-9]{8}\.txt$", x)]
 
 def last_daily_of(my_dir = "c:/writing/daily", full_path = False):
     if full_path:
