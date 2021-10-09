@@ -36,7 +36,9 @@ files_to_check = defaultdict(lambda: defaultdict(bool))
 # full_regex = 'table of {} (anagrams|hintobjs)'.format(my_reg)
 # sys.exit(list(exrex.generate(full_regex)))
 
-def is_valid_table_header(x):
+def is_valid_table_header(x, file_name):
+    if x.startswith("table of") and files_to_check[my_proj][file_name] and not '\t' in x:
+        return True
     return x.lower() in tables_to_check[my_proj]
 
 def check_my_loop(my_loop):
@@ -101,7 +103,7 @@ def define_finds(my_entry, my_line, my_col, current_table):
                 my_index += 1
                 main_check[q0] = (my_line, my_col, current_table, my_index)
     if my_entry.endswith(" rule") and my_entry != "a rule":
-        if my_entry not in main_check:
+        if my_entry not in main_check and slate_for_sorting(my_entry):
             main_check[my_entry] = (my_line, my_col, current_table, 0)
 
 def read_cfg_file():
@@ -164,14 +166,14 @@ def read_cfg_file():
             else:
                 print("Unrecognized data on line {}: {}".format(line_count, line.strip()))
 
-def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
+def process_sortables(my_dict, order_dict, fout, my_table, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
         return
     #for o in order_dict:
         #print(o, order_dict[o], type(order_dict[o]))
     for m in my_dict:
         if m not in order_dict:
-            print("WARNING:", m, "is in the post-table subtitutions but not in the table. It is given a default value and kicked to the end.")
+            print("WARNING:", m, "is in the {} post-table substitutions but not in the table. It is given a default value and kicked to the end.".format(my_table))
             order_dict[m] = (1<<20, 0, '', 0)
         #print(m, order_dict[m], type(order_dict[m]))
     for x in sorted(my_dict, key=order_dict.get):
@@ -197,27 +199,37 @@ def shorthand_of(header_line):
         temp = re.sub(":.*", "", temp).strip()
     return (temp, is_common_error)
 
+def loop_breaker(my_line):
+    if my_line.startswith("chapter") or my_line.startswith("book") or my_line.startswith("volume"):
+        return True
+    if my_line.startswith("table of") and not "\t" in my_line:
+        return True
+    if my_line.endswith("auxiliary"):
+        return True
+    return False
+
 def write_dont_print(my_file):
     force_tables = files_to_check[my_proj][my_file]
     my_table = ''
     in_table = False
     in_sortable_section = False
     need_header = False
+    first_table_yet = False
     current_sortable = ''
     sortable_stuff = defaultdict(str)
-    fout = open(ott_temp, "w")
+    fout = open(ott_temp, "w", newline="\n")
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if need_header:
                 need_header = False
             l0 = mt.zap_comments(line)
-            if in_sortable_section and (l0.startswith("book") or l0.startswith("volume") or l0.endswith("auxiliary") or (l0.startswith("table of") and not '\t' in l0)):
-                process_sortables(sortable_stuff, main_check, fout)
+            if first_table_yet and loop_breaker(l0) and in_sortable_section:
+                process_sortables(sortable_stuff, main_check, fout, my_table)
                 sortable_stuff.clear()
                 main_check.clear()
                 auxil_check.clear()
                 in_sortable_section = False
-            if is_valid_table_header(l0):
+            if is_valid_table_header(l0, my_file):
                 my_table = mt.zap_comments(line.lower())
                 in_table = True
                 first_table_yet = True
@@ -240,6 +252,7 @@ def write_dont_print(my_file):
                     if current_sortable in onces[my_proj]:
                         if onces[my_proj][current_sortable] == True:
                             print("WARNING {} line {} redefined sortable {} that should only appear once.".format(my_file, line_count, current_sortable))
+                        onces[my_proj][current_sortable] = True
                     if common_error:
                         print("WARNING: {} at {} line {}: {}".format(common_error, my_file, line_count, l0))
                     sortable_stuff[current_sortable] = line
@@ -249,7 +262,7 @@ def write_dont_print(my_file):
                 else:
                     current_sortable = ''
     if len(sortable_stuff):
-        process_sortables(sortable_stuff, main_check, fout)
+        process_sortables(sortable_stuff, main_check, fout, "<END OF FILE>")
     fout.close()
     if not mt.alfcomp(my_file, ott_temp, quiet=quiet):
         print("UH OH data loss/gain between tempfile and current one. You likely forgot to add a rule. Fix before continuing.")
@@ -257,7 +270,7 @@ def write_dont_print(my_file):
     elif not quiet:
         print("No data differences in before and after file.")
     mt.wm(my_file, ott_temp, quiet=quiet)
-    if copy_back:
+    if copy_back and not cmp(my_file, ott_temp):
         print("Copying {} to {}.".format(ott_temp, my_file))
         copy(ott_temp, my_file)
     else:
@@ -272,14 +285,14 @@ def print_dont_write(my_file):
             l0 = mt.zap_comments(line)
             if l0.startswith("table of ") and "\t" in l0:
                 print("Ignoring probable table-in-table at line {}, character {}".format(line_count, l0.index("\t")))
-            if l0.startswith("book") or l0.startswith("volume") or (l0.startswith("table of") and not "\t" in l0) or l0.endswith("auxiliary"):
+            if loop_breaker(l0):
                 if current_table and in_loop:
                     check_my_loop(current_table)
                     main_check.clear()
                     auxil_check.clear()
                 in_loop = False
                 current_table = ''
-                if is_valid_table_header(l0):
+                if is_valid_table_header(l0, my_file):
                     current_table = l0.strip()
                     #print("new table", current_table, line_count)
                 continue
@@ -302,6 +315,10 @@ def print_dont_write(my_file):
                 continue
             if in_loop:
                 (temp, common_error) = shorthand_of(l0)
+                if temp in onces[my_proj]:
+                    if onces[my_proj][temp] == True:
+                        print("WARNING {} line {} redefined sortable {} that should only appear once.".format(my_file, line_count, current_sortable))
+                    onces[my_proj][temp] = True
                 if common_error:
                     print("WARNING: {} at {} line {}: {}".format(common_error, my_file, line_count, l0))
                 if l0.startswith("to say "):
@@ -342,7 +359,7 @@ while cmd_count < len(sys.argv):
         mt.npo("c:/writing/scripts/ott.py")
         quiet = False
     elif i7.main_abb(arg):
-        my_proj = i7.main_abb(arg)
+        my_proj = i7.long_name(arg)
     else:
         sys.exit("Bad parameter {}".format(arg))
     cmd_count += 1
