@@ -127,7 +127,7 @@ def find_ignores():
                 for cp in cur_proj_list:
                     for x in data.split(","):
                         if x in ignores[cp]:
-                            print("Duplicate ignore <{}> at {}.".format(x, line_count))
+                            print("Duplicate ignore <{}> at {} for project {}.".format(x, line_count, cp))
                         else:
                             ignores[cp][x] = True
             elif prefix == 'once':
@@ -324,6 +324,13 @@ while cmd_count < len(sys.argv):
         quiet = True
     elif arg in ( 'qn', 'nq'):
         quiet = False
+    elif arg == 'e':
+        os.system(ott_cfg)
+    elif arg == 'es':
+        mt.npo("c:/writing/scripts/ott.py")
+        quiet = False
+    elif i7.main_abb(arg):
+        my_proj = i7.main_abb(arg)
     else:
         sys.exit("Bad parameter {}".format(arg))
     cmd_count += 1
