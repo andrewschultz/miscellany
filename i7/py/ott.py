@@ -105,7 +105,7 @@ def define_finds(my_entry, my_line, my_col, current_table):
             main_check[my_entry] = (my_line, my_col, current_table, 0)
 
 def find_ignores():
-    cur_proj = 'global'
+    cur_proj_list = ['global']
     with open(ott_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith('#'):
@@ -113,44 +113,48 @@ def find_ignores():
             (prefix, data) = mt.cfg_data_split(mt.zap_comments(line))
             ary = mt.zap_comments(line.strip()).split(',')
             if prefix == 'proj':
-                cur_proj = i7.long_name(data)
-                print("New proj", cur_proj)
+                cur_proj_list = i7.long_name(data).split(',')
                 continue
             elif prefix == 'file_list':
-                for x in data.split(","):
-                    if x == 'ni':
-                        files_with_tables.append(i7.main_src(cur_proj))
-                    else:
-                        files_with_tables.append(i7.hdr(cur_proj, x))
+                for cp in cur_proj_list:
+                    for x in data.split(","):
+                        if x == 'ni':
+                            files_with_tables.append(i7.main_src(cur_proj_list))
+                        else:
+                            files_with_tables.append(i7.hdr(cur_proj_list, x))
                 continue
             elif prefix == 'ignore':
-                for x in data.split(","):
-                    if x in ignores[cur_proj]:
-                        print("Duplicate ignore <{}> at {}.".format(x, line_count))
-                    else:
-                        ignores[cur_proj][x] = True
+                for cp in cur_proj_list:
+                    for x in data.split(","):
+                        if x in ignores[cp]:
+                            print("Duplicate ignore <{}> at {}.".format(x, line_count))
+                        else:
+                            ignores[cp][x] = True
             elif prefix == 'once':
-                if cur_proj == 'global':
-                    print("WARNING a once function should not be part of a global project line {}: {}".format(line_count, line.strip()))
-                for x in data.split(","):
-                    if x in onces[cur_proj]:
-                        print("Duplicate ignore <{}> at {}.".format(x, line_count))
-                    else:
-                        onces[cur_proj][x] = True
+                for cp in cur_proj_list:
+                    if cp == 'global':
+                        print("WARNING a once function should not be part of a global project line {}: {}".format(line_count, line.strip()))
+                    for x in data.split(","):
+                        if x in onces[cp]:
+                            print("Duplicate ignore <{}> at {}.".format(x, line_count))
+                        else:
+                            onces[cp][x] = True
             elif prefix == 'tables_add':
-                to_add = exrex.generate(data)
-                for mytab in to_add:
-                    if mytab in tables_to_check:
-                        print("Duplicate table_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj, line_count))
-                    else:
-                        tables_to_check[cur_proj][mytab] = False
+                for cp in cur_proj_list:
+                    to_add = exrex.generate(data)
+                    for mytab in to_add:
+                        if mytab in tables_to_check:
+                            print("Duplicate table_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj_list, line_count))
+                        else:
+                            tables_to_check[cp][mytab] = False
             elif prefix == 'tables_del':
-                to_del = exrex.generate(data)
-                for mytab in to_del:
-                    if mytab not in tables_to_check[cur_proj]:
-                        print("Asked to delete table that was not in tables_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj, line_count))
-                    else:
-                        tables_to_check[cur_proj].pop(mytab)
+                for cp in cur_proj_list:
+                    to_del = exrex.generate(data)
+                    for mytab in to_del:
+                        if mytab not in tables_to_check[cp]:
+                            print("Asked to delete table that was not in tables_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj_list, line_count))
+                        else:
+                            tables_to_check[cp].pop(mytab)
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
