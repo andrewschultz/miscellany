@@ -12,6 +12,7 @@ auxil_check = defaultdict(tuple)
 files_with_tables = defaultdict(list)
 
 ott_temp = "c:/writing/temp/ott-py-tempfile.txt"
+ott_cfg = "c:/writing/scripts/ott.txt"
 
 print_what_to_do = True
 write_out = True
@@ -20,9 +21,10 @@ copy_back = False
 in_loop = False
 squash_errors = False
 
+default_proj = ''
 my_proj = i7.dir2proj()
 
-ignores = defaultdict(bool)
+ignores = defaultdict(lambda: defaultdict(bool))
 
 my_reg = "(ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)"
 regexes = [ '^book (ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)$' ]
@@ -85,6 +87,13 @@ def invalid_sub(my_text):
         return True
     return False
 
+def slate_for_sorting(my_string):
+    if my_string in ignores['global']:
+        return False
+    if my_string in ignores[my_proj]:
+        return False
+    return True
+
 def define_finds(my_entry, my_line, my_col, current_table):
     fall = re.findall(r'\[(.*?)\]', my_entry)
     my_index = 0
@@ -93,7 +102,7 @@ def define_finds(my_entry, my_line, my_col, current_table):
             if q.startswith('the '):
                 q = q[4:]
             q0 = re.sub(" of .*", "", q)
-            if q0 not in main_check and q0 not in ignores and not invalid_sub(q0):
+            if q0 not in main_check and slate_for_sorting(q0) and not invalid_sub(q0):
                 my_index += 1
                 main_check[q0] = (my_line, my_col, current_table, my_index)
     if my_entry.endswith(" rule") and my_entry != "a rule":
@@ -101,16 +110,33 @@ def define_finds(my_entry, my_line, my_col, current_table):
             main_check[my_entry] = (my_line, my_col, current_table, 0)
 
 def find_ignores():
-    with open("c:/writing/scripts/ott.txt") as file:
+    cur_proj = 'global'
+    with open(ott_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith('#'):
                 continue
+            (prefix, data) = mt.cfg_data_split(mt.zap_comments(line))
             ary = mt.zap_comments(line.strip()).split(',')
-            for a in ary:
-                if a in ignores:
-                    print("Duplicate ignore <{}> at {}.".format(a, line_count))
-                else:
-                    ignores[a] = True
+            if prefix == 'proj':
+                cur_proj = i7.long_name(data)
+                print("New proj", cur_proj)
+                continue
+            elif prefix == 'file_list':
+                for x in data.split(","):
+                    if x == 'ni':
+                        files_with_tables.append(i7.main_src(cur_proj))
+                    else:
+                        files_with_tables.append(i7.hdr(cur_proj, x))
+                continue
+            elif prefix == 'ignore':
+                for x in data.split(","):
+                    if x in ignores[cur_proj]:
+                        print("Duplicate ignore <{}> at {}.".format(x, line_count))
+                    else:
+                        ignores[cur_proj][x] = True
+    for x in ignores:
+        print(x)
+        print(ignores[x])
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
