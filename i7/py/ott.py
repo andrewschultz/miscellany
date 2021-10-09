@@ -9,6 +9,7 @@ from shutil import copy
 
 main_check = defaultdict(tuple)
 auxil_check = defaultdict(tuple)
+files_with_tables = defaultdict(list)
 
 ott_temp = "c:/writing/temp/ott-py-tempfile.txt"
 
@@ -18,6 +19,8 @@ copy_back = False
 
 in_loop = False
 squash_errors = False
+
+my_proj = i7.dir2proj()
 
 ignores = defaultdict(bool)
 
@@ -98,7 +101,7 @@ def define_finds(my_entry, my_line, my_col, current_table):
             main_check[my_entry] = (my_line, my_col, current_table, 0)
 
 def find_ignores():
-    with open("ott.txt") as file:
+    with open("c:/writing/scripts/ott.txt") as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith('#'):
                 continue
@@ -212,7 +215,7 @@ def print_dont_write(my_file):
                 if current_table and in_loop:
                     check_my_loop(current_table)
                     main_check.clear()
-                    auxil_check.clear()            
+                    auxil_check.clear()
                 in_loop = False
                 current_table = ''
                 if is_valid_table_header(l0):
@@ -270,11 +273,18 @@ while cmd_count < len(sys.argv):
         sys.exit("Bad parameter {}".format(arg))
     cmd_count += 1
 
+if not my_proj and not default_proj:
+    sys.exit("Go to a project directory, define a default project or specify one on the command line.")
+
 current_table = ''
 
 find_ignores()
 
-if print_what_to_do:
-    print_dont_write(i7.header('roi', 'ta'))
-if write_out:
-    write_dont_print(i7.header('roi', 'ta'))
+if not files_with_tables[my_proj]:
+    print("Going with default table file for project {}.".format(my_proj))
+    files_with_tables[my_proj] = ['ta']
+for x in files_with_tables[my_proj]:
+    if print_what_to_do:
+        print_dont_write(i7.header(my_proj, x))
+    if write_out:
+        write_dont_print(i7.header(my_proj, x))
