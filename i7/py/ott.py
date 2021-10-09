@@ -25,6 +25,7 @@ default_proj = ''
 my_proj = i7.dir2proj()
 
 ignores = defaultdict(lambda: defaultdict(bool))
+onces = defaultdict(lambda: defaultdict(bool))
 
 my_reg = "(ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)"
 regexes = [ '^book (ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)$' ]
@@ -50,10 +51,12 @@ def check_my_loop(my_loop):
     loop_verified = True
     for x in main_check:
         if x not in auxil_check:
+            if x in onces[my_proj] and onces[my_proj][x]:
+                continue
             if loop_verified:
                 print("ERRORS FOR", my_loop)
             loop_verified = False
-            print("Need to move up auxiliary text for", x)
+            print("Auxiliary text for", x, "should be placed after", my_loop)
     for x in auxil_check:
         if x not in main_check:
             if loop_verified:
@@ -134,9 +137,14 @@ def find_ignores():
                         print("Duplicate ignore <{}> at {}.".format(x, line_count))
                     else:
                         ignores[cur_proj][x] = True
-    for x in ignores:
-        print(x)
-        print(ignores[x])
+            elif prefix == 'once':
+                if cur_proj == 'global':
+                    print("WARNING a once function should not be part of a global project line {}: {}".format(line_count, line.strip()))
+                for x in data.split(","):
+                    if x in onces[cur_proj]:
+                        print("Duplicate ignore <{}> at {}.".format(x, line_count))
+                    else:
+                        onces[cur_proj][x] = True
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
@@ -206,6 +214,9 @@ def write_dont_print(my_file):
             if not current_sortable:
                 if line.strip():
                     (current_sortable, common_error) = shorthand_of(line)
+                    if current_sortable in onces[my_proj]:
+                        if onces[my_proj][current_sortable] == True:
+                            print("WARNING {} line {} redefined sortable {} that should only appear once.".format(my_file, line_count, current_sortable))
                     if common_error:
                         print("WARNING: {} at {} line {}: {}".format(common_error, my_file, line_count, l0))
                     sortable_stuff[current_sortable] = line
