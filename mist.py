@@ -489,6 +489,8 @@ if len(added.keys()) == 0:
     x = i7.dir2proj(os.getcwd())
     if x in short.keys():
         print("Going with default", x)
+        if x == 'shuffling' or x == 'roiling':
+            print("Use STS to run both Shuffling and Roiling.")
         added[x] = True
     else:
         print("No default mistake file in current directory. You may wish to specify a project.")
