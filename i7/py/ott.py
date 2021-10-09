@@ -10,7 +10,6 @@ from shutil import copy
 
 main_check = defaultdict(tuple)
 auxil_check = defaultdict(tuple)
-files_with_tables = defaultdict(list)
 
 ott_temp = "c:/writing/temp/ott-py-tempfile.txt"
 ott_cfg = "c:/writing/scripts/ott.txt"
@@ -30,6 +29,7 @@ my_proj = i7.dir2proj()
 ignores = defaultdict(lambda: defaultdict(bool))
 onces = defaultdict(lambda: defaultdict(bool))
 tables_to_check = defaultdict(lambda: defaultdict(bool))
+files_to_check = defaultdict(lambda: defaultdict(bool))
 
 # for later
 # import exrex
@@ -122,10 +122,13 @@ def read_cfg_file():
             elif prefix == 'file_list':
                 for cp in cur_proj_list:
                     for x in data.split(","):
+                        read_all = '*' in x
+                        x = x.replace('*', '')
                         if x == 'ni':
-                            files_with_tables.append(i7.main_src(cur_proj_list))
+                            this_file = i7.main_src(cur_proj_list)
                         else:
-                            files_with_tables.append(i7.hdr(cur_proj_list, x))
+                            this_file = i7.hdr(cp, x)
+                        files_to_check[cp][this_file] = read_all
             elif prefix == 'ignore':
                 for cp in cur_proj_list:
                     for x in data.split(","):
@@ -195,7 +198,8 @@ def shorthand_of(header_line):
     return (temp, is_common_error)
 
 def write_dont_print(my_file):
-    current_table = ''
+    force_tables = files_to_check[my_proj][my_file]
+    my_table = ''
     in_table = False
     in_sortable_section = False
     need_header = False
@@ -216,7 +220,8 @@ def write_dont_print(my_file):
             if is_valid_table_header(l0):
                 my_table = mt.zap_comments(line.lower())
                 in_table = True
-                if my_table in tables_to_check[my_proj]:
+                first_table_yet = True
+                if force_tables or my_table in tables_to_check[my_proj]:
                    tables_to_check[my_proj][my_table] = True
                 need_header = True
             if in_table and not line.strip():
@@ -225,7 +230,7 @@ def write_dont_print(my_file):
             if in_table and not need_header:
                 ary = l0.lower().split("\t")
                 for x in range(0, len(ary)):
-                    define_finds(ary[x], line_count, x, current_table)
+                    define_finds(ary[x], line_count, x, my_table)
             if not in_sortable_section:
                 fout.write(line)
                 continue
@@ -261,6 +266,7 @@ def write_dont_print(my_file):
 def print_dont_write(my_file):
     in_loop = False
     current_table = ''
+    force_tables = files_to_check[my_proj][my_file]
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             l0 = mt.zap_comments(line)
@@ -279,7 +285,7 @@ def print_dont_write(my_file):
                 continue
             if l0.startswith("table of") and not "\t" in l0:
                 current_table = l0.strip()
-                if current_table in tables_to_check[my_proj]:
+                if force_tables or current_table in tables_to_check[my_proj]:
                    tables_to_check[my_proj][current_table] = True
             if l0.endswith("auxiliary"):
                 in_loop = False
@@ -349,14 +355,19 @@ if not my_proj:
     print("Going with default project", default_proj)
     my_proj = default_proj
 
-if not files_with_tables[my_proj]:
+if not files_to_check[my_proj]:
     print("Going with default table file for project {}.".format(my_proj))
-    files_with_tables[my_proj] = ['ta']
-for x in files_with_tables[my_proj]:
+    files_to_check[my_proj] = [i7.hdr(my_proj, 'ta')]
+
+for x in files_to_check[my_proj]:
+    for o in onces[my_proj]:
+        onces[my_proj][o] = False
     if print_what_to_do:
-        print_dont_write(i7.header(my_proj, x))
+        print_dont_write(x)
+    for o in onces[my_proj]:
+        onces[my_proj][o] = False
     if write_out:
-        write_dont_print(i7.header(my_proj, x))
+        write_dont_print(x)
 for x in tables_to_check[my_proj]:
     if not tables_to_check[my_proj][x]:
         print("We did not see", x, "in", my_proj)
