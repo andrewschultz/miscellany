@@ -19,6 +19,8 @@ print_what_to_do = True
 write_out = True
 copy_back = False
 
+quiet = True
+
 in_loop = False
 squash_errors = False
 
@@ -53,7 +55,7 @@ def check_my_loop(my_loop):
                 print("ERRORS FOR", my_loop)
             loop_verified = False
             print("Stray to-say or rule:", x, auxil_check[x])
-    if loop_verified:
+    if loop_verified and not quiet:
         print("Hooray! Loop verified for {}!".format(my_loop))
     y = list(set(main_check) & set(auxil_check))
     y = sorted(y, key = main_check.get)
@@ -227,14 +229,14 @@ def write_dont_print(my_file):
     if len(sortable_stuff):
         process_sortables(sortable_stuff, main_check, fout)
     fout.close()
-    if not mt.alfcomp(my_file, ott_temp):
+    if not mt.alfcomp(my_file, ott_temp, quiet=quiet):
         print("UH OH data loss/gain between tempfile and current one. You likely forgot to add a rule. Fix before continuing.")
         return
-    else:
-        print("No differences.")
-    mt.wm(my_file, ott_temp)
+    elif not quiet:
+        print("No data differences in before and after file.")
+    mt.wm(my_file, ott_temp, quiet=quiet)
     if copy_back:
-        print("Copying back.")
+        print("Copying {} to {}.".format(ott_temp, my_file))
         copy(ott_temp, my_file)
     else:
         print("Use -c to copy.")
@@ -307,6 +309,10 @@ while cmd_count < len(sys.argv):
         copy_back = True
     elif arg in ( 'pw', 'wp' ):
         print_what_to_do = write_out = True
+    elif arg in ( 'qy', 'yq', 'q'):
+        quiet = True
+    elif arg in ( 'qn', 'nq'):
+        quiet = False
     else:
         sys.exit("Bad parameter {}".format(arg))
     cmd_count += 1
