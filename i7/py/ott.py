@@ -1,5 +1,6 @@
 # ott.py: organize table text
 
+import exrex
 import sys
 import mytools as mt
 import re
@@ -26,14 +27,7 @@ my_proj = i7.dir2proj()
 
 ignores = defaultdict(lambda: defaultdict(bool))
 onces = defaultdict(lambda: defaultdict(bool))
-
-my_reg = "(ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)"
-regexes = [ '^book (ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)$' ]
-regexes = [ '^book (ordeal reload|stores|routes|troves|presto|oyster|towers|otters|others|demo dome)$' ]
-#regexes = [ '^book (ordeal reload)$' ]
-#MAKE SURE THESE HAVE ^ TO START
-table_regexes = [ '^table of {} anagrams'.format(my_reg), '^table of {} hintobjs'.format(my_reg), '^table of {} attacks'.format(my_reg), '^table of {} nowheres'.format(my_reg), '^table of {} readables'.format(my_reg), '^table of {} scannotes'.format(my_reg), '^table of {} spechelp'.format(my_reg), '^table of {} done rejects'.format(my_reg) ]
-table_regexes = [ '^table of {} reflexive blather'.format(my_reg), '^table of {} subject blather'.format(my_reg), '^table of {} hint-done-notes'.format(my_reg), '^table of {} general blather'.format(my_reg) ]
+tables_to_check = defaultdict(lambda: defaultdict(bool))
 
 # for later
 # import exrex
@@ -41,11 +35,7 @@ table_regexes = [ '^table of {} reflexive blather'.format(my_reg), '^table of {}
 # sys.exit(list(exrex.generate(full_regex)))
 
 def is_valid_table_header(x):
-    x = x.lower()
-    for r in table_regexes:
-        if re.search(r, x):
-            return True
-    return False
+    return x.lower() in tables_to_check[my_proj]
 
 def check_my_loop(my_loop):
     loop_verified = True
@@ -145,6 +135,13 @@ def find_ignores():
                         print("Duplicate ignore <{}> at {}.".format(x, line_count))
                     else:
                         onces[cur_proj][x] = True
+            elif prefix == 'tables_add':
+                to_add = exrex.generate(data)
+                for mytab in to_add:
+                    if mytab in tables_to_check:
+                        print("Duplicate table_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj, line_count))
+                    else:
+                        tables_to_check[cur_proj][mytab] = False
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
@@ -197,9 +194,11 @@ def write_dont_print(my_file):
                 main_check.clear()
                 auxil_check.clear()
                 in_sortable_section = False
-            if is_valid_table_header(line):
+            if is_valid_table_header(l0):
                 my_table = mt.zap_comments(line.lower())
                 in_table = True
+                if my_table in tables_to_check[my_proj]:
+                   tables_to_check[my_proj][my_table] = True
                 need_header = True
             if in_table and not line.strip():
                 in_table = False
@@ -261,6 +260,8 @@ def print_dont_write(my_file):
                 continue
             if l0.startswith("table of") and not "\t" in l0:
                 current_table = l0.strip()
+                if current_table in tables_to_check[my_proj]:
+                   tables_to_check[my_proj][current_table] = True
             if l0.endswith("auxiliary"):
                 in_loop = False
                 continue
@@ -325,3 +326,7 @@ for x in files_with_tables[my_proj]:
         print_dont_write(i7.header(my_proj, x))
     if write_out:
         write_dont_print(i7.header(my_proj, x))
+for x in tables_to_check[my_proj]:
+    if not tables_to_check[my_proj][x]:
+        print("We did not see", x, "in", my_proj)
+
