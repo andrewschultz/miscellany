@@ -144,6 +144,13 @@ def find_ignores():
                         print("Duplicate table_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj, line_count))
                     else:
                         tables_to_check[cur_proj][mytab] = False
+            elif prefix == 'tables_del':
+                to_del = exrex.generate(data)
+                for mytab in to_del:
+                    if mytab not in tables_to_check[cur_proj]:
+                        print("Asked to delete table that was not in tables_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj, line_count))
+                    else:
+                        tables_to_check[cur_proj].pop(mytab)
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
