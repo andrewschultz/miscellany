@@ -104,7 +104,8 @@ def define_finds(my_entry, my_line, my_col, current_table):
         if my_entry not in main_check:
             main_check[my_entry] = (my_line, my_col, current_table, 0)
 
-def find_ignores():
+def read_cfg_file():
+    global default_proj
     cur_proj_list = ['global']
     with open(ott_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -114,7 +115,10 @@ def find_ignores():
             ary = mt.zap_comments(line.strip()).split(',')
             if prefix == 'proj':
                 cur_proj_list = i7.long_name(data).split(',')
-                continue
+            elif prefix == 'default_project':
+                if default_proj:
+                    print("WARNING redefining default project from {} at line {}.".format(default_project, line_count))
+                default_proj = data
             elif prefix == 'file_list':
                 for cp in cur_proj_list:
                     for x in data.split(","):
@@ -122,7 +126,6 @@ def find_ignores():
                             files_with_tables.append(i7.main_src(cur_proj_list))
                         else:
                             files_with_tables.append(i7.hdr(cur_proj_list, x))
-                continue
             elif prefix == 'ignore':
                 for cp in cur_proj_list:
                     for x in data.split(","):
@@ -155,6 +158,8 @@ def find_ignores():
                             print("Asked to delete table that was not in tables_to_check {} for project {} from table extension at line {}.".format(mytab, cur_proj_list, line_count))
                         else:
                             tables_to_check[cp].pop(mytab)
+            else:
+                print("Unrecognized data on line {}: {}".format(line_count, line.strip()))
 
 def process_sortables(my_dict, order_dict, fout, leave_cr_on_blank = True):
     if not leave_cr_on_blank and len(my_dict) == 0:
@@ -190,6 +195,7 @@ def shorthand_of(header_line):
     return (temp, is_common_error)
 
 def write_dont_print(my_file):
+    current_table = ''
     in_table = False
     in_sortable_section = False
     need_header = False
@@ -335,12 +341,13 @@ while cmd_count < len(sys.argv):
         sys.exit("Bad parameter {}".format(arg))
     cmd_count += 1
 
-if not my_proj and not default_proj:
-    sys.exit("Go to a project directory, define a default project or specify one on the command line.")
+read_cfg_file()
 
-current_table = ''
-
-find_ignores()
+if not my_proj:
+    if not default_proj:
+        sys.exit("Go to a project directory, define a default project or specify one on the command line.")
+    print("Going with default project", default_proj)
+    my_proj = default_proj
 
 if not files_with_tables[my_proj]:
     print("Going with default table file for project {}.".format(my_proj))
