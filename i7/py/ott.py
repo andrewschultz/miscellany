@@ -7,6 +7,7 @@ import re
 import i7
 from collections import defaultdict
 from shutil import copy
+from filecmp import cmp
 
 main_check = defaultdict(tuple)
 auxil_check = defaultdict(tuple)
@@ -35,6 +36,14 @@ files_to_check = defaultdict(lambda: defaultdict(bool))
 # import exrex
 # full_regex = 'table of {} (anagrams|hintobjs)'.format(my_reg)
 # sys.exit(list(exrex.generate(full_regex)))
+
+def usage(message='general usage'):
+    print("=" * 50 + message)
+    print("e/ec opens source, es opens source")
+    print("q/qy/yq quiet, qn/nq not")
+    print("p/w = print or write out, can be combined")
+    print("c copies over")
+    sys.exit()
 
 def is_valid_table_header(x, file_name):
     if x.startswith("table of") and files_to_check[my_proj][file_name] and not '\t' in x:
@@ -185,7 +194,9 @@ def shorthand_of(header_line):
     is_common_error = False
     if re.search("^(before|check|after|instead of|carry out) ", header_line):
         is_common_error = "Possible rule starting"
-    if re.search("is a [-a-z ]+ that varies", header_line):
+    elif re.search("^\[.*\]", header_line):
+        is_common_error = "Possible comment to move in-line or to auxiliary section"
+    elif re.search("is a [-a-z ]+ that varies", header_line):
         is_common_error = "Possible variable definition"
     if is_common_error and squash_errors:
         return('', is_common_error)
@@ -270,7 +281,9 @@ def write_dont_print(my_file):
     elif not quiet:
         print("No data differences in before and after file.")
     mt.wm(my_file, ott_temp, quiet=quiet)
-    if copy_back and not cmp(my_file, ott_temp):
+    if cmp(my_file, ott_temp):
+        return
+    if copy_back:
         print("Copying {} to {}.".format(ott_temp, my_file))
         copy(ott_temp, my_file)
     else:
@@ -343,25 +356,29 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'p':
         print_what_to_do = True
+        write_out = False
     elif arg == 'w':
+        print_what_to_do = False
         write_out = True
     elif arg == 'c':
         copy_back = True
     elif arg in ( 'pw', 'wp' ):
         print_what_to_do = write_out = True
-    elif arg in ( 'qy', 'yq', 'q'):
+    elif arg in ( 'qy', 'yq', 'q' ):
         quiet = True
-    elif arg in ( 'qn', 'nq'):
+    elif arg in ( 'qn', 'nq' ):
         quiet = False
-    elif arg == 'e':
+    elif arg in ( 'e', 'ec' ):
         os.system(ott_cfg)
     elif arg == 'es':
         mt.npo("c:/writing/scripts/ott.py")
         quiet = False
+    elif arg == '?':
+        usage()
     elif i7.main_abb(arg):
         my_proj = i7.long_name(arg)
     else:
-        sys.exit("Bad parameter {}".format(arg))
+        usage(message="Bad parameter {}".format(arg))
     cmd_count += 1
 
 read_cfg_file()
