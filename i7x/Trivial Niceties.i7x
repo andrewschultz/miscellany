@@ -125,8 +125,11 @@ any-key-yet is a truth state that varies.
 
 to say wfak:
 	if any-key-yet is false, say " (when text pauses like this, it means press any key to continue)";
+	if debug-state is false:
+		wfak;
+		if any-key-yet is false:
+			say "[paragraph break]";
 	now any-key-yet is true;
-	if debug-state is false, wfak;
 
 book plural
 
