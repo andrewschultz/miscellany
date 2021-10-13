@@ -393,15 +393,15 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
 
 cfg_split = cfg_to_data = cfg_data_split
 
-def quick_dict_from_line(my_line, outer_separator = ',', inner_separator = '=', use_ints = False, delete_before_colon = True, need_colon = True):
+def quick_dict_from_line(my_line, init_separator=':', outer_separator = ',', inner_separator = '=', use_ints = False, delete_before_colon = True, need_init_delimiter = True):
     my_line = my_line.strip()
-    if need_colon and ':' not in my_line:
+    if need_init_delimiter and init_separator not in my_line:
         print("WARNING no colon in line", my_line, "so skipping, since we specified we need it.")
         return
     if delete_before_colon:
-        if ':' not in my_line:
-            print("WARNING no colon in line", my_line, "but still; processing.")
-        my_line = re.sub("^.*?:", "", my_line)
+        if init_separator not in my_line:
+            print("WARNING no initial separator {} in line <<{}>> but still processing.".format(init_separator, my_line))
+        my_line = re.sub("^.*?" + init_separator, "", my_line)
     if use_ints:
         temp_dict = defaultdict(int)
     else:
