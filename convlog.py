@@ -1,5 +1,6 @@
 # logfile's format is 0=file 1=errors 2=time run finished 3=time taken
 
+import mytools as mt
 import re
 import os
 import pendulum
@@ -18,7 +19,10 @@ raw_link = defaultdict(str)
 mod_link = defaultdict(str)
 timestamp = defaultdict(int)
 
+write_to_file = False
+
 my_binary = ''
+my_proj = ''
 
 def find_binary_in(a_file):
     with open(a_file) as file:
@@ -46,10 +50,20 @@ def now_of(my_time):
     my_time_int = round(float(my_time))
     return pendulum.from_timestamp(my_time_int, tz='local').format("YYYY/MM/DD HH:mm:ss")
 
-try:
-    my_proj = i7.main_abb(sys.argv[1])
-except:
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    temp_proj = i7.main_abb(arg)
+    if temp_proj:
+        my_proj = temp_proj
+    elif arg == 'w':
+        write_to_file = True
+    cmd_count += 1
+
+if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
+    if not my_proj:
+        sys.exit("Specify project or move to a directory with a project.")
     print("Pulling default project", my_proj)
 
 out_file = os.path.join(i7.prt, "logpy-{}.htm".format(my_proj))
@@ -109,6 +123,8 @@ f.close()
 
 print("Spoiler alert: {} never passed, {} still have errors, {} passed.".format(len(never_pass), len(still_errs), len(passed)))
 
+total_errs = len(still_errs) + len(never_pass)
+
 if len(still_errs):
     my_max = max(still_errs, key=last_errs.get)
     print("Most still-errs is {} with {}".format(my_max, last_errs[my_max]))
@@ -116,6 +132,20 @@ if len(still_errs):
 if len(never_pass):
     my_max = max(never_pass, key=last_errs.get)
     print("Most never-pass is {} with {}".format(my_max, last_errs[my_max]))
+
+if write_to_file:
+    if total_errs == 0:
+        sys.exit("No script to write.")
+    else:
+        td = pendulum.now()
+        todays_date = td.format("YYYYMMDD")
+        f = open(todays_date, "w", newline='\n')
+        for x in still_errs:
+            f.write("r1 {}\n".format(x))
+        for x in never_pass:
+            f.write("r1 {}\n".format(x))
+        f.close()
+        print("Wrote re-run script to", todays_date)
 
 os.system(out_file)
 #g = glob.glob("c:/games/inform/prt/reg-{}-*.txt".format(my_proj))
