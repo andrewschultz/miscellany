@@ -6,6 +6,9 @@
 #
 # imk.py ai ta
 #
+# Fourbyfourian Quarryin Beta Testing:
+# imk.py 4 be
+#
 # other/core files can be created with
 #
 # imk.py "My new odd extension"
@@ -84,7 +87,8 @@ if not base_file_noxt:
 
 base_file = base_file_noxt + ".i7x"
 nongit_file = i7.extdir + "\\" + base_file # can't use os.path.join since the file may not be there
-git_file = i7.gh_dir + "\\" + my_proj + "\\" + base_file
+my_git_proj = i7.i7gx[i7.main_abbr(my_proj)] if my_proj in i7.i7xr else my_proj
+git_file = i7.gh_dir + "\\" + my_git_proj + "\\" + base_file
 
 link_command = "mklink \"{}\" \"{}\"".format(nongit_file, git_file)
 
