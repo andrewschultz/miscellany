@@ -146,7 +146,7 @@ for x in include_files:
     if author_only and my_name.lower() not in x.lower():
         print("Skipping not-by-author", xb)
         continue
-    if project_only and my_title.lower() not in x.lower():
+    if project_only and my_title.lower().replace('-', ' ') not in x.lower() and my_title.lower().replace('-', '') not in x.lower():
         force_accept = False
         for a in accepts:
             if a in x.lower():
