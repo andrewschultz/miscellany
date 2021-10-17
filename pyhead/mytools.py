@@ -680,9 +680,10 @@ def alfcomp(x1, x2, bail = True, comments = True, spaces = False, show_winmerge 
         if bail: sys.exit()
     return cmp(a1, a2)
 
-def wm(x1, x2, ignore_if_identical = True):
+def wm(x1, x2, ignore_if_identical = True, quiet = False):
     if ignore_if_identical and cmp(x1, x2):
-        print("Not comparing identical files", x1, "and", x2, "in WinMerge.")
+        if not quiet:
+            print("Not comparing identical files", x1, "and", x2, "in WinMerge.")
         return
     os.system("wm \"{:s}\" \"{:s}\"".format(x1, x2))
 
