@@ -90,11 +90,16 @@ def truth_state_of(text_data, print_warning = True):
 def bail_if_not(f, file_desc = ""):
     if not os.path.exists(f): sys.exit("Need {:s}{:s}file {:s}".format(file_desc, " " if file_desc else "", f))
 
+def filelines_no_comments(file_stream):
+    return [ x for x in file_stream.readlines() if x.strip() and not x.startswith('#') and not x.startswith(";") ]
+
 def alpha_match(var1, var2, case_insensitive = True):
     if case_insensitive:
         var1 = var1.lower()
         var2 = var2.lower()
     return sorted(var1) == sorted(var2)
+
+alf_match = alfmatch = alphamatch = alpha_match
 
 def plur(a, choices=['s', '']):
     if type(a) == str and a.isdigit():
@@ -137,6 +142,8 @@ def is_daily(x):
     if '/' in x or '\\' in x:
         x = os.path.basename(x).lower()
     return re.search("^2[0-9]{7}\.txt$", x)
+
+is_daily_file = is_daily
 
 def has_uncommented_text(x, bail_on_semicolon = False):
     if not exist(x): return False
