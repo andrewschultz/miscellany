@@ -842,10 +842,12 @@ def comment_combine(my_lines, cr_at_end = True):
 
 comcom = comment_combine
 
-def zap_comment(my_line, zap_spaces_before = True):
+def zap_comment(my_line, zap_spaces_before = True, zap_brackets = True):
     temp = re.sub("#.*", "", my_line)
     if zap_spaces_before:
         temp = temp.strip()
+    if zap_brackets:
+        temp = re.sub("\[[^\]]*\]$", "", temp)
     return temp
 
 no_comment = no_comments = zap_comments = zap_comment
