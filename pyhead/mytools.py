@@ -673,19 +673,20 @@ def alphabetize_lines(x, ignore_punctuation_and_articles = True):
         temp = x.split("\n")
     return "\n".join(sorted(temp, key=lambda x:strip_punctuation(x) if ignore_punctuation_and_articles else x.lower())) + "\n"
 
-def alfcomp(x1, x2, bail = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True):
+def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True, quiet = True):
     a1 = "c:/writing/temp/alpha-1.txt"
     a2 = "c:/writing/temp/alpha-2.txt"
-    if acknowledge_comparison:
+    if acknowledge_comparison and not quiet:
         print("Alphabetical comparison: {} vs {}".format(x1, x2))
     create_temp_alf(x1, a1, comments, spaces)
     create_temp_alf(x2, a2, comments, spaces)
-    if show_winmerge:
+    temp = cmp(a1, a2)
+    if show_winmerge and not temp:
         wm(a1, a2)
         os.remove(a1)
         os.remove(a2)
-        if bail: sys.exit()
-    return cmp(a1, a2)
+        if bail_on_show_winmerge: sys.exit()
+    return temp
 
 def wm(x1, x2, ignore_if_identical = True, quiet = False):
     if ignore_if_identical and cmp(x1, x2):
