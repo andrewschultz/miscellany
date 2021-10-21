@@ -489,9 +489,12 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0): # returns true if identical, false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
+    if f1 == f2:
+        print("You are comparing {} to itself.".format(f1))
+        return True
     freq = defaultdict(int)
     total = defaultdict(int)
     with open(f1) as file:
@@ -507,6 +510,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     left = 0
     right = 0
     totals = 0
+    bn1 = os.path.basename(f1)
+    bn2 = os.path.basename(f2)
+    if bn1 == bn2:
+        bn1 = f1
+        bn2 = f2
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
@@ -516,7 +524,9 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                 j2 = j
                 if max_chars and len(j) > abs(max_chars):
                     j2 = j[:max_chars] + " ..." if max_chars > 0 else "... " + j[max_chars:]
-                print(">>>RIGHT FILE" if freq[j] > 0 else "LEFT FILE<<<<", 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, os.path.basename(f1) if freq[j] > 0 else os.path.basename(f2))) # different # of >>/<< to make eyeball comparisons (if necessary) easier
+                if not mention_blanks and not j2:
+                    continue
+                print(">>>{}".format(bn1) if freq[j] > 0 else "{}<<<<".format(bn2), 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2)) # different # of >>/<< to make eyeball comparisons (if necessary) easier
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
