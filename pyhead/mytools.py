@@ -667,6 +667,8 @@ def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = '
     q = q.replace('-', ' ')
     q = q.replace('!', '')
     q = q.replace('?', '')
+    q = q.replace('~', '')
+    q = q.replace("[']", '') # inform 7 tweak
     q = q.replace("'", '')
     if '  ' in q:
         q = re.sub(" {2,}", " ", q)
@@ -915,6 +917,7 @@ def latest_of(file_array, latest = True):
             y = os.stat(x)
             if y.st_mtime > last_time:
                 new_ret = x
+                last_time = y.st_mtime
         except:
             print("No info for", x)
     if not new_ret: sys.exit("Can't get latest of {}".format(', '.join(file_array)))
