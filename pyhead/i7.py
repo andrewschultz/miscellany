@@ -734,6 +734,9 @@ sdir = p2d = proj2dir
 def ghtest(x = dir2proj()):
     return os.path.normpath(os.path.join(proj2dir(x, to_github = True), 'testing'))
 
+def ghutils(x = dir2proj()):
+    return os.path.normpath(os.path.join(proj2dir(x, to_github = True), 'utils'))
+
 def proj2mat(x = dir2proj()):
     return proj2dir(x, my_subdir = "", materials = True)
 
