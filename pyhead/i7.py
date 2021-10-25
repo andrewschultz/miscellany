@@ -705,15 +705,23 @@ def inform_short_name(my_file, acknowledge_dailies = True):
         elif 'drive' in my_file:
             return "(drive) {}".format(retval)
         elif 'daily' in my_file:
-            return "(daily) {}".format(retval)
+            return "({}daily) {}".format('current ' if 'to-proc' not in my_file else '', retval)
         else:
             return "(YYYYMMDD notes) {}".format(retval)
+    if retval.startswith("notes-"):
+        base = re.sub("\..*", "", retval[6:])
+        return "{} notes".format(long_name(base, strip_dashes = True).title())
     return '* ({})'.format(retval)
 
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj(), my_subdir = "source", to_github = False, materials = False, bail_if_nothing = False):
+def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True):
+    if default_subdir and not my_subdir:
+        if materials:
+            my_subdir = "Release"
+        else:
+            my_subdir = "source"
     if to_github:
         temp = main_abb(x)
         if not temp:
@@ -1027,8 +1035,12 @@ with open(i7_cfg_file) as file:
         l0p = re.sub(".*:", "", l0[0])
         l1 = l0[1].split(",")
         if l0[0].startswith("headers:"):
-            i7f[l0p] = [ src(l0p) ]
-            i7fg[l0p] = [ gh_src(l0p) ]
+            if l0p in i7com:
+                i7f[l0p] = []
+                i7fg[l0p] = []
+            else:
+                i7f[l0p] = [ src(l0p) ]
+                i7fg[l0p] = [ gh_src(l0p) ]
             for q in l1:
                 i7f[l0p].append(hdr(l0p, q))
                 i7fg[l0p].append(hdr(l0p, q, github=True))
