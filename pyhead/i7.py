@@ -109,10 +109,13 @@ def strip_name_punc(x, remove_apostrophe = True, space_dash = True):
 
 strip_name = name_strip = strip_name_punc
 
-def long_name(x, debug = False):
+def long_name(x, debug = False, strip_dashes = False):
     if x in i7x:
-        return i7x[x]
-    if x not in i7xr:
+        temp = i7x[x]
+        if strip_dashes:
+            temp = strip_name_punc(temp)
+        return temp
+    if x not in i7xr and debug:
         print("Warning: finding long name for", x," failed.")
     return x
 
@@ -127,6 +130,8 @@ def main_abb(x, use_given = False):
         print("    **** I7.PY WARNING {}/{} does not have reverse abbreviation.".format(x, i7x[x]))
         return ""
     return i7xr[i7x[x]]
+
+main_abbr = main_abbrev = main_abb
 
 def dict_val_or_similar(my_key, my_dict):
     if my_key in my_dict:
