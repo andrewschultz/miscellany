@@ -183,7 +183,7 @@ def zap_end_brax(x):
         x = re.sub(" *\[.*?\]", "", x)
     return x
 
-def cols_of(file_name, table_name, default_value = 0):
+def cols_of(file_name, table_name, default_value = 0, warn_if_different = True):
     if not os.path.exists(file_name):
         print("Going with default value {} for {} # of columns as {} doesn't exist.".format(default_value, table_name, file_name))
         return default_value
@@ -195,10 +195,10 @@ def cols_of(file_name, table_name, default_value = 0):
                 continue
             if check_next:
                 line = re.sub("[ \t]*\[[^\]]*\]", "", line)
-                retval = len(line.split("\t"))
+                ret_val = len(line.split("\t"))
                 if default_value and warn_if_different and default_value != ret_val:
-                    print("WARNING: return value {} different from default value {}.".format(retval, default_value))
-                return retval
+                    print("WARNING: return value {} different from default value {}.".format(ret_val, default_value))
+                return ret_val
     print("Did not find table name {} in {}. Returning default value {} for # of columns.".format(table_name, file_name, default_value))
     return default_value
 
