@@ -258,20 +258,24 @@ def one_topic_to_array(x, div_char = "/"): # a/b c/d to a c, a d,
             return return_array
     return return_array
 
-def topics_to_array(x, div_char = "/"):
+def topics_to_array(x, div_char = "/", convert_to_spaces = True, double_dash_to_blank = True):
     ret_ary = []
     if '"' in x:
         all_topics = x.split('"')
     else:
         all_topics = [x]
     for temp in all_topics[1::2]:
+        if double_dash_to_blank:
+            temp = re.sub("\w--\w", "", temp)
         temp2 = one_topic_to_array(temp.split(' '))
         ret_ary.extend(temp2)
+    if convert_to_spaces:
+        return [ ' '.join(x) for x in ret_ary ]
     return ret_ary
 
 topx2ary = topics_to_array
 
-def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "volume beta testing"):
+def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "beta testing"):
     got_beta_line = False
     changed_beta_line = False
     from_file = main_src(my_proj)
@@ -279,7 +283,7 @@ def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "volume beta 
     f = open(to_file, "w", newline="\n")
     with open(from_file) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line.startswith(text_to_find):
+            if re.search("^(volume|book|part|chapter|section) {}".format(text_to_find), line.lower()):
                 got_beta_line = True
                 if "not for release" in line:
                     changed_beta_line = True
@@ -287,6 +291,9 @@ def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "volume beta 
                     continue
                 else:
                     print("Found beta line {}, but it was already marked for-release.".format(line.strip()))
+            elif is_beta_include(line):
+                line = line.replace('[', '').replace(']', '')
+                got_beta_line = True
             f.write(line)
     f.close()
     if not got_beta_line:
