@@ -40,6 +40,10 @@ DASH_TO_UNDERSCORE = 1
 KEEP_DASH_UNDERSCORE = 0
 UNDERSCORE_TO_DASH = -1
 
+SORT_ALPHA_BACKWARD = -1
+SORT_ALPHA_NONE = 0
+SORT_ALPHA_FORWARD = 1
+
 def dailies_of(my_dir = "c:/writing/daily"):
     try_1 = [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
     return [x for x in try_1 if re.search("^[0-9]{8}\.txt$", x)]
@@ -829,7 +833,7 @@ def browser_or_native(file_name, print_action = True, bail = False, return_to_or
     if bail:
         sys.exit()
 
-file_in_browser = file_in_browser_conditional = gib = g_i_b = graphics_in_browser = tib = t_i_b = text_in_browser = fib = f_i_b = browser_or_native
+open_in_browser = file_in_browser = file_in_browser_conditional = gib = g_i_b = graphics_in_browser = tib = t_i_b = text_in_browser = fib = f_i_b = browser_or_native
 
 def comment_combine(my_lines, cr_at_end = True):
     if type(cr_at_end) != bool and type(cr_at_end) != int:
