@@ -585,6 +585,10 @@ def invis_file(x, warning=False):
 
 def notes_file(x, suffix=''):
     notes_local = "notes{}.txt".format('-' + suffix if suffix else '')
+    if x in i7com:
+        combo_try = "c:/Users/Andrew/Documents/github/configs/notes/notes-{}.txt".format(main_abb(x))
+        if os.path.exists(combo_try):
+            return combo_try
     return os.path.join(sdir(x), notes_local)
 
 def walkthrough_file(x, extra_string = ""):
@@ -646,8 +650,8 @@ def hfi_exp(x, return_nonblank = True):
     if return_nonblank: return x
     return ""
 
-def lpro(x, spaces=False):
-    retval = proj_exp(x, False)
+def lpro(x, nonblank = False, spaces = True):
+    retval = proj_exp(x, nonblank)
     if spaces: retval = re.sub("-", " ", retval)
     return retval
 
@@ -703,6 +707,8 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
 
 def inform_short_name(my_file, acknowledge_dailies = True):
     retval = os.path.basename(my_file)
+    if retval.startswith('reg-') or retval.startswith('rbr-'):
+        return retval
     if 'i7x' in retval:
         return retval.replace('.i7x', '')
     if retval in i7gsn:
