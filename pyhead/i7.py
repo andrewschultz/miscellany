@@ -243,7 +243,7 @@ def quoted_text_array_of(my_line, erase_brackets = True, get_inside = True, as_l
     else:
         return ' '.join(ary)
 
-def one_topic_to_array(x, div_char = "/"): # a/b c/d to a c, a d, 
+def one_topic_to_array(x, div_char = "/"): # a/b c/d to a c, a d,
     if div_char not in ''.join(x):
         return [x]
     return_array = []
@@ -493,6 +493,8 @@ def gh_src(x = os.getcwd(), give_source = True):
     if give_source: retval = os.path.join(retval, "story.ni")
     return os.path.normpath(retval)
 
+github_source = gh_source = github_src = gh_src
+
 def i2g(x, force_copy_to_github = False, force_copy_from_github = False):
     if force_copy_to_github and force_copy_from_github:
         print("Whoah there little dude! You can't force copying to and from {:s}!".format(sys._getframe().f_code.co_name))
@@ -566,8 +568,8 @@ blo = bl_o = build_log_open
 
 def hdr(x, y, base=False, github=False):
     if proj_exp(y, False) and x in i7hfx and not proj_exp(x, False): (x, y) = (y, x) # if x is a header and not a project, flip x and y
-    x = main_abb(x)
-    base_file_name = '{:s} {:s}.i7x'.format(lpro(x, True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+    x = main_abb(x, use_given = True)
+    base_file_name = '{:s} {:s}.i7x'.format(lpro(x, nonblank=True).title(), i7hfx[y].title() if y in i7hfx else y.title())
     temp = '{:s}\{:s}'.format(extdir, base_file_name)
     if base:
         return os.path.basename(temp)
