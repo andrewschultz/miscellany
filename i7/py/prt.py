@@ -5,6 +5,14 @@ import sys
 import i7
 import filecmp
 
+def bin_not_blorb(x):
+    ary = os.path.splitext(x)
+    try:
+        y = ary[1]
+    except:
+        return False
+    return y.lower() in ('.z5', '.z8', '.ulx')
+
 try:
     my_proj = i7.long_name(sys.argv[1])
 except:
@@ -34,10 +42,12 @@ build_dir = i7.proj2dir(my_proj, my_subdir = "Build")
 
 y0 = glob.glob(os.path.join(build_dir, "output.*"))
 
+y = [x for x in y0 if bin_not_blorb(x)]
+
 if len(y) == 0:
-    sys.exit("No binary found in {}".format(build_dir))
+    sys.exit("No non-blorb binary found in {}".format(build_dir))
 elif len(y) > 1:
-    sys.exit("Multiple binaries found in {}: {}".format(build_dir, y))
+    sys.exit("Multiple non-blorb binaries found in {}: {}".format(build_dir, y))
 
 my_copy_file = y[0]
 
@@ -52,7 +62,7 @@ else:
     shutil.copy(y[0], file_dest)
 
 if not changes:
-    print("No test scripts changed.")
+    print("No test scripts changed--note that RBR.PY may run PRT.PY automatically.")
 
 if not news:
     print("No new test scripts.")
