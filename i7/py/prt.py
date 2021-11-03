@@ -31,6 +31,7 @@ for x in glob.glob(os.path.join(mp, "reg-*.txt")):
     if not os.path.exists(x0):
         print("New file", x0)
         news += 1
+        continue
     if filecmp.cmp(x, x0):
         continue
     else:
@@ -47,7 +48,10 @@ y = [x for x in y0 if bin_not_blorb(x)]
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))
 elif len(y) > 1:
-    sys.exit("Multiple non-blorb binaries found in {}: {}".format(build_dir, y))
+    print("Multiple non-blorb binaries found in {}. Please leave one and try again.".format(build_dir))
+    for y0 in y:
+        print("    " + y0)
+    sys.exit()
 
 my_copy_file = y[0]
 
