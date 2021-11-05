@@ -1,3 +1,11 @@
+#
+# prt.py : python regression test copy-over script
+# supplants prt.pl (old copy-over script) -- more portable, faster
+#
+# usage: no arguments or, if there are 2 binary files,
+#     prt.py fxz8 to pull a z8 file
+#
+
 import shutil
 import os
 import glob
@@ -16,6 +24,7 @@ def bin_not_blorb(x):
 
 cmd_count = 1
 my_proj = ''
+force_extension = ''
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
@@ -65,7 +74,7 @@ if force_extension:
         y = [x for x in y if x.endswith(force_extension)]
     else:
         print("No need to force extension. Only one file found.")
-    
+
 
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))

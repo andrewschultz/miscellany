@@ -18,6 +18,8 @@ my %fileCopy;
 
 findProj();
 
+print("NOTE: THIS HAS BEEN SUPERSEDED BY prt.py!")
+
 my $ignore_timestamps = 1;
 my $ignoreBinary = 0;
 my $prt          = "c:\\games\\inform\\prt";
