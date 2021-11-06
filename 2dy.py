@@ -545,6 +545,9 @@ def read_2dy_cfg():
                 minimum_seconds_between = int(data)
             elif prefix == 'glob':
                 glob_string = data
+                if not data.endswith(".txt"):
+                    print("Tacking on .txt to glob in {} at line {}.".format(my_sections_file, line_count))
+                    glob_string += '.txt'
             elif prefix == 'file_header':
                 file_header += data.replace("\\", "\n") + "\n"
             elif prefix in ( 'color', 'colors' ):
