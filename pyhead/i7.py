@@ -183,6 +183,16 @@ def zap_end_brax(x):
         x = re.sub(" *\[.*?\]", "", x)
     return x
 
+def first_table_text(my_line, include_quotes = False):
+    ary = my_line.strip().split("\t")
+    for x in ary:
+        if x.startswith('"'):
+            retval = x.split('"')[1]
+            if include_quotes:
+                retval = '"' + retval + '"'
+            return retval
+    return ''
+
 def cols_of(file_name, table_name, default_value = 0, warn_if_different = True):
     if not os.path.exists(file_name):
         print("Going with default value {} for {} # of columns as {} doesn't exist.".format(default_value, table_name, file_name))
@@ -489,6 +499,8 @@ rq = remove_quotes
 
 def gh_src(x = os.getcwd(), give_source = True):
     temp = proj_exp(x, to_github = True)
+    if temp in i7gx:
+        temp = i7gx[temp]
     retval = os.path.join(gh_dir, temp)
     if give_source: retval = os.path.join(retval, "story.ni")
     return os.path.normpath(retval)
