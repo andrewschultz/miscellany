@@ -546,7 +546,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False):
+def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False, my_opt_bail_msg = ''):
     if not os.path.exists(my_file):
         print("WARNING:", my_file, "does not exist.")
     elif follow_open_link:
@@ -563,7 +563,10 @@ def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link =
         os.system(cmd)
     else:
         print("Unable to find", my_file)
-    if bail: exit()
+    if bail:
+        if my_opt_bail_msg != '':
+            print(colorama.Fore.GREEN + my_opt_bail_msg + colorama.Style.RESET_ALL)
+        exit()
 
 def open_this(bail = True):
     try:
