@@ -15,6 +15,7 @@ verb_types = defaultdict(str)
 bracket_text = defaultdict(str)
 copy_text = True
 print_text = False
+general_text = ''
 
 verb_data = "c:/writing/scripts/verbdata.txt"
 sample_data = []
@@ -38,9 +39,12 @@ def add_clipboard_text(prefix, data):
     for x in ary:
         this_string += 'understand the command "{}" as something new.\n'.format(x)
     this_string += "\n"
+    global general_text
     for x in ary:
         second_arg = '' if not bracket_text[prefix] else " [{}]".format(bracket_text[prefix])
-        this_string += 'understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
+        to_add = '    understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
+        this_string += to_add
+        general_text += to_add
     this_string += "\n"
     this_string += "carry out {}:\n\tthe rule succeeds;\n\n".format(my_action)
     return this_string
@@ -98,7 +102,10 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if copy_text:
-    print("Copied source text to clipboard.")
+    print("Copied source text to clipboard. Note (p | clip) also works.")
+    if not print_text:
+        print("Overview of UNDERSTAND commands:")
+        print(general_text.rstrip())
     pyperclip.copy(clip_text)
 
 if print_text:
