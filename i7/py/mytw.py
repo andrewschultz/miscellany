@@ -1,5 +1,7 @@
+from filecmp import cmp
 import re
 import os
+from shutil import copy
 
 def check_valid_path():
     if not os.path.exists("style.css"):
@@ -9,7 +11,11 @@ def check_valid_path():
 
 def rewrite_css():
     in_gameport = ever_gameport = False
-    f = open("style2.css", "w")
+    orig_out_file = this_out_file = "style2.css"
+    rewrite_file = os.path.exists("style2.css")
+    if rewrite_file:
+        this_out_file = "bak-" + this_out_file
+    f = open(this_out_file, "w")
     with open("style.css") as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("#gameport"):
@@ -26,6 +32,13 @@ def rewrite_css():
                     continue
             f.write(line)
     f.close()
+    if rewrite_file:
+        if cmp(orig_out_file, this_out_file):
+            print("Everything is identical between this template export and last for {}.".format(orig_out_file))
+        else:
+            print("Copying over {} to {}.".format(this_out_file, orig_out_file))
+        copy(this_out_file, orig_out_file)
+        os.remove(this_out_file)
     if not ever_gameport:
         print("Didn't find #gameport in style.css.")
     else:
