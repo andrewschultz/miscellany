@@ -1,7 +1,18 @@
+# mytw.py: my template writer
+#
+# This is for when Inform runs things through the Parchment template. THe output index.html isn't quite what I want.
+# This checks for if everything is sane and then tweaks the lines that need tweaking.
+# It's a bit hard-coded, but it works.
+#
+
 from filecmp import cmp
 import re
 import os
 from shutil import copy
+import sys
+
+import i7
+import mytools as mt
 
 def check_valid_path():
     if not os.path.exists("style.css"):
@@ -58,6 +69,22 @@ def rewrite_play():
         print("Didn't change play.html to play2.html.")
     else:
         print("Changed play.html to play2.html.")
+
+cmd_count = 1
+got_one = False
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    temp = i7.proj2matr(arg)
+    if temp:
+        if got_one:
+            sys.exit("Can't run two projects in one run.")
+        print("Going to", temp)
+        got_one = True
+        os.chdir(temp)
+    else:
+        sys.exit("Invalid project specified.")
+    cmd_count += 1
 
 check_valid_path()
 rewrite_css()
