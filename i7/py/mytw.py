@@ -1,8 +1,12 @@
+#
 # mytw.py: my template writer
 #
 # This is for when Inform runs things through the Parchment template. THe output index.html isn't quite what I want.
 # This checks for if everything is sane and then tweaks the lines that need tweaking.
 # It's a bit hard-coded, but it works.
+#
+# usage: nothing needed in the right directory
+#        mytw.py would tweak Ailihphilia's necessary web pages
 #
 
 from filecmp import cmp
@@ -23,7 +27,7 @@ def check_valid_path():
 def rewrite_css():
     in_gameport = ever_gameport = False
     orig_out_file = this_out_file = "style2.css"
-    rewrite_file = os.path.exists("style2.css")
+    rewrite_file = os.path.exists(orig_out_file)
     if rewrite_file:
         this_out_file = "bak-" + this_out_file
     f = open(this_out_file, "w")
@@ -57,7 +61,11 @@ def rewrite_css():
 
 def rewrite_play():
     got_css = False
-    f = open("play2.html", "w")
+    orig_out_file = this_out_file = "play2.html"
+    rewrite_file = os.path.exists(orig_out_file)
+    if rewrite_file:
+        this_out_file = "bak-" + this_out_file
+    f = open(this_out_file, "w")
     with open("play.html") as file:
         for (line_count, line) in enumerate (file, 1):
             if re.search("<link.*style.css", line):
@@ -65,10 +73,17 @@ def rewrite_play():
                 line = line.replace("style.css", "style2.css")
             f.write(line)
     f.close()
+    if rewrite_file:
+        if cmp(orig_out_file, this_out_file):
+            print("Everything is identical between this template export and last for {}.".format(orig_out_file))
+        else:
+            print("Copying over {} to {}.".format(this_out_file, orig_out_file))
+        copy(this_out_file, orig_out_file)
+        os.remove(this_out_file)
     if not got_css:
-        print("Didn't change play.html to play2.html.")
+        print("Found relevant css-change lines in play.html.")
     else:
-        print("Changed play.html to play2.html.")
+        print("Didn't find relevant css-change lines in play.html.")
 
 cmd_count = 1
 got_one = False
