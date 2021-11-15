@@ -686,12 +686,18 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
         if not x2:
             sys.stderr.write("WARNING: {} should've mapped to a project but didn't.".format(x))
     elif 'github' in ary and ary.index('github') < len(ary) - 1:
-        x2 = ary[ary.index('github') + 1]
+        ghi = ary.index('github') + 1
+        long_match = '/'.join(ary[ghi:])
+        x2 = ary[ghi]
         for x in range(ary.index('github') + 2, len(ary)):
             if os.path.exists(os.path.join(pathlib.Path(*ary[:x]), "story.ni")):
                 x2 = ary[x-1]
                 if return_first_subfind:
                     break
+        for x in i7gxr:
+            if long_match.startswith(x):
+                x2 = x
+                break
     elif os.path.exists(os.path.join(x0, "story.ni")) or ".inform" in x0: # this works whether in the github or inform directory
         for a in ary:
             if ".inform" in a:
