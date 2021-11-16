@@ -19,6 +19,8 @@ raw_link = defaultdict(str)
 mod_link = defaultdict(str)
 timestamp = defaultdict(int)
 
+wild_cards = ''
+
 write_to_file = False
 
 my_binary = ''
@@ -38,6 +40,8 @@ def center_write(my_text):
     f.write("<center><font size=+4>{}</font></center>".format(my_text))
 
 def html_table_make(val_array, array_of_dict):
+    if len(val_array) == 0:
+        f.write("<center><font size=+4>(nothing found, no table created)</font></center>\n")
     f.write("<center><table border=1>")
     for x in sorted(val_array):
         f.write("<tr><td>{}</td>".format(x))
@@ -58,6 +62,9 @@ while cmd_count < len(sys.argv):
         my_proj = temp_proj
     elif arg == 'w':
         write_to_file = True
+    elif arg.startswith("w="):
+        write_to_file = True
+        wild_cards = arg[2:]
     cmd_count += 1
 
 if not my_proj:
@@ -137,15 +144,23 @@ if write_to_file:
     if total_errs == 0:
         sys.exit("No script to write.")
     else:
+        total_commands = 0
         td = pendulum.now()
         todays_date = td.format("YYYYMMDD")
         f = open(todays_date, "w", newline='\n')
         for x in still_errs:
-            f.write("r1 {}\n".format(x))
+            if not wild_cards or re.search(wild_cards, x):
+                f.write("r1a {}\n".format(x))
+                total_commands += 1
+        f.write("##################still has errors above, never passed below\n")
         for x in never_pass:
-            f.write("r1 {}\n".format(x))
+            if not wild_cards or re.search(wild_cards, x):
+                f.write("r1a {}\n".format(x))
+                total_commands += 1
         f.close()
         print("Wrote re-run script to", todays_date)
+        if total_commands == 0:
+            print("No commands were sent to the command file with wildcard {}, even though error files were found.".format(wild_cards))
 
 os.system(out_file)
 #g = glob.glob("c:/games/inform/prt/reg-{}-*.txt".format(my_proj))
