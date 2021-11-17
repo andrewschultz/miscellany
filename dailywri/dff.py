@@ -17,6 +17,7 @@ from filecmp import cmp
 from shutil import copy
 import colorama
 import pathlib
+import ctypes
 
 DEFAULT_SORT = daily.DAILY
 
@@ -70,6 +71,8 @@ show_blank_to_blank = True
 edit_blank_to_blank = True
 run_test_file = False
 
+pop_up_if_clean = False
+
 read_most_recent = False
 
 bail_on_warnings = True
@@ -79,6 +82,7 @@ ask_to_copy_back = False
 show_stat_numbers = False
 
 last_file_first = True
+ignore_limerick_headers_in_stats = True
 
 STATS_EXT_OFF = 0
 STATS_EXT_ALPHABETICALLY = 1
@@ -164,6 +168,8 @@ def idea_count(text_chunk):
         return text_chunk.count('\n') + 1 # sections' CRs cut off at end
     elif '\t' in text_chunk:
         return text_chunk.count('\t') + 1
+    elif text_chunk.startswith("====") and ignore_limerick_headers_in_stats:
+        return 0
     else:
         return 1
 
@@ -738,6 +744,9 @@ def sort_raw(raw_long):
     no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
     if no_changes:
         if verbose or read_most_recent: print(raw_long, "had no sortable changes since last run.")
+        if pop_up_if_clean:
+            messageBox2 = ctypes.windll.user32.MessageBoxA
+            messageBox2(None, "Popup to mention that weekly file is sorted OK.\n\nThis should usually only be run at week's end.".encode('ascii'), "HOORAY!".encode('ascii'), 0x0)
     if show_stat_numbers:
         print("    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)))
         without_names = os.stat(temp_out_file).st_size - len(sections['nam'])
@@ -839,6 +848,8 @@ while cmd_count < len(sys.argv):
         protect_no_force = True
     elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
         only_list_files = True
+    elif arg == 'puc':
+        pop_up_if_clean = True
     elif arg == '1a':
         copy_then_test = True
         test_no_copy = False
