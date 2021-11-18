@@ -52,8 +52,9 @@ news = 0
 for x in glob.glob(os.path.join(mp, "reg-*.txt")):
     x0 = os.path.join(i7.prt, os.path.basename(x))
     if not os.path.exists(x0):
-        print("New file", x0)
+        print("Copying over new file", x0)
         news += 1
+        shutil.copy(x, x0)
         continue
     if filecmp.cmp(x, x0):
         continue
@@ -79,7 +80,7 @@ if force_extension:
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))
 elif len(y) > 1:
-    print("Multiple non-blorb binaries found in {}. Delete one and try again, or use x(extension).".format(build_dir))
+    print("Multiple non-blorb binaries found in {}. Delete one and try again, or use fx(extension) to force extension.".format(build_dir))
     for y0 in y:
         print("    " + y0)
     sys.exit()
