@@ -112,9 +112,10 @@ waited-yet is a truth state that varies.
 ignore-wait is a truth state that varies.
 
 to wfak:
+	if debug-state is true, continue the action;
 	if ignore-wait is false:
 		if any-key-yet is false:
-			say "[i][bracket]NOTE: when the prompt does not appear, it means you need to push any key to continue[close bracket][r]";
+			say "[i][bracket][b]NOTE[r][i]: when the prompt does not appear, it means you need to push any key to continue[close bracket][r]";
 			now any-key-yet is true;
 			wait for any key;
 			say "[paragraph break]";
@@ -124,7 +125,7 @@ to wfak:
 any-key-yet is a truth state that varies.
 
 to say wfak:
-	if any-key-yet is false, say " (when text pauses like this, it means press any key to continue)";
+	if any-key-yet is false, say " [i](when text pauses like this, it means press any key to continue)[r]";
 	if debug-state is false:
 		wfak;
 		if any-key-yet is false:
