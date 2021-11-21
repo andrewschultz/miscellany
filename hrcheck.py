@@ -274,9 +274,14 @@ def read_hourly_check(a):
 
 def check_print_run(x, msg="(no message)"):
     if not x: return 0
-    if x.startswith("http"): x = "start " + x
     if print_cmd: print("***running", msg, x)
-    if run_cmd: os.system(x)
+    if run_cmd:
+        if x.startswith("http"):
+            if '^&' in x:
+                print("WARNING: get rid of ^& and replace with &, as we aren't using os.system any more.")
+            os.startfile(x)
+        else:
+            os.system(x)
     return 1
 
 def carve_up(q, msg):
