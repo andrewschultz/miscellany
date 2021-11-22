@@ -541,7 +541,21 @@ blurb = blurb_file
 def uid_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "uuid.txt"))
 
-uuid = uuid_file = uid_file
+uuid = uuid_file = uidfile = uid_file
+
+def uuid_value(x):
+    dummy_id = '00000000-0000-0000-0000-0000-00000000'
+    if not os.path.exists(uidfile(x)):
+        print("WARNING: could not find uuid file for project {x}. Going with default.")
+        return dummy_id
+    with open(uid_file(x)) as file:
+        for line in file:
+            l = line.strip()
+            print(l)
+            if re.search("^[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$", l):
+                return line
+    print("WARNING: could not find valid UUID in uuid file for project {x}. Going with default.")
+    return dummy_id
 
 def auto_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
