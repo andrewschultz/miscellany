@@ -239,7 +239,7 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
         if generic_blorb:
             blorb_file = 'Build/output.{}'.format(blorb_ext_of(output_ext))
         else:
-            other_blorb = "{}/{}.{}".format(i7.proj2dir(this_proj, materials = True), title_from_blurb(this_proj), blorb_ext_of(output_ext))
+            blorb_file = "{}/{}.{}".format(i7.proj2dir(this_proj, materials = True), title_from_blurb(this_proj), blorb_ext_of(output_ext))
 
         print("Creating blorb file", blorb_file)
 
@@ -297,7 +297,7 @@ while cmd_count < len(sys.argv):
         to_blorb = True
     elif arg in ( 'bg', 'gb' ):
         generic_blorb = True
-    elif alpha_match(arg, 'bgn'):
+    elif mt.alpha_match(arg, 'bgn'):
         generic_blorb = False
     elif arg == 'no' or arg == 'on':
         overwrite = False
