@@ -285,6 +285,10 @@ def topics_to_array(x, div_char = "/", convert_to_spaces = True, double_dash_to_
 
 topx2ary = topics_to_array
 
+def is_beta_include(this_line):
+    tll = this_line.lower()
+    return tll.startswith("include") and " beta" in tll
+
 def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "beta testing"):
     got_beta_line = False
     changed_beta_line = False
@@ -297,7 +301,9 @@ def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "beta testing
                 got_beta_line = True
                 if "not for release" in line:
                     changed_beta_line = True
-                    f.write(text_to_find + "\n")
+                    line = line.replace('not for release', '').strip()
+                    line = re.sub("-$", "", line).strip()
+                    f.write(line + '\n')
                     continue
                 else:
                     print("Found beta line {}, but it was already marked for-release.".format(line.strip()))
@@ -307,12 +313,12 @@ def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "beta testing
             f.write(line)
     f.close()
     if not got_beta_line:
-        print("WARNIING: Found no '{}' line in {}, returning.".format(text_to_find, my_file))
-        os.remove(temp_out_file)
+        print("WARNIING: Found no '{}' line in {}, returning.".format(text_to_find, from_file))
+        os.remove(to_file)
         return
     if not changed_beta_line:
-        print("Did not change '{}' line in {}, returning.".format(text_to_find, my_file))
-        os.remove(temp_out_file)
+        print("Did not change '{}' line in {}, returning.".format(text_to_find, from_file))
+        os.remove(to_file)
         return
     print("Successfully toggled '{}' line in {} to {}".format(text_to_find, my_proj, beta_proj))
 
