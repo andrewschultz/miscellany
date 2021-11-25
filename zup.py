@@ -189,6 +189,7 @@ def read_zup_txt():
     file_base_dir = ''
     file_to_dir = ''
     current_file = ''
+    cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
@@ -200,6 +201,22 @@ def read_zup_txt():
                     file_base_dir = ''
                     file_to_dir = ''
                 continue
+            if line.startswith("$"):
+                if '=' not in line:
+                    flag_cfg_error(line_count, "= needed in string definition")
+                    continue
+                x = line.rstrip().split('=')
+                if not (x[0].startswith('$') and x[0].endswith('$')):
+                    flag_cfg_error(line_count, "$...$ needed in string definition")
+                    continue
+                cfg_string_table[x[0]] = '='.join(x[1:])
+                continue
+            if '$' in line:
+                for x in re.findall("\$.*\$", line):
+                    if x not in cfg_string_table:
+                        flag_cfg_error(line_count, "Invalid $...$ {} referenced".format(x))
+                        continue
+                    line = line.replace(x, cfg_string_table[x])
             if line.startswith("!"):
                 flag_cfg_error(line_count, "Remove old artifact (!) from config file at line", line_count)
                 continue
