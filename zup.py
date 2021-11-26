@@ -18,6 +18,7 @@ import pyperclip
 import filecmp
 import shlex
 import colorama
+import subprocess
 
 from collections import defaultdict
 
@@ -211,6 +212,8 @@ def read_zup_txt():
                     continue
                 cfg_string_table[x[0]] = '='.join(x[1:])
                 continue
+            if '%' in line:
+                line = line.replace('%', zups[proj_candidate].version)
             if '$' in line:
                 for x in re.findall("\$.*\$", line):
                     if x not in cfg_string_table:
@@ -479,10 +482,12 @@ for x in project_array:
         print(colorama.Fore.GREEN + "{} likely has a beta project, so this is just a nag to check you want the release and not the beta.".format(x) + colorama.Style.RESET_ALL)
 
 for x in zups:
+    print(x, zups[x].out_name)
     if zups[x].out_name:
-        zups[x].out_name = zups[x].out_name.replace("%", zups[x].version)
+        zups[x].out_name = zups[x].out_name
     else:
-        zups[x].out_name = '{}.zip'.format(name)
+        zups[x].out_name = '{}.zip'.format(x)
+    zups[x].out_name = zups[x].out_name.replace("%", zups[x].version)
 
 out_temp = os.path.join(zip_dir, "temp.zip")
 
@@ -496,7 +501,8 @@ for p in project_array:
         continue
     for x in zups[p].command_pre_buffer:
         print("Running pre-command", x)
-        subprocess.open(shlex.split(' ', x))
+        print(shlex.split(x, posix=False))
+        subprocess.Popen(shlex.split(x, posix=False))
     if build_before_zipping:
         is_beta = p.endswith("-b")
         p2 = p[:-2] if zups[p].build_type == "b" else p
@@ -528,7 +534,8 @@ for p in project_array:
     print(colorama.Fore.GREEN + "    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p) + colorama.Style.RESET_ALL)
     for x in zups[p].command_post_buffer:
         print("Running post-command", x)
-        subprocess.open(shlex.split(' ', x))
+        print(shlex.split(x))
+        subprocess.Popen(shlex.split(x))
     if copy_dropbox_after:
         if os.path.exists(os.path.join(dropbox_bin_dir, zups[p].out_name)):
             if filecmp.cmp(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
