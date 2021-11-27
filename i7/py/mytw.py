@@ -8,6 +8,8 @@
 # usage: nothing needed in the right directory
 #        mytw.py would tweak Ailihphilia's necessary web pages
 #
+# todo: allow for default path
+#
 
 from filecmp import cmp
 import re
@@ -20,7 +22,7 @@ import mytools as mt
 
 def check_valid_path():
     if not os.path.exists("style.css"):
-        sys.exit("No style.css found. Be sure you are releasing to parchment.")
+        sys.exit("No style.css found. Be sure you are releasing to Parchment.")
     if not os.path.exists("play.html"):
         sys.exit("No play.html found. Be sure you are releasing to Parchment.")
 
@@ -61,6 +63,9 @@ def rewrite_css():
 
 def rewrite_play():
     got_css = False
+    got_container = False
+    ignore_next = False
+    ignore_ever = False
     orig_out_file = this_out_file = "play2.html"
     rewrite_file = os.path.exists(orig_out_file)
     if rewrite_file:
@@ -68,9 +73,19 @@ def rewrite_play():
     f = open(this_out_file, "w")
     with open("play.html") as file:
         for (line_count, line) in enumerate (file, 1):
+            if '<div class="container">' in line:
+                got_container = True
+                f.write(line)
+                ignore_next = True
+                ignore_ever = True
+                continue
             if re.search("<link.*style.css", line):
                 got_css = True
                 line = line.replace("style.css", "style2.css")
+            if ignore_next:
+                if line.strip() != "</div>":
+                    continue
+                ignore_next = False
             f.write(line)
     f.close()
     if rewrite_file:
@@ -80,10 +95,15 @@ def rewrite_play():
             print("Copying over {} to {}.".format(this_out_file, orig_out_file))
         copy(this_out_file, orig_out_file)
         os.remove(this_out_file)
-    if not got_css:
+    if ignore_next:
+        print("I got to the end of the file and was still ignoring text. This is a big bug.")
+    if not ignore_ever:
+        print("I didn't find any DIV CONTAINER text to ignore.")
+    if got_css:
         print("Found relevant css-change lines in play.html.")
     else:
         print("Didn't find relevant css-change lines in play.html.")
+    print("Was {}able to delete container code in play.html.".format('' if got_container else 'un'))
 
 cmd_count = 1
 got_one = False
