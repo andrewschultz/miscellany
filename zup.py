@@ -5,6 +5,9 @@
 #
 # todo:
 # 2 switch statement in CFG reader (if possible)
+#
+# todo: disable extract if zipfiles created? Clean build? (put old zip to backup)? Override timestamp check?
+#
 
 import glob
 import re
@@ -105,6 +108,15 @@ def dict_reverse(my_dict, my_val, bail = True):
         if bail:
             sys.exit()
     return temp_key
+
+def invalid_times(time_compare_array):
+    ret_val = False
+    for t in time_compare_array:
+        if os.stat(t[0]).st_mtime < os.stat(t[1]).st_mtime:
+            print(colorama.Fore.RED + "{} should not have timestamp before {}".format(t[0], t[1]))
+            print("The reason: {}".format(t[2]) + colorama.Style.RESET_ALL)
+            ret_val = True
+    return ret_val
 
 def copy_first_link(project_array, bail = True):
     for p in project_array:
@@ -376,14 +388,19 @@ def read_zup_txt():
             elif prefix == 'postbuild':
                 curzip.post_build.append(data)
             elif prefix == 'time':
-                time_array = re.split("[<>]", data)
+                ary = data.split("\t")
+                if len(ary) > 1:
+                    time_msg = ary[1]
+                else:
+                    time_msg = "<UNDEFINED REASON>"
+                time_array = re.split("[<>]", ary[0])
                 if len(time_array) != 2:
                     flag_cfg_error(line_count, "Bad timing line {} needs exactly one < or >.".format(line_count))
                     continue
                 if '>' in data:
-                    curzip.time_compare.append((time_array[0], time_array[1]))
+                    curzip.time_compare.append((time_array[0], time_array[1], time_msg))
                 else:
-                    curzip.time_compare.append((time_array[1], time_array[0]))
+                    curzip.time_compare.append((time_array[1], time_array[0], time_msg))
             elif prefix in ( 'v', 'version' ):
                 if re.search("[^0-9\.]", data):
                     flag_cfg_error(line_count, "WARNING version must only contain integers or decimals at line {}".format(line_count))
@@ -482,7 +499,6 @@ for x in project_array:
         print(colorama.Fore.GREEN + "{} likely has a beta project, so this is just a nag to check you want the release and not the beta.".format(x) + colorama.Style.RESET_ALL)
 
 for x in zups:
-    print(x, zups[x].out_name)
     if zups[x].out_name:
         zups[x].out_name = zups[x].out_name
     else:
@@ -495,9 +511,12 @@ print("Failed creations will go to temp.zip.")
 
 if extract_only:
     open_zips()
+
 for p in project_array:
     if p not in zups:
         print("WARNING potentially valid project {} not in zup.txt.".format(p))
+        continue
+    if invalid_times(zups[p].time_compare):
         continue
     for x in zups[p].command_pre_buffer:
         print("Running pre-command", x)
