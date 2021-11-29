@@ -316,7 +316,12 @@ def is_palindrome(x, accept_comments = True, fail_on_unusual = True, decipher_as
 is_palindromey = is_palindromy = is_palindrome
 
 def print_centralized(my_string, eliminate_control_chars = True):
-    x = os.get_terminal_size()
+    try: # needed if we pipe something
+        x = os.get_terminal_size()
+    except:
+        print("Failed to get terminal information. Printing.")
+        print(my_string)
+        return
     length_string = my_string
     search_string = chr(0x1b) + "\[[0-9]+m"
     if eliminate_control_chars:
