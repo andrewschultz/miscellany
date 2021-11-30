@@ -521,9 +521,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     totals = 0
     bn1 = os.path.basename(f1)
     bn2 = os.path.basename(f2)
+    space_delta = len(bn1) - len(bn2)
     if bn1 == bn2:
         bn1 = f1
         bn2 = f2
+    any_extra_lines = False
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
@@ -535,9 +537,14 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                     j2 = j[:max_chars] + " ..." if max_chars > 0 else "... " + j[max_chars:]
                 if not mention_blanks and not j2:
                     continue
-                print(">>>{}".format(bn1) if freq[j] > 0 else "{}<<<<".format(bn2), 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2)) # different # of >>/<< to make eyeball comparisons (if necessary) easier
+                if not any_extra_lines:
+                    print("=" * 20 + " BEGIN DIFFERENCES " + "=" * 20)
+                    any_extra_lines = True
+                print("{}>>>>{}".format(' ' * (abs(space_delta) if space_delta < 0 else 0), bn1) if freq[j] > 0 else "{}{}<<<<".format(' ' * (space_delta if space_delta > 0 else 0), bn2), 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2)) # different # of >>/<< to make eyeball comparisons (if necessary) easier
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
+            if any_extra_lines:
+                print("=" * 21 + " END DIFFERENCES " + "=" * 21)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
         if len(difs) == 1 and difs[0] == '':
             print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
