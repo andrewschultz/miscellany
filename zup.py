@@ -7,7 +7,7 @@
 # 2 switch statement in CFG reader (if possible)
 #
 # todo: disable extract if zipfiles created? Clean build? (put old zip to backup)? Override timestamp check?
-#
+# (track total # of projects actually successfully processed--if none, say so)
 
 import glob
 import re
@@ -139,14 +139,14 @@ def project_or_beta_name(proj_read_in, accept_alt_proj_name):
     temp_project = i7.proj_exp(proj_read_in, return_nonblank = False)
     if temp_project:
         return temp_project
-    temp_project = i7.proj_exp(proj_read_in[:-2], return_nonblank = False)
-    if temp_project:
-        return temp_project + "-b"
-    temp_project = i7.proj_exp(proj_read_in[:-1], return_nonblank = False)
-    if temp_project:
-        if temp_project + '-b' in zups:
-            return temp_project + '-b'
-        return temp_project + "b"
+    if proj_read_in.endswith("-b"):
+        temp_project = i7.proj_exp(proj_read_in[:-2], return_nonblank = False)
+        if temp_project:
+            return temp_project + "-b"
+    if proj_read_in.endswith("-w"):
+        temp_project = i7.proj_exp(proj_read_in[:-2], return_nonblank = False)
+        if temp_project:
+            return temp_project + "-w"
     return i7.proj_exp(proj_read_in, return_nonblank = False)
 
 def is_beta(proj_read_in):
@@ -368,6 +368,9 @@ def read_zup_txt():
                 if data.endswith('b') and not data.endswith('-b'):
                     if data[:-1] in i7.i7x and data not in i7.i7x:
                         flag_cfg_error(line_count, "WARNING: likely beta build {} should end in -b, not just b.".format(data), auto_bail = False)
+                if data.endswith('w') and not data.endswith('-w'):
+                    if data[:-1] in i7.i7x and data not in i7.i7x:
+                        flag_cfg_error(line_count, "WARNING: likely web build {} should end in -w, not just w.".format(data), auto_bail = False)
                 accept_alt_proj_name = (prefix == 'projx')
                 if cur_zip_proj:
                     flag_cfg_error(line_count, "BAILING redefinition of current project at line")
