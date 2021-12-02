@@ -1,0 +1,86 @@
+#
+# oneof.py
+# python script to emulate Inform's "one of" behavior
+#
+# started 2021-12-17
+#
+
+from collections import defaultdict
+from random import random, shuffle
+import re
+
+sample_data_file = "c:/writing/scripts/oneof.txt"
+
+oneof_keywords = [ 'cycling', 'stopping', 'in random order', 'then at random', 'purely at random', 'then purely at random', 'sticky random', 'decreasingly likely', 'increasingly likely' ]
+
+ONEOF_CYCLING = 0 # 0 1 2 3 0 1 2 3
+ONEOF_STOPPING = 1 # 0 1 2 3 3 3 3
+ONEOF_RANDOM_ORDER = 2 # random, but no repetitions
+ONEOF_THEN_AT_RANDOM = 3 # in sequence, then random, but no repetitions
+ONEOF_PURELY_AT_RANDOM = 4 # random, potential repetitions
+ONEOF_THEN_PURELY_AT_RANDOM = 5 # in sequence, then random
+ONEOF_STICKY_RANDOM = 6 # 7, 7, 7, 7 or 8, 8, 8, 8
+ONEOF_DECREASINGLY_LIKELY = 7
+ONEOF_INCREASINGLY_LIKELY = 8
+
+class one_of:
+    string_array = []
+    string_index = 0
+    one_of_type = ONEOF_CYCLING
+    need_first_time_through = False
+
+    def __init__(self, my_array, my_type):
+        self.string_array = my_array
+        self.one_of_type = my_type
+        if my_type == ONEOF_STICKY_RANDOM or my_type == ONEOF_RANDOM_ORDER:
+            my_array = shuffle(my_array)
+        if my_type == ONEOF_THEN_AT_RANDOM or my_type == ONEOF_THEN_PURELY_AT_RANDOM:
+            need_first_time_through = True
+        return
+
+my_oneofs = defaultdict(one_of)
+
+def print_one_of(x):
+    this_one_of = my_oneofs[x]
+    print(this_one_of.string_array[this_one_of.string_index])
+    if this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
+        this_one_of.string_index += 1
+        if this_one_of.string_index == len(this_one_of.string_array):
+            this_one_of.string_index = 0
+
+with open(sample_data_file) as file:
+    for (line_count, line) in enumerate (file, 1):
+        if line.startswith(";"):
+            break
+        if line.startswith("#"):
+            continue
+        line = line.rstrip()
+        if line.startswith("$"):
+            if not '=' in line:
+                print("Line {} needs = since it starts with $.".format(line_count))
+                continue
+            ary = line.split('=')
+            variable = ary[0]
+            if not variable.endswith("$"):
+                variable = variable + "$"
+            if variable in my_oneofs:
+                print("Duplicate one-of {} at line {}.".format(variable, line_count))
+                continue
+            value = '='.join(ary[1:])
+            entries = value.split("\t")
+            if len(entries) == 1:
+                print("Need tabbed characters at line {}.".format(line_count))
+                continue
+            if entries[-1] not in oneof_keywords:
+                print("Unrecognized ONEOF key at line {}: {}.".format(line_count, entries[-1]))
+                continue
+            this_oneof_type = oneof_keywords.index(entries[-1])
+            my_oneofs[variable] = one_of(entries[:-1], this_oneof_type)
+            print(variable, my_oneofs[variable].string_array, my_oneofs[variable].string_index, my_oneofs[variable].one_of_type)
+        elif line.startswith("P:"):
+            line = line[2:].rstrip()
+            for x in re.findall("\$[A-Za-z0-9]+\$", line):
+                if x not in my_oneofs:
+                    print("Unrecognized ONEOF keyword {} at line {}.".format(x, line_count))
+                    continue
+                print_one_of(x)
