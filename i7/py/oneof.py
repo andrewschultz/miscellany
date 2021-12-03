@@ -43,6 +43,8 @@ my_oneofs = defaultdict(one_of)
 def print_one_of(x):
     this_one_of = my_oneofs[x]
     print(this_one_of.string_array[this_one_of.string_index])
+    if this_one_of.one_of_type == ONEOF_STOPPING and this_one_of.string_index == len(this_one_of.string_array) - 1:
+        return
     if this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
         this_one_of.string_index += 1
         if this_one_of.string_index == len(this_one_of.string_array):
