@@ -42,13 +42,15 @@ my_oneofs = defaultdict(one_of)
 
 def print_one_of(x):
     this_one_of = my_oneofs[x]
-    print(this_one_of.string_array[this_one_of.string_index])
+    print(this_one_of.string_array)
     if this_one_of.one_of_type == ONEOF_STOPPING and this_one_of.string_index == len(this_one_of.string_array) - 1:
-        return
-    if this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
+        retval = this_one_of.string_array[this_one_of.string_index]
+    elif this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
+        retval = this_one_of.string_array[this_one_of.string_index]
         this_one_of.string_index += 1
         if this_one_of.string_index == len(this_one_of.string_array):
             this_one_of.string_index = 0
+    return retval
 
 with open(sample_data_file) as file:
     for (line_count, line) in enumerate (file, 1):
@@ -78,11 +80,11 @@ with open(sample_data_file) as file:
                 continue
             this_oneof_type = oneof_keywords.index(entries[-1])
             my_oneofs[variable] = one_of(entries[:-1], this_oneof_type)
-            print(variable, my_oneofs[variable].string_array, my_oneofs[variable].string_index, my_oneofs[variable].one_of_type)
         elif line.startswith("P:"):
             line = line[2:].rstrip()
             for x in re.findall("\$[A-Za-z0-9]+\$", line):
                 if x not in my_oneofs:
                     print("Unrecognized ONEOF keyword {} at line {}.".format(x, line_count))
                     continue
-                print_one_of(x)
+                line = line.replace(x, print_one_of(x), 1)
+            print(line)
