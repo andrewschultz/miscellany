@@ -28,6 +28,7 @@ class one_of:
     string_index = 0
     one_of_type = ONEOF_CYCLING
     need_first_time_through = False
+    purely_random_first_yet = False
 
     def __init__(self, my_array, my_type):
         self.string_array = my_array
@@ -42,8 +43,15 @@ my_oneofs = defaultdict(one_of)
 
 def print_one_of(x):
     this_one_of = my_oneofs[x]
-    print(this_one_of.string_array)
     if this_one_of.one_of_type == ONEOF_STOPPING and this_one_of.string_index == len(this_one_of.string_array) - 1:
+        retval = this_one_of.string_array[this_one_of.string_index]
+    elif this_one_of.one_of_type == ONEOF_PURELY_AT_RANDOM:
+        if this_one_of.purely_random_first_yet:
+            this_one_of.string_index += 1 + int(random() * (len(this_one_of.string_array) - 1))
+            this_one_of.string_index %= len(this_one_of.string_array)
+        else:
+            this_one_of.purely_random_first_yet = True
+            this_one_of.string_index = int(random() * len(this_one_of.string_array))
         retval = this_one_of.string_array[this_one_of.string_index]
     elif this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
         retval = this_one_of.string_array[this_one_of.string_index]
