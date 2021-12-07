@@ -41,6 +41,23 @@ class one_of:
 
 my_oneofs = defaultdict(one_of)
 
+def weighted_choice(my_array_l, ascending = True):
+    totals = (my_array_l * (my_array_l + 1)) // 2
+    x = int(random() * totals)
+    current_compare_val = 1
+    increment_val = 1
+    my_index = 0
+    while 1:
+        if x < current_compare_val:
+            break
+        my_index += 1
+        increment_val += 1
+        current_compare_val += increment_val
+    if ascending:
+        return my_index
+    else:
+        return my_array_l - 1 - my_index
+
 def print_one_of(x):
     this_one_of = my_oneofs[x]
     if this_one_of.one_of_type == ONEOF_STOPPING and this_one_of.string_index == len(this_one_of.string_array) - 1:
@@ -49,6 +66,9 @@ def print_one_of(x):
         if not this_one_of.first_chosen_yet:
             this_one_of.first_chosen_yet = True
             this_one_of.string_index = int(random() * len(this_one_of.string_array))
+        retval = this_one_of.string_array[this_one_of.string_index]
+    elif this_one_of.one_of_type == ONEOF_DECREASINGLY_LIKELY or this_one_of.one_of_type == ONEOF_INCREASINGLY_LIKELY:
+        this_one_of.string_index = weighted_choice(len(this_one_of.string_array), ascending = this_one_of.one_of_type == ONEOF_INCREASINGLY_LIKELY)
         retval = this_one_of.string_array[this_one_of.string_index]
     elif this_one_of.one_of_type == ONEOF_PURELY_AT_RANDOM:
         if this_one_of.first_chosen_yet:
