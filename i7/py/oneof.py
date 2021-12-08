@@ -28,13 +28,14 @@ class one_of:
     string_index = 0
     one_of_type = ONEOF_CYCLING
     need_first_time_through = False
+    got_first_time_through = False
     first_chosen_yet = False
 
     def __init__(self, my_array, my_type):
         self.string_array = my_array
         self.one_of_type = my_type
         if my_type == ONEOF_STICKY_RANDOM or my_type == ONEOF_RANDOM_ORDER:
-            my_array = shuffle(my_array)
+            shuffle(self.string_array)
         if my_type == ONEOF_THEN_AT_RANDOM or my_type == ONEOF_THEN_PURELY_AT_RANDOM:
             need_first_time_through = True
         return
@@ -62,6 +63,13 @@ def print_one_of(x):
     this_one_of = my_oneofs[x]
     if this_one_of.one_of_type == ONEOF_STOPPING and this_one_of.string_index == len(this_one_of.string_array) - 1:
         retval = this_one_of.string_array[this_one_of.string_index]
+    elif not this_one_of.got_first_time_through and (this_one_of.one_of_type == ONEOF_THEN_AT_RANDOM or this_one_of.one_of_type == ONEOF_THEN_PURELY_AT_RANDOM):
+        retval = this_one_of.string_array[this_one_of.string_index]
+        this_one_of.string_index += 1
+        if this_one_of.string_index == len(this_one_of.string_array):
+            shuffle(this_one_of.string_array)
+            this_one_of.got_first_time_through = True
+            this_one_of.string_index = 0
     elif this_one_of.one_of_type == ONEOF_STICKY_RANDOM:
         if not this_one_of.first_chosen_yet:
             this_one_of.first_chosen_yet = True
@@ -70,7 +78,7 @@ def print_one_of(x):
     elif this_one_of.one_of_type == ONEOF_DECREASINGLY_LIKELY or this_one_of.one_of_type == ONEOF_INCREASINGLY_LIKELY:
         this_one_of.string_index = weighted_choice(len(this_one_of.string_array), ascending = this_one_of.one_of_type == ONEOF_INCREASINGLY_LIKELY)
         retval = this_one_of.string_array[this_one_of.string_index]
-    elif this_one_of.one_of_type == ONEOF_PURELY_AT_RANDOM:
+    elif this_one_of.one_of_type == ONEOF_PURELY_AT_RANDOM or this_one_of.one_of_type == ONEOF_THEN_PURELY_AT_RANDOM:
         if this_one_of.first_chosen_yet:
             this_one_of.string_index += 1 + int(random() * (len(this_one_of.string_array) - 1))
             this_one_of.string_index %= len(this_one_of.string_array)
@@ -78,7 +86,7 @@ def print_one_of(x):
             this_one_of.first_chosen_yet = True
             this_one_of.string_index = int(random() * len(this_one_of.string_array))
         retval = this_one_of.string_array[this_one_of.string_index]
-    elif this_one_of.one_of_type != ONEOF_STICKY_RANDOM:
+    else: # everything else should be, or degenerate to, CYCLING
         retval = this_one_of.string_array[this_one_of.string_index]
         this_one_of.string_index += 1
         if this_one_of.string_index == len(this_one_of.string_array):
