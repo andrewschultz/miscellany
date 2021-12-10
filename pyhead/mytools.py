@@ -318,18 +318,17 @@ is_palindromey = is_palindromy = is_palindrome
 def print_centralized(my_string, eliminate_control_chars = True):
     try: # needed if we pipe something
         x = os.get_terminal_size()
+        screen_columns = x.columns
     except:
-        print("Failed to get terminal information. Printing.")
-        print(my_string)
-        return
+        screen_columns = 200
     length_string = my_string
     search_string = chr(0x1b) + "\[[0-9]+m"
     if eliminate_control_chars:
         length_string = re.sub(search_string, "", my_string)
-    if len(length_string) > x.columns:
+    if len(length_string) > screen_columns:
         padding = 0
     else:
-        padding = (x.columns - len(length_string)) // 2
+        padding = (screen_columns - len(length_string)) // 2
     print(' ' * padding + my_string)
 
 center = centralized = print_center = print_centralized
