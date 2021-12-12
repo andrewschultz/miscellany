@@ -110,17 +110,17 @@ def num_to_text_color(my_num):
     retval = colorama.Back.WHITE
     if my_num <= 0:
         retval += colorama.Back.RED
-    elif my_num < 200:
+    elif my_num < goal_per_file // 336: # we could say goal_per_file // 168 as goal_per_hour but decimal precision etc.
         retval += colorama.Fore.RED
-    elif my_num < 500:
+    elif my_num < goal_per_file // 168: # breakeven goal
         retval += colorama.Fore.YELLOW
-    elif my_num < 1000:
+    elif my_num < goal_per_file // 84:
         retval += colorama.Fore.BLACK
-    elif my_num < 2000:
+    elif my_num < goal_per_file // 42:
         retval += colorama.Fore.GREEN
-    elif my_num < 3000:
+    elif my_num < goal_per_file // 28:
         retval += colorama.Fore.BLUE
-    elif my_num < 4000:
+    elif my_num < goal_per_file // 21:
         retval += colorama.Fore.CYAN
     else:
         retval += colorama.Fore.MAGENTA
@@ -530,6 +530,7 @@ def read_2dy_cfg():
     global minimum_seconds_between
     this_weeks_goal = 0
     temp_glob = []
+    adjust_color_dict = False
     with open(my_sections_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"): continue
@@ -556,6 +557,9 @@ def read_2dy_cfg():
                 file_header += data.replace("\\", "\n") + "\n"
             elif prefix in ( 'color', 'colors' ):
                 color_dict = mt.quick_dict_from_line(line, use_ints = True)
+            elif prefix in ( 'colorrel', 'colorsrel' ):
+                color_dict = mt.quick_dict_from_line(line, use_floats = True)
+                adjust_color_dict = True
             elif prefix in ( 'defaults', 'sect', 'section', 'sections' ):
                 sect_dict = mt.quick_dict_from_line(line)
                 if len(sect_ary):
@@ -571,6 +575,11 @@ def read_2dy_cfg():
                     this_weeks_goal = poss_thousands(data)
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
+    if adjust_color_dict:
+        for x in color_dict:
+            if color_dict[x] < 0:
+                continue
+            color_dict[x] = goal_per_file * color_dict[x] / 168
     if this_weeks_goal > 0:
         goal_per_file = this_weeks_goal
     if len(sect_ary) == 0:
