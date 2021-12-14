@@ -185,6 +185,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         this_file = os.path.basename(g[file_index])
     current_size = os.stat(this_file).st_size
     gsl = len(goals_and_stretch)
+    basic_goal = goals_and_stretch[0]
     for x in range(0, gsl):
         goal_per_file = goals_and_stretch[x]
         if current_size > goals_and_stretch[x]:
@@ -198,27 +199,27 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     t_goal = t_base.add(days=max_days_new)
     weekly_interval_so_far = (t_now - t_base).in_seconds()
     full_weekly_interval = (t_goal - t_base).in_seconds()
-    current_goal = goal_per_file * weekly_interval_so_far // full_weekly_interval
-    seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // goal_per_file
-    current_pace_seconds_delta = weekly_interval_so_far * goal_per_file / current_size
+    current_goal = basic_goal * weekly_interval_so_far // full_weekly_interval
+    seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // basic_goal
+    current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
     t_eta = t_base.add(seconds = current_pace_seconds_delta)
-    equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // goal_per_file).format("YYYY-MM-DD HH:mm:ss")
+    equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
-    print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, goal_per_file, current_goal, time_dir_string, abs(current_goal - current_size)))
+    print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, basic_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
     if time_dir_string == 'ahead':
         time_dir_string += ' of'
     print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
-    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - goal_per_file), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
-    if current_size < goal_per_file:
+    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
+    if current_size < basic_goal:
         mt.center(colorama.Fore.YELLOW + "ETA to achieve goal: {}, {} away.".format(t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
-        bytes_remaining = goal_per_file - current_size
+        bytes_remaining = basic_goal - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
-        bytes_per_hour_overall = goal_per_file * 3600 / full_weekly_interval
+        bytes_per_hour_overall = basic_goal * 3600 / full_weekly_interval
         so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
         catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
@@ -321,7 +322,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.ylabel("bytes")
 
     plt.plot(times, a*times+b) # line of best fit
-    per_day = goal_per_file // max_days_new
+    per_day = goals_and_stretches[0] // max_days_new
     plt.plot(times, per_day * times - per_day * init_from_epoch) # general pacing line assuming consistent output
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
@@ -356,7 +357,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.xlabel("days")
     plt.ylabel("bytes")
 
-    per_day = goal_per_file // max_days_new
+    per_day = goals_and_stretches[0] // max_days_new
 
     (a, b) = np.polyfit(times2, hour_delt, 1)
     hourly_average = (sizes[-1] - first_size) * 3600 / (last_time - first_time).total_seconds()
@@ -535,7 +536,7 @@ def read_2dy_cfg():
     global color_dict
     global minimum_seconds_between
     global goals_and_stretch
-    this_weeks_goal = 0
+    this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
     with open(my_sections_file) as file:
@@ -579,7 +580,7 @@ def read_2dy_cfg():
                 if file_name != os.path.basename(temp_glob[-1]):
                     print("WARNING line {} has outdated custom goal {}. Comment it out or delete it.".format(line_count, file_name))
                 else:
-                    this_weeks_goal = poss_thousands(data)
+                    this_weeks_goal = [poss_thousands(int(x)) for x in data.split(',')]
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
     if adjust_color_dict:
@@ -587,8 +588,8 @@ def read_2dy_cfg():
             if color_dict[x] < 0:
                 continue
             color_dict[x] = goals_and_stretch[0] * color_dict[x] / 168
-    if this_weeks_goal > 0:
-        goal_per_file = this_weeks_goal
+    if len(this_weeks_goal) > 0:
+        goals_and_stretches = [ this_weeks_goal ]
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
