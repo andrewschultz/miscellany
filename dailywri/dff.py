@@ -70,6 +70,7 @@ verbose = False
 show_blank_to_blank = True
 edit_blank_to_blank = True
 run_test_file = False
+ignore_duplicate = False
 
 pop_up_if_clean = False
 
@@ -698,7 +699,9 @@ def sort_raw(raw_long):
         mt.npo(raw_long, blank_edit_lines[0])
     if len(dupe_edit_lines):
         print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
-        mt.npo(raw_long, dupe_edit_lines[0])
+        if not ignore_duplicate:
+            print("If you are sure this is okay, the igdup option works. But it is hidden for a reason. You probably just want to put a comment after, or change things subtly.")
+            mt.npo(raw_long, dupe_edit_lines[0])
     if len(old_names):
         new_names = sections['nam'].lower().strip().split("\t")
         t1 = sorted(list(set(new_names) - set(old_names)))
@@ -882,6 +885,8 @@ while cmd_count < len(sys.argv):
         verbose = 0
     elif arg == 'tf':
         run_test_file = True
+    elif arg == 'igdup':
+        ignore_duplicate = True
     elif arg == 'n':
         show_stat_numbers = True
     elif arg in ( 'na', 'an' ):
