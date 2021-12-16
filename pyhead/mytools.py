@@ -406,7 +406,7 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
         return(ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
     return ary # (prefix, data) = general usage in programs
 
-cfg_split = cfg_to_data = cfg_data_split
+cfg_split = cfg_to_data = data_cfg_split = cfg_data_split
 
 def quick_dict_from_line(my_line, init_separator=':', outer_separator = ',', inner_separator = '=', use_ints = False, use_floats = False, delete_before_colon = True, need_init_delimiter = True):
     my_line = my_line.strip()
@@ -546,8 +546,8 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                 print("{}>>>>{}".format(' ' * (abs(space_delta) if space_delta < 0 else 0), bn1) if freq[j] > 0 else "{}{}<<<<".format(' ' * (space_delta if space_delta > 0 else 0), bn2), 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2)) # different # of >>/<< to make eyeball comparisons (if necessary) easier
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
-            if any_extra_lines:
-                print("=" * 21 + " END DIFFERENCES " + "=" * 21)
+        if any_extra_lines:
+            print("=" * 21 + " END DIFFERENCES " + "=" * 21)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
         if len(difs) == 1 and difs[0] == '':
             print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
