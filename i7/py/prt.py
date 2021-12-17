@@ -13,6 +13,7 @@ import sys
 import i7
 import filecmp
 import mytools as mt
+import colorama
 
 def bin_not_blorb(x):
     ary = os.path.splitext(x)
@@ -76,7 +77,6 @@ if force_extension:
     else:
         print("No need to force extension. Only one file found.")
 
-
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))
 elif len(y) > 1:
@@ -91,14 +91,20 @@ my_copy_file = y[0]
 
 file_dest = os.path.join(i7.prt, "debug-{}{}".format(i7.long_name(my_proj), my_ext))
 
+binary_change = False
+
 if os.path.exists(file_dest) and filecmp.cmp(my_copy_file, file_dest):
     print("No binary file change.")
 else:
     print("New binary file needed! Copying {} to {}.".format(my_copy_file, file_dest))
     shutil.copy(y[0], file_dest)
+    binary_change = True
 
 if not changes:
     print("No test scripts changed--note that RBR.PY may run PRT.PY automatically.")
 
 if not news:
     print("No new test scripts.")
+
+if not (binary_change or changes or news):
+    print(colorama.Fore.RED + "    WARNING: nothing was actually copied over." + colorama.Style.RESET_ALL)
