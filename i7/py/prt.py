@@ -32,18 +32,18 @@ while cmd_count < len(sys.argv):
     if arg.startswith("fx"):
         force_extension = arg[2:]
     elif my_proj:
-        sys.exit("Duplicate project definition attempt.")
+        sys.exit(colorama.Fore.RED + "Duplicate project definition attempt." + colorama.Style.RESET_ALL)
     else:
         my_proj = i7.long_name(arg)
     cmd_count += 1
 
 if not my_proj:
-    print("No project on command line. Going with default pulled from directory.")
+    print(colorama.Fore.YELLOW + "No project on command line. Going with default pulled from directory." + colorama.Style.RESET_ALL)
 
 my_proj = i7.dir2proj()
 
 if not my_proj:
-    sys.exit("Need a project or valid directory.")
+    sys.exit(colorama.Fore.RED + "Need a project or valid directory." + colorama.Style.RESET_ALL)
 
 mp = i7.proj2dir(my_proj)
 
@@ -53,7 +53,7 @@ news = 0
 for x in glob.glob(os.path.join(mp, "reg-*.txt")):
     x0 = os.path.join(i7.prt, os.path.basename(x))
     if not os.path.exists(x0):
-        print("Copying over new file", x0)
+        print(colorama.Fore.GREEN + "Copying over new file {}.".format(x0) + colorama.Style.RESET_ALL)
         news += 1
         shutil.copy(x, x0)
         continue
@@ -61,7 +61,7 @@ for x in glob.glob(os.path.join(mp, "reg-*.txt")):
         continue
     else:
         changes += 1
-        print(x, "has changed. Copying over.")
+        print(colorama.Fore.GREEN + "File {} has changed. Copying over.".format(x) + colorama.Style.RESET_ALL)
         shutil.copy(x, x0)
 
 build_dir = i7.proj2dir(my_proj, my_subdir = "Build")
@@ -72,15 +72,15 @@ y = [x for x in y0 if bin_not_blorb(x)]
 
 if force_extension:
     if len(y) > 1:
-        print("Initial pass had multiple files. Narrowing them down.")
+        print(colorama.Fore.YELLOW + "Initial pass had multiple files. Narrowing them down." + colorama.Style.RESET_ALL)
         y = [x for x in y if x.endswith(force_extension)]
     else:
-        print("No need to force extension. Only one file found.")
+        print(colorama.Fore.YELLOW + "No need to force extension. Only one file found." + colorama.Style.RESET_ALL)
 
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))
 elif len(y) > 1:
-    print("Multiple non-blorb binaries found in {}. Delete one and try again, or use fx(extension) to force extension.".format(build_dir))
+    print(colorama.Fore.YELLOW + "Multiple non-blorb binaries found in {}. Delete one and try again, or use fx(extension) to force extension.".format(build_dir) + colorama.Style.RESET_ALL)
     for y0 in y:
         print("    " + y0)
     sys.exit()
@@ -96,7 +96,7 @@ binary_change = False
 if os.path.exists(file_dest) and filecmp.cmp(my_copy_file, file_dest):
     print("No binary file change.")
 else:
-    print("New binary file needed! Copying {} to {}.".format(my_copy_file, file_dest))
+    print(colorama.Fore.GREEN + "New binary file needed! Copying {} to {}.".format(my_copy_file, file_dest) + colorama.Style.RESET_ALL)
     shutil.copy(y[0], file_dest)
     binary_change = True
 
