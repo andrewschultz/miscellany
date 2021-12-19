@@ -501,7 +501,7 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True): # returns true if identical (option to get rid of blanks,) false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = ''): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -543,7 +543,23 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                 if not any_extra_lines:
                     print("=" * 20 + " BEGIN DIFFERENCES " + "=" * 20)
                     any_extra_lines = True
-                print("{}>>>>{}".format(' ' * (abs(space_delta) if space_delta < 0 else 0), bn1) if freq[j] > 0 else "{}{}<<<<".format(' ' * (space_delta if space_delta > 0 else 0), bn2), 'Extra line', "<blank>" if not j2 else j2, "/", "{:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2)) # different # of >>/<< to make eyeball comparisons (if necessary) easier
+                print_string = "{}>>>>{}".format(' ' * (abs(space_delta) if space_delta < 0 else 0), bn1) if freq[j] > 0 else "{}{}<<<<".format(' ' * (space_delta if space_delta > 0 else 0), bn2)
+                print_string += " Extra Line {}".format("<blank>" if not j2 else j2)
+                print_string += " / {:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2) # different # of >>/<< to make eyeball comparisons (if necessary) easier
+                color_flags = 0
+                if red_regexp:
+                    if re.search(red_regexp, j):
+                        color_flags |= 1
+                    elif not green_regexp:
+                        color_flags |= 2
+                if green_regexp:
+                    if re.search(green_regexp, j):
+                        color_flags |= 2
+                    elif not green_regexp:
+                        color_flags |= 1
+                color_array = [ colorama.Fore.WHITE, colorama.Fore.RED, colorama.Fore.GREEN, colorama.Fore.YELLOW ]
+                print_string = color_array[color_flags] + print_string + colorama.Style.RESET_ALL
+                print(print_string)
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
         if any_extra_lines:
