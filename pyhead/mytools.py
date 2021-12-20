@@ -501,7 +501,13 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = ''): # returns true if identical (option to get rid of blanks,) false if not
+def lines_of(file_name):
+    f = open(file_name, "r")
+    temp = f.readlines()
+    f.close()
+    return temp
+
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -509,14 +515,14 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         return True
     freq = defaultdict(int)
     total = defaultdict(int)
-    with open(f1) as file:
-        for line in file:
-            freq[line.lower().strip()] += 1
-            total[line.lower().strip()] += 1
-    with open(f2) as file:
-        for line in file:
-            freq[line.lower().strip()] -= 1
-            total[line.lower().strip()] += 1
+    f1_ary = lines_of(f1)
+    f2_ary = lines_of(f2)
+    for line in f1_ary:
+        freq[line.lower().strip()] += 1
+        total[line.lower().strip()] += 1
+    for line in f2_ary:
+        freq[line.lower().strip()] -= 1
+        total[line.lower().strip()] += 1
     difs = [x for x in freq if freq[x]]
     if ignore_blanks and '' in difs: difs.remove('')
     left = 0
@@ -565,6 +571,10 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         if any_extra_lines:
             print("=" * 21 + " END DIFFERENCES " + "=" * 21)
         print("{} has {} extra mismatches but {} has {}.".format(os.path.basename(f1), left, os.path.basename(f2), right))
+        if show_bytes and len(difs):
+            f1s = os.stat(f1).st_size
+            f2s = os.stat(f2).st_size
+            print("OLD: {} lines {} bytes, NEW: {} lines {} bytes, DELTA: {} lines {} bytes.".format(len(f1_ary), f1s, len(f2_ary), f2s, len(f1_ary) - len(f2_ary), f1s-f2s))
         if len(difs) == 1 and difs[0] == '':
             print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
         if bail:
