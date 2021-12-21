@@ -63,14 +63,14 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
         os.system("ttrim.py c {}".format(my_main))
     my_gh = i7.gh_src(my_proj)
     if not os.path.exists(my_main):
-        print("Cannot find", my_main)
+        print("Cannot find main source", my_main)
         if bail_on_error:
             sys.exit()
         else:
             return
     if not os.path.exists(my_gh):
         if not copy_to_blank:
-            print("Cannot find", my_gh)
+            print("Cannot find GitHub file", my_gh)
             print("If this is new, you may wish to copy it manually with c/-c or set copy_to_blank = True in the code.")
         else:
             if reverse_copy:

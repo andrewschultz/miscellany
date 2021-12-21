@@ -169,7 +169,7 @@ for my_f in to_edit:
         cfa = check_file(my_f_real)
         cf = cfa[0]
         if cf:
-            print(colorama.Fore.GREEN + my_f_real, "needed {0}s.".format(test_type(my_f_real)) + colorama.Style.RESET_ALL)
+            print(colorama.Fore.CYAN + my_f_real, "needed {0}s.".format(test_type(my_f_real)) + colorama.Style.RESET_ALL)
             total_tweaks += 1
         elif not quiet_mode:
             print(my_f_real, "needed no {0}s.".format(test_type(my_f_real)))

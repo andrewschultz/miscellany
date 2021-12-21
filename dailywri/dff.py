@@ -741,7 +741,7 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
-    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
     no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
@@ -785,7 +785,7 @@ def sort_raw(raw_long):
                 change_amounts[x] = ( sectdif[x][0] - raw_nums[x][0], sectdif[x][1] - raw_nums[x][1] )
             show_size_stats(change_amounts, "NET SECTION DELTAS")
         if test_no_copy:
-            print("Not modifying", raw_long, "even though differences were found. Set -co to change this.")
+            print("Not modifying", raw_long, "even though differences were found. Set -co to change this or add a Q to a parameter to get a verification question.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if ask_to_copy_back:
