@@ -238,7 +238,7 @@ chapter complex consents
 
 debug-auto-yes is a truth state that varies.
 
-yn-auto is a number that varies. yn-auto is 1.
+yn-auto is a number that varies.
 
 to decide whether the player dir-consents:
 	if debug-state is true:
@@ -246,6 +246,10 @@ to decide whether the player dir-consents:
 		if yn-auto is -1, decide no;
 	if the player consents, decide yes;
 	decide no;
+
+section debug - not for release
+
+yn-auto is 1. [if need be we can put a "when play begins" rule at the start, but we shouldn't need to.]
 
 chapter scling
 
