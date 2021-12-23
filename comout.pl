@@ -35,7 +35,7 @@ while ($count <= $#ARGV)
   /^-?n?[0-9]+/ && do { $need = $arg; $need =~ s/^-?n?//g; $count++; next; };
   /^-?[ef]$/i && do { `$comcfg`; exit(); };
   /^-?[a]$/i && do { $afterComp = 1; $count++; print "Opening WinDiff after...\n"; next; };
-  /^-?[c]$/i && do { $cmd = "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $comsou"; `$cmd`; exit(); };
+  /^-?[c]$/i && do { $cmd = "start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" $comsou"; `$cmd`; exit(); };
   $myproj = $ARGV[$count];
   last;
   }

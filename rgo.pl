@@ -78,7 +78,7 @@ if ($tabLine && !$lineTo)
 if (!$lineTo) { die ("Didn't find string $search"); }
 else
 {
-  my $cmd = "start \"\" \"C:/Program Files (x86)/Notepad++/notepad++.exe\" story.ni -n$lineTo";
+  my $cmd = "start \"\" \"C:/Program Files/Notepad++/notepad++.exe\" story.ni -n$lineTo";
   print "Running $cmd\n";
   `$cmd`;
 }

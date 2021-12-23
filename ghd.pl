@@ -56,7 +56,7 @@ while ( $count <= $#ARGV ) {
   for ($arg) {
     /^-?ab$/ && do { $allBranches = 1; $count++; next; };
     /^-?c$/ && do {
-      `start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"`;
+      `start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\"`;
       exit();
     };
     /^-?d$/ && do { $debug = 1; $count++; next; };

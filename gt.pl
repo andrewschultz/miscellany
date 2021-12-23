@@ -48,4 +48,4 @@ close(A);
 
 if (!$getLine) { print "String not found, just opening $file.\n"; }
 
-system("start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" \"$file\" -n$getLine"); exit;
+system("start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" \"$file\" -n$getLine"); exit;

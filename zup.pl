@@ -182,7 +182,7 @@ while ( $count <= $#ARGV ) {
     /^-?(c|ee)$/ && do {
       print "Opening script file.\n";
       system(
-"start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\"  $zupl"
+"start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\"  $zupl"
       );
       exit;
     };

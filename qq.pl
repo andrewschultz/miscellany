@@ -79,7 +79,7 @@ sub scanForQs {
       $temp =~ s/ by .*//;
       $temp =~ s/include +//;
       $temp =
-"c:\\Program Files (x86)\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp.i7x";
+"c:\\Program Files\\Inform 7\\Inform7\\Extensions\\Andrew Schultz\\$temp.i7x";
       push( @fileArray, $temp );
     }
     if ( ( $line =~ /\[/ ) && ( $line !~ /\]/ ) ) { $comment = 1; }

@@ -53,7 +53,7 @@ while ( $count <= $#ARGV ) {
   for ($arg) {
     /^-?a$/ && do { $analyze = 1; $count++; next; };
     /^-?c$/ && do {
-      my $cmd = 'start "" "C:\Program Files (x86)\Notepad++\notepad++.exe" ';
+      my $cmd = 'start "" "C:\Program Files\Notepad++\notepad++.exe" ';
       $cmd .= "\"$sourceFile\"";
       `$cmd`;
       exit();

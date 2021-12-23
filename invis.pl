@@ -140,7 +140,7 @@ if ($launchTextFile) {
     if ( -f $filename ) { `$filename`; }
     else {
       my $cmd =
-"start \"\" \"c:\\program files (x86)\\Notepad++\\Notepad++\" \"$filename\"";
+"start \"\" \"c:\\program files\\Notepad++\\Notepad++\" \"$filename\"";
       `$cmd`;
       die($cmd);
     }

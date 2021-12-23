@@ -71,7 +71,7 @@ while ( $count <= $#ARGV ) {
     /^-?a$/i && do { $alphabetical = 1; $count++; next; };
     /^-?e$/i && do {
       system(
-"start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $sourceFile"
+"start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" $sourceFile"
       );
       exit();
     };

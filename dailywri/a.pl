@@ -365,7 +365,7 @@ if ($betterDie)
   push (@badFiles, $shortName);
   if ($openFile)
   {
-	my $fileOpenCmd = "start \"\" \"c:\\program files (x86)\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; testResults(); exit;
+	my $fileOpenCmd = "start \"\" \"c:\\program files\\notepad++\\notepad++\" $fileToOpen -n$lineToGo"; `$fileOpenCmd`; testResults(); exit;
   }
   if ($clipboard)
   {

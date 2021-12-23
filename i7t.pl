@@ -122,7 +122,7 @@ while ( $count <= $#ARGV ) {
       print
         "Opening source. -e opens the data file, -ec/ce both, -pr private.\n";
       system(
-"start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"
+"start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" c:\\writing\\scripts\\i7t.pl"
       );
       exit;
     };
@@ -441,7 +441,7 @@ if ($openPost) {
   for $myfi ( sort keys %filesToOpen ) {
     print "Opening $myfi, line $filesToOpen{$myfi}\n";
     my $openCmd =
-      "start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $myfi";
+      "start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" $myfi";
     if ( $filesToOpen{$myfi} ) { $openCmd .= " -n$filesToOpen{$myfi}"; }
     `$openCmd`;
     if ( $spawnPopup && $popupString ) {
@@ -471,7 +471,7 @@ elsif ($spawnPopup) {
 
 if ($openTableFile) {
   my $openCmd =
-"start \"\" \"C:\\Program Files (x86)\\Notepad++\\notepad++.exe\" $tableFile";
+"start \"\" \"C:\\Program Files\\Notepad++\\notepad++.exe\" $tableFile";
   `$openCmd`;
 }
 
