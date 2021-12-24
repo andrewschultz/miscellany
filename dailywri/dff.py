@@ -374,11 +374,24 @@ def read_comment_cfg():
 def is_in_procs(my_file):
     fbn = os.path.normpath(my_file)
     for vp in valid_procs:
-        if os.path.exists(os.path.join(vp, fbn)): return True
-    retval = False
+        this_file = os.path.join(vp, fbn)
+        if os.path.exists(this_file):
+            return this_file
     if ".txt" not in fbn:
-        retval |= is_in_procs(fbn + ".txt")
-    return retval
+        temp_val = is_in_procs(fbn + ".txt")
+        if temp_val:
+            return temp_val
+    return ""
+
+def is_match_monthdate(my_date):
+    for x in range(2022, 2013, -1):
+        this_check = "{}{}".format(x, my_date)
+        print("Checking", this_check)
+        temp = is_in_procs(this_check)
+        print(temp)
+        if temp:
+            return temp
+    return ""
 
 def is_likely_name(my_line, my_sec):
     if ' ' in my_line or '=' in my_line: return False
@@ -588,6 +601,7 @@ def sort_raw(raw_long):
     dupe_edit_lines = []
     old_names = []
     this_file_lines = defaultdict(int)
+    default_streak = last_default = 0
     if protect_empties:
         for x in empty_to_protect:
             sections[x] = ''
@@ -685,8 +699,15 @@ def sort_raw(raw_long):
             if current_section == '':
                 if not line.startswith('#'):
                     if show_blank_to_blank:
-                        print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
+                        if line_count == last_default + 1 and default_streak > 10:
+                            pass
+                        else:
+                            print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
+                        default_streak += 1
+                        last_default = line_count
                     blank_edit_lines.append(line_count)
+            else:
+                default_streak = 0
             if temp != current_section:
                 if current_section:
                     section_change += 1
@@ -983,6 +1004,11 @@ while cmd_count < len(sys.argv):
         if arg.startswith("20"):
             if ".txt" not in arg:
                 arg += ".txt"
+            file_list.append(arg)
+        elif re.search("^(0)?[0-9]{3}$", arg):
+            temp = is_match_monthdate(arg)
+            if temp:
+                file_list.append(temp)
             file_list.append(arg)
         elif is_in_procs(arg):
             file_list.append(arg)
