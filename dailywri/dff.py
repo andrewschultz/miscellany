@@ -35,13 +35,13 @@ dir_search_flag = daily.TOPROC
 cwd_parts = [ x.lower() for x in pathlib.PurePath(my_cwd).parts ]
 
 if 'daily' in cwd_parts:
-    print("Sorting daily.DAILY stuff")
+    print("Sorting DAILY stuff")
     what_to_sort = daily.DAILY
 elif 'keep' in cwd_parts:
-    print("Sorting daily.KEEP stuff")
+    print("Sorting KEEP stuff")
     what_to_sort = daily.KEEP
 elif 'drive' in cwd_parts:
-    print("Sorting daily.DRIVE stuff")
+    print("Sorting DRIVE stuff")
     what_to_sort = daily.DRIVE
 else:
     what_to_sort = DEFAULT_SORT
