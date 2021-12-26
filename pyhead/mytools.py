@@ -549,7 +549,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                 if not any_extra_lines:
                     print("=" * 20 + " BEGIN DIFFERENCES " + "=" * 20)
                     any_extra_lines = True
-                print_string = "{}>>>>{}".format(' ' * (abs(space_delta) if space_delta < 0 else 0), bn1) if freq[j] > 0 else "{}{}<<<<".format(' ' * (space_delta if space_delta > 0 else 0), bn2)
+                print_string = "{}{}{}".format(bn1 if freq[j] > 0 else ' ' * len(bn1), '<<<<' if freq[j] > 0 else '>>>>', bn2 if freq[j] < 0 else ' ' * len(bn2))
                 print_string += " Extra Line {}".format("<blank>" if not j2 else j2)
                 print_string += " / {:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2) # different # of >>/<< to make eyeball comparisons (if necessary) easier
                 color_flags = 0
@@ -574,7 +574,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         if show_bytes and len(difs):
             f1s = os.stat(f1).st_size
             f2s = os.stat(f2).st_size
-            print("OLD: {} lines {} bytes, NEW: {} lines {} bytes, DELTA: {} lines {} bytes.".format(len(f1_ary), f1s, len(f2_ary), f2s, len(f1_ary) - len(f2_ary), f1s-f2s))
+            print("OLD: {} lines {} bytes, NEW: {} lines {} bytes, DELTA: {} lines {} bytes.".format(len(f1_ary), f1s, len(f2_ary), f2s, len(f2_ary) - len(f1_ary), f2s-f1s))
         if len(difs) == 1 and difs[0] == '':
             print("ONLY BLANKS are different. You can run this function with ignore_blanks = True.")
         if bail:
