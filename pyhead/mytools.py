@@ -507,7 +507,7 @@ def lines_of(file_name):
     f.close()
     return temp
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False): # returns true if identical (option to get rid of blanks,) false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -581,6 +581,8 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             print("Compare shuffled lines is bailing on difference.")
             sys.exit()
         return False
+    elif verify_alphabetized_true:
+        print_centralized(colorama.Back.GREEN + "THERE ARE NO DIFFERENCES BETWEEN {} AND {}.".format(bn1, bn2) + colorama.Style.RESET_ALL)
     if verbose:
         print("No shuffle-diffs")
     return True
