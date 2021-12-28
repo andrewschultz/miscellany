@@ -27,6 +27,8 @@ np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
 my_creds = "c:/coding/perl/proj/mycreds.txt"
 
+hosts_file = "C:/Windows/System32/drivers/etc/hosts"
+
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
 file_post_list = defaultdict(lambda: defaultdict(int))
@@ -506,6 +508,27 @@ def lines_of(file_name):
     temp = f.readlines()
     f.close()
     return temp
+
+def hosts_file_toggle(my_website, set_available):
+    the_temp_string = ""
+    any_changes = False
+    with open(hosts_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            x = re.split("[\t ]", line.strip().lower())
+            if len(x) > 1 and x[1] == my_website:
+                temp = re.sub("#", "", x[0])
+                if not set_available:
+                    temp = '#' + x[0]
+                if x[0] != temp:
+                    x[0] = temp
+                    any_changes = True
+                    the_temp_string += '\t'.join(x) + '\n'
+                    continue
+            the_temp_string += line
+    if any_changes:
+        f = open(hosts_file, "w")
+        f.write(the_temp_string)
+        f.close()
 
 def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
