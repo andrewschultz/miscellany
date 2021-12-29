@@ -276,7 +276,11 @@ def check_print_run(x, msg="(no message)"):
     if not x: return 0
     if print_cmd: print("***running", msg, x)
     if run_cmd:
-        if x.startswith("http"):
+        if x.startswith("+host"):
+            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), set_available = True)
+        elif x.startswith("-host"):
+            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), set_available = False)
+        elif x.startswith("http"):
             if '^&' in x:
                 print("WARNING: get rid of ^& and replace with &, as we aren't using os.system any more.")
             os.startfile(x)
