@@ -254,6 +254,12 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     current_size = os.stat(this_file).st_size
 
+    if not len(relevant_stats):
+        sys.exit("No relevant stats yet. You must have tried to graph things at the start of the week.")
+
+    if len(relevant_stats) == 1:
+        sys.exit("Not enough relevant stats for a graph yet. You must have tried to graph things at the start of the week.")
+
     init_ary = relevant_stats[0].split("\t")
     last_ary = relevant_stats[-1].split("\t")
     first_size = int(init_ary[2])
