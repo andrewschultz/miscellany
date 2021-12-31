@@ -39,7 +39,7 @@ d = pendulum.today()
 #these are covered in the config file, but keep them here to make sure
 max_days_new = 7
 max_days_back = 1000
-goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot
+goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
 
 latest_daily = True
@@ -73,7 +73,7 @@ def isfloat(value):
     except ValueError:
         return False
 
-def see_back(this_file = d, my_dir = "", days_back = 7):
+def see_back(this_file = d, my_dir = "", days_back = max_days_new):
     my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
     return os.path.join(my_dir, my_file)
 
@@ -285,9 +285,9 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         size_delta = sizes[-1] - sizes[-2]
         color_array.append(mt.text_from_values(color_dict, size_delta))
         if my_time.hour == last_time.hour:
-            print("WARNING line", ' / '.join(ary), "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.\n    Run 2dy.py es to do so.".format(last_time.minute, my_time.minute))
+            print("WARNING line", ' / '.join(ary), "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.\n    Run 2dy.py es/ed to do so.".format(last_time.minute, my_time.minute))
         elif my_time.hour - last_time.hour > 1:
-            print("WARNING line", ' / '.join(ary), "skipped at least one hour. You probably deleted data. It's not a big deal, but O Lost and all that sort of thing.\n    Run 2dy.py es to see the line.".format(last_time.minute, my_time.minute))
+            print("WARNING line", ' / '.join(ary), "skipped at least one hour. You probably deleted data. It's not a big deal, but O Lost and all that sort of thing.\n    Run 2dy.py es/ed to see the line.".format(last_time.minute, my_time.minute))
         last_time = my_time
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
@@ -476,7 +476,7 @@ def move_to_proc(my_dir = "c:/writing/daily"):
     g1 = mt.dailies_of(my_dir)
     g2 = mt.dailies_of(my_dir + "/to-proc")
 
-    threshold = see_back(d, '', 7)
+    threshold = see_back(d, '', max_days_new)
     temp_save_string = ""
 
     for q in g1:
@@ -520,8 +520,8 @@ def usage(param = 'Cmd line usage'):
     print("(-?)l or ln/nl = latest-daily (or not)")
     print("(-?)v or vn/nv = toggle verbosity")
     print("(-?)p/tp = move to to_proc, tk/kt and dt/td to keep/drive")
-    print("(-?)ps = put stats, (-?)gs = get stats, (-?)es = edit stats, (-?)ss = sift stats")
-    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec/em = edit code, es = edit stats")
+    print("(-?)ps = put stats, (-?)gs = get stats, (-?)es/ed = edit stats/data, (-?)ss = sift stats")
+    print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec/em = edit code, es/ed = edit stats")
     print("(-)ct(o) checks thousands, (-)wr(o) checks weekly writing goals based on current document size. O = only do this")
     exit()
 
@@ -640,7 +640,7 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
-    elif arg == 'es': mt.npo(stats_file)
+    elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'cto':
         compare_thousands(bail = True)
