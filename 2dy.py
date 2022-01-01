@@ -315,7 +315,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         my_label += "\n{} bytes since last data check".format(current_size - last_size)
 
     if current_size > first_size:
-        expected_kb = (current_size - first_size) * 86400 * 7 / (last_time - first_time).total_seconds() + first_size
+        expected_kb = (current_size - first_size) * 86400 * max_days_new / (last_time - first_time).total_seconds() + first_size
         my_label += "\nAverage from last exp bytes: {:.2f}".format(expected_kb)
 
     if a:
@@ -328,7 +328,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.ylabel("bytes")
 
     plt.plot(times, a*times+b) # line of best fit
-    per_day = goals_and_stretches[0] // max_days_new
+    per_day = goals_and_stretch[0] // max_days_new
     plt.plot(times, per_day * times - per_day * init_from_epoch) # general pacing line assuming consistent output
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
@@ -363,7 +363,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.xlabel("days")
     plt.ylabel("bytes")
 
-    per_day = goals_and_stretches[0] // max_days_new
+    per_day = goals_and_stretch[0] // max_days_new
 
     (a, b) = np.polyfit(times2, hour_delt, 1)
     hourly_average = (sizes[-1] - first_size) * 3600 / (last_time - first_time).total_seconds()
@@ -595,7 +595,7 @@ def read_2dy_cfg():
                 continue
             color_dict[x] = goals_and_stretch[0] * color_dict[x] / 168
     if len(this_weeks_goal) > 0:
-        goals_and_stretches = [ this_weeks_goal ]
+        goals_and_stretch = [ this_weeks_goal ]
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
