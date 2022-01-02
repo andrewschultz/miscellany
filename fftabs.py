@@ -4,6 +4,8 @@
 """
 find all Firefox tabs. Look for duplicates and top_domains etc.
 """
+# NOTE: THIS HAS BEEN DEPRECATED AND RENAMED FOR THE NEW FFTABS
+# THIS GIVES A LOT OF DUPLICATE TABS, WHICH I DON'T WANT
 
 from collections import defaultdict
 import os
@@ -103,6 +105,8 @@ if not (print_to_stdout or open_out_after or open_in_browser_after):
 
 video_titles = []
 
+total_tabs = 0
+
 for f in files:
     b = f.read_bytes()
     if b[:8] == b'mozLz40\0':
@@ -118,19 +122,25 @@ for f in files:
                     continue
                 print("windows/tabs had null value for index", type(t['index']), t['index'])
                 continue
+            if len(t['entries']) == 0:
+                print("Empty tab (?)")
+                continue
             my_url = t['entries'][i]['url']
+            print(total_tabs, my_url)
             if just_urls:
                 urls[my_url] += 1
-            print(my_url)
+            #print(my_url)
             if 'youtube' in my_url:
                 if t['entries'][i]['url'] not in video_titles:
                     t1 = re.sub("^\([0-9]+\) *", "", t['entries'][i]['title'])
                     video_titles.append(t1)
                     video_dict[my_url] = t1
-            continue
             counts[my_url] += 1
             top_domains[domain(my_url, False)] += 1
+            print(domain(my_url, False))
+            print(domain(my_url, True))
             full_domains[domain(my_url, True)] += 1
+            total_tabs += 1
 
 if just_urls:
     print("=" * 50)
@@ -145,6 +155,8 @@ if print_keep:
     out_file = del_file
 
 fout = codecs.open(out_file, "w", "utf-8")
+
+print("Total tabs:", total_tabs)
 
 print_out(counts, "PAGES")
 print_out(full_domains, "FULL DOMAINS")
