@@ -25,6 +25,7 @@ auto_today_ok = False
 days_back = 0
 push_after_commit = False
 no_verify = False
+actual_time_commit_stamp = False
 
 by_end_of_month = False
 by_end_of_week = False
@@ -242,6 +243,8 @@ while count < len(sys.argv):
     elif arg == 'ao':
         auto_date = True
         auto_today_ok = True
+    elif arg == 'at':
+        actual_time_commit_stamp = True
     elif arg == 'fl' or arg == 'lf':
         get_from_log = True
     elif arg == 'na':
@@ -268,6 +271,10 @@ while count < len(sys.argv):
     count += 1
 
 my_time = pendulum.today()
+
+if actual_time_commit_stamp:
+    cur_date_time = pendulum.now().format("YY/MM/DD hh:mm:ss")
+    commit_message = "{} {}".format(cur_date_time, commit_message)
 
 bare_commit_cmd = "git commit{} -m \"{}\"".format(" --no-verify" if no_verify else "", commit_message)
 
