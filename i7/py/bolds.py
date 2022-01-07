@@ -138,23 +138,23 @@ while count < len(sys.argv):
     if arg[0] == '-': arg = arg[1:]
     if arg == 'e': i7.npo(bolds_data)
     elif arg == 'f': find_caps_bool = True
-    elif arg == 'nf' or arg == 'fn': find_caps_bool = False
-    elif arg == 'ob' or arg == 'bo':
+    elif arg in ( 'nf', 'fn' ): find_caps_bool = False
+    elif arg in ( 'ob', 'bo' ):
         sophisticated_bool = brute_force_bool = check_bold_italic_bool = False
         find_caps_bool = True
     elif arg == 'b': brute_force_bool = True
-    elif arg == 'nb' or arg == 'bn': brute_force_bool = False
-    elif arg == 'ob' or arg == 'bo':
+    elif arg in ( 'nb', 'bn' ): brute_force_bool = False
+    elif arg in ( 'ob', 'bo' ):
         sophisticated_bool = brute_force_bool = find_caps_bool = False
         check_bold_italic_bool = True
     elif arg == 's': sophisticated_bool = True
-    elif arg == 'ns' or arg == 'sn': sophisticated_bool = False
-    elif arg == 'os' or arg == 'so':
+    elif arg in ( 'ns', 'sn' ): sophisticated_bool = False
+    elif arg in ( 'os', 'so' ):
         check_bold_italic_bool = brute_force_bool = find_caps_bool = False
         sophisticated_bool = True
     elif arg == 'c': check_bold_italic_bool = True
-    elif arg == 'nc' or arg == 'cn': check_bold_italic_bool = False
-    elif arg == 'oc' or arg == 'co':
+    elif arg in ( 'nc', 'cn' ): check_bold_italic_bool = False
+    elif arg in ( 'oc', 'co' ):
         sophisticated_bool = brute_force_bool = find_caps_bool = False
         check_bold_italic_bool = True
     elif arg == '?': usage()
