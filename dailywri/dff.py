@@ -225,7 +225,7 @@ def short_cfg_prefix(my_line):
 def sanitize(tabbed_names):
     low_case_dict = defaultdict(bool)
     new_ary = []
-    for x in tabbed_names.split("\t"):
+    for x in re.split("\t+", tabbed_names):
         if x.lower() in low_case_dict:
             blue_print("WARNING deleting duplicate name (case-insensitive) {}".format(x))
         else:
@@ -652,7 +652,9 @@ def sort_raw(raw_long):
                     sections[current_section] += line
                     continue
             if current_section == 'nam':
-                old_names.extend(line.lower().strip().split('\t'))
+                if "\t\t" in line:
+                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in name line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                old_names.extend(re.split("\t+", line.lower().strip()))
             temp = section_from_prefix(ll)
             if temp:
                 if temp in prefixes and temp in delete_marker:
@@ -724,7 +726,7 @@ def sort_raw(raw_long):
             print("If you are sure this is okay, the igdup option works. But it is hidden for a reason. You probably just want to put a comment after, or change things subtly.")
             mt.npo(raw_long, dupe_edit_lines[0])
     if len(old_names):
-        new_names = sections['nam'].lower().strip().split("\t")
+        new_names = re.split("\t+", sections['nam'].lower().strip())
         t1 = sorted(list(set(new_names) - set(old_names)))
         t2 = sorted(list(set(old_names) - set(new_names)))
         if len(t1) > 0:
