@@ -589,6 +589,7 @@ def sort_raw(raw_long):
     sections = defaultdict(str)
     raw_sections = defaultdict(str)
     blank_dict = defaultdict(str)
+    name_line = defaultdict(int)
     if is_locked(raw_long):
         print(raw_long, "has been locked for writing, skipping.")
         return 0
@@ -692,6 +693,7 @@ def sort_raw(raw_long):
                 if current_section:
                     print("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section, line_count, line.strip()))
                 sections['nam'] += "\t" + line.strip()
+                name_line[line.strip()] = line_count
                 to_names += 1
                 continue
             if resort_already_sorted:
@@ -730,7 +732,7 @@ def sort_raw(raw_long):
         t1 = sorted(list(set(new_names) - set(old_names)))
         t2 = sorted(list(set(old_names) - set(new_names)))
         if len(t1) > 0:
-            print(colorama.Fore.GREEN + "New names: {}".format(t1) + colorama.Style.RESET_ALL)
+            print(colorama.Fore.GREEN + "New names: {}".format(', '.join(["{}~{}".format(t1, name_line[t1])]) + colorama.Style.RESET_ALL))
         if len(t2) > 0:
             print(colorama.Fore.GREEN + "Old names deleted: {}".format(t2) + colorama.Style.RESET_ALL)
     if 'nam' in sections:
