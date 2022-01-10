@@ -18,6 +18,7 @@ from shutil import copy
 import colorama
 import pathlib
 import ctypes
+import pendulum
 
 DEFAULT_SORT = daily.DAILY
 
@@ -384,11 +385,10 @@ def is_in_procs(my_file):
     return ""
 
 def is_match_monthdate(my_date):
-    for x in range(2022, 2013, -1):
+    for x in range(mt.this_year, mt.this_year - 5, -1):
         this_check = "{}{}".format(x, my_date)
         print("Checking", this_check)
         temp = is_in_procs(this_check)
-        print(temp)
         if temp:
             return temp
     return ""
@@ -1013,7 +1013,8 @@ while cmd_count < len(sys.argv):
             temp = is_match_monthdate(arg)
             if temp:
                 file_list.append(temp)
-            file_list.append(arg)
+            else:
+                sys.exit("WARNING: {} is not a readable file in any to-proc directory. Treating as command and bailing. Use ? to see usage.".format(arg))
         elif is_in_procs(arg):
             file_list.append(arg)
         else:
