@@ -582,6 +582,7 @@ def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude =
     return return_string
 
 def sort_raw(raw_long):
+    overflow = False
     raw_long = os.path.normpath(raw_long)
     global test_no_copy
     global copy_then_test
@@ -704,12 +705,12 @@ def sort_raw(raw_long):
                 if not line.startswith('#'):
                     if show_blank_to_blank:
                         if line_count == last_default + 1 and default_streak > 10:
-                            pass
+                            overflow = True
                         else:
                             print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
+                            blank_edit_lines.append(line_count)
                         default_streak += 1
                         last_default = line_count
-                    blank_edit_lines.append(line_count)
             else:
                 default_streak = 0
             if temp != current_section:
@@ -721,6 +722,8 @@ def sort_raw(raw_long):
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
+        if overflow:
+            print("NOTE: consecutive-line overflow (line not fitting in any section) was detected, so there may be a big chunk that is the result of one extra CR.")
         mt.npo(raw_long, blank_edit_lines[0])
     if len(dupe_edit_lines):
         print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
