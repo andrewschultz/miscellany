@@ -58,6 +58,7 @@ def usage(arg = ""):
     time_str = my_time.format("HH:mm:ss ZZ")
     print("=" * 50)
     print("a tries for auto date, ao says today is okay")
+    print("at puts actual timestamp on a past-dated commit")
     print("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc, though p = git push after git commit")
     print("l at the end runs git log too")
@@ -193,7 +194,6 @@ while count < len(sys.argv):
     elif ' ' in arg:
         if commit_message: sys.exit("Duplicate commit message {} vs {}".format(sys.argv[count].strip(), commit_message))
         commit_message = sys.argv[count].strip()
-        print("Commit message from cmd line:", commit_message)
     elif re.search("^[rxl]+$", arg):
         run_cmd = 'r' in arg or 'x' in arg
         cmd_counts = arg.count('r') + arg.count('x')
@@ -273,8 +273,11 @@ while count < len(sys.argv):
 my_time = pendulum.today()
 
 if actual_time_commit_stamp:
-    cur_date_time = pendulum.now().format("YY/MM/DD hh:mm:ss")
+    cur_date_time = pendulum.now().format("YY/MM/DD HH:mm:ss")
     commit_message = "{} {}".format(cur_date_time, commit_message)
+
+if commit_message:
+    print("Commit message from cmd line:", commit_message)
 
 bare_commit_cmd = "git commit{} -m \"{}\"".format(" --no-verify" if no_verify else "", commit_message)
 
@@ -312,6 +315,8 @@ if auto_date:
                 if by_end_of_year:
                     per_day_metrics(days, 'year')
             break
+    if not actual_time_commit_stamp:
+        print("Reminder: if you want a time-stamp, you can add the -at flag.")
 
 if proj_shift_yet:
     ghdir = os.path.join(base_dir_needed, proj_shift_yet if proj_shift_yet not in i7.i7gx.keys() else i7.i7gx[proj_shift_yet])
@@ -363,4 +368,4 @@ else:
     else:
         print("The date-string things will be sent to is", date_string)
     print("Use -r to run.")
-    if not commit_message: print("Also, remember to set a commit message. Anything with a space counts as a commit message.")
+    if not commit_message: print("Also, remember to set a commit message. Any string with a space (use quotes) counts as a commit message.")
