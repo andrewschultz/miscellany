@@ -21,6 +21,9 @@ from shutil import copy
 import xml.etree.ElementTree as ET
 import codecs
 import colorama
+import pendulum
+
+this_year = pendulum.now().year
 
 gitbase = 'c:/users/andrew/documents/github'
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
@@ -535,7 +538,7 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
             if len(x) > 1 and web_site_match(x[1], my_website, absolute_match):
                 print("Matched", my_website, "with hosts file site", x[1])
                 temp = re.sub("^#+", "", x[0])
-                if not set_available:
+                if set_available:
                     temp = '#' + temp
                 if x[0] != temp:
                     x[0] = temp
