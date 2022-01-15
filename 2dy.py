@@ -185,9 +185,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         this_file = os.path.basename(g[file_index])
     current_size = os.stat(this_file).st_size
     gsl = len(goals_and_stretch)
-    basic_goal = goals_and_stretch[0]
+    stretch_metric_goal = basic_goal = goals_and_stretch[0]
     for x in range(0, gsl):
-        goal_per_file = goals_and_stretch[x]
+        stretch_metric_goal = goal_per_file = goals_and_stretch[x]
         if current_size > goals_and_stretch[x]:
             mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit {} of {}!'.format('your weekly goal' if x == 0 else 'stretch goal # {}{}'.format(x, '' if gsl == 2 else '/{}'.format(gsl-1)), goals_and_stretch[x]) + colorama.Style.RESET_ALL)
         else:
@@ -199,7 +199,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     t_goal = t_base.add(days=max_days_new)
     weekly_interval_so_far = (t_now - t_base).in_seconds()
     full_weekly_interval = (t_goal - t_base).in_seconds()
-    current_goal = basic_goal * weekly_interval_so_far // full_weekly_interval
+    current_goal = stretch_metric_goal * weekly_interval_so_far // full_weekly_interval
     seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // basic_goal
     current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
     t_eta = t_base.add(seconds = current_pace_seconds_delta)
@@ -207,12 +207,12 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
     print("... calculating notes size vs. goals ...")
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
-    print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, basic_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
+    print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, stretch_metric_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
     if time_dir_string == 'ahead':
         time_dir_string += ' of'
     print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
-    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {}.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
+    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} of your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
     if current_size < basic_goal:
         mt.center(colorama.Fore.YELLOW + "ETA to achieve goal: {}, {} away.".format(t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
