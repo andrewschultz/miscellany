@@ -180,6 +180,7 @@ def dhms(my_int):
 
 def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
+    hit_all_stretch = False
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[file_index])
@@ -194,6 +195,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
             break
         if x == gsl - 1 and x > 1:
             mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + "Extra hooray! You hit {} your stretch goals!".format('all' if x > 2 else 'both') + colorama.Style.RESET_ALL)
+            hit_all_stretch = True
     t_base = pendulum.local(int(this_file[:4]), int(this_file[4:6]), int(this_file[6:8]))
     t_now = pendulum.now()
     t_goal = t_base.add(days=max_days_new)
@@ -204,8 +206,10 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
     t_eta = t_base.add(seconds = current_pace_seconds_delta)
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
+    if hit_all_stretch:
+        mt.center(colorama.Fore.CYAN + "If you want to establish a new stretch goal, 2dy -e will do so." + colorama.Style.RESET_ALL)
+        return
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
-    print("... calculating notes size vs. goals ...")
     time_dir_string = 'behind' if current_size < current_goal else 'ahead'
     print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, stretch_metric_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
     if time_dir_string == 'ahead':
