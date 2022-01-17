@@ -34,6 +34,9 @@ import time
 import pendulum
 import mytools as mt
 
+retired_file = 'c:/writing/scripts/hrcheck.txt'
+hrcheck_list = 'c:/writing/scripts/hrcheck-list.txt'
+
 dupes = ['', 's']
 
 from collections import defaultdict
@@ -50,12 +53,6 @@ bookmark_dict = defaultdict(list)
 bookmark_file = defaultdict(list)
 extra_bookmark = defaultdict(list)
 backbkmk = defaultdict(str)
-
-check_file  = "c:\\writing\\scripts\\hrcheck.txt";
-check_private = "c:\\writing\\scripts\\hrcheckp.txt";
-xtra_file   = "c:\\writing\\scripts\\hrcheckx.txt";
-
-hr_files = [ check_file, check_private, xtra_file ]
 
 lock_file   = "c:\\writing\\scripts\\hrchecklock.txt";
 queue_file   = "c:\\writing\\scripts\\hrcheckqueue.txt";
@@ -90,10 +87,10 @@ def find_in_one_checkfile(my_string, f, find_comments):
 def find_in_checkfiles(my_string, find_comments_first_pass, ignore_comments):
     if find_comments_first_pass and ignore_comments:
         print("WARNING: conflicting options C and I to both find comments and ignore them. Finding comments (C) overrides ignoring comments (I).")
-    for x in hr_files:
+    for x in hrcheck_array:
         find_in_one_checkfile(my_string, x, find_comments_first_pass)
     if not find_comments_first_pass and not ignore_comments: # second pass through, this time looking for comments, assuming we ignored them first time
-        for x in hr_files:
+        for x in hrcheck_array:
             find_in_one_checkfile(my_string, x, find_comments_first_pass)
     mt.postopen()
     print("Nothing found for <<{}>>.".format(my_string))
@@ -124,6 +121,13 @@ def usage():
     print("v = verbose")
     print("f/s(c):(string) = find string in file, c = look in comments too")
     exit()
+
+def get_file_list_by_priority():
+    temp_array = []
+    with open(hrcheck_list) as file:
+        for (line_count, line) in enumerate (file, 1):
+            temp_array.extend(line.strip().split(","))
+    return temp_array
 
 def print_all_bookmarks():
     for x in sorted(extra_bookmark):
@@ -430,6 +434,11 @@ queue_max = 4
 my_bookmarks = []
 print_bookmarks = False
 
+if 1:
+    hrcheck_array = get_file_list_by_priority()
+else:
+    sys.exit("Could not retrieve list of HRCHECK files. Bailing.")
+
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg[0] == '-' and not arg[1:].isdigit():
@@ -478,37 +487,29 @@ while count < len(sys.argv):
     elif is_time(arg):
         time_array = [int(q) for q in arg.split(":")]
     elif arg in ( 'ra', 'ar' ):
-        if retired_file in hr_files:
+        if retired_file in hrcheck_array:
             print("Tried to add retired file twice.")
         else:
-            hr_files.append(retired_file)
+            hrcheck_array.append(retired_file)
     elif arg == 'e':
-        mt.npo(check_file)
-        exit()
-    elif arg == 'ep':
-        mt.npo(check_private)
-        exit()
-    elif arg == 'ex':
-        mt.npo(xtra_file)
-        exit()
-    elif arg == 'er':
-        mt.npo(retired_file)
-        exit()
-    elif arg == 'ea':
-        mt.npo(check_file, bail=False)
-        mt.npo(check_private, bail=False)
-        mt.npo(xtra_file, bail=False)
-        mt.npo(retired_file, bail=False)
+        mt.npo(hrcheck_array[0])
+    elif arg == 'e?':
+        print("List of indices")
+        for x in range (0, len(hrcheck_array)):
+            print("{:2d} {}".format(x, hrchech_array[x]))
         sys.exit()
-    elif re.search("^e[xpmr]+", arg):
-        if 'x' in arg:
-            mt.npo(xtra_file, bail=False)
-        if 'p' in arg:
-            mt.npo(check_private, bail=False)
-        if 'm' in arg:
-            mt.npo(check_file, bail=False)
-        if 'r' in arg:
-            mt.npo(retired_file, bail=False)
+    elif arg[:2] == 'e-':
+        mt.npo(retired_file)
+    elif arg[0] == 'e' and arg[1].isdigit():
+        print_at_end = False
+        for x in arg[1:].split(","):
+            try:
+                mt.npo(hrcheck_array[int(x)], bail=False)
+            except:
+                print("Bad index", x, "range is 0 to", len(hrcheck_array) - 1)
+                print_at_end = True
+        if print_at_end:
+            print("e? shows indices with files they point to.")
         sys.exit()
     elif arg.startswith("b="):
         my_bookmarks += arg[2:].split(",")
@@ -530,7 +531,7 @@ while count < len(sys.argv):
 
 n = pendulum.now()
 
-for f in hr_files:
+for f in hrcheck_array:
     read_hourly_check(f)
 
 if only_check_expired:
