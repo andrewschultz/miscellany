@@ -3,6 +3,7 @@
 #
 # a bunch of auxiliary/helper scripts to make things easier
 
+import stat
 import pathlib
 import glob
 import ctypes
@@ -519,15 +520,13 @@ def web_site_match(site1, site2, absolute_match):
         return True
     if absolute_match:
         return False
-    print("www." + site1, site2)
-    print("www." + site2, site1)
     if site1 == 'www.' + site2:
         return True
     if site2 == 'www.' + site1:
         return True
     return False
 
-def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolute_match = False):
+def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolute_match = False, set_read_after = False):
     the_temp_string = ""
     any_changes = False
     with open(hosts_file) as file:
@@ -536,7 +535,6 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
                 break
             x = re.split("[\t ]", line.strip().lower())
             if len(x) > 1 and web_site_match(x[1], my_website, absolute_match):
-                print("Matched", my_website, "with hosts file site", x[1])
                 temp = re.sub("^#+", "", x[0])
                 if set_available:
                     temp = '#' + temp
@@ -547,11 +545,17 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
                     continue
             the_temp_string += line
     if any_changes:
+        try:
+            os.chmod(hosts_file, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH)
+        except:
+            sys.exit("I wanted to change the host file, but I could not properly open it for writing.")
         f = open(hosts_file, "w")
         f.write(the_temp_string)
         f.close()
     elif warn_no_changes:
         print("WARNING: no websites matching {} were found in hosts_file_toggle.".format(my_website))
+    if set_read_after:
+        os.chmod(hosts_file, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
 
 def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
