@@ -120,7 +120,7 @@ def usage():
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     print("v = verbose")
     print("f/s(c):(string) = find string in file, c = look in comments too")
-    exit()
+    sys.exit()
 
 def get_file_list_by_priority():
     temp_array = []
@@ -343,7 +343,7 @@ def list_queue():
     if not got_any: print("Nothing in the queue.")
     if total_dupes:
         print(len(hours_processed), "duplicate time" + dupes[not len(hours_processed)], total_dupes, "additional duplicate line" + dupes[not total_dupes])
-    exit()
+    sys.exit()
 
 def file_lock():
     if not os.path.exists(lock_file): return False
@@ -445,17 +445,17 @@ while count < len(sys.argv):
         arg = arg[1:]
     if arg == 'hh':
         half_hour = True
-    elif arg == 'nh' or arg == 'hn':
+    elif arg in ( 'nh', 'hn' ):
         half_hour = False
     elif re.search("^[pr]+$", arg):
         run_cmd = 'r' in arg
         print_cmd = 'p' in arg
     elif arg == 'l':
         lock_lock_file()
-        exit()
-    elif arg == 'u' or arg == 'ul' or arg == 'lu':
+        sys.exit()
+    elif arg in ( 'u', 'ul', 'lu' ):
         unlock_lock_file()
-        exit()
+        sys.exit()
     elif arg == 'q':
         unlock_lock_file(False)
         queue_run = 1
@@ -466,16 +466,16 @@ while count < len(sys.argv):
     elif arg[:2] == 'mq' or arg[:2] == 'qm':
         queue_run = 1
         queue_max = int(arg[2:])
-    elif arg == 'qk' or arg == 'kq':
+    elif arg in ( 'qk', 'kq' ):
         unlock_lock_file(False)
         queue_run = 1
         queue_keep = True
-    elif arg == 'ql' or arg == 'lq':
+    elif arg in ( 'ql', 'lq' ):
         list_queue()
-        exit()
+        sys.exit()
     elif arg == 'qe':
         os.system(queue_file)
-        exit()
+        sys.exit()
     elif arg == 'cx':
         only_check_expired = True
     elif arg[:2] == 'id':
@@ -522,11 +522,11 @@ while count < len(sys.argv):
         find_in_checkfiles(this_array[1], 'c' in this_array[0], 'i' in this_array[0])
     elif arg == '?':
         usage()
-        exit()
+        sys.exit()
     else:
         print("Bad argument", count, arg)
         usage()
-        exit()
+        sys.exit()
     count += 1
 
 n = pendulum.now()
@@ -575,7 +575,7 @@ if file_lock():
     string_to_write = "{:d},{:d},{:d}".format(time_index,wkday,mday)
     f.write(string_to_write + "\n")
     print("Wrote", string_to_write, "to", queue_file, "since it is locked.")
-    exit()
+    sys.exit()
 
 if init_delay: time.sleep(init_delay)
 
