@@ -325,15 +325,22 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     if a:
         my_label += "\nBest-fit exp bytes: {:.2f}/{:.2f}".format(7 * a + b0, times[-1] * a + b)
 
+    my_line_width = 1
+
     plt.figure(figsize=(15, 12))
     plt.xticks(rotation=45, ha='right')
     plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
 
-    plt.plot(times, a*times+b) # line of best fit
-    per_day = goals_and_stretch[0] // max_days_new
-    plt.plot(times, per_day * times - per_day * init_from_epoch) # general pacing line assuming consistent output
+    for g in goals_and_stretch:
+        per_day = g // max_days_new
+        plt.plot(times, per_day * times - per_day * init_from_epoch, linewidth=my_line_width, linestyle='dashed') # general pacing line assuming consistent output
+        my_line_width += 1
+        if sizes[-1] < g:
+            break
+
+    plt.plot(times, a*times+b, linewidth=my_line_width) # line of best fit
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
@@ -367,8 +374,6 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     plt.xlabel("days")
     plt.ylabel("bytes")
 
-    per_day = goals_and_stretch[0] // max_days_new
-
     (a, b) = np.polyfit(times2, hour_delt, 1)
     hourly_average = (sizes[-1] - first_size) * 3600 / (last_time - first_time).total_seconds()
 
@@ -377,7 +382,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     b1 = b * weight - hourly_average * weight + hourly_average
     b2 = b1 + a1 * init_from_epoch
 
-    plt.plot(times2, a1 * times2 + b1)
+    plt.plot(times2, a1 * times2 + b1, linewidth=my_line_width)
 
     count = len(times2)
     projection_time = times2[-1]
