@@ -329,18 +329,19 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     plt.figure(figsize=(15, 12))
     plt.xticks(rotation=45, ha='right')
-    plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label)
     plt.xlabel("days")
     plt.ylabel("bytes")
 
     for g in goals_and_stretch:
         per_day = g // max_days_new
         plt.plot(times, per_day * times - per_day * init_from_epoch, linewidth=my_line_width, linestyle='dashed') # general pacing line assuming consistent output
-        my_line_width += 1
+        my_line_width += 0.2
         if sizes[-1] < g:
             break
 
     plt.plot(times, a*times+b, linewidth=my_line_width) # line of best fit
+
+    plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label, zorder=100) # not sure which zorder is which, but make sure of things. I want the line under the points.
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
