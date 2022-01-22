@@ -301,7 +301,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     (a, b) = np.polyfit(times, sizes, 1)
     b0 = b + a * init_from_epoch
-    my_label = "{}\nbytes={:.2f}*days{}{:.2f}".format(my_time.to_day_datetime_string(), a, '+' if b0 > 0 else '', b0)
+    my_label = "{}\nbytes={:.2f}*days({:.2f}*hours){}{:.2f}".format(my_time.to_day_datetime_string(), a, a/24, '+' if b0 > 0 else '', b0)
 
     my_graph_graphic = "c:/writing/temp/daily-{}{}".format('past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
 
@@ -410,7 +410,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         print(floor_hourly, this_delta, more_bytes)
         count += 1
 
-    label_2 = "Bytes={:.2f}*days+{:.2f}\nTotal expected bytes:{:.2f}+{:.2f}={:.2f}{}".format(a1, b2, sizes[-1], more_bytes, sizes[-1] + more_bytes, "\n(trendline hit zero at {})".format(count) if this_delta < 0 else '')
+    label_2 = "Bytes={:.2f}*days/{:.2f}/hours{}{:.2f}\nTotal expected bytes:{:.2f}+{:.2f}={:.2f}{}".format(a1, a1 / 24, '+' if b2 >= 0 else '-', abs(b2), sizes[-1], more_bytes, sizes[-1] + more_bytes, "\n(trendline hit zero at {})".format(count) if this_delta < 0 else '')
 
     label_2 += "\nCurrent expected={:.2f}\n".format(current_expected)
 
