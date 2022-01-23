@@ -526,7 +526,14 @@ def web_site_match(site1, site2, absolute_match):
         return True
     return False
 
-def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolute_match = False, set_read_after = False):
+HOSTS_NOCHANGE = 0
+HOSTS_RESTRICT = 1
+HOSTS_OPEN = 2
+HOSTS_UNKNOWN = 3
+
+def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, absolute_match = False, set_read_after = False):
+    my_website = my_website.lower()
+    tracked_change = HOSTS_NOCHANGE
     the_temp_string = ""
     any_changes = False
     with open(hosts_file) as file:
@@ -536,9 +543,17 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
             x = re.split("[\t ]", line.strip().lower())
             if len(x) > 1 and web_site_match(x[1], my_website, absolute_match):
                 temp = re.sub("^#+", "", x[0])
-                if set_available:
+                if allow_website_access:
                     temp = '#' + temp
                 if x[0] != temp:
+                    print(temp, x[0], tracked_change)
+                    if '#' in temp and '#' not in x[0]:
+                        tracked_change = HOSTS_RESTRICT
+                    elif '#' in x[0] and '#' not in temp:
+                        tracked_change = HOSTS_OPEN
+                    else:
+                        tracked_change = HOSTS_UNKNOWN
+                    print(temp, x[0], tracked_change)
                     x[0] = temp
                     any_changes = True
                     the_temp_string += '\t'.join(x) + '\n'
@@ -548,7 +563,7 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
         try:
             os.chmod(hosts_file, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH)
         except:
-            sys.exit("I wanted to change the host file, but I could not properly open it for writing.")
+            sys.exit("I wanted to change the host file, but I could not properly open it for writing.\nMake sure you have administrative privileges with your script/function.")
         f = open(hosts_file, "w")
         f.write(the_temp_string)
         f.close()
@@ -556,6 +571,7 @@ def hosts_file_toggle(my_website, set_available, warn_no_changes = True, absolut
         print("WARNING: no websites matching {} were found in hosts_file_toggle.".format(my_website))
     if set_read_after:
         os.chmod(hosts_file, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
+    return tracked_change
 
 def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
