@@ -46,6 +46,7 @@ hour_parts = 4
 
 of_day = defaultdict(str)
 of_neg_day = defaultdict(str)
+quarter_mod_shift = defaultdict(str)
 of_week = defaultdict(lambda: defaultdict(str))
 of_month = defaultdict(lambda: defaultdict(str))
 
@@ -147,7 +148,7 @@ def my_time(x):
     return int(x) * 4
 
 def make_time_array(j, k, line_count):
-    quarter_hour = 0
+    quarter_delta = 0
     my_weekday = 0
     my_monthday = 0
     monthday_array = []
@@ -161,8 +162,10 @@ def make_time_array(j, k, line_count):
             monthday_array = q[2:].split(",")
         elif q.startswith("d="):
             weekday_array = q[2:].split(",")
-        elif q.startswith("m") or q.startswith("d"):
-            print("Uh oh, line {0} has time starting with m/d and not m=/d=. Fix this.".format(line_count), j, q)
+        elif q.startswith("q="):
+            quarter_delta = int(q[2:])
+        elif q.startswith("m") or q.startswith("d") or q.startswith("q"):
+            print("Uh oh, line {0} has time starting with m/d/q and not m=/d=/q=. Fix this.".format(line_count), j, q)
             return
         else:
             hour_array = [my_time(x) for x in q.split(",")]
@@ -183,8 +186,11 @@ def make_time_array(j, k, line_count):
     if not len(monthday_array) and not len(weekday_array):
         for h in hour_array:
             hi = int(h)
-            if hi >= 0: of_day[int(h)] += kn
-            else: of_neg_day[-hi] += kn
+            if hi >= 0:
+                of_day[int(h)] += kn
+            else:
+                quarter_mod_shift[kn] = quarter_delta
+                of_neg_day[-hi] += kn
     return
 
 def read_hourly_check(a):
@@ -303,7 +309,7 @@ def carve_up(q, msg):
 def carve_neg(ti):
     retval = 0
     for q in of_neg_day.keys():
-        if ti % q == 0:
+        if ti % q == quarter_mod_shift[of_neg_day[q]]:
             negary = of_neg_day[q].split("\n")
             for q2 in negary:
                 retval += check_print_run(q2, "every-x-hours {:d} {:d}-per-hour units".format(q, hour_parts))
