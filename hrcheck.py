@@ -292,7 +292,8 @@ def check_print_run(x, msg="(no message)"):
             mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), set_available = False)
         elif x.startswith("http"):
             if '^&' in x:
-                print("WARNING: get rid of ^& and replace with &, as we aren't using os.system any more.")
+                x = x.replace('^&', '&')
+                print("WARNING: get rid of ^& and replace with &, as we are using os.startfile for websites and not os.system.")
             os.startfile(x)
         else:
             os.system(x)
@@ -568,7 +569,8 @@ if len(time_array):
     time_index = time_array[0] * hour_parts + (time_array[1] * hour_parts) // 60
 else:
     n.subtract(minutes=minute_delta)
-    if minute_delta: print("WARNING shifting", minute_delta, "back" if minute_delta < 0 else "forward")
+    if minute_delta:
+        print("WARNING shifting", minute_delta, "back" if minute_delta < 0 else "forward")
     time_index = n.hour * 4 + (n.minute * hour_parts) // 60
 
 if mday == -1: mday = n.day
