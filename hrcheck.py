@@ -45,7 +45,7 @@ init_delay = 0
 hour_parts = 4
 
 of_day = defaultdict(str)
-of_neg_day = defaultdict(str)
+of_neg_day = defaultdict(list)
 quarter_mod_shift = defaultdict(str)
 of_week = defaultdict(lambda: defaultdict(str))
 of_month = defaultdict(lambda: defaultdict(str))
@@ -189,8 +189,8 @@ def make_time_array(j, k, line_count):
             if hi >= 0:
                 of_day[int(h)] += kn
             else:
-                quarter_mod_shift[kn] = quarter_delta
-                of_neg_day[-hi] += kn
+                quarter_mod_shift[kn.strip()] = quarter_delta
+                of_neg_day[-hi].append(kn.strip())
     return
 
 def read_hourly_check(a):
@@ -309,11 +309,10 @@ def carve_up(q, msg):
 
 def carve_neg(ti):
     retval = 0
-    for q in of_neg_day.keys():
-        if ti % q == quarter_mod_shift[of_neg_day[q]]:
-            negary = of_neg_day[q].split("\n")
-            for q2 in negary:
-                retval += check_print_run(q2, "every-x-hours {:d} {:d}-per-hour units".format(q, hour_parts))
+    for delta_group in of_neg_day.keys():
+        for neg_cmd in of_neg_day[delta_group]:
+            if ti % delta_group == quarter_mod_shift[neg_cmd]:
+                retval += check_print_run(neg_cmd, "every-x-hours {:d} {:d}-per-hour units".format(delta_group, hour_parts))
     return retval
 
 def see_what_to_run(ti, wd, md, hh):
