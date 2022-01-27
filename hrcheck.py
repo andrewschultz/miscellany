@@ -65,6 +65,8 @@ forgotFile = "c:\\writing\\scripts\\hrcheck-forgotfile.txt";
 anyExtra   = 0;
 extraFiles = [];
 
+cmds_to_ignore = []
+
 show_warnings = False
 
 verbose = False
@@ -287,15 +289,18 @@ def check_print_run(x, msg="(no message)"):
     if print_cmd: print("***running", msg, x)
     if run_cmd:
         if x.startswith("+host"):
-            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), set_available = True)
+            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = True)
         elif x.startswith("-host"):
-            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), set_available = False)
+            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = False)
         elif x.startswith("http"):
             if '^&' in x:
                 x = x.replace('^&', '&')
                 print("WARNING: get rid of ^& and replace with &, as we are using os.startfile for websites and not os.system.")
             os.startfile(x)
         else:
+            for y in cmds_to_ignore:
+                if y in x:
+                    return 0
             os.system(x)
     return 1
 
@@ -526,6 +531,12 @@ while count < len(sys.argv):
     elif re.search('^[fs]([ci]?)[:=]', arg):
         this_array = re.split("[:=]", arg, 1)
         find_in_checkfiles(this_array[1], 'c' in this_array[0], 'i' in this_array[0])
+    elif arg[:2] == 'i:':
+        ignore_string = arg[2:].lower()
+        for z in ignore_string.split(','):
+            if len(z) == 0:
+                sys.exit("Need a string to ignore.")
+            cmds_to_ignore.append(z)
     elif arg == '?':
         usage()
         sys.exit()
