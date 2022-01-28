@@ -204,7 +204,6 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     current_goal = stretch_metric_goal * weekly_interval_so_far // full_weekly_interval
     seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // basic_goal
     current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
-    t_eta = t_base.add(seconds = current_pace_seconds_delta)
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
     if hit_all_stretch:
         mt.center(colorama.Fore.CYAN + "If you want to establish a new stretch goal, 2dy -e will do so." + colorama.Style.RESET_ALL)
@@ -217,13 +216,17 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
     projection = current_size * full_weekly_interval // weekly_interval_so_far
     mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} of your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
-    if current_size < basic_goal:
-        mt.center(colorama.Fore.YELLOW + "ETA to achieve goal: {}, {} away.".format(t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
+    nexty = '' if basic_goal == stretch_metric_goal else 'next '
+    goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
+    for this_goal in goal_array:
+        current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
+        t_eta = t_base.add(seconds = current_pace_seconds_delta)
+        mt.center(colorama.Fore.YELLOW + "ETA to achieve {}goal of {}: {}, {} away.".format(nexty, this_goal, t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
-        bytes_remaining = basic_goal - current_size
+        bytes_remaining = this_goal - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
-        bytes_per_hour_overall = basic_goal * 3600 / full_weekly_interval
+        bytes_per_hour_overall = this_goal * 3600 / full_weekly_interval
         so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
         catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
@@ -672,7 +675,7 @@ while cmd_count < len(sys.argv):
     elif arg[:2] == 'gs' and arg[2:].isdigit():
         file_index = int(arg[2:])
         if abs(file_index) == 1:
-            print("Note: this is not zero-based, so 1 is the most recent and the default.")
+            print("Note: this is not zero-based. Rather, it starts at 1, or -1, as the most recent (element -1 in an array).")
         graph_stats(file_index = file_index, overwrite = True)
     elif arg == 'gsd': graph_stats(graph_type = HOURLY_BYTES)
     elif arg[:3] == 'gsd':
