@@ -852,6 +852,38 @@ def sort_raw(raw_long):
     os.system(raw_long)
     return 1
 
+def is_outline_text(my_line):
+    if my_line == '====':
+        return True
+    if my_line.startswith("\\"):
+        return True
+    return False
+
+def deep_duplicate_delete():
+    x = glob("c:/writing/daily/20*.txt")
+    dupes = 0
+    dupe_dict = defaultdict(list)
+    for y in x[:-1]:
+        bn = os.path.basename(y)
+        with open(y) as file:
+            for (line_count, line) in enumerate (file, 1):
+                line_content = mt.strip_punctuation(line, remove_comments = True)
+                if not line_content:
+                    continue
+                dupe_dict[line_content].append((bn, line_count))
+    with open(x[-1]) as file:
+        for (line_count, line) in enumerate (file, 1):
+            line_content = mt.strip_punctuation(line, remove_comments = True)
+            if is_outline_text(line_content):
+                continue
+            if line_content in dupe_dict:
+                dupes += 1
+                print(colorama.Fore.GREEN + "DUPLICATE {} {}".format(line_count, line.strip()) + colorama.Style.RESET_ALL)
+                print('        ', ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]))
+    if not dupes:
+        print("no duplicates detected.")
+    sys.exit()
+
 files_done = 0
 file_list = []
 cmd_count = 1
@@ -873,6 +905,8 @@ while cmd_count < len(sys.argv):
         what_to_sort = daily.DAILY
     elif arg == 'p' or arg == 'sp':
         sort_proc = True
+    elif arg == 'ddd':
+        deep_duplicate_delete()
     elif arg == 'py' or arg == 'yp':
         protect_yes_force = True
     elif arg == 'pn' or arg == 'np':

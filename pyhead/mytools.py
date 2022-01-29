@@ -236,7 +236,14 @@ def modified_size_of(my_file):
 
 def is_npp_modified(my_file): # see if a file is unsaved in notepad++
     quick_basename = os.path.basename(my_file).lower()
-    e = ET.parse(np_xml)
+    parse_successful = False
+    while not parse_successful:
+        try:
+            e = ET.parse(np_xml)
+            parse_successful = True
+        except:
+            messageBox = ctypes.windll.user32.MessageBoxW
+            messageBox(None, "Error reading Notepad++ tabs.\n\nYou may need to wait to try again, especially if you just edited something.", "Try again!", 0x0)
     for elem in e.iter('File'):
         this_np_file = elem.get("filename")
         if quick_basename not in this_np_file.lower(): continue # this speeds stuff up slightly
