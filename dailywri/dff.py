@@ -655,7 +655,7 @@ def sort_raw(raw_long):
                     continue
             if current_section == 'nam':
                 if "\t\t" in line:
-                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in name line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
                 old_names.extend(re.split("\t+", line.lower().strip()))
             temp = section_from_prefix(ll)
             if temp:
@@ -769,7 +769,7 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
-    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
     no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
