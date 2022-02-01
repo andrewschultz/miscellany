@@ -1047,7 +1047,7 @@ def latest_of(file_array, latest = True):
     if not new_ret: sys.exit("Can't get latest of {}".format(', '.join(file_array)))
     return new_ret
 
-def first_of(file_array, latest = True):
+def first_timed_file_of(file_array, latest = True):
     new_ret = ''
     first_time = time.time()
     for x in file_array:
@@ -1059,6 +1059,8 @@ def first_of(file_array, latest = True):
             print("No info for", x)
     if not new_ret: sys.exit("Can't get first of {}".format(', '.join(file_array)))
     return new_ret
+
+first_of = first_timed_file_of
 
 def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out = 0, bail = False):
     if type(string_to_print) == list:
