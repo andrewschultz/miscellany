@@ -581,7 +581,16 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
         os.chmod(hosts_file, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
     return tracked_change
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True): # returns true if identical (option to get rid of blanks,) false if not
+def first_string_diff(string_1, string_2):
+    min_length = min(len(string_1), len(string_2))
+    for x in range(0, min_length):
+        if string_1[x] != string_2[x]:
+            return x
+    if string_1 != string_2:
+        return min_length
+    return -1
+
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -609,6 +618,22 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         bn1 = f1
         bn2 = f2
     any_extra_lines = False
+    if compare_tabbed:
+        tabbed_entries = [x for x in freq if '\t' in x]
+        if len(tabbed_entries) != 2:
+            print("WARNING found more than one tabbed line when comparing tabs")
+        else:
+            if tabbed_entries[0] in f2_ary:
+                (tabbed_entries[0], tabbed_entries[1]) = (tabbed_entries[1], tabbed_entries[0])
+            difs = [x for x in difs if '\t' not in x]
+            set1 = set(tabbed_entries[0]) - set(tabbed_entries[1])
+            print
+            my_first_diff = first_string_diff(tabbed_entries[0], tabbed_entries[1])
+
+            print(my_first_diff, len(tabbed_entries[0]), len(tabbed_entries[1]))
+            print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE")
+            print("    ORIG", tabbed_entries[0][my_first_diff:my_first_diff + 100])
+            print("     NEW", tabbed_entries[1][my_first_diff:my_first_diff + 100] + colorama.Style.RESET_ALL)
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
