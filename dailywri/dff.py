@@ -859,29 +859,43 @@ def is_outline_text(my_line):
         return True
     return False
 
+def dff_normalize(my_line):
+    my_line = mt.strip_punctuation(my_line, remove_comments = True)
+    if re.search(r' ([0-9=])\1 ', my_line):
+        rexp = re.compile(r' *(?:([0-9=]+)) *')
+        line_list = rexp.split(my_line)[0::2]
+        if '==' in my_line:
+            my_line = "<BTP> " + ', '.join(sorted(line_list))
+        else:
+            my_line = "<SPOONERISM> " + ', '.join(sorted(line_list))
+    return my_line
+
 def deep_duplicate_delete():
     x = glob("c:/writing/daily/20*.txt")
     dupes = 0
     dupe_dict = defaultdict(list)
+    bytes_i_got = 0
     for y in x[:-1]:
         bn = os.path.basename(y)
         with open(y) as file:
             for (line_count, line) in enumerate (file, 1):
-                line_content = mt.strip_punctuation(line, remove_comments = True)
+                line_content = dff_normalize(line)
                 if not line_content:
                     continue
                 dupe_dict[line_content].append((bn, line_count))
     with open(x[-1]) as file:
         for (line_count, line) in enumerate (file, 1):
-            line_content = mt.strip_punctuation(line, remove_comments = True)
+            line_content = dff_normalize(line)
             if is_outline_text(line_content):
                 continue
             if line_content in dupe_dict:
                 dupes += 1
-                print(colorama.Fore.GREEN + "DUPLICATE {} {}".format(line_count, line.strip()) + colorama.Style.RESET_ALL)
-                print('        ', ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]))
+                print(colorama.Fore.GREEN + "DUPLICATE {} {}:".format(line_count, line.strip()), colorama.Fore.YELLOW + ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]), colorama.Style.RESET_ALL)
+                bytes_i_got += len(line) + 1
     if not dupes:
         print("no duplicates detected.")
+    else:
+        print(dupes, "duplicate lines for a total of", bytes_i_got, "bytes.")
     sys.exit()
 
 files_done = 0
