@@ -875,6 +875,7 @@ def deep_duplicate_delete():
     dupes = 0
     dupe_dict = defaultdict(list)
     bytes_i_got = 0
+    this_sect = '<none>'
     for y in x[:-1]:
         bn = os.path.basename(y)
         with open(y) as file:
@@ -885,12 +886,18 @@ def deep_duplicate_delete():
                 dupe_dict[line_content].append((bn, line_count))
     with open(x[-1]) as file:
         for (line_count, line) in enumerate (file, 1):
+            if line.startswith("\\"):
+                this_sect = line.strip()[1:]
+                continue
+            elif not line.strip():
+                this_sect = '<none>'
+                continue
             line_content = dff_normalize(line)
             if is_outline_text(line_content):
                 continue
             if line_content in dupe_dict:
                 dupes += 1
-                print(colorama.Fore.GREEN + "DUPLICATE {} {}:".format(line_count, line.strip()), colorama.Fore.YELLOW + ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]), colorama.Style.RESET_ALL)
+                print(colorama.Fore.GREEN + "DUPLICATE {} {} {}:".format(line_count, this_sect, line.strip()), colorama.Fore.YELLOW + ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]), colorama.Style.RESET_ALL)
                 bytes_i_got += len(line) + 1
     if not dupes:
         print("no duplicates detected.")
