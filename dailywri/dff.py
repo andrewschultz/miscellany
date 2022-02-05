@@ -223,10 +223,13 @@ def short_cfg_prefix(my_line):
         return False
     return my_line[0].isalpha()
 
+def tab_split(x):
+    return re.split("\t+", x.strip())
+
 def sanitize(tabbed_names):
     low_case_dict = defaultdict(bool)
     new_ary = []
-    for x in re.split("\t+", tabbed_names):
+    for x in tab_split(tabbed_names):
         if x.lower() in low_case_dict:
             blue_print("WARNING deleting duplicate name (case-insensitive) {}".format(x))
         else:
@@ -656,7 +659,7 @@ def sort_raw(raw_long):
             if current_section == 'nam':
                 if "\t\t" in line:
                     print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
-                old_names.extend(re.split("\t+", line.lower().strip()))
+                old_names.extend(tab_split(line.lower().strip()))
             temp = section_from_prefix(ll)
             if temp:
                 if temp in prefixes and temp in delete_marker:
@@ -731,7 +734,7 @@ def sort_raw(raw_long):
             print("If you are sure this is okay, the igdup option works. But it is hidden for a reason. You probably just want to put a comment after, or change things subtly.")
             mt.npo(raw_long, dupe_edit_lines[0])
     if len(old_names):
-        new_names = re.split("\t+", sections['nam'].lower().strip())
+        new_names = tab_split(sections['nam'].lower().strip())
         t1 = sorted(list(set(new_names) - set(old_names)))
         t2 = sorted(list(set(old_names) - set(new_names)))
         if len(t1) > 0:
@@ -862,7 +865,7 @@ def is_outline_text(my_line):
 def dff_normalize(my_line):
     my_line = mt.strip_punctuation(my_line, remove_comments = True)
     if re.search(r' ([0-9=])\1 ', my_line):
-        rexp = re.compile(r' *(?:([0-9=]+)) *')
+        rexp = re.compile(r' *(?:([0-9=])\1) *')
         line_list = rexp.split(my_line)[0::2]
         if '==' in my_line:
             my_line = "<BTP> " + ', '.join(sorted(line_list))
