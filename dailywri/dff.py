@@ -875,9 +875,10 @@ def dff_normalize(my_line):
 
 def deep_duplicate_delete():
     x = glob("c:/writing/daily/20*.txt")
-    dupes = 0
+    name_dupes = dupes = 0
+    name_bytes_i_got = bytes_i_got = 0
     dupe_dict = defaultdict(list)
-    bytes_i_got = 0
+    dupe_name_dict = defaultdict(list)
     this_sect = '<none>'
     for y in x[:-1]:
         bn = os.path.basename(y)
@@ -886,6 +887,9 @@ def deep_duplicate_delete():
                 line_content = dff_normalize(line)
                 if not line_content:
                     continue
+                if '\t' in line_content:
+                    for a_name in tab_split(line.lower()):
+                        dupe_name_dict[a_name].append(bn)
                 dupe_dict[line_content].append((bn, line_count))
     with open(x[-1]) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -895,6 +899,12 @@ def deep_duplicate_delete():
             elif not line.strip():
                 this_sect = '<none>'
                 continue
+            if '\t' in line:
+                for a_name in tab_split(line.lower()):
+                    if a_name in dupe_name_dict:
+                        name_dupes += 1
+                        print(colorama.Fore.GREEN + "DUPLICATE NAME {}:".format(a_name), colorama.Fore.YELLOW + ', '.join(dupe_name_dict[a_name]), colorama.Style.RESET_ALL)
+                        name_bytes_i_got += len(a_name)
             line_content = dff_normalize(line)
             if is_outline_text(line_content):
                 continue
@@ -906,6 +916,7 @@ def deep_duplicate_delete():
         print("no duplicates detected.")
     else:
         print(dupes, "duplicate lines for a total of", bytes_i_got, "bytes.")
+        print(name_dupes, "duplicate names for a total of", name_bytes_i_got, "bytes.")
     sys.exit()
 
 files_done = 0
