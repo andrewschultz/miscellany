@@ -873,14 +873,16 @@ def dff_normalize(my_line):
             my_line = "<SPOONERISM> " + ', '.join(sorted(line_list))
     return my_line
 
-def deep_duplicate_delete():
-    x = glob("c:/writing/daily/20*.txt")
+def deep_duplicate_delete(last_file = "3000.txt"):
+    if not last_file.lower().endswith('txt'):
+        last_file += '.txt'
+    dailies = [x for x in glob("c:/writing/daily/20*.txt") if re.sub(".*[\\\/]", "", x) <= last_file]
     name_dupes = dupes = 0
     name_bytes_i_got = bytes_i_got = 0
     dupe_dict = defaultdict(list)
     dupe_name_dict = defaultdict(list)
     this_sect = '<none>'
-    for y in x[:-1]:
+    for y in dailies[:-1]:
         bn = os.path.basename(y)
         with open(y) as file:
             for (line_count, line) in enumerate (file, 1):
@@ -891,7 +893,7 @@ def deep_duplicate_delete():
                     for a_name in tab_split(line.lower()):
                         dupe_name_dict[a_name].append(bn)
                 dupe_dict[line_content].append((bn, line_count))
-    with open(x[-1]) as file:
+    with open(dailies[-1]) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("\\"):
                 this_sect = line.strip()[1:]
@@ -942,6 +944,8 @@ while cmd_count < len(sys.argv):
         sort_proc = True
     elif arg == 'ddd':
         deep_duplicate_delete()
+    elif arg[:3] == 'ddd' and arg[3:].isdigit():
+        deep_duplicate_delete(arg[3:])
     elif arg == 'py' or arg == 'yp':
         protect_yes_force = True
     elif arg == 'pn' or arg == 'np':
