@@ -270,6 +270,13 @@ def read_hourly_check(a):
                     print("WARNING too many variables, can't yet parse {0} line {1} (maybe you want a forward slash instead of |):\n    {:2}".format(bn, line_count, line))
                     mt.add_post(a, line_count)
                 continue
+            if '{' in a1[-1]:
+                if a1[-1].count('{') != a1[-1].count('}')
+                    sys.exit("Bad curly brace count for timestamp at line {} of {}.".format(line_count, ab))
+                try:
+                    a1[-1] = re.sub("({.*?})", lambda x: pendulum.now().format(x.group(0)), a1[-1])
+                except:
+                    sys.exit("Bad now-time formatting line {}: {}".format(line_count, a1))
             a3 = re.sub("\t", "\n", a1[-1])
             make_time_array(a1[0].lower(), a3, line_count)
             if bookmark_string:
