@@ -271,7 +271,7 @@ def read_hourly_check(a):
                     mt.add_post(a, line_count)
                 continue
             if '{' in a1[-1]:
-                if a1[-1].count('{') != a1[-1].count('}')
+                if a1[-1].count('{') != a1[-1].count('}'):
                     sys.exit("Bad curly brace count for timestamp at line {} of {}.".format(line_count, ab))
                 try:
                     a1[-1] = re.sub("({.*?})", lambda x: pendulum.now().format(x.group(0)), a1[-1])
@@ -298,7 +298,7 @@ def check_print_run(x, msg="(no message)"):
         if x.startswith("+host"):
             mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = True)
         elif x.startswith("-host"):
-            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = False)
+            mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = False, set_read_after = True)
         elif x.startswith("http"):
             if '^&' in x:
                 x = x.replace('^&', '&')
