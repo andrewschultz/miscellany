@@ -535,9 +535,9 @@ def web_site_match(site1, site2, absolute_match):
 
 HOSTS_NOCHANGE = 0
 HOSTS_RESTRICT = 1
-HOSTS_OPEN = 2
-HOSTS_UNKNOWN = 3
-HOSTS_FOUND_NOCHANGE = 4
+HOSTS_OPEN = 1>>1
+HOSTS_UNKNOWN = 1>>2
+HOSTS_FOUND_NOCHANGE = 1>>3
 
 def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, absolute_match = False, set_read_after = False):
     my_website = my_website.lower()
@@ -555,17 +555,17 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
                     temp = '#' + temp
                 if x[0] != temp:
                     if '#' in temp and '#' not in x[0]:
-                        tracked_change = HOSTS_RESTRICT
+                        tracked_change |= HOSTS_RESTRICT
                     elif '#' in x[0] and '#' not in temp:
-                        tracked_change = HOSTS_OPEN
+                        tracked_change |= HOSTS_OPEN
                     else:
-                        tracked_change = HOSTS_UNKNOWN
+                        tracked_change |= HOSTS_UNKNOWN
                     x[0] = temp
                     any_changes = True
                     the_temp_string += '\t'.join(x) + '\n'
                     continue
                 else:
-                    tracked_change = HOSTS_FOUND_NOCHANGE
+                    tracked_change |= HOSTS_FOUND_NOCHANGE
             the_temp_string += line
     if any_changes:
         try:
