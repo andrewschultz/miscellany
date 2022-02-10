@@ -341,10 +341,11 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         my_line_width += 0.2
         if sizes[-1] < g:
             break
+        plt.axhline(y=g, linestyle='dotted', zorder=10)
 
     plt.plot(times, a*times+b, linewidth=my_line_width) # line of best fit
 
-    plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label, zorder=100) # not sure which zorder is which, but make sure of things. I want the line under the points.
+    plt.scatter(times, sizes, color = color_array, s = shape_array, label=my_label, zorder=20) # not sure which zorder is which, but make sure of things. I want the line under the points.
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
