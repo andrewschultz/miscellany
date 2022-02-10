@@ -882,6 +882,7 @@ def deep_duplicate_delete(last_file = "3000.txt"):
     dupe_dict = defaultdict(list)
     dupe_name_dict = defaultdict(list)
     this_sect = '<none>'
+    to_print = []
     for y in dailies[:-1]:
         bn = os.path.basename(y)
         with open(y) as file:
@@ -905,20 +906,24 @@ def deep_duplicate_delete(last_file = "3000.txt"):
                 for a_name in tab_split(line.lower()):
                     if a_name in dupe_name_dict:
                         name_dupes += 1
-                        print(colorama.Fore.GREEN + "DUPLICATE NAME {}:".format(a_name), colorama.Fore.YELLOW + ', '.join(dupe_name_dict[a_name]), colorama.Style.RESET_ALL)
+                        to_print.append(colorama.Fore.GREEN + "DUPLICATE NAME {}:{} {}{}".format(a_name, colorama.Fore.YELLOW, ', '.join(dupe_name_dict[a_name]), colorama.Style.RESET_ALL))
                         name_bytes_i_got += len(a_name)
             line_content = dff_normalize(line)
             if is_outline_text(line_content):
                 continue
             if line_content in dupe_dict:
                 dupes += 1
-                print(colorama.Fore.GREEN + "DUPLICATE {} {} {}:".format(line_count, this_sect, line.strip()), colorama.Fore.YELLOW + ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]), colorama.Style.RESET_ALL)
+                to_print.append(colorama.Fore.GREEN + "DUPLICATE LINE {} {} {}:{} {}{}".format(line_count, this_sect, line.strip(), colorama.Fore.YELLOW, ', '.join(["{} line {}".format(x[0], x[1]) for x in dupe_dict[line_content]]), colorama.Style.RESET_ALL))
                 bytes_i_got += len(line) + 1
+    head_foot_string = colorama.Fore.CYAN + "{} duplicate lines for a total of {} bytes. {} duplicate names for a total of {} bytes.".format(dupes, bytes_i_got, name_dupes, name_bytes_i_got) + colorama.Style.RESET_ALL
     if not dupes:
         print("no duplicates detected.")
     else:
-        print(dupes, "duplicate lines for a total of", bytes_i_got, "bytes.")
-        print(name_dupes, "duplicate names for a total of", name_bytes_i_got, "bytes.")
+        mt.center(head_foot_string)
+    for tp in to_print:
+        print(tp)
+    if dupes:
+        mt.center(head_foot_string)
     sys.exit()
 
 files_done = 0
