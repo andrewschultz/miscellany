@@ -620,20 +620,24 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     any_extra_lines = False
     if compare_tabbed:
         tabbed_entries = [x for x in freq if '\t' in x]
-        if len(tabbed_entries) != 2:
+        if len(tabbed_entries) == 0:
+            pass
+        elif len(tabbed_entries) != 2:
             print("WARNING found more than one tabbed line when comparing tabs")
         else:
             if tabbed_entries[0] in f2_ary:
                 (tabbed_entries[0], tabbed_entries[1]) = (tabbed_entries[1], tabbed_entries[0])
             difs = [x for x in difs if '\t' not in x]
-            set1 = set(tabbed_entries[0]) - set(tabbed_entries[1])
-            print
-            my_first_diff = first_string_diff(tabbed_entries[0], tabbed_entries[1])
-
-            print(my_first_diff, len(tabbed_entries[0]), len(tabbed_entries[1]))
+            tabs1 = tabbed_entries[0].split("\t")
+            tabs2 = tabbed_entries[1].split("\t")
+            set1 = set(tabs1) - set(tabs2)
+            set2 = set(tabs2) - set(tabs1)
+            print(set1, set2)
             print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE")
-            print("    ORIG", tabbed_entries[0][my_first_diff:my_first_diff + 100])
-            print("     NEW", tabbed_entries[1][my_first_diff:my_first_diff + 100] + colorama.Style.RESET_ALL)
+            if set1:
+                print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + colorama.Style.RESET_ALL)
+            if set2:
+                print(colorama.Fore.GREEN + "     NEW:", ', '.join(['{} idx {}'.format(x, tabbed_entries[1].index(x) + 1) for x in set2]) + colorama.Style.RESET_ALL)
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
