@@ -205,7 +205,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // basic_goal
     current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
+    bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
     if hit_all_stretch:
+        mt.center(colorama.Fore.CYAN + "Total expected bytes this period: {:.2f}".format(bytes_per_hour_so_far * max_days_new * 24) + colorama.Style.RESET_ALL)
         mt.center(colorama.Fore.CYAN + "If you want to establish a new stretch goal, 2dy -e will do so." + colorama.Style.RESET_ALL)
         return
     cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
@@ -225,7 +227,6 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
         bytes_remaining = this_goal - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
-        bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
         bytes_per_hour_overall = this_goal * 3600 / full_weekly_interval
         so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
