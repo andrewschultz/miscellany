@@ -534,20 +534,33 @@ def web_site_match(site1, site2, absolute_match):
     return False
 
 HOSTS_NOCHANGE = 0
-HOSTS_RESTRICT = 1
-HOSTS_OPEN = 1>>1
-HOSTS_UNKNOWN = 1>>2
-HOSTS_FOUND_NOCHANGE = 1>>3
+HOSTS_UNREADABLE = 1>>1
+HOSTS_UNWRITEABLE = 1>>2
+HOSTS_RESTRICT = 1>>3
+HOSTS_OPEN = 1>>4
+HOSTS_UNKNOWN = 1>>5
+HOSTS_FOUND_NOCHANGE = 1>>6
 
-def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, absolute_match = False, set_read_after = False):
+def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, absolute_match = False, set_read_after = False, auto_bail = False):
     my_website = my_website.lower()
     tracked_change = HOSTS_NOCHANGE
     the_temp_string = ""
     any_changes = False
-    with open(hosts_file) as file:
+    try:
+        file = open(hosts_file)
+    except:
+        print("Could not open hosts file.")
+        if auto_bail:
+            sys.exit()
+        return HOSTS_UNREADABLE
+    skip_the_rest = False
+    with file:
         for (line_count, line) in enumerate(file, 1):
-            if 'entries inserted by Spybot' in line:
-                break
+            if skip_the_rest:
+                the_temp_string += line
+                continue
+            if "inserted by spybot" in line.lower():
+                skip_the_rest = True
             x = re.split("[\t ]", line.strip().lower())
             if len(x) > 1 and web_site_match(x[1], my_website, absolute_match):
                 temp = re.sub("^#+", "", x[0])
@@ -571,7 +584,10 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
         try:
             os.chmod(hosts_file, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH)
         except:
-            sys.exit("I wanted to change the host file, but I could not properly open it for writing.\nMake sure you have administrative privileges with your script/function.")
+            print("I wanted to change the host file, but I could not properly open it for writing.\nMake sure you have administrative privileges with your script/function.")
+            if auto_bail:
+                sys.exit()
+            return tracked_change | HOSTS_UNWRITEABLE
         f = open(hosts_file, "w")
         f.write(the_temp_string)
         f.close()
