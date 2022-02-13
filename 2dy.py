@@ -327,7 +327,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         my_label += "\nAverage from last exp bytes: {:.2f}".format(expected_kb)
 
     if a:
-        my_label += "\nBest-fit exp bytes: {:.2f}/{:.2f}".format(7 * a + b0, times[-1] * a + b)
+        my_label += "\nBest-fit exp bytes: {:.2f} end/{:.2f} now".format(7 * a + b0, times[-1] * a + b)
 
     my_line_width = 1
 
@@ -350,7 +350,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper left', framealpha=1).set_zorder(300)
 
     if graph_type & TOTAL_BYTES:
         plt.savefig(my_graph_graphic)
@@ -428,7 +428,8 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%m/%d %H:00'))
     plt.gca().xaxis.set_major_locator(mdates.HourLocator(interval = 6 if times[-1] - times[0] < 4 else 12))
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper left', framealpha=1).set_zorder(300)
+
     plt.savefig(my_graph_graphic)
     mt.text_in_browser(my_graph_graphic)
 
