@@ -126,6 +126,17 @@ def num_to_text_color(my_num, goal_per_file):
         retval += colorama.Fore.MAGENTA
     return retval
 
+def date_match(line_1, line_2):
+    try:
+        d1 = line_1.split("\t")
+        d2 = line_2.split("\t")
+    except:
+        print("Bad line formatting when checking date_match")
+        print(line_1)
+        print(line_2)
+        sys.exit()
+    return d1[1][:10] == d2[1][:10] # we may need to tighten this up later e.g. x.replace('-', '')[:8], but the dates have dashes for now
+
 def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
     if not this_file:
@@ -140,6 +151,10 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
+
+    todays_points = [ x for x in raw_stat_lines if date_match(x, raw_stat_lines[-1]) ]
+    todays_min = int(todays_points[0].split("\t")[2])
+
     hour_delta = my_size - last_size
     header_color = num_to_text_color(hour_delta, goals_and_stretch[0])
     my_string = header_color + "HOURLY BYTE/THOUSANDS NOW/BEFORE COUNT: {} vs {}, {} vs {}, +{}.".format(my_size, last_size, my_size // 1000, last_size // 1000, my_size - last_size) + colorama.Style.RESET_ALL
@@ -149,19 +164,29 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     right_now = pendulum.now()
     minutes_adjusted = (right_now.minute + 57) % 60
 
-    seconds_so_far = minutes_adjusted * 60 + right_now.second
-    seconds_to_go = 3600 - seconds_so_far
+    seconds_taken_this_hour = minutes_adjusted * 60 + right_now.second
+    seconds_remaining_this_hour = 3600 - seconds_taken_this_hour
+
+    day_start = right_now.set(minute=3, second=0, hour=0)
+    if day_start < right_now:
+        day_start.subtract(days=1)
+
+    seconds_taken_today = (right_now - day_start).in_seconds()
 
     try:
-        projected_hourly = (my_size - last_size) * 3600 / seconds_so_far
+        projected_hourly = (my_size - last_size) * 3600 / seconds_taken_this_hour
         header_color = num_to_text_color(projected_hourly, goals_and_stretch[0])
         my_string = header_color + "Projected bytes this hour: {:.2f}".format(projected_hourly) + colorama.Style.RESET_ALL
+        mt.center(my_string)
+        projected_daily = (my_size - todays_min) * 86400 / seconds_taken_today
+        header_color = num_to_text_color(projected_daily, goals_and_stretch[0] * 24)
+        my_string = header_color + "Projected bytes today: {:.2f}".format(projected_daily) + colorama.Style.RESET_ALL
         mt.center(my_string)
     except:
         print("Oops! Synchronicity. There are no projections to make for this hour.")
 
     try:
-        rate_for_next = until_next * 60 / seconds_to_go
+        rate_for_next = until_next * 60 / seconds_remaining_this_hour
     except:
         print("Oops! Synchronicity! You did this right at x:03! We're going to pretend you have one second left. Just run it again to see the upcoming hour.")
         rate_for_next = 1
