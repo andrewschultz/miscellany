@@ -1,7 +1,8 @@
 # dff.py: daily file find
 #
 # sorts notes from google keep/drive and modifies them a bit if necessary
-#
+# todo: pull COMMENTS from DDD
+# todo: in a = b lines, flag both a and b and get all the comments. Have actual_info array along with my_comment_list
 
 import daily
 import codecs
@@ -226,7 +227,7 @@ def short_cfg_prefix(my_line):
 def tab_split(x):
     return re.split("\t+", x.strip())
 
-def sanitize(tabbed_names):
+def sanitize(tabbed_names, start_tab = False):
     low_case_dict = defaultdict(bool)
     new_ary = []
     for x in tab_split(tabbed_names):
@@ -235,7 +236,10 @@ def sanitize(tabbed_names):
         else:
             new_ary.append(x)
             low_case_dict[x.lower()] = True
-    return "\t".join(new_ary)
+    return_val = "\t".join(new_ary)
+    if not return_val.startswith("\t"):
+        return_val = "\t" + return_val
+    return return_val
 
 def read_daily_cfg():
     with open("c:/writing/scripts/2dy.txt") as file:
@@ -744,7 +748,7 @@ def sort_raw(raw_long):
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
-        sections['nam'] = sanitize(sections['nam'])
+        sections['nam'] = sanitize(sections['nam'], start_tab = True)
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
             print("Not dumping text to", important_file, "as the text", raw_long, "is already in there.")
