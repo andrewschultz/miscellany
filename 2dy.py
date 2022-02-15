@@ -56,6 +56,7 @@ stats_file = "c:/writing/temp/daily-stats.txt"
 
 file_header = ""
 
+color_deltas = defaultdict(list)
 color_dict = defaultdict(int)
 sect_ary = []
 
@@ -106,21 +107,25 @@ def check_unsaved():
     for x in open_array:
         mt.npo(x, bail = False)
 
-def num_to_text_color(my_num, goal_per_file):
+def num_to_text_color(my_num, goal_per_file, deltas='basic'):
+    if deltas not in color_deltas:
+        print("Unrecognized color_delta {}, going to default. You can choose from {}.".format(', '.join(color_deltas[deltas])))
+        deltas = 'basic'
+    cd = color_deltas[deltas]
     retval = colorama.Back.WHITE
     if my_num <= 0:
         retval += colorama.Back.RED
-    elif my_num < goal_per_file // 336: # we could say goal_per_file // 168 as goal_per_hour but decimal precision etc.
+    elif my_num < goal_per_file // cd[0]: # we could say goal_per_file // 168 as goal_per_hour but decimal precision etc.
         retval += colorama.Fore.RED
-    elif my_num < goal_per_file // 168: # breakeven goal
+    elif my_num < goal_per_file // cd[1]: # breakeven goal
         retval += colorama.Fore.YELLOW
-    elif my_num < goal_per_file // 84:
+    elif my_num < goal_per_file // cd[2]:
         retval += colorama.Fore.BLACK
-    elif my_num < goal_per_file // 42:
+    elif my_num < goal_per_file // cd[3]:
         retval += colorama.Fore.GREEN
-    elif my_num < goal_per_file // 28:
+    elif my_num < goal_per_file // cd[4]:
         retval += colorama.Fore.BLUE
-    elif my_num < goal_per_file // 21:
+    elif my_num < goal_per_file // cd[5]:
         retval += colorama.Fore.CYAN
     else:
         retval += colorama.Fore.MAGENTA
@@ -179,8 +184,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         my_string = header_color + "Projected bytes this hour: {:.2f}".format(projected_hourly) + colorama.Style.RESET_ALL
         mt.center(my_string)
         projected_daily = (my_size - todays_min) * 86400 / seconds_taken_today
-        header_color = num_to_text_color(projected_daily, goals_and_stretch[0] * 24)
-        my_string = header_color + "Projected bytes today: {:.2f}".format(projected_daily) + colorama.Style.RESET_ALL
+        header_color = num_to_text_color(projected_daily, goals_and_stretch[0], 'daily')
+        my_string = header_color + "Projected bytes today: {} + {:.2f} = {:.2f}".format(todays_min, projected_daily, todays_min + projected_daily) + colorama.Style.RESET_ALL
         mt.center(my_string)
     except:
         print("Oops! Synchronicity. There are no projections to make for this hour.")
@@ -591,7 +596,13 @@ def read_2dy_cfg():
             if line.startswith("#"): continue
             if line.startswith(";"): break
             (prefix, data) = mt.cfg_data_split(line)
-            if prefix == 'goalperfile':
+            if prefix == 'color_deltas':
+                my_ary = data.split(',')
+                try:
+                    color_deltas[my_ary[0]] = [int(x) for x in my_ary[1:]]
+                except:
+                    print("Oops. The color-deltas array {} needs integers after the name.".format(', '.join(my_ary[1:])))
+            elif prefix == 'goalperfile':
                 goals_and_stretch = [poss_thousands(int(x)) for x in data.split(',')]
             elif prefix == 'maxnew':
                 max_days_new = int(data)
