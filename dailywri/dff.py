@@ -698,8 +698,7 @@ def sort_raw(raw_long):
                         from_blank += 1
                 continue
             if one_word_names and is_likely_name(line, current_section) and 'nam' not in local_block_move:
-                if current_section:
-                    print("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section, line_count, line.strip()))
+                print(colorama.Fore.CYAN + "    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section if current_section else '<none>', line_count, line.strip()) + colorama.Style.RESET_ALL)
                 sections['nam'] += "\t" + line.strip()
                 name_line[line.strip()] = line_count
                 to_names += 1
@@ -726,23 +725,22 @@ def sort_raw(raw_long):
                 else:
                     from_blank += 1
             sections['sh'] += line
+    if len(dupe_edit_lines):
+        if not ignore_duplicate:
+            print("If you are sure the duplication ({}) is okay, the igdup option will bypass this bail. But the option is hidden for a reason. You probably just want to put a comment after, or change things subtly.".format(mt.listnums(dupe_edit_lines)))
+            mt.npo(raw_long, dupe_edit_lines[0])
     print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         if overflow:
             print("NOTE: consecutive-line overflow (line not fitting in any section) was detected, so there may be a big chunk that is the result of one extra CR.")
         mt.npo(raw_long, blank_edit_lines[0])
-    if len(dupe_edit_lines):
-        print("Duplicate lines: {}".format(mt.listnums(dupe_edit_lines)))
-        if not ignore_duplicate:
-            print("If you are sure this is okay, the igdup option works. But it is hidden for a reason. You probably just want to put a comment after, or change things subtly.")
-            mt.npo(raw_long, dupe_edit_lines[0])
     if len(old_names):
         new_names = tab_split(sections['nam'].lower().strip())
         t1 = sorted(list(set(new_names) - set(old_names)))
         t2 = sorted(list(set(old_names) - set(new_names)))
         if len(t1) > 0:
-            print(colorama.Fore.GREEN + "New names: {}".format(', '.join(["{}~{}".format(t1, name_line[t1])]) + colorama.Style.RESET_ALL))
+            print(colorama.Fore.GREEN + "New names: {}".format(', '.join(["{}~{}".format(x, name_line[x]) for x in t1]) + colorama.Style.RESET_ALL))
         if len(t2) > 0:
             print(colorama.Fore.GREEN + "Old names deleted: {}".format(t2) + colorama.Style.RESET_ALL)
     if 'nam' in sections:
