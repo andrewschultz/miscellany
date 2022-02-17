@@ -144,6 +144,12 @@ read_cfg_defaults()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'rz':
+        print("Ignoring RZ argument # {}".format(cmd_count))
+        continue
+    if arg.startswith('rz'):
+        print("Stripping RZ from argument {} to {} as you probably forgot to execute a full command.".format(arg, arg[2:]))
+        arg = arg[2:]
     if arg == 'w':
         to_web = True
     elif arg in ('nw', 'wn'):
