@@ -254,6 +254,13 @@ def is_npp_modified(my_file): # see if a file is unsaved in notepad++
                     return True
             return False
 
+def wait_until_npp_saved(my_file):
+    while is_npp_modified(my_file):
+        messageBox = ctypes.windll.user32.MessageBoxW
+        x = messageBox(None, "Save {} and hit OK and try again to open it in Notepad++.\n\nCANCEL aborts things.".format(my_file), "Try again!", 0x1)
+        if x == 2: # Cancel ... OK is 1
+            print("Okay, cancelling.")
+
 def conditional_notepad_open_my_file(my_file, open_if_already_there):
     e = ET.parse(np_xml)
     already_in_notepad = is_open_in_notepad(my_file)
