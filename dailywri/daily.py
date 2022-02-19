@@ -50,7 +50,18 @@ glob_default = "da"
 
 open_on_warn = False
 
-dir_keywords = [ "daily", "from_drive", "from_keep" ]
+def read_daily_abbrev():
+    temp_dict = defaultdict(str)
+    daily_dir_cfg = "c:/writing/scripts/daily-abbrev.txt"
+    with open(daily_dir_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            (prefix, data) = mt.cfg_data_split(line)
+            temp_dict[prefix] = data
+            if line.startswith('#'):
+                continue
+            if line.startswith(';'):
+                break
+    return temp_dict
 
 def is_true_string(x):
     if x == '0' or x == 'false': return False
@@ -171,7 +182,7 @@ def is_dir_or_proc(dir_1, dir_list):
         if temp2 in temp1.parents or temp2 == temp1:
             return temp2
     return ""
-    
+
 def copy_to_done(file_name, dir_path):
     done_path = done_of(dir_path)
     done_from = os.path.join(dir_path, file_name)
@@ -187,4 +198,6 @@ def valid_file(file_name, dir_name):
             return re.search("^20[0-9]{6}\.txt$", base_name.lower())
     print("Bad dir name in", dir_name, "for", base_name)
     return False
+
+dir_keywords = read_daily_abbrev()
 
