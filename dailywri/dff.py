@@ -614,6 +614,7 @@ def sort_raw(raw_long):
     if protect_empties:
         for x in empty_to_protect:
             sections[x] = ''
+    mt.wait_until_npp_saved(raw_long)
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:

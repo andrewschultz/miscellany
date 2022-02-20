@@ -655,7 +655,6 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             tabs2 = tabbed_entries[1].split("\t")
             set1 = set(tabs1) - set(tabs2)
             set2 = set(tabs2) - set(tabs1)
-            print(set1, set2)
             print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE")
             if set1:
                 print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + colorama.Style.RESET_ALL)
