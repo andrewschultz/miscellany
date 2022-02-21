@@ -990,23 +990,23 @@ while cmd_count < len(sys.argv):
         max_files = num_of
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
-    elif arg == 'k' or arg == 'dk':
+    elif arg in ( 'k', 'dk' ):
         what_to_sort = daily.KEEP
-    elif arg == 'd' or arg == 'dr':
+    elif arg in ( 'd', 'dr' ):
         what_to_sort = daily.DRIVE
-    elif arg == 'a' or arg == 'da':
+    elif arg in ( 'a', 'da' ):
         what_to_sort = daily.DAILY
-    elif arg == 'p' or arg == 'sp':
+    elif arg in ( 'p', 'sp' ):
         sort_proc = True
     elif arg == 'ddd':
         deep_duplicate_delete()
     elif arg[:3] == 'ddd' and arg[3:].isdigit():
         deep_duplicate_delete(arg[3:])
-    elif arg == 'py' or arg == 'yp':
+    elif arg in ( 'py', 'yp' ):
         protect_yes_force = True
-    elif arg == 'pn' or arg == 'np':
+    elif arg in ( 'pn', 'np' ):
         protect_no_force = True
-    elif arg == 'o' or arg == 'fo' or arg == 'of' or arg == 'f':
+    elif arg in ( 'o', 'fo', 'of', 'f' ):
         only_list_files = True
     elif arg == 'puc':
         pop_up_if_clean = True
@@ -1028,7 +1028,7 @@ while cmd_count < len(sys.argv):
         bail_after_unchanged = True
     elif arg == 'n1':
         one_word_names = False
-    elif arg == '1w' or arg == 'w1':
+    elif arg in ( '1w', 'w1' ):
         one_word_names = True
     elif arg in ( 'l1', '1l' ):
         last_file_first = True
@@ -1070,12 +1070,12 @@ while cmd_count < len(sys.argv):
     elif arg == 'bb':
         show_blank_to_blank = True
         edit_blank_to_blank = False
-    elif arg == 'nbb' or arg == 'bbn':
+    elif arg in ( 'nbb', 'bbn' ):
         show_blank_to_blank = False
         edit_blank_to_blank = False
-    elif arg == 'bw' or arg == 'wb':
+    elif arg in ( 'bw', 'wb' ):
         bail_on_warning = True
-    elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
+    elif arg in ( 'nbw', 'nwb', 'bwn', 'wbn' ):
         bail_on_warning = False
     elif arg in ( 'tj', 'jt' ):
         show_total_jumps = True
