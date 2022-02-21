@@ -74,6 +74,8 @@ edit_blank_to_blank = True
 run_test_file = False
 ignore_duplicate = False
 
+show_total_jumps = False
+
 pop_up_if_clean = False
 
 read_most_recent = False
@@ -588,6 +590,50 @@ def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude =
     return_string = "{} bytes, {} lines, {:.2f} average.".format(total_bytes, len(my_lines), total_bytes / len(my_lines))
     return return_string
 
+def worthwhile_line(line):
+    if not line.strip():
+        return False
+    if line.startswith('#') or line.startswith('\\') or line.startswith('='):
+        return False
+    return True
+
+def sanitized_readlines_of(file_1, file_2):
+    f1 = open(file_1, 'r')
+    ary_1 = [x.lower().strip() for x in f1.readlines() if worthwhile_line(x)]
+    f2 = open(file_2, 'r')
+    ary_2 = [x.lower().strip() for x in f2.readlines() if worthwhile_line(x)]
+    ary_1a = [ x for x in ary_1 if x in ary_2 ]
+    ary_2a = [ x for x in ary_2 if x in ary_1 ]
+    return (ary_1a, ary_2a)
+
+def show_adjustments(before_file, after_file):
+    total_adjustments = 0
+    total_places = 0
+    (before_ary, after_ary) = sanitized_readlines_of(before_file, after_file)
+    sorting_to_do = True
+    total_delta = 0
+    total_changes = 0
+    while sorting_to_do:
+        max_delta = 0
+        to_fix = 0
+        sorting_to_do = False
+        for x in range(0, len(before_ary)):
+            if before_ary[x] != after_ary[x]:
+                this_delta = abs(x - after_ary.index(before_ary[x]))
+                if this_delta > max_delta:
+                    max_delta = this_delta
+                    to_fix = x
+                    sorting_to_do = True
+        if not sorting_to_do:
+            break
+        temp = before_ary.pop(to_fix)
+        temp2 = after_ary.index(temp)
+        print(temp, to_fix, "shifted", max_delta)
+        total_delta += max_delta
+        total_changes += 1
+        after_ary.remove(temp)
+    print("Total changes and delta", total_changes, total_delta)
+
 def sort_raw(raw_long):
     overflow = False
     raw_long = os.path.normpath(raw_long)
@@ -818,6 +864,8 @@ def sort_raw(raw_long):
             for x in sectdif:
                 change_amounts[x] = ( sectdif[x][0] - raw_nums[x][0], sectdif[x][1] - raw_nums[x][1] )
             show_size_stats(change_amounts, "NET SECTION DELTAS")
+        if show_total_jumps:
+            show_adjustments(raw_long, temp_out_file)
         if test_no_copy:
             print("Not modifying", raw_long, "even though differences were found. Set -co to change this or add a Q to a parameter to get a verification question.")
             if show_differences:
@@ -1029,6 +1077,8 @@ while cmd_count < len(sys.argv):
         bail_on_warning = True
     elif arg == 'nbw' or arg == 'nwb' or arg == 'bwn' or arg == 'wbn':
         bail_on_warning = False
+    elif arg in ( 'tj', 'jt' ):
+        show_total_jumps = True
     elif arg == 'sb':
         dir_search_flag = daily.BACKUP
     elif arg == 'sr':
