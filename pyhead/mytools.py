@@ -527,17 +527,28 @@ def lines_of(file_name):
     f.close()
     return temp
 
-def web_site_match(site1, site2, absolute_match):
+HOST_MATCH_PERFECT = 1
+HOST_MATCH_IGNORE_WWW = 1>>1
+HOST_MATCH_SUBSITE = 1>>2
+
+def web_site_match(site1, site2, match_type = HOST_MATCH_IGNORE_WWW):
+    print(site1, "vs", site2, match_type)
     site1 = site1.lower()
     site2 = site2.lower()
     if site1 == site2:
         return True
-    if absolute_match:
+    if match_type == HOST_MATCH_PERFECT:
         return False
-    if site1 == 'www.' + site2:
-        return True
-    if site2 == 'www.' + site1:
-        return True
+    if match_type == HOST_MATCH_IGNORE_WWW:
+        print(1)
+        if site1 == 'www.' + site2:
+            return True
+        if site2 == 'www.' + site1:
+            return True
+        print(2)
+    if match_type == HOST_MATCH_SUBSITE:
+        if site2 in site1 or site1 in site2:
+            return True
     return False
 
 HOSTS_NOCHANGE = 0
@@ -548,7 +559,7 @@ HOSTS_OPEN = 1>>4
 HOSTS_UNKNOWN = 1>>5
 HOSTS_FOUND_NOCHANGE = 1>>6
 
-def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, absolute_match = False, set_read_after = False, auto_bail = False):
+def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, match_type = HOST_MATCH_IGNORE_WWW, set_read_after = False, auto_bail = False):
     my_website = my_website.lower()
     tracked_change = HOSTS_NOCHANGE
     the_temp_string = ""
@@ -569,7 +580,7 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
             if "inserted by spybot" in line.lower():
                 skip_the_rest = True
             x = re.split("[\t ]", line.strip().lower())
-            if len(x) > 1 and web_site_match(x[1], my_website, absolute_match):
+            if len(x) > 1 and web_site_match(x[1], my_website, match_type):
                 temp = re.sub("^#+", "", x[0])
                 if allow_website_access:
                     temp = '#' + temp
