@@ -9,7 +9,11 @@ ignores = []
 
 temp_file = "c:\\writing\\temp\\ifarg-from-old.txt"
 
+max_needed = 1
+total_so_far = 0
+
 def try_line_open(my_file):
+    global total_so_far
     any_bugs = False
     my_line = 0
     f2 = open(temp_file, "w")
@@ -32,11 +36,27 @@ def try_line_open(my_file):
         paste_string = "copy {} {}".format(temp_file, my_file)
         pyperclip.copy(paste_string)
         mt.wm(my_file, temp_file)
-        sys.exit()
+        total_so_far += 1
+        if total_so_far == max_needed:
+            print("Max of {} reached.")
+            sys.exit()
+        else:
+            print("{} of {} reached so far.".format(total_so_far, max_needed))
 
-my_dir = "c:\\writing\\scripts"
+g = []
 
-g = glob.glob(my_dir + "\\*.py")
+try:
+    temp = sys.argv[1]
+    if temp.isdigit():
+        max_needed = int(temp)
+    else:
+        g = [ sys.argv[1] ]
+except:
+    print("You can put in an integer as an argument to open multiple files.")
+
+if not g:
+    my_dir = "c:\\writing\\scripts"
+    g = glob.glob(my_dir + "\\*.py")
 
 for f in g:
     if os.path.basename(f) in ignores:
