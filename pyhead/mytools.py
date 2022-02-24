@@ -532,7 +532,6 @@ HOST_MATCH_IGNORE_WWW = 1>>1
 HOST_MATCH_SUBSITE = 1>>2
 
 def web_site_match(site1, site2, match_type = HOST_MATCH_IGNORE_WWW):
-    print(site1, "vs", site2, match_type)
     site1 = site1.lower()
     site2 = site2.lower()
     if site1 == site2:
@@ -540,12 +539,10 @@ def web_site_match(site1, site2, match_type = HOST_MATCH_IGNORE_WWW):
     if match_type == HOST_MATCH_PERFECT:
         return False
     if match_type == HOST_MATCH_IGNORE_WWW:
-        print(1)
         if site1 == 'www.' + site2:
             return True
         if site2 == 'www.' + site1:
             return True
-        print(2)
     if match_type == HOST_MATCH_SUBSITE:
         if site2 in site1 or site1 in site2:
             return True
@@ -559,7 +556,7 @@ HOSTS_OPEN = 1>>4
 HOSTS_UNKNOWN = 1>>5
 HOSTS_FOUND_NOCHANGE = 1>>6
 
-def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, match_type = HOST_MATCH_IGNORE_WWW, set_read_after = False, auto_bail = False):
+def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, match_type = HOST_MATCH_IGNORE_WWW, set_read_after = False, auto_bail = False, look_for_start = True):
     my_website = my_website.lower()
     tracked_change = HOSTS_NOCHANGE
     the_temp_string = ""
@@ -572,15 +569,23 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
             sys.exit()
         return HOSTS_UNREADABLE
     skip_the_rest = False
+    process_host_mappings = not look_for_start
+    next_cr_go = False
     with file:
         for (line_count, line) in enumerate(file, 1):
+            if next_cr_go and not line.strip():
+                process_host_mappings = True
+                next_cr_go = False
+            if not process_host_mappings:
+                if line.startswith('#') and 'localhost' in line:
+                    next_cr_go = True
             if skip_the_rest:
                 the_temp_string += line
                 continue
             if "inserted by spybot" in line.lower():
                 skip_the_rest = True
             x = re.split("[\t ]", line.strip().lower())
-            if len(x) > 1 and web_site_match(x[1], my_website, match_type):
+            if process_host_mappings and len(x) > 1 and web_site_match(x[1], my_website, match_type):
                 temp = re.sub("^#+", "", x[0])
                 if allow_website_access:
                     temp = '#' + temp
@@ -598,6 +603,9 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
                 else:
                     tracked_change |= HOSTS_FOUND_NOCHANGE
             the_temp_string += line
+    if not process_host_mappings:
+        print("Did not find LOCALHOST in file, and look_for_start was true, so I found nothing.")
+        return
     if any_changes:
         try:
             os.chmod(hosts_file, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH)
