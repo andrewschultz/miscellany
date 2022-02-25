@@ -613,6 +613,7 @@ def show_adjustments(before_file, after_file):
     sorting_to_do = True
     total_delta = 0
     total_changes = 0
+    max_adjustment_summary = 100
     while sorting_to_do:
         max_delta = 0
         to_fix = 0
@@ -626,12 +627,14 @@ def show_adjustments(before_file, after_file):
                     sorting_to_do = True
         if not sorting_to_do:
             break
-        temp = before_ary.pop(to_fix)
-        temp2 = after_ary.index(temp)
-        print(temp, to_fix, "shifted", max_delta)
+        to_delete = before_ary.pop(to_fix)
+        after_fix = after_ary.index(to_delete)
+        after_ary.remove(to_delete)
+        if len(to_delete) > max_adjustment_summary:
+            to_delete = to_delete[:max_adjustment_summary] + " ..."
+        print(to_delete, to_fix, "->", after_fix, "shifted", abs(after_fix - to_fix))
         total_delta += max_delta
         total_changes += 1
-        after_ary.remove(temp)
     print("Total changes and delta", total_changes, total_delta)
 
 def sort_raw(raw_long):
