@@ -697,7 +697,7 @@ def has_ni(x):
     if os.path.exists(os.path.join(my_proj, "story.ni")): return True
     return False
 
-def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, return_first_subfind = False):
+def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, return_first_subfind = False, default_if_unmatched = False):
     x0 = x.lower()
     x2 = ""
     ary = pathlib.PurePath(x).parts
@@ -743,6 +743,8 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
             return x3
         if x3 in i7x:
             return i7x[x3]
+    if default_if_unmatched and x2 not in i7xr:
+        return curdef
     if empty_if_unmatched and x2 not in i7xr:
         return ""
     return x2

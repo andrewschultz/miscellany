@@ -14,7 +14,7 @@ caps = defaultdict(lambda: defaultdict(bool))
 ignores = defaultdict(lambda: defaultdict(bool))
 
 line_to_open = 0
-my_project = "ailihphilia"
+my_project = i7.default_proj()
 cmd_line_proj = ""
 
 def usage():
