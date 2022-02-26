@@ -1161,8 +1161,9 @@ def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out =
         print("tkinter...")
         import tkinter as tk
         root = tk.Tk()
+        root.geometry("400x400")
         root.title(header_to_print)
-        tk.Label(root, text="This is a pop-up message").pack()
+        tk.Label(root, text=string_to_print).pack()
         root.after(time_out * 1000, lambda: root.destroy())     # time in ms
         root.mainloop()
     elif windows_popup_box:
@@ -1170,6 +1171,8 @@ def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out =
         messageBox(None, string_to_print, header_to_print, 0x0)
     else:
         print(string_to_print)
+    if bail:
+        sys.exit()
 
 def isAdmin():
     try:
