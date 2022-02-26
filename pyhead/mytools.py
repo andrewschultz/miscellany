@@ -1025,6 +1025,15 @@ def browser_or_native(file_name, print_action = True, bail = False, return_to_or
 
 open_in_browser = file_in_browser = file_in_browser_conditional = gib = g_i_b = graphics_in_browser = tib = t_i_b = text_in_browser = fib = f_i_b = browser_or_native
 
+def text_to_browser(my_text, delete_immediately = True):
+    file_name = pendulum.now().format("YYYY-MM-DD-HH-mm-SS.txt")
+    f = open(file_name, "w")
+    f.write(my_text)
+    f.close()
+    browser_or_native(file_name)
+    if delete_immediately:
+        os.remove(file_name)
+
 def comment_combine(my_lines, cr_at_end = True):
     if type(cr_at_end) != bool and type(cr_at_end) != int:
         raise ValueError('You probably sent a couple strings instead of an array of strings: <<{} / {}>>'.format(my_lines, cr_at_end)) from None
