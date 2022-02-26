@@ -109,7 +109,7 @@ def strip_name_punc(x, remove_apostrophe = True, space_dash = True):
 
 strip_name = name_strip = strip_name_punc
 
-def long_name(x, debug = False, strip_dashes = False):
+def long_name(x, debug = False, strip_dashes = False, use_given = False):
     if x in i7x:
         temp = i7x[x]
         if strip_dashes:
@@ -117,7 +117,9 @@ def long_name(x, debug = False, strip_dashes = False):
         return temp
     if x not in i7xr and debug:
         print("Warning: finding long name for", x," failed.")
-    return x
+    if use_given:
+        return x
+    return ''
 
 def main_abb(x, use_given = False):
     if x in i7xr:
