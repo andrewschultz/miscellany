@@ -112,6 +112,11 @@ def alpha_match(var1, var2, case_insensitive = True):
 alf_match = alfmatch = alphamatch = alpha_match
 
 def plur(a, choices=['s', '']):
+    if type(choices) == str:
+        choices = re.split(choices, '[/,]')
+        if len(choices) != 2:
+            print("You need a CSV/slashed string if defining choices, and the length must be 2. Defaulting to s/(nothing).")
+            choices = [ 's', '' ]
     if type(a) == str and a.isdigit():
         a = int(a)
     if type(a) == list:
