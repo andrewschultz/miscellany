@@ -42,7 +42,7 @@ def add_clipboard_text(prefix, data):
     global general_text
     for x in ary:
         second_arg = '' if not bracket_text[prefix] else " [{}]".format(bracket_text[prefix])
-        to_add = '    understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
+        to_add = 'understand "{}{}" as {}.\n'.format(x, second_arg, my_action)
         this_string += to_add
         general_text += to_add
     this_string += "\n"
@@ -105,7 +105,8 @@ if copy_text:
     print("Copied source text to clipboard. Note (p | clip) also works.")
     if not print_text:
         print("Overview of UNDERSTAND commands:")
-        print(general_text.rstrip())
+        for x in general_text.rstrip().split("\n"):
+            print('    ' + x)
     pyperclip.copy(clip_text)
 
 if print_text:
