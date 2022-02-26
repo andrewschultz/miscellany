@@ -406,14 +406,13 @@ def read_args(my_arg_array, in_loop = False):
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
         arg_orig = my_arg_array[cmd_count].lower()
-        if arg_orig in i7.i7x:
-            my_proj = i7.i7x[arg_orig]
-        elif arg_orig in i7.i7xr: # this is because we may have a dash- flag going to the same as a project name, so let's have a way to look at any project
-            my_proj = arg_orig
+        poss_proj = i7.long_name(arg_orig, strip_dashes = False, use_given = False) # We want to differentiate between, say -proj (a flag) and proj (a project). If we want to use, say, ai as a search term, we use `ai
+        if poss_proj:
+            my_proj = poss_proj
         elif arg == 'r':
             print("Using super-shortcut 'r' for A Roiling Original.")
             my_proj = "roiling"
-        elif arg == 'cr' or arg == 'rc':
+        elif arg in ( 'cr', 'rc' ):
             run_commands_after = True
         elif arg in ( 'npo', 'pon' ):
             post_open_matches = False
