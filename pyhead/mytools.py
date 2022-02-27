@@ -1153,7 +1153,7 @@ def first_timed_file_of(file_array, latest = True):
 
 first_of = first_timed_file_of
 
-def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out = 0, bail = False):
+def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out = 0, bail = False, width = 400, height = 400):
     if type(string_to_print) == list:
         try:
             string_to_print = "\n".join(string_to_print)
@@ -1164,7 +1164,7 @@ def win_or_print(string_to_print, header_to_print, windows_popup_box, time_out =
         print("tkinter...")
         import tkinter as tk
         root = tk.Tk()
-        root.geometry("400x400")
+        root.geometry("{}x{}".format(width, height))
         root.title(header_to_print)
         tk.Label(root, text=string_to_print).pack()
         root.after(time_out * 1000, lambda: root.destroy())     # time in ms
