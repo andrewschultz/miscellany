@@ -113,7 +113,7 @@ alf_match = alfmatch = alphamatch = alpha_match
 
 def plur(a, choices=['s', '']):
     if type(choices) == str:
-        choices = re.split(choices, '[/,]')
+        choices = re.split('[/,]', choices)
         if len(choices) != 2:
             print("You need a CSV/slashed string if defining choices, and the length must be 2. Defaulting to s/(nothing).")
             choices = [ 's', '' ]
@@ -627,7 +627,10 @@ def hosts_file_toggle(my_website, allow_website_access, warn_no_changes = True, 
         f.write(the_temp_string)
         f.close()
     elif warn_no_changes:
-        print("WARNING: no websites matching {} were found in hosts_file_toggle.".format(my_website))
+        if tracked_change & HOSTS_FOUND_NOCHANGE:
+            print("WARNING: no websites matching {} were found in hosts_file_toggle.".format(my_website))
+        else:
+            print("WARNING: websites matching {} were found in hosts_file_toggle, but they were already set as requested.".format(my_website))
     if set_read_after:
         os.chmod(hosts_file, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH)
     return tracked_change
