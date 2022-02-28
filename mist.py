@@ -421,16 +421,16 @@ if len(sys.argv) > 1:
         if arg == 'w': write_file = True
         elif arg == 'nw': write_file = False
         elif arg == '2': to_clipboard = True
-        elif arg == '2o' or arg == '20':
+        elif arg in ( '2o', '20' ):
             to_clipboard = True
             print_output = False
         elif arg[:2] == 'fm': find_min = int(arg[2:])
         elif arg[0] == 'f': find_max = int(arg[1:])
         elif arg == 'e': edit_data = True
-        elif arg == 'eo' or arg == 'oe': edit_data_only = True
-        elif arg == 'eb' or arg == 'be':
+        elif arg in ( 'eo', 'oe' ): edit_data_only = True
+        elif arg in ( 'eb', 'be' ):
             edit_branches = True
-        elif arg == 'ec' or arg == 'ce':
+        elif arg in ( 'ec', 'ce' ):
             edit_source = True
             run_check = False
         elif arg == 'a': check_stuff_after = True
