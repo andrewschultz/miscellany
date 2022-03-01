@@ -115,11 +115,13 @@ def long_name(x, debug = False, strip_dashes = False, use_given = False):
         if strip_dashes:
             temp = strip_name_punc(temp)
         return temp
-    if x not in i7xr and debug:
-        print("Warning: finding long name for", x," failed.")
-    if use_given:
+    if x in i7xr:
         return x
-    return ''
+    if debug:
+        print("Warning: finding long name for", x," failed.")
+    if not use_given:
+        return ''
+    return x
 
 def main_abb(x, use_given = False):
     if x in i7xr:
