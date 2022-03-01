@@ -126,7 +126,7 @@ def mister(a, my_file, do_standard):
     comment_line = defaultdict(int)
     comment_file = defaultdict(str)
     full_line = defaultdict(str)
-    source_dir = "c:/games/inform/{:s}.inform/Source/".format(a)
+    source_dir = i7.proj2dir(a)
     count = 0
     special_def = ''
     room_sect_var = default_room_level if a not in levs.keys() else levs[a]
@@ -487,13 +487,20 @@ if not write_file and not print_output and not to_clipboard:
 
 if len(added.keys()) == 0:
     x = i7.dir2proj(os.getcwd())
-    if x in short.keys():
-        print("Going with default", x)
-        if x == 'shuffling' or x == 'roiling':
-            print("Use STS to run both Shuffling and Roiling.")
-        added[x] = True
-    else:
-        print("No default mistake file in current directory. You may wish to specify a project.")
+    my_abb = i7.main_abb(x)
+    if x == 'shuffling' or x == 'roiling':
+        print("REMINDER: use STS to run both Shuffling and Roiling.")
+    added[x] = True
+    if x == 'sts':
+        added['shuffling'] = added['roiling'] = True
+    if not os.path.exists(i7.hdr(x, 'mi')):
+        sys.exit("There is no mistake file for project {}.".format(x))
+
+for ad in added:
+    if ad not in files:
+        main_rbr = 'rbr-{}-thru.txt'.format(i7.main_abb(ad))
+        print("Going with default RBR file to look through for {}: {}".format(ad, main_rbr))
+        files[ad] = [ os.path.join(i7.proj2dir(ad), main_rbr) ]
 
 if edit_branches:
     for a in added.keys():
@@ -504,12 +511,12 @@ if edit_branches:
 
 for e in sorted(added.keys()):
     mist_file = i7.hdr(e, 'mi')
-    print(mist_file)
     if e in smallfiles.keys():
         print(e, "smallfile check:", ', '.join(smallfiles[e]))
         mister(e, mist_file, False)
-    print(e, "regular file check:", os.path.basename(mist_file))
-    mister(e, mist_file, True)
+    else:
+        print(e, "regular file check:", os.path.basename(mist_file))
+        mister(e, mist_file, True)
 
 if clipboard_str:
     pyperclip.copy(clipboard_str)
