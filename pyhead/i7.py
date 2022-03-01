@@ -248,9 +248,18 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
+def text_convert(my_string, erase_brackets = True, bracket_replace = '/'):
+    temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
+    temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
+    temp = temp.replace("[']", "'")
+    if erase_brackets:
+        temp = re.sub("\[[^\]]*\]", bracket_replace, temp)
+    return temp
+
+#print(text_convert("'This is a test of my Inform single-quote conversion function. It's got seven test cases,' said Andrew, avoiding 'air quotes' because those annoy everyone. 'Folks['] opinions may vary on if this is a good test string, but it's the best I could do. The final case is the end quote.'"))
+
 def quoted_text_array_of(my_line, erase_brackets = True, get_inside = True, as_list = True, bracket_replace = '/'):
-    temp = my_line.strip().replace("[']", "'")
-    if erase_brackets: temp = re.sub("\[[^\]]*\]", bracket_replace, temp)
+    temp = text_convert(my_line, erase_brackets = erase_brackets, bracket_replace = bracket_replace)
     ary = temp.split('"')[get_inside::2]
     if as_list:
         return ary
