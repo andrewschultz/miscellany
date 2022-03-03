@@ -224,8 +224,10 @@ def basic_bad_apostrophes(my_line):
 
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
-    if basic_bad_apostrophes(line):
-        print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count, ":", line.strip())
+    if line != i7.text_convert(line):
+        print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count)
+        print("  Before:", line.strip())
+        print("   After:", i7.text_convert(line.strip()))
         return True
     elif '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
         print(cur_pot+1, "CR/apostrophe coding artifact in line", line_count, ":", line.strip())
