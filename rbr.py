@@ -1011,23 +1011,23 @@ while count < len(sys.argv):
         edit_individual_files = True
     elif arg == 'er': edit_main_branch = True
     elif arg[:2] == 's4': search_for(arg[2:])
-    elif arg[:2] == 'vn' or arg[:2] == 'nv' or arg == 'v': verify_nudges = True
+    elif arg[:2] in ( 'vn', 'nv', 'v'): verify_nudges = True
     elif arg == 'd': debug = True
-    elif arg == 'nf' or arg == 'fn': flag_all_brackets = False
+    elif arg in ( 'nf', 'fn'): flag_all_brackets = False
     elif arg == 'm': monty_process = True
     elif arg == 'q': quiet = True
     elif arg == 'su': show_unchanged = True
     elif arg in ( 'nsu', 'sun') : show_unchanged = False
-    elif arg == 'nq' or arg == 'qn': quiet = False
+    elif arg in 'nq', 'qn': quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
     elif arg == 'wc': wrong_check = True
-    elif arg == 'wcn' or arg == 'nwc': wrong_check = False
+    elif arg in ( 'wcn', 'nwc'): wrong_check = False
     elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'st': strict_name_force_on = True
-    elif arg == 'nst' or arg == 'stn': strict_name_force_off = True
-    elif arg == 'pf' or arg == 'pc' or arg == 'cp': copy_over_post = force_all_regs = True
+    elif arg in ( 'nst', 'stn'): strict_name_force_off = True
+    elif arg in ( 'pf', 'pc', 'cp' ): copy_over_post = force_all_regs = True
     elif arg in i7.i7x.keys():
         if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         exe_proj = i7.i7x[arg]
