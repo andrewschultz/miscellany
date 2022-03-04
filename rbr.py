@@ -39,6 +39,7 @@ monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
 times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
+apostrophes = defaultdict(list)
 generic_bracket_error = defaultdict(int)
 okay_apostrophes = defaultdict(bool)
 new_files = defaultdict(list)
@@ -213,21 +214,12 @@ def branch_variable_adjust(var_line, err_stub, actives):
     #print("After:", my_var, branch_variables[my_var])
     return
 
-def basic_bad_apostrophes(my_line):
-    if not(line.startswith("'") or line.strip().endswith("'") or " '" in line):
-        return False
-    for x in okay_apostrophes:
-        if x in my_line:
-            my_line = my_line.replace(x, "OKAY PHRASE")
-    if not(line.startswith("'") or line.strip().endswith("'") or " '" in line):
-        return False
-
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
-    if line != i7.text_convert(line):
+    if line != i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj]):
         print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count)
         print("  Before:", line.strip())
-        print("   After:", i7.text_convert(line.strip()))
+        print("   After:", i7.text_convert(line.strip(), erase_brackets = False))
         return True
     elif '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
         print(cur_pot+1, "CR/apostrophe coding artifact in line", line_count, ":", line.strip())
@@ -350,7 +342,7 @@ def act(a):
     return '/'.join(trues)
 
 def wipe_first_word(a):
-    return re.sub(r'^[a-z]+([=:])?', "", ll, 0, re.IGNORECASE)
+    return re.sub(r'^[a-z]+([=:])?', "", a, 0, re.IGNORECASE)
 
 def write_monty_file(fname, testnum):
     mytest = monty_detail[testnum]
@@ -905,9 +897,10 @@ mwrites = defaultdict(lambda: defaultdict(bool))
 
 with open(rbr_config) as file:
     for (lc, line) in enumerate(file, 1):
-        ll = line.lower().strip()
-        if ll.startswith(';'): break
-        if ll.startswith('#'): continue
+        if line.startswith(';'): break
+        if line.startswith('#'): continue
+        lr = line.strip()
+        ll = lr.lower()
         if '>' in ll[1:] and '<' not in ll[1:]:
             print("WARNING: possible erroneous cut and paste. Line", lc, "may need line break before command prompt:", line.strip())
         vars = wipe_first_word(ll)
@@ -920,6 +913,9 @@ with open(rbr_config) as file:
             continue
         if ll.startswith('project') or ll.startswith('projname'):
             cur_proj = i7.main_abb(vars)
+            continue
+        if ll.startswith('apostrophe'):
+            apostrophes[cur_proj].extend(wipe_first_word(lr).split(','))
             continue
         if ll.startswith('abbrevs'):
             temp = ll[8:].split(',')
