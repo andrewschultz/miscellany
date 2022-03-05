@@ -483,12 +483,12 @@ def get_file(fname):
             if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "", line.strip())
-                very_temp_array = abbrevs_to_ints(vta_before[3:].split(","))
+                temp_file_fullname_array = abbrevs_to_ints(vta_before[3:].split(","))
                 if "\\n" in line:
                     print("WARNING {} line {} needs \\\\ and not \\n for line-changes for temporary one-line edit.".format(fname, line_count))
                     mt.add_post(fname, line_count)
                 u = vta_after.replace("\\\\", "\n") + "\n"
-                for q in very_temp_array:
+                for q in temp_file_fullname_array:
                     file_list[q].write(u)
                 continue
             if wrong_check and line.startswith("WRONG"):
@@ -575,13 +575,13 @@ def get_file(fname):
                     temp_array_1 = line_no_com.split("/")
                     temp_file_array = temp_array_1[0].split(",")
                     cmd_to_run = temp_array_1[1].split(",")
+                    if exclude:
+                        temp_file_array = [x for x in file_array_base if x not in temp_file_array]
                     for x in temp_file_array:
                         if x not in file_array_base:
                             sys.exit("FATAL ERROR: {} is not in the original file array {}.".format(x, file_array_base))
-                    if exclude:
-                        temp_file_array = [x for x in file_array_base if x not in temp_file_array]
                 else:
-                    temp_file_array = file_array
+                    temp_file_array = list(file_array)
                     cmd_to_run = re.sub("^.*?=", "", line_no_com).split(",")
                 for tf in temp_file_array:
                     postproc_if_changed[prt_temp_loc(tf)] += cmd_to_run
@@ -1018,7 +1018,7 @@ while count < len(sys.argv):
     elif arg == 'q': quiet = True
     elif arg == 'su': show_unchanged = True
     elif arg in ( 'nsu', 'sun') : show_unchanged = False
-    elif arg in 'nq', 'qn': quiet = False
+    elif arg in ( 'nq', 'qn' ): quiet = False
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
