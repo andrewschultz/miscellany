@@ -69,6 +69,7 @@ wrong_check = False
 show_unchanged = False
 
 start_line = 0
+start_command = ''
 max_flag_brackets = 0
 cur_flag_brackets = 0
 ignore_next_bracket = False
@@ -431,6 +432,7 @@ def get_file(fname):
     ignore_extra_undos = False
     temp_diverge_warned = False
     ignore_next_balance = False
+    need_start_command = (start_command != '')
     fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -593,7 +595,11 @@ def get_file(fname):
                 for f in file_array_base:
                     long_name = prt_temp_loc(f)
                     file_array.append(long_name)
-                    file_output[long_name] = '## truncated branches starting with line {}, so rerun without -sl\n'.format(start_line) if start_line else ''
+                    file_output[long_name] = ''
+                    if start_line:
+                        file_output[long_name] += '## truncated branches starting with line {}, so rerun without -sl\n'.format(start_line)
+                    if start_command:
+                        file_output[long_name] += '## truncated branches before command {}, so run withough -sc:\n'.format(start_command)
                     actives.append(True)
                 continue
             if not len(file_array): continue # allows for comments at the start
@@ -777,8 +783,15 @@ def get_file(fname):
             for ct in range(0, len(file_array)):
                 if actives[ct]:
                     this_file = file_array[ct]
-                    if start_line > line_count:
-                        continue
+                    if sum(actives) == 1:
+                        if need_start_command:
+                            if line.startswith('>') and start_command == line_orig[1:]:
+                                need_start_command = False
+                                print("Found start-command {} at line {}.".format(start_command, line_count))
+                            else:
+                                continue
+                        if start_line > line_count:
+                            continue
                     line_write = re.sub("\*file", os.path.basename(this_file), line, 0, re.IGNORECASE)
                     line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
                     if "{$" in line_write:
@@ -799,6 +812,8 @@ def get_file(fname):
                         for x in range(0, reps):
                             dupe_file.write("\n" + last_cmd + "\n")
                             dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
+    if need_start_command:
+        print("WARNING: did not find start command {} anywhere in single-file branches, though it was specified on the command line.".format(start_command))
     if len(untested_commands):
         print("POTENTIALLY UNTESTED COMMANDS for {}: (remove with ###skip test checking (optional explanation) below the command, or ALSO_IGNORE:x or x* or IGNOREGLOBAL in rbr.txt)".format(fname))
         cmd_count = 0
@@ -1021,6 +1036,7 @@ while count < len(sys.argv):
     elif arg == 'fp': force_postproc = True
     elif arg == 'wc': wrong_check = True
     elif arg[:2] == 'sl': start_line = int(arg[2:])
+    elif arg[:3] == 'sc:': start_command = arg[3:].replace('-', ' ')
     elif arg in ( 'wcn', 'nwc'): wrong_check = False
     elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'st': strict_name_force_on = True
