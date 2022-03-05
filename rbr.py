@@ -68,6 +68,7 @@ strict_name_force_off = False
 wrong_check = False
 show_unchanged = False
 
+start_line = 0
 max_flag_brackets = 0
 cur_flag_brackets = 0
 ignore_next_bracket = False
@@ -433,8 +434,6 @@ def get_file(fname):
     fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
-            if line_count < 20:
-                print(line_count, file_output)
             line_orig = line.strip()
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
@@ -491,7 +490,7 @@ def get_file(fname):
                     mt.add_post(fname, line_count)
                 u = vta_after.replace("\\\\", "\n") + "\n"
                 for q in temp_file_fullname_array:
-                    file_list[q].write(u)
+                    file_output[q] += u
                 continue
             if wrong_check and line.startswith("WRONG"):
                 wrong_lines.append(line_count)
@@ -594,8 +593,7 @@ def get_file(fname):
                 for f in file_array_base:
                     long_name = prt_temp_loc(f)
                     file_array.append(long_name)
-                    print(long_name, "added name")
-                    file_output[long_name] = '' # important to initialize stuff even though it is a defaultdict
+                    file_output[long_name] = '## truncated branches starting with line {}, so rerun without -sl\n'.format(start_line) if start_line else ''
                     actives.append(True)
                 continue
             if not len(file_array): continue # allows for comments at the start
@@ -725,7 +723,7 @@ def get_file(fname):
                 string_out = re.sub(r"\\{2,}", "\n", la[1])
                 for x in la[int(0)].split(","): temp_actives[int(x)] = True
                 for x in range(0, len(file_array)):
-                    if temp_actives[x]: file_list[x].write(string_out)
+                    if temp_actives[x]: file_output[x] += string_out
                 continue
             if line.startswith("==t"):
                 if temp_diverge:
@@ -779,6 +777,8 @@ def get_file(fname):
             for ct in range(0, len(file_array)):
                 if actives[ct]:
                     this_file = file_array[ct]
+                    if start_line > line_count:
+                        continue
                     line_write = re.sub("\*file", os.path.basename(this_file), line, 0, re.IGNORECASE)
                     line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
                     if "{$" in line_write:
@@ -789,7 +789,6 @@ def get_file(fname):
                     #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
                     file_output[this_file] += line_write_2
                     first_file = False
-                # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if dupe_val < len(actives) and actives[dupe_val]:
                 if dupe_file_name:
                     dupe_file.write(line)
@@ -1021,6 +1020,7 @@ while count < len(sys.argv):
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
     elif arg == 'wc': wrong_check = True
+    elif arg[:2] == 'sl': start_line = int(arg[2:])
     elif arg in ( 'wcn', 'nwc'): wrong_check = False
     elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'st': strict_name_force_on = True
