@@ -402,7 +402,7 @@ def get_file(fname):
     dupe_val = 1
     warns = 0
     last_cmd = ""
-    file_list = []
+    file_output = defaultdict(str)
     file_array = []
     line_count = 0
     dupe_file_name = ""
@@ -433,6 +433,8 @@ def get_file(fname):
     fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line_count < 20:
+                print(line_count, file_output)
             line_orig = line.strip()
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
@@ -589,12 +591,12 @@ def get_file(fname):
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
-                file_array = [prt_temp_loc(f) for f in file_array_base]
-                actives = [True] * len(file_array)
-                last_cr = [False] * len(file_array)
-                for x in file_array:
-                    f = open(x, "w", newline="\n")
-                    file_list.append(f)
+                for f in file_array_base:
+                    long_name = prt_temp_loc(f)
+                    file_array.append(long_name)
+                    print(long_name, "added name")
+                    file_output[long_name] = '' # important to initialize stuff even though it is a defaultdict
+                    actives.append(True)
                 continue
             if not len(file_array): continue # allows for comments at the start
             if line.startswith(")"):
@@ -626,9 +628,7 @@ def get_file(fname):
             if temp_diverge and not line.strip():
                 temp_diverge = False
                 for x in range(len(actives)):
-                    if not last_cr[x]:
-                        file_list[x].write("\n") # only actives get a CR
-                        last_cr[x] = True
+                    file_output[file_array[x]] += "\n"
                 actives = list(old_actives)
                 continue
             if line.strip() == "\\\\": line = "\n"
@@ -652,7 +652,7 @@ def get_file(fname):
                     print("WARNING line", line_count, "doesn't cover all files. Change TSV to TSVI to ignore this.")
                     print("TEXT:", line.strip())
                 for x in range(len(l2)):
-                    file_list[x].write(l2[x] + "\n")
+                    file_output[file_array[x]] += l2[x] + "\n"
                 continue
             if all_false(actives):
                 if always_be_writing and len(actives):
@@ -776,21 +776,18 @@ def get_file(fname):
             first_file = True
             if line.startswith("~="):
                 line = line.replace("~", "=") # hack to allow ==== headers
-            for ct in range(0, len(file_list)):
+            for ct in range(0, len(file_array)):
                 if actives[ct]:
-                    line_write = re.sub("\*file", os.path.basename(file_list[ct].name), line, 0, re.IGNORECASE)
+                    this_file = file_array[ct]
+                    line_write = re.sub("\*file", os.path.basename(this_file), line, 0, re.IGNORECASE)
                     line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
-                    if last_cr[ct] and (len(line_write.strip()) == 0):
-                        pass
-                    else:
-                        if "{$" in line_write:
-                            #print("BEFORE:", line_write.strip())
-                            line_write = string_fill(line_write, line_count)
-                            #print("AFTER:", line_write.strip())
-                        line_write_2 = fill_vars(line_write, ct, line_count, first_file)
-                        #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
-                        file_list[ct].write(line_write_2)
-                    last_cr[ct] = len(line_write.strip()) == 0
+                    if "{$" in line_write:
+                        #print("BEFORE:", line_write.strip())
+                        line_write = string_fill(line_write, line_count)
+                        #print("AFTER:", line_write.strip())
+                    line_write_2 = fill_vars(line_write, ct, line_count, first_file)
+                    #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
+                    file_output[this_file] += line_write_2
                     first_file = False
                 # if ct == 1: file_list[ct].write(str(line_count) + " " + line)
             if dupe_val < len(actives) and actives[dupe_val]:
@@ -803,8 +800,6 @@ def get_file(fname):
                         for x in range(0, reps):
                             dupe_file.write("\n" + last_cmd + "\n")
                             dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
-    for ct in range(0, len(file_array)):
-        file_list[ct].close()
     if len(untested_commands):
         print("POTENTIALLY UNTESTED COMMANDS for {}: (remove with ###skip test checking (optional explanation) below the command, or ALSO_IGNORE:x or x* or IGNOREGLOBAL in rbr.txt)".format(fname))
         cmd_count = 0
@@ -821,7 +816,6 @@ def get_file(fname):
     if warns > 0 and not quiet:
         print(warns, "potential bad commands in {}.".format(fname))
     if monty_process:
-        print(file_array)
         for x in file_array:
             x2 = os.path.basename(x)
             if x2 in mwrites.keys():
@@ -836,6 +830,10 @@ def get_file(fname):
             mt.wm(x, xb)
             sys.exit()
     for x in file_array:
+        f = open(x, "w")
+        modified_output = re.sub("\n{3,}", "\n\n", file_output[x])
+        f.write(modified_output)
+        f.close()
         xb = os.path.basename(x)
         if not os.path.exists(xb):
             new_files[fname].append(xb)
