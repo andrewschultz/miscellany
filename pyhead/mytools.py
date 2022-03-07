@@ -203,17 +203,28 @@ num_list = nums_list = listnums = listnum = list_nums
 # main usage (arg, num) = parnum(sys.argv[count]) returns string/number tuple
 # see if we want to include a string instead of, say, a chopped off 1a2b3c
 
-def parnum(x, also_lower = True, default_value = 0):
+def parnum(x, also_lower = True, default_value = 0, allow_float = False):
     if x[0] == '-': x = x[1:]
     if also_lower:
         x = x.lower()
-    temp = re.search(r"\d", x)
-    if not temp:
-        return(x, default_value)
+    digit_offset = re.search(r"\d", x)
+    letters = x[:digit_offset.start()]
+    numbers = x[digit_offset.start():]
+    if not digit_offset:
+        return(letters, default_value)
     try:
-        return(x[:temp.start()], int(x[temp.start():]))
+        return(letters, int(numbers))
     except:
-        return(x, default_value)
+        pass
+    try:
+        temp = float(numbers)
+        if not allow_float:
+            print("WARNING allow_float must be set to allow floats")
+            return(letters, default_value)
+        return(letters, temp)
+    except:
+        pass
+    return(letters, default_value)
 
 def nohy(x, also_lower = True): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
