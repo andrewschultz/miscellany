@@ -663,6 +663,17 @@ def read_2dy_cfg():
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
+def weekly_compare(files_back = 1):
+    if files_back < 1:
+        sys.exit("Weekly compare needs 1+ as an index for looking back.")
+    x = glob.glob(daily_proc + "/20*.txt")
+    if len(x) < files_back:
+        sys.exit("Files back is too large. Maximum is {}.".format(len(x)))
+    readable = x[-files_back]
+    locked = os.path.join(daily, os.path.basename(readable))
+    mt.wm(readable, locked)
+    sys.exit()
+
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
     f = open(my_file, "w")
@@ -687,6 +698,7 @@ read_2dy_cfg()
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
+    arg_no_num = re.sub("[0-9]+$", "", arg)
     if arg[0] == 'f' and arg[1:].isdigit():
         files_back_wanted = int(arg[1:])
         latest_daily = False
@@ -706,6 +718,12 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
     elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
+    elif arg_no_num == 'wc':
+        try:
+            weekly_compare(int(arg[2:]))
+        except:
+            print("No number after wc. Assuming 1.")
+            weekly_compare(1)
     elif arg == 'cto':
         compare_thousands(bail = True)
     elif arg == 'ct':
