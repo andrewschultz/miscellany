@@ -68,6 +68,7 @@ f_l = "c:/writing/dict/lasts.txt"
 prt = "c:/games/inform/prt"
 prt_temp = os.path.join(prt, "temp")
 i7_cfg_file = "c:/writing/scripts/i7p.txt"
+i7_temp_config = "c:/writing/scripts/i7d.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 beta_dir = "c:/games/inform/beta Materials/Release"
@@ -876,6 +877,41 @@ def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
             next_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(x, file_type))
             if os.path.exists(next_try): return next_try
     sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
+
+def read_latest_proj():
+    with open(i7_temp_config) as file:
+        for (line_count, line) in enumerate (file, 1):
+            (prefix, data) = cfg_data_split(line)
+            if prefix == 'current':
+                global latest_project_abbr
+                global latest_project_long
+                latest_project_abbr = main_abbr(data)
+                latest_project_long = long_name(data)
+            else:
+                print("WARNING i7.py bad temp-config line {} {}".format(line_count, line.strip()))
+
+def write_latest_proj(proj_to_write):
+    file_write_string = ''
+    any_diff = False
+    any_current = False
+    with open(i7_temp_config) as file:
+        for (line_count, line) in enumerate (file, 1):
+            (prefix, data) = mt.cfg_data_split(line)
+            if prefix == 'current':
+                any_current = True
+                next_string = "current={}\n".format(main_abbr(proj_to_write))
+                if next_string.lower() != line.lower():
+                    any_diff = True
+                file_write_string += next_string
+            else:
+                file_write_string += line
+    if not any_current:
+        print("Not writing latest project file as I found no current= line.")
+    elif not any_diff:
+        print("Not writing latest project file as default project wasn't changed: {} is already the default project.".format(proj_to_write))
+    f = open(i7_temp_config, "w")
+    f.write(file_write_string)
+    f.close()
 
 def see_uniq_and_vers(args):
     if args[0] == '-': args = args[1:]
