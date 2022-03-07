@@ -35,6 +35,10 @@ hosts_file = "C:/Windows/System32/drivers/etc/hosts"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
+words_file = 'c:/writing/dict/brit-1word.txt'
+first_name_file = 'c:/writing/dict/firsts.txt'
+last_name_file = 'c:/writing/dict/lasts.txt'
+
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
 
@@ -411,6 +415,7 @@ def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_
     temp = re.sub("^[^:]*:", "", x)
     return temp.split(delimiter)
 
+# main usage (prefix, data) = cfg_data_split(line)
 def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_to_underscore = KEEP_DASH_UNDERSCORE, array_splitter = '', blank_second = False, lowercase_prefix = True, lowercase_data = True):
     if strip_line:
         x = x.strip()
@@ -766,6 +771,8 @@ def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link =
         if my_opt_bail_msg != '':
             print(colorama.Fore.GREEN + my_opt_bail_msg + colorama.Style.RESET_ALL)
         exit()
+
+open_in_notepad = notepad_open = npo
 
 def open_this(bail = True):
     try:
