@@ -249,7 +249,7 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
-def text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore_array = []):
+def i7_text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore_array = []):
     temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
     temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
     temp = temp.replace("[']", "'")
@@ -260,6 +260,8 @@ def text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore
         if ig != ig.lower():
             temp = temp.replace(ig.lower().replace('"', "'"), ig.lower())
     return temp
+
+text_convert = i7_text_convert
 
 #print(text_convert("'This is a test of my Inform single-quote conversion function. It's got seven test cases,' said Andrew, avoiding 'air quotes' because those annoy everyone. 'Folks['] opinions may vary on if this is a good test string, but it's the best I could do. The final case is the end quote.'"))
 
@@ -709,7 +711,7 @@ def lpro(x, nonblank = False, spaces = True):
 
 def has_ni(x):
     if os.path.exists(os.path.join(x, "story.ni")): return True
-    my_proj = proj2dir(i7.dir2proj(x))
+    my_proj = proj2dir(dir2proj(x))
     if os.path.exists(os.path.join(my_proj, "story.ni")): return True
     return False
 
