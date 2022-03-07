@@ -62,6 +62,7 @@ sect_ary = []
 
 files_back_wanted = 1
 verbose = False
+use_proc_dir = True
 
 my_sections_file = "c:/writing/scripts/2dy.txt"
 
@@ -74,7 +75,18 @@ def isfloat(value):
     except ValueError:
         return False
 
-def see_back(this_file = d, my_dir = "", days_back = max_days_new):
+def latest_editable(my_file):
+    temp = os.path.split(my_file)
+    proc_pos = os.path.abspath(os.path.join(temp[0], 'to-proc', temp[1]))
+    print(proc_pos)
+    if os.path.exists(proc_pos):
+        return proc_pos
+    return my_file
+
+def open_editable(my_file):
+    mt.npo(latest_editable(my_file))
+
+def see_back(this_file = d, my_dir = ".", days_back = max_days_new):
     my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
     return os.path.join(my_dir, my_file)
 
@@ -798,7 +810,7 @@ for x in range(0, max_days_back):
         if verbose and files_back_in_dir <= files_back_wanted: print("Skipping", day_file)
     if files_back_in_dir > files_back_wanted:
         print("Got daily file", day_file, files_back_wanted, "files back.")
-        os.system(day_file)
+        open_editable(day_file)
         exit()
 
 print("Failed to get a file in the last", max_days_back, "every 6 hours")
