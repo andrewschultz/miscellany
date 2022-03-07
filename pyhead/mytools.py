@@ -200,6 +200,21 @@ def list_nums(my_list, separator=', '):
 
 num_list = nums_list = listnums = listnum = list_nums
 
+# main usage (arg, num) = parnum(sys.argv[count]) returns string/number tuple
+# see if we want to include a string instead of, say, a chopped off 1a2b3c
+
+def parnum(x, also_lower = True, default_value = 0):
+    if x[0] == '-': x = x[1:]
+    if also_lower:
+        x = x.lower()
+    temp = re.search(r"\d", x)
+    if not temp:
+        return(x, default_value)
+    try:
+        return(x[:temp.start()], int(x[temp.start():]))
+    except:
+        return(x, default_value)
+
 def nohy(x, also_lower = True): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
     if also_lower:
