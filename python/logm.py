@@ -181,6 +181,7 @@ force_time = []
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
+    arg_no_num = re.sub("[0-9]+$", "", arg)
     if not arg: usage("<blank parameter>")
     if arg.startswith("f:") or arg.startswith("a:"):
         files_to_add.append(arg[2:])
@@ -228,9 +229,11 @@ while count < len(sys.argv):
         proj_shift_yet = i7.proj_exp(arg[1:])
         if not proj_shift_yet:
             sys.exit("No such project or abbreviation {:s}".format(arg[1:]))
-    elif arg[0] == 'm' and arg[1:].isdigit():
-        min_before = int(arg[1:])
-        #sys.exit("-m (minutes) must take a positive integer after!")
+    elif arg_no_num == 'm':
+        try:
+            min_before = int(arg[1:])
+        except:
+            sys.exit("-m (minutes) must take a positive integer after! \n(NOTE: -m for message would be redundant. Anything that looks like a message is flagged as such.)")
     elif arg[:2] == 'so' and arg[2:].isdigit():
         sec_before = int(arg[2:])
         min_before = 0
