@@ -248,12 +248,16 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
-def text_convert(my_string, erase_brackets = True, bracket_replace = '/'):
+def text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore_array = []):
     temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
     temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
     temp = temp.replace("[']", "'")
     if erase_brackets:
         temp = re.sub("\[[^\]]*\]", bracket_replace, temp)
+    for ig in ignore_array:
+        temp = temp.replace(ig.replace("'", '"'), ig)
+        if ig != ig.lower():
+            temp = temp.replace(ig.lower().replace('"', "'"), ig.lower())
     return temp
 
 #print(text_convert("'This is a test of my Inform single-quote conversion function. It's got seven test cases,' said Andrew, avoiding 'air quotes' because those annoy everyone. 'Folks['] opinions may vary on if this is a good test string, but it's the best I could do. The final case is the end quote.'"))
