@@ -72,6 +72,7 @@ i7_temp_config = "c:/writing/scripts/i7d.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 beta_dir = "c:/games/inform/beta Materials/Release"
+latest_project_abbr = latest_project_long = ''
 
 # these are default values for binaries--debug is assumed to be most important
 # since it is the one I'll be using the most.
@@ -881,16 +882,21 @@ def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
     sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
 
 def read_latest_proj():
+    global latest_project_abbr
+    global latest_project_long
     with open(i7_temp_config) as file:
         for (line_count, line) in enumerate (file, 1):
-            (prefix, data) = cfg_data_split(line)
+            if line.startswith('#'):
+                continue
+            if line.startswith(';'):
+                break
+            (prefix, data) = mt.cfg_data_split(line)
             if prefix == 'current':
-                global latest_project_abbr
-                global latest_project_long
                 latest_project_abbr = main_abbr(data)
                 latest_project_long = long_name(data)
             else:
-                print("WARNING i7.py bad temp-config line {} {}".format(line_count, line.strip()))
+                print("WARNING i7d.txt bad temp-config line {} = {}".format(line_count, line.strip()))
+    return (latest_project_abbr, latest_project_long)
 
 def write_latest_proj(proj_to_write):
     file_write_string = ''
