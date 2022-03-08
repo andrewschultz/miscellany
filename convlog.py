@@ -71,8 +71,12 @@ while cmd_count < len(sys.argv):
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
-        sys.exit("Specify project or move to a directory with a project.")
-    print("Pulling default project", my_proj)
+        my_proj = i7.read_latest_proj()[0]
+        if not my_proj:
+            sys.exit("No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project.")
+        print("Pulling project from CFG", my_proj)
+    else:
+        print("Pulling project from current directory", my_proj)
 
 out_file = os.path.join(i7.prt, "logpy-{}.htm".format(my_proj))
 
