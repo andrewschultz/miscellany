@@ -18,6 +18,7 @@ blank = defaultdict(int)
 raw_link = defaultdict(str)
 mod_link = defaultdict(str)
 timestamp = defaultdict(int)
+gone_files = defaultdict(int)
 
 wild_cards = ''
 
@@ -121,6 +122,11 @@ f.write("</body>\n</html>\n".format(my_proj))
 
 for x in last_run:
     x0 = os.path.realpath(x)
+    if not os.path.exists(x0):
+        if x0 not in gone_files:
+            print(x0, "could not be found. If it was moved, you may wish to delete it from the data.")
+            gone_files[x0] += 1
+        continue
     if os.stat(x).st_mtime > timestamp[x]:
         f.write("{} modified after test run {:.2f} seconds.<br />\n".format(x, os.stat(x).st_mtime - timestamp[x]))
     elif os.stat(my_binary).st_mtime > timestamp[x]:
