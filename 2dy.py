@@ -581,7 +581,7 @@ def usage(param = 'Cmd line usage'):
     print("(-?)ps = put stats, (-?)gs = get stats, (-?)es/ed = edit stats/data, (-?)ss = sift stats")
     print("(-)e = edit 2dy.txt to add sections or usage or adjust days_new. ec/em = edit code, es/ed = edit stats")
     print("(-)ct(o) checks thousands, (-)wr(o) checks weekly writing goals based on current document size. O = only do this")
-    exit()
+    sys.exit()
 
 def poss_thousands(my_int):
     my_int = int(my_int)
@@ -697,19 +697,18 @@ cmd_count = 1
 read_2dy_cfg()
 
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
-    arg_no_num = re.sub("[0-9]+$", "", arg)
-    if arg[0] == 'f' and arg[1:].isdigit():
-        files_back_wanted = int(arg[1:])
+    (arg, num) = mt.parnum(sys.argv[cmd_count], allow_float = True)
+    if arg == 'f':
+        files_back_wanted = num
         latest_daily = False
-    elif arg[0] == 'm' and arg[1:].isdigit():
-        max_days_back = int(arg[1:])
+    elif arg == 'm' and arg[1:].isdigit():
+        max_days_back = num
         latest_daily = False
-    elif arg[:2] in ( 'mn', 'nm' ) and arg[2:].isdigit():
-        max_days_new = int(arg[2:])
+    elif arg in ( 'mn', 'nm' ):
+        max_days_new = num
         latest_daily = False
-    elif arg[:2] == 'ms' and arg[2:].isdigit():
-        minimum_seconds_between = int(arg[2:])
+    elif arg[:2] == 'ms':
+        minimum_seconds_between = num
     elif arg == 'l': latest_daily = True
     elif arg in ( 'nl', 'ln' ): latest_daily = False
     elif arg == 'v': verbose = True
@@ -718,7 +717,7 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
     elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
-    elif arg_no_num == 'wc':
+    elif arg == 'wc':
         try:
             weekly_compare(int(arg[2:]))
         except:
@@ -740,10 +739,9 @@ while cmd_count < len(sys.argv):
             goal_per_file = 1000 * int(digits_only(arg))
         else:
             sys.exit("You need a number after g/g= or before k.")
-    elif arg == 'gs': graph_stats()
-    elif arg[:2] == 'gs' and arg[2:].isdigit():
-        file_index = int(arg[2:])
-        if abs(file_index) == 1:
+    elif arg == 'gs':
+        file_index = num
+        if file_index == 0:
             print("Note: this is not zero-based. Rather, it starts at 1, or -1, as the most recent (element -1 in an array).")
         graph_stats(file_index = file_index, overwrite = True)
     elif arg == 'gsd': graph_stats(graph_type = HOURLY_BYTES)
@@ -776,10 +774,13 @@ while cmd_count < len(sys.argv):
     elif arg == 'gsl': graph_stats(overwrite = True, launch_present = True)
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
-    elif arg == 'ps': put_stats()
+    elif arg == 'ps':
+        if num:
+            put_stats(print_on_over = int(arg[2:]))
+        else:
+            put_stats()
     elif arg == 'psr': put_stats(check_floor = True)
     elif arg == 'bs': write_base_stats = False
-    elif arg[:2] == 'ps' and arg[2:].isdigit(): put_stats(print_on_over = int(arg[2:]))
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
@@ -809,12 +810,12 @@ if latest_daily:
                 continue
             print("Found recent daily file {:s}, opening.".format(day_file))
             os.system(day_file)
-            exit()
+            sys.exit()
         if os.path.exists(day_done_file): found_done_file = day_done_file
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
     print("Looking back", max_days_new, "days, daily file not found.")
     create_new_file(see_back(d, my_daily_dir, 0))
-    exit()
+    sys.exit()
 
 files_back_in_dir = 0
 
@@ -829,7 +830,7 @@ for x in range(0, max_days_back):
     if files_back_in_dir > files_back_wanted:
         print("Got daily file", day_file, files_back_wanted, "files back.")
         open_editable(day_file)
-        exit()
+        sys.exit()
 
 print("Failed to get a file in the last", max_days_back, "every 6 hours")
 
