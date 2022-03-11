@@ -278,7 +278,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0, temp_file = False):
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
@@ -298,6 +298,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
             relevant_stats.append(this_line)
 
     times = []
+
     sizes = []
     color_array = []
     shape_array = []
@@ -349,7 +350,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     b0 = b + a * init_from_epoch
     my_label = "{}\nbytes={:.2f}*days({:.2f}*hours){}{:.2f}".format(my_time.to_day_datetime_string(), a, a/24, '+' if b0 > 0 else '', b0)
 
-    my_graph_graphic = "c:/writing/temp/daily-{}{}".format('past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
+    my_graph_graphic = "c:/writing/temp/{}daily-{}{}".format('temp-' if temp_file else '', 'past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
 
     if not overwrite and os.path.exists(my_graph_graphic):
         print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.{}".format("" if launch_present else " -gsl launches."))
@@ -773,6 +774,7 @@ while cmd_count < len(sys.argv):
             graph_stats(graph_type = HOURLY_BYTES | TOTAL_BYTES)
     elif arg == 'gsl': graph_stats(overwrite = True, launch_present = True)
     elif arg == 'gso': graph_stats(overwrite = True)
+    elif arg == 'gst': graph_stats(overwrite = True, temp_file = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'ps':
         if num:
