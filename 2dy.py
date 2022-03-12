@@ -274,7 +274,13 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
         catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
         catchup_inverse = 1 / catchup_ratio
-        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes overall: {:.2f}. Bytes so far: {:.2f} {:.2f}%. Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct, bytes_per_hour_overall, bytes_per_hour_so_far, so_far_pct, mt.green_red_comp(bytes_per_hour_so_far, bytes_per_hour_to_go), catchup_ratio, catchup_inverse) + colorama.Style.RESET_ALL)
+        now_breakeven = this_goal * weekly_interval_so_far / full_weekly_interval
+        raw_plus_minus = current_size - now_breakeven
+        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes so far: {:.2f}. Bytes overall: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
+          bytes_per_hour_overall,
+          bytes_per_hour_so_far, so_far_pct,
+          mt.green_red_comp(current_size, now_breakeven), '+' if raw_plus_minus > 0 else '', raw_plus_minus, colorama.Fore.CYAN,
+          mt.green_red_comp(bytes_per_hour_so_far, bytes_per_hour_to_go), catchup_ratio, catchup_inverse) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
 
