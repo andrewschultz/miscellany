@@ -30,6 +30,7 @@ from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
 import mytools as mt
+import colorama
 
 my_strings = defaultdict(str)
 branch_variables = defaultdict(list)
@@ -301,12 +302,12 @@ def post_copy(file_array, in_file):
         elif len(changed_files.keys()):
             print("Copying changed files over to PRT directory.")
             for q in changed_files.keys():
-                print(q, "=>", ', '.join(changed_files[q]))
+                print(colorama.Fore.GREEN + q, "=>", ', '.join(changed_files[q]) + colorama.Style.RESET_ALL)
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
             changed_files.clear()
         elif len(my_file_list_valid) == 1:
-            print("No files copied over to PRT directory. Try -fp or -pf to force copying of all files encompassed by", in_file)
+            print(colorama.Fore.YELLOW + "No files copied over to PRT directory." + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
 def examples():
     print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
