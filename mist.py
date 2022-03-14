@@ -129,6 +129,9 @@ def mister(a, my_file, do_standard):
     last_loc = '(none)'
     slashes = []
     mults = []
+    if not os.path.exists(my_file):
+        print("SKIPPING TEST: no such header file", my_file)
+        return
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             l = line.strip()
@@ -142,7 +145,7 @@ def mister(a, my_file, do_standard):
                 continue
             if re.search("understand.*as a mistake", l, re.IGNORECASE) and not l.startswith('['):
                 cmd = re.sub("understand +\"", "", l)
-                cmd = re.sub("\" as a mistake.*", "", cmd)
+                cmd = re.sub("\" +as a mistake.*", "", cmd)
                 cmd = re.sub("\"", "", cmd)
                 cmd = re.sub(" (and|or) ", "/", cmd)
                 cmd_ary = cmd.split('"')[0::2]
@@ -319,7 +322,7 @@ def mister(a, my_file, do_standard):
                 for (line_count, line) in enumerate(file, 1):
                     if line_count in extra_text.keys():
                         if end_room and end_room in location[count]: break
-                        fout.write("##mistake test for " + extra_text[count] + "\n")
+                        fout.write("##mistake test for " + i7.text_convert(extra_text[count]) + "\n")
                         if print_location: fout.write("##location = " + location[count])
                         if print_condition: fout.write("##condition(s) " + condition[count])
                         mistakes_added += 1
