@@ -464,7 +464,11 @@ if len(sys.argv) > 1:
                     for x in ary:
                         added[x] = True
                 elif q in i7.i7x:
-                    added[i7.i7x[q]] = True
+                    q0 = i7.i7x[q]
+                    if q0 in i7.i7comr:
+                        new_ary = [ x for x in i7.i7com[i7.i7comr[q0]].split(',') if x != q0 ]
+                        print("You specified a project with an umbrella project. Use {} to see {} and not just {}.".format(i7.i7comr[q0], ' / '.join(new_ary), q0))
+                    added[q0] = True
                 else:
                     print(q, "not recognized as a project with a mistake file and/or regex test files.")
                     print('=' * 50)
@@ -484,11 +488,11 @@ if not write_file and not print_output and not to_clipboard:
 if len(added.keys()) == 0:
     x = i7.dir2proj(os.getcwd())
     my_abb = i7.main_abb(x)
-    if x == 'shuffling' or x == 'roiling':
-        print("REMINDER: use STS to run both Shuffling and Roiling.")
+    if x in i7.comr:
+        x2 = i7.comr[x]
+        if x2 != x:
+            print("You specified a project with an umbrella project. Use {} to see {} and not just {}.".format(x2, i7.com[x2], x))
     added[x] = True
-    if x == 'sts':
-        added['shuffling'] = added['roiling'] = True
     if not os.path.exists(i7.hdr(x, 'mi')):
         sys.exit("There is no mistake file for project {}.".format(x))
 
