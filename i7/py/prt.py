@@ -59,9 +59,20 @@ for x in glob.glob(os.path.join(mp, "reg-*.txt")):
         news += 1
         shutil.copy(x, x0)
         continue
-    if filecmp.cmp(x, x0):
+    try:
+        temp = filecmp.cmp(x, x0)
+    except Exception as p:
+        any_yet = False
+        if not os.path.exists(x):
+            print(x, "source may be a stale symlink.")
+            any_yet = True
+        if not os.path.exists(x0):
+            print(x0, "target may be a stale symlink.")
+            any_yet = True
+        if not any_yet:
+            print(os.path.basename(x), "Official error:", p)
         continue
-    else:
+    if not temp:
         changes += 1
         print(colorama.Fore.GREEN + "File {} has changed. Copying over.".format(x) + colorama.Style.RESET_ALL)
         shutil.copy(x, x0)
@@ -91,7 +102,7 @@ my_copy_file = y[0]
 
 (_, my_ext) = os.path.splitext(my_copy_file)
 
-file_dest = os.path.join(i7.prt, "debug-{}{}".format(i7.long_name(my_proj), my_ext))
+file_dest = os.path.normpath(os.path.join(i7.prt, "debug-{}{}".format(i7.long_name(my_proj), my_ext)))
 
 binary_change = False
 
