@@ -29,8 +29,6 @@ base_err = defaultdict(str)
 
 end_room = ""
 
-short = { 'shuffling':'sa', 'roiling':'roi', 'ailihphilia':'ail' }
-
 #unusued, but if something is not the default_room_level, it goes here.
 default_room_level = 'chapter'
 levs = { }
@@ -38,8 +36,6 @@ levs = { }
 clipboard_str = ""
 
 mistake_defaults = "c:/writing/scripts/mist-d.txt"
-
-for x in short: srev[short[x]] = x
 
 def usage():
     print("All commands can be with or without hyphen")
@@ -94,7 +90,6 @@ def clip_out(x):
 
 def to_full(a):
     if a in srev.keys(): return srev[a]
-    if a in short.keys(): return a
     print(a, "not a project with a recognized mistake file.")
     exit()
 
@@ -175,7 +170,6 @@ def mister(a, my_file, do_standard):
             special_def = ''
     # for p in sorted(need_test.keys(), key=need_test.get):
         # print(p, need_test[p])
-    # files = glob.glob(source_dir + "reg-" + short[a] + "-thru*.txt")
     if a == 'roiling':
         got_trailing_a = False
         in_trailing_a = False
@@ -453,9 +447,6 @@ if len(sys.argv) > 1:
         elif arg == 'po':
             print_output = True
             write_file = False
-        elif arg == 'sts':
-            added['shuffling'] = True
-            added['roiling'] = True
         elif arg[:2] == 'e=':
             end_room = arg[2:].replace("-", " ")
         elif arg == '?': usage()
@@ -463,11 +454,12 @@ if len(sys.argv) > 1:
             for q in arg.split(','):
                 if q in added.keys():
                     print(q, "already in.")
-                elif q in short.keys():
-                    print("Adding", q)
-                    added[q] = True
-                elif q in i7.i7x.keys() and i7.i7x[q] in short.keys():
-                    print("Adding", i7.i7x[q])
+                elif q in i7.i7com:
+                    ary = i7.i7com[q].split(',')
+                    print("Adding combo project", q, ', '.join(ary))
+                    for x in ary:
+                        added[x] = True
+                elif q in i7.i7x:
                     added[i7.i7x[q]] = True
                 else:
                     print(q, "not recognized as a project with a mistake file and/or regex test files.")
