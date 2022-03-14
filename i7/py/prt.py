@@ -38,12 +38,14 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if not my_proj:
-    print(colorama.Fore.YELLOW + "No project on command line. Going with default pulled from directory." + colorama.Style.RESET_ALL)
-
-my_proj = i7.dir2proj()
-
-if not my_proj:
-    sys.exit(colorama.Fore.RED + "Need a project or valid directory." + colorama.Style.RESET_ALL)
+    my_proj = i7.main_abb(i7.dir2proj())
+    if not my_proj:
+        my_proj = i7.read_latest_proj()[0]
+        if not my_proj:
+            sys.exit(colorama.Fore.RED + "No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project." + colorama.Style.RESET_ALL)
+        print(colorama.Fore.GREEN + "Pulling project from CFG: {}.".format(my_proj) + colorama.Style.RESET_ALL)
+    else:
+        print(colorama.Fore.YELLOW + "No project on command line. Going with default pulled from directory." + colorama.Style.RESET_ALL)
 
 mp = i7.proj2dir(my_proj)
 
