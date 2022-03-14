@@ -113,6 +113,7 @@ def mister(a, my_file, do_standard):
     superfluous = 0
     help_text_rm = 0
     need_comment = 0
+    mist_dic = defaultdict(int)
     need_test = defaultdict(int)
     mistake_text = defaultdict(str)
     cmd_text = defaultdict(str)
@@ -354,6 +355,7 @@ def mister(a, my_file, do_standard):
                             clip_out(mistake_text[f] if do_standard else mistake_msg(a))
                     if to_clipboard: clipboard_str += "\n"
                     mistakes += 1
+                    mist_dic[location[f]] += 1
                     if print_output: print()
     if check_this_after:
         regs = [re.sub(r'\\', '/', x.lower()) for x in glob.glob(source_dir + "reg-*.txt")]
@@ -383,6 +385,8 @@ def mister(a, my_file, do_standard):
     else:
         totes = mistakes + flags + duplicates + superfluous + bracket_errs + help_text_rm + need_comment
         print(a, mistakes, "mistakes,", flags, "flags", duplicates, "duplicates", superfluous, "superfluous", bracket_errs, "brackets", help_text_rm, "helper text", need_comment, "need comment", totes, "total")
+        if mistakes > 0:
+            print(', '.join(['{} {}'.format(x, mist_dic[x]) for x in sorted(mist_dic, key=lambda x:(-mist_dic[x], x))]))
 
 files = defaultdict(str)
 smallfiles = defaultdict(str)
