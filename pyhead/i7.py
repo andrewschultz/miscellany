@@ -251,15 +251,21 @@ def column_from_file(file_name, table_name, column_name):
 mult_columns_from_header_file = column_from_file
 
 def i7_text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore_array = []):
-    temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
-    temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
-    temp = temp.replace("[']", "'")
+    #temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
+    #temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
+    iglo = [x.lower() for x in ignore_array]
+    temp = my_string.replace("[']", "'")
+    temp = re.sub(r"([!.])'", r'\1"', temp)
     if erase_brackets:
         temp = re.sub("\[[^\]]*\]", bracket_replace, temp)
-    for ig in ignore_array:
-        temp = temp.replace(ig.replace("'", '"'), ig)
-        if ig != ig.lower():
-            temp = temp.replace(ig.lower().replace('"', "'"), ig.lower())
+    for x in re.findall(r"[a-zA-Z]+'(?![\]a-zA-Z])", temp):
+        if x.lower() not in iglo:
+            temp = re.sub(x, x.replace("'", '"'), temp)
+            temp = re.sub(r"{}(?![\]a-zA-Z])".format(x), x.replace('"', "'"), temp)
+    for x in re.findall(r"(?<![\[A-Za-z])'[a-zA-Z]+", temp):
+        if x.lower() not in iglo:
+            temp = re.sub(x, x.replace("'", '"'), temp)
+            temp = re.sub(r"(?<![\[A-Za-z]){}".format(x), x.replace('"', "'"), temp)
     return temp
 
 text_convert = i7_text_convert
