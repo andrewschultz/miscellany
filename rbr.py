@@ -48,6 +48,7 @@ changed_files = defaultdict(list)
 unchanged_files = defaultdict(list)
 postproc_if_changed = defaultdict(list)
 ignores = defaultdict(str)
+apost_changes = defaultdict(int)
 
 rbr_config = 'c:/writing/scripts/rbr.txt'
 
@@ -217,14 +218,26 @@ def branch_variable_adjust(var_line, err_stub, actives):
     #print("After:", my_var, branch_variables[my_var])
     return
 
+def apostrophe_check(line, line_count, warns):
+    if line.startswith('#'):
+        return False
+    apost_line = i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj])
+    if line == apost_line:
+        return False
+    print(warns + 1, "Possible apostrophe-to-quote change needed line", line_count)
+    print("  Before:", "!" + line.strip() + "!")
+    print("   After:", "!" + apost_line.strip() + "!")
+    a1 = line.split(' ')
+    a2 = apost_line.split(' ')
+    mv = min(len(a1), len(a2))
+    for x in range(0, mv):
+        if "'" in a1[x] and a1[x].replace("'", '"') == a2[x]:
+            apost_changes[a1[x]] += 1
+    return True
+
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
-    if line != i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj]):
-        print(cur_pot+1, "Possible apostrophe-to-quote change needed line", line_count)
-        print("  Before:", line.strip())
-        print("   After:", i7.text_convert(line.strip(), erase_brackets = False))
-        return True
-    elif '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
+    if '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
         print(cur_pot+1, "CR/apostrophe coding artifact in line", line_count, ":", line.strip())
         return True
     elif '[i]' in line or '[r]' in line or '[b]' in line:
@@ -433,6 +446,7 @@ def get_file(fname):
     ignore_extra_undos = False
     temp_diverge_warned = False
     ignore_next_balance = False
+    skip_apostrophe_check = False
     need_start_command = (start_command != '')
     fb = os.path.basename(fname)
     with open(fname) as file:
@@ -512,6 +526,9 @@ def get_file(fname):
                         print("Warning DE-IGNORE tries to remove element not in ignore list {} at line {}.".format(x, line_count))
                     else:
                         untested_ignore.remove(x)
+                continue
+            if line.startswith("#OK-APOSTROPHE") or line.startswith("#APOSTROPHE-OK"):
+                skip_apostrophe_check = True
                 continue
             if line.startswith("ALSO-IGNORE:") or line.startswith("ALSO_IGNORE"):
                 l = re.sub("^.*?:", "", line.strip().lower())
@@ -637,11 +654,15 @@ def get_file(fname):
                 actives = list(old_actives)
                 continue
             if line.strip() == "\\\\": line = "\n"
+            if skip_apostrophe_check:
+                skip_apostrophe_check = False
+            elif apostrophe_check(line, line_count, warns):
+                mt.add_postopen(fname, line_count, priority=5)
+                warns += 1
             if vet_potential_errors(line, line_count, warns):
                 mt.add_postopen(fname, line_count, priority=5)
                 warns += 1
             ignore_next_bracket = False
-            ignore_apostrophe_warnings = False
             if line.startswith("dupefile="):
                 dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
                 dupe_file = open(dupe_file_name, "w", newline="\n")
@@ -1176,6 +1197,11 @@ for x in my_file_list_valid:
         print("Skipping", x, "for no new edits.")
         continue
     get_file(x)
+
+if len(apost_changes):
+    for x in sorted(apost_changes, key=apost_changes.get, reverse=True):
+        add_note = '(lower-case version is in apostrophes-to-ignore)' if x.lower() in apostrophes[exe_proj] else ''
+        print(x, apost_changes[x], add_note)
 
 internal_postproc_stuff()
 
