@@ -872,7 +872,10 @@ def get_file(fname):
             sys.exit()
     for x in file_array:
         f = open(x, "w")
-        modified_output = re.sub("\n{3,}", "\n\n", file_output[x])
+        # modifications below to avoid extra spacing. While we could define in_header, sweeping things up with a REGEX is probably easier
+        modified_output = re.sub("\n{3,}", "\n\n", file_output[x]) # get rid of extra carriage return spacing
+        modified_output = re.sub("^\n+", "", modified_output) # get rid of spacing at the start
+        #modified_output = re.sub("\n+\*\*", "\n**", modified_output) # get rid of spacing in the header
         f.write(modified_output)
         f.close()
         xb = os.path.basename(x)
