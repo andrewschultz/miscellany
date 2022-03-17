@@ -535,7 +535,7 @@ def get_file(fname):
                 if not l:
                     untested_ignore = list(untested_default)
                 else:
-                    if "\t" in x:
+                    if "\t" in line:
                         print("WARNING you need to split with commas and not tabs line {}.".format(line_count))
                     for x in l.split(","):
                         if x in untested_ignore:
@@ -668,15 +668,20 @@ def get_file(fname):
                 dupe_file = open(dupe_file_name, "w", newline="\n")
                 continue
             if re.search("^TSV(I)?[=:]", line): #tab separated values
+                if ' #' in line:
+                    print('WARNING SPACES NOT TABS for TSV line', line_count)
                 ignore_too_short = line.lower().startswith("tsvi")
                 l2 = re.sub("TSV(I)?.", "", line.lower(), 0, re.IGNORECASE).strip().split("\t")
-                if len(l2) > len(actives):
+                if len(l2) > len(file_array):
                     print("WARNING line", line_count, "has too many TSV values, ignoring")
-                    print("TEXT:", line.strip())
+                    for x in range(0, len(l2)):
+                        print(l2[x], '~', os.path.basename(file_array[x]) if x < len(file_array) else '?')
                     continue
-                elif ignore_too_short and len(l2) < len(actives):
+                elif not ignore_too_short and len(l2) < len(actives):
                     print("WARNING line", line_count, "doesn't cover all files. Change TSV to TSVI to ignore this.")
                     print("TEXT:", line.strip())
+                    for x in range(0, len(file_array)):
+                        print(l2[x] if x < len(l2) else '?', '~', os.path.basename(file_array[x]))
                 for x in range(len(l2)):
                     file_output[file_array[x]] += l2[x] + "\n"
                 continue
