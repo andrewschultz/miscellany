@@ -31,6 +31,7 @@ ignores = defaultdict(lambda: defaultdict(bool))
 onces = defaultdict(lambda: defaultdict(bool))
 tables_to_check = defaultdict(lambda: defaultdict(bool))
 files_to_check = defaultdict(lambda: defaultdict(bool))
+force_table_read = defaultdict(bool)
 
 # for later
 # import exrex
@@ -46,8 +47,8 @@ def usage(message='general usage'):
     sys.exit()
 
 def is_valid_table_header(x, file_name):
-    if x.startswith("table of") and files_to_check[my_proj][file_name] and not '\t' in x:
-        return True
+    if x.startswith("table of") and file_name in force_table_read and not '\t' in x:
+        return True # if table reading is forced in this file, and "table of" is not itself a table entry, force things
     return x.lower() in tables_to_check[my_proj]
 
 def check_my_loop(my_loop):
@@ -125,7 +126,7 @@ def read_cfg_file():
             (prefix, data) = mt.cfg_data_split(mt.zap_comments(line))
             ary = mt.zap_comments(line.strip()).split(',')
             if prefix == 'proj':
-                cur_proj_list = i7.long_name(data).split(',')
+                cur_proj_list = [i7.long_name(x) for x in data.split(',')]
             elif prefix == 'default_project':
                 if default_proj:
                     print("WARNING redefining default project from {} at line {}.".format(default_project, line_count))
@@ -139,7 +140,8 @@ def read_cfg_file():
                             this_file = i7.main_src(cur_proj_list)
                         else:
                             this_file = i7.hdr(cp, x)
-                        files_to_check[cp][this_file] = read_all
+                        files_to_check[cp][this_file] = True
+                        force_table_read[this_file] = read_all
             elif prefix == 'ignore':
                 for cp in cur_proj_list:
                     for x in data.split(","):
@@ -217,10 +219,12 @@ def loop_breaker(my_line):
         return True
     if my_line.endswith("auxiliary"):
         return True
+    if my_line.endswith("ends here.") or my_line.endswith("ends here"):
+        return True
     return False
 
 def write_dont_print(my_file):
-    force_tables = files_to_check[my_proj][my_file]
+    force_tables = my_file in force_table_read
     my_table = ''
     in_table = False
     in_sortable_section = False
@@ -292,7 +296,7 @@ def write_dont_print(my_file):
 def print_dont_write(my_file):
     in_loop = False
     current_table = ''
-    force_tables = files_to_check[my_proj][my_file]
+    force_tables = my_file in force_table_read
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             l0 = mt.zap_comments(line)
@@ -394,6 +398,7 @@ if not files_to_check[my_proj]:
     files_to_check[my_proj] = [i7.hdr(my_proj, 'ta')]
 
 for x in files_to_check[my_proj]:
+    print("Table-reference sorting for file", x)
     for o in onces[my_proj]:
         onces[my_proj][o] = False
     if print_what_to_do:
@@ -402,6 +407,7 @@ for x in files_to_check[my_proj]:
         onces[my_proj][o] = False
     if write_out:
         write_dont_print(x)
+
 for x in tables_to_check[my_proj]:
     if not tables_to_check[my_proj][x]:
         print("We did not see", x, "in", my_proj)
