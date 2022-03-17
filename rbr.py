@@ -507,7 +507,7 @@ def get_file(fname):
                     mt.add_post(fname, line_count)
                 u = vta_after.replace("\\\\", "\n") + "\n"
                 for q in temp_file_fullname_array:
-                    file_output[q] += u
+                    file_output[file_array[q]] += u
                 continue
             if wrong_check and line.startswith("WRONG"):
                 wrong_lines.append(line_count)
@@ -891,6 +891,9 @@ def get_file(fname):
             changed_files[fname].append(xb)
             copy(x, xb)
         os.remove(x)
+        file_output.pop(x)
+    for x in file_output:
+        print(colorama.Fore.RED + "WARNING: there may be leftover output for the file_output key {}.".format(x) + colorama.Style.RESET_ALL)
     if len(wrong_lines) > 1:
         if wrong_check:
             print("{} WRONG line{} to fix: {}".format(len(wrong_lines), mt.plur(len(wrong_lines)), ", ".join([str(x) for x in wrong_lines])))
