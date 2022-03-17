@@ -46,6 +46,7 @@ okay_apostrophes = defaultdict(bool)
 new_files = defaultdict(list)
 changed_files = defaultdict(list)
 unchanged_files = defaultdict(list)
+absent_files = defaultdict(list)
 postproc_if_changed = defaultdict(list)
 ignores = defaultdict(str)
 apost_changes = defaultdict(int)
@@ -319,6 +320,13 @@ def post_copy(file_array, in_file):
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
             changed_files.clear()
+        elif len(absent_files.keys()):
+            print("Copying files not in PRT over to PRT directory.")
+            for q in absent_files.keys():
+                print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
+                for r in absent_files[q]:
+                    copy(r[0], r[1])
+            absent_files.clear()
         elif len(my_file_list_valid) == 1:
             print(colorama.Fore.YELLOW + "No files copied over to PRT directory." + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
@@ -879,9 +887,12 @@ def get_file(fname):
         f.write(modified_output)
         f.close()
         xb = os.path.basename(x)
+        prt_mirror = os.path.join(i7.prt, xb)
         if not os.path.exists(xb):
             new_files[fname].append(xb)
             copy(x, xb)
+        elif not os.path.exists(prt_mirror):
+            absent_files[fname].append((xb, prt_mirror))
         elif cmp(x, xb):
             unchanged_files[fname].append(xb)
         else:
