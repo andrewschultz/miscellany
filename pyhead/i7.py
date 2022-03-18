@@ -695,13 +695,17 @@ def hf_exp(x, return_nonblank = True):
 th_exp = hf_exp
 
 def proj_exp(x, return_nonblank = True, to_github = False):
+    if '/' in x:
+        ary = x.split('/')
+        if ary[0] in i7com and ary[1] in i7com[ary[0]].split(','):
+            x = ary[1]
     if to_github:
         temp = x
         if temp in i7xr.keys(): temp = i7xr[temp]
         if temp in i7gx.keys(): return i7gx[temp]
     if x in i7xr.keys(): return x
     elif x in i7x.keys(): return i7x[x]
-    if x.lower() == 'sts': return x
+    if x.lower() in i7com: return x
     return (x if return_nonblank else '')
 
 pex = proj_exp
@@ -810,6 +814,8 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
             my_subdir = "Release"
         else:
             my_subdir = "source"
+    if x and os.path.exists(os.path.join(gh_dir, x)):
+        return os.path.normpath(os.path.join(gh_dir, x))
     if to_github:
         temp = main_abb(x)
         if not temp:
