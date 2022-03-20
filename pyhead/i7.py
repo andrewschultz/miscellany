@@ -814,9 +814,9 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
             my_subdir = "Release"
         else:
             my_subdir = "source"
-    if x and os.path.exists(os.path.join(gh_dir, x)):
-        return os.path.normpath(os.path.join(gh_dir, x))
     if to_github:
+        if x and os.path.isdir(os.path.join(gh_dir, x)):
+            return os.path.normpath(os.path.join(gh_dir, x))
         temp = main_abb(x)
         if not temp:
             temp = x
