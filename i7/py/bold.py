@@ -12,6 +12,8 @@ from collections import defaultdict
 ignores = defaultdict(int)
 counts = defaultdict(int)
 
+show_line_count = False
+show_count = False
 count = 0
 clip = False
 list_caps = False
@@ -54,6 +56,7 @@ def bolded_caps(my_str):
     x = re.sub(r"(?<!(\[b\]))\b([A-Z]{2,}[A-Z ]*[A-Z])\b", lambda x: maybe_bold(x.group(0)), my_str)
     x = x.replace("[b][b]", "[b]")
     x = x.replace("[r][r]", "[r]")
+    x = re.sub(r"(\[b\][ A-Z:']+)\[b\]", r'\1', x)
     return x
 
 def code_exception(my_line):
@@ -62,15 +65,16 @@ def code_exception(my_line):
     return False
 
 if clip:
+    print("NOTE: deprecated for bold.py | clip")
     orig = pyperclip.paste()
     final = bolded_caps(orig)
     print(final)
 else:
     get_ignores()
+    count = 0
     with open("story.ni") as file:
         for (line_count, line) in enumerate(file, 1):
             if code_exception(line): # letters settler readings don't count
-                print(line.rstrip())
                 continue
             lr = line.rstrip()
             by_quotes = lr.split('"')
@@ -83,8 +87,13 @@ else:
             new_quote = '"'.join(new_ary)
             if new_quote != lr:
                 count += 1
-                #print(count, bolded_caps(line.rstrip()))
-            print(new_quote)
+                out_string = new_quote
+                if show_line_count:
+                    out_string = "{} {}".format(line_count, new_quote)
+                if show_count:
+                    out_string = "{} {}".format(count, new_quote)
+                print(out_string)
+    sys.stderr.write("{} total boldable lines.".format(count))
 
 if list_caps:
     counts_list = sorted(list(counts))
