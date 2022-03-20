@@ -1,6 +1,9 @@
 # bold.py
 # looks for CAPITALIZED stuff inside quotes to put in BOLD with [b] [r] tags.
+# ignore = actual bold text to ignore
+# ignore_auxiliary = non bold case by case text that should be flagged as ignorable
 
+import mytools as mt
 import sys
 import i7
 import re
@@ -71,8 +74,10 @@ if clip:
     print(final)
 else:
     get_ignores()
+def process_potential_bolds(my_file):
     count = 0
-    with open("story.ni") as file:
+    # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
+    with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if code_exception(line): # letters settler readings don't count
                 continue
@@ -93,7 +98,21 @@ else:
                 if show_count:
                     out_string = "{} {}".format(count, new_quote)
                 print(out_string)
-    sys.stderr.write("{} total boldable lines.".format(count))
+    sys.stderr.write("{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count))
+
+my_project = i7.dir2proj()
+if not my_project:
+    sys.exit("You need to go to a directory with a project.")
+
+if clip:
+    print("NOTE: deprecated for bold.py | clip")
+    orig = pyperclip.paste()
+    final = bolded_caps(orig)
+    print(final)
+else:
+    get_ignores()
+    for x in i7.i7f[my_project]:
+        process_potential_bolds(x)
 
 if list_caps:
     counts_list = sorted(list(counts))
