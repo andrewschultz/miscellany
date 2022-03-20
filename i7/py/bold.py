@@ -12,7 +12,8 @@ import os
 
 from collections import defaultdict
 
-ignores = defaultdict(int)
+ignores = defaultdict(list)
+ignore_auxiliary = defaultdict(list)
 counts = defaultdict(int)
 
 show_line_count = False
@@ -20,6 +21,8 @@ show_count = False
 count = 0
 clip = False
 list_caps = False
+
+bold_ignores = "c:/writing/scripts/boldi.txt"
 
 try:
     if sys.argv[1] == 'c':
@@ -30,29 +33,36 @@ except:
     pass
 
 def get_ignores():
-    if not os.path.exists("boldi.txt"):
-        print("No ignores file boldi.txt.")
+    if not os.path.exists(bold_ignores):
+        print("No ignores file {}.".format(bold_ignores))
         return
-    with open("boldi.txt") as file:
+    current_project = "global"
+    with open(bold_ignores) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"):
                 continue
             if line.startswith(";"):
+                break
+            (prefix, data) = mt.cfg_data_split(line)
+            if prefix.lower() in ( 'project', 'proj' ):
+                current_project = data
                 continue
-            for x in line.lower().strip().split(','):
-                if x in ignores:
-                    print("duplicate ignore {} at line {}.".format(x, line_count))
-                ignores[x] = 1
+            for x in line.strip().split(','):
+                if x in ignores[current_project] or x in ignore_auxiliary[current_project]:
+                    print("duplicate ignore {} at line {}, {}.".format(x, line_count, current_project))
+                if x == x.upper():
+                    ignores[current_project].append(x)
+                else:
+                    ignore_auxiliary[current_project].append(x)
 
 def maybe_bold(my_str):
     if my_str.count(' ') > 2:
         return my_str
     if re.search("^[RYGPB\*\?]{3,}$", my_str):
         return my_str
-    ml = my_str.lower()
-    if ml in ignores:
+    if my_str in ignores[my_project] or my_str in ignores['global']:
         return my_str
-    counts[ml] += 1
+    counts[my_str] += 1
     return '[b]{}[r]'.format(my_str)
 
 def bolded_caps(my_str):
@@ -67,13 +77,15 @@ def code_exception(my_line):
         return True
     return False
 
-if clip:
-    print("NOTE: deprecated for bold.py | clip")
-    orig = pyperclip.paste()
-    final = bolded_caps(orig)
-    print(final)
-else:
-    get_ignores()
+def string_match(my_line, my_dict):
+    for ia in my_dict[my_project]:
+        if ia in my_line:
+            return True
+    for ia in my_dict['global']:
+        if ia in my_line:
+            return True
+    return False
+
 def process_potential_bolds(my_file):
     count = 0
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
@@ -91,6 +103,8 @@ def process_potential_bolds(my_file):
                     new_ary.append(bolded_caps(by_quotes[x]))
             new_quote = '"'.join(new_ary)
             if new_quote != lr:
+                if string_match(lr, ignore_auxiliary):
+                    continue
                 count += 1
                 out_string = new_quote
                 if show_line_count:
@@ -105,7 +119,7 @@ if not my_project:
     sys.exit("You need to go to a directory with a project.")
 
 if clip:
-    print("NOTE: deprecated for bold.py | clip")
+    print("NOTE: CLIP deprecated for bold.py | clip")
     orig = pyperclip.paste()
     final = bolded_caps(orig)
     print(final)
