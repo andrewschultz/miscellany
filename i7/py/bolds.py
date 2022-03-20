@@ -1,5 +1,8 @@
+#
 # bolds.py
 # looks for misplaced bold in story.ni locally
+# deprecated for the more general bold.py which has a better regex and error-ignoring
+#
 
 import re
 import i7
@@ -13,7 +16,8 @@ bolds_data = "c:/writing/scripts/bolds.txt"
 caps = defaultdict(lambda: defaultdict(bool))
 ignores = defaultdict(lambda: defaultdict(bool))
 
-line_to_open = 0
+line_to_open = defaultdict(str)
+
 cmd_line_proj = ""
 
 def usage():
@@ -49,9 +53,9 @@ def brute_force(my_file = "story.ni"):
     if count == 0: print("NO ERRORS! Yay!")
 
 def sophisticated(my_file = "story.ni"):
-    retval = 0
+    first_line_number = 0
     finerr = defaultdict(str)
-    print("Sophisticated run:")
+    print("Sophisticated run:", my_file)
     count = 0
     countall = 0
     with open(my_file) as file:
@@ -61,7 +65,7 @@ def sophisticated(my_file = "story.ni"):
             q = re.findall(r"(?<!(\[b\]))\b({:s})\b(?!(\[r\]))".format(caps_par), l2)
             if q:
                 if skipit(line): continue
-                if not retval: retval = line_count
+                if not first_line_number: first_line_number = line_count
                 count += 1
                 countall += len(q)
                 adds = [x[1] for x in q]
@@ -71,7 +75,7 @@ def sophisticated(my_file = "story.ni"):
     else:
         for q in sorted(finerr.keys(), key=lambda x: (len(finerr[x]), finerr[x])):
             print("{:10s}".format(q), finerr[q])
-    return retval
+    return first_line_number
 
 def find_caps(my_file = "story.ni"):
     retval = 0
@@ -168,6 +172,7 @@ if cmd_line_proj:
     print("Changing dir to", cmd_line_proj)
     try:
         os.chdir(i7.proj2dir(cmd_line_project))
+        my_project = cmd_line_proj
     except:
         sys.exit("Can't map", cmd_line_proj, "to a directory.")
 else:
@@ -177,17 +182,25 @@ else:
     except:
         print("Couldn't get project from directory. Going with default.")
 
-
-
 if not os.path.exists("story.ni"): sys.exit("Need a directory with story.ni.")
 
 read_data_file()
 
 caps_par = "|".join(set(caps[my_project].keys()) | set(caps["generic"].keys()))
 
-if find_caps_bool: find_caps()
-if brute_force_bool: brute_force()
-if sophisticated_bool: line_to_open = sophisticated()
-if check_bold_italic_bool: check_bold_italic()
+if my_project in i7.i7f:
+    file_array = i7.i7f[my_project]
+else:
+    file_array = [ 'story.ni' ]
 
-if line_to_open: i7.npo("story.ni", line_to_open)
+for f in file_array:
+    if find_caps_bool: find_caps(f)
+    if brute_force_bool: brute_force(f)
+    if sophisticated_bool: sophisticated(f)
+    if check_bold_italic_bool: check_bold_italic(f)
+
+for l in line_to_open:
+    i7.npo(l, line_to_open[l], bail = False)
+
+print("WARNING: BOLD.PY is a better, and more recently updated, checker for bold text. You may wish to go with that instead.")
+sys.exit()
