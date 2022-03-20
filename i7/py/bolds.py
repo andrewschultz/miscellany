@@ -14,7 +14,6 @@ caps = defaultdict(lambda: defaultdict(bool))
 ignores = defaultdict(lambda: defaultdict(bool))
 
 line_to_open = 0
-my_project = i7.default_proj()
 cmd_line_proj = ""
 
 def usage():
@@ -37,10 +36,10 @@ def skipit(a):
     if 'REV OVER doesn\'t think' in a: return True
     return False
 
-def brute_force():
+def brute_force(my_file = "story.ni"):
     print("Brute force run:")
     count = 0
-    with open("story.ni") as file:
+    with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             for q in caps:
                 if q in line and "[b]{:s}[r]".format(q) not in line:
@@ -49,13 +48,13 @@ def brute_force():
                     print(line.rstrip())
     if count == 0: print("NO ERRORS! Yay!")
 
-def sophisticated():
+def sophisticated(my_file = "story.ni"):
     retval = 0
     finerr = defaultdict(str)
     print("Sophisticated run:")
     count = 0
     countall = 0
-    with open("story.ni") as file:
+    with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             l2 = i7.in_quotes(line)
             #print(l2.rstrip())
@@ -74,13 +73,13 @@ def sophisticated():
             print("{:10s}".format(q), finerr[q])
     return retval
 
-def find_caps():
+def find_caps(my_file = "story.ni"):
     retval = 0
     capfind = defaultdict(int)
     print("Find caps:")
     count = 0
     countall = 0
-    with open("story.ni") as file:
+    with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if skipit(line): continue
             l2 = i7.in_quotes(line)
@@ -92,10 +91,10 @@ def find_caps():
         print(q, capfind[q])
     return retval
 
-def check_bold_italic():
+def check_bold_italic(my_file = "story.ni"):
     imbalances = 0
     imbalance = 0
-    with open("story.ni") as file:
+    with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             bolds = line.count("[b]")
             italics = line.count("[i]")
@@ -104,8 +103,10 @@ def check_bold_italic():
             if imbalance:
                 print("line", line_count, "has imbalance of", imbalance, ":", line.rstrip())
                 imbalances += 1
-    if imbalances: print(imbalances, "imbalances")
-    else: print("No bold/italic/regular imbalances found.")
+    if imbalances:
+        print(imbalances, "imbalances")
+    else:
+        print("No bold/italic/regular imbalances found.")
 
 def read_data_file():
     if not os.path.exists(bolds_data): sys.exit("Need file " + bolds_data)
@@ -166,11 +167,17 @@ while count < len(sys.argv):
 if cmd_line_proj:
     print("Changing dir to", cmd_line_proj)
     try:
-        os.chdir(to_proj(cmd_line_project))
+        os.chdir(i7.proj2dir(cmd_line_project))
     except:
         sys.exit("Can't map", cmd_line_proj, "to a directory.")
+else:
+    my_project = i7.dir2proj(os.getcwd())
+    try:
+        os.chdir(i7.proj2dir(my_project))
+    except:
+        print("Couldn't get project from directory. Going with default.")
 
-my_proj = i7.dir2proj(os.getcwd())
+
 
 if not os.path.exists("story.ni"): sys.exit("Need a directory with story.ni.")
 
