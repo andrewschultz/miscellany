@@ -15,6 +15,7 @@ from collections import defaultdict
 ignores = defaultdict(list)
 ignore_auxiliary = defaultdict(list)
 counts = defaultdict(int)
+bail_at = defaultdict(list)
 
 show_line_count = False
 show_count = False
@@ -42,6 +43,9 @@ def get_ignores():
             if line.startswith(";"):
                 break
             (prefix, data) = mt.cfg_data_split(line)
+            if prefix.lower() == 'bail':
+                bail_at[current_project].extend(data.split(','))
+                continue
             if prefix.lower() in ( 'project', 'proj' ):
                 current_project = data
                 continue
@@ -86,10 +90,14 @@ def string_match(my_line, my_dict):
 
 def process_potential_bolds(my_file):
     count = 0
+    broken = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
-            if code_exception(line): # letters settler readings don't count
+            if broken or code_exception(line): # letters settler readings don't count
+                continue
+            if string_match(line, bail_at):
+                broken = True
                 continue
             lr = line.rstrip()
             by_quotes = lr.split('"')
