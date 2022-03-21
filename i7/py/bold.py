@@ -37,7 +37,8 @@ def usage(header = '==== GENERAL USAGE ===='):
     print("c = clipboard(deprecated)")
     print("l = list caps")
     print("sl / ls = stderr text later, sn / ns = stderr text now")
-    print("w = write comp file and open in WinMerge, w+ w= are file wildcards to include, w- are file wildcards to exclude")
+    print("w = write temp compare file and open in WinMerge")
+    print("f+ f= are file wildcards to include, f- are file wildcards to exclude, w instead of f writes to temp compare")
     sys.exit()
 
 def get_ignores():
@@ -187,7 +188,13 @@ while cmd_count < len(sys.argv):
         write_comp_file = True
     elif arg[:2] in ( 'w+', 'w=' ):
         file_includes = arg[2:].split(',')
-    elif arg.startswith('w-'):
+        write_comp_file = True
+    elif arg.startswith( 'w-' ):
+        file_excludes = arg[2:].split(',')
+        write_comp_file = True
+    elif arg[:2] in ( 'f+', 'f=' ):
+        file_includes = arg[2:].split(',')
+    elif arg.startswith( 'f-' ):
         file_excludes = arg[2:].split(',')
     else:
         usage()
