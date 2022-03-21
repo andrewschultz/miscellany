@@ -13,6 +13,8 @@ from filecmp import cmp
 
 from collections import defaultdict
 
+file_includes = []
+file_excludes = []
 ignores = defaultdict(list)
 ignore_auxiliary = defaultdict(list)
 unignores = defaultdict(list)
@@ -93,6 +95,15 @@ def code_exception(my_line):
         return True
     return False
 
+def in_match(my_string, my_list, case_sensitive = False):
+    for x in my_list:
+        if case_sensitive:
+            if x in my_string:
+                return True
+        elif x.lower() in my_string.lower():
+            return True
+    return False
+
 def string_match(my_line, my_dict):
     for ia in my_dict[my_project]:
         if ia in my_line:
@@ -161,11 +172,19 @@ while cmd_count < len(sys.argv):
         list_caps = True
     elif arg == 'w':
         write_comp_file = True
+    elif arg[:2] in ( 'w+', 'w=' ):
+        file_includes = arg[2:].split(',')
+    elif arg.startswith('w-'):
+        file_excludes = arg[2:].split(',')
     else:
         usage()
     cmd_count += 1
 
+if len(file_includes) and len(file_excludes):
+    sys.exit("You can only have one of w+ and w- to include or exclude files.")
+
 my_project = i7.dir2proj()
+
 if not my_project:
     sys.exit("You need to go to a directory with a project.")
 
@@ -177,6 +196,10 @@ if clip:
 else:
     get_ignores()
     for x in i7.i7f[my_project]:
+        if len(file_includes) and not in_match(x, file_includes):
+            continue
+        if len(file_excludes) and in_match(x, file_excludes):
+            continue
         process_potential_bolds(x)
 
 if list_caps:
