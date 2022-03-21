@@ -40,6 +40,7 @@ def usage(header = '==== GENERAL USAGE ===='):
     print("sl / ls = stderr text later, sn / ns = stderr text now")
     print("w = write temp compare file and open in WinMerge")
     print("f+ f= are file wildcards to include, f- are file wildcards to exclude, w instead of f writes to temp compare")
+    print("es = open source, ec/ed/ei = open cfg/data file")
     sys.exit()
 
 def get_ignores():
@@ -186,6 +187,10 @@ while cmd_count < len(sys.argv):
         clip = True
     elif arg == 'l':
         list_caps = True
+    elif arg == 'es':
+        mt.npo(main.__file__)
+    elif arg in ( 'ec', 'ed', 'ei' ):
+        mt.npo(bold_ignores)
     elif arg in ( 'sn', 'ns' ):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
