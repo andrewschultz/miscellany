@@ -22,6 +22,7 @@ unignores = defaultdict(list)
 counts = defaultdict(int)
 bail_at = defaultdict(list)
 
+max_errors = 0
 stderr_now = False
 show_line_count = False
 show_count = False
@@ -154,7 +155,12 @@ def process_potential_bolds(my_file):
                     out_string = "{} {}".format(line_count, new_quote)
                 if show_count:
                     out_string = "{} {}".format(count, new_quote)
-                print(out_string)
+                if max_errors and count > max_errors:
+                    if count == max_errors + 1:
+                        print("Reached maximum errors. Adjust with m#.")
+                    out_string = lr.rstrip()
+                else:
+                    print(out_string)
             if write_comp_file:
                 f.write(out_string + "\n")
     this_stderr_text = "{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count)
@@ -175,7 +181,7 @@ def process_potential_bolds(my_file):
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
+    (arg, val, found_val) = mt.parnum(sys.argv[cmd_count])
     if arg == 'c':
         clip = True
     elif arg == 'l':
@@ -184,6 +190,10 @@ while cmd_count < len(sys.argv):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
         stderr_now = False
+    elif arg == 'm':
+        if not found_val:
+            sys.exit("Need value after m.")
+        max_errors = val
     elif arg == 'w':
         write_comp_file = True
     elif arg[:2] in ( 'w+', 'w=' ):
