@@ -15,6 +15,7 @@ from collections import defaultdict
 
 ignores = defaultdict(list)
 ignore_auxiliary = defaultdict(list)
+unignores = defaultdict(list)
 counts = defaultdict(int)
 bail_at = defaultdict(list)
 
@@ -52,6 +53,16 @@ def get_ignores():
             if prefix.lower() in ( 'project', 'proj' ):
                 current_project = data
                 continue
+            if prefix.lower == 'unignore':
+                if current_project == 'global':
+                    print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
+                    continue
+                for x in line.strip().split(','):
+                    if x in unignores[current_project]:
+                        print("duplicate unignore {} at line {}, for project {}.".format(x, line_count, current_project))
+                        continue
+                    unignore[current_project].append(x)
+                continue
             for x in line.strip().split(','):
                 if x in ignores[current_project] or x in ignore_auxiliary[current_project]:
                     print("duplicate ignore {} at line {}, {}.".format(x, line_count, current_project))
@@ -65,7 +76,7 @@ def maybe_bold(my_str):
         return my_str
     if re.search("^[RYGPB\*\?]{3,}$", my_str):
         return my_str
-    if my_str in ignores[my_project] or my_str in ignores['global']:
+    if my_str in ignores[my_project] or my_str in ignores['global'] and my_str not in unignores[my_project]:
         return my_str
     counts[my_str] += 1
     return '[b]{}[r]'.format(my_str)
