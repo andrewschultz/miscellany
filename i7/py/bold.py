@@ -24,13 +24,11 @@ list_caps = False
 
 bold_ignores = "c:/writing/scripts/boldi.txt"
 
-try:
-    if sys.argv[1] == 'c':
-        clip = True
-    elif sys.argv[1] == 'l':
-        list_caps = True
-except:
-    pass
+def usage(header = '==== GENERAL USAGE ===='):
+    print("c = clipboard(deprecated)")
+    print("l = list caps")
+    print("w = write comp file and open in WinMerge")
+    sys.exit()
 
 def get_ignores():
     if not os.path.exists(bold_ignores):
@@ -113,6 +111,20 @@ def process_potential_bolds(my_file):
                     out_string = "{} {}".format(count, new_quote)
                 print(out_string)
     sys.stderr.write("{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count))
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'c':
+        clip = True
+    elif arg == 'l':
+        list_caps = True
+    elif arg == 'w':
+        write_comp_file = True
+    else:
+        usage()
+    cmd_count += 1
 
 my_project = i7.dir2proj()
 if not my_project:
