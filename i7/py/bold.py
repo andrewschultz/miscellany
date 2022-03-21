@@ -9,6 +9,7 @@ import i7
 import re
 import pyperclip
 import os
+from filecmp import cmp
 
 from collections import defaultdict
 
@@ -22,8 +23,10 @@ show_count = False
 count = 0
 clip = False
 list_caps = False
+write_comp_file = False
 
 bold_ignores = "c:/writing/scripts/boldi.txt"
+comp_file = "c:/writing/temp/bold-py-temp-file.txt"
 
 def usage(header = '==== GENERAL USAGE ===='):
     print("c = clipboard(deprecated)")
@@ -90,14 +93,20 @@ def string_match(my_line, my_dict):
 
 def process_potential_bolds(my_file):
     count = 0
+    if write_comp_file:
+        f = open(comp_file, "w", newline='')
     broken = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if broken or code_exception(line): # letters settler readings don't count
+                if write_comp_file:
+                    f.write(line)
                 continue
             if string_match(line, bail_at):
                 broken = True
+                if write_comp_file:
+                    f.write(line)
                 continue
             lr = line.rstrip()
             by_quotes = lr.split('"')
@@ -108,17 +117,28 @@ def process_potential_bolds(my_file):
                 else:
                     new_ary.append(bolded_caps(by_quotes[x]))
             new_quote = '"'.join(new_ary)
+            out_string = new_quote
             if new_quote != lr:
                 if string_match(lr, ignore_auxiliary):
+                    if write_comp_file:
+                        f.write(line)
                     continue
                 count += 1
-                out_string = new_quote
                 if show_line_count:
                     out_string = "{} {}".format(line_count, new_quote)
                 if show_count:
                     out_string = "{} {}".format(count, new_quote)
                 print(out_string)
+            if write_comp_file:
+                f.write(out_string + "\n")
     sys.stderr.write("{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count))
+    if write_comp_file:
+        f.close()
+        if count == 0:
+            if not cmp(my_file, comp_file):
+                print("Newline differences between {} and {}.".format(my_file, comp_file))
+            return
+            mt.wm(my_file, comp_file)
 
 cmd_count = 1
 
@@ -154,3 +174,6 @@ if list_caps:
     while len(counts_list) > 0:
         print("#{}".format(','.join(["{}={}".format(x, counts[x]) for x in counts_list[:10]])))
         counts_list = counts_list[10:]
+
+if write_comp_file:
+    os.remove(comp_file)
