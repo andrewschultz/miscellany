@@ -13,6 +13,7 @@ from filecmp import cmp
 
 from collections import defaultdict
 
+stderr_text = ''
 file_includes = []
 file_excludes = []
 ignores = defaultdict(list)
@@ -21,6 +22,7 @@ unignores = defaultdict(list)
 counts = defaultdict(int)
 bail_at = defaultdict(list)
 
+stderr_now = False
 show_line_count = False
 show_count = False
 count = 0
@@ -34,7 +36,8 @@ comp_file = "c:/writing/temp/bold-py-temp-file.txt"
 def usage(header = '==== GENERAL USAGE ===='):
     print("c = clipboard(deprecated)")
     print("l = list caps")
-    print("w = write comp file and open in WinMerge")
+    print("sl / ls = stderr text later, sn / ns = stderr text now")
+    print("w = write comp file and open in WinMerge, w+ w= are file wildcards to include, w- are file wildcards to exclude")
     sys.exit()
 
 def get_ignores():
@@ -67,7 +70,7 @@ def get_ignores():
                 continue
             for x in line.strip().split(','):
                 if x in ignores[current_project] or x in ignore_auxiliary[current_project]:
-                    print("duplicate ignore {} at line {}, {}.".format(x, line_count, current_project))
+                    print("duplicate ignore {} at line {}, for project {}.".format(x, line_count, current_project))
                 if x == x.upper():
                     ignores[current_project].append(x)
                 else:
@@ -153,14 +156,20 @@ def process_potential_bolds(my_file):
                 print(out_string)
             if write_comp_file:
                 f.write(out_string + "\n")
-    sys.stderr.write("{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count))
+    this_stderr_text = "{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count)
+    if stderr_now:
+        sys.stderr.write(this_stderr_text)
+    else:
+        global stderr_text
+        stderr_text += this_stderr_text
     if write_comp_file:
         f.close()
         if count == 0:
             if not cmp(my_file, comp_file):
                 print("Newline differences between {} and {}.".format(my_file, comp_file))
             return
-            mt.wm(my_file, comp_file)
+        print("Total differences:", count)
+        mt.wm(my_file, comp_file)
 
 cmd_count = 1
 
@@ -170,6 +179,10 @@ while cmd_count < len(sys.argv):
         clip = True
     elif arg == 'l':
         list_caps = True
+    elif arg in ( 'sn', 'ns' ):
+        stderr_now = True
+    elif arg in ( 'sl', 'ls' ):
+        stderr_now = False
     elif arg == 'w':
         write_comp_file = True
     elif arg[:2] in ( 'w+', 'w=' ):
@@ -208,6 +221,9 @@ if list_caps:
     while len(counts_list) > 0:
         print("#{}".format(','.join(["{}={}".format(x, counts[x]) for x in counts_list[:10]])))
         counts_list = counts_list[10:]
+
+if stderr_text:
+    print(stderr_text)
 
 if write_comp_file:
     os.remove(comp_file)
