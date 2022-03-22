@@ -2,6 +2,12 @@
 # looks for CAPITALIZED stuff inside quotes to put in BOLD with [b] [r] tags.
 # ignore = actual bold text to ignore
 # ignore_auxiliary = non bold case by case text that should be flagged as ignorable
+#
+# to-do (but very low priority):
+#    track anything in more than one ignore_local
+#    allow for custom ignoring in def bolded_caps based on project
+#    allow for optional dashes or slashes in long string
+#    allow for leading articles e.g. [b]A MOTTO[r] instead of A [b]MOTTO[r] <- this is hard coded right now
 
 import mytools as mt
 import sys
@@ -114,9 +120,10 @@ def maybe_bold(my_str):
     return '[b]{}[r]'.format(my_str)
 
 def bolded_caps(my_str):
-    x = re.sub(r"(?<!(\[b\]))\b([A-Z]{2,}[A-Z ]*[A-Z])\b", lambda x: maybe_bold(x.group(0)), my_str)
+    x = re.sub(r"(?<!(\[b\]))\b([A-Z] )*([A-Z]{2,}[A-Z ]*[A-Z])\b", lambda x: maybe_bold(x.group(0)), my_str)
     x = x.replace("[b][b]", "[b]")
     x = x.replace("[r][r]", "[r]")
+    x = x.replace("[first custom style][b]", "[first custom style]") # ugh, this is a horrible hack, but for Shuffling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
     x = re.sub(r"(\[b\][ A-Z:']+)\[b\]", r'\1', x)
     return x
 
@@ -213,7 +220,7 @@ while cmd_count < len(sys.argv):
         list_caps = True
     elif arg == 'es':
         mt.npo(main.__file__)
-    elif arg in ( 'ec', 'ed', 'ei' ):
+    elif arg in ( 'ec', 'ed', 'ei', 'ce', 'de', 'ie' ):
         mt.npo(bold_ignores)
     elif arg in ( 'sn', 'ns' ):
         stderr_now = True
