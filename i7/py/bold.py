@@ -43,6 +43,18 @@ def usage(header = '==== GENERAL USAGE ===='):
     print("es = open source, ec/ed/ei = open cfg/data file")
     sys.exit()
 
+def zap_nested_brax(my_string):
+    brax_depth = 0
+    out_string = ''
+    for x in range(0, len(my_string)):
+        if my_string[x] == '[':
+            brax_depth += 1
+        if brax_depth < 2:
+            out_string += my_string[x]
+        if my_string[x] == ']':
+            brax_depth -= 1
+    return out_string
+
 def get_ignores():
     if not os.path.exists(bold_ignores):
         print("No ignores file {}.".format(bold_ignores))
@@ -151,7 +163,7 @@ def process_potential_bolds(my_file):
             new_quote = '"'.join(new_ary)
             out_string = new_quote
             if new_quote != lr:
-                if string_match(lr, ignore_auxiliary):
+                if string_match(lr, ignore_auxiliary) or zap_nested_brax(new_quote) == zap_nested_brax(lr): # we ignore strings we acknowledge are ok, as well as stuff inside an IF statement
                     if write_comp_file:
                         f.write(line)
                     continue
