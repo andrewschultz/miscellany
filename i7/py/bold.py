@@ -47,7 +47,7 @@ def get_ignores():
     if not os.path.exists(bold_ignores):
         print("No ignores file {}.".format(bold_ignores))
         return
-    current_project = "global"
+    current_projs = ["global"]
     with open(bold_ignores) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("#"):
@@ -56,28 +56,32 @@ def get_ignores():
                 break
             (prefix, data) = mt.cfg_data_split(line)
             if prefix.lower() == 'bail':
-                bail_at[current_project].extend(data.split(','))
+                for cp in current_projs:
+                    bail_at[cp].extend(data.split(','))
                 continue
             if prefix.lower() in ( 'project', 'proj' ):
-                current_project = data
+                cur_projs = data.split(',')
                 continue
             if prefix.lower == 'unignore':
-                if current_project == 'global':
+                if 'global' in cur_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
                     continue
                 for x in line.strip().split(','):
-                    if x in unignores[current_project]:
-                        print("duplicate unignore {} at line {}, for project {}.".format(x, line_count, current_project))
-                        continue
-                    unignore[current_project].append(x)
+                    for cp in current_projs:
+                        if x in unignores[cp]:
+                            print("duplicate unignore {} at line {}, for project {}.".format(x, line_count, cp))
+                            continue
+                        unignore[cp].append(x)
                 continue
             for x in line.strip().split(','):
-                if x in ignores[current_project] or x in ignore_auxiliary[current_project]:
-                    print("duplicate ignore {} at line {}, for project {}.".format(x, line_count, current_project))
-                if x == x.upper():
-                    ignores[current_project].append(x)
-                else:
-                    ignore_auxiliary[current_project].append(x)
+                for cp in current_projs:
+                    if x in ignores[cp] or x in ignore_auxiliary[cp]:
+                        print("duplicate ignore {} at line {}, for project {}.".format(x, line_count, cp))
+                        continue
+                    if x == x.upper():
+                        ignores[cp].append(x)
+                    else:
+                        ignore_auxiliary[cp].append(x)
 
 def maybe_bold(my_str):
     if my_str.count(' ') > 2:
