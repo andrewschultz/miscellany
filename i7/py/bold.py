@@ -30,6 +30,7 @@ count = 0
 clip = False
 list_caps = False
 write_comp_file = False
+just_find_stuff = False
 
 bold_ignores = "c:/writing/scripts/boldi.txt"
 comp_file = "c:/writing/temp/bold-py-temp-file.txt"
@@ -94,6 +95,13 @@ def get_ignores():
                         ignores[cp].append(x)
                     else:
                         ignore_auxiliary[cp].append(x)
+
+def just_find(my_file, stuff_to_find):
+    mfb = os.path.basename(my_file)
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if re.search(r"(?<!(\[b\])){}\b".format(stuff_to_find), line):
+                print(mfb, line_count, line.rstrip())
 
 def maybe_bold(my_str):
     if my_str.count(' ') > 2:
@@ -211,6 +219,9 @@ while cmd_count < len(sys.argv):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
         stderr_now = False
+    elif arg[:2] in ( 'j:', 'j=' ):
+        just_find_stuff = True
+        find_string = '|'.join(arg[2:].upper().split(','))
     elif arg == 'm':
         if not found_val:
             sys.exit("Need value after m.")
@@ -250,6 +261,9 @@ else:
         if len(file_includes) and not in_match(x, file_includes):
             continue
         if len(file_excludes) and in_match(x, file_excludes):
+            continue
+        if just_find_stuff:
+            just_find(x, find_string)
             continue
         process_potential_bolds(x)
 
