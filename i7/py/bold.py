@@ -38,6 +38,7 @@ clip = False
 list_caps = False
 write_comp_file = False
 just_find_stuff = False
+ignore_single_word_quote = True
 bold_dashes = True
 
 what_to_find_string = "A-Z "
@@ -53,6 +54,11 @@ def usage(header = '==== GENERAL USAGE ===='):
     print("f+ f= are file wildcards to include, f- are file wildcards to exclude, w instead of f writes to temp compare")
     print("es = open source, ec/ed/ei = open cfg/data file")
     sys.exit()
+
+def special_mod(my_line):
+    if ignore_single_word_quote:
+        my_line = re.sub(r'"\[b\]([a-zA-Z]+)\[r\]"', r'"\1"', my_line)
+    return my_line
 
 def zap_nested_brax(my_string):
     brax_depth = 0
@@ -186,6 +192,7 @@ def process_potential_bolds(my_file):
                 else:
                     new_ary.append(bolded_caps(by_quotes[x]))
             new_quote = '"'.join(new_ary)
+            new_quote = special_mod(new_quote)
             out_string = new_quote
             if new_quote != lr:
                 if string_match(lr, ignore_auxiliary) or zap_nested_brax(new_quote) == zap_nested_brax(lr): # we ignore strings we acknowledge are ok, as well as stuff inside an IF statement
@@ -240,6 +247,10 @@ while cmd_count < len(sys.argv):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
         stderr_now = False
+    elif mt.alpha_match(arg, 'isw'):
+        ignore_single_word = True
+    elif mt.alpha_match(arg, 'nisw'):
+        ignore_single_word = False
     elif arg[:2] in ( 'j:', 'j=' ):
         just_find_stuff = True
         find_string = '|'.join(arg[2:].upper().split(','))
