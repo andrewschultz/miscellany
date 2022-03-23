@@ -27,6 +27,7 @@ ignore_auxiliary = defaultdict(list)
 unignores = defaultdict(list)
 counts = defaultdict(int)
 bail_at = defaultdict(list)
+unbail_at = defaultdict(list)
 
 max_errors = 0
 stderr_now = False
@@ -80,6 +81,10 @@ def get_ignores():
             if prefix.lower() == 'bail':
                 for cp in current_projs:
                     bail_at[cp].extend(data.split(','))
+                continue
+            if prefix.lower() == 'unbail':
+                for cp in current_projs:
+                    unbail_at[cp].extend(data.split(','))
                 continue
             if prefix.lower() in ( 'project', 'proj' ):
                 cur_projs = data.split(',')
@@ -161,6 +166,8 @@ def process_potential_bolds(my_file):
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
+            if string_match(line, unbail_at):
+                broken = False
             if broken or code_exception(line): # letters settler readings don't count
                 if write_comp_file:
                     f.write(line)
