@@ -6,8 +6,10 @@
 # to-do (but very low priority):
 #    track anything in more than one ignore_local
 #    allow for custom ignoring in def bolded_caps based on project
-#    allow for optional dashes or slashes in long string
+#    allow for optional dashes or slashes in long string (dashes: done)
 #    allow for leading articles e.g. [b]A MOTTO[r] instead of A [b]MOTTO[r] <- this is hard coded right now
+#    one-offs: allow for a certain potentially suspicious word to get 1 or more than 1 tries, but flag it
+#    fish for words in multiple project ignores to see if maybe they go in the general ignores
 
 import mytools as mt
 import sys
@@ -84,6 +86,9 @@ def get_ignores():
             if line.startswith(";"):
                 break
             (prefix, data) = mt.cfg_data_split(line)
+            if prefix.lower() == 'projects':
+                current_projs = data.split(',')
+                continue
             if prefix.lower() == 'bail':
                 for cp in current_projs:
                     bail_at[cp].extend(data.split(','))
@@ -93,10 +98,10 @@ def get_ignores():
                     unbail_at[cp].extend(data.split(','))
                 continue
             if prefix.lower() in ( 'project', 'proj' ):
-                cur_projs = data.split(',')
+                current_projs = data.split(',')
                 continue
             if prefix.lower == 'unignore':
-                if 'global' in cur_projs:
+                if 'global' in current_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
                     continue
                 for x in line.strip().split(','):
@@ -200,6 +205,7 @@ def process_potential_bolds(my_file):
                         f.write(line)
                     continue
                 count += 1
+                out_string = zap_nested_brax(out_string)
                 if show_line_count:
                     out_string = "{} {}".format(line_count, new_quote)
                 if show_count:
@@ -312,5 +318,5 @@ if list_caps:
 if stderr_text:
     print(stderr_text)
 
-if write_comp_file:
+if write_comp_file and os.path.exists(comp_file):
     os.remove(comp_file)
