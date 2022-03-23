@@ -37,6 +37,9 @@ clip = False
 list_caps = False
 write_comp_file = False
 just_find_stuff = False
+bold_dashes = True
+
+what_to_find_string = "A-Z "
 
 bold_ignores = "c:/writing/scripts/boldi.txt"
 comp_file = "c:/writing/temp/bold-py-temp-file.txt"
@@ -120,7 +123,7 @@ def maybe_bold(my_str):
     return '[b]{}[r]'.format(my_str)
 
 def bolded_caps(my_str):
-    x = re.sub(r"(?<!(\[b\]))\b([A-Z] )*([A-Z]{2,}[A-Z ]*[A-Z])\b", lambda x: maybe_bold(x.group(0)), my_str)
+    x = re.sub(r"(?<!(\[b\]))\b([A-Z] )*([A-Z]+[{}]*[A-Z])\b".format(what_to_find_string), lambda x: maybe_bold(x.group(0)), my_str)
     x = x.replace("[b][b]", "[b]")
     x = x.replace("[r][r]", "[r]")
     x = x.replace("[first custom style][b]", "[first custom style]") # ugh, this is a horrible hack, but for Shuffling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
@@ -222,6 +225,10 @@ while cmd_count < len(sys.argv):
         mt.npo(main.__file__)
     elif arg in ( 'ec', 'ed', 'ei', 'ce', 'de', 'ie' ):
         mt.npo(bold_ignores)
+    elif arg in ( 'dn', 'nd' ):
+        bold_dashes = False
+    elif arg in ( 'dy', 'yd' ):
+        bold_dashes = True
     elif arg in ( 'sn', 'ns' ):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
@@ -248,6 +255,9 @@ while cmd_count < len(sys.argv):
     else:
         usage()
     cmd_count += 1
+
+if bold_dashes:
+    what_to_find_string += '-'
 
 if len(file_includes) and len(file_excludes):
     sys.exit("You can only have one of w+ and w- to include or exclude files.")
