@@ -82,6 +82,9 @@ def zap_nested_brax(my_string):
 
 def bold_cfg_array_of(my_data):
     dary = my_data.strip().split(',')
+    for x in dary:
+        if x.endswith('`'):
+            print("WARNING match string cannot end with backtick/comma:", my_data)
     return [x.replace('`', ',').replace('~', ',') for x in dary]
 
 def get_ignores():
@@ -121,7 +124,6 @@ def get_ignores():
                             continue
                         unignore[cp].append(x)
                 continue
-            print(current_projs, bold_cfg_array_of(line))
             for x in bold_cfg_array_of(line):
                 for cp in current_projs:
                     if x in ignores[cp] or x in ignore_auxiliary[cp]:
@@ -180,6 +182,17 @@ def string_match(my_line, my_dict):
         if ia in my_line:
             return True
     return False
+
+def bold_modify(my_line):
+    by_quotes = my_line.split('"')
+    new_ary = []
+    for x in range(0, len(by_quotes)):
+        if x % 2 == 0:
+            new_ary.append(by_quotes[x])
+        else:
+            new_ary.append(bolded_caps(by_quotes[x]))
+    new_quote = '"'.join(new_ary)
+    return special_mod(new_quote)
 
 def process_potential_bolds(my_file):
     count_err_lines = 0
