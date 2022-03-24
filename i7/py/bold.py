@@ -42,6 +42,7 @@ write_comp_file = False
 just_find_stuff = False
 ignore_single_word_quote = True
 bold_dashes = True
+bold_commas = True
 only_one = False
 find_copy_paste_stuff = False
 
@@ -262,6 +263,10 @@ while cmd_count < len(sys.argv):
         bold_dashes = False
     elif arg in ( 'dy', 'yd' ):
         bold_dashes = True
+    elif arg in ( 'bcn', 'nbc' ):
+        bold_commas = False
+    elif arg in ( 'bcy', 'ybc' ):
+        bold_commas = True
     elif arg in ( 'sn', 'ns' ):
         stderr_now = True
     elif arg in ( 'sl', 'ls' ):
@@ -293,6 +298,8 @@ while cmd_count < len(sys.argv):
         usage()
     cmd_count += 1
 
+if bold_commas:
+    what_to_find_string += ','
 if bold_dashes:
     what_to_find_string += '-'
 
