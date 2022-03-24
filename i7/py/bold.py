@@ -42,6 +42,7 @@ write_comp_file = False
 just_find_stuff = False
 ignore_single_word_quote = True
 bold_dashes = True
+only_one = False
 
 what_to_find_string = "A-Z "
 
@@ -235,12 +236,20 @@ def process_potential_bolds(my_file):
             return
         print("Line/bold-text differences:", count_err_lines, count_total_bolds)
         mt.wm(my_file, comp_file)
+    if only_one and count_err_lines:
+        print("Bailing after first file difference.")
+        if not stderr_now:
+            sys.stderr.write(this_stderr_text)
+        sys.exit()
 
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
     (arg, val, found_val) = mt.parnum(sys.argv[cmd_count])
-    if arg == 'c':
+    argraw = sys.argv[cmd_count]
+    if argraw == 'o1':
+        only_one = True
+    elif arg == 'c':
         clip = True
     elif arg == 'l':
         list_caps = True
