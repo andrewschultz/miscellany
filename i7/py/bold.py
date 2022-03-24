@@ -170,11 +170,13 @@ def string_match(my_line, my_dict):
     return False
 
 def process_potential_bolds(my_file):
-    count = 0
+    count_err_lines = 0
+    count_total_bolds = 0
     if write_comp_file:
         f = open(comp_file, "w", newline='')
     broken = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
+    mfb = os.path.basename(my_file)
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if string_match(line, unbail_at):
@@ -204,21 +206,22 @@ def process_potential_bolds(my_file):
                     if write_comp_file:
                         f.write(line)
                     continue
-                count += 1
+                count_err_lines += 1
+                count_total_bolds += new_quote.count('[b]') - lr.count('[b]')
                 out_string = zap_nested_brax(out_string)
                 if show_line_count:
                     out_string = "{} {}".format(line_count, new_quote)
                 if show_count:
-                    out_string = "{} {}".format(count, new_quote)
-                if max_errors and count > max_errors:
-                    if count == max_errors + 1:
+                    out_string = "{} {}".format(count_err_lines, new_quote)
+                if max_errors and count_err_lines > max_errors:
+                    if count_err_lines == max_errors + 1:
                         print("Reached maximum errors. Adjust with m#.")
                     out_string = lr.rstrip()
                 else:
                     print(out_string)
             if write_comp_file:
                 f.write(out_string + "\n")
-    this_stderr_text = "{} {} has {} total boldable lines.\n".format('=' * 50, my_file, count)
+    this_stderr_text = "{} {} has {} total bold line candidates, {} total bold word/phrase candidates.\n".format('=' * 50, mfb, count_err_lines, count_total_bolds)
     if stderr_now:
         sys.stderr.write(this_stderr_text)
     else:
@@ -226,11 +229,11 @@ def process_potential_bolds(my_file):
         stderr_text += this_stderr_text
     if write_comp_file:
         f.close()
-        if count == 0:
+        if count_err_lines == 0:
             if not cmp(my_file, comp_file):
-                print("Newline differences between {} and {}.".format(my_file, comp_file))
+                print("Newline differences between {} and {}.".format(mfb, comp_file))
             return
-        print("Total differences:", count)
+        print("Line/bold-text differences:", count_err_lines, count_total_bolds)
         mt.wm(my_file, comp_file)
 
 cmd_count = 1
