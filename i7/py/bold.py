@@ -43,6 +43,9 @@ just_find_stuff = False
 ignore_single_word_quote = True
 bold_dashes = True
 only_one = False
+find_copy_paste_stuff = False
+
+test_array = []
 
 what_to_find_string = "A-Z "
 
@@ -75,6 +78,10 @@ def zap_nested_brax(my_string):
             brax_depth -= 1
     return out_string
 
+def bold_cfg_array_of(my_data):
+    dary = my_data.strip().split(',')
+    return [x.replace('`', ',').replace('~', ',') for x in dary]
+
 def get_ignores():
     if not os.path.exists(bold_ignores):
         print("No ignores file {}.".format(bold_ignores))
@@ -88,31 +95,32 @@ def get_ignores():
                 break
             (prefix, data) = mt.cfg_data_split(line)
             if prefix.lower() == 'projects':
-                current_projs = data.split(',')
+                current_projs = bold_cfg_array_of(data)
                 continue
             if prefix.lower() == 'bail':
                 for cp in current_projs:
-                    bail_at[cp].extend(data.split(','))
+                    bail_at[cp].extend(bold_cfg_array_of(data))
                 continue
             if prefix.lower() == 'unbail':
                 for cp in current_projs:
-                    unbail_at[cp].extend(data.split(','))
+                    unbail_at[cp].extend(bold_cfg_array_of(data))
                 continue
             if prefix.lower() in ( 'project', 'proj' ):
-                current_projs = data.split(',')
+                current_projs = bold_cfg_array_of(data)
                 continue
             if prefix.lower == 'unignore':
                 if 'global' in current_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
                     continue
-                for x in line.strip().split(','):
+                for x in bold_cfg_array_of(data):
                     for cp in current_projs:
                         if x in unignores[cp]:
                             print("duplicate unignore {} at line {}, for project {}.".format(x, line_count, cp))
                             continue
                         unignore[cp].append(x)
                 continue
-            for x in line.strip().split(','):
+            print(current_projs, bold_cfg_array_of(line))
+            for x in bold_cfg_array_of(line):
                 for cp in current_projs:
                     if x in ignores[cp] or x in ignore_auxiliary[cp]:
                         print("duplicate ignore {} at line {}, for project {}.".format(x, line_count, cp))
@@ -192,16 +200,7 @@ def process_potential_bolds(my_file):
                     f.write(line)
                 continue
             lr = line.rstrip()
-            by_quotes = lr.split('"')
-            new_ary = []
-            for x in range(0, len(by_quotes)):
-                if x % 2 == 0:
-                    new_ary.append(by_quotes[x])
-                else:
-                    new_ary.append(bolded_caps(by_quotes[x]))
-            new_quote = '"'.join(new_ary)
-            new_quote = special_mod(new_quote)
-            out_string = new_quote
+            out_string = new_quote = bold_modify(lr)
             if new_quote != lr:
                 if string_match(lr, ignore_auxiliary) or zap_nested_brax(new_quote) == zap_nested_brax(lr): # we ignore strings we acknowledge are ok, as well as stuff inside an IF statement
                     if write_comp_file:
@@ -253,6 +252,8 @@ while cmd_count < len(sys.argv):
         clip = True
     elif arg == 'l':
         list_caps = True
+    elif arg == 'cp':
+        find_copy_paste_stuff = True
     elif arg == 'es':
         mt.npo(main.__file__)
     elif arg in ( 'ec', 'ed', 'ei', 'ce', 'de', 'ie' ):
@@ -308,8 +309,25 @@ if clip:
     orig = pyperclip.paste()
     final = bolded_caps(orig)
     print(final)
-else:
-    get_ignores()
+    sys.exit()
+
+get_ignores()
+if find_copy_paste_stuff:
+    cp = pyperclip.paste()
+    test_array = [x for x in cp.split("\n") if x]
+
+if len(test_array):
+    for this_line in test_array:
+        if not this_line:
+            continue
+        temp = bold_modify(this_line)
+        print(this_line)
+        if temp == this_line:
+            print("IDENTICAL")
+        else:
+            print(temp)
+    sys.exit()
+
     for x in i7.i7f[my_project]:
         if len(file_includes) and not in_match(x, file_includes):
             continue
