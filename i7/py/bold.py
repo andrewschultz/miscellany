@@ -44,6 +44,7 @@ ignore_single_word_quote = True
 bold_dashes = True
 bold_commas = True
 only_one = False
+exact_find = False
 find_copy_paste_stuff = False
 
 test_array = []
@@ -133,9 +134,10 @@ def get_ignores():
 
 def just_find(my_file, stuff_to_find):
     mfb = os.path.basename(my_file)
+    search_string = r'(\b|\]){}{}'.format(stuff_to_find, r'\b' if exact_find else "")
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
-            if re.search(r"(?<!(\[b\])){}\b".format(stuff_to_find), line):
+            if re.search(search_string, line):
                 print(mfb, line_count, line.rstrip())
 
 def maybe_bold(my_str):
@@ -277,7 +279,12 @@ while cmd_count < len(sys.argv):
         ignore_single_word = False
     elif arg[:2] in ( 'j:', 'j=' ):
         just_find_stuff = True
+        exact_find = True
         find_string = '|'.join(arg[2:].upper().split(','))
+    elif arg[:3] in ( 'ja:', 'ja=' ):
+        just_find_stuff = True
+        exact_find = False
+        find_string = '|'.join(arg[3:].upper().split(','))
     elif arg == 'm':
         if not found_val:
             sys.exit("Need value after m.")
