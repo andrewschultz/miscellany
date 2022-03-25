@@ -894,7 +894,7 @@ def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
             if os.path.exists(next_try): return next_try
     sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
 
-def read_latest_proj():
+def read_latest_project():
     global latest_project_abbr
     global latest_project_long
     with open(i7_temp_config) as file:
@@ -911,7 +911,9 @@ def read_latest_proj():
                 print("WARNING i7d.txt bad temp-config line {} = {}".format(line_count, line.strip()))
     return (latest_project_abbr, latest_project_long)
 
-def write_latest_proj(proj_to_write):
+read_latest_proj = read_latest_project
+
+def write_latest_project(proj_to_write):
     file_write_string = ''
     any_diff = False
     any_current = False
@@ -930,9 +932,12 @@ def write_latest_proj(proj_to_write):
         print("Not writing latest project file as I found no current= line.")
     elif not any_diff:
         print("Not writing latest project file as default project wasn't changed: {} is already the default project.".format(proj_to_write))
+        return
     f = open(i7_temp_config, "w")
     f.write(file_write_string)
     f.close()
+
+write_latest_proj = write_latest_project
 
 def see_uniq_and_vers(args):
     if args[0] == '-': args = args[1:]
