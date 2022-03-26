@@ -275,6 +275,9 @@ while cmd_count < len(sys.argv):
         list_caps = True
     elif arg == 'cp':
         find_copy_paste_stuff = True
+    elif arg == 't' and found_val:
+        f = open("c:/writing/scripts/bold-test-{}.txt")
+        test_array_extend([x for x in f.readlines() if x and not x.startswith('#') and not x.startswith(';')])
     elif arg == 'es':
         mt.npo(main.__file__)
     elif arg in ( 'ec', 'ed', 'ei', 'ce', 'de', 'ie' ):
@@ -349,6 +352,7 @@ if find_copy_paste_stuff:
     test_array = [x for x in cp.split("\n") if x]
 
 if len(test_array):
+    test_array = list(dict.fromkeys(test_array))
     for this_line in test_array:
         if not this_line:
             continue
