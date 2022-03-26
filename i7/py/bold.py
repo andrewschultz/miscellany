@@ -84,8 +84,10 @@ def bold_cfg_array_of(my_data):
     dary = my_data.strip().split(',')
     for x in dary:
         if x.endswith('`'):
-            print("WARNING match string cannot end with backtick/comma:", my_data)
-    return [x.replace('`', ',').replace('~', ',') for x in dary]
+            print("WARNING match string cannot end with backtick/comma:", x)
+        if x != x.strip():
+            print("WARNING match string was stripped of end/start whitespace <{}>".format(x))
+    return [x.replace('`', ',').replace('~', ',').strip() for x in dary]
 
 def get_ignores():
     if not os.path.exists(bold_ignores):
@@ -364,15 +366,15 @@ if len(test_array):
             print(temp)
     sys.exit()
 
-    for x in i7.i7f[my_project]:
-        if len(file_includes) and not in_match(x, file_includes):
-            continue
-        if len(file_excludes) and in_match(x, file_excludes):
-            continue
-        if just_find_stuff:
-            just_find(x, find_string)
-            continue
-        process_potential_bolds(x)
+for x in i7.i7f[my_project]:
+    if len(file_includes) and not in_match(x, file_includes):
+        continue
+    if len(file_excludes) and in_match(x, file_excludes):
+        continue
+    if just_find_stuff:
+        just_find(x, find_string)
+        continue
+    process_potential_bolds(x)
 
 if list_caps:
     counts_list = sorted(list(counts))
