@@ -156,12 +156,17 @@ def bolded_caps(my_str):
     x = re.sub(r"(?<!(\[b\]))\b([A-Z] )*([A-Z]+[{}]*[A-Z])\b".format(what_to_find_string), lambda x: maybe_bold(x.group(0)), my_str)
     x = x.replace("[b][b]", "[b]")
     x = x.replace("[r][r]", "[r]")
-    x = x.replace("[first custom style][b]", "[first custom style]") # ugh, this is a horrible hack, but for Shuffling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
+    x = x.replace("[first custom style][b]", "[first custom style]") # ugh, this is a horrible hack, but for Shuffling/Roiling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
+    x = x.replace("[second custom style][b]", "[second custom style]") # ugh, this is a horrible hack, but for Shuffling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
+    x = x.replace("[bluetext][b]", "[bluetext]") # ugh, this is a horrible hack, but for Shuffling, we want to be able to keep red CAPS text ... we could allow for permissible_previous e.g. SA/[first custom style] but it is feature creep
+    x = x.replace("[i][b]", "[i]") # this too ... but it happens in some cases ... we should maybe toggle this option?
     x = re.sub(r"(\[b\][ A-Z:']+)\[b\]", r'\1', x)
     return x
 
 def code_exception(my_line):
-    if "a-text" in my_line or "b-text" in my_line or my_line.startswith("understand"):
+    if "a-text" in my_line or "b-text" in my_line:
+        return True
+    if my_line.startswith("understand") and "as a mistake" not in my_line:
         return True
     return False
 
