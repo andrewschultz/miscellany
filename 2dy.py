@@ -500,7 +500,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     if bail:
         sys.exit()
 
-def put_stats(bail = True, print_on_over = 0, check_floor = False):
+def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
     os.chdir("c:/writing/daily")
     f = open(stats_file, "a")
     ld = mt.last_daily_of()
@@ -820,7 +820,8 @@ while cmd_count < len(sys.argv):
             put_stats(print_on_over = int(arg[2:]))
         else:
             put_stats()
-    elif arg == 'psr': put_stats(check_floor = True)
+    elif arg == 'psr': put_stats(launch_iff_new_k = True)
+    elif arg == 'psf': put_stats(launch_iff_new_k = False)
     elif arg == 'bs': write_base_stats = False
     elif arg == 'ss': stat_sort()
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
