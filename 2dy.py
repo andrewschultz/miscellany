@@ -45,6 +45,7 @@ minimum_seconds_between = 3000
 latest_daily = True
 write_base_stats = True
 run_weekly_check = False
+force_stats = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -53,6 +54,7 @@ daily_done = "c:/writing/daily/done"
 my_daily_dir = daily
 
 stats_file = "c:/writing/temp/daily-stats.txt"
+old_stats_file = "c:/writing/temp/daily-stats.txt"
 
 file_header = ""
 
@@ -519,7 +521,7 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
     f.write(out_string + "\n")
     f.close()
 
-    if check_floor:
+    if launch_iff_new_k:
         f = open(stats_file)
         ary = mt.filelines_no_comments(f)
         f.close()
@@ -753,6 +755,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
     elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
+    elif arg == 'fs': force_stats = True
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
     elif arg == 'wc':
         try:
