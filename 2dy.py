@@ -575,6 +575,21 @@ def move_to_proc(my_dir = "c:/writing/daily"):
     if 'daily' not in my_dir:
         sys.exit("Bailing since we're using non-daily directory.")
 
+def stat_sort():
+    f = open(stats_file)
+    raw_stat_lines = f.readlines()
+    last_bump_up = final_index = 0
+    for x in range(0, len(raw_stat_lines)):
+        if raw_stat_lines[x].startswith('#'):
+            continue
+        if raw_stat_lines[x].startswith(';'):
+            final_index = x
+            break;
+        ary = x.split('\t')
+    f.close()
+    if not last_bump_up:
+        print("Nothing to shuffle over.")
+
 def usage(param = 'Cmd line usage'):
     print(param)
     print('=' * 50)
@@ -789,6 +804,7 @@ while cmd_count < len(sys.argv):
             put_stats()
     elif arg == 'psr': put_stats(check_floor = True)
     elif arg == 'bs': write_base_stats = False
+    elif arg == 'ss': stat_sort()
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
