@@ -42,6 +42,11 @@ max_days_back = 1000
 goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
 
+GRAPH_LAUNCH_NEVER = 0
+GRAPH_LAUNCH_NO_K_JUMP = 1
+GRAPH_LAUNCH_ONLY_K_JUMP = 2
+GRAPH_LAUNCH_ALWAYS = GRAPH_LAUNCH_NO_K_JUMP | GRAPH_LAUNCH_ONLY_K_JUMP
+
 latest_daily = True
 write_base_stats = True
 run_weekly_check = False
@@ -736,7 +741,7 @@ cmd_count = 1
 read_2dy_cfg()
 
 while cmd_count < len(sys.argv):
-    (arg, num) = mt.parnum(sys.argv[cmd_count], allow_float = True)
+    (arg, num, valid_num) = mt.parnum(sys.argv[cmd_count], allow_float = True)
     if arg == 'f':
         files_back_wanted = num
         latest_daily = False
@@ -754,6 +759,7 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
+    elif arg == 'eo': mt.npo(old_stats_file)
     elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
     elif arg == 'fs': force_stats = True
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
