@@ -284,7 +284,8 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = False, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0, temp_file = False):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = GRAPH_LAUNCH_NEVER, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0, temp_file = False, data_back = 0):
+    data_back = abs(data_back)
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[-abs(file_index)])
@@ -303,8 +304,8 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         if ary[0].lower() == this_file.lower():
             relevant_stats.append(this_line)
 
+    datetime_strings = []
     times = []
-
     sizes = []
     color_array = []
     shape_array = []
@@ -328,6 +329,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     for r in relevant_stats:
         ary = r.strip().split("\t")
         my_time = pendulum.parse(ary[1])
+        datetime_strings.append(my_time)
         times.append((my_time - pendulum.from_timestamp(0)).total_seconds() / 86400)
         sizes.append(int(ary[2]))
         if len(sizes) == 1:
@@ -349,21 +351,34 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     init_from_epoch = (first_time - pendulum.from_timestamp(0)).total_seconds() / 86400
 
+    if data_back:
+        times = times[:-data_back]
+        sizes = sizes[:-data_back]
+        color_array = color_array[:-data_back]
+        shape_array = shape_array[:-data_back]
+        datetime_strings = datetime_strings[:-data_back]
+
     times = np.array(times)
     sizes = np.array(sizes)
 
     (a, b) = np.polyfit(times, sizes, 1)
     b0 = b + a * init_from_epoch
-    my_label = "{}\nbytes={:.2f}*days({:.2f}*hours){}{:.2f}".format(my_time.to_day_datetime_string(), a, a/24, '+' if b0 > 0 else '', b0)
+    #my_label = "{}\nbytes={:.2f}*days({:.2f}*hours){}{:.2f}".format(time_strings[-data_back-1].to_day_datetime_string(), a, a/24, '+' if b0 > 0 else '', b0)
 
-    my_graph_graphic = "c:/writing/temp/{}daily-{}{}".format('temp-' if temp_file else '', 'past-' if abs(file_index) > 1 else '', my_time.format("YYYY-MM-DD-HH.png"))
+    my_label = "{}\nbytes={:.2f}*days({:.2f}*hours){}{:.2f}".format(datetime_strings[-1].to_day_datetime_string(), a, a/24, '+' if b0 > 0 else '', b0)
+
+    my_graph_graphic = "c:/writing/temp/{}daily-{}{}.png".format('temp-' if temp_file else '', 'past-' if abs(file_index) > 1 else '', datetime_strings[-1].format("YYYY-MM-DD-HH"))
+
+    should_i_launch = False
+    final_thousands_delta = sizes[-1] // 1000 - sizes[-2] // 1000
 
     if not overwrite and os.path.exists(my_graph_graphic):
         print(my_graph_graphic, "already exists. I am not overwriting it. Use the -gso flag or specify files back, e.g. gs1 to override this reject.{}".format("" if launch_present else " -gsl launches."))
         if launch_present and TOTAL_BYTES:
             mt.text_in_browser(my_graph_graphic)
-        if bail and not (graph_type and HOURLY_BYTES):
+        if bail:
             sys.exit()
+        return
 
     mso = mt.modified_size_of(this_file)
     if mso > current_size:
@@ -793,7 +808,10 @@ while cmd_count < len(sys.argv):
             graph_stats(graph_type = HOURLY_BYTES | TOTAL_BYTES, weight = float(arg[3:]))
         else:
             graph_stats(graph_type = HOURLY_BYTES | TOTAL_BYTES)
-    elif arg == 'gsl': graph_stats(overwrite = True, launch_present = True)
+    elif arg == 'gsd': graph_stats(overwrite = True, launch_present = GRAPH_LAUNCH_NO_K_JUMP) # this is for daily launches
+    elif arg == 'gsh':
+        graph_stats(overwrite = False, launch_present = GRAPH_LAUNCH_ALWAYS, data_back = num)
+    elif arg == 'gsl': graph_stats(overwrite = True, launch_present = GRAPH_LAUNCH_ALWAYS)
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gst': graph_stats(overwrite = True, temp_file = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
