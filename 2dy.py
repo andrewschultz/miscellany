@@ -159,7 +159,7 @@ def date_match(line_1, line_2):
         print(line_1)
         print(line_2)
         sys.exit()
-    return d1[1][:10] == d2[1][:10] # we may need to tighten this up later e.g. x.replace('-', '')[:8], but the dates have dashes for now
+    return d1[0] == d2[0] and d1[1][:10] == d2[1][:10] # we may need to tighten this up later e.g. x.replace('-', '')[:8], but the dates have dashes for now
 
 def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
@@ -518,10 +518,10 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
         try:
             last_time = pendulum.parse(my_stuff[-1].split("\t")[1])
             cur_diff = pn.diff(last_time).in_seconds()
-            if cur_diff < minimum_seconds_between:
-                sys.exit("It's been too soon since the last time I looked at the daily file size. {} seconds and minimum is {}. Use -fs to override this.".format(cur_diff, minimum_seconds_between))
         except:
             print("No readable data in {}, so I can't check if it's being run too soon. It probably isn't.".format(stats_file))
+        if cur_diff < minimum_seconds_between and not force_stats:
+            sys.exit("It's been too soon since the last time I looked at the daily file size. {} seconds and minimum is {}. Use -fs to override this.".format(cur_diff, minimum_seconds_between))
     out_string = "{}\t{}\t{}".format(ld, pn, os.stat(ld).st_size)
     f.write(out_string + "\n")
     f.close()
@@ -788,8 +788,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'gs':
         file_index = num
         if file_index == 0:
-            print("Note: this is not zero-based. Rather, it starts at 1, or -1, as the most recent (element -1 in an array).")
-        graph_stats(file_index = file_index, overwrite = True)
+            if valid_num:
+                print("Note: 2dy.py graphing indices are not zero-based. Rather, they stat at 1, or -1, as the most recent (element -1 in an array). So I am setting the index to -1/1.")
+            file_index = -1
+        graph_stats(file_index = file_index, overwrite = False)
     elif arg == 'gsd': graph_stats(graph_type = HOURLY_BYTES)
     elif arg[:3] == 'gsd':
         my_floor = 0
