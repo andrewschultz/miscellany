@@ -20,6 +20,8 @@ mod_link = defaultdict(str)
 timestamp = defaultdict(int)
 gone_files = defaultdict(int)
 
+orphaned_file_flags = 0
+
 wild_cards = ''
 
 write_to_file = False
@@ -34,6 +36,7 @@ def usage(header = 'usage'):
     print("w = write to file")
     print("w= = wild card")
     print("wp/pw = write current project to i7 data file")
+    print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
     sys.exit()
 
 def find_binary_in(a_file):
@@ -66,7 +69,7 @@ def now_of(my_time):
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
+    (arg, num, valid_num) = mt.parnum(sys.argv[cmd_count], allow_float = True)
     temp_proj = i7.main_abb(arg)
     if temp_proj:
         my_proj = temp_proj
@@ -77,6 +80,10 @@ while cmd_count < len(sys.argv):
         wild_cards = arg[2:]
     elif arg in ( 'wp', 'pw' ):
         write_current_project = True
+    elif arg == 'o':
+        orphaned_file_flags = num
+    elif arg == 'oa':
+        orphaned_file_flags = -1
     elif arg == '?':
         usage()
     else:
@@ -100,11 +107,26 @@ prefix = "reg-{}".format(my_proj)
 
 os.chdir(i7.prt)
 
+orphaned_files = []
+original_dir = i7.proj2dir(my_proj)
+
+ORPHANED_WARN = 1
+ORPHANED_SKIPCHECKING = 2
+
 with open(os.path.join(i7.prt, "logfile.txt")) as file:
     for (line_count, line) in enumerate (file, 1):
         if not line.startswith(prefix):
             continue
         ary = line.strip().split("\t")
+        if orphaned_file_flags:
+            original_file = os.path.join(original_dir, ary[0])
+            if not os.path.exists(original_file):
+                if original_file not in orphaned_files:
+                    orphaned_files.append(original_file)
+                    if orphaned_file_flags | ORPHANED_WARN:
+                        print("Found orphaned file line {}: {}".format(line_count, ary[0]))
+                if orphaned_file_flags | ORPHANED_SKIPCHECKING:
+                    continue
         if ary[1] == '0':
             last_success[ary[0]] = now_of(ary[2])
             last_success_time_taken[ary[0]] = ary[3]
@@ -138,6 +160,12 @@ center_write("Still errors")
 html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_errs, mod_link ])
 center_write("Passing")
 html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ])
+
+if len(orphaned_files):
+    f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(orphaned_files)))
+    for x in orphaned_files:
+        f.write("<li>{}</li>\n".format(x))
+    f.write("</ul>\n")
 
 f.write("</body>\n</html>\n".format(my_proj))
 
