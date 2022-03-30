@@ -49,13 +49,18 @@ def find_binary_in(a_file):
     print("Warning no game file found in {}".format(a_file))
     return ''
 
-def center_write(my_text):
-    f.write("<center><font size=+4>{}</font></center>".format(my_text))
+def center_write(my_text, my_num = 0):
+    f.write("<center><font size=+4>{}{}</font></center>".format(my_text, '' if my_num == 0 else '({})'.format(my_num)))
 
-def html_table_make(val_array, array_of_dict):
+
+def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time of day', 'Errors', 'Last test run length', 'Modified' ]):
     if len(val_array) == 0:
         f.write("<center><font size=+4>(nothing found, no table created)</font></center>\n")
     f.write("<center><table border=1>")
+    header_string = ""
+    for h in header_array:
+        header_string += "<th>{}</th>".format(h)
+    f.write(header_string + "\n")
     for x in sorted(val_array):
         f.write("<tr><td>{}</td>".format(x))
         for y in array_of_dict:
@@ -81,7 +86,10 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'wp', 'pw' ):
         write_current_project = True
     elif arg == 'o':
-        orphaned_file_flags = num
+        if not valid_num:
+            orphaned_file_flags = -1
+        else:
+            orphaned_file_flags = num
     elif arg == 'oa':
         orphaned_file_flags = -1
     elif arg == '?':
@@ -132,7 +140,7 @@ with open(os.path.join(i7.prt, "logfile.txt")) as file:
             last_success_time_taken[ary[0]] = ary[3]
         last_run[ary[0]] = now_of(ary[2])
         timestamp[ary[0]] = round(float(ary[2]))
-        last_run_time_taken[ary[0]] = ary[3]
+        last_run_time_taken[ary[0]] = "{:.2f} sec".format(float(ary[3]))
         last_errs[ary[0]] = int(ary[1])
         if not my_binary:
             my_binary = find_binary_in(ary[0])
@@ -153,12 +161,12 @@ f.write("<html><title>LOG RUNS FOR {}</title>\n<body>\n".format(my_proj))
 if len(never_pass) == 0:
     f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
-    center_write("Never passed")
-    html_table_make(never_pass, [ raw_link, last_run, last_errs, mod_link ])
+    center_write("Never passed", len(never_pass))
+    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, mod_link ])
 
-center_write("Still errors")
+center_write("Still errors", len(still_errs))
 html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_errs, mod_link ])
-center_write("Passing")
+center_write("Passing", len(passed))
 html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ])
 
 if len(orphaned_files):
