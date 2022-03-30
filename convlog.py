@@ -23,9 +23,18 @@ gone_files = defaultdict(int)
 wild_cards = ''
 
 write_to_file = False
+write_current_project = False
+read_i7_default_project = False
 
 my_binary = ''
 my_proj = ''
+
+def usage(header = 'usage'):
+    print('=' * 20 + header + '=' * 20)
+    print("w = write to file")
+    print("w= = wild card")
+    print("wp/pw = write current project to i7 data file")
+    sys.exit()
 
 def find_binary_in(a_file):
     with open(a_file) as file:
@@ -66,12 +75,19 @@ while cmd_count < len(sys.argv):
     elif arg.startswith("w="):
         write_to_file = True
         wild_cards = arg[2:]
+    elif arg in ( 'wp', 'pw' ):
+        write_current_project = True
+    elif arg == '?':
+        usage()
+    else:
+        usage('invalid command {}'.format(arg))
     cmd_count += 1
 
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
         my_proj = i7.read_latest_proj()[0]
+        read_i7_default_project = True
         if not my_proj:
             sys.exit("No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project.")
         print("Pulling project from CFG", my_proj)
@@ -113,8 +129,9 @@ f = open(out_file, "w")
 f.write("<html><title>LOG RUNS FOR {}</title>\n<body>\n".format(my_proj))
 
 if len(never_pass) == 0:
-    f.write("All files have passed at one time or another.\n")
+    f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
+    center_write("Never passed")
     html_table_make(never_pass, [ raw_link, last_run, last_errs, mod_link ])
 
 center_write("Still errors")
@@ -171,6 +188,11 @@ if write_to_file:
         print("Wrote re-run script to", todays_date)
         if total_commands == 0:
             print("No commands were sent to the command file with wildcard {}, even though error files were found.".format(wild_cards))
+
+if write_current_project:
+    i7.write_latest_project(my_proj)
+elif read_i7_default_project:
+    print("Note we can write a new default project with -wp or -pw.")
 
 os.system(out_file)
 #g = glob.glob("c:/games/inform/prt/reg-{}-*.txt".format(my_proj))

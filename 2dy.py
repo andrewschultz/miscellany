@@ -60,6 +60,7 @@ my_daily_dir = daily
 
 stats_file = "c:/writing/temp/daily-stats.txt"
 old_stats_file = "c:/writing/temp/daily-stats.txt"
+information_file = "c:/writing/scripts/2dyinfo.txt"
 
 file_header = ""
 
@@ -759,6 +760,10 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nv', 'vn' ): verbose = False
     elif arg == 'e': mt.npo(my_sections_file)
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
+    elif arg in ( 'ei', 'ie' ): mt.npo(information_file)
+    elif mt.alpha_match('eit', arg):
+        os.system("type {}".format(os.path.normpath(information_file)))
+        sys.exit()
     elif arg == 'eo': mt.npo(old_stats_file)
     elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
     elif arg == 'fs': force_stats = True
