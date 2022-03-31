@@ -21,11 +21,11 @@ mod_link = defaultdict(str)
 timestamp = defaultdict(int)
 gone_files = defaultdict(int)
 
-orphaned_file_flags = 0
+orphaned_file_flags = 3
 
 wild_cards = ''
 
-write_to_file = False
+write_errors_to_script = False
 write_current_project = False
 read_i7_default_project = False
 
@@ -119,9 +119,9 @@ while cmd_count < len(sys.argv):
     elif arg[:2] == 'd=':
         delete_array = arg[2:].split(',')
     elif arg == 'w':
-        write_to_file = True
+        write_errors_to_script = True
     elif arg.startswith("w="):
-        write_to_file = True
+        write_errors_to_script = True
         wild_cards = arg[2:]
     elif arg in ( 'wp', 'pw' ):
         write_current_project = True
@@ -164,6 +164,10 @@ original_dir = i7.proj2dir(my_proj)
 ORPHANED_WARN = 1
 ORPHANED_SKIPCHECKING = 2
 
+orphan_count = 0
+
+del_cmd = ''
+
 with open(os.path.join(i7.prt, runs_logfile)) as file:
     for (line_count, line) in enumerate (file, 1):
         if not line.startswith(prefix):
@@ -175,7 +179,9 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
                 if original_file not in orphaned_files:
                     orphaned_files.append(original_file)
                     if orphaned_file_flags | ORPHANED_WARN:
-                        print("Found orphaned file line {}: {}".format(line_count, ary[0]))
+                        orphan_count += 1
+                        print("Found orphaned file (data, but not in original source directory) {} line {} of {}: {}".format(orphan_count, line_count, runs_logfile, ary[0]))
+                        del_cmd += "    convlog.py d={}\n".format(ary[0])
                 if orphaned_file_flags | ORPHANED_SKIPCHECKING:
                     continue
         if ary[1] == '0':
@@ -224,7 +230,8 @@ for x in last_run:
     x0 = os.path.realpath(x)
     if not os.path.exists(x0):
         if x0 not in gone_files:
-            print(x0, "could not be found. If it was moved, you may wish to delete it from the data.")
+            print(x0, "was in the PRT directory but not the source directory. If it was moved, you may wish to delete it from the data.")
+            del_cmd += "    convlog.py d={}\n".format(x)
             gone_files[x0] += 1
         continue
     if os.stat(x).st_mtime > timestamp[x]:
@@ -233,6 +240,10 @@ for x in last_run:
         f.write("{} modified after binary file {:.2f} seconds.<br />\n".format(x, os.stat(my_binary).st_mtime - timestamp[x]))
 
 f.close()
+
+if del_cmd:
+    print("Delete command:")
+    print(del_cmd)
 
 print("Spoiler alert: {} never passed, {} still have errors, {} passed.".format(len(never_pass), len(still_errs), len(passed)))
 
@@ -248,7 +259,7 @@ if len(never_pass):
     my_max = max(never_pass, key=last_errs.get)
     print("Most never-pass is {} with {}".format(my_max, last_errs[my_max]))
 
-if write_to_file:
+if write_errors_to_script:
     if total_errs == 0:
         sys.exit("No script to write.")
     else:
