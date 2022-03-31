@@ -39,6 +39,14 @@ def usage(header = 'usage'):
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
     sys.exit()
 
+def float_stub(x):
+    temp = re.sub(" .*", "", x)
+    try:
+        return float(temp)
+    except:
+        print("Unable to get a float from", temp)
+        return 0
+
 def find_binary_in(a_file):
     with open(a_file) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -195,6 +203,8 @@ print("Spoiler alert: {} never passed, {} still have errors, {} passed.".format(
 
 total_errs = len(still_errs) + len(never_pass)
 
+still_times = never_times = 0
+
 if len(still_errs):
     my_max = max(still_errs, key=last_errs.get)
     print("Most still-errs is {} with {}".format(my_max, last_errs[my_max]))
@@ -215,15 +225,30 @@ if write_to_file:
             if not wild_cards or re.search(wild_cards, x):
                 f.write("r1a {}\n".format(x))
                 total_commands += 1
+                still_times += float_stub(last_run_time_taken[x])
         f.write("##################still has errors above, never passed below\n")
         for x in never_pass:
             if not wild_cards or re.search(wild_cards, x):
                 f.write("r1a {}\n".format(x))
                 total_commands += 1
+                never_times += float_stub(last_run_time_taken[x])
+        if still_times:
+            f.write("# time for files still left: {}\n".format(still_times))
+        if never_times:
+            f.write("# time for files never passed: {}\n".format(never_times))
+        if still_times and never_times:
+            f.write("# total time for files still to pass: {}\n".format(still_times + never_times))
         f.close()
         print("Wrote re-run script to", todays_date)
         if total_commands == 0:
             print("No commands were sent to the command file with wildcard {}, even though error files were found.".format(wild_cards))
+
+if still_times:
+    print("# time for files still left: {}".format(still_times))
+if never_times:
+    print("# time for files never passed: {}".format(never_times))
+if still_times and never_times:
+    print("# total time for files still to pass: {}".format(still_times + never_times))
 
 if write_current_project:
     i7.write_latest_project(my_proj)
