@@ -8,6 +8,7 @@ import i7
 import glob
 import sys
 from collections import defaultdict
+from shutil import copy
 
 last_success = defaultdict(int)
 last_success_time_taken = defaultdict(int)
@@ -28,6 +29,10 @@ write_to_file = False
 write_current_project = False
 read_i7_default_project = False
 
+delete_array = []
+runs_logfile = 'logfile.txt'
+logfile_temp = 'logfile-temp.txt'
+
 my_binary = ''
 my_proj = ''
 
@@ -37,6 +42,31 @@ def usage(header = 'usage'):
     print("w= = wild card")
     print("wp/pw = write current project to i7 data file")
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
+    sys.exit()
+
+def zap_files(del_array):
+    f = open(runs_logfile)
+    ary = f.readlines()
+    out_string = ""
+    count = 0
+    my_dels = defaultdict(int)
+    for x in ary:
+        temp = x.split("\t")
+        if temp[0] in del_array:
+            my_dels[temp[0]] += 1
+            continue
+        out_string += x
+        count += 1
+    f.close()
+    if not count:
+        sys.exit("Didn't find any lines to delete.")
+    f = open(logfile_temp, 'w', newline='\n')
+    f.write(out_string)
+    f.close()
+    print("How much got erased, where:")
+    for x in sorted(my_dels):
+        print(x, my_dels[x])
+    copy(logfile_temp, runs_logfile)
     sys.exit()
 
 def float_stub(x):
@@ -86,6 +116,8 @@ while cmd_count < len(sys.argv):
     temp_proj = i7.main_abb(arg)
     if temp_proj:
         my_proj = temp_proj
+    elif arg[:2] == 'd=':
+        delete_array = arg[2:].split(',')
     elif arg == 'w':
         write_to_file = True
     elif arg.startswith("w="):
@@ -123,13 +155,16 @@ prefix = "reg-{}".format(my_proj)
 
 os.chdir(i7.prt)
 
+if delete_array:
+    zap_files(delete_array)
+
 orphaned_files = []
 original_dir = i7.proj2dir(my_proj)
 
 ORPHANED_WARN = 1
 ORPHANED_SKIPCHECKING = 2
 
-with open(os.path.join(i7.prt, "logfile.txt")) as file:
+with open(os.path.join(i7.prt, runs_logfile)) as file:
     for (line_count, line) in enumerate (file, 1):
         if not line.startswith(prefix):
             continue
