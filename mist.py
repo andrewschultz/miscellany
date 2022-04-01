@@ -490,11 +490,13 @@ if not write_file and not print_output and not to_clipboard:
 
 if len(added.keys()) == 0:
     x = i7.dir2proj(os.getcwd())
+    if not x:
+        sys.exit("Could not find a project from the current directory.")
     my_abb = i7.main_abb(x)
-    if x in i7.comr:
-        x2 = i7.comr[x]
+    if x in i7.i7comr:
+        x2 = i7.i7comr[x]
         if x2 != x:
-            print("You specified a project with an umbrella project. Use {} to see {} and not just {}.".format(x2, i7.com[x2], x))
+            print("You specified a project with an umbrella project. Use {} to see {} and not just {}.".format(x2, i7.i7com[x2], x))
     added[x] = True
     if not os.path.exists(i7.hdr(x, 'mi')):
         sys.exit("There is no mistake file for project {}.".format(x))
