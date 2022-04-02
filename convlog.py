@@ -109,6 +109,7 @@ def center_write(my_text, my_num = 0):
 def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time of day', 'Errors', 'Last test run length', 'Modified' ]):
     if len(val_array) == 0:
         f.write("<center><font size=+4>(nothing found, no table created)</font></center>\n")
+        return
     f.write("<center><table border=1>")
     header_string = ""
     for h in header_array:
@@ -246,7 +247,7 @@ else:
 center_write("Still errors", len(still_errs))
 html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_errs, mod_link ])
 center_write("Passing", len(passed))
-html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ])
+html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Modified' ])
 
 if len(extra_data_files):
     f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(extra_data_files)))
@@ -261,8 +262,8 @@ find_orphans(last_run)
 f.close()
 
 if del_cmd:
-    print("Delete command:")
-    print(del_cmd)
+    print("Delete-from-log command:")
+    print('\n'.join(sorted(del_cmd.rstrip().split("\n"))))
 
 print("Spoiler alert: {} never passed, {} still have errors, {} passed.".format(len(never_pass), len(still_errs), len(passed)))
 
