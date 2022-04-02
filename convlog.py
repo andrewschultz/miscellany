@@ -297,7 +297,7 @@ if still_times and never_times:
     print("# total time for files still to pass: {}".format(still_times + never_times))
 
 if write_current_project:
-    i7.write_latest_project(my_proj)
+    i7.write_latest_project(my_proj, give_success_feedback = True)
 elif read_i7_default_project:
     print("Note we can write a new default project with -wp or -pw.")
 

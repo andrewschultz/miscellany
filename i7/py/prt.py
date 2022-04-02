@@ -27,12 +27,17 @@ cmd_count = 1
 my_proj = ''
 force_extension = ''
 
+write_current_project = False
+read_i7_default_project = False
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg.startswith("fx"):
         force_extension = arg[2:]
     elif my_proj:
         sys.exit(colorama.Fore.RED + "Duplicate project definition attempt." + colorama.Style.RESET_ALL)
+    elif arg in ( 'wp', 'pw' ):
+        write_current_project = True
     else:
         my_proj = i7.long_name(arg)
     cmd_count += 1
@@ -41,6 +46,7 @@ if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
         my_proj = i7.read_latest_proj()[0]
+        read_i7_default_project = True
         if not my_proj:
             sys.exit(colorama.Fore.RED + "No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project." + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Pulling project from CFG: {}.".format(my_proj) + colorama.Style.RESET_ALL)
@@ -121,3 +127,8 @@ if not news:
 
 if not (binary_change or changes or news):
     print(colorama.Fore.RED + "    WARNING: nothing was actually copied over." + colorama.Style.RESET_ALL)
+
+if write_current_project:
+    i7.write_latest_project(my_proj, give_success_feedback = True)
+elif read_i7_default_project:
+    print("Note we can write a new default project with -wp or -pw.")
