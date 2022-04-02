@@ -44,6 +44,20 @@ def usage(header = 'usage'):
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
     sys.exit()
 
+def find_orphans(my_array):
+    for x in last_run:
+        x0 = os.path.realpath(x)
+        if not os.path.exists(x0):
+            if x0 not in orphaned_files:
+                print(x0, "is orphaned (in the PRT directory but not the source directory. If it was moved, you may wish to delete it from the data.")
+                del_cmd += "    erase {}\n".format(x)
+                orphaned_files[x0] += 1
+            continue
+        if os.stat(x).st_mtime > timestamp[x]:
+            f.write("{} modified after test run {:.2f} seconds.<br />\n".format(x, os.stat(x).st_mtime - timestamp[x]))
+        elif os.stat(my_binary).st_mtime > timestamp[x]:
+            f.write("{} modified after binary file {:.2f} seconds.<br />\n".format(x, os.stat(my_binary).st_mtime - timestamp[x]))
+
 def zap_files(del_array):
     f = open(runs_logfile)
     ary = f.readlines()
@@ -226,18 +240,7 @@ if len(orphaned_files):
 
 f.write("</body>\n</html>\n".format(my_proj))
 
-for x in last_run:
-    x0 = os.path.realpath(x)
-    if not os.path.exists(x0):
-        if x0 not in gone_files:
-            print(x0, "was in the PRT directory but not the source directory. If it was moved, you may wish to delete it from the data.")
-            del_cmd += "    convlog.py d={}\n".format(x)
-            gone_files[x0] += 1
-        continue
-    if os.stat(x).st_mtime > timestamp[x]:
-        f.write("{} modified after test run {:.2f} seconds.<br />\n".format(x, os.stat(x).st_mtime - timestamp[x]))
-    elif os.stat(my_binary).st_mtime > timestamp[x]:
-        f.write("{} modified after binary file {:.2f} seconds.<br />\n".format(x, os.stat(my_binary).st_mtime - timestamp[x]))
+find_orphans(last_run)
 
 f.close()
 
