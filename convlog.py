@@ -28,6 +28,7 @@ wild_cards = ''
 write_errors_to_script = False
 write_current_project = False
 read_i7_default_project = False
+save_old_copy = False
 
 delete_array = []
 runs_logfile = 'logfile.txt'
@@ -137,6 +138,10 @@ while cmd_count < len(sys.argv):
     elif arg.startswith("w="):
         write_errors_to_script = True
         wild_cards = arg[2:]
+    elif arg in ( 'so', 'os' ):
+        save_old_copy = True
+    elif mt.alfmatch('nso', arg):
+        save_old_copy = False
     elif arg in ( 'wp', 'pw' ):
         write_current_project = True
     elif arg == 'o':
@@ -181,6 +186,13 @@ ORPHANED_SKIPCHECKING = 2
 orphan_count = 0
 
 del_cmd = ''
+
+if save_old_copy:
+    old_file = os.path.join(i7.prt, "logpy-old-{}.htm".format(my_proj))
+    try:
+        shutil.copy(out_file, old_file)
+    except:
+        print("Could not find {} to back up.".format(out_file))
 
 with open(os.path.join(i7.prt, runs_logfile)) as file:
     for (line_count, line) in enumerate (file, 1):
