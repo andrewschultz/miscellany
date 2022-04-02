@@ -19,9 +19,9 @@ blank = defaultdict(int)
 raw_link = defaultdict(str)
 mod_link = defaultdict(str)
 timestamp = defaultdict(int)
-gone_files = defaultdict(int)
+orphaned_files = defaultdict(int)
 
-orphaned_file_flags = 3
+extra_data_file_flags = 3
 
 wild_cards = ''
 
@@ -146,11 +146,11 @@ while cmd_count < len(sys.argv):
         write_current_project = True
     elif arg == 'o':
         if not valid_num:
-            orphaned_file_flags = -1
+            extra_data_file_flags = -1
         else:
-            orphaned_file_flags = num
+            extra_data_file_flags = num
     elif arg == 'oa':
-        orphaned_file_flags = -1
+        extra_data_file_flags = -1
     elif arg == '?':
         usage()
     else:
@@ -177,11 +177,11 @@ os.chdir(i7.prt)
 if delete_array:
     zap_files(delete_array)
 
-orphaned_files = []
+extra_data_files = []
 original_dir = i7.proj2dir(my_proj)
 
-ORPHANED_WARN = 1
-ORPHANED_SKIPCHECKING = 2
+EXTRA_DATA_WARN = 1
+EXTRA_DATA_SKIPCHECKING = 2
 
 orphan_count = 0
 
@@ -199,16 +199,20 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
         if not line.startswith(prefix):
             continue
         ary = line.strip().split("\t")
-        if orphaned_file_flags:
+        if extra_data_file_flags:
             original_file = os.path.join(original_dir, ary[0])
             if not os.path.exists(original_file):
-                if original_file not in orphaned_files:
-                    orphaned_files.append(original_file)
-                    if orphaned_file_flags | ORPHANED_WARN:
+                if original_file not in extra_data_files:
+                    extra_data_files.append(original_file)
+                    if extra_data_file_flags | EXTRA_DATA_WARN:
                         orphan_count += 1
-                        print("Found orphaned file (data, but not in original source directory) {} line {} of {}: {}".format(orphan_count, line_count, runs_logfile, ary[0]))
+                        print("Found extra-data file (data, but not in original source directory) {} line {} of {}: {}".format(orphan_count, line_count, runs_logfile, ary[0]))
                         del_cmd += "    convlog.py d={}\n".format(ary[0])
-                if orphaned_file_flags | ORPHANED_SKIPCHECKING:
+                        prt_file = os.path.normpath(os.path.join(i7.prt, ary[0]))
+                        if os.path.exists(prt_file):
+                            print("You may also wish to erase {}".format(prt_file))
+                            del_cmd += "    erase {}\n".format(prt_file)
+                if extra_data_file_flags | EXTRA_DATA_SKIPCHECKING:
                     continue
         if ary[1] == '0':
             last_success[ary[0]] = now_of(ary[2])
@@ -244,9 +248,9 @@ html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, l
 center_write("Passing", len(passed))
 html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ])
 
-if len(orphaned_files):
-    f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(orphaned_files)))
-    for x in orphaned_files:
+if len(extra_data_files):
+    f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(extra_data_files)))
+    for x in extra_data_files:
         f.write("<li>{}</li>\n".format(x))
     f.write("</ul>\n")
 
