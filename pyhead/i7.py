@@ -913,16 +913,17 @@ def read_latest_project():
 
 read_latest_proj = read_latest_project
 
-def write_latest_project(proj_to_write):
+def write_latest_project(proj_to_write, give_feedback = True):
     file_write_string = ''
     any_diff = False
     any_current = False
+    abbr_to_write = main_abbr(proj_to_write)
     with open(i7_temp_config) as file:
         for (line_count, line) in enumerate (file, 1):
             (prefix, data) = mt.cfg_data_split(line)
             if prefix == 'current':
                 any_current = True
-                next_string = "current={}\n".format(main_abbr(proj_to_write))
+                next_string = "current={}\n".format(abbr_to_write)
                 if next_string.lower() != line.lower():
                     any_diff = True
                 file_write_string += next_string
@@ -933,9 +934,14 @@ def write_latest_project(proj_to_write):
     elif not any_diff:
         print("Not writing latest project file as default project wasn't changed: {} is already the default project.".format(proj_to_write))
         return
-    f = open(i7_temp_config, "w")
-    f.write(file_write_string)
-    f.close()
+    try:
+        f = open(i7_temp_config, "w")
+        f.write(file_write_string)
+        f.close()
+    except:
+        print("Tried to write over the temp-config file, but it didn't work.")
+        return
+    print("Successfully changed latest-project to", abbr_to_write)
 
 write_latest_proj = write_latest_project
 
