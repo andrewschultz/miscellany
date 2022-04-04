@@ -19,6 +19,7 @@ to_print = defaultdict(str)
 my_proj = i7.dir2proj()
 
 wild_cards = []
+failures = successes = 0
 
 def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
@@ -51,9 +52,10 @@ def verify_test_case(test_case_name):
                 mt.add_postopen(file, line_count)
             else:
                 print(colorama.Fore.GREEN + "Successfully found proper test case for {}.".format(test_case_name) + colorama.Style.RESET_ALL)
-            return
+            return True
     print(colorama.Fore.RED + "No test case {} found in {}.".format(test_case_name, os.path.basename(my_file)) + colorama.Style.RESET_ALL + " to add it, copy/paste below:")
     print(to_print[test_case_name])
+    return False
 
 def i7_test_name(file_name):
     file_name = file_name.replace(".txt", "").replace("reg-", "")
@@ -111,8 +113,17 @@ for x in my_files:
         continue
     to_print[i7_test_name(x)] = convert_reg2test(x)
     if verify_test:
-        verify_test_case(i7_test_name(x))
+        temp = verify_test_case(i7_test_name(x))
+        successes += temp
+        failures += not temp
     else:
         print(to_print[i7_test_name(x)])
+
+if verify_test:
+    if failures:
+        print("Failures", failures)
+        print("Successes", successes)
+    else:
+        print("All tests succeeded!")
 
 mt.post_open()
