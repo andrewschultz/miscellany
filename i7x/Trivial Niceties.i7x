@@ -242,8 +242,8 @@ yn-auto is a number that varies.
 
 to decide whether the player dir-consents:
 	if debug-state is true:
-		if yn-auto is 1, decide yes;
-		if yn-auto is -1, decide no;
+		if yn-auto is 2, decide yes;
+		if yn-auto is 0, decide no;
 	if the player consents, decide yes;
 	decide no;
 
@@ -328,6 +328,7 @@ chapter basic consents
 
 [ "if the player regex-prompt-consents" is useful for when I am running a regex script and want to test full yes/no behavior, especially if I need to undo.
   "if the player switch-consents" is useful for when I want to say no automatically. ]
+[ this is superseded by dir-consents for the most part, as we often just want to set "yes" automatically to run through test cases. ]
 
 to decide whether the player regex-prompt-consents: [used to be (mis)named "direct-consents"]
 	if debug-state is true:
@@ -370,6 +371,8 @@ chapter auing
 
 [* this lets the user switch how the debug version auto-responds to yes/no prompts *]
 
+[ note that it is 2, 1, 0 instead of 1, 0, -1 because some parsers strip hyphens ]
+
 auing is an action out of world applying to one number.
 
 understand the command "au" as something new.
@@ -386,7 +389,7 @@ carry out auing:
 	the rule succeeds;
 
 to say auto-set:
-	say "[if yn-auto is 1]auto-yes[else if yn-auto is -1]auto-no[else]no auto[end if]";
+	say "[if yn-auto is 2]auto-yes[else if yn-auto is 0]auto-no[else]no auto[end if]";
 
 chapter wining
 
