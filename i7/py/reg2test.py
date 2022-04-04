@@ -2,15 +2,20 @@
 # this tests
 
 from collections import defaultdict
+import os
 import re
 import sys
 import glob
 import mytools as mt
+import i7
 
-ignorables = [ 'score', 'thisalt' ]
+ignorables = [ 'posf', 'score', 'thisalt' ]
 
+verify_test = False
 truncate_hyphens = True
 to_print = defaultdict(str)
+
+my_proj = i7.dir2proj()
 
 wild_card = ''
 
@@ -23,6 +28,28 @@ def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
     print("nh/hn/th/ht = truncate hyphens, h/hy/yh = don't truncate hyphens")
     sys.exit()
+
+def verify_test_case(test_case_name):
+    my_file = i7.hdr(my_proj, 'te')
+    got_test_case = False
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if not line.startswith("test "):
+                continue
+            if not re.search(r"test +{} +with +".format(test_case_name), line):
+                continue
+            if '  ' in line:
+                print("Warning extra space in line.")
+                line = re.sub(" +", " ", line)
+            expected_string = to_print[test_case_name]
+            if not line.startswith(expected_string):
+                print("WARNING different strings for", test_case_name)
+                print("EXP:", expected_string)
+                print("GOT:", line.strip())
+            else:
+                print("Successfully found proper test case for", test_case_name)
+            return
+    print("No test case {} found in {}.".format(test_case_name, os.path.basename(my_file)))
 
 def i7_test_name(file_name):
     file_name = file_name.replace(".txt", "").replace("reg-", "")
@@ -57,6 +84,8 @@ while cmd_count < len(sys.argv):
         truncate_hyphens = True
     elif arg in ( 'h', 'hy', 'yh' ):
         truncate_hyphens = False
+    elif arg == 'v':
+        verify_test = True
     elif len(arg) > 6:
         wild_card = arg
     else:
@@ -74,5 +103,8 @@ if not len(my_files):
 for x in my_files:
     if wild_card not in x:
         continue
-    to_print = convert_reg2test(x)
-    print(to_print)
+    to_print[i7_test_name(x)] = convert_reg2test(x)
+    if verify_test:
+        verify_test_case(i7_test_name(x))
+    else:
+        print(to_print[i7_test_name(x)] + '.')
