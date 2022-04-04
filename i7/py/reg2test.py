@@ -4,6 +4,7 @@
 import re
 import sys
 import glob
+import mytools as mt
 
 ignorables = [ 'score', 'thisalt' ]
 
@@ -15,7 +16,8 @@ except:
     print("You need an argument for the wildcard.")
 
 def usage(my_header = 'USAGE FOR REG2TEST'):
-    print(my_header
+    print(my_header)
+    print("nh/hn/th/ht = truncate hyphens, h/hy/yh = don't truncate hyphens")
     sys.exit()
 
 def convert_reg2test(my_file):
@@ -42,13 +44,15 @@ def convert_reg2test(my_file):
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv)
+    arg = mt.nohy(sys.argv[cmd_count])
     if arg in ( 'nh', 'hn', 'th', 'ht' ):
         truncate_hyphens = True
     elif arg in ( 'h', 'hy', 'yh' ):
         truncate_hyphens = False
+    elif len(arg) > 6:
+        wild_card = arg
     else:
-        usage('illegal command {}".format(arg))
+        usage(my_header = "illegal command {}".format(arg))
     cmd_count += 1
 
 my_files = glob.glob("reg-*.txt")
