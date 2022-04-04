@@ -20,12 +20,16 @@ def usage(my_header = 'USAGE FOR REG2TEST'):
     print("nh/hn/th/ht = truncate hyphens, h/hy/yh = don't truncate hyphens")
     sys.exit()
 
+def i7_test_name(file_name):
+    file_name = file_name.replace(".txt", "").replace("reg-", "")
+    file_name = re.sub("^.*?-", "", file_name)
+    if truncate_hyphens:
+        file_name = file_name.replace('-', '')
+    return file_name
+
 def convert_reg2test(my_file):
     command_list = []
-    test_out_name = my_file.replace(".txt", "").replace("reg-", "")
-    test_out_name = re.sub("^.*?-", "", test_out_name)
-    if truncate_hyphens:
-        test_out_name = test_out_name.replace('-', '')
+    test_out_name = i7_test_name(my_file)
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if not line.startswith(">"):
