@@ -8,6 +8,7 @@ import sys
 import glob
 import mytools as mt
 import i7
+import colorama
 
 ignorables = [ 'posf', 'score', 'thisalt' ]
 
@@ -17,17 +18,18 @@ to_print = defaultdict(str)
 
 my_proj = i7.dir2proj()
 
-wild_card = ''
-
-try:
-    wild_card = sys.argv[1]
-except:
-    print("You need an argument for the wildcard.")
+wild_cards = []
 
 def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
     print("nh/hn/th/ht = truncate hyphens, h/hy/yh = don't truncate hyphens")
     sys.exit()
+
+def match_any(my_string, my_wild_cards):
+    for w in my_wild_cards:
+        if w in my_string:
+            return True
+    return False
 
 def verify_test_case(test_case_name):
     my_file = i7.hdr(my_proj, 'te')
@@ -43,13 +45,15 @@ def verify_test_case(test_case_name):
                 line = re.sub(" +", " ", line)
             expected_string = to_print[test_case_name]
             if not line.startswith(expected_string):
-                print("WARNING different strings for", test_case_name)
+                print(colorama.Fore.YELLOW + "WARNING different strings for {}.".format(test_case_name) + colorama.Style.RESET_ALL)
                 print("EXP:", expected_string)
                 print("GOT:", line.strip())
+                mt.add_postopen(file, line_count)
             else:
-                print("Successfully found proper test case for", test_case_name)
+                print(colorama.Fore.GREEN + "Successfully found proper test case for {}.".format(test_case_name) + colorama.Style.RESET_ALL)
             return
-    print("No test case {} found in {}.".format(test_case_name, os.path.basename(my_file)))
+    print(colorama.Fore.RED + "No test case {} found in {}.".format(test_case_name, os.path.basename(my_file)) + colorama.Style.RESET_ALL + " to add it, copy/paste below:")
+    print(to_print[test_case_name])
 
 def i7_test_name(file_name):
     file_name = file_name.replace(".txt", "").replace("reg-", "")
@@ -86,25 +90,29 @@ while cmd_count < len(sys.argv):
         truncate_hyphens = False
     elif arg == 'v':
         verify_test = True
+    elif arg.startswith('w='):
+        wild_cards.extend(arg[2:].split(','))
     elif len(arg) > 6:
-        wild_card = arg
+        wild_cards.extend(arg.split(','))
     else:
         usage(my_header = "illegal command {}".format(arg))
     cmd_count += 1
 
 my_files = glob.glob("reg-*.txt")
 
-if not wild_card:
+if not len(wild_cards):
     sys.exit("Need to define wild card.")
 
 if not len(my_files):
     sys.exit("No reg-* files found in current/specified directory.")
 
 for x in my_files:
-    if wild_card not in x:
+    if not match_any(x, wild_cards):
         continue
     to_print[i7_test_name(x)] = convert_reg2test(x)
     if verify_test:
         verify_test_case(i7_test_name(x))
     else:
-        print(to_print[i7_test_name(x)] + '.')
+        print(to_print[i7_test_name(x)])
+
+mt.post_open()
