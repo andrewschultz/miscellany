@@ -1,6 +1,7 @@
 #reg2test
 # this tests
 
+from collections import defaultdict
 import re
 import sys
 import glob
@@ -9,6 +10,9 @@ import mytools as mt
 ignorables = [ 'score', 'thisalt' ]
 
 truncate_hyphens = True
+to_print = defaultdict(str)
+
+wild_card = ''
 
 try:
     wild_card = sys.argv[1]
@@ -44,7 +48,7 @@ def convert_reg2test(my_file):
                     print("Uh oh. Tried to UNDO when there was nothing to undo.")
                 continue
             command_list.append(cmd)
-    return('test {} with "{}"'.format(test_out_name, '/'.join(command_list)))
+    return('test {} with "{}".'.format(test_out_name, '/'.join(command_list)))
 
 cmd_count = 1
 while cmd_count < len(sys.argv):
@@ -60,6 +64,12 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 my_files = glob.glob("reg-*.txt")
+
+if not wild_card:
+    sys.exit("Need to define wild card.")
+
+if not len(my_files):
+    sys.exit("No reg-* files found in current/specified directory.")
 
 for x in my_files:
     if wild_card not in x:
