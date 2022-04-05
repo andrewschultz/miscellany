@@ -19,6 +19,11 @@ def usage(header = "usage for ".format(__file__)):
     print("You can specify a file or a wild card to test.")
     sys.exit()
 
+def to_wild(my_text):
+    if '*' in my_text:
+        return my_text
+    return '*' + my_text + '*'
+
 def check_one_file(my_file):
     commented_sections = defaultdict(int)
     includes = defaultdict(int)
@@ -32,12 +37,12 @@ def check_one_file(my_file):
                 includes[line[10:].strip()] = line_count
     for x in commented_sections:
         if x not in includes:
-            print(x, "is commented at line", commented_sections[x], "but is not in {include}s.")
+            print("{}: {} is commented at line {} of but is not in {{include}}s.".format(my_file, x, commented_sections[x]))
             if open_after:
                 mt.add_post_open(my_file, commented_sections[x])
 
-file = ''
-wild_card = "reg-*.txt"
+files = []
+wild_cards = []
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
@@ -50,19 +55,24 @@ while cmd_count < len(sys.argv):
         max_files = num
     elif os.path.exists(arg):
         check_one_file(arg)
-        wild_card = ''
-    elif '*' in arg:
-        wild_card = arg
+        files.append(arg)
+    elif '*' in arg or len(arg) > 4:
+        wild_cards.append(to_wild(arg))
     elif arg == '?':
         usage()
     else:
         usage(header = 'invalid argument: {}'.format(arg))
     cmd_count += 1
 
-if wild_card:
-    reg_glob = glob.glob(wild_card)
-    for f in reg_glob:
-        check_one_file(f)
+if not len(files) and not len(wild_cards):
+    print("Going with default reg-*.txt.")
+    wild_cards = [ "reg-*.txt" ]
+
+for this_wild in wild_cards:
+    files.extend(glob.glob(this_wild))
+
+for f in files:
+    check_one_file(f)
 
 if open_after:
     mt.post_open()
