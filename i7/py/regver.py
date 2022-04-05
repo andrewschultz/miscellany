@@ -8,7 +8,16 @@ import sys
 import glob
 from collections import defaultdict
 
-open_after = False
+open_after = True
+
+max_files = 10
+
+def usage(header = "usage for ".format(__file__)):
+    print('=' * 20, header, '=' * 20)
+    print("m# = max files")
+    print("o = open after, no/on = don't open after")
+    print("You can specify a file or a wild card to test.")
+    sys.exit()
 
 def check_one_file(my_file):
     commented_sections = defaultdict(int)
@@ -32,18 +41,22 @@ wild_card = "reg-*.txt"
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
+    (arg, num, valid) = mt.let_num(sys.argv[cmd_count])
     if arg == 'o':
         open_after = True
     elif arg in ( 'no', 'on' ):
         open_after = False
+    elif arg == 'm' and valid:
+        max_files = num
     elif os.path.exists(arg):
         check_one_file(arg)
         wild_card = ''
     elif '*' in arg:
         wild_card = arg
+    elif arg == '?':
+        usage()
     else:
-        sys.exit("Only file or wild card at this time.")
+        usage(header = 'invalid argument: {}'.format(arg))
     cmd_count += 1
 
 if wild_card:
