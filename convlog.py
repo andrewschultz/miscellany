@@ -9,6 +9,7 @@ import glob
 import sys
 from collections import defaultdict
 from shutil import copy
+import colorama
 
 last_success = defaultdict(int)
 last_success_time_taken = defaultdict(int)
@@ -228,6 +229,9 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
 never_pass = [x for x in last_errs if x not in last_success]
 still_errs = [x for x in last_errs if x in last_success and last_run[x] > last_success[x]]
 passed = [x for x in last_errs if x in last_success and last_run[x] == last_success[x]]
+
+if len(passed) + len(still_errs) + len(never_pass) == 0:
+    sys.exit(colorama.Fore.CYAN + "I couldn't find any logruns for {}, so I won't output an HTML file.".format(my_proj) + colorama.Style.RESET_ALL)
 
 for l in last_run:
     l_mod = l.replace(".txt", "-mod.txt")
