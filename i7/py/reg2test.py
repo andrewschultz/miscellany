@@ -13,16 +13,20 @@ import pyperclip
 
 ignorables = [ 'posf', 'score', 'thisalt' ]
 
+write_test_file = True
 tests_to_clipboard = False
 verify_test = False
 truncate_hyphens = True
 to_print = defaultdict(str)
+write_out = defaultdict(tuple)
 
 my_proj = i7.dir2proj()
 
 wild_cards = []
 failures = successes = 0
 clip_string = ''
+
+temp_out = "c:/writing/temp/reg2test-temp.txt"
 
 def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
@@ -72,7 +76,9 @@ def verify_test_case(test_case_name):
                 print(colorama.Fore.YELLOW + "WARNING different strings for {}.".format(test_case_name) + colorama.Style.RESET_ALL)
                 print("EXP:", expected_string)
                 print("GOT:", line.strip())
-                mt.add_postopen(file, line_count)
+                mt.add_postopen(my_file, line_count)
+                write_out[test_case_name] = (my_file, line_count)
+                return False
             else:
                 print(colorama.Fore.GREEN + "Successfully found proper test case for {}.".format(test_case_name) + colorama.Style.RESET_ALL)
             return True
@@ -116,6 +122,11 @@ while cmd_count < len(sys.argv):
         verify_test = True
     elif arg == 'c':
         tests_to_clipboard = True
+    elif arg == 'w':
+        write_test_file = True
+    elif arg in ( 'wc', 'cw' ):
+        write_test_file = True
+        compare_before_recopy = True
     elif arg.startswith('w='):
         wild_cards.extend(arg[2:].split(','))
     elif len(arg) > 6:
@@ -155,5 +166,10 @@ if verify_test:
 
 if clip_string:
     pyperclip.copy(clip_string)
+
+if write_test_file:
+    if len(write_out) == 0:
+        sys.exit("Nothing to write to test file.")
+    write_new_test_cases()
 
 mt.post_open()
