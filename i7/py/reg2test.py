@@ -72,8 +72,6 @@ def convert_reg2test(my_file):
             if not line.startswith(">"):
                 continue
             cmd = line[1:].strip()
-            if cmd in ignorables:
-                continue
             if cmd == 'undo':
                 try:
                     command_list.pop()
@@ -81,6 +79,7 @@ def convert_reg2test(my_file):
                     print("Uh oh. Tried to UNDO when there was nothing to undo.")
                 continue
             command_list.append(cmd)
+    command_list = [ x for x in command_list if x not in ignorables ]
     return('test {} with "{}".'.format(test_out_name, '/'.join(command_list)))
 
 cmd_count = 1
