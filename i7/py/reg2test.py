@@ -9,9 +9,11 @@ import glob
 import mytools as mt
 import i7
 import colorama
+import pyperclip
 
 ignorables = [ 'posf', 'score', 'thisalt' ]
 
+tests_to_clipboard = False
 verify_test = False
 truncate_hyphens = True
 to_print = defaultdict(str)
@@ -20,6 +22,7 @@ my_proj = i7.dir2proj()
 
 wild_cards = []
 failures = successes = 0
+clip_string = ''
 
 def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
@@ -32,9 +35,29 @@ def match_any(my_string, my_wild_cards):
             return True
     return False
 
+def write_new_test_cases():
+    my_file = i7.hdr(my_proj, 'te')
+    vals = [x[1] for x in write_out.values()]
+    f = open(temp_out, "w")
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line_count in vals:
+                print("Changing line", line_count)
+                ary = [x for x in write_out if write_out[x][1] == line_count]
+                f.write(to_print[ary[0]] + "\n")
+                continue
+            f.write(line)
+    f.close()
+    if compare_before_recopy:
+        mt.wm(my_file, temp_out)
+    copy(temp_out, my_file)
+    os.remove(temp_out)
+    sys.exit()
+
 def verify_test_case(test_case_name):
     my_file = i7.hdr(my_proj, 'te')
     got_test_case = False
+    global clip_string
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if not line.startswith("test "):
@@ -91,6 +114,8 @@ while cmd_count < len(sys.argv):
         truncate_hyphens = False
     elif arg == 'v':
         verify_test = True
+    elif arg == 'c':
+        tests_to_clipboard = True
     elif arg.startswith('w='):
         wild_cards.extend(arg[2:].split(','))
     elif len(arg) > 6:
@@ -110,13 +135,16 @@ if not len(my_files):
 for x in my_files:
     if not match_any(x, wild_cards):
         continue
-    to_print[i7_test_name(x)] = convert_reg2test(x)
+    this_test = i7_test_name(x)
+    to_print[this_test] = convert_reg2test(x)
     if verify_test:
-        temp = verify_test_case(i7_test_name(x))
+        temp = verify_test_case(this_test)
+        if (not temp) and tests_to_clipboard:
+            clip_string += to_print[this_test] + "\n"
         successes += temp
         failures += not temp
     else:
-        print(to_print[i7_test_name(x)])
+        print(to_print[this_test])
 
 if verify_test:
     if failures:
@@ -124,5 +152,8 @@ if verify_test:
         print("Successes", successes)
     else:
         print("All tests succeeded!")
+
+if clip_string:
+    pyperclip.copy(clip_string)
 
 mt.post_open()
