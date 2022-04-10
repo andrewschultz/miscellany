@@ -35,6 +35,7 @@ table_specs = defaultdict(lambda: defaultdict(TablePicker))
 
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
+    table_line_count = 0
     for this_file in table_specs[this_proj]:
         print("Reading file", this_file, "for test cases...")
         in_table = False
@@ -53,14 +54,20 @@ def get_cases(this_proj):
                     continue
                 if table_header_next == True:
                     table_header_next = False
+                    table_line_count = 0
                     continue
                 if not line.strip():
                     in_table = False
                     continue
+                table_line_count += 1
                 columns = line.strip().split('\t')
-                relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][0]]
+                if table_specs[this_proj][this_file].table_names[current_table][0][0] == -1:
+                    sub_test_case = "{}".format(table_line_count)
+                else:
+                    relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][0]]
+                    sub_test_case = '-'.join(relevant_text_array)
                 possible_text = '<NONE>' if table_specs[this_proj][this_file].table_names[current_table][1] == -20 else columns[table_specs[this_proj][this_file].table_names[current_table][1]].replace('"', '')
-                test_case_name = "ttc-{}-{}".format(current_table, '-'.join(relevant_text_array)).replace(' ', '-').lower().replace('"', '').replace('--', '-')
+                test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                 if test_case_name in return_dict:
                     print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
                 else:
@@ -86,7 +93,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if test_to_check not in this_case_list:
                         print("Errant re-test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
                         continue
-                    if this_case_list[test_to_check][0] == False:
+                    if this_case_list[test_to_check].found_yet == False:
                         print("Re-test before test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
                     continue
                 if not line.startswith("#ttc"):
