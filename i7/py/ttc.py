@@ -103,6 +103,14 @@ def change_dir_if_needed(new_dir = ''):
         print("Changing to", new_dir)
         os.chdir(new_dir)
 
+def expected_file(my_case, this_proj):
+    for q in test_case_file_mapper[this_proj]:
+        if q in my_case:
+            temp = test_case_file_mapper[this_proj][q]
+            temp = temp.replace('reg-', '').replace('.*', '')
+            return temp
+    return "<NO GUESS>"
+
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -135,6 +143,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     else:
         print("{} missed test cases:".format(len(misses)))
         for m in misses:
+            print('@' + expected_file(m, this_proj))
             print('#' + m)
             print(">(COMMAND HERE)")
             print(this_case_list[m].suggested_text)
