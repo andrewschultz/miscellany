@@ -688,7 +688,10 @@ def read_2dy_cfg():
                 if len(sect_ary):
                     print("Adding to non-blank sections array on line {}".format(line_count))
                 sect_ary.extend(sect_dict)
-            elif prefix.isdigit() and len(prefix) == 8:
+            elif prefix.isdigit():
+                if len(prefix) != 8:
+                    print("WARNING suggested weekly file has wrong # of digits (should be 8) at line {}.".format(line_count))
+                    continue
                 file_name = prefix + ".txt"
                 if not len(temp_glob):
                     temp_glob = glob.glob("c:/writing/daily/20*.txt")
@@ -704,7 +707,11 @@ def read_2dy_cfg():
                 continue
             color_dict[x] = goals_and_stretch[0] * color_dict[x] / 168
     if len(this_weeks_goal) > 0:
-        goals_and_stretch = [ this_weeks_goal ]
+        goals_and_stretch.extend(this_weeks_goal)
+        old_goals = list(goals_and_stretch)
+        goals_and_stretch = sorted(goals_and_stretch)
+        if old_goals != goals_and_stretch:
+            print("NOTE: resorted goals array because custom this-week goals made it non-increasing.")
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
 
