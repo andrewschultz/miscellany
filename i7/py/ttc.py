@@ -32,7 +32,8 @@ class TablePicker:
         self.ignore_wild = []
 
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
-test_case_file_mapper = defaultdict(lambda: defaultdict(str))
+test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
+test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 
 def wild_card_match(my_table, my_cards, to_lower = True):
     if to_lower:
@@ -123,9 +124,14 @@ def change_dir_if_needed(new_dir = ''):
         os.chdir(new_dir)
 
 def expected_file(my_case, this_proj):
-    for q in test_case_file_mapper[this_proj]:
+    for q in test_case_file_mapper_match[this_proj]:
         if q in my_case:
-            temp = test_case_file_mapper[this_proj][q]
+            temp = test_case_file_mapper_match[this_proj][q]
+            temp = temp.replace('reg-', '').replace('.*', '')
+            return temp
+    for q in test_case_file_mapper_regex[this_proj]:
+        if re.search(q, my_case):
+            temp = test_case_file_mapper_regex[this_proj][q]
             temp = temp.replace('reg-', '').replace('.*', '')
             return temp
     return "<NO GUESS>"
@@ -205,13 +211,21 @@ def verify_case_placement(this_proj):
                     is_retest = True
                 total_matches = 0
                 this_success = True
-                for t in test_case_file_mapper[this_proj]:
+                for t in test_case_file_mapper_match[this_proj]:
                     if re.search(t, line):
                         total_matches += bool(re.search(t, line))
-                        if not re.search(test_case_file_mapper[this_proj][t], fb):
-                            print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper[this_proj][t])
+                        if not re.search(test_case_file_mapper_match[this_proj][t], fb):
+                            print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
                             wrong_file += 1
                             this_success = False
+                for t in test_case_file_mapper_regex[this_proj]:
+                    if not re.search(t, line):
+                        continue
+                    total_matches += bool(re.search(t, line))
+                    if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
+                        print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
+                        wrong_file += 1
+                        this_success = False
                 if total_matches == 0:
                     unsorted += 1
                     print("WARNING unsorted test case", line, "line", line_count)
@@ -252,10 +266,17 @@ with open(ttc_cfg) as file:
         if prefix == 'casemap':
             ary = data.split(",")
             for x in range(0, len(ary), 2):
-                if ary[x] in test_case_file_mapper[cur_proj]:
+                if ary[x] in test_case_file_mapper_match[cur_proj]:
                     print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
                 else:
-                    test_case_file_mapper[cur_proj][ary[x]] = ary[x+1]
+                    test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
+        elif prefix == 'casemapr':
+            ary = data.split(",")
+            for x in range(0, len(ary), 2):
+                if ary[x] in test_case_file_mapper_regex[cur_proj]:
+                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                else:
+                    test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
         elif prefix == 'file':
             cur_file = i7.hdr(cur_proj, data)
             if cur_file in table_specs:
