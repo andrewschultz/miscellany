@@ -55,6 +55,7 @@ rbr_config = 'c:/writing/scripts/rbr.txt'
 
 branch_timestamp_skip_check = True
 
+ignore_unsaved_changes = False
 ignore_first_file_changes = False
 force_postproc = False
 github_okay = False
@@ -1086,6 +1087,8 @@ while count < len(sys.argv):
     elif arg == 'st': strict_name_force_on = True
     elif arg in ( 'nst', 'stn'): strict_name_force_off = True
     elif arg in ( 'pf', 'pc', 'cp' ): copy_over_post = force_all_regs = True
+    elif arg == 'iuc':
+        ignore_unsaved_changed = True
     elif arg in i7.i7x.keys():
         if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         exe_proj = i7.i7x[arg]
@@ -1127,6 +1130,9 @@ my_file_list_valid = []
 
 if in_file:
     if not os.path.isfile(in_file): sys.exit(in_file + " not found.")
+    if (not ignore_unsaved_changes) and mt.is_npp_modified(my_file):
+        sys.exit("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(os.path.basename(my_file)))
+
     os.chdir(os.path.dirname(os.path.abspath(in_file)))
     mydir = os.getcwd()
     if edit_main_branch:
