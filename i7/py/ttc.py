@@ -35,6 +35,14 @@ class TablePicker:
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper = defaultdict(lambda: defaultdict(str))
 
+def wild_card_match(my_table, my_cards, to_lower = True):
+    if to_lower:
+        my_table = my_table.lower()
+    for x in my_cards:
+        if re.search(x, my_table):
+            return x
+    return False
+
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
@@ -43,8 +51,10 @@ def get_cases(this_proj):
         in_table = False
         table_header_nethis_filet = False
         current_table = ''
+        cur_wild_card = ''
         read_table_data = False
         fb = os.path.basename(this_file)
+        table_header_next = False
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not in_table:
@@ -53,7 +63,10 @@ def get_cases(this_proj):
                     current_table = re.sub(" \[.*", "", line.strip())
                     current_table = re.sub(" +\(continued\).*", "", current_table)
                     in_table = True
+                    cur_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].wild_cards)
                     if current_table in table_specs[this_proj][this_file].table_names:
+                        table_header_next = True
+                    elif cur_wild_card:
                         table_header_next = True
                     elif current_table in table_specs[this_proj][this_file].ignore:
                         pass
@@ -68,24 +81,29 @@ def get_cases(this_proj):
                 if not line.strip():
                     in_table = False
                     read_table_data = False
+                    cur_wild_card = ''
                     continue
                 if not read_table_data:
                     continue
                 table_line_count += 1
                 columns = line.strip().split('\t')
-                if table_specs[this_proj][this_file].table_names[current_table][0][0] == -1:
+                if cur_wild_card:
+                    ary_to_poke = table_specs[this_proj][this_file].wild_cards[cur_wild_card]
+                else:
+                    ary_to_poke = table_specs[this_proj][this_file].table_names[current_table]
+                if ary_to_poke[0][0] == -1:
                     sub_test_case = "{}".format(table_line_count)
                 else:
                     try:
-                        relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][0]]
+                        relevant_text_array = [columns[y] for y in ary_to_poke[0]]
                         sub_test_case = '-'.join(relevant_text_array)
                     except:
-                        sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(table_specs[this_proj][this_file].table_names[current_table][0], len(columns), line_count, fb))
-                if table_specs[this_proj][this_file].table_names[current_table][1] == -20:
+                        sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(ary_to_poke[0], len(columns), line_count, fb))
+                if ary_to_poke[1] == -20:
                     possible_text = '<NONE>'
                 else:
                     try:
-                        relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][1]]
+                        relevant_text_array = [columns[y] for y in ary_to_poke[1]]
                         possible_text = '\n'.join(relevant_text_array).replace('"', '')
                     except:
                         possible_text = '<ERROR PARSING COLUMNS>'
@@ -158,6 +176,7 @@ def valid_ttc(my_line):
     return my_line.startswith('ttc')
 
 def verify_case_placement(this_proj):
+    mt.center("VERIFYING TEST CASE PLACEMENT IN RBR/REG FILES")
     change_dir_if_needed()
     reg_glob = glob.glob("reg-*.txt")
     case_verification = defaultdict(bool)
@@ -207,7 +226,7 @@ def verify_case_placement(this_proj):
                 successful += this_success
                 tests_in_file += 1
         if successful == tests_in_file:
-            print("NO ERRORS FOUND IN", fb)
+            print("NO ERRORS FOUND IN", fb, successful, "successes")
         else:
             print(fb, "Unsorted", unsorted, "Double sorted cases/lines", double_sorted_cases, double_sorted_lines, "Wrong file", wrong_file, "Successful", successful)
         total_unsorted += unsorted
@@ -217,7 +236,7 @@ def verify_case_placement(this_proj):
         total_successful += successful
         total_tests_in_file += tests_in_file
     if total_successful == total_tests_in_file:
-        print("NO ERRORS FOUND ANYWHERE IN GENERATED FILES")
+        print("NO ERRORS FOUND ANYWHERE IN GENERATED FILES", total_successful, "total successes")
     else:
         print("TOTALS Unsorted", total_unsorted, "Double sorted cases/lines", total_double_sorted_cases, total_double_sorted_lines, "Wrong file", total_wrong_file, "Successful", total_successful)
 
@@ -255,6 +274,15 @@ with open(ttc_cfg) as file:
             try:
                 for tn in ary[0].split(','):
                     table_specs[cur_proj][cur_file].table_names[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
+            except:
+                print(line_count, data)
+                print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
+                print("Also, make sure entries 2/3 are integers.")
+        elif prefix in ( 'wc', 'wild', 'wildcard', 'wildcards' ):
+            ary = data.split("\t")
+            try:
+                for tn in ary[0].split(','):
+                    table_specs[cur_proj][cur_file].wild_cards[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
             except:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
