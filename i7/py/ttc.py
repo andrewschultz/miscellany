@@ -74,11 +74,15 @@ def get_cases(this_proj):
                     return_dict[test_case_name] = SimpleTestCase(possible_text)
     return return_dict
 
+def change_dir_if_needed(new_dir = ''):
+    if not new_dir:
+        new_dir = i7.proj2dir(my_proj)
+    if os.getcwd().lower() != new_dir.lower():
+        print("Changing to", new_dir)
+        os.chdir(new_dir)
+
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
-    dir_to_go = i7.proj2dir(this_proj)
-    if dir_to_go != os.getcwd():
-        print("Changing to", dir_to_go)
-        os.chdir(dir_to_go)
+    change_dir_if_needed()
     glob_string = prefix + "-*.txt"
     test_file_glob = glob.glob(glob_string)
     if len(test_file_glob) == 0:
