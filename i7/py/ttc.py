@@ -32,6 +32,7 @@ class TablePicker:
         pass
 
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
+test_case_file_mapper = defaultdict(lambda: defaultdict(str))
 
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
@@ -118,6 +119,78 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
             print(this_case_list[m].suggested_text)
     return
 
+def valid_ttc(my_line):
+    if not my_line.startswith('#'):
+        return False
+    my_line = my_line[1:]
+    if my_line.startswith('+'):
+        my_line = my_line[1:]
+    return my_line.startswith('ttc')
+
+def verify_case_placement(this_proj):
+    change_dir_if_needed()
+    reg_glob = glob.glob("reg-*.txt")
+    case_verification = defaultdict(bool)
+    total_unsorted = 0
+    total_double_sorted_cases = 0
+    total_double_sorted_lines = 0
+    total_wrong_file = 0
+    total_successful = 0
+    total_tests_in_file = 0
+    for file_name in reg_glob:
+        unsorted = 0
+        double_sorted_cases = 0
+        double_sorted_lines = 0
+        wrong_file = 0
+        successful = 0
+        tests_in_file = 0
+        fb = os.path.basename(file_name)
+        with open(file_name) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if not valid_ttc(line):
+                    continue
+                line = line[1:].lower().strip()
+                is_retest = False
+                if line.startswith('+'):
+                    is_retest = True
+                total_matches = 0
+                this_success = True
+                for t in test_case_file_mapper[this_proj]:
+                    if re.search(t, line):
+                        total_matches += bool(re.search(t, line))
+                        if not re.search(test_case_file_mapper[this_proj][t], fb):
+                            print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper[this_proj][t])
+                            wrong_file += 1
+                            this_success = False
+                if total_matches == 0:
+                    unsorted += 1
+                    print("WARNING unsorted test case", line, "line", line_count)
+                    this_success = False
+                elif total_matches > 1:
+                    double_sorted_cases += (total_matches == 2)
+                    double_sorted_lines += 1
+                    print("WARNING double sorted test case", line, "line", line_count)
+                    this_success = False
+                else:
+                    pass
+                    #print(line, "works.") # uncomment if we want unquiet
+                successful += this_success
+                tests_in_file += 1
+        if successful == tests_in_file:
+            print("NO ERRORS FOUND IN", fb)
+        else:
+            print(fb, "Unsorted", unsorted, "Double sorted cases/lines", double_sorted_cases, double_sorted_lines, "Wrong file", wrong_file, "Successful", successful)
+        total_unsorted += unsorted
+        total_double_sorted_cases += double_sorted_cases
+        total_double_sorted_lines += double_sorted_lines
+        total_wrong_file += wrong_file
+        total_successful += successful
+        total_tests_in_file += tests_in_file
+    if total_successful == total_tests_in_file:
+        print("NO ERRORS FOUND ANYWHERE IN GENERATED FILES")
+    else:
+        print("TOTALS Unsorted", total_unsorted, "Double sorted cases/lines", total_double_sorted_cases, total_double_sorted_lines, "Wrong file", total_wrong_file, "Successful", total_successful)
+
 with open(ttc_cfg) as file:
     for (line_count, line) in enumerate (file, 1):
         if line.startswith('#'):
@@ -144,8 +217,15 @@ with open(ttc_cfg) as file:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
                 print("Also, make sure entries 2/3 are integers.")
+        elif prefix == 'casemap':
+            ary = data.split(",")
+            for x in range(0, len(ary), 2):
+                if ary[x] in test_case_file_mapper[cur_proj]:
+                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                else:
+                    test_case_file_mapper[cur_proj][ary[x]] = ary[x+1]
         else:
-            print("Invalid data", prefix, "line", line_count)
+            print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
 my_proj = i7.dir2proj()
 
@@ -156,3 +236,4 @@ if my_proj not in table_specs:
 
 case_list = get_cases(my_proj)
 case_test = verify_cases(my_proj, case_list)
+verify_case_placement(my_proj)
