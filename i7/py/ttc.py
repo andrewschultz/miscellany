@@ -18,19 +18,18 @@ import os
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
 class SimpleTestCase:
-    found_yet = False
-    suggested_text = 'None'
 
     def __init__(self, some_text = 'None'):
+        self.found_yet = False
         self.suggested_text = some_text
 
 class TablePicker:
-    table_names = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
-    wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
-    ignore = []
 
     def __init__(self):
-        pass
+        self.table_names = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
+        self.wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
+        self.ignore = []
+        self.ignore_wild = []
 
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper = defaultdict(lambda: defaultdict(str))
