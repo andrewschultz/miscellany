@@ -208,16 +208,28 @@ with open(ttc_cfg) as file:
         if line.startswith(';'):
             break
         (prefix, data) = mt.cfg_data_split(line)
-        if prefix == 'project':
-            cur_proj = i7.long_name(data)
-            if not cur_proj:
-                print("WARNING bad project specified line {}: {}".format(line_count, data))
+        if prefix == 'casemap':
+            ary = data.split(",")
+            for x in range(0, len(ary), 2):
+                if ary[x] in test_case_file_mapper[cur_proj]:
+                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                else:
+                    test_case_file_mapper[cur_proj][ary[x]] = ary[x+1]
         elif prefix == 'file':
             cur_file = i7.hdr(cur_proj, data)
             if cur_file in table_specs:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
             else:
                 table_specs[cur_proj][cur_file] = TablePicker()
+        elif prefix == 'ignore':
+            if data in table_specs[cur_proj][cur_file].ignore:
+                print("WARNING duplicate ignore", cur_file, line_count, data)
+            else:
+                table_specs[cur_proj][cur_file].ignore.append(data)
+        elif prefix == 'project':
+            cur_proj = i7.long_name(data)
+            if not cur_proj:
+                print("WARNING bad project specified line {}: {}".format(line_count, data))
         elif prefix == 'table':
             ary = data.split("\t")
             try:
@@ -227,13 +239,6 @@ with open(ttc_cfg) as file:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
                 print("Also, make sure entries 2/3 are integers.")
-        elif prefix == 'casemap':
-            ary = data.split(",")
-            for x in range(0, len(ary), 2):
-                if ary[x] in test_case_file_mapper[cur_proj]:
-                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
-                else:
-                    test_case_file_mapper[cur_proj][ary[x]] = ary[x+1]
         else:
             print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
