@@ -44,6 +44,7 @@ def get_cases(this_proj):
         table_header_nethis_filet = False
         current_table = ''
         read_table_data = False
+        fb = os.path.basename(this_file)
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not in_table:
@@ -75,9 +76,19 @@ def get_cases(this_proj):
                 if table_specs[this_proj][this_file].table_names[current_table][0][0] == -1:
                     sub_test_case = "{}".format(table_line_count)
                 else:
-                    relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][0]]
-                    sub_test_case = '-'.join(relevant_text_array)
-                possible_text = '<NONE>' if table_specs[this_proj][this_file].table_names[current_table][1] == -20 else columns[table_specs[this_proj][this_file].table_names[current_table][1]].replace('"', '')
+                    try:
+                        relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][0]]
+                        sub_test_case = '-'.join(relevant_text_array)
+                    except:
+                        sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(table_specs[this_proj][this_file].table_names[current_table][0], len(columns), line_count, fb))
+                if table_specs[this_proj][this_file].table_names[current_table][1] == -20:
+                    possible_text = '<NONE>'
+                else:
+                    try:
+                        relevant_text_array = [columns[y] for y in table_specs[this_proj][this_file].table_names[current_table][1]]
+                        possible_text = '\n'.join(relevant_text_array).replace('"', '')
+                    except:
+                        possible_text = '<ERROR PARSING COLUMNS>'
                 test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                 if test_case_name in return_dict:
                     print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
@@ -234,7 +245,7 @@ with open(ttc_cfg) as file:
             ary = data.split("\t")
             try:
                 for tn in ary[0].split(','):
-                    table_specs[cur_proj][cur_file].table_names[tn] = ( [int(x) for x in ary[1].split(',')], int(ary[2]))
+                    table_specs[cur_proj][cur_file].table_names[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
             except:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
