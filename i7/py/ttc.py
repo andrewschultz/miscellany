@@ -48,7 +48,6 @@ def get_cases(this_proj):
     for this_file in table_specs[this_proj]:
         print("Reading file", this_file, "for test cases...")
         in_table = False
-        table_header_nethis_filet = False
         current_table = ''
         cur_wild_card = ''
         read_table_data = False
@@ -63,11 +62,14 @@ def get_cases(this_proj):
                     current_table = re.sub(" +\(continued\).*", "", current_table)
                     in_table = True
                     cur_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].wild_cards)
+                    ig_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].ignore_wild)
                     if current_table in table_specs[this_proj][this_file].table_names:
                         table_header_next = True
                     elif cur_wild_card:
                         table_header_next = True
                     elif current_table in table_specs[this_proj][this_file].ignore:
+                        pass
+                    elif ig_wild_card:
                         pass
                     else:
                         print("Stray table should be put into test cases or ignore=:", current_table)
@@ -239,6 +241,7 @@ def verify_case_placement(this_proj):
     else:
         print("TOTALS Unsorted", total_unsorted, "Double sorted cases/lines", total_double_sorted_cases, total_double_sorted_lines, "Wrong file", total_wrong_file, "Successful", total_successful)
 
+cur_file = "<NONE>"
 with open(ttc_cfg) as file:
     for (line_count, line) in enumerate (file, 1):
         if line.startswith('#'):
@@ -264,6 +267,11 @@ with open(ttc_cfg) as file:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
             else:
                 table_specs[cur_proj][cur_file].ignore.append(data)
+        elif prefix in ( 'ignorew', 'igw' ):
+            if data in table_specs[cur_proj][cur_file].ignore_wild:
+                print("WARNING duplicate ignore", cur_file, line_count, data)
+            else:
+                table_specs[cur_proj][cur_file].ignore_wild.append(data)
         elif prefix == 'project':
             cur_proj = i7.long_name(data)
             if not cur_proj:
