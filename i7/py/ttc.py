@@ -27,6 +27,7 @@ class SimpleTestCase:
 class TablePicker:
     table_names = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
     wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
+    ignore = []
 
     def __init__(self):
         pass
@@ -42,6 +43,7 @@ def get_cases(this_proj):
         in_table = False
         table_header_nethis_filet = False
         current_table = ''
+        read_table_data = False
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not in_table:
@@ -49,16 +51,24 @@ def get_cases(this_proj):
                         continue
                     current_table = re.sub(" \[.*", "", line.strip())
                     current_table = re.sub(" +\(continued\).*", "", current_table)
+                    in_table = True
                     if current_table in table_specs[this_proj][this_file].table_names:
-                        in_table = True
                         table_header_next = True
+                    elif current_table in table_specs[this_proj][this_file].ignore:
+                        pass
+                    else:
+                        print("Stray table should be put into test cases or ignore=:", current_table)
                     continue
                 if table_header_next == True:
                     table_header_next = False
                     table_line_count = 0
+                    read_table_data = True
                     continue
                 if not line.strip():
                     in_table = False
+                    read_table_data = False
+                    continue
+                if not read_table_data:
                     continue
                 table_line_count += 1
                 columns = line.strip().split('\t')
