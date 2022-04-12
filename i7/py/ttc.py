@@ -139,6 +139,44 @@ def expected_file(my_case, this_proj):
             return temp
     return "<NO GUESS>"
 
+def clean_up_spaces(this_proj, prefix = 'rbr'):
+    change_dir_if_needed()
+    glob_string = prefix + "-*.txt"
+    test_file_glob = glob.glob(glob_string)
+    if len(test_file_glob) == 0:
+        print("No test files found in", glob_string)
+        return
+    for ext in extra_project_files[this_proj]:
+        if os.path.exists(ext):
+            test_file_glob.append(ext)
+        else:
+            print("Uh oh extra file", ext, "was not found.")
+    out_file = "c:/writing/temp/ttc-mod-file.txt"
+    for my_rbr in test_file_glob:
+        any_changes = False
+        out_string = ''
+        with open(my_rbr) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if not line.startswith('#'):
+                    out_string += line
+                    continue
+                if not 'ttc' in line:
+                    out_string += line
+                    continue
+                if ' ' in line: # this may get more stringent if we allow more detailed comments
+                    any_changes = True
+                    line = line.replace(' ', '-')
+                out_string += line
+        if not any_changes:
+            print(my_rbr, "ok")
+            continue
+        print("Comparing differences in", my_rbr)
+        f = open(out_file, "w")
+        f.write(out_string)
+        f.close()
+        mt.wm(my_rbr, out_file)
+    sys.exit()
+
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -331,6 +369,12 @@ with open(ttc_cfg) as file:
             print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
 my_proj = i7.dir2proj()
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'sp':
+        clean_up_spaces(my_proj)
+else:
+    print("sp to clean up spaces is the only argument now.")
 
 if my_proj not in table_specs:
     print(my_proj, "not in table_specs.")
