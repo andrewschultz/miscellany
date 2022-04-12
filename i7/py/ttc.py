@@ -31,6 +31,7 @@ class TablePicker:
         self.ignore = []
         self.ignore_wild = []
 
+extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
@@ -125,12 +126,14 @@ def change_dir_if_needed(new_dir = ''):
 
 def expected_file(my_case, this_proj):
     for q in test_case_file_mapper_match[this_proj]:
-        if q in my_case:
+        q1 = q.replace(' ', '-')
+        if q1 in my_case:
             temp = test_case_file_mapper_match[this_proj][q]
             temp = temp.replace('reg-', '').replace('.*', '')
             return temp
     for q in test_case_file_mapper_regex[this_proj]:
-        if re.search(q, my_case):
+        q1 = q.replace(' ', '-')
+        if re.search(q1, my_case):
             temp = test_case_file_mapper_regex[this_proj][q]
             temp = temp.replace('reg-', '').replace('.*', '')
             return temp
@@ -143,6 +146,11 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     if len(test_file_glob) == 0:
         print("No test files found in", glob_string)
         return
+    for ext in extra_project_files[this_proj]:
+        if os.path.exists(ext):
+            test_file_glob.append(ext)
+        else:
+            print("Uh oh extra file", ext, "was not found.")
     for my_rbr in test_file_glob:
         print("Checking test file", my_rbr, "to verify test cases are present...")
         with open(my_rbr) as file:
@@ -170,7 +178,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         for m in misses:
             print('@' + expected_file(m, this_proj))
             print('#' + m)
-            print(">(COMMAND HERE)")
+            print(">VERB {}".format(m.replace('-', ' ')))
             print(this_case_list[m].suggested_text)
     return
 
@@ -212,6 +220,7 @@ def verify_case_placement(this_proj):
                 total_matches = 0
                 this_success = True
                 for t in test_case_file_mapper_match[this_proj]:
+                    t1 = t.replace(' ', '-')
                     if re.search(t, line):
                         total_matches += bool(re.search(t, line))
                         if not re.search(test_case_file_mapper_match[this_proj][t], fb):
@@ -219,9 +228,10 @@ def verify_case_placement(this_proj):
                             wrong_file += 1
                             this_success = False
                 for t in test_case_file_mapper_regex[this_proj]:
-                    if not re.search(t, line):
+                    t1 = t.replace(' ', '-')
+                    if not re.search(t1, line):
                         continue
-                    total_matches += bool(re.search(t, line))
+                    total_matches += bool(re.search(t1, line))
                     if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
                         print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
                         wrong_file += 1
@@ -243,7 +253,7 @@ def verify_case_placement(this_proj):
         if successful == tests_in_file:
             print("NO ERRORS FOUND IN", fb, successful, "successes")
         else:
-            print(fb, "Unsorted", unsorted, "Double sorted cases/lines", double_sorted_cases, double_sorted_lines, "Wrong file", wrong_file, "Successful", successful)
+            print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, unsorted, double_sorted_cases, double_sorted_lines, wrong_file, successful))
         total_unsorted += unsorted
         total_double_sorted_cases += double_sorted_cases
         total_double_sorted_lines += double_sorted_lines
@@ -253,7 +263,7 @@ def verify_case_placement(this_proj):
     if total_successful == total_tests_in_file:
         print("NO ERRORS FOUND ANYWHERE IN GENERATED FILES", total_successful, "total successes")
     else:
-        print("TOTALS Unsorted", total_unsorted, "Double sorted cases/lines", total_double_sorted_cases, total_double_sorted_lines, "Wrong file", total_wrong_file, "Successful", total_successful)
+        print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, total_unsorted, total_double_sorted_cases, total_double_sorted_lines, total_wrong_file, total_successful))
 
 cur_file = "<NONE>"
 with open(ttc_cfg) as file:
@@ -276,7 +286,9 @@ with open(ttc_cfg) as file:
                 if ary[x] in test_case_file_mapper_regex[cur_proj]:
                     print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
                 else:
-                    test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
+                    test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
+        elif prefix == 'extra':
+            extra_project_files[cur_proj].extend(data.split(','))
         elif prefix == 'file':
             cur_file = i7.hdr(cur_proj, data)
             if cur_file in table_specs:
