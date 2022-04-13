@@ -17,6 +17,11 @@ import os
 
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
+def usage():
+    print("sp to clean up spaces is the only argument now.")
+    print("q = quiet, no debug info and v[0-2] = debug info level")
+    sys.exit()
+
 class SimpleTestCase:
 
     def __init__(self, some_text = 'None'):
@@ -36,6 +41,8 @@ table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 
+verbose_level = 0
+
 def wild_card_match(my_table, my_cards, to_lower = True):
     if to_lower:
         my_table = my_table.lower()
@@ -48,7 +55,8 @@ def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
     for this_file in table_specs[this_proj]:
-        print("Reading file", this_file, "for test cases...")
+        if verbose_level > 0:
+            print("Reading file", this_file, "for test cases...")
         in_table = False
         current_table = ''
         cur_wild_card = ''
@@ -190,7 +198,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         else:
             print("Uh oh extra file", ext, "was not found.")
     for my_rbr in test_file_glob:
-        print("Checking test file", my_rbr, "to verify test cases are present...")
+        if verbose_level > 0:
+            print("Checking test file", my_rbr, "to verify test cases are present...")
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("#+ttc"):
@@ -289,7 +298,11 @@ def verify_case_placement(this_proj):
                 successful += this_success
                 tests_in_file += 1
         if successful == tests_in_file:
-            print("NO ERRORS FOUND IN", fb, successful, "successes")
+            output_string = "NO ERRORS FOUND IN {}: {} successes.".format(fb, successful)
+            if verbose_level == 1 and successful > 0:
+                print(output_string)
+            elif verbose_level == 2:
+                print(output_string)
         else:
             print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, unsorted, double_sorted_cases, double_sorted_lines, wrong_file, successful))
         total_unsorted += unsorted
@@ -299,7 +312,7 @@ def verify_case_placement(this_proj):
         total_successful += successful
         total_tests_in_file += tests_in_file
     if total_successful == total_tests_in_file:
-        print("NO ERRORS FOUND ANYWHERE IN GENERATED FILES", total_successful, "total successes")
+        print("NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful))
     else:
         print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, total_unsorted, total_double_sorted_cases, total_double_sorted_lines, total_wrong_file, total_successful))
 
@@ -370,11 +383,26 @@ with open(ttc_cfg) as file:
 
 my_proj = i7.dir2proj()
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'sp':
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    (arg, num, valfound) = mt.parnum(sys.argv[cmd_count])
+    cmd_count += 1
+    if arg == 'sp':
         clean_up_spaces(my_proj)
-else:
-    print("sp to clean up spaces is the only argument now.")
+        sys.exit()
+    elif arg == 'v':
+        if valfound:
+            verbose_level = num
+        else:
+            verbose_level = 1
+    elif arg == 'q':
+        verbose_level = 0
+    elif arg == '?':
+        usage()
+    else:
+        print("BAD ARGUMENT", arg)
+        usage()
 
 if my_proj not in table_specs:
     print(my_proj, "not in table_specs.")
