@@ -171,6 +171,9 @@ def clean_up_spaces(this_proj, prefix = 'rbr'):
                 if not 'ttc' in line:
                     out_string += line
                     continue
+                if 'rettc' in line:
+                    line = line.replace('rettc', '+ttc')
+                    any_changes = True
                 if ' ' in line: # this may get more stringent if we allow more detailed comments
                     any_changes = True
                     line = line.replace(' ', '-')
@@ -206,15 +209,18 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     test_to_check = line[2:].lower().strip()
                     if test_to_check not in this_case_list:
                         print("Errant re-test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
+                        mt.add_postopen(my_rbr, line_count)
                         continue
                     if this_case_list[test_to_check].found_yet == False:
                         print("Re-test before test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
+                        mt.add_postopen(my_rbr, line_count)
                     continue
                 if not line.startswith("#ttc"):
                     continue
                 test_to_check = line[1:].lower().strip()
                 if test_to_check not in this_case_list:
                     print("Errant test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
+                    mt.add_postopen(my_rbr, line_count)
                 elif test_to_check :
                     this_case_list[test_to_check].found_yet = True
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
@@ -238,7 +244,7 @@ def valid_ttc(my_line):
     return my_line.startswith('ttc')
 
 def verify_case_placement(this_proj):
-    mt.center("VERIFYING TEST CASE PLACEMENT IN RBR/REG FILES")
+    mt.center("VERIFYING TEST CASE PLACEMENT IN REG FILES INHERITED FROM RBR FILES")
     change_dir_if_needed()
     reg_glob = glob.glob("reg-*.txt")
     case_verification = defaultdict(bool)
@@ -329,6 +335,7 @@ with open(ttc_cfg) as file:
             for x in range(0, len(ary), 2):
                 if ary[x] in test_case_file_mapper_match[cur_proj]:
                     print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                    mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
         elif prefix == 'casemapr':
@@ -336,6 +343,7 @@ with open(ttc_cfg) as file:
             for x in range(0, len(ary), 2):
                 if ary[x] in test_case_file_mapper_regex[cur_proj]:
                     print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                    mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
         elif prefix == 'extra':
@@ -346,20 +354,24 @@ with open(ttc_cfg) as file:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
             else:
                 table_specs[cur_proj][cur_file] = TablePicker()
+                mt.add_postopen(ttc_cfg, line_count)
         elif prefix == 'ignore':
             if data in table_specs[cur_proj][cur_file].ignore:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
+                mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file].ignore.append(data)
         elif prefix in ( 'ignorew', 'igw' ):
             if data in table_specs[cur_proj][cur_file].ignore_wild:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
+                mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file].ignore_wild.append(data)
         elif prefix == 'project':
             cur_proj = i7.long_name(data)
             if not cur_proj:
                 print("WARNING bad project specified line {}: {}".format(line_count, data))
+                mt.add_postopen(ttc_cfg, line_count)
         elif prefix == 'table':
             ary = data.split("\t")
             try:
@@ -412,3 +424,5 @@ if my_proj not in table_specs:
 case_list = get_cases(my_proj)
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
+
+mt.post_open()
