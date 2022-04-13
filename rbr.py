@@ -81,6 +81,8 @@ ignore_next_bracket = False
 quiet = False
 copy_over_post = True
 
+prt_color = colorama.Back.GREEN + colorama.Fore.WHITE + "PRT" + colorama.Style.RESET_ALL
+
 rbr_bookmark_indices = ["loc", "room", "rm", #places
   "itm", "item", "thing", #things
   "npc", "per" #people
@@ -93,7 +95,7 @@ exe_proj = ""
 default_rbrs = defaultdict(str)
 
 def postopen_stub():
-    print("Reminder that -np disables copy-over-post and -p enables it. Default is not to copy the REG files over.")
+    print("Reminder that -np disables copy-over-post and -p enables it. Default is to copy the REG files over to the {} directory.".format(prt_color))
     mt.postopen_files()
 
 def abbrevs_to_ints(my_ary):
@@ -312,24 +314,24 @@ def search_for(x):
 def post_copy(file_array, in_file):
     if copy_over_post:
         if force_all_regs:
-            print("Copying all files over to PRT directory.")
+            print("Copying all files over to {} directory.".format(prt_color))
             for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
         elif len(changed_files.keys()):
-            print("Copying changed files over to PRT directory.")
+            print("Copying changed files over to {} directory.".format(prt_color))
             for q in changed_files.keys():
                 print(colorama.Fore.GREEN + q, "=>", ', '.join(changed_files[q]) + colorama.Style.RESET_ALL)
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
             changed_files.clear()
         elif len(absent_files.keys()):
-            print("Copying files not in PRT over to PRT directory.")
+            print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
             for q in absent_files.keys():
                 print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
                 for r in absent_files[q]:
                     copy(r[0], r[1])
             absent_files.clear()
         elif len(my_file_list_valid) == 1:
-            print(colorama.Fore.YELLOW + "No files copied over to PRT directory." + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
+            print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
 def examples():
     print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
@@ -484,10 +486,10 @@ def get_file(fname):
                 if "#skip test checking" in line:
                     last_atted_command = ""
                 continue
-            if line.startswith('@') or line.startswith('`'):
+            if (line.startswith('@') and not line.startswith('@@')) or line.startswith('`'):
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
-            elif not line.strip():
+            elif line.startswith('@@') or not line.strip():
                 if at_section and last_atted_command:
                     if viable_untested(last_atted_command,untested_ignore):
                         untested_commands[last_atted_command].append(last_cmd_line)
@@ -498,6 +500,9 @@ def get_file(fname):
                     if len(balance_trace):
                         print("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
                     balance_undos = False
+                if line.startswith('@@'):
+                    actives = [True] * len(actives)
+                    continue
             if line.startswith('=='):
                 last_eq = line_count
             if line.startswith('#'):
@@ -891,7 +896,12 @@ def get_file(fname):
         prt_mirror = os.path.join(i7.prt, xb)
         if not os.path.exists(xb):
             new_files[fname].append(xb)
-            copy(x, xb)
+            try:
+                copy(x, xb)
+            except:
+                print("Could not copy temp file", x, "to local file", xb)
+                if os.path.islink(xb):
+                    print("The problem might be a symlink directed to the wrong file or directory. Look for typos or a forgotten c: at the start.")
         elif not os.path.exists(prt_mirror):
             absent_files[fname].append((xb, prt_mirror))
         elif cmp(x, xb):
@@ -1089,6 +1099,9 @@ while count < len(sys.argv):
     elif arg in ( 'pf', 'pc', 'cp' ): copy_over_post = force_all_regs = True
     elif arg == 'iuc':
         ignore_unsaved_changed = True
+    elif arg.startswith('p='):
+        if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
+        exe_proj = i7.i7x[arg[2:]]
     elif arg in i7.i7x.keys():
         if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         exe_proj = i7.i7x[arg]
@@ -1114,7 +1127,7 @@ if strict_name_force_on and strict_name_force_off:
 my_dir = os.getcwd()
 
 if my_dir == "c:\\games\\inform\\prt":
-    sys.exit("Can't run from the PRT directory. Move to an Inform source directory.")
+    sys.exit("Can't run from the {} directory. Move to an Inform source directory.".format(prt_color))
 
 if 'github' in my_dir.lower():
     if not github_okay:
