@@ -17,6 +17,8 @@ import os
 
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
+open_after = True
+
 def usage():
     print("sp to clean up spaces is the only argument now.")
     print("q = quiet, no debug info and v[0-2] = debug info level")
@@ -386,9 +388,9 @@ with open(ttc_cfg) as file:
             cur_file = i7.hdr(cur_proj, data)
             if cur_file in table_specs:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file] = TablePicker()
-                mt.add_postopen(ttc_cfg, line_count)
         elif prefix == 'ignore':
             if data in table_specs[cur_proj][cur_file].ignore:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
@@ -444,6 +446,10 @@ while cmd_count < len(sys.argv):
             verbose_level = num
         else:
             verbose_level = 1
+    elif arg in ( 'oa', 'ao' ):
+        open_after = True
+    elif arg in ( 'no', 'on' ):
+        open_after = False
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
@@ -461,4 +467,5 @@ case_list = get_cases(my_proj)
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
 
-mt.post_open()
+if open_after:
+    mt.post_open()
