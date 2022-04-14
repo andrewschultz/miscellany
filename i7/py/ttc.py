@@ -196,6 +196,28 @@ def clean_up_spaces(this_proj, prefix = 'rbr'):
         mt.wm(my_rbr, out_file)
     sys.exit()
 
+def similar_end_match(string1, string2):
+    for x in range(0, min(len(string1), len(string2))):
+        if string1[-x] != string2[-x]:
+            break
+    if not x or '-' not in string1[-x:]:
+        return 0
+    return x
+
+def look_for_similars(my_test_case, all_test_cases):
+    max_end_match = 0
+    end_match_ary = []
+    for x in all_test_cases:
+        temp = similar_end_match(my_test_case, x)
+        if temp == 0 or temp < max_end_match:
+            continue
+        if temp > max_end_match:
+            end_match_ary = []
+        end_match_ary.append(x)
+        max_end_match = temp
+    if len(end_match_ary):
+        print("Possible match(es):", end_match_ary)
+
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -217,6 +239,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     test_to_check = line[2:].lower().strip()
                     if test_to_check not in this_case_list:
                         print("Errant re-test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
+                        look_for_similars(test_to_check, this_case_list)
                         mt.add_postopen(my_rbr, line_count)
                         continue
                     if this_case_list[test_to_check].found_yet == False:
