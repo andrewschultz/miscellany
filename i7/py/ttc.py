@@ -35,6 +35,7 @@ class TablePicker:
         self.wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
         self.ignore = []
         self.ignore_wild = []
+        self.stopper = ''
 
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
@@ -65,6 +66,8 @@ def get_cases(this_proj):
         table_header_next = False
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
+                if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
+                    break
                 if not in_table:
                     if not line.startswith("table of"):
                         continue
@@ -372,6 +375,8 @@ with open(ttc_cfg) as file:
             if not cur_proj:
                 print("WARNING bad project specified line {}: {}".format(line_count, data))
                 mt.add_postopen(ttc_cfg, line_count)
+        elif prefix == 'stopper':
+            table_specs[cur_proj][cur_file].stopper = data
         elif prefix == 'table':
             ary = data.split("\t")
             try:
