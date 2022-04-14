@@ -301,12 +301,13 @@ def verify_case_placement(this_proj):
                 is_retest = False
                 if line.startswith('+'):
                     is_retest = True
-                total_matches = 0
+                match_array = []
                 this_success = True
                 for t in test_case_file_mapper_match[this_proj]:
                     t1 = t.replace(' ', '-')
                     if re.search(t, line):
-                        total_matches += bool(re.search(t, line))
+                        if re.search(t, line):
+                            match_array.append(t)
                         if not re.search(test_case_file_mapper_match[this_proj][t], fb):
                             print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
                             wrong_file += 1
@@ -315,11 +316,13 @@ def verify_case_placement(this_proj):
                     t1 = t.replace(' ', '-')
                     if not re.search(t1, line):
                         continue
-                    total_matches += bool(re.search(t1, line))
+                    if re.search(t1, line):
+                        match_array.append(t1)
                     if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
-                        print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
+                        print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_regex[this_proj][t])
                         wrong_file += 1
                         this_success = False
+                total_matches = len(match_array)
                 if total_matches == 0:
                     unsorted += 1
                     print("WARNING unsorted test case", line, "line", line_count)
@@ -327,7 +330,7 @@ def verify_case_placement(this_proj):
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
                     double_sorted_lines += 1
-                    print("WARNING double sorted test case", line, "line", line_count)
+                    print("WARNING double sorted test case", line, "line", line_count, ' / '.join(match_array))
                     this_success = False
                 else:
                     pass
