@@ -273,11 +273,12 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     for this_goal in goal_array:
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
-        mt.center(colorama.Fore.YELLOW + "ETA to achieve {}goal of {}: {}, {} away.".format(nexty, this_goal, t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
         bytes_remaining = this_goal - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
         bytes_per_hour_overall = this_goal * 3600 / full_weekly_interval
+        t_pace_eta = t_now.add(seconds = (this_goal - current_size) * 3600 / bytes_per_hour_overall)
+        mt.center(colorama.Fore.YELLOW + "For the {}goal of {}: ETA (current pace) {}, {} away, ETA (baseline pace) {}, {} away.".format(nexty, this_goal, t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds()), t_pace_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_pace_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
         catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
