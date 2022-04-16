@@ -68,6 +68,8 @@ def get_cases(this_proj):
         fb = os.path.basename(this_file)
         table_header_next = False
         stray_table = False
+        table_lines_undecided = 0
+        table_overall_undecided = 0
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -100,7 +102,9 @@ def get_cases(this_proj):
                     continue
                 if not line.strip() or line.startswith('['):
                     if stray_table:
-                        print("Stray table {} ({} lines) should be put into test cases or ignore=.".format(current_table, table_line_count), line_count)
+                        print("Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1))
+                        table_overall_undecided += 1
+                        table_lines_undecided += table_line_count
                     in_table = False
                     read_table_data = False
                     cur_wild_card = ''
@@ -134,6 +138,8 @@ def get_cases(this_proj):
                     print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
                 else:
                     return_dict[test_case_name] = SimpleTestCase(possible_text)
+            if table_lines_undecided > 0:
+                print("{} table line{} from {} table{} still to decide on in ttc.txt for {}.".format(table_lines_undecided, mt.plur(table_lines_undecided), table_overall_undecided, mt.plur(table_overall_undecided), fb))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
