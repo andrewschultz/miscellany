@@ -77,8 +77,8 @@ def get_cases(this_proj):
                 if not in_table:
                     if not line.startswith("table of"):
                         continue
-                    current_table = re.sub(" \[.*", "", line.strip())
-                    current_table = re.sub(" +\(continued\).*", "", current_table)
+                    current_table = re.sub("[ \t]+\[.*", "", line.strip())
+                    current_table = re.sub("[ \t]+\(continued\).*", "", current_table)
                     in_table = True
                     cur_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].wild_cards)
                     ig_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].ignore_wild)
@@ -402,11 +402,13 @@ with open(ttc_cfg) as file:
             else:
                 table_specs[cur_proj][cur_file] = TablePicker()
         elif prefix == 'ignore':
-            if data in table_specs[cur_proj][cur_file].ignore:
-                print("WARNING duplicate ignore", cur_file, line_count, data)
-                mt.add_postopen(ttc_cfg, line_count)
-            else:
-                table_specs[cur_proj][cur_file].ignore.append(data)
+            ary = data.split(',')
+            for d in ary:
+                if data in table_specs[cur_proj][cur_file].ignore:
+                    print("WARNING duplicate ignore", cur_file, line_count, data)
+                    mt.add_postopen(ttc_cfg, line_count)
+                else:
+                    table_specs[cur_proj][cur_file].ignore.append(data)
         elif prefix in ( 'ignorew', 'igw' ):
             if data in table_specs[cur_proj][cur_file].ignore_wild:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
