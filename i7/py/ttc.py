@@ -18,6 +18,7 @@ import os
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
 open_after = True
+show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
 def usage():
     print("sp to clean up spaces is the only argument now.")
@@ -262,10 +263,13 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     else:
         print("{} missed test cases:".format(len(misses)))
         for m in misses:
-            print('@' + expected_file(m, this_proj))
+            if show_suggested_file:
+                print('@' + expected_file(m, this_proj))
             print('#' + m)
-            print(">VERB {}".format(m.replace('-', ' ')))
-            print(this_case_list[m].suggested_text)
+            if show_suggested_syntax:
+                print(">VERB {}".format(m.replace('-', ' ')))
+            if show_suggested_text:
+                print(this_case_list[m].suggested_text)
     return
 
 def valid_ttc(my_line):
@@ -450,6 +454,14 @@ while cmd_count < len(sys.argv):
         open_after = True
     elif arg in ( 'no', 'on' ):
         open_after = False
+    elif arg in ( 'na', 'an' ):
+        show_suggested_syntax = show_suggested_text = show_suggested_file = False
+    elif mt.alfmatch(arg, 'nst') or arg in ( 'qt', 'tq' ):
+        show_suggested_syntax = show_suggested_text = False
+    elif arg in ( 'ns', 'sn' ):
+        show_suggested_syntax = False
+    elif arg in ( 'nt', 'tn' ):
+        show_suggested_text = False
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
