@@ -48,6 +48,9 @@ test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 
 verbose_level = 0
 
+def strip_end_comments(my_string):
+    return re.sub("\[.*?\]$", "", my_string.strip())
+
 def wild_card_match(my_table, my_cards, to_lower = True):
     if to_lower:
         my_table = my_table.lower()
@@ -71,6 +74,7 @@ def get_cases(this_proj):
         stray_table = False
         table_lines_undecided = 0
         table_overall_undecided = 0
+        tables_found = defaultdict(bool)
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -106,6 +110,7 @@ def get_cases(this_proj):
                         print("Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1))
                         table_overall_undecided += 1
                         table_lines_undecided += table_line_count
+                        tables_found[current_table] = True
                     in_table = False
                     read_table_data = False
                     cur_wild_card = ''
@@ -122,7 +127,7 @@ def get_cases(this_proj):
                     sub_test_case = "{}".format(table_line_count)
                 else:
                     try:
-                        relevant_text_array = [columns[y] for y in ary_to_poke[0]]
+                        relevant_text_array = [strip_end_comments(columns[y]) for y in ary_to_poke[0]]
                         sub_test_case = '-'.join(relevant_text_array)
                     except:
                         sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(ary_to_poke[0], len(columns), line_count, fb))
@@ -137,10 +142,16 @@ def get_cases(this_proj):
                 test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                 if test_case_name in return_dict:
                     print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
+                elif test_case_name in table_specs[this_proj][this_file].untestables:
+                    print("UNTESTABLE", test_case_name)
                 else:
                     return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
-                print("{} table line{} from {} table{} still to decide on in ttc.txt for {}.".format(table_lines_undecided, mt.plur(table_lines_undecided), table_overall_undecided, mt.plur(table_overall_undecided), fb))
+                if table_overall_undecided != len(tables_found):
+                    unique_tables = "/{}".format(len(tables_found))
+                else:
+                    unique_tables = ''
+                print("{} table line{} from {}{} table{} still to decide on in ttc.txt for {}.".format(table_lines_undecided, mt.plur(table_lines_undecided), table_overall_undecided, unique_tables, mt.plur(table_overall_undecided), fb))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
@@ -338,7 +349,7 @@ def verify_case_placement(this_proj):
                 total_matches = len(match_array)
                 if total_matches == 0:
                     unsorted += 1
-                    print("WARNING unsorted test case", line, "line", line_count)
+                    print("WARNING test case missing from reg* file pool:", line, "line", line_count)
                     this_success = False
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
@@ -406,10 +417,10 @@ with open(ttc_cfg) as file:
             ary = data.split(',')
             for d in ary:
                 if data in table_specs[cur_proj][cur_file].ignore:
-                    print("WARNING duplicate ignore", cur_file, line_count, data)
+                    print("WARNING duplicate ignore", cur_file, line_count, d)
                     mt.add_postopen(ttc_cfg, line_count)
                 else:
-                    table_specs[cur_proj][cur_file].ignore.append(data)
+                    table_specs[cur_proj][cur_file].ignore.append(d)
         elif prefix in ( 'ignorew', 'igw' ):
             if data in table_specs[cur_proj][cur_file].ignore_wild:
                 print("WARNING duplicate ignore", cur_file, line_count, data)
