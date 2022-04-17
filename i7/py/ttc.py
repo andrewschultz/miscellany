@@ -39,6 +39,7 @@ class TablePicker:
         self.ignore = []
         self.ignore_wild = []
         self.stopper = ''
+        self.untestables = []
 
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
@@ -431,6 +432,17 @@ with open(ttc_cfg) as file:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
                 print("Also, make sure entries 2/3 are integers.")
+        elif prefix in ( 'untestable', 'untestables' ):
+            ary = data.split(",")
+            for a in ary:
+                if a.startswith('#'):
+                    print("Stripping # from untestable at line", line_count)
+                    a = a[1:]
+                    mt.add_postopen(ttc_cfg, line_count, priority = 4)
+                if a in table_specs[cur_proj][cur_file].untestables:
+                    print("Duplicate untestable", a)
+                    continue
+                table_specs[cur_proj][cur_file].untestables.append(a)
         elif prefix in ( 'wc', 'wild', 'wildcard', 'wildcards' ):
             ary = data.split("\t")
             try:
