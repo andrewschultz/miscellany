@@ -239,6 +239,24 @@ def look_for_similars(my_test_case, all_test_cases):
     if len(end_match_ary):
         print("Possible match(es):", end_match_ary)
 
+def base_of(my_str):
+    if my_str.startswith("#+"):
+        return my_str[2:]
+    if my_str.startswith("#"):
+        return my_str[1:]
+    return my_str
+
+def is_ttc_comment(my_str):
+    return my_str.startswith("#ttc") or my_str.startswith("+ttc")
+
+def rbr_cases_of(my_line):
+    if is_ttc_comment(my_line):
+        return [ my_line.strip().lower() ]
+    if not my_line.startswith("{"):
+        return []
+    my_line = re.sub("^\{.*?\}", "", my_line)
+    return [x for x in re.split("\\\\", my_line) if is_ttc_comment(x)]
+
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -256,25 +274,22 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
             print("Checking test file", my_rbr, "to verify test cases are present...")
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
-                if line.startswith("#+ttc"):
-                    test_to_check = line[2:].lower().strip()
-                    if test_to_check not in this_case_list:
-                        print("Errant re-test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
-                        look_for_similars(test_to_check, this_case_list)
+                my_cases = rbr_cases_of(line)
+                for this_case in my_cases:
+                    raw_case = base_of(this_case)
+                    if raw_case not in this_case_list:
+                        print("Errant {} {}test case at {} line {}.".format(raw_case, 're-' if '+' in this_case else '', my_rbr, line_count))
+                        look_for_similars(raw_case, this_case_list)
                         mt.add_postopen(my_rbr, line_count)
                         continue
-                    if this_case_list[test_to_check].found_yet == False:
-                        print("Re-test before test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
+                    if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
+                        print("Re-test before test case {} at {} line {}.".format(raw_case, my_rbr, line_count))
                         mt.add_postopen(my_rbr, line_count)
-                    continue
-                if not line.startswith("#ttc"):
-                    continue
-                test_to_check = line[1:].lower().strip()
-                if test_to_check not in this_case_list:
-                    print("Errant test case {} at {} line {}.".format(test_to_check, my_rbr, line_count))
-                    mt.add_postopen(my_rbr, line_count)
-                elif test_to_check :
-                    this_case_list[test_to_check].found_yet = True
+                    if raw_case not in this_case_list:
+                        print("Errant test case {} at {} line {}.".format(raw_case, my_rbr, line_count))
+                        mt.add_postopen(my_rbr, line_count)
+                    elif raw_case:
+                        this_case_list[raw_case].found_yet = True
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
     if len(misses) == 0:
         print("No test cases were missed!")
