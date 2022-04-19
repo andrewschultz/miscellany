@@ -40,6 +40,7 @@ class TablePicker:
         self.ignore_wild = []
         self.stopper = ''
         self.untestables = []
+        self.untestable_regexes = []
 
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
@@ -142,8 +143,9 @@ def get_cases(this_proj):
                 test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                 if test_case_name in return_dict:
                     print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
-                elif test_case_name in table_specs[this_proj][this_file].untestables:
-                    print("UNTESTABLE", test_case_name)
+                elif test_case_name in table_specs[this_proj][this_file].untestables or wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
+                    pass
+                    #print("UNTESTABLE", test_case_name)
                 else:
                     return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
@@ -469,6 +471,16 @@ with open(ttc_cfg) as file:
                     print("Duplicate untestable", a)
                     continue
                 table_specs[cur_proj][cur_file].untestables.append(a)
+        elif prefix in ( 'untestabler' ):
+            ary = data.split(",")
+            for a in ary:
+                if a.startswith('#'):
+                    print("Stripping # from untestable at line", line_count)
+                    a = a[1:]
+                    mt.add_postopen(ttc_cfg, line_count, priority = 4)
+                if a in table_specs[cur_proj][cur_file].untestable_regexes:
+                    continue
+                table_specs[cur_proj][cur_file].untestable_regexes.append(a)
         elif prefix in ( 'wc', 'wild', 'wildcard', 'wildcards' ):
             ary = data.split("\t")
             try:
