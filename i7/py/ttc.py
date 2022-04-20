@@ -52,11 +52,11 @@ verbose_level = 0
 def strip_end_comments(my_string):
     return re.sub("\[.*?\]$", "", my_string.strip())
 
-def wild_card_match(my_table, my_cards, to_lower = True):
+def wild_card_match(my_string_to_match, my_cards, to_lower = True):
     if to_lower:
-        my_table = my_table.lower()
+        my_string_to_match = my_string_to_match.lower()
     for x in my_cards:
-        if re.search(x, my_table):
+        if re.search(x, my_string_to_match):
             return x
     return False
 
@@ -249,14 +249,14 @@ def base_of(my_str):
     return my_str
 
 def is_ttc_comment(my_str):
-    return my_str.startswith("#ttc") or my_str.startswith("+ttc")
+    return my_str.startswith("#ttc") or my_str.startswith("#+ttc")
 
 def rbr_cases_of(my_line):
     if is_ttc_comment(my_line):
         return [ my_line.strip().lower() ]
     if not my_line.startswith("{"):
         return []
-    my_line = re.sub("^\{.*?\}", "", my_line)
+    my_line = re.sub("^\{.*?\}", "", my_line.strip())
     return [x for x in re.split("\\\\", my_line) if is_ttc_comment(x)]
 
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
