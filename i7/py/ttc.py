@@ -274,21 +274,23 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     for my_rbr in test_file_glob:
         if verbose_level > 0:
             print("Checking test file", my_rbr, "to verify test cases are present...")
+        base = os.path.basename(my_rbr)
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 my_cases = rbr_cases_of(line)
                 for this_case in my_cases:
                     raw_case = base_of(this_case)
                     if raw_case not in this_case_list:
-                        print("Errant {} {}test case at {} line {}.".format(raw_case, 're-' if '+' in this_case else '', my_rbr, line_count))
+                        print("Errant {} {}test case at {} line {}.".format(raw_case, 're-' if '+' in this_case else '', base, line_count))
                         look_for_similars(raw_case, this_case_list)
                         mt.add_postopen(my_rbr, line_count)
                         continue
                     if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
-                        print("Re-test before test case {} at {} line {}.".format(raw_case, my_rbr, line_count))
+                        print("Re-test before test case {} at {} line {}.".format(raw_case, base, line_count))
+                        this_case_list[raw_case].found_yet = True
                         mt.add_postopen(my_rbr, line_count)
                     if raw_case not in this_case_list:
-                        print("Errant test case {} at {} line {}.".format(raw_case, my_rbr, line_count))
+                        print("Errant test case {} at {} line {}.".format(raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     elif raw_case:
                         this_case_list[raw_case].found_yet = True
@@ -296,8 +298,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     if len(misses) == 0:
         print("No test cases were missed!")
     else:
-        print("{} missed test cases:".format(len(misses)))
-        for m in misses:
+        print("{} missed test case{}:".format(len(misses), mt.plur(len(misses))))
+        for m in sorted(misses):
             if show_suggested_file:
                 print('@' + expected_file(m, this_proj))
             print('#' + m)
@@ -366,7 +368,7 @@ def verify_case_placement(this_proj):
                 total_matches = len(match_array)
                 if total_matches == 0:
                     unsorted += 1
-                    print("WARNING test case missing from reg* file pool:", line, "line", line_count)
+                    print("WARNING ({}) test case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line in case_list else 'invalid', fb, line_count, line))
                     this_success = False
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
@@ -529,7 +531,7 @@ while cmd_count < len(sys.argv):
         usage()
 
 if my_proj not in table_specs:
-    print(my_proj, "not in table_specs.")
+    print("{} not in table_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
     print("Here is which are:", ', '.join(sorted(table_specs)))
     sys.exit()
 
