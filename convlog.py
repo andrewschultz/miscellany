@@ -32,8 +32,8 @@ read_i7_default_project = False
 save_old_copy = False
 
 delete_array = []
-runs_logfile = 'logfile.txt'
-logfile_temp = 'logfile-temp.txt'
+runs_logfile = os.path.join(i7.prt, 'logfile.txt')
+logfile_temp = os.path.join(i7.prt, 'logfile-temp.txt')
 
 my_binary = ''
 my_proj = ''
@@ -159,6 +159,11 @@ while cmd_count < len(sys.argv):
         usage('invalid command {}'.format(arg))
     cmd_count += 1
 
+if delete_array:
+    zap_files(delete_array)
+    print("Deleting files causes a bail before we read/export to HTML.")
+    sys.exit()
+
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
@@ -175,9 +180,6 @@ out_file = os.path.join(i7.prt, "logpy-{}.htm".format(my_proj))
 prefix = "reg-{}".format(my_proj)
 
 os.chdir(i7.prt)
-
-if delete_array:
-    zap_files(delete_array)
 
 extra_data_files = []
 original_dir = i7.proj2dir(my_proj)
