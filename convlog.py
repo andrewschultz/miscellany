@@ -16,6 +16,7 @@ last_success_time_taken = defaultdict(int)
 last_run = defaultdict(int)
 last_run_time_taken = defaultdict(int)
 last_errs = defaultdict(int)
+last_lines = defaultdict(int)
 blank = defaultdict(int)
 raw_link = defaultdict(str)
 mod_link = defaultdict(str)
@@ -45,6 +46,19 @@ def usage(header = 'usage'):
     print("wp/pw = write current project to i7 data file")
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
     sys.exit()
+
+def lines_of(my_file):
+    try:
+        f = open(my_file)
+        temp = len(f.readlines())
+        f.close()
+    except:
+        print("Trouble reading last", my_file, "so returning -1")
+        return -1
+    return temp
+
+def latest_file(my_file):
+    return os.path.join(i7.prt, 'latest', 'trans-' + my_file)
 
 def find_orphans(my_array):
     for x in last_run:
@@ -107,7 +121,7 @@ def center_write(my_text, my_num = 0):
     f.write("<center><font size=+4>{}{}</font></center>".format(my_text, '' if my_num == 0 else '({})'.format(my_num)))
 
 
-def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time of day', 'Errors', 'Last test run length', 'Modified' ]):
+def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time passed', 'Last passed test run length', 'Last time run', 'Last test duration', 'Last lines', 'Errors', 'Modified' ]):
     if len(val_array) == 0:
         f.write("<center><font size=+4>(nothing found, no table created)</font></center>\n")
         return
@@ -225,6 +239,9 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
         timestamp[ary[0]] = round(float(ary[2]))
         last_run_time_taken[ary[0]] = "{:.2f} sec".format(float(ary[3]))
         last_errs[ary[0]] = int(ary[1])
+        this_latest_file = latest_file(ary[0])
+        if ary[0] not in last_lines:
+            last_lines[ary[0]] = lines_of(this_latest_file)
         if not my_binary:
             my_binary = find_binary_in(ary[0])
 
@@ -248,12 +265,12 @@ if len(never_pass) == 0:
     f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
     center_write("Never passed", len(never_pass))
-    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, mod_link ])
+    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified' ])
 
 center_write("Still errors", len(still_errs))
-html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_errs, mod_link ])
+html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_lines, last_errs, mod_link ])
 center_write("Passing", len(passed))
-html_table_make(passed, [ raw_link, last_run, last_run_time_taken, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Modified' ])
+html_table_make(passed, [ raw_link, last_run, last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
 
 if len(extra_data_files):
     f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(extra_data_files)))
