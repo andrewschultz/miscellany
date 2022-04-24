@@ -60,6 +60,14 @@ def wild_card_match(my_string_to_match, my_cards, to_lower = True):
             return x
     return False
 
+def tweak_text(column_entry):
+    column_entry = strip_end_comments(column_entry.replace('/', '-').replace("'", ''))
+    if '"' not in column_entry:
+        return column_entry
+    qary = column_entry.split('"')
+    return qary[1]
+
+# this function pulls the potential test cases from the source code.
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
@@ -128,7 +136,7 @@ def get_cases(this_proj):
                     sub_test_case = "{}".format(table_line_count)
                 else:
                     try:
-                        relevant_text_array = [strip_end_comments(columns[y]) for y in ary_to_poke[0]]
+                        relevant_text_array = [tweak_text(columns[y]) for y in ary_to_poke[0]]
                         sub_test_case = '-'.join(relevant_text_array)
                     except:
                         sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(ary_to_poke[0], len(columns), line_count, fb))
