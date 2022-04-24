@@ -145,15 +145,18 @@ def get_cases(this_proj):
                 else:
                     try:
                         relevant_text_array = [columns[y] for y in ary_to_poke[1]]
-                        possible_text = '\n'.join(relevant_text_array).replace('"', '')
+                        possible_text = '\n'.join(relevant_text_array)
                     except:
                         possible_text = '<ERROR PARSING COLUMNS>'
                 test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                 if test_case_name in return_dict:
-                    print("Oops. We have a duplicate test case {} line {}.".format(line_count, test_case_name))
-                elif test_case_name in table_specs[this_proj][this_file].untestables or wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
-                    pass
-                    #print("UNTESTABLE", test_case_name)
+                    print("Potential error: source code provided duplicate test case/column entry {} at line {} of {}.".format(test_case_name, line_count, fb))
+                elif test_case_name in table_specs[this_proj][this_file].untestables:
+                    if verbose_level > 0:
+                        print("UNTESTABLE ABSOLUTE", test_case_name)
+                elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
+                    if verbose_level > 0:
+                        print("UNTESTABLE REGEX", test_case_name)
                 else:
                     return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
@@ -267,6 +270,7 @@ def rbr_cases_of(my_line):
     my_line = re.sub("^\{.*?\}", "", my_line.strip())
     return [x for x in re.split("\\\\", my_line) if is_ttc_comment(x)]
 
+# this verifies test cases are in rbr* or reg* files at least once, following ttc = first time, +ttc = those after.
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -296,6 +300,9 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
                         print("Re-test before test case {} at {} line {}.".format(raw_case, base, line_count))
                         this_case_list[raw_case].found_yet = True
+                        mt.add_postopen(my_rbr, line_count)
+                    if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
+                        print("Duplicate test case {} at {} line {} must be acknowledged with preceding +.".format(raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     if raw_case not in this_case_list:
                         print("Errant test case {} at {} line {}.".format(raw_case, base, line_count))
@@ -370,7 +377,7 @@ def verify_case_placement(this_proj):
                     if re.search(t1, line):
                         match_array.append(t1)
                     if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
-                        print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_regex[this_proj][t])
+                        print("Test case", line, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
                         wrong_file += 1
                         this_success = False
                 total_matches = len(match_array)
@@ -381,7 +388,7 @@ def verify_case_placement(this_proj):
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
                     double_sorted_lines += 1
-                    print("WARNING double sorted test case", line, "line", line_count, ' / '.join(match_array))
+                    print("WARNING test case potentially sorted into two files:", line, "line", line_count, ' / '.join(match_array))
                     this_success = False
                 else:
                     pass
@@ -489,6 +496,7 @@ with open(ttc_cfg) as file:
                     a = a[1:]
                     mt.add_postopen(ttc_cfg, line_count, priority = 4)
                 if a in table_specs[cur_proj][cur_file].untestable_regexes:
+                    print("Duplicate regex", a, cur_proj, line_count)
                     continue
                 table_specs[cur_proj][cur_file].untestable_regexes.append(a)
         elif prefix in ( 'wc', 'wild', 'wildcard', 'wildcards' ):
