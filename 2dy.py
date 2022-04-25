@@ -522,8 +522,11 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
             cur_diff = pn.diff(last_time).in_seconds()
         except:
             print("No readable data in {}, so I can't check if it's being run too soon. It probably isn't.".format(stats_file))
-        if cur_diff < minimum_seconds_between and not force_stats:
-            sys.exit("It's been too soon since the last time I looked at the daily file size. {} seconds and minimum is {}. Use -fs to override this.".format(cur_diff, minimum_seconds_between))
+        if cur_diff < minimum_seconds_between and not force_stats and (ld == my_stuff[-1].split("\t")[1]):
+            print("It's been too soon since the last time I looked at the daily file size. {} seconds and minimum is {}. Use -fs to override this.".format(cur_diff, minimum_seconds_between))
+            if bail:
+                sys.exit()
+            return
     out_string = "{}\t{}\t{}".format(ld, pn, os.stat(ld).st_size)
     f.write(out_string + "\n")
     f.close()
@@ -736,7 +739,7 @@ def create_new_file(my_file, launch = True):
     f.close()
     if write_base_stats and my_daily_dir == daily:
         put_stats(bail = False)
-    if launch: mt.npo(my_file, my_line = 500)
+    if launch: mt.npo(my_file)
 
 #
 # main coding block
