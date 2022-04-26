@@ -31,6 +31,7 @@ write_errors_to_script = False
 write_current_project = False
 read_i7_default_project = False
 save_old_copy = False
+force_open = False
 
 delete_array = []
 runs_logfile = os.path.join(i7.prt, 'logfile.txt')
@@ -61,11 +62,12 @@ def latest_file(my_file):
     return os.path.join(i7.prt, 'latest', 'trans-' + my_file)
 
 def find_orphans(my_array):
+    global del_cmd
     for x in last_run:
         x0 = os.path.realpath(x)
         if not os.path.exists(x0):
             if x0 not in orphaned_files:
-                print(x0, "is orphaned (in the PRT directory but not the source directory. If it was moved, you may wish to delete it from the data.")
+                print(x0, "is in the log file but not the PRT directory. If it was moved, you may wish to delete it from the data.")
                 del_cmd += "    erase {}\n".format(x)
                 orphaned_files[x0] += 1
             continue
@@ -167,6 +169,8 @@ while cmd_count < len(sys.argv):
             extra_data_file_flags = num
     elif arg == 'oa':
         extra_data_file_flags = -1
+    elif arg == 'f':
+        force_open = True
     elif arg == '?':
         usage()
     else:
@@ -344,7 +348,11 @@ if write_current_project:
 elif read_i7_default_project:
     print("Note we can write a new default project with -wp or -pw.")
 
-os.system(out_file)
+if len(never_pass) or len(still_errs) or (force_open):
+    os.system(out_file)
+else:
+    print(colorama.Fore.GREEN + "Not opening the log file since everything succeeded!" + colorama.Style.RESET_ALL)
+
 #g = glob.glob("c:/games/inform/prt/reg-{}-*.txt".format(my_proj))
 
 #print(g)
