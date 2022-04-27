@@ -20,6 +20,7 @@ last_lines = defaultdict(int)
 blank = defaultdict(int)
 raw_link = defaultdict(str)
 mod_link = defaultdict(str)
+frame_link = defaultdict(str)
 timestamp = defaultdict(int)
 orphaned_files = defaultdict(int)
 
@@ -123,7 +124,7 @@ def center_write(my_text, my_num = 0):
     f.write("<center><font size=+4>{}{}</font></center>".format(my_text, '' if my_num == 0 else '({})'.format(my_num)))
 
 
-def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time passed', 'Last passed test run length', 'Last time run', 'Last test duration', 'Last lines', 'Errors', 'Modified' ]):
+def html_table_make(val_array, array_of_dict, header_array = [ 'Name', 'Original', 'Last time passed', 'Last passed test run length', 'Last time run', 'Last test duration', 'Last lines', 'Errors', 'Modified', 'Frame' ]):
     if len(val_array) == 0:
         f.write("<center><font size=+4>(nothing found, no table created)</font></center>\n")
         return
@@ -260,6 +261,21 @@ for l in last_run:
     l_mod = l.replace(".txt", "-mod.txt")
     raw_link[l] = '<a href="latest/trans-{}">{} original</a>'.format(l, l)
     mod_link[l] = '<a href="latest/trans-{}">{} modified</a>'.format(l_mod, l)
+    frame_link[l] = '<a href="latest/frame-{}">Frame</a>'.format(l.replace('.txt', '.htm'))
+
+for le in last_errs:
+    if le in passed:
+        continue
+    if os.path.exists(frame_link[le]):
+        continue
+    f = open("latest/frame-{}".format(le.replace('.txt', '.htm')), "w")
+    f.write('<html>\n')
+    f.write('  <frameset cols = "50%,50%">\n')
+    f.write('    <frame src = "trans-{}" />\n'.format(le))
+    f.write('    <frame src = "trans-{}" />\n'.format(le.replace('.txt', '-mod.txt')))
+    f.write('   </frameset>\n')
+    f.write("</html>\n")
+    f.close()
 
 f = open(out_file, "w")
 
@@ -269,10 +285,10 @@ if len(never_pass) == 0:
     f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
     center_write("Never passed", len(never_pass))
-    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified' ])
+    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link, frame_link], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified', 'Frame' ])
 
 center_write("Still errors", len(still_errs))
-html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_lines, last_errs, mod_link ])
+html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_lines, last_errs, mod_link, frame_link ])
 center_write("Passing", len(passed))
 html_table_make(passed, [ raw_link, last_run, last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
 
