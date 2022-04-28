@@ -28,6 +28,7 @@ extra_data_file_flags = 3
 
 wild_cards = ''
 
+force_frame_rewrite = False
 write_errors_to_script = False
 write_current_project = False
 read_i7_default_project = False
@@ -47,6 +48,7 @@ def usage(header = 'usage'):
     print("w= = wild card")
     print("wp/pw = write current project to i7 data file")
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
+    print("fr = force frame rewrite, f = force open when all successful")
     sys.exit()
 
 def lines_of(my_file):
@@ -172,6 +174,8 @@ while cmd_count < len(sys.argv):
         extra_data_file_flags = -1
     elif arg == 'f':
         force_open = True
+    elif arg in ( 'fr', 'rf' ):
+        force_frame_rewrite = True
     elif arg == '?':
         usage()
     else:
@@ -266,8 +270,9 @@ for l in last_run:
 for le in last_errs:
     if le in passed:
         continue
-    if os.path.exists(frame_link[le]):
+    if not force_frame_rewrite and os.path.exists(frame_link[le]):
         continue
+    print("Rewriting" if os.path.exists(frame_link[le]) else "Writing", frame_link[le])
     f = open("latest/frame-{}".format(le.replace('.txt', '.htm')), "w")
     f.write('<html>\n')
     f.write('  <frameset cols = "50%,50%">\n')
