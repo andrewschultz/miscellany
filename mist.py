@@ -102,6 +102,17 @@ def read_mistake_defaults():
             if len(l0) != 2: sys.exit("Need a tab separating project and default message at line {:d}.".format(line_count))
             base_err[l0[0]] = l0[1]
 
+def is_probable_mistake(my_line):
+    if "#mistake" not in my_line:
+        return False
+    if "\\#mistake " in my_line:
+        return True
+    if re.search("^{.*?}#mistake", my_line):
+        return True
+    if my_line.startswith("#mistake "):
+        return True
+    return False
+
 def mister(a, my_file, do_standard):
     global clipboard_str
     check_this_after = check_stuff_after and do_standard
@@ -264,7 +275,7 @@ def mister(a, my_file, do_standard):
                         clipboard_str += re.sub("mistake test", "mistake retest", last_mistake) + last_cmd + line + '\n'
                 ignore_brackets = False
                 retest = False
-                if "\\#mistake " in line or line.startswith("#mistake "):
+                if is_probable_mistake(line):
                     last_mistake = line
                     test_note = re.sub(".*#mistake test (for )?", "", line.strip().lower())
                     test_note = re.sub("\\\\.*", "", test_note)
