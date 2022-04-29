@@ -19,6 +19,7 @@ from collections import defaultdict
 # ary = ['shuffling']
 ary = []
 
+verify_regs = False
 
 added = defaultdict(bool)
 srev = defaultdict(str)
@@ -51,6 +52,19 @@ def usage():
     print("-e = edit the data file, -ec/ce = edit source, -eb = edit branches")
     print("Other arguments are the project name, short or long")
     exit()
+
+def process_mistake_comments(one_file):
+    if 'nudmis' in one_file:
+        return 0
+    count = 0
+    fb = os.path.basename(one_file)
+    with open(one_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if not (line.startswith("#mistake test") or line.startswith("#mistake retest")):
+                continue
+            print("{} line {} has errant mistake test: {}".format(fb, line_count, line.strip()))
+            count += 1
+    return count
 
 def read_from_mist_data(mist_data):
     f = defaultdict(list)
@@ -465,6 +479,8 @@ if len(sys.argv) > 1:
         elif arg == 'po':
             print_output = True
             write_file = False
+        elif arg == 'v':
+            verify_regs = True
         elif arg[:2] == 'e=':
             end_room = arg[2:].replace("-", " ")
         elif arg == '?': usage()
@@ -511,6 +527,18 @@ if len(added.keys()) == 0:
     added[x] = True
     if not os.path.exists(i7.hdr(x, 'mi')):
         sys.exit("There is no mistake file for project {}.".format(x))
+
+if verify_regs:
+    g = glob.glob("reg*.txt")
+    total_errs = total_files = 0
+    for fi in g:
+        temp = process_mistake_comments(fi)
+        total_errs += temp
+        total_files += not (not temp)
+    if not total_errs:
+        print("SUCCESS! No mistake tests are misplaced.")
+    else:
+        print("Misplaced mistake test cases: {} in {} file{}.".format(total_errs, total_files, mt.plur(total_files)))
 
 for ad in added:
     if ad not in files:
