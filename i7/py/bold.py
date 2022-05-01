@@ -46,6 +46,7 @@ bold_commas = True
 only_one = False
 exact_find = False
 find_copy_paste_stuff = False
+italic_text_alt = True
 
 test_array = []
 
@@ -66,6 +67,9 @@ def usage(header = '==== GENERAL USAGE ===='):
 def special_mod(my_line):
     if ignore_single_word_quote:
         my_line = re.sub(r'"\[b\]([a-zA-Z]+)\[r\]"', r'"\1"', my_line)
+    if italic_text_alt:
+        if ('ital-say') in my_line:
+            my_line = my_line.replace('[r][i]', '[i]').replace('[r]', '[i]')
     return my_line
 
 def zap_nested_brax(my_string):
@@ -273,6 +277,12 @@ while cmd_count < len(sys.argv):
         only_one = True
     elif arg == 'c':
         clip = True
+    elif arg == 'l':
+        list_caps = True
+    elif arg in ( 'ia', 'ai' ):
+        italic_text_alt = True
+    elif mt.alpha_match(arg, 'ain'):
+        italic_text_alt = False
     elif arg == 'l':
         list_caps = True
     elif arg == 'cp':
