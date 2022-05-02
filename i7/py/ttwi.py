@@ -20,6 +20,8 @@ to_clipboard = False
 in_table = got_table = False
 t_start = 0
 
+detailed_notes = False
+
 out_newline = '\n'
 
 def print_whats_missing():
@@ -49,11 +51,12 @@ while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-': arg = arg[1:]
     if arg == 'c' or arg == '2c': to_clipboard = True
+    elif arg == 'd': detailed_notes = True
     elif arg == 'u': out_newline = '\n'
     elif arg == 'w': out_newline = '\r\n'
     elif re.search("[a-z]", arg):
         if arg.startswith("table-of-"):
-            print("No need to put table-of- to start.")
+            print("No need to start the table name with table-of-.")
             table_to_find = arg
         else:
             table_to_find = ("table of " + arg).lower()
@@ -69,12 +72,15 @@ if not increasing(switch_array): sys.exit("You need the switch-array to be a per
 
 if not os.path.exists("story.ni"): sys.exit("Need to move to a directory with story.ni.")
 
+in_header_row = False
+
 with open("story.ni") as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(table_to_find):
             print("Got", table_to_find, "at line", line_count)
             t_start = line_count
             in_table = got_table = True
+            in_header_row = True
             continue
         if not in_table: continue
         if not line.strip() or line.startswith("["):
@@ -96,18 +102,24 @@ with open("story.ni") as file:
                 print("New array", switch_array)
             lma = str(ll)
         lm = lma.split("\t")
+        if in_header_row:
+            required_size = len(lm)
+            in_header_row = False
+        if len(lm) < required_size:
+            if detailed_notes:
+                print("Extending line {} by {}.".format(line_count, required_size - len(lm)))
+            lm.extend(['--'] * (required_size - len(lm)))
+            #print(line_count, lm)
         if cur_row == 0:
             for q in lm:
                 if re.search(" [a-z]", q.lower()): print("WARNING space in header", q)
-        if "\"" in ll:
-            lx = re.sub(".*\"", "", ll)
-        else:
-            lx = ""
         new_ar = []
         for x in switch_array: new_ar.append(lm[x])
-        this_row_string = "\t".join(new_ar) + lx
-        if to_clipboard: clipboard_string += this_row_string + '\n'
-        else: print(this_row_string)
+        this_row_string = "\t".join(new_ar)
+        if to_clipboard:
+            clipboard_string += this_row_string + '\n'
+        else:
+            print(this_row_string)
 
 if not got_table: sys.exit("Could not find {:s} in story.ni.".format(table_to_find))
 
