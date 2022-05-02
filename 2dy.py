@@ -323,9 +323,15 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     if not len(relevant_stats):
         sys.exit("No relevant stats yet. You must have tried to graph things at the start of the week.")
+        if bail:
+            sys.exit()
+        return
 
     if len(relevant_stats) == 1:
-        sys.exit("Not enough relevant stats for a graph yet. You must have tried to graph things at the start of the week.")
+        print("Not enough relevant stats for a graph yet. You must have tried to graph things at the start of the week.")
+        if bail:
+            sys.exit()
+        return
 
     init_ary = relevant_stats[0].split("\t")
     last_ary = relevant_stats[-1].split("\t")
@@ -509,7 +515,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     if bail:
         sys.exit()
 
-def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
+def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False, create_graphics = True):
     os.chdir("c:/writing/daily")
     f = open(stats_file, "a")
     ld = mt.last_daily_of()
@@ -530,6 +536,8 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
     out_string = "{}\t{}\t{}".format(ld, pn, os.stat(ld).st_size)
     f.write(out_string + "\n")
     f.close()
+    if not create_graphics:
+        return
 
     if launch_iff_new_k:
         f = open(stats_file)
@@ -540,9 +548,13 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False):
         byte_delta = last_bytes - before_last_bytes
         if byte_delta:
             print("Thousands-floor increased from {} to {}, so I am opening a new graph".format(before_last_bytes, last_bytes))
-            graph_stats()
+            graph_stats(bail = bail)
         else:
             print("Thousands-floor stayed constant at {}, so I am not going to create a new graph".format(last_bytes))
+    else:
+        print("Forcing launch of graphics file.")
+        graph_stats()
+
     if print_on_over:
         f = open(stats_file)
         ary = f.readlines()
@@ -738,8 +750,8 @@ def create_new_file(my_file, launch = True):
     for s in sect_ary: f.write("\n\\{:s}\n".format(s))
     f.close()
     if write_base_stats and my_daily_dir == daily:
-        put_stats(bail = False)
-    if launch: mt.npo(my_file)
+        put_stats(bail = False, create_graphics = False)
+    if launch: mt.npo(my_file, bail=False)
 
 #
 # main coding block
