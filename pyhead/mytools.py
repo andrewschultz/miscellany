@@ -24,6 +24,8 @@ import codecs
 import colorama
 import pendulum
 
+mt_default_dict = defaultdict(str)
+
 this_year = pendulum.now().year
 
 gitbase = 'c:/users/andrew/documents/github'
@@ -92,6 +94,16 @@ np = '"{}"'.format(npnq)
 
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
+
+def string_expand(my_string, my_expand_dictionary = mt_default_dict, force_lower = False):
+    if '$' not in my_string:
+        return my_string
+    full_join = "|".join(my_expand_dictionary)
+    join_string = r"\${{({})}}".format(full_join)
+    if force_lower:
+        join_string = join_string.lower()
+    new_string = re.sub(join_string, lambda x: my_expand_dictionary[x.group(1)] if x.group(1) in my_expand_dictionary else "!!", my_string)
+    return new_string
 
 def truth_state_of(text_data, print_warning = True):
     tl = text_data.lower().strip()
