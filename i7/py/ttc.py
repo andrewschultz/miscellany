@@ -15,6 +15,7 @@ import sys
 import re
 import os
 import itertools
+import colorama
 
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
@@ -44,6 +45,7 @@ class TablePicker:
         self.stopper = ''
         self.untestables = []
         self.untestable_regexes = []
+        self.okay_duplicates = defaultdict(int)
 
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
@@ -81,6 +83,7 @@ def prefix_array_of(this_table):
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
+    any_dupes_yet = False
     for matrix in matrices[this_proj]:
         mult_matrix = matrix[0].split(",")
         for x in range(1, len(matrix)):
@@ -101,6 +104,7 @@ def get_cases(this_proj):
         table_lines_undecided = 0
         table_overall_undecided = 0
         tables_found = defaultdict(bool)
+        dupe_orig = table_specs[this_proj][this_file].okay_duplicates.copy()
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -169,6 +173,11 @@ def get_cases(this_proj):
                 for this_prefix in prefix_array:
                     test_case_name = "{}-{}-{}".format(this_prefix, current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                     if test_case_name in return_dict:
+                        if test_case_name in table_specs[this_proj][this_file].okay_duplicates:
+                            table_specs[this_proj][this_file].okay_duplicates[test_case_name] -= 1
+                            if table_specs[this_proj][this_file].okay_duplicates[test_case_name] < 0:
+                                print("Potential error: too many duplicate listings for {} in {}.".format(test_case_name, this_file))
+                            continue
                         print("Potential error: source code provided duplicate test case/column entry {} at line {} of {}.".format(test_case_name, line_count, fb))
                     elif test_case_name in table_specs[this_proj][this_file].untestables:
                         if verbose_level > 0:
@@ -184,6 +193,13 @@ def get_cases(this_proj):
                 else:
                     unique_tables = ''
                 print("{} table line{} from {}{} table{} still to decide on in ttc.txt for {}.".format(table_lines_undecided, mt.plur(table_lines_undecided), table_overall_undecided, unique_tables, mt.plur(table_overall_undecided), fb))
+        for dupe in table_specs[this_proj][this_file].okay_duplicates:
+            if table_specs[this_proj][this_file].okay_duplicates[dupe] == 0:
+                continue
+            if not any_dupes_yet:
+                any_dupes_yet = True
+                print(colorama.Fore.YELLOW + "NOTE: we count the number of duplicates, not the total number of occurrences." + colorama.Style.RESET_ALL)
+            print("Too {} duplicates for entry {}: {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicates[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicates[dupe]), dupe_orig[dupe]))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
@@ -467,7 +483,7 @@ with open(ttc_cfg) as file:
             custom_table_prefixes[ary[0]] = ary[1].split(',')
             print(ary[0], custom_table_prefixes[ary[0]])
         elif prefix == 'extra':
-            extra_project_files[cur_proj].extend(data.split(','))
+            extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
         elif prefix == 'file':
             cur_file = i7.hdr(cur_proj, data)
             if cur_file in table_specs:
@@ -491,6 +507,16 @@ with open(ttc_cfg) as file:
                 table_specs[cur_proj][cur_file].ignore_wild.append(data)
         elif prefix == 'matrix':
             matrices[cur_proj].append(data.split("\t"))
+        elif prefix == 'okdup':
+            ary = data.split(",")
+            if not cur_file:
+                print("WARNING: you probably want to put an OKDUP in a specific file.")
+            for a in ary:
+                if '~' not in a:
+                    table_specs[cur_proj][cur_file].okay_duplicates[a] = 1
+                else:
+                    a2 = a.split("~")
+                    table_specs[cur_proj][cur_file].okay_duplicates[a2[0]] = int(a2[1])
         elif prefix == 'project':
             cur_proj = i7.long_name(data)
             if not cur_proj:
