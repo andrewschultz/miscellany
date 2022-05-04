@@ -441,7 +441,12 @@ with open(ttc_cfg) as file:
         if line.startswith(';'):
             break
         (prefix, data) = mt.cfg_data_split(line)
-        if prefix == 'casemap':
+        if len(mt.mt_default_dict) and '$' in line:
+            old_data = data
+            data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
+        if prefix.startswith("$"):
+            mt.mt_default_dict[prefix[1:]] = data
+        elif prefix == 'casemap':
             ary = data.split(",")
             for x in range(0, len(ary), 2):
                 if ary[x] in test_case_file_mapper_match[cur_proj]:
