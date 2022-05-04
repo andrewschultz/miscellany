@@ -20,6 +20,8 @@ ttc_cfg = "c:/writing/scripts/ttc.txt"
 open_after = True
 show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
+custom_table_prefixes = defaultdict(list)
+
 def usage():
     print("sp to clean up spaces is the only argument now.")
     print("q = quiet, no debug info and v[0-2] = debug info level")
@@ -67,6 +69,11 @@ def tweak_text(column_entry):
     qary = column_entry.split('"')
     return qary[1]
 
+def prefix_array_of(this_table):
+    if this_table not in custom_table_prefixes:
+        return [ 'ttc' ]
+    return [ (x if x.startswith('ttc-') else 'ttc-' + x) for x in custom_table_prefixes[this_table] ]
+
 # this function pulls the potential test cases from the source code.
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
@@ -108,6 +115,8 @@ def get_cases(this_proj):
                     else:
                         stray_table = True
                         table_line_count = -1
+                    prefix_array = prefix_array_of(current_table)
+                    print(current_table, "prefix array", prefix_array)
                     continue
                 if table_header_next == True:
                     table_header_next = False
@@ -148,17 +157,18 @@ def get_cases(this_proj):
                         possible_text = '\n'.join(relevant_text_array)
                     except:
                         possible_text = '<ERROR PARSING COLUMNS>'
-                test_case_name = "ttc-{}-{}".format(current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
-                if test_case_name in return_dict:
-                    print("Potential error: source code provided duplicate test case/column entry {} at line {} of {}.".format(test_case_name, line_count, fb))
-                elif test_case_name in table_specs[this_proj][this_file].untestables:
-                    if verbose_level > 0:
-                        print("UNTESTABLE ABSOLUTE", test_case_name)
-                elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
-                    if verbose_level > 0:
-                        print("UNTESTABLE REGEX", test_case_name)
-                else:
-                    return_dict[test_case_name] = SimpleTestCase(possible_text)
+                for this_prefix in prefix_array:
+                    test_case_name = "{}-{}-{}".format(this_prefix, current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
+                    if test_case_name in return_dict:
+                        print("Potential error: source code provided duplicate test case/column entry {} at line {} of {}.".format(test_case_name, line_count, fb))
+                    elif test_case_name in table_specs[this_proj][this_file].untestables:
+                        if verbose_level > 0:
+                            print("UNTESTABLE ABSOLUTE", test_case_name)
+                    elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
+                        if verbose_level > 0:
+                            print("UNTESTABLE REGEX", test_case_name)
+                    else:
+                        return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
                     unique_tables = "/{}".format(len(tables_found))
@@ -438,6 +448,10 @@ with open(ttc_cfg) as file:
                     mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
+        elif prefix == 'custpref':
+            ary = data.split('\t')
+            custom_table_prefixes[ary[0]] = ary[1].split(',')
+            print(ary[0], custom_table_prefixes[ary[0]])
         elif prefix == 'extra':
             extra_project_files[cur_proj].extend(data.split(','))
         elif prefix == 'file':
