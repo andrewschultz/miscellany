@@ -14,6 +14,7 @@ import i7
 import sys
 import re
 import os
+import itertools
 
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
@@ -49,6 +50,8 @@ table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 
+matrices = defaultdict(list)
+
 verbose_level = 0
 
 def strip_end_comments(my_string):
@@ -78,6 +81,13 @@ def prefix_array_of(this_table):
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
+    for matrix in matrices[this_proj]:
+        mult_matrix = matrix[0].split(",")
+        for x in range(1, len(matrix)):
+            mult_matrix = list(itertools.product(mult_matrix, matrix[x].split(',')))
+        for f in mult_matrix:
+            f0 = 'testcase-' + '-'.join(f)
+            return_dict[f0] = SimpleTestCase("WHAT WE EXPECT FROM " + f0)
     for this_file in table_specs[this_proj]:
         if verbose_level > 0:
             print("Reading file", this_file, "for test cases...")
@@ -116,7 +126,6 @@ def get_cases(this_proj):
                         stray_table = True
                         table_line_count = -1
                     prefix_array = prefix_array_of(current_table)
-                    print(current_table, "prefix array", prefix_array)
                     continue
                 if table_header_next == True:
                     table_header_next = False
@@ -270,7 +279,7 @@ def base_of(my_str):
     return my_str
 
 def is_ttc_comment(my_str):
-    return my_str.startswith("#ttc") or my_str.startswith("#+ttc")
+    return my_str.startswith("#ttc") or my_str.startswith("#+ttc") or my_str.startswith("#testcase") or my_str.startswith("#+testcase")
 
 def rbr_cases_of(my_line):
     if is_ttc_comment(my_line):
@@ -475,6 +484,8 @@ with open(ttc_cfg) as file:
                 mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file].ignore_wild.append(data)
+        elif prefix == 'matrix':
+            matrices[cur_proj].append(data.split("\t"))
         elif prefix == 'project':
             cur_proj = i7.long_name(data)
             if not cur_proj:
