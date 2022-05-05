@@ -31,9 +31,12 @@ def usage():
 
 class SimpleTestCase:
 
-    def __init__(self, some_text = 'None'):
+    def __init__(self, suggested_text = 'None', command_text = '', condition_text = '', expected_file = ''):
         self.found_yet = False
-        self.suggested_text = some_text
+        self.suggested_text = suggested_text
+        self.command_text = command_text
+        self.condition_text = condition_text
+        self.expected_file = expected_file
 
 class TablePicker:
 
@@ -100,15 +103,16 @@ def get_mistakes(this_proj):
             conditions = suffix
             conditions = re.sub(".*(when|while)", "", conditions).replace('.', '')
             conditions = re.sub("\[.*", "", conditions).strip()
-            full_commands = test_prefix + '-'.join(prefix.split('"')[1::2])
+            full_commands = '-'.join(prefix.split('"')[1::2])
             full_commands = full_commands.replace('[', '').replace(']', '').replace(' ', '-').replace('/', '-')
+            test_case = test_prefix + full_commands
             suffix = suffix.replace('[b]', '').replace('[r]', '')
             suffix = re.sub("\".*", "", suffix)
-            if full_commands in mistake_dict:
-                full_commands = renumber(full_commands, mistake_dict)
+            if test_case in mistake_dict:
+                test_case = renumber(test_case, mistake_dict)
                 if verbose_level > 0:
-                    print(this_proj, "mistake file: renaming", re.sub(".[0-9]+$", "", full_commands), "to", full_commands)
-            mistake_dict[full_commands] = SimpleTestCase(suffix + "\n#" + conditions)
+                    print(this_proj, "mistake file: renaming", re.sub(".[0-9]+$", "", test_case), "to", test_case)
+            mistake_dict[test_case] = SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
     return mistake_dict
 
 # this function pulls the potential test cases from the source code.
@@ -385,12 +389,20 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         print("missed test case{} listed below:".format(mt.plur(len(misses))))
         for m in sorted(misses):
             if show_suggested_file:
-                print('@' + expected_file(m, this_proj))
+                if this_case_list[m].expected_file:
+                    print('@' + this_case_list[m].expected_file)
+                else:
+                    print('@' + expected_file(m, this_proj))
             print('#' + m)
             if show_suggested_syntax:
-                print(">VERB {}".format(m.replace('-', ' ')))
+                if this_case_list[m].command_text:
+                    print(">{}".format(this_case_list[m].command_text))
+                else:
+                    print(">VERB {}".format(m.replace('-', ' ')))
             if show_suggested_text:
                 print(this_case_list[m].suggested_text)
+                if this_case_list[m].condition_text:
+                    print("#condition: {}".format(this_case_list[m].condition_text))
         if len(misses) > 0:
             print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
     return
