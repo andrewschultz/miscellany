@@ -79,6 +79,38 @@ def prefix_array_of(this_table):
         return [ 'ttc' ]
     return [ (x if x.startswith('ttc-') else 'ttc-' + x) for x in custom_table_prefixes[this_table] ]
 
+def renumber(entry, my_dict):
+    number_to_add = 2
+    candidate_entry = entry + "-2"
+    while candidate_entry in my_dict:
+        number_to_add += 1
+        candidate_entry = "{}-{}".format(entry, number_to_add)
+    return candidate_entry
+
+def get_mistakes(this_proj):
+    mistake_file = i7.hdr(this_proj, "mi")
+    mistake_dict = defaultdict(SimpleTestCase)
+    test_prefix = 'testcase-mistake-{}-'.format(this_proj)
+    with open(mistake_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if not line.startswith("understand") or not 'as a mistake' in line:
+                continue
+            prefix = re.sub("as a mistake.*", "", line.strip())
+            suffix = re.sub(".*\(\"", "", line.strip())
+            conditions = suffix
+            conditions = re.sub(".*(when|while)", "", conditions).replace('.', '')
+            conditions = re.sub("\[.*", "", conditions).strip()
+            full_commands = test_prefix + '-'.join(prefix.split('"')[1::2])
+            full_commands = full_commands.replace('[', '').replace(']', '').replace(' ', '-').replace('/', '-')
+            suffix = suffix.replace('[b]', '').replace('[r]', '')
+            suffix = re.sub("\".*", "", suffix)
+            if full_commands in mistake_dict:
+                full_commands = renumber(full_commands, mistake_dict)
+                if verbose_level > 0:
+                    print(this_proj, "mistake file: renaming", re.sub(".[0-9]+$", "", full_commands), "to", full_commands)
+            mistake_dict[full_commands] = SimpleTestCase(suffix + "\n#" + conditions)
+    return mistake_dict
+
 # this function pulls the potential test cases from the source code.
 def get_cases(this_proj):
     return_dict = defaultdict(bool)
@@ -87,7 +119,7 @@ def get_cases(this_proj):
     for matrix in matrices[this_proj]:
         mult_matrix = matrix[0].split(",")
         for x in range(1, len(matrix)):
-            mult_matrix = list(itertools.product(mult_matrix, matrix[x].split(',')))
+            mult_matrix = list(itertools.product(mult_matrix, [a.strip() for a in matrix[x].split(',')]))
         for f in mult_matrix:
             f0 = 'testcase-' + '-'.join(f)
             return_dict[f0] = SimpleTestCase("WHAT WE EXPECT FROM " + f0)
@@ -186,6 +218,8 @@ def get_cases(this_proj):
                         if verbose_level > 0:
                             print("UNTESTABLE REGEX", test_case_name)
                     else:
+                        if possible_text.startswith('"') and possible_text.endswith('"'):
+                            possible_text = possible_text[1:-1]
                         return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
@@ -348,7 +382,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     if len(misses) == 0:
         print("No test cases were missed!")
     else:
-        print("{} missed test case{}:".format(len(misses), mt.plur(len(misses))))
+        print("missed test case{} listed below:".format(mt.plur(len(misses))))
         for m in sorted(misses):
             if show_suggested_file:
                 print('@' + expected_file(m, this_proj))
@@ -357,6 +391,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                 print(">VERB {}".format(m.replace('-', ' ')))
             if show_suggested_text:
                 print(this_case_list[m].suggested_text)
+        if len(misses) > 0:
+            print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
     return
 
 def valid_ttc(my_line):
@@ -608,6 +644,7 @@ if my_proj not in table_specs:
     sys.exit()
 
 case_list = get_cases(my_proj)
+case_list.update(get_mistakes(my_proj))
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
 
