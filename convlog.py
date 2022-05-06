@@ -270,10 +270,11 @@ for l in last_run:
 for le in last_errs:
     if le in passed:
         continue
-    if not force_frame_rewrite and os.path.exists(frame_link[le]):
+    out_frame_file = "latest/frame-{}".format(le.replace('.txt', '.htm'))
+    if (not force_frame_rewrite) and os.path.exists(out_frame_file):
         continue
     print("Rewriting" if os.path.exists(frame_link[le]) else "Writing", frame_link[le])
-    f = open("latest/frame-{}".format(le.replace('.txt', '.htm')), "w")
+    f = open(out_frame_file, "w")
     f.write('<html>\n')
     f.write('  <frameset cols = "50%,50%">\n')
     f.write('    <frame src = "trans-{}" />\n'.format(le))
@@ -370,7 +371,8 @@ elif read_i7_default_project:
     print("Note we can write a new default project with -wp or -pw.")
 
 if len(never_pass) or len(still_errs) or (force_open):
-    os.system(out_file)
+    print("Opening", os.path.normpath(out_file), os.path.abspath(out_file))
+    os.system(os.path.normpath(out_file))
 else:
     print(colorama.Fore.GREEN + "Not opening the log file since everything succeeded!" + colorama.Style.RESET_ALL)
 
