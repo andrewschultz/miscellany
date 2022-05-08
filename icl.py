@@ -73,7 +73,7 @@ def build_type(a):
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
 def title_from_blurb(my_proj):
-    blurb_file = "c:/games/inform/{}.inform/Release.blurb".format(i7.long_name(my_proj))
+    blurb_file = "c:/games/inform/{}.inform/Release.blurb".format(i7.long_name(my_proj, use_given = True))
     with open(blurb_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if "[TITLE]" in line:
@@ -274,9 +274,9 @@ while cmd_count < len(sys.argv):
     if arg == 'debug':
         what_to_build[i7.DEBUG] = True
     elif arg == 'beta':
-        what_to_build[i7.RELEASE] = True
-    elif arg == 'release':
         what_to_build[i7.BETA] = True
+    elif arg == 'release':
+        what_to_build[i7.RELEASE] = True
     elif arg == 'l':
         launch_after = True
     elif arg[-1:] == 'w' and arg[:-1].isdigit():
