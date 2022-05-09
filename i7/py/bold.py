@@ -30,6 +30,7 @@ unignores = defaultdict(list)
 counts = defaultdict(int)
 bail_at = defaultdict(list)
 unbail_at = defaultdict(list)
+rule_ignore = defaultdict(list)
 
 max_errors = 0
 stderr_now = False
@@ -119,6 +120,8 @@ def get_ignores():
             if prefix.lower() in ( 'project', 'proj' ):
                 current_projs = bold_cfg_array_of(data)
                 continue
+            if prefix.lower == 'ruleignore':
+                rule_ignore[cp].append(data)
             if prefix.lower == 'unignore':
                 if 'global' in current_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
@@ -205,12 +208,19 @@ def bold_modify(my_line):
     new_quote = '"'.join(new_ary)
     return special_mod(new_quote)
 
+def rule_ignorable(my_line):
+    for r in rule_ignore[my_project]:
+        if r in my_line:
+            return True
+    return False
+
 def process_potential_bolds(my_file):
     count_err_lines = 0
     count_total_bolds = 0
     if write_comp_file:
         f = open(comp_file, "w", newline='')
     broken = False
+    ignore_this_rule = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     mfb = os.path.basename(my_file)
     with open(my_file) as file:
@@ -221,6 +231,14 @@ def process_potential_bolds(my_file):
                 if write_comp_file:
                     f.write(line)
                 continue
+            if not line.strip():
+                ignore_this_rule = False
+            if ignore_this_rule:
+                continue
+            if not line.startswith('\t'):
+                if rule_ignorable(line):
+                    ignore_whole_rule = True
+                    continue
             if string_match(line, bail_at):
                 broken = True
                 if write_comp_file:
