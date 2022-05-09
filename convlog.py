@@ -291,12 +291,21 @@ if len(never_pass) == 0:
     f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
     center_write("Never passed", len(never_pass))
-    html_table_make(never_pass, [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link, frame_link], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified', 'Frame' ])
+    html_table_make(last_run_filtered(never_pass), [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link, frame_link], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified', 'Frame' ])
+
+by_time = defaultdict(str)
+
+def last_run_filtered(my_dict):
+    time_sort = sorted([last_run[x] for x in my_dict], reverse=True)
+    temp_dict = defaultdict(str)
+    for x in my_dict:
+        temp_dict[x] = last_run[x] + " ({})".format(time_sort.index(last_run[x]) + 1)
+    return temp_dict
 
 center_write("Still errors", len(still_errs))
-html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run, last_run_time_taken, last_lines, last_errs, mod_link, frame_link ])
+html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run_filtered(still_errs), last_run_time_taken, last_lines, last_errs, mod_link, frame_link ])
 center_write("Passing", len(passed))
-html_table_make(passed, [ raw_link, last_run, last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
+html_table_make(passed, [ raw_link, last_run_filtered(passed), last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
 
 if len(extra_data_files):
     f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(extra_data_files)))
