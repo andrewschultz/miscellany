@@ -1,6 +1,7 @@
 # nitxt.py
 #
-# gets NI game text between the quotes--or any extension of source code
+# gets Inform 7 game text between the quotes--or any extension of source code
+# it does this for story.ni as well as the files in the header
 #
 # usage: optional file name (e.g. for escape.xvn)
 # -nr / -rn / -rb = toggles whether or not to rub what is between brackets, which overrides extension settings
@@ -15,6 +16,8 @@ import sys
 import codecs
 import re
 import mytools as mt
+
+skip_single_words = False
 
 count = 0
 
@@ -79,6 +82,9 @@ def get_text(file_name, get_include):
             # print("Line", line_count, cur_line)
             x = cur_line.strip().split("\"")[1::2]
             for y in x:
+                if skip_single_words:
+                    if ' ' not in y and '-' not in y:
+                        continue
                 if rub_brackets: temp = re.sub("\[[^\]]+\]", " / ", y)
                 else: temp = y
                 temp = re.sub("\['\]", "'", temp)
@@ -125,7 +131,9 @@ while count < len(sys.argv):
         author_only = True
     elif arg[:2] == 'n=':
         author_name = arg[2:]
-    elif arg[:2] == 'w=':
+    elif arg == 'ss':
+        skip_single_words = True
+    elif arg[:2] in ( 'w=', 'f=' ):
         forbidden_words.extend(arg[2:].split(','))
     else:
         if file_name: sys.exit("Tried to define 2 file names or a bad flag.")
