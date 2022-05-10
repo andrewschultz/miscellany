@@ -18,6 +18,7 @@ import re
 import mytools as mt
 
 skip_single_words = False
+errors_only = False
 
 count = 0
 
@@ -138,6 +139,8 @@ while count < len(sys.argv):
         print_tables = False
     elif arg == 'a':
         author_only = True
+    elif arg == 'eo':
+        errors_only = True
     elif arg[:2] == 'n=':
         author_name = arg[2:]
     elif arg == 'ss':
@@ -145,8 +148,11 @@ while count < len(sys.argv):
     elif arg[:2] in ( 'w=', 'f=' ):
         forbidden_words.extend(arg[2:].split(','))
     else:
-        if file_name: sys.exit("Tried to define 2 file names or a bad flag.")
-        file_name = arg
+        if '.' in arg:
+            if file_name: sys.exit("Tried to define 2 file names or had a bad flag.")
+            file_name = arg
+        else:
+            usage('Bad argument {}'.format(arg))
     count += 1
 
 if not file_name: file_name = "story.ni" # could search for a bunch of different names ... or not
