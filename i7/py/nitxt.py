@@ -30,9 +30,15 @@ ignores = []
 accepts = []
 
 forbidden_words = []
+forbiddens = 0
 
 my_name = "Andrew Schultz"
 my_dir = "c:/program files (x86)/inform 7/inform7/Extensions/Andrew Schultz"
+
+def usage(header = 'main usage'):
+    print('=' * 20, header, '=' * 20)
+    print("Main usage is nitxt.py f=(forbidden word)")
+    sys.exit()
 
 def ext_2_brax(file_name):
     if file_name.endswith('xvn'): return False # Marnix Van Den Bos's XVAN system. For the sample game Escape.
@@ -40,6 +46,7 @@ def ext_2_brax(file_name):
     return False
 
 def get_text(file_name, get_include):
+    global forbiddens
     if file_name in already_got:
         print(("=" * 30) + "Already got", file_name)
         return
@@ -90,13 +97,15 @@ def get_text(file_name, get_include):
                 temp = re.sub("\['\]", "'", temp)
                 temp = re.sub(" +", " ", temp)
                 temp = re.sub(r'\\n', " ", temp)
-                if re.search("[A-Za-z]", temp):
-                    print("Line {}{}: {}".format(line_count, ' ({})'.format(this_table) if print_tables and this_table else '', temp))
+                if not errors_only:
+                    if re.search("[A-Za-z]", temp):
+                        print("Line {}{}: {}".format(line_count, ' ({})'.format(this_table) if print_tables and this_table else '', temp))
                 if line_count == 1:
                     continue
                 for f in forbidden_words:
                     if f.lower() in temp.lower():
                         sys.stderr.write("Forbidden word {} present in {} at line {}: {}.\n".format(f, fb, line_count, y))
+                        forbiddens += 1
             cur_line = ""
 
 count = 1
@@ -170,3 +179,9 @@ for x in include_files:
     if ignore_skip:
         continue
     get_text(x, False)
+
+if len(forbidden_words):
+    if forbiddens:
+        print("Forbidden words found:", forbiddens)
+    else:
+        print("Forbidden words were all redacted!")
