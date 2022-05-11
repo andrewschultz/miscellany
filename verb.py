@@ -17,6 +17,7 @@ bracket_text = defaultdict(str)
 copy_text = True
 print_text = False
 general_text = ''
+default_prefix = ''
 
 verb_data = "c:/writing/scripts/verbdata.txt"
 sample_data = []
@@ -46,6 +47,14 @@ def add_clipboard_text(prefix, data):
     if not my_action.endswith("ing"):
         my_action += "ing"
     this_string = "chapter {}\n\n".format(my_action)
+    if prefix not in verb_types:
+        if prefix:
+            print("WARNING unrecognized prefix {}.")
+        if not default_prefix:
+            print("Bailing. If you wish to give a default prefix, edit the data file with verb.py e and say default=(what you want).")
+            sys.exit()
+        print("Going with default of {}. Find valid prefixes with ?.".format(default_prefix))
+        verb_types[prefix] = default_prefix
     if verb_types[prefix] == "out of world":
         action_type = "out of world"
     else:
@@ -70,6 +79,8 @@ with open(verb_data) as file:
         if prefix == "sample":
             sample_data.append(data)
             continue
+        if prefix in ( "default", "defaultprefix", "default-prefix", "dp" ):
+            default_prefix = data
         ary = prefix.split(",")
         for a in ary:
             if a in verb_types:
@@ -102,7 +113,9 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     elif not prefix:
-        sys.exit("Badly formed argument {}: there is no default prefix, so we need to specify w= for out of world, etc.".format(arg))
+        if not default_prefix:
+            sys.exit("Badly formed argument {}: there is no default prefix, so we need to specify w= for out of world, etc.".format(arg))
+        clip_text += add_clipboard_text(default_prefix, data)
     elif not data:
         sys.exit("You need data after the =/: in {}.".format(arg))
     else:
