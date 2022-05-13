@@ -202,6 +202,7 @@ def read_zup_txt():
     file_base_dir = ''
     file_to_dir = ''
     current_file = ''
+    to_base_dir = ''
     cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -240,7 +241,7 @@ def read_zup_txt():
                 curzip.command_buffer.append(line[2:].strip())
                 continue
             try:
-                (prefix, data) = mt.cfg_data_split(line.strip())
+                (prefix, data) = mt.cfg_data_split(line.strip(), lowercase_data = False)
             except:
                 flag_cfg_error(line_count, "Badly formed data line {}: |{}|".format(line_count, line.strip()))
                 continue
@@ -286,9 +287,9 @@ def read_zup_txt():
                         add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.join(file_array[1], x) if len(file_array) > 1 else os.path.basename(x)), line_count)
                     continue
                 if len(file_array) == 1:
-                    add_to_file_map(curzip.file_map, file_array[0], os.path.basename(file_array[0]), line_count)
+                    add_to_file_map(curzip.file_map, file_array[0], os.path.join(to_base_dir, os.path.basename(file_array[0])), line_count)
                 elif len(file_array) == 2:
-                    add_to_file_map(curzip.file_map, file_array[0], file_array[1], line_count)
+                    add_to_file_map(curzip.file_map, file_array[0], os.path.join(to_base_dir, file_array[1]), line_count)
                 else:
                     flag_cfg_error(line_count, "Badly split file line at {} has {} entr(y/ies).".format(line_count, len(file_array)))
                 if '*' not in data:
@@ -390,6 +391,8 @@ def read_zup_txt():
                     curzip = zups[proj_candidate]
             elif prefix == 'postbuild':
                 curzip.post_build.append(data)
+            elif prefix in ( 't', 'tb', 'td' ):
+                to_base_dir = data
             elif prefix == 'time':
                 ary = data.split("\t")
                 if len(ary) > 1:
