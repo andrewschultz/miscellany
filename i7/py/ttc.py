@@ -237,7 +237,7 @@ def get_cases(this_proj):
             if not any_dupes_yet:
                 any_dupes_yet = True
                 print(colorama.Fore.YELLOW + "NOTE: we count the number of duplicates, not the total number of occurrences." + colorama.Style.RESET_ALL)
-            print("Too {} duplicates for entry {}: {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicates[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicates[dupe]), dupe_orig[dupe]))
+            print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicates[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicates[dupe]), dupe_orig[dupe]))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
@@ -413,7 +413,7 @@ def valid_ttc(my_line):
     my_line = my_line[1:]
     if my_line.startswith('+'):
         my_line = my_line[1:]
-    return my_line.startswith('ttc')
+    return my_line.startswith('ttc-') or my_line.startswith('testcase-')
 
 def verify_case_placement(this_proj):
     mt.center("VERIFYING TEST CASE PLACEMENT IN REG FILES INHERITED FROM RBR FILES")
