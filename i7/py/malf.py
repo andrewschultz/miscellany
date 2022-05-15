@@ -18,6 +18,7 @@ from filecmp import cmp
 from shutil import copy
 from collections import defaultdict
 from collections import OrderedDict
+import colorama
 
 malf_cfg = "c:/writing/scripts/malf.txt"
 
@@ -148,9 +149,13 @@ def sort_mistake(pr):
     mfs = os.path.basename(mf)
     last_sorted_header = ""
     last_sorted_line = 0
+    ignore_sorting_this_section = False
+    last_header_name = "<NONE>"
     with open(mf) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower().rstrip()
+            if i7.is_outline_start(ll):
+                last_header_name = ll.lower().strip()
             if pr in sort_level.keys():
                 q = i7.is_outline_start(ll)
                 if q:
@@ -160,11 +165,16 @@ def sort_mistake(pr):
                             if not post_open_line: post_open_line = line_count
                         last_sorted_header = ll
                         last_sorted_line = line_count
+                        ignore_sorting_this_section = False
                     elif i7.outline_val_hash[q] > i7.outline_val_hash[sort_level[pr]]:
                         last_sorted_header = ""
             if flag_actual_code and ll and ' DOCUMENTATION ' not in line:
                 sys.exit("Uh oh. Line {:d} in {:s} has code it shouldn't. You need to adjust the 'ends here' line.".format(line_count, mfs))
             if ll.startswith('understand'):
+                if 'as something new' in ' '.join(ll.split('"')[0::2]):
+                    if not ignore_sorting_this_section:
+                        print(colorama.Fore.YELLOW + "definitions detected in {} line {}.".format(last_header_name, line_count) + colorama.Style.RESET_ALL)
+                    ignore_sorting_this_section = True
                 for x in all_mistakes(ll):
                     if not ignore_dupe_next_line:
                         if x in local_duplicates.keys():
@@ -184,8 +194,9 @@ def sort_mistake(pr):
                     print("Need carriage return before line", line_count, ":", line.strip())
                     exit()
                 if len(sect_to_sort) > 0:
-                    s2 = sorted(sect_to_sort, key=mistake_compare)
-                    f.write("\n" + "\n".join(s2) + "\n")
+                    if not ignore_sorting_this_section:
+                        sect_to_sort = sorted(sect_to_sort, key=mistake_compare)
+                    f.write("\n" + "\n".join(sect_to_sort) + "\n")
                 elif need_alpha:
                     f.write("\n")
                 need_alpha = is_on_heading(line)
