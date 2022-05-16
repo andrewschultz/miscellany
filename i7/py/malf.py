@@ -151,6 +151,7 @@ def sort_mistake(pr):
     last_sorted_line = 0
     ignore_sorting_this_section = False
     last_header_name = "<NONE>"
+    ever_sorted = False
     with open(mf) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower().rstrip()
@@ -173,7 +174,7 @@ def sort_mistake(pr):
             if ll.startswith('understand'):
                 if 'as something new' in ' '.join(ll.split('"')[0::2]):
                     if not ignore_sorting_this_section:
-                        print(colorama.Fore.YELLOW + "definitions detected in {} line {}.".format(last_header_name, line_count) + colorama.Style.RESET_ALL)
+                        print(colorama.Fore.YELLOW + "as-something-new detected in {} line {}, not sorting.".format(last_header_name, line_count) + colorama.Style.RESET_ALL)
                     ignore_sorting_this_section = True
                 for x in all_mistakes(ll):
                     if not ignore_dupe_next_line:
@@ -194,6 +195,7 @@ def sort_mistake(pr):
                     print("Need carriage return before line", line_count, ":", line.strip())
                     exit()
                 if len(sect_to_sort) > 0:
+                    ever_sorted = True
                     if not ignore_sorting_this_section:
                         sect_to_sort = sorted(sect_to_sort, key=mistake_compare)
                     f.write("\n" + "\n".join(sect_to_sort) + "\n")
@@ -213,6 +215,8 @@ def sort_mistake(pr):
                     current_lines = ""
                 continue
             current_lines += line
+    if not ever_sorted:
+        print(colorama.Fore.YELLOW + "Nothing was sorted. Maybe you need to adjust the level. This happens if BOOK is sorted for a project but not CHAPTER." + colorama.Style.RESET_ALL)
     if not flag_actual_code:
         sys.exit("You should never hit this error, but if you do, you need a line saying\n{:s} ends here.\n".format(mfs))
     if current_lines: sect_to_sort.append(current_lines)
