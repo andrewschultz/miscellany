@@ -90,6 +90,21 @@ def renumber(entry, my_dict):
         candidate_entry = "{}-{}".format(entry, number_to_add)
     return candidate_entry
 
+def mark_rbr_open(file_name, orig_line_count, comp_line):
+    global rbr_globals
+    if not rbr_globals:
+        rbr_globals = glob.glob("rbr-*")
+    print(comp_line)
+    for x in rbr_globals:
+        with open(x) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if line.lower() == comp_line.lower():
+                    mt.add_open(x, line_count)
+                    print("Found RBR line", line_count, comp_line.strip())
+                    return
+    mt.add_open(file_name, orig_line_count)
+    return
+
 def get_mistakes(this_proj):
     mistake_file = i7.hdr(this_proj, "mi")
     mistake_dict = defaultdict(SimpleTestCase)
@@ -438,40 +453,44 @@ def verify_case_placement(this_proj):
             for (line_count, line) in enumerate (file, 1):
                 if not valid_ttc(line):
                     continue
-                line = line[1:].lower().strip()
+                line_mod = line[1:].lower().strip()
                 is_retest = False
-                if line.startswith('+'):
+                if line_mod.startswith('+'):
                     is_retest = True
                 match_array = []
                 this_success = True
                 for t in test_case_file_mapper_match[this_proj]:
                     t1 = t.replace(' ', '-')
-                    if re.search(t, line):
-                        if re.search(t, line):
+                    if re.search(t, line_mod):
+                        if re.search(t, line_mod):
                             match_array.append(t)
                         if not re.search(test_case_file_mapper_match[this_proj][t], fb):
-                            print("Test case", line, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
+                            print("Test case", line_mod, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
+                            mark_rbr_open(file_name, line_count, line)
                             wrong_file += 1
                             this_success = False
                 for t in test_case_file_mapper_regex[this_proj]:
                     t1 = t.replace(' ', '-')
-                    if not re.search(t1, line):
+                    if not re.search(t1, line_mod):
                         continue
-                    if re.search(t1, line):
+                    if re.search(t1, line_mod):
                         match_array.append(t1)
                     if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
-                        print("Test case", line, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
+                        print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
+                        mark_rbr_open(file_name, line_count, line)
                         wrong_file += 1
                         this_success = False
                 total_matches = len(match_array)
                 if total_matches == 0:
                     unsorted += 1
-                    print("WARNING ({}) test case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line in case_list else 'invalid', fb, line_count, line))
+                    print("WARNING ({}) test case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line_mod in case_list else 'invalid', fb, line_count, line_mod))
+                    mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
                     double_sorted_lines += 1
-                    print("WARNING test case potentially sorted into two files:", line, "line", line_count, ' / '.join(match_array))
+                    print("WARNING test case potentially sorted into two files:", line_mod, "line_mod", line_count, ' / '.join(match_array))
+                    mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 else:
                     pass
