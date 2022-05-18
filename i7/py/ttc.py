@@ -17,6 +17,7 @@ import os
 import itertools
 import colorama
 
+rbr_globals = []
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
 open_after = True
@@ -43,6 +44,7 @@ class TablePicker:
     def __init__(self):
         self.table_names = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
         self.wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
+        self.extra_case_headers = defaultdict(int) # each tuple is (array of column #'s, then test case)
         self.ignore = []
         self.ignore_wild = []
         self.stopper = ''
@@ -77,7 +79,10 @@ def tweak_text(column_entry):
     qary = column_entry.split('"')
     return qary[1]
 
-def prefix_array_of(this_table):
+def prefix_array_of(this_table, this_proj, this_file):
+    for ech in table_specs[this_proj][this_file].extra_case_headers:
+        if re.search(ech, this_table):
+            return [ 'ttc' ] + table_specs[this_proj][this_file].extra_case_headers[ech]
     if this_table not in custom_table_prefixes:
         return [ 'ttc' ]
     return [ (x if x.startswith('ttc-') else 'ttc-' + x) for x in custom_table_prefixes[this_table] ]
@@ -180,7 +185,7 @@ def get_cases(this_proj):
                     else:
                         stray_table = True
                         table_line_count = -1
-                    prefix_array = prefix_array_of(current_table)
+                    prefix_array = prefix_array_of(current_table, this_proj, this_file)
                     continue
                 if table_header_next == True:
                     table_header_next = False
@@ -627,6 +632,8 @@ with open(ttc_cfg) as file:
             try:
                 for tn in ary[0].split(','):
                     table_specs[cur_proj][cur_file].wild_cards[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
+                    if len(ary) > 3:
+                        table_specs[cur_proj][cur_file].extra_case_headers[tn] = ary[3].split(',')
             except:
                 print(line_count, data)
                 print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
