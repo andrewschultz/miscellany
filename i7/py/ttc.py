@@ -16,6 +16,7 @@ import re
 import os
 import itertools
 import colorama
+from string import ascii_lowercase
 
 rbr_globals = []
 ttc_cfg = "c:/writing/scripts/ttc.txt"
@@ -99,7 +100,6 @@ def mark_rbr_open(file_name, orig_line_count, comp_line):
     global rbr_globals
     if not rbr_globals:
         rbr_globals = glob.glob("rbr-*")
-    print(comp_line)
     for x in rbr_globals:
         with open(x) as file:
             for (line_count, line) in enumerate (file, 1):
@@ -109,6 +109,23 @@ def mark_rbr_open(file_name, orig_line_count, comp_line):
                     return
     mt.add_open(file_name, orig_line_count)
     return
+
+def starts_with_text(my_line, my_file):
+    if not my_line.strip():
+        return False
+    if my_line.strip == "\\\\" and 'rbr' not in my_file:
+        return True
+    if my_line.startswith("/"):
+        return True
+    if my_line.startswith("["):
+        return True
+    if my_line.startswith("!"):
+        return True
+    if my_line.startswith(">"):
+        return True
+    if my_line.startswith("#") or my_line.startswith("@"):
+        return False
+    return my_line[0].isalpha()
 
 def get_mistakes(this_proj):
     mistake_file = i7.hdr(this_proj, "mi")
@@ -298,6 +315,7 @@ def clean_up_spaces(this_proj, prefix = 'rbr'):
     for my_rbr in test_file_glob:
         any_changes = False
         out_string = ''
+        last_line_text = False
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 if not line.startswith('#'):
@@ -380,8 +398,15 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         if verbose_level > 0:
             print("Checking test file", my_rbr, "to verify test cases are present...")
         base = os.path.basename(my_rbr)
+        flag_spacing = base.startswith("rbr-") or base.startswith("reg-")
+        last_line_text = False
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
+                if flag_spacing:
+                    if last_line_text and valid_ttc(line):
+                        print("    Spacing issue {} line {}.".format(base, line_count))
+                        mt.add_postopen(my_rbr, line_count)
+                    last_line_text = starts_with_text(line, base)
                 my_cases = rbr_cases_of(line)
                 for this_case in my_cases:
                     raw_case = base_of(this_case)
