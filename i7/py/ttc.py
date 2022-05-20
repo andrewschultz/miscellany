@@ -53,6 +53,7 @@ class TablePicker:
         self.untestable_regexes = []
         self.okay_duplicates = defaultdict(int)
 
+odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
@@ -403,7 +404,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 if flag_spacing:
-                    if last_line_text and valid_ttc(line):
+                    if last_line_text and valid_ttc(line, this_proj):
                         print("    Spacing issue {} line {}.".format(base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     last_line_text = starts_with_text(line, base)
@@ -452,12 +453,16 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
             print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
     return
 
-def valid_ttc(my_line):
+def valid_ttc(my_line, my_proj=''):
     if not my_line.startswith('#'):
         return False
     my_line = my_line[1:]
     if my_line.startswith('+'):
         my_line = my_line[1:]
+    if my_proj:
+        for x in odd_cases[my_proj]:
+            if my_line.startswith(x):
+                return True
     return my_line.startswith('ttc-') or my_line.startswith('testcase-')
 
 def verify_case_placement(this_proj):
@@ -614,6 +619,8 @@ with open(ttc_cfg) as file:
                 else:
                     a2 = a.split("~")
                     table_specs[cur_proj][cur_file].okay_duplicates[a2[0]] = int(a2[1])
+        elif prefix in ( 'oddcase', 'oddcases' ):
+            odd_cases[cur_proj].extend(data.split(','))
         elif prefix == 'project':
             cur_proj = i7.long_name(data)
             if not cur_proj:
