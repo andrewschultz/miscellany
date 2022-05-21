@@ -52,6 +52,7 @@ class TablePicker:
         self.untestables = []
         self.untestable_regexes = []
         self.okay_duplicates = defaultdict(int)
+        self.okay_duplicate_regexes = []
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
@@ -247,6 +248,8 @@ def get_cases(this_proj):
                 for this_prefix in prefix_array:
                     test_case_name = "{}-{}-{}".format(this_prefix, current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
                     if test_case_name in return_dict:
+                        if wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
+                            continue
                         if test_case_name in table_specs[this_proj][this_file].okay_duplicates:
                             table_specs[this_proj][this_file].okay_duplicates[test_case_name] -= 1
                             if table_specs[this_proj][this_file].okay_duplicates[test_case_name] < 0:
@@ -619,6 +622,10 @@ with open(ttc_cfg) as file:
                 else:
                     a2 = a.split("~")
                     table_specs[cur_proj][cur_file].okay_duplicates[a2[0]] = int(a2[1])
+        elif prefix == 'okdupr':
+            if not cur_file:
+                print("WARNING: you probably want to put an OKDUP in a specific file.")
+            table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
         elif prefix in ( 'oddcase', 'oddcases' ):
             odd_cases[cur_proj].extend(data.split(','))
         elif prefix == 'project':
