@@ -31,6 +31,14 @@ def usage():
     print("q = quiet, no debug info and v[0-2] = debug info level")
     sys.exit()
 
+class TestCaseGenerator:
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1]):
+        self.match_string = match_string
+        self.exact_match = exact_match
+        self.prefix_list = prefix_list
+        self.read_col_list = read_col_list
+        self.print_col_list = print_col_list
+
 class SimpleTestCase:
 
     def __init__(self, suggested_text = 'None', command_text = '', condition_text = '', expected_file = ''):
@@ -43,9 +51,7 @@ class SimpleTestCase:
 class TablePicker:
 
     def __init__(self):
-        self.table_names = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
-        self.wild_cards = defaultdict(tuple) # each tuple is (array of column #'s, then test case)
-        self.extra_case_headers = defaultdict(int) # each tuple is (array of column #'s, then test case)
+        self.generators = []
         self.ignore = []
         self.ignore_wild = []
         self.stopper = ''
@@ -81,14 +87,6 @@ def tweak_text(column_entry):
         return column_entry
     qary = column_entry.split('"')
     return qary[1]
-
-def prefix_array_of(this_table, this_proj, this_file):
-    for ech in table_specs[this_proj][this_file].extra_case_headers:
-        if re.search(ech, this_table):
-            return [ 'ttc' ] + table_specs[this_proj][this_file].extra_case_headers[ech]
-    if this_table not in custom_table_prefixes:
-        return [ 'ttc' ]
-    return [ (x if x.startswith('ttc-') else 'ttc-' + x) for x in custom_table_prefixes[this_table] ]
 
 def renumber(entry, my_dict):
     number_to_add = 2
@@ -180,6 +178,7 @@ def get_cases(this_proj):
         table_overall_undecided = 0
         tables_found = defaultdict(bool)
         dupe_orig = table_specs[this_proj][this_file].okay_duplicates.copy()
+        these_table_gens = []
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -189,29 +188,32 @@ def get_cases(this_proj):
                         continue
                     current_table = re.sub("[ \t]+\[.*", "", line.strip())
                     current_table = re.sub("[ \t]+\(continued\).*", "", current_table)
+                    if wild_card_match(current_table, table_specs[this_proj][this_file].ignore_wild):
+                        continue
+                    if current_table in table_specs[this_proj][this_file].ignore:
+                        continue
                     in_table = True
-                    cur_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].wild_cards)
-                    ig_wild_card = wild_card_match(current_table, table_specs[this_proj][this_file].ignore_wild)
-                    stray_table = False
-                    if current_table in table_specs[this_proj][this_file].table_names:
+                    these_table_gens = []
+                    for tg in table_specs[this_proj][this_file].generators:
+                        if tg.exact_match:
+                            if line.strip().lower() == tg.match_string:
+                                these_table_gens.append(tg)
+                        else:
+                            if re.search(tg.match_string, line.strip().lower()):
+                                these_table_gens.append(tg)
+                    if len(these_table_gens):
                         table_header_next = True
-                    elif cur_wild_card:
-                        table_header_next = True
-                    elif current_table in table_specs[this_proj][this_file].ignore:
-                        pass
-                    elif ig_wild_card:
-                        pass
                     else:
                         stray_table = True
+                        read_table_data = False
                         table_line_count = -1
-                    prefix_array = prefix_array_of(current_table, this_proj, this_file)
                     continue
                 if table_header_next == True:
                     table_header_next = False
                     table_line_count = 0
                     read_table_data = True
                     continue
-                if not line.strip() or line.startswith('['):
+                if not line.strip() or line.startswith('['): # we have reached the end of the table.
                     if stray_table:
                         print("Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1))
                         table_overall_undecided += 1
@@ -225,47 +227,48 @@ def get_cases(this_proj):
                 if not read_table_data:
                     continue
                 columns = line.strip().split('\t')
-                if cur_wild_card:
-                    ary_to_poke = table_specs[this_proj][this_file].wild_cards[cur_wild_card]
-                else:
-                    ary_to_poke = table_specs[this_proj][this_file].table_names[current_table]
-                if ary_to_poke[0][0] == -1:
-                    sub_test_case = "{}".format(table_line_count)
-                else:
-                    try:
-                        relevant_text_array = [tweak_text(columns[y]) for y in ary_to_poke[0]]
-                        sub_test_case = '-'.join(relevant_text_array)
-                    except:
-                        sys.exit("Fatal error parsing columns: {} with {} total at line {} of {}.".format(ary_to_poke[0], len(columns), line_count, fb))
-                if ary_to_poke[1] == -20:
-                    possible_text = '<NONE>'
-                else:
-                    try:
-                        relevant_text_array = [columns[y] for y in ary_to_poke[1]]
-                        possible_text = '\n'.join(relevant_text_array)
-                    except:
-                        possible_text = '<ERROR PARSING COLUMNS>'
-                for this_prefix in prefix_array:
-                    test_case_name = "{}-{}-{}".format(this_prefix, current_table, sub_test_case).replace(' ', '-').lower().replace('"', '').replace('--', '-')
-                    if test_case_name in return_dict:
-                        if wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
+                for my_generator in these_table_gens:
+                    subcase = ''
+                    for x in my_generator.read_col_list:
+                        if x == -1:
+                            subcase += '-{}'.format(table_line_count)
+                        else:
+                            if columns[x].startswith('"'):
+                                columns[x] = re.sub(r'".*', '', columns[x][1:])
+                            subcase += '-{}'.format(columns[x]).replace('"', '')
+                    if not subcase.replace('-', '') or subcase == '-a rule' or subcase == 'a thing':
+                        continue
+                    for p in my_generator.prefix_list:
+                        test_case_name = (p + '-' + current_table + subcase).lower().replace('"', '').replace(' ', '-').replace('--', '-').replace('/', '-')
+                        if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
+                        possible_text = ''
+                        for c in my_generator.print_col_list:
+                            try:
+                                temp_text = columns[c]
+                                if temp_text.startswith('"'):
+                                    temp_text = re.sub(r'".*', '', temp_text[1:])
+                                possible_text += '-{}'.format(columns[c])
+                            except:
+                                possible_text += '---'
+                        possible_text = possible_text[1:]
                         if test_case_name in table_specs[this_proj][this_file].okay_duplicates:
                             table_specs[this_proj][this_file].okay_duplicates[test_case_name] -= 1
                             if table_specs[this_proj][this_file].okay_duplicates[test_case_name] < 0:
-                                print("Potential error: too many duplicate listings for {} in {}.".format(test_case_name, this_file))
+                                print("Potential error: too many duplicate listings for {} in {}. Check okdup statement.".format(test_case_name, this_file))
                             continue
-                        print("Potential error: source code provided duplicate test case/column entry {} at line {} of {}.".format(test_case_name, line_count, fb))
-                    elif test_case_name in table_specs[this_proj][this_file].untestables:
-                        if verbose_level > 0:
-                            print("UNTESTABLE ABSOLUTE", test_case_name)
-                    elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
-                        if verbose_level > 0:
-                            print("UNTESTABLE REGEX", test_case_name)
-                    else:
-                        if possible_text.startswith('"') and possible_text.endswith('"'):
-                            possible_text = possible_text[1:-1]
-                        return_dict[test_case_name] = SimpleTestCase(possible_text)
+                        if test_case_name in return_dict:
+                            print("POTENTIAL ERROR: source code provided duplicate test case/column entry {} at line {} of {}. Use okdup/okdupr if this is correct.".format(test_case_name, line_count, fb))
+                        elif test_case_name in table_specs[this_proj][this_file].untestables:
+                            if verbose_level > 0:
+                                print("UNTESTABLE ABSOLUTE", test_case_name)
+                        elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
+                            if verbose_level > 0:
+                                print("UNTESTABLE REGEX", test_case_name)
+                        else:
+                            if possible_text.startswith('"') and possible_text.endswith('"'):
+                                possible_text = possible_text[1:-1]
+                            return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
                     unique_tables = "/{}".format(len(tables_found))
@@ -635,14 +638,15 @@ with open(ttc_cfg) as file:
                 mt.add_postopen(ttc_cfg, line_count)
         elif prefix == 'stopper':
             table_specs[cur_proj][cur_file].stopper = data
-        elif prefix == 'table':
+        elif prefix in ('gen', 'generator', 'table'):
             ary = data.split("\t")
             try:
-                for tn in ary[0].split(','):
-                    table_specs[cur_proj][cur_file].table_names[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
+                my_prefixes = ary[3].split(',') if len(ary) > 3 else [ 'ttc' ]
+                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = [int(x) for x in ary[2].split(',')], prefix_list = my_prefixes)
+                table_specs[cur_proj][cur_file].generators.append(this_generator)
             except:
-                print(line_count, data)
-                print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
+                print("Exception reading CFG", line_count, data)
+                print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
                 print("Also, make sure entries 2/3 are integers.")
         elif prefix in ( 'untestable', 'untestables' ):
             ary = data.split(",")
@@ -666,17 +670,6 @@ with open(ttc_cfg) as file:
                     print("Duplicate regex", a, cur_proj, line_count)
                     continue
                 table_specs[cur_proj][cur_file].untestable_regexes.append(a)
-        elif prefix in ( 'wc', 'wild', 'wildcard', 'wildcards' ):
-            ary = data.split("\t")
-            try:
-                for tn in ary[0].split(','):
-                    table_specs[cur_proj][cur_file].wild_cards[tn] = ( [int(x) for x in ary[1].split(',')], [int(x) for x in ary[2].split(',')])
-                    if len(ary) > 3:
-                        table_specs[cur_proj][cur_file].extra_case_headers[tn] = ary[3].split(',')
-            except:
-                print(line_count, data)
-                print("You may need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
-                print("Also, make sure entries 2/3 are integers.")
         else:
             print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
