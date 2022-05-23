@@ -110,6 +110,11 @@ def mark_rbr_open(file_name, orig_line_count, comp_line):
     mt.add_open(file_name, orig_line_count)
     return
 
+def spacing_pass(my_line):
+    if my_line.startswith("}}") or my_line.startswith("#"):
+        return True
+    return False
+
 def starts_with_text(my_line, my_file):
     if not my_line.strip():
         return False
@@ -118,6 +123,8 @@ def starts_with_text(my_line, my_file):
     if my_line.startswith("/"):
         return True
     if my_line.startswith("["):
+        return True
+    if my_line.startswith('"'):
         return True
     if my_line.startswith("!"):
         return True
@@ -413,7 +420,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if last_line_text and valid_ttc(line, this_proj):
                         print("    Spacing issue {} line {}.".format(base, line_count))
                         mt.add_postopen(my_rbr, line_count)
-                    last_line_text = starts_with_text(line, base)
+                    if not spacing_pass(line):
+                        last_line_text = starts_with_text(line, base)
                 my_cases = rbr_cases_of(line)
                 for this_case in my_cases:
                     raw_case = base_of(this_case)
