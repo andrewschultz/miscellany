@@ -9,6 +9,7 @@ import glob
 from collections import defaultdict
 
 open_after = True
+edit_files = False
 
 max_files = 10
 
@@ -24,9 +25,14 @@ def to_wild(my_text):
         return my_text
     return '*' + my_text + '*'
 
-def check_one_file(my_file):
+def check_one_file(my_file, edit_the_file = True):
     commented_sections = defaultdict(int)
     includes = defaultdict(int)
+    lines_to_edit = []
+    ret_val = False
+    if not os.path.exists(my_file):
+        print("IGNORNG", my_file)
+        return 0
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("* _"):
@@ -38,8 +44,22 @@ def check_one_file(my_file):
     for x in commented_sections:
         if x not in includes:
             print("{}: {} is commented at line {} of but is not in {{include}}s.".format(my_file, x, commented_sections[x]))
+            ret_val = True
+            lines_to_edit.append(commented_sections[x])
             if open_after:
                 mt.add_post_open(my_file, commented_sections[x])
+    if not edit_the_file or not len(lines_to_edit):
+        return ret_val
+    f = open(temp_regver, "w")
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line_count in lines_to_edit:
+                line = line.replace("* _", "* ")
+            f.write(line)
+    f.close()
+    copy(temp_regver, my_file)
+    os.path.delete(temp_regver)
+    return ret_val
 
 files = []
 wild_cards = []
@@ -51,10 +71,17 @@ while cmd_count < len(sys.argv):
         open_after = True
     elif arg in ( 'no', 'on' ):
         open_after = False
+    if arg == 'e':
+        edit_files = True
+        open_after = False
+    elif arg in ( 'ne', 'en' ):
+        edit_files = False
+    elif arg in ( 'oe', 'eo' ):
+        edit_files = True
+        open_after = True
     elif arg == 'm' and valid:
         max_files = num
     elif os.path.exists(arg):
-        check_one_file(arg)
         files.append(arg)
     elif '*' in arg or len(arg) > 4:
         wild_cards.append(to_wild(arg))
