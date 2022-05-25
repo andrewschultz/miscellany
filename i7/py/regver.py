@@ -13,11 +13,15 @@ edit_files = False
 
 max_files = 10
 
+temp_regver = "c:/writing/temp/regver-py.txt"
+
+default_wild_card = "reg-*-lone-*.txt"
+
 def usage(header = "usage for ".format(__file__)):
     print('=' * 20, header, '=' * 20)
     print("m# = max files")
     print("o = open after, no/on = don't open after")
-    print("You can specify a file or a wild card to test.")
+    print("You can specify a file or a wild card to test with an asterisk. Default wild card is {}.".format(default_wild_card))
     sys.exit()
 
 def to_wild(my_text):
@@ -92,11 +96,13 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if not len(files) and not len(wild_cards):
-    print("Going with default reg-*.txt.")
-    wild_cards = [ "reg-*.txt" ]
+    print("Going with default {}.".format(default_wild_card))
+    wild_cards = [ default_wild_card ]
 
 for this_wild in wild_cards:
     files.extend(glob.glob(this_wild))
+
+files = sorted(set(files))
 
 for f in files:
     check_one_file(f)
