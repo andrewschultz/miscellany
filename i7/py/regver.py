@@ -104,8 +104,22 @@ for this_wild in wild_cards:
 
 files = sorted(set(files))
 
+running_total = 0
+
 for f in files:
-    check_one_file(f)
+    running_total += check_one_file(f, edit_the_file = edit_files)
+
+if not running_total:
+    if len(files) > 1:
+        print(len(files), "files passed!")
+    else:
+        print(files[0], "passed!")
+else:
+    print(running_total, "files failed,", len(files) - running_total, "files failed")
+
+if running_total and not edit_files:
+    print("-e edits files")
 
 if open_after:
+    print("no/on turns opening files off, en/ne edits but does not open files.")
     mt.post_open()
