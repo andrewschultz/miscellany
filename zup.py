@@ -214,6 +214,7 @@ def read_zup_txt():
                     current_file = ''
                     file_base_dir = ''
                     file_to_dir = ''
+                    to_base_dir = ''
                 continue
             if line.startswith("$"):
                 if '=' not in line:
