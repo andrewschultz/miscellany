@@ -1,5 +1,6 @@
-# sas.py: search all source for a specific string
+# sas.py: search all source for a specific string or regex
 
+import re
 import sys
 import codecs
 import os
@@ -7,16 +8,24 @@ import glob
 
 my_string = "aqueduct"
 
+find_regex = False
+
 try:
     my_string = sys.argv[1]
+    if my_string.startswith('/'):
+        find_regex = True
 except:
     pass
 
 def look_for_string(my_string, this_file):
     with codecs.open(this_file, "r", "utf-8", errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
-            if my_string.lower() in line.lower():
-                print(line_count, this_file, line.strip())
+            if find_regex:
+                if re.search(my_string, line.lower()):
+                    print(line_count, this_file, line.strip())
+            else:
+                if my_string.lower() in line.lower():
+                    print(line_count, this_file, line.strip())
 
 ary = glob.glob("c:/games/inform/*.inform")
 
