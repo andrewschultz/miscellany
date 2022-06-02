@@ -1,5 +1,6 @@
 # sas.py: search all source for a specific string or regex
 
+from collections import defaultdict
 import re
 import sys
 import codecs
@@ -44,10 +45,17 @@ def look_for_string(my_string, this_file):
             if in_rule and print_full_rule:
                 print(line_count, this_file, line.strip())
 
+done_dict = defaultdict(bool)
+
 if track_story_files:
     ary = glob.glob("c:/games/inform/*.inform")
+    done_dict.clear()
     for d in ary:
         if not os.path.isdir(d):
+            continue
+        temp = os.path.realpath(d)
+        if temp in done_dict:
+            print(temp, "already covered by another symlink")
             continue
         my_ni_file = os.path.join(d, "source", "story.ni")
         if not os.path.exists(my_ni_file):
@@ -57,5 +65,12 @@ if track_story_files:
 
 if track_extension_files:
     ary = glob.glob("C:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/*.i7x")
+    done_dict.clear()
     for a in ary:
+        temp = os.path.realpath(a)
+        if temp in done_dict:
+            print(temp, "already covered by another symlink")
+            continue
+        else:
+            done_dict[temp] = True
         look_for_string(my_string, a)
