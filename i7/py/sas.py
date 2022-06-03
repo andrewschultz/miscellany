@@ -7,7 +7,10 @@ import codecs
 import os
 import glob
 
-my_string = "aqueduct"
+import mytools as mt
+
+default_string = "aqueduct"
+my_string = ''
 
 find_regex = False
 print_full_rule = False
@@ -15,16 +18,14 @@ print_full_rule = False
 track_story_files = True
 track_extension_files = True
 
-try:
-    my_string = sys.argv[1]
-    if my_string.startswith('r:'):
-        my_string = my_string[2:]
-        print_full_rule = True
-    if my_string.startswith('/'):
-        find_regex = True
-        my_string = my_string[1:]
-except:
-    pass
+cmd_count = 1
+
+def usage(msg='General usage'):
+    print('=' * 30 + msg)
+    print("r  = print full rule")
+    print("re = find regex not text")
+    print("s  = track story files only, e/x = track extension files only")
+    sys.exit()
 
 def look_for_string(my_string, this_file):
     in_rule = False
@@ -44,6 +45,33 @@ def look_for_string(my_string, this_file):
                     continue
             if in_rule and print_full_rule:
                 print(line_count, this_file, line.strip())
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'r':
+        print_full_rule = True
+    elif arg == 're':
+        find_regex = True
+    elif arg == 's':
+        track_story_files = True
+        track_extension_files = False
+    elif arg == ( 'e', 'x' ):
+        track_story_files = False
+        track_extension_files = True
+    elif arg == '?':
+        usage()
+    elif len(arg) > 2:
+        if my_string:
+            sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
+        else:
+            my_string = arg
+    else:
+        usage('Bad command {}'.format(arg))
+    cmd_count += 1
+
+if not my_string:
+    print("Using default string", default_string)
+    my_string = default_string
 
 done_dict = defaultdict(bool)
 
