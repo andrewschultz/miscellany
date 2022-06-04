@@ -6,6 +6,7 @@ import sys
 import codecs
 import os
 import glob
+import colorama
 
 import mytools as mt
 
@@ -27,24 +28,43 @@ def usage(msg='General usage'):
     print("s  = track story files only, e/x = track extension files only")
     sys.exit()
 
+def print_my_rules(count_start, count_end, the_string):
+    first_rule_line = the_string.split("\n")[0]
+    line_list = "Lines {}-{}".format(count_start, count_end) if count_start != count_end else "Line {}".format(count_start)
+    print(colorama.Fore.YELLOW + "{} RULE HEADER {}:".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
+    print(colorama.Fore.GREEN + the_string + colorama.Style.RESET_ALL)
+
 def look_for_string(my_string, this_file):
-    in_rule = False
+    print_this_rule = False
+    this_rule_string = ''
+    first_rule_line_count = 0
     with codecs.open(this_file, "r", "utf-8", errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
             if not line.strip():
-                in_rule = False
+                if print_this_rule:
+                    print_my_rules(first_rule_line_count, line_count - 1, this_rule_string)
+                print_this_rule = False
+                this_rule_string = ''
+            else:
+                if not this_rule_string:
+                    first_rule_line_count = line_count
+                this_rule_string += line
             if find_regex:
                 if re.search(my_string, line.lower()):
-                    print(line_count, this_file, line.strip())
-                    in_rule = True
+                    if print_full_rule:
+                        print_this_rule = True
+                    else:
+                        print(line_count, this_file, line.strip())
                     continue
             else:
                 if my_string.lower() in line.lower():
-                    print(line_count, this_file, line.strip())
-                    in_rule = True
+                    if print_full_rule:
+                        print_this_rule = True
+                    else:
+                        print(line_count, this_file, line.strip())
                     continue
-            if in_rule and print_full_rule:
-                print(line_count, this_file, line.strip())
+    if print_this_rule:
+        print_my_rules(first_rule_line_count, 'END', this_rule_string)
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
