@@ -14,7 +14,7 @@ default_string = "aqueduct"
 my_string = ''
 
 find_regex = False
-print_full_rule = False
+print_full_rule = True
 
 track_story_files = True
 track_extension_files = True
@@ -23,10 +23,14 @@ cmd_count = 1
 
 def usage(msg='General usage'):
     print('=' * 30 + msg)
-    print("r  = print full rule")
-    print("re = find regex not text")
+    print("sas has semantic regex detection")
+    print("r  = print full rule, l = print line")
+    print("re = find regex not text, rn/nr turns it off")
     print("s  = track story files only, e/x = track extension files only")
     sys.exit()
+
+def is_likely_regex(my_string):
+    return '[' in my_string or ']' in my_string or '.' in my_string or '(' in my_string or ')' in my_string or '*' in my_string
 
 def print_my_rules(count_start, count_end, the_string):
     first_rule_line = the_string.split("\n")[0]
@@ -70,6 +74,8 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'r':
         print_full_rule = True
+    elif arg == 'l':
+        print_full_rule = False
     elif arg == 're':
         find_regex = True
     elif arg == 's':
@@ -85,6 +91,8 @@ while cmd_count < len(sys.argv):
             sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
         else:
             my_string = arg
+            if is_likely_regex(my_string):
+                print("Assuming regex due to special character e.g. [].()*")
     else:
         usage('Bad command {}'.format(arg))
     cmd_count += 1
