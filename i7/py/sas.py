@@ -19,7 +19,7 @@ print_full_rule = True
 track_story_files = True
 track_extension_files = True
 
-cmd_count = 1
+cmd_count = 0
 
 def usage(msg='General usage'):
     print('=' * 30 + msg)
@@ -70,8 +70,21 @@ def look_for_string(my_string, this_file):
     if print_this_rule:
         print_my_rules(first_rule_line_count, 'END', this_rule_string)
 
-while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
+param_array = sys.argv[1:]
+
+for x in param_array:
+    if len(x) > 2:
+        if my_string:
+            sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
+        else:
+            my_string = x
+            if is_likely_regex(my_string):
+                print("Assuming regex due to special character e.g. [].()*")
+                find_regex = True
+                param_array.remove(x)
+
+while cmd_count < len(param_array):
+    arg = mt.nohy(param_array[cmd_count])
     if arg == 'r':
         print_full_rule = True
     elif arg == 'l':
@@ -86,13 +99,6 @@ while cmd_count < len(sys.argv):
         track_extension_files = True
     elif arg == '?':
         usage()
-    elif len(arg) > 2:
-        if my_string:
-            sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
-        else:
-            my_string = arg
-            if is_likely_regex(my_string):
-                print("Assuming regex due to special character e.g. [].()*")
     else:
         usage('Bad command {}'.format(arg))
     cmd_count += 1
