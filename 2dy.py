@@ -41,6 +41,7 @@ max_days_new = 7
 max_days_back = 1000
 goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
+super_stretch_delta = 10000
 
 GRAPH_LAUNCH_NEVER = 0
 GRAPH_LAUNCH_NO_K_JUMP = 1
@@ -51,6 +52,7 @@ latest_daily = True
 write_base_stats = True
 run_weekly_check = False
 force_stats = False
+show_all_goals = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -239,12 +241,13 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     stretch_metric_goal = basic_goal = goals_and_stretch[0]
     for x in range(0, gsl):
         stretch_metric_goal = goal_per_file = goals_and_stretch[x]
-        if current_size > goals_and_stretch[x]:
-            mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit {} of {}!'.format('your weekly goal' if x == 0 else 'stretch goal # {}{}'.format(x, '' if gsl == 2 else '/{}'.format(gsl-1)), goals_and_stretch[x]) + colorama.Style.RESET_ALL)
+        if current_size >= goals_and_stretch[x]:
+            init_bit = colorama.Back.YELLOW + colorama.Fore.BLACK + 'Hooray! You hit'
+            mt.center('{} {} of {}!'.format(init_bit, 'your weekly goal' if x == 0 else 'stretch goal # {}{}'.format(x, '' if gsl == 2 else '/{}'.format(gsl-1)), goals_and_stretch[x]) + colorama.Style.RESET_ALL)
         else:
             break
         if x == gsl - 1 and x > 1:
-            mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + "Extra hooray! You hit {} your stretch goals!".format('all' if x > 2 else 'both') + colorama.Style.RESET_ALL)
+            mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + "Extra hooray! You hit {} your stretch goals! -x# will add another, or e edits for a temporary goal.".format('all' if x > 2 else 'both') + colorama.Style.RESET_ALL)
             hit_all_stretch = True
     t_base = pendulum.local(int(this_file[:4]), int(this_file[4:6]), int(this_file[6:8]))
     t_now = pendulum.now()
@@ -259,17 +262,25 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if hit_all_stretch:
         mt.center(colorama.Fore.CYAN + "Total expected bytes this period: {:.2f}".format(bytes_per_hour_so_far * max_days_new * 24) + colorama.Style.RESET_ALL)
         mt.center(colorama.Fore.CYAN + "If you want to establish a new stretch goal, 2dy -e will do so." + colorama.Style.RESET_ALL)
-        return
-    cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
-    time_dir_string = 'behind' if current_size < current_goal else 'ahead'
-    print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, stretch_metric_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
-    if time_dir_string == 'ahead':
-        time_dir_string += ' of'
-    print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
-    projection = current_size * full_weekly_interval // weekly_interval_so_far
-    mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} of your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
-    nexty = '' if basic_goal == stretch_metric_goal else 'next '
-    goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
+    else:
+        cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
+        time_dir_string = 'behind' if current_size < current_goal else 'ahead'
+        print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, stretch_metric_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
+        if time_dir_string == 'ahead':
+            time_dir_string += ' of'
+        print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
+        projection = current_size * full_weekly_interval // weekly_interval_so_far
+        mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
+    nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
+    if current_size > goals_and_stretch[-1]:
+        print(1)
+        goal_array = [ ((current_size // super_stretch_delta) + 1) * super_stretch_delta ]
+    elif not hit_all_stretch and not show_all_goals:
+        print(2)
+        goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
+    else:
+        print(3)
+        goal_array = [ x for x in goals_and_stretch if x > current_size ]
     for this_goal in goal_array:
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
@@ -285,7 +296,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         catchup_inverse = 1 / catchup_ratio
         now_breakeven = this_goal * weekly_interval_so_far / full_weekly_interval
         raw_plus_minus = current_size - now_breakeven
-        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes so far: {:.2f}. Bytes overall: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
+        mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes for exact pace: {:.2f}. Bytes done so far: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
           bytes_per_hour_overall,
           bytes_per_hour_so_far, so_far_pct,
           mt.green_red_comp(current_size, now_breakeven), '+' if raw_plus_minus > 0 else '', raw_plus_minus, colorama.Fore.CYAN,
@@ -407,6 +418,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     if a:
         my_label += "\nBest-fit exp bytes: {:.2f} end/{:.2f} now".format(7 * a + b0, times[-1] * a + b)
+        my_label += "\nBest-fit projection: {:.2f}".format((7-(times[-1]-times[0])) * a + current_size)
 
     my_line_width = 1
 
@@ -704,6 +716,8 @@ def read_2dy_cfg():
                 if len(sect_ary):
                     print("Adding to non-blank sections array on line {}".format(line_count))
                 sect_ary.extend(sect_dict)
+            elif prefix in ( 'super_stretch_delta' ):
+                super_stretch_delta = int(data)
             elif prefix.isdigit():
                 if len(prefix) != 8:
                     print("WARNING suggested weekly file has wrong # of digits (should be 8) at line {}.".format(line_count))
@@ -781,16 +795,34 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nl', 'ln' ): latest_daily = False
     elif arg == 'v': verbose = True
     elif arg in ( 'nv', 'vn' ): verbose = False
-    elif arg == 'e': mt.npo(my_sections_file)
+    elif arg in ( 'ag', 'ga' ):
+        show_all_goals = True
+    elif mt.alfmatch( arg, 'agn' ):
+        show_all_goals = False
+    elif arg in ( 'e', 'es' ):
+        if arg == 'es':
+            print(colorama.Fore.GREEN + "NOTE: if you wanted to edit the stats file, try ED instead." + colorama.Style.RESET_ALL)
+        mt.npo(my_sections_file)
     elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
     elif arg in ( 'ei', 'ie' ): mt.npo(information_file)
-    elif mt.alpha_match('eit', arg):
+    elif mt.alpha_match('eit', arg) or arg in ( 'et', 'te' ):
+        mt.eq_print("text of information file (edit with ie/ei)", equals_width = 20, color_info = colorama.Fore.YELLOW)
         os.system("type {}".format(os.path.normpath(information_file)))
         sys.exit()
     elif arg == 'eo': mt.npo(old_stats_file)
-    elif arg in ( 'es', 'ed' ): mt.npo(stats_file)
+    elif arg in ( 'es', 'ed' ):
+        mt.npo(stats_file)
     elif arg == 'fs': force_stats = True
     elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
+    elif arg == 'x' and valid_num:
+        if num < 1000:
+            num *= 1000
+        goals_and_stretch.append(num)
+        if num < goals_and_stretch[-2]:
+            mt.centcol("NOTE: I am re-sorting, since the number you supplied was less than the current maximum stretch goal of {}.{}".format(goals_and_stretch[-2], '' if num > goals_and_stretch[0] else ' In fact, it is less than the low-end goal of {}.'.format(goals_and_stretch[0])), color_string = colorama.Fore.YELLOW)
+            goals_and_stretch = sorted(goals_and_stretch)
+        run_weekly_check = True
+        weekly_bail = True
     elif arg == 'wc':
         try:
             weekly_compare(int(arg[2:]))
