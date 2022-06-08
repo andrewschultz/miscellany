@@ -42,6 +42,7 @@ max_days_back = 1000
 goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
 super_stretch_delta = 10000
+offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 
 GRAPH_LAUNCH_NEVER = 0
 GRAPH_LAUNCH_NO_K_JUMP = 1
@@ -249,7 +250,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         if x == gsl - 1 and x > 1:
             mt.center(colorama.Back.YELLOW + colorama.Fore.BLACK + "Extra hooray! You hit {} your stretch goals! -x# will add another, or e edits for a temporary goal.".format('all' if x > 2 else 'both') + colorama.Style.RESET_ALL)
             hit_all_stretch = True
-    t_base = pendulum.local(int(this_file[:4]), int(this_file[4:6]), int(this_file[6:8]))
+    t_base = pendulum.local(int(this_file[:4]), int(this_file[4:6]), int(this_file[6:8])).add(seconds=offset_seconds)
     t_now = pendulum.now()
     t_goal = t_base.add(days=max_days_new)
     weekly_interval_so_far = (t_now - t_base).in_seconds()
@@ -716,6 +717,8 @@ def read_2dy_cfg():
                 if len(sect_ary):
                     print("Adding to non-blank sections array on line {}".format(line_count))
                 sect_ary.extend(sect_dict)
+            elif prefix in ( 'offset_seconds', 'seconds_offset' ):
+                offset_seconds = int(data)
             elif prefix in ( 'super_stretch_delta' ):
                 super_stretch_delta = int(data)
             elif prefix.isdigit():
