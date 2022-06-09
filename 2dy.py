@@ -54,6 +54,7 @@ write_base_stats = True
 run_weekly_check = False
 force_stats = False
 show_all_goals = False
+unlimited_stretch_goals = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -274,13 +275,16 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     if current_size > goals_and_stretch[-1]:
-        print(1)
-        goal_array = [ ((current_size // super_stretch_delta) + 1) * super_stretch_delta ]
+        current_extra_stretch = ((current_size // super_stretch_delta) + 1) * super_stretch_delta
+        goal_array = [ current_extra_stretch ]
+        if unlimited_stretch_goals:
+            current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
+            while current_extra_stretch <= current_projected_bytes:
+                current_extra_stretch += super_stretch_delta
+                goal_array.append(current_extra_stretch)
     elif not hit_all_stretch and not show_all_goals:
-        print(2)
         goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
     else:
-        print(3)
         goal_array = [ x for x in goals_and_stretch if x > current_size ]
     for this_goal in goal_array:
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
@@ -897,6 +901,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'psr': put_stats(launch_iff_new_k = True)
     elif arg == 'psf': put_stats(launch_iff_new_k = False)
     elif arg == 'bs': write_base_stats = False
+    elif arg == 'us': unlimited_stretch_goals = True
     elif arg == 'ss': stat_sort()
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
