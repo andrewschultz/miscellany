@@ -274,18 +274,20 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         projection = current_size * full_weekly_interval // weekly_interval_so_far
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
-    if current_size > goals_and_stretch[-1]:
-        current_extra_stretch = ((current_size // super_stretch_delta) + 1) * super_stretch_delta
-        goal_array = [ current_extra_stretch ]
-        if unlimited_stretch_goals:
-            current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
-            while current_extra_stretch <= current_projected_bytes:
-                current_extra_stretch += super_stretch_delta
-                goal_array.append(current_extra_stretch)
-    elif not hit_all_stretch and not show_all_goals:
+    post_stretch_goals = []
+    if unlimited_stretch_goals:
+        current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) // super_stretch_delta) + 1) * super_stretch_delta
+        current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
+        while current_extra_stretch <= current_projected_bytes:
+            current_extra_stretch += super_stretch_delta
+            post_stretch_goals.append(current_extra_stretch)
+    elif current_size > goals_and_stretch[-1]:
+        post_stretch_goals = [ ((current_size // super_stretch_delta) + 1) * super_stretch_delta ]
+    if not hit_all_stretch and not show_all_goals:
         goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
     else:
         goal_array = [ x for x in goals_and_stretch if x > current_size ]
+    goal_array.extend(post_stretch_goals)
     for this_goal in goal_array:
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
