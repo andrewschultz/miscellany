@@ -43,6 +43,7 @@ goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and al
 minimum_seconds_between = 3000
 super_stretch_delta = 10000
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
+post_stretch_max = 10
 
 GRAPH_LAUNCH_NEVER = 0
 GRAPH_LAUNCH_NO_K_JUMP = 1
@@ -230,7 +231,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
 def dhms(my_int):
     my_int = abs(my_int)
-    return '{}d{}h{}m{}s'.format(my_int // 86400, (my_int // 3600) % 24, (my_int // 60) % 60, my_int % 60)
+    return '{:02d}d{:02d}h{:02d}m{:02d}s'.format(my_int // 86400, (my_int // 3600) % 24, (my_int // 60) % 60, my_int % 60)
 
 def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
     os.chdir(my_dir)
@@ -287,7 +288,11 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         goal_array = [ basic_goal ] if stretch_metric_goal == basic_goal else [ x for x in goals_and_stretch if x > current_size ]
     else:
         goal_array = [ x for x in goals_and_stretch if x > current_size ]
+    if post_stretch_max and len(post_stretch_goals) > post_stretch_max:
+        print("Truncating upper bounds to the top {} entr{} of {}.".format(post_stretch_max, mt.plur(post_stretch_max, [ 'ies', 'y' ]), len(post_stretch_goals)))
+        post_stretch_goals = post_stretch_goals[-post_stretch_max:]
     goal_array.extend(post_stretch_goals)
+    prev_goal = 0
     for this_goal in goal_array:
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
@@ -303,6 +308,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         catchup_inverse = 1 / catchup_ratio
         now_breakeven = this_goal * weekly_interval_so_far / full_weekly_interval
         raw_plus_minus = current_size - now_breakeven
+        if prev_goal > 0 and super_stretch_delta > 0 and this_goal - prev_goal > super_stretch_delta:
+            mt.center('=' * 80)
+        prev_goal = this_goal
         mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes for exact pace: {:.2f}. Bytes done so far: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
           bytes_per_hour_overall,
           bytes_per_hour_so_far, so_far_pct,
@@ -727,6 +735,8 @@ def read_2dy_cfg():
                 offset_seconds = int(data)
             elif prefix in ( 'super_stretch_delta' ):
                 super_stretch_delta = int(data)
+            elif prefix in ( 'post_stretch_max' ):
+                post_stretch_max = int(data)
             elif prefix.isdigit():
                 if len(prefix) != 8:
                     print("WARNING suggested weekly file has wrong # of digits (should be 8) at line {}.".format(line_count))
