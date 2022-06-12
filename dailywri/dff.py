@@ -23,6 +23,8 @@ import pendulum
 
 DEFAULT_SORT = daily.DAILY
 
+max_adjustment_summary = 100
+
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
 test_file_index = 0
 daily_strings = ['daily', 'drive', 'keep']
@@ -613,7 +615,7 @@ def show_adjustments(before_file, after_file):
     sorting_to_do = True
     total_delta = 0
     total_changes = 0
-    max_adjustment_summary = 100
+    print("    (NOTE: some line numbers may be identical due to reshuffling/deleting. But the net values are right.)")
     while sorting_to_do:
         max_delta = 0
         to_fix = 0
@@ -631,6 +633,10 @@ def show_adjustments(before_file, after_file):
         after_fix = after_ary.index(to_delete)
         after_ary.remove(to_delete)
         if len(to_delete) > max_adjustment_summary:
+            try:
+                space_index = to_delete.index(' ', max_adjustment_summary)
+            except:
+                pass
             to_delete = to_delete[:max_adjustment_summary] + " ..."
         print(to_delete, to_fix, "->", after_fix, "shifted", abs(after_fix - to_fix))
         total_delta += max_delta
@@ -779,7 +785,7 @@ def sort_raw(raw_long):
         if not ignore_duplicate:
             print("If you are sure the duplication ({}) is okay, the igdup option will bypass this bail. But the option is hidden for a reason. You probably just want to put a comment after, or change things subtly.".format(mt.listnums(dupe_edit_lines)))
             mt.npo(raw_long, dupe_edit_lines[0])
-    print("{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names))
+    print((colorama.Fore.CYAN if section_change > 0 else '') + "{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names), colorama.Style.RESET_ALL)
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         if overflow:
@@ -882,7 +888,7 @@ def sort_raw(raw_long):
             if only_one:
                 if open_raw:
                     os.system(raw_long)
-                print("Bailing, because flag for only one file was set, probably for testing. Again, set with -co to change this.")
+                print("Bailing now we've read our one file. Set -co to override this.")
                 sys.exit()
         if mt.is_npp_modified(raw_long):
             if force_copy:
@@ -1017,6 +1023,11 @@ while cmd_count < len(sys.argv):
         copy_then_test = True
         test_no_copy = False
         max_files = 2
+    elif arg[:2] == 'ma':
+        try:
+            max_adjustment_summary = int(arg[2:])
+        except:
+            print("WARNING: MA max-adjustment needs a number after it.")
     elif arg[:2] == 'lb':
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
