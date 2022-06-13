@@ -383,6 +383,34 @@ def read_comment_cfg():
     if any_warnings:
         conditional_bail()
 
+def is_valid_limerick(this_limerick):
+    print(this_limerick)
+    print(('==' in this_limerick), (this_limerick.count("\n") == 6))
+    return ('==' in this_limerick) and (this_limerick.count("\n") == 6)
+
+def limerick_flip(complete_section, incomplete_section):
+    d1 = complete_section.strip().split("\n")
+    d2 = incomplete_section.strip().split("\n")
+    done_limericks = ''
+    undone_limericks = ''
+    for d in [ d1, d2 ]:
+        current_limerick = ''
+        for x in d:
+            if x.startswith('==='):
+                if current_limerick:
+                    if is_valid_limerick(current_limerick):
+                        done_limericks += current_limerick
+                    else:
+                        undone_limericks += current_limerick
+                current_limerick = ''
+            current_limerick += x + "\n"
+        print("Ending limerick", current_limerick)
+        if is_valid_limerick(current_limerick):
+            done_limericks += current_limerick
+        else:
+            undone_limericks += current_limerick
+    return(done_limericks, undone_limericks)
+
 def is_in_procs(my_file):
     fbn = os.path.normpath(my_file)
     for vp in valid_procs:
@@ -803,6 +831,12 @@ def sort_raw(raw_long):
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
         sections['nam'] = sanitize(sections['nam'], start_tab = True)
+    if 'lim' in sections or 'lip' in sections:
+        ( sections['lim'], sections['lip'] ) = limerick_flip(sections['lim'], sections['lip'])
+        if not sections['lim']:
+            sections.pop('lim')
+        if not sections['lip']:
+            sections.pop('lip')
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
             print("Not dumping text to", important_file, "as the text", raw_long, "is already in there.")
