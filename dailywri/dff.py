@@ -141,7 +141,8 @@ def examples():
     print("dgrab.py s=pbn would actually sort things afterwards.")
     print("dff.py sr/st force sorting in regular or to-proc directory.")
     print("dff.py ld/rd sorts first file back in regular/to-proc directory but doesn't copy. Adding a q verifies changes.")
-    print("dff.py cb copies back.")
+    print("dff.py cq/qc copies back.")
+    print("dff.py fb specifies maximum files back.")
     sys.exit()
 
 def usage(my_arg = ''):
@@ -838,9 +839,9 @@ def sort_raw(raw_long):
         sections['nam'] = sanitize(sections['nam'], start_tab = True)
     if 'lim' in sections or 'lip' in sections:
         ( sections['lim'], sections['lip'] ) = limerick_flip(sections['lim'], sections['lip'])
-        if not sections['lim']:
+        if not sections['lim'].strip():
             sections.pop('lim')
-        if not sections['lip']:
+        if not sections['lip'].strip():
             sections.pop('lip')
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
@@ -915,7 +916,7 @@ def sort_raw(raw_long):
         if show_total_jumps:
             show_adjustments(raw_long, temp_out_file)
         if test_no_copy:
-            print("Not modifying", raw_long, "even though differences were found. Set -co to change this or add a Q to a parameter to get a verification question.")
+            print("Not modifying", raw_long, "even though differences were found. Set -co force changes with no question or add a Q to a parameter to get a verification question.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if ask_to_copy_back:
@@ -923,11 +924,11 @@ def sort_raw(raw_long):
                 if x.strip().lower()[0] == 'y':
                     copy(temp_out_file, raw_long)
             else:
-                print("Add q or g to question/get copy-back, or use cb as a separate argument.")
+                print("Add q or g to question/get copy-back, or use cq/qc as a separate argument, or co to force copying back.")
             if only_one:
                 if open_raw:
                     os.system(raw_long)
-                print("Bailing now we've read our one file. Set -co to override this.")
+                print("Bailing now we've read our one file. Multiple files can be processed with -mu.")
                 sys.exit()
         if mt.is_npp_modified(raw_long):
             if force_copy:
@@ -937,7 +938,8 @@ def sort_raw(raw_long):
             else:
                 print("BAILING because {} is unsaved in notepad. You can copy over with -fc.".format(raw_long)) # do not put this option in usage, because I want to make sure I use it sparingly
                 sys.exit()
-        copy(temp_out_file, raw_long)
+        if not test_no_copy:
+            copy(temp_out_file, raw_long)
         if copy_then_test:
             print("OK, copied one, now testing another.")
             test_no_copy = True
@@ -1032,10 +1034,9 @@ max_files = 1
 daily_files_back = 1
 
 while cmd_count < len(sys.argv):
-    arg = mt.nohy(sys.argv[cmd_count])
-    num_of = mt.end_number_of(arg)
-    if arg[0] == 'f' and arg[1:].isdigit():
-        max_files = num_of
+    (arg, num, value_found) = mt.parameter_with_number(sys.argv[cmd_count], default_value = 1)
+    if arg[0] in ( 'f', 'fb'):
+        max_files = num
     elif arg[:2] == 'g=':
         raw_glob = arg[2:]
     elif arg in ( 'k', 'dk' ):
@@ -1046,6 +1047,8 @@ while cmd_count < len(sys.argv):
         what_to_sort = daily.DAILY
     elif arg in ( 'p', 'sp' ):
         sort_proc = True
+    elif arg in ( 'cq', 'qc' ):
+        ask_to_copy_back = True
     elif arg == 'ddd':
         deep_duplicate_delete()
     elif arg[:3] == 'ddd' and arg[3:].isdigit():
@@ -1064,7 +1067,7 @@ while cmd_count < len(sys.argv):
         max_files = 2
     elif arg[:2] == 'ma':
         try:
-            max_adjustment_summary = int(arg[2:])
+            max_adjustment_summary = int(arg[2:].replace('=', ''))
         except:
             print("WARNING: MA max-adjustment needs a number after it.")
     elif arg[:2] == 'lb':
@@ -1073,6 +1076,10 @@ while cmd_count < len(sys.argv):
         local_unblock_move.update(arg[3:].split(","))
     elif arg == 'c':
         sys.exit("While C is the natural command-line parameter for copy, we want to avoid accidents, so you need to type co.")
+    elif arg == 'mu':
+        only_one = False
+    elif arg == 'oo':
+        only_one = True
     elif arg == 'co':
         test_no_copy = False
     elif arg == 'te':
@@ -1145,7 +1152,7 @@ while cmd_count < len(sys.argv):
         read_most_recent = True
         dir_search_flag = daily.ROOT
         test_no_copy = False
-    elif mt.alpha_match(arg, 'ldq') or mt.alpha_match(arg, 'ldg') or arg == 'lq' or arg == 'lg':
+    elif mt.alpha_match(arg, 'ldq') or mt.alpha_match(arg, 'ldg') or arg in ( 'lq', 'lg' ):
         read_most_recent = True
         dir_search_flag = daily.ROOT
         ask_to_copy_back = True
@@ -1156,10 +1163,11 @@ while cmd_count < len(sys.argv):
         read_most_recent = True
         dir_search_flag = daily.TOPROC
         test_no_copy = False
-    elif mt.alpha_match(arg, 'rdq') or mt.alpha_match(arg, 'rdg') or arg == 'rq' or arg == 'rg':
+    elif mt.alpha_match(arg, 'rdq') or mt.alpha_match(arg, 'rdg') or arg in ( 'rq', 'rg' ):
         read_most_recent = True
         dir_search_flag = daily.TOPROC
         ask_to_copy_back = True
+        daily_files_back = num
     elif mt.alpha_match(arg, 'lwd'):
         read_most_recent = True
         dir_search_flag = daily.ROOT
@@ -1170,22 +1178,22 @@ while cmd_count < len(sys.argv):
         what_to_sort = daily.DAILIES
     elif arg == 'rf':
         read_most_recent = True
-    elif arg[:2] == 'rd' and arg[2:].isdigit():
+    elif arg[:2] == 'rd':
         read_most_recent = True
         what_to_sort = daily.DAILIES
         dir_search_flag = daily.TOPROC
-        daily_files_back = num_of
-    elif arg[:2] == 'rf' and arg[2:].isdigit():
+        daily_files_back = num
+    elif arg[:2] == 'rf':
         read_most_recent = True
         dir_search_flag = daily.TOPROC
         daily_files_back = num_of
     elif arg == 'fc':
         force_copy = True
     elif arg[:2] == 'm=' or arg[:3] == 'mi=' or arg[:3] == 'mn=' or arg[:4] == 'min=':
-        my_min_file = str(num_of)
+        my_min_file = str(num)
         print("Minfile is now", my_min_file)
     elif arg[0:2] == 'ma=' or arg[0:2] == 'max=':
-        my_max_file = str(num_of)
+        my_max_file = str(num)
         print("Maxfile is now", my_max_file)
     elif arg == '?':
         usage()
