@@ -137,6 +137,13 @@ local_unblock_move = set()
 
 sect_move = defaultdict(lambda: defaultdict(int))
 
+def examples():
+    print("dgrab.py s=pbn would actually sort things afterwards.")
+    print("dff.py sr/st force sorting in regular or to-proc directory.")
+    print("dff.py ld/rd sorts first file back in regular/to-proc directory but doesn't copy. Adding a q verifies changes.")
+    print("dff.py cb copies back.")
+    sys.exit()
+
 def usage(my_arg = ''):
     if (my_arg):
         print("Bad argument", my_arg)
@@ -154,6 +161,7 @@ def usage(my_arg = ''):
     print("-rd# means go back # daily files, default is 1, -rf looks at files in current directory.")
     print("  adding Q to rd/ld allows you to say YES to changes.")
     print()
+    print("?? lists examples or sibling scripts for tinkering with files once sorted, as well as most po[ular/used commands.")
     print("You can also list files you wish to look up.")
     sys.exit()
 
@@ -384,8 +392,6 @@ def read_comment_cfg():
         conditional_bail()
 
 def is_valid_limerick(this_limerick):
-    print(this_limerick)
-    print(('==' in this_limerick), (this_limerick.count("\n") == 6))
     return ('==' in this_limerick) and (this_limerick.count("\n") == 6)
 
 def limerick_flip(complete_section, incomplete_section):
@@ -404,7 +410,6 @@ def limerick_flip(complete_section, incomplete_section):
                         undone_limericks += current_limerick
                 current_limerick = ''
             current_limerick += x + "\n"
-        print("Ending limerick", current_limerick)
         if is_valid_limerick(current_limerick):
             done_limericks += current_limerick
         else:
@@ -918,7 +923,7 @@ def sort_raw(raw_long):
                 if x.strip().lower()[0] == 'y':
                     copy(temp_out_file, raw_long)
             else:
-                print("Add q or g to question/get copy-back.")
+                print("Add q or g to question/get copy-back, or use cb as a separate argument.")
             if only_one:
                 if open_raw:
                     os.system(raw_long)
@@ -1184,6 +1189,8 @@ while cmd_count < len(sys.argv):
         print("Maxfile is now", my_max_file)
     elif arg == '?':
         usage()
+    elif arg == '??':
+        examples()
     elif len(arg) <= 2:
         usage(arg)
     else:
