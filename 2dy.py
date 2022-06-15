@@ -276,8 +276,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
+    high_stretch_goal = goals_and_stretch[-1]
     if unlimited_stretch_goals:
-        current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) // super_stretch_delta) + 1) * super_stretch_delta
+        current_extra_stretch = (max(current_size, goals_and_stretch[-1]) // super_stretch_delta) * super_stretch_delta
         current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
         while current_extra_stretch <= current_projected_bytes:
             current_extra_stretch += super_stretch_delta
@@ -294,6 +295,10 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     goal_array.extend(post_stretch_goals)
     prev_goal = 0
     for this_goal in goal_array:
+        if prev_goal > 0 and super_stretch_delta > 0 and this_goal - prev_goal > super_stretch_delta:
+            mt.center('=' * 80)
+        elif prev_goal == high_stretch_goal:
+            mt.center('~' * 80)
         current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
@@ -308,8 +313,6 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         catchup_inverse = 1 / catchup_ratio
         now_breakeven = this_goal * weekly_interval_so_far / full_weekly_interval
         raw_plus_minus = current_size - now_breakeven
-        if prev_goal > 0 and super_stretch_delta > 0 and this_goal - prev_goal > super_stretch_delta:
-            mt.center('=' * 80)
         prev_goal = this_goal
         mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes for exact pace: {:.2f}. Bytes done so far: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
           bytes_per_hour_overall,
