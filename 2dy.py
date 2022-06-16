@@ -56,6 +56,7 @@ run_weekly_check = False
 force_stats = False
 show_all_goals = False
 unlimited_stretch_goals = False
+print_yearly_pace = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -228,6 +229,23 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print(colorama.Fore.GREEN + "There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next) + colorama.Style.RESET_ALL)
     if bail:
         sys.exit()
+
+def check_yearly_pace():
+    total_bytes = 0
+    pnow = pendulum.now()
+    year_start = pendulum.now().set(month=1,day=1,hour=0,minute=0,second=0)
+    year_end = year_start.add(years=1)
+    year_seconds = (year_end-year_start).in_seconds()
+    seconds_delta = (pnow - year_start).in_seconds()
+    this_year = pnow.year
+    g = glob.glob("c:/writing/daily/{}*.txt".format(this_year))
+    for f in g:
+        this_file_bytes = os.stat(f).st_size
+        total_bytes += this_file_bytes
+        print(f, "adds", this_file_bytes)
+    print(total_bytes, "total bytes")
+    print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
+    sys.exit()
 
 def dhms(my_int):
     my_int = abs(my_int)
@@ -927,9 +945,14 @@ while cmd_count < len(sys.argv):
     elif arg.isdigit(): # this should be at the end since we have other digit wildcard checks
         files_back_wanted = int(arg)
         latest_daily = False
+    elif arg in ( 'py', 'yp' ):
+        print_yearly_pace = True
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
+
+if print_yearly_pace:
+    check_yearly_pace()
 
 if run_weekly_check:
     check_weekly_rate(bail = weekly_bail)
