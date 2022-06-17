@@ -235,16 +235,28 @@ def check_yearly_pace():
     pnow = pendulum.now()
     year_start = pendulum.now().set(month=1,day=1,hour=0,minute=0,second=0)
     year_end = year_start.add(years=1)
+    cut_off_last_file = year_end.subtract(days=7)
+    this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     year_seconds = (year_end-year_start).in_seconds()
     seconds_delta = (pnow - year_start).in_seconds()
     this_year = pnow.year
-    g = glob.glob("c:/writing/daily/{}*.txt".format(this_year))
+    last_year = pnow.year - 1
+    os.chdir("c:/writing/daily")
+    g = glob.glob("{}*.txt".format(this_year))
     for f in g:
         this_file_bytes = os.stat(f).st_size
         total_bytes += this_file_bytes
-        print(f, "adds", this_file_bytes)
+        if verbose:
+            print(f, "adds", this_file_bytes)
     print(total_bytes, "total bytes")
     print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
+    if g[-1] < this_years_last_file:
+        g0 = glob.glob("{}*.txt".format(last_year))
+        print(colorama.Fore.GREEN + "Adding last year's last-file: {}".format(g0[-1]) + colorama.Style.RESET_ALL)
+        this_file_bytes = os.stat(g0[-1]).st_size
+        total_bytes += this_file_bytes
+        print(total_bytes, "total bytes")
+        print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes including last file")
     sys.exit()
 
 def dhms(my_int):
