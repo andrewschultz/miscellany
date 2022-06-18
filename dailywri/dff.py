@@ -88,6 +88,8 @@ ask_to_copy_back = False
 
 show_stat_numbers = False
 
+space_to_tab_conversion = False
+
 last_file_first = True
 ignore_limerick_headers_in_stats = True
 
@@ -542,8 +544,11 @@ def my_section(l):
     if temp:
         return temp
     if '\t' in l or l.count('  ') > 2:
-        if l.count(' ') - l.count('\t') > 2:
-            print("LOOK OUT line may have errant tab(s):", l.strip())
+        if l.count('\t') == 0:
+            if not space_to_tab_conversion:
+                print("LOOK out name section may require space-to-tab conversion with -tc")
+        elif l.count(' ') - l.count('\t') > 2:
+            print("LOOK OUT name section may have errant tab(s):", l.strip())
         return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
@@ -676,6 +681,17 @@ def show_adjustments(before_file, after_file):
         total_delta += max_delta
         total_changes += 1
     print("Total changes and delta", total_changes, total_delta)
+
+def spaces_to_tabs(name_sect):
+    if '  ' in name_sect:
+        if '\t' in name_sect.strip():
+            print("WARNING mixing tabs and extra spaces in NAM section. Open manually to fix this.")
+            xspace = re.findall(" {2,}", name_sect)
+            print("To be precise, {} tabs and {} extra spaces.".format(name_sect.count('\t'), len(xspace)))
+            return name_sect
+    else:
+        return name_sect
+    return re.sub(" {2,}", "\t", name_sect)
 
 def sort_raw(raw_long):
     overflow = False
@@ -815,6 +831,8 @@ def sort_raw(raw_long):
                 else:
                     from_blank += 1
             sections['sh'] += line
+    if space_to_tab_conversion:
+        sections['nam'] = spaces_to_tabs(sections['nam'])
     if len(dupe_edit_lines):
         if not ignore_duplicate:
             print("If you are sure the duplication ({}) is okay, the igdup option will bypass this bail. But the option is hidden for a reason. You probably just want to put a comment after, or change things subtly.".format(mt.listnums(dupe_edit_lines)))
@@ -1195,6 +1213,8 @@ while cmd_count < len(sys.argv):
     elif arg[0:2] == 'ma=' or arg[0:2] == 'max=':
         my_max_file = str(num)
         print("Maxfile is now", my_max_file)
+    elif arg == 'tc':
+        space_to_tab_conversion = True
     elif arg == '?':
         usage()
     elif arg == '??':
