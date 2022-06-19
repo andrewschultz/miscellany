@@ -49,7 +49,7 @@ elif 'drive' in cwd_parts:
     what_to_sort = daily.DRIVE
 else:
     what_to_sort = DEFAULT_SORT
-    print("The directory gives us a default of", daily_strings[what_to_sort])
+    print("The current working directory gave no information what to sort, so we are reverting to a default of", daily_strings[what_to_sort])
 
 force_copy = False
 
@@ -145,6 +145,7 @@ def examples():
     print("dff.py ld/rd sorts first file back in regular/to-proc directory but doesn't copy. Adding a q verifies changes.")
     print("dff.py cq/qc copies back.")
     print("dff.py fb specifies maximum files back.")
+    print("dff.py ddq or kdq copies back when looking ad drive or keep files.")
     sys.exit()
 
 def usage(my_arg = ''):
@@ -786,9 +787,10 @@ def sort_raw(raw_long):
                         print("Move from", current_section if current_section else "<none>", "to", temp, ":", line.strip(), block_move_from_cfg[current_section], 'block?', temp in block_move_from_cfg[current_section])
                 if temp in block_move_from_cfg[current_section]:
                     sections[current_section] += line
+                    continue
                 elif temp == 'nam':
                     line = "\t" + line.strip()
-                    sections[temp] += line
+                    sections[temp] += line.replace('`', '') # the "replace" is for stuff done at the library
                 elif temp == 'lim':
                     sections[temp] += mt.slash_to_limerick(line)
                 else:
@@ -837,7 +839,8 @@ def sort_raw(raw_long):
         if not ignore_duplicate:
             print("If you are sure the duplication ({}) is okay, the igdup option will bypass this bail. But the option is hidden for a reason. You probably just want to put a comment after, or change things subtly.".format(mt.listnums(dupe_edit_lines)))
             mt.npo(raw_long, dupe_edit_lines[0])
-    print((colorama.Fore.CYAN if section_change > 0 else '') + "{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names), colorama.Style.RESET_ALL)
+    if verbose or section_change:
+        print((colorama.Fore.CYAN if section_change > 0 else '') + "{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names), colorama.Style.RESET_ALL)
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         if overflow:
@@ -888,7 +891,7 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
-    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
     no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
@@ -934,7 +937,8 @@ def sort_raw(raw_long):
         if show_total_jumps:
             show_adjustments(raw_long, temp_out_file)
         if test_no_copy:
-            print("Not modifying", raw_long, "even though differences were found. Set -co force changes with no question or add a Q to a parameter to get a verification question.")
+            if not ask_to_copy_back:
+                print("Not modifying", raw_long, "even though differences were found. Set -co force changes with no question or add a Q to a parameter to get a verification question.")
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if ask_to_copy_back:
@@ -1290,7 +1294,8 @@ if run_test_file:
 if not len(file_list):
     my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
     file_list = glob(my_glob)
-    print("Globbing", my_glob)
+    if verbose:
+        print("Globbing", my_glob)
 
 if read_most_recent:
     daily_count = 0
