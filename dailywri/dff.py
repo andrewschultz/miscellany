@@ -1089,10 +1089,10 @@ daily_files_back = 1
 
 while cmd_count < len(sys.argv):
     (arg, num, value_found) = mt.parameter_with_number(sys.argv[cmd_count], default_value = 1)
-    if arg[0] in ( 'f', 'fb'):
+    if arg in ( 'f', 'fb'):
         max_files = num
-    elif arg[:2] == 'g=':
-        raw_glob = arg[2:]
+    elif arg[:2] == 'g=': # there may be a letter here so we can't rely on num
+        raw_glob = num if num else arg[2:]
     elif arg in ( 'k', 'dk' ):
         what_to_sort = daily.KEEP
     elif arg in ( 'd', 'dr' ):
@@ -1119,11 +1119,6 @@ while cmd_count < len(sys.argv):
         copy_then_test = True
         test_no_copy = False
         max_files = 2
-    elif arg[:2] == 'ma':
-        try:
-            max_adjustment_summary = int(arg[2:].replace('=', ''))
-        except:
-            print("WARNING: MA max-adjustment needs a number after it.")
     elif arg[:2] == 'lb':
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
@@ -1226,6 +1221,31 @@ while cmd_count < len(sys.argv):
         dir_search_flag = daily.TOPROC
         ask_to_copy_back = True
         daily_files_back = num
+    elif mt.alpha_match(arg, 'dd'):
+        what_to_sort = daily.DRIVE
+        dir_search_flag = daily.TOPROC
+    elif mt.alpha_match(arg, 'ddc'):
+        what_to_sort = daily.DRIVE
+        dir_search_flag = daily.TOPROC
+        test_no_copy = False
+    elif mt.alpha_match(arg, 'ddq'):
+        what_to_sort = daily.DRIVE
+        dir_search_flag = daily.TOPROC
+        ask_to_copy_back = True
+        daily_files_back = num
+    elif mt.alpha_match(arg, 'kd'):
+        what_to_sort = daily.KEEP
+        dir_search_flag = daily.TOPROC
+    elif mt.alpha_match(arg, 'kdc'):
+        what_to_sort = daily.KEEP
+        read_most_recent = False
+        dir_search_flag = daily.TOPROC
+        test_no_copy = False
+    elif mt.alpha_match(arg, 'kdq'):
+        what_to_sort = daily.KEEP
+        dir_search_flag = daily.TOPROC
+        ask_to_copy_back = True
+        daily_files_back = num
     elif mt.alpha_match(arg, 'lwd'):
         read_most_recent = True
         dir_search_flag = daily.ROOT
@@ -1247,10 +1267,10 @@ while cmd_count < len(sys.argv):
         daily_files_back = num_of
     elif arg == 'fc':
         force_copy = True
-    elif arg[:2] == 'm=' or arg[:3] == 'mi=' or arg[:3] == 'mn=' or arg[:4] == 'min=':
+    elif arg in ( 'm=', 'mi=', 'mn=', 'min=' ):
         my_min_file = str(num)
         print("Minfile is now", my_min_file)
-    elif arg[0:2] == 'ma=' or arg[0:2] == 'max=':
+    elif arg in ( 'ma=', 'max=' ):
         my_max_file = str(num)
         print("Maxfile is now", my_max_file)
     elif arg == 'tc':
