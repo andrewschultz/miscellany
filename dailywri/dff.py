@@ -169,6 +169,38 @@ def usage(my_arg = ''):
     print("You can also list files you wish to look up.")
     sys.exit()
 
+def have_first_comment(file_name):
+    with open(file_name) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"):
+                return line.strip()
+            if line.startswith("\\"):
+                return ''
+    return 'COMPLETED'
+
+def verify_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
+    start_comments = defaultdict(int)
+    for di in dir_list:
+        this_dir_file = ''
+        this_dir_to_fix = 0
+        for f in glob(di + "/20*.txt"):
+            temp = have_first_comment(f)
+            start_comments[temp] += 1
+            if not temp:
+                this_dir_file = f
+                this_dir_to_fix += 1
+        if this_dir_to_fix:
+            mt.add_open(this_dir_file)
+            print(colorama.Fore.YELLOW + "{} to add headers to in {}".format(this_dir_to_fix, di) + colorama.Style.RESET_ALL)
+    for com in sorted(start_comments, key=start_comments.get, reverse = True):
+        print("{} instance{} of {}".format(start_comments[com], mt.plur(start_comments[com]), com if com else 'no comment'))
+    if clipboard_msg:
+        import pyperclip
+        print(colorama.Fore.CYAN + "Copying header to clipboard: {}".format(clipboard_msg.strip()) + colorama.Style.RESET_ALL)
+        pyperclip.copy(clipboard_msg)
+    mt.post_open(full_file_paths = True)
+    sys.exit()
+
 def blue_print(my_str):
     print(colorama.Fore.CYAN + my_str + colorama.Style.RESET_ALL)
 
@@ -417,7 +449,7 @@ def limerick_flip(complete_section, incomplete_section):
         if is_valid_limerick(current_limerick):
             done_limericks += current_limerick
         else:
-            undone_limericks += current_limerick
+            undone_limericks += current_limerick.lstrip()
     return(done_limericks, undone_limericks)
 
 def is_in_procs(my_file):
@@ -805,7 +837,7 @@ def sort_raw(raw_long):
                     else:
                         from_blank += 1
                 continue
-            if one_word_names and is_likely_name(line, current_section) and 'nam' not in local_block_move:
+            if one_word_names and is_likely_name(line, current_section) and 'nam' not in local_block_move and current_section != 'nam':
                 print(colorama.Fore.CYAN + "    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section if current_section else '<none>', line_count, line.strip()) + colorama.Style.RESET_ALL)
                 sections['nam'] += "\t" + line.strip()
                 name_line[line.strip()] = line_count
@@ -1116,6 +1148,10 @@ while cmd_count < len(sys.argv):
         last_file_first = True
     elif arg in ( 'f1', '1f' ):
         last_file_first = False
+    elif arg in ( 've', 'ver' ):
+        verify_dirs(clipboard_msg = '')
+    elif arg in ( 'vc', 'vec', 'verc' ):
+        verify_dirs(clipboard_msg = "#verified sorted for final dgrab\n\n")
     elif arg == 'vv':
         verbose = 2
     elif arg == 'v':
