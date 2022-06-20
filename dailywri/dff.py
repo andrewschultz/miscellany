@@ -23,6 +23,7 @@ import pendulum
 
 DEFAULT_SORT = daily.DAILY
 
+max_consecutive_blank_section_lines = 10
 max_adjustment_summary = 100
 
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
@@ -727,7 +728,7 @@ def spaces_to_tabs(name_sect):
     return re.sub(" {2,}", "\t", name_sect)
 
 def sort_raw(raw_long):
-    overflow = False
+    overflow = 0
     raw_long = os.path.normpath(raw_long)
     global test_no_copy
     global copy_then_test
@@ -850,8 +851,10 @@ def sort_raw(raw_long):
             if current_section == '':
                 if not line.startswith('#'):
                     if show_blank_to_blank:
-                        if line_count == last_default + 1 and default_streak > 10:
-                            overflow = True
+                        if line_count == last_default + 1 and default_streak > max_consecutive_blank_section_lines:
+                            if not overflow:
+                                print(colorama.Fore.RED + "    <note: lines-in-a-row (x, x+1) exceeded max_consecutive_blank_section_lines at line {}.>".format(line_count) + colorama.Style.RESET_ALL)
+                            overflow += 1
                         else:
                             print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
                             blank_edit_lines.append(line_count)
@@ -873,10 +876,10 @@ def sort_raw(raw_long):
             mt.npo(raw_long, dupe_edit_lines[0])
     if verbose or section_change:
         print((colorama.Fore.CYAN if section_change > 0 else '') + "{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names), colorama.Style.RESET_ALL)
+    if overflow:
+        print("NOTE: consecutive-line overflow (line not fitting in any section) was detected. Inspection showed a total of {} overflow line{}.".format(overflow, mt.plur(overflow)))
     if edit_blank_to_blank and len(blank_edit_lines):
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
-        if overflow:
-            print("NOTE: consecutive-line overflow (line not fitting in any section) was detected, so there may be a big chunk that is the result of one extra CR.")
         mt.npo(raw_long, blank_edit_lines[0])
     if len(old_names):
         new_names = tab_split(sections['nam'].lower().strip())
