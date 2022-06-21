@@ -94,6 +94,8 @@ space_to_tab_conversion = False
 last_file_first = True
 ignore_limerick_headers_in_stats = True
 
+run_apostrophe_check = False
+
 STATS_EXT_OFF = 0
 STATS_EXT_ALPHABETICALLY = 1
 STATS_EXT_BY_SECTION_SIZE = 2
@@ -129,6 +131,7 @@ fixed_marker = defaultdict(str)
 prority_sort = defaultdict(int)
 header_tweak = defaultdict(str)
 no_names = defaultdict(bool)
+apostrophe_check = defaultdict(str)
 
 empty_to_protect = defaultdict(bool)
 protect_yes_force = False
@@ -179,7 +182,48 @@ def have_first_comment(file_name):
                 return ''
     return 'COMPLETED'
 
-def verify_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
+def convert_apos_case(x):
+    if x == x.lower():
+        return apostrophe_check[x]
+    if x == x.title():
+        return apostrophe_check[x.lower()].title()
+    if x == x.upper():
+        return apostrophe_check[x.lower()].upper()
+    return "!" + apostrophe_check[x.lower()]
+
+def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ]):
+    apostrophe_regex = r"\b({})\b".format("|".join(list(apostrophe_check)))
+    temp_apostrophe_file = "c:/writing/temp/dff-apostrophe.txt"
+    for di in dir_list:
+        count = 0
+        globdir = glob(di + "/20*.txt")
+        for f in globdir:
+            if not re.search("[0-9]{8}\.txt$", f):
+                print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
+                continue
+            count += 1
+            apos_out = open(temp_apostrophe_file, "w")
+            subcount = 0
+            with open(f) as file:
+                for (line_count, line) in enumerate (file, 1):
+                    for x in re.findall(apostrophe_regex, line, re.IGNORECASE):
+                        if subcount == 0:
+                            print(count, 'of', len(globdir), "Found stuff in", f)
+                        subcount += 1
+                        print("    ", subcount, line_count, x, "->", convert_apos_case(x))
+                        line = line.replace(x, convert_apos_case(x))
+                    apos_out.write(line)
+            apos_out.close()
+            if cmp(f, temp_apostrophe_file):
+                continue
+            else:
+                mt.wm(f, temp_apostrophe_file)
+                x = input("Copy back? (Y does, anything else doesn't)")
+                if x.strip().lower()[0] == 'y':
+                    copy(temp_apostrophe_file, f)
+    sys.exit()
+
+def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
     start_comments = defaultdict(int)
     for di in dir_list:
         this_dir_file = ''
@@ -340,7 +384,17 @@ def read_comment_cfg():
                         any_warnings = True
                     else:
                         delete_marker[y] = True
-            if prefix == 'block':
+            if prefix in ( 'apostrophe', 'apostrophes' ):
+                for e in entries:
+                    if "'" not in e:
+                        print("WARNING line {} has {} which does not have an apostrophe.")
+                        continue
+                    er = e.replace("'", '')
+                    if er in apostrophe_check:
+                        print("WARNING line {} has duplicate apostrophe entry {}.".format(er))
+                        continue
+                    apostrophe_check[er] = e
+            elif prefix == 'block':
                 for my_from in entries:
                     for my_to in vals:
                         block_move_from_cfg[my_from].add(my_to)
@@ -1147,9 +1201,9 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'f1', '1f' ):
         last_file_first = False
     elif arg in ( 've', 'ver' ):
-        verify_dirs(clipboard_msg = '')
+        verify_weekly_headers_in_dirs(clipboard_msg = '')
     elif arg in ( 'vc', 'vec', 'verc' ):
-        verify_dirs(clipboard_msg = "#verified sorted for final dgrab\n\n")
+        verify_weekly_headers_in_dirs(clipboard_msg = "#verified sorted for final dgrab\n\n")
     elif arg == 'vv':
         verbose = 2
     elif arg == 'v':
@@ -1278,6 +1332,8 @@ while cmd_count < len(sys.argv):
         print("Maxfile is now", my_max_file)
     elif arg == 'tc':
         space_to_tab_conversion = True
+    elif arg in ( 'ap', 'apo' ):
+        run_apostrophe_check = True
     elif arg == '?':
         usage()
     elif arg == '??':
@@ -1344,6 +1400,9 @@ os.chdir(dir_to_scour)
 
 read_daily_cfg()
 read_comment_cfg()
+
+if run_apostrophe_check:
+    check_apostrophes_in_file()
 
 if run_test_file:
     test_file_name = "c:/writing/temp/dff-test-file-{}.txt".format(test_file_index)
