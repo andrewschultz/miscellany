@@ -183,13 +183,25 @@ def have_first_comment(file_name):
     return 'COMPLETED'
 
 def convert_apos_case(x):
+    apos = apostrophe_check[x.lower()]
     if x == x.lower():
-        return apostrophe_check[x]
+        return apos
     if x == x.title():
-        return apostrophe_check[x.lower()].title()
+        return apos[0].upper() + apos[1:].lower()
     if x == x.upper():
-        return apostrophe_check[x.lower()].upper()
-    return "!" + apostrophe_check[x.lower()]
+        return apos.upper()
+    return_value = ''
+    count = 0
+    for y in range(0, len(apos)):
+        if not apos[y].isalpha():
+            return_value += apos[y]
+            continue
+        if x[count] == x[count].lower():
+            return_value += x[count]
+        else:
+            return_value += x[count].upper()
+        count += 1
+    return return_value
 
 def relevant_daily_glob(my_dir):
     gwarning = [x for x in glob(my_dir + "/20*.txt") if not re.search("[0-9]{8}\.txt$", x)]
@@ -201,7 +213,7 @@ def relevant_daily_glob(my_dir):
     return gbase[-1:]
 
 def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
-    apostrophe_regex = r"\b({})\b".format("|".join(list(apostrophe_check)))
+    apostrophe_regex = r"[^a-z']({})[^a-z']".format("|".join(list(apostrophe_check)))
     temp_apostrophe_file = "c:/writing/temp/dff-apostrophe.txt"
     for di in dir_list:
         count = 0
@@ -215,7 +227,7 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
             subcount = 0
             with open(f) as file:
                 for (line_count, line) in enumerate (file, 1):
-                    for x in re.findall(apostrophe_regex, line, re.IGNORECASE):
+                    for x in set(re.findall(apostrophe_regex, line, re.IGNORECASE)):
                         if subcount == 0:
                             print(count, 'of', len(globdir), "Found stuff in", f)
                         subcount += 1
