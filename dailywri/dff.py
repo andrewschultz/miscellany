@@ -191,12 +191,21 @@ def convert_apos_case(x):
         return apostrophe_check[x.lower()].upper()
     return "!" + apostrophe_check[x.lower()]
 
-def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ]):
+def relevant_daily_glob(my_dir):
+    gwarning = [x for x in glob(my_dir + "/20*.txt") if not re.search("[0-9]{8}\.txt$", x)]
+    if len(gwarning):
+        print(colorama.Fore.YELLOW + "WARNING: nonrelevant daily files {} found in {}.".format(', '.join(gwarning), my_dir) + colorama.Style.RESET_ALL)
+    gbase = [x for x in glob(my_dir + "/20*.txt") if re.search("[0-9]{8}\.txt$", x)]
+    if 'to-proc' in my_dir:
+        return gbase
+    return gbase[-1:]
+
+def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
     apostrophe_regex = r"\b({})\b".format("|".join(list(apostrophe_check)))
     temp_apostrophe_file = "c:/writing/temp/dff-apostrophe.txt"
     for di in dir_list:
         count = 0
-        globdir = glob(di + "/20*.txt")
+        globdir = relevant_daily_glob(di)
         for f in globdir:
             if not re.search("[0-9]{8}\.txt$", f):
                 print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
@@ -226,6 +235,7 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
 def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
     start_comments = defaultdict(int)
     for di in dir_list:
+        smallest_file_list = []
         this_dir_file = ''
         this_dir_to_fix = 0
         for f in glob(di + "/20*.txt"):
@@ -234,9 +244,12 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
             if not temp:
                 this_dir_file = f
                 this_dir_to_fix += 1
+                smallest_file_list.append(this_dir_file)
         if this_dir_to_fix:
-            mt.add_open(this_dir_file)
+            smallest_file_list = sorted(smallest_file_list, key=lambda x: os.stat(x).st_size)
             print(colorama.Fore.YELLOW + "{} to add headers to in {}".format(this_dir_to_fix, di) + colorama.Style.RESET_ALL)
+            print(smallest_file_list[0], "has size", os.stat(smallest_file_list[0]).st_size)
+            mt.add_open(smallest_file_list[0])
     for com in sorted(start_comments, key=start_comments.get, reverse = True):
         print("{} instance{} of {}".format(start_comments[com], mt.plur(start_comments[com]), com if com else 'no comment'))
     if clipboard_msg:
