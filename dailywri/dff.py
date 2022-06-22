@@ -188,6 +188,8 @@ def convert_apos_case(x):
     if x == x.lower():
         return apos
     if x == x.title():
+        if apos.startswith("'"):
+            return apos[0] + apos[1].upper() + apos[2:].lower()
         return apos[0].upper() + apos[1:].lower()
     if x == x.upper():
         return apos.upper()
@@ -213,8 +215,12 @@ def relevant_daily_glob(my_dir):
         return gbase
     return gbase[-1:]
 
+def add_apostrophe(match):
+    return match.group(1) + convert_apos_case(match.group(2)) + match.group(3)
+
 def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
-    apostrophe_regex = r"[^a-z']({})[^a-z']".format("|".join(list(apostrophe_check)))
+    #apostrophe_regex = r"[^a-z']({})[^a-z']".format("|".join(list(apostrophe_check)))
+    apostrophe_regex = r"(^|[^a-z'])({})($|[^a-z'])".format("|".join(list(apostrophe_check)))
     temp_apostrophe_file = "c:/writing/temp/dff-apostrophe.txt"
     for di in dir_list:
         count = 0
@@ -232,8 +238,8 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
                         if subcount == 0:
                             print(count, 'of', len(globdir), "Found stuff in", f)
                         subcount += 1
-                        print("    ", subcount, line_count, x, "->", convert_apos_case(x))
-                        line = line.replace(x, convert_apos_case(x))
+                        print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
+                        line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
                     apos_out.write(line)
             apos_out.close()
             if cmp(f, temp_apostrophe_file):
