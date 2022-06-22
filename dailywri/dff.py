@@ -150,6 +150,7 @@ def examples():
     print("dff.py cq/qc copies back.")
     print("dff.py fb specifies maximum files back.")
     print("dff.py ddq or kdq copies back when looking ad drive or keep files.")
+    print("dff.py ver/verc = verify headers, dff.py apo fixes apostrophes.")
     sys.exit()
 
 def usage(my_arg = ''):
@@ -239,9 +240,15 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
                 continue
             else:
                 mt.wm(f, temp_apostrophe_file)
-                x = input("Copy back? (Y does, anything else doesn't)")
-                if x.strip().lower()[0] == 'y':
+                x = input("Copy back? (Y does, O doesn't but opens, Q quits, anything else doesn't)")
+                if not x.strip():
+                    pass
+                elif x.strip().lower()[0] == 'y':
                     copy(temp_apostrophe_file, f)
+                elif x.strip().lower()[0] == 'q':
+                    sys.exit()
+                elif x.strip().lower()[0] == 'o':
+                    mt.npo(f, bail=False)
     sys.exit()
 
 def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
@@ -260,7 +267,7 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
         if this_dir_to_fix:
             smallest_file_list = sorted(smallest_file_list, key=lambda x: os.stat(x).st_size)
             print(colorama.Fore.YELLOW + "{} to add headers to in {}".format(this_dir_to_fix, di) + colorama.Style.RESET_ALL)
-            print(smallest_file_list[0], "has size", os.stat(smallest_file_list[0]).st_size)
+            print(smallest_file_list[0], "has size", os.stat(smallest_file_list[0]).st_size, "with maximum size", os.stat(smallest_file_list[-1]).st_size)
             mt.add_open(smallest_file_list[0])
     for com in sorted(start_comments, key=start_comments.get, reverse = True):
         print("{} instance{} of {}".format(start_comments[com], mt.plur(start_comments[com]), com if com else 'no comment'))
@@ -1057,7 +1064,9 @@ def sort_raw(raw_long):
                 mt.wm(raw_long, temp_out_file)
             if ask_to_copy_back:
                 x = input("Copy back? (Y does, anything else doesn't)")
-                if x.strip().lower()[0] == 'y':
+                if not x.strip():
+                    pass
+                elif x.strip().lower()[0] == 'y':
                     copy(temp_out_file, raw_long)
             else:
                 print("Add q or g to question/get copy-back, or use cq/qc as a separate argument, or co to force copying back.")
