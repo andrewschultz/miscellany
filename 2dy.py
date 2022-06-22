@@ -42,6 +42,7 @@ max_days_back = 1000
 goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
 super_stretch_delta = 10000
+stretch_offset = 0
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 post_stretch_max = 10
 
@@ -307,8 +308,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
     high_stretch_goal = goals_and_stretch[-1]
+    print(stretch_offset)
     if unlimited_stretch_goals:
-        current_extra_stretch = (max(current_size, goals_and_stretch[-1]) // super_stretch_delta) * super_stretch_delta
+        current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) - stretch_offset) // super_stretch_delta) * super_stretch_delta + stretch_offset
         current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
         while current_extra_stretch <= current_projected_bytes:
             current_extra_stretch += super_stretch_delta
@@ -721,6 +723,7 @@ def read_2dy_cfg():
     global color_dict
     global minimum_seconds_between
     global goals_and_stretch
+    global stretch_offset
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -766,8 +769,10 @@ def read_2dy_cfg():
                 sect_ary.extend(sect_dict)
             elif prefix in ( 'offset_seconds', 'seconds_offset' ):
                 offset_seconds = int(data)
-            elif prefix in ( 'super_stretch_delta' ):
+            elif prefix in ( 'stretch_delta', 'super_stretch_delta' ):
                 super_stretch_delta = int(data)
+            elif prefix in ( 'stretch_offset', 'offset_stretch' ):
+                stretch_offset = int(data)
             elif prefix in ( 'post_stretch_max' ):
                 post_stretch_max = int(data)
             elif prefix.isdigit():
@@ -959,6 +964,10 @@ while cmd_count < len(sys.argv):
         latest_daily = False
     elif arg in ( 'py', 'yp' ):
         print_yearly_pace = True
+    elif arg == 'so':
+        if num < 50:
+            num *= 1000
+        stretch_offset = num
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
