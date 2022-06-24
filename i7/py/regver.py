@@ -19,6 +19,7 @@ max_files = 10
 temp_regver = "c:/writing/temp/regver-py.txt"
 
 default_wild_card = "reg-*-lone-*.txt"
+blanket_wild_card = "reg-*.txt"
 
 my_proj = ''
 
@@ -26,6 +27,8 @@ def usage(header = "usage for ".format(__file__)):
     print('=' * 20, header, '=' * 20)
     print("m# = max files")
     print("o = open after, no/on = don't open after")
+    print("e = edit files, can be combined with o")
+    print("a = all files, not just -lone-")
     print("You can specify a file or a wild card to test with an asterisk or long (4+ chars) string name.")
     print("Default wild card is {}.".format(default_wild_card))
     sys.exit()
@@ -85,7 +88,9 @@ while cmd_count < len(sys.argv):
         open_after = True
     elif arg in ( 'no', 'on' ):
         open_after = False
-    if arg == 'e':
+    if arg == 'a':
+        default_wild_card = blanket_wild_card
+    elif arg == 'e':
         edit_files = True
         open_after = False
     elif arg in ( 'ne', 'en' ):
@@ -116,6 +121,10 @@ if not len(files) and not len(wild_cards):
 
 for this_wild in wild_cards:
     files.extend(glob.glob(this_wild))
+
+if not len(files):
+    print("No specific wild cards found. Going with reg-*.txt.")
+    files.extend(glob.glob("reg-*.txt"))
 
 files = sorted(set(files))
 
