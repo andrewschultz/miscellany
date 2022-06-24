@@ -58,6 +58,7 @@ force_stats = False
 show_all_goals = False
 unlimited_stretch_goals = False
 print_yearly_pace = False
+see_silly_max = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -308,7 +309,6 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
     high_stretch_goal = goals_and_stretch[-1]
-    print(stretch_offset)
     if unlimited_stretch_goals:
         current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) - stretch_offset) // super_stretch_delta) * super_stretch_delta + stretch_offset
         current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
@@ -327,6 +327,9 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     goal_array.extend(post_stretch_goals)
     prev_goal = 0
     for this_goal in goal_array:
+        if see_silly_max:
+            current_size = this_goal - 1
+            bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
         if prev_goal > 0 and super_stretch_delta > 0 and this_goal - prev_goal > super_stretch_delta:
             mt.center('=' * 80)
         elif prev_goal == high_stretch_goal:
@@ -968,6 +971,8 @@ while cmd_count < len(sys.argv):
         if num < 50:
             num *= 1000
         stretch_offset = num
+    elif arg == 'ssm':
+        see_silly_max = True
     elif arg == '?': usage()
     else: usage("Bad parameter {:s}".format(arg))
     cmd_count += 1
