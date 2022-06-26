@@ -48,8 +48,8 @@ def add_clipboard_text(prefix, data):
         my_action += "ing"
     this_string = "chapter {}\n\n".format(my_action)
     if prefix not in verb_types:
-        if prefix:
-            print("WARNING unrecognized prefix {}.")
+        if prefix and prefix != "out of world":
+            print("WARNING unrecognized prefix {}.".format(prefix))
         if not default_prefix:
             print("Bailing. If you wish to give a default prefix, edit the data file with verb.py e and say default=(what you want).")
             sys.exit()
