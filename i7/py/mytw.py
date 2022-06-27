@@ -5,8 +5,11 @@
 # This checks for if everything is sane and then tweaks the lines that need tweaking.
 # It's a bit hard-coded, but it works.
 #
+# "release along with the parchment interpreter"
+# release to itch.io
+#
 # usage: nothing needed in the right directory
-#        mytw.py would tweak Ailihphilia's necessary web pages
+#        mytw.py ai would tweak Ailihphilia's necessary web pages
 #
 # todo: allow for default path
 #
@@ -20,7 +23,7 @@ import sys
 import i7
 import mytools as mt
 
-def check_valid_path():
+def check_web_components():
     if not os.path.exists("style.css"):
         sys.exit("No style.css found. Be sure you are releasing to Parchment.")
     if not os.path.exists("play.html"):
@@ -108,19 +111,27 @@ def rewrite_play():
 cmd_count = 1
 got_one = False
 
+param_project = ''
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    temp = i7.proj2matr(arg)
+    temp = i7.long_name(arg)
     if temp:
-        if got_one:
+        if param_project:
             sys.exit("Can't run two projects in one run.")
-        print("Going to", temp)
-        got_one = True
-        os.chdir(temp)
+        param_project = temp
+        print("Choosing project", param_project)
     else:
         sys.exit("Invalid project specified.")
     cmd_count += 1
 
-check_valid_path()
+if not param_project:
+    param_project = i7.dir2proj()
+    if not param_project:
+        sys.exit("Could not get project from current directory or not find one from the command line.")
+
+i7.go_proj(param_project, materials=True)
+
+check_web_components()
 rewrite_css()
 rewrite_play()

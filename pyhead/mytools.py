@@ -573,10 +573,12 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def lines_of(file_name):
+def lines_of(file_name, read_blanks = True):
     f = open(file_name, "r")
     temp = f.readlines()
     f.close()
+    if not read_blanks:
+        temp = [x for x in lines_of if x.strip()]
     return temp
 
 HOST_MATCH_PERFECT = 1
