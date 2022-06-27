@@ -724,8 +724,8 @@ def lock_it(proc_file):
     f.close()
 
 def process_blank_details(temp_out_file):
-    print(" NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)))
-    print("NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)))
+    print(colorama.Fore.YELLOW + " NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)) + colorama.Style.RESET_ALL)
+    print(colorama.Fore.YELLOW + "NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)) + colorama.Style.RESET_ALL)
 
 def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude = []):
     f = open(text_file, "r")
@@ -742,12 +742,14 @@ def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude =
         if x.startswith("\\"):
             for y in to_exclude:
                 if x.startswith("\\" + y):
-                    print("EXCLUDE START WITH", x)
+                    if verbose:
+                        print("EXCLUDE START WITH", x)
                     get_next = False
         if get_next:
             my_lines_2.append(x)
         else:
-            print("IGNORING", x)
+            if verbose:
+                print("IGNORING", x)
     my_lines = list(my_lines_2)
     if not count_headings:
         my_lines = [x for x in my_lines if not x.startswith("\\")]
@@ -1028,9 +1030,9 @@ def sort_raw(raw_long):
             messageBox2 = ctypes.windll.user32.MessageBoxA
             messageBox2(None, "Popup to mention that weekly file is sorted OK.\n\nThis should usually only be run at week's end.".encode('ascii'), "HOORAY!".encode('ascii'), 0x0)
     if show_stat_numbers:
-        print("    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)))
+        print(colorama.Fore.GREEN + "    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)) + colorama.Style.RESET_ALL)
         without_names = os.stat(temp_out_file).st_size - len(sections['nam'])
-        print("  NO NAMES: {}".format(stats_of(temp_out_file, to_exclude = 'nam')))
+        print(colorama.Fore.CYAN + "  NO NAMES: {}".format(stats_of(temp_out_file, to_exclude = 'nam')) + colorama.Style.RESET_ALL)
         if not no_changes:
             print("     AFTER: {}".format(stats_of(temp_out_file)))
         process_blank_details(temp_out_file)
@@ -1265,7 +1267,7 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'nl', 'ln' ):
         show_stat_numbers = True
         show_ext_stats = STATS_EXT_BY_LINES
-    elif arg in ( 'nv', 'vn' ):
+    elif arg in ( 'nv', 'vn', 'ny', 'yn' ):
         show_stat_numbers = True
         show_ext_stats = STATS_EXT_BY_AVERAGE
     elif arg[:2] == 'tf':
