@@ -46,6 +46,8 @@ stretch_offset = 0
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 post_stretch_max = 10
 
+stretch_special = []
+
 GRAPH_LAUNCH_NEVER = 0
 GRAPH_LAUNCH_NO_K_JUMP = 1
 GRAPH_LAUNCH_ONLY_K_JUMP = 2
@@ -313,6 +315,16 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) - stretch_offset) // super_stretch_delta) * super_stretch_delta + stretch_offset
         current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
         while current_extra_stretch <= current_projected_bytes:
+            try:
+                if stretch_special[0] < current_extra_stretch:
+                    stretch_special.pop(0)
+                if stretch_special[0] < current_extra_stretch + super_stretch_delta:
+                    post_stretch_goals.append(stretch_special.pop(0))
+                    if post_stretch_goals[-1] > current_projected_bytes:
+                        break
+                    continue
+            except:
+                pass
             current_extra_stretch += super_stretch_delta
             post_stretch_goals.append(current_extra_stretch)
     elif current_size > goals_and_stretch[-1]:
@@ -727,6 +739,7 @@ def read_2dy_cfg():
     global minimum_seconds_between
     global goals_and_stretch
     global stretch_offset
+    global stretch_special
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -776,6 +789,8 @@ def read_2dy_cfg():
                 super_stretch_delta = int(data)
             elif prefix in ( 'stretch_offset', 'offset_stretch' ):
                 stretch_offset = int(data)
+            elif prefix in ( 'stretch_special', 'special_stretch' ):
+                stretch_special = [ int(x) for x in data.split(',') ]
             elif prefix in ( 'post_stretch_max' ):
                 post_stretch_max = int(data)
             elif prefix.isdigit():
