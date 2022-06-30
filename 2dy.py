@@ -203,8 +203,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     seconds_remaining_this_hour = 3600 - seconds_taken_this_hour
 
     day_start = right_now.set(minute=3, second=0, hour=0)
-    if day_start < right_now:
-        day_start.subtract(days=1)
+    if day_start >= right_now:
+        day_start = day_start.subtract(days=1)
 
     seconds_taken_today = (right_now - day_start).in_seconds()
 
@@ -256,8 +256,8 @@ def check_yearly_pace():
     print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
     if g[-1] < this_years_last_file:
         g0 = glob.glob("{}*.txt".format(last_year))
-        print(colorama.Fore.GREEN + "Adding last year's last-file: {}".format(g0[-1]) + colorama.Style.RESET_ALL)
         this_file_bytes = os.stat(g0[-1]).st_size
+        print(colorama.Fore.GREEN + "Adding last year's last-file: {}, {} bytes".format(g0[-1], this_file_bytes) + colorama.Style.RESET_ALL)
         total_bytes += this_file_bytes
         print(total_bytes, "total bytes")
         print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes including last file")
@@ -722,10 +722,17 @@ def usage(param = 'Cmd line usage'):
     sys.exit()
 
 def poss_thousands(my_int):
-    my_int = int(my_int)
-    if my_int < 1000:
-        return my_int * 1000
-    return my_int
+    try:
+        my_int = int(my_int)
+        if my_int < 1000:
+            return my_int * 1000
+        return my_int
+    except:
+        print("Uh oh", my_int, "should have been an integer.")
+        return 0
+
+def poss_thousands_list(my_string):
+    return [ poss_thousands(x) for x in my_string.split(',') ]
 
 def read_2dy_cfg():
     global sect_ary
@@ -755,7 +762,7 @@ def read_2dy_cfg():
                 except:
                     print("Oops. The color-deltas array {} needs integers after the name.".format(', '.join(my_ary[1:])))
             elif prefix == 'goalperfile':
-                goals_and_stretch = [poss_thousands(int(x)) for x in data.split(',')]
+                goals_and_stretch = poss_thousands_list(data)
             elif prefix == 'maxnew':
                 max_days_new = int(data)
             elif prefix == 'maxback':
@@ -803,7 +810,7 @@ def read_2dy_cfg():
                 if file_name != os.path.basename(temp_glob[-1]):
                     print("WARNING line {} has outdated custom goal {}. Comment it out or delete it.".format(line_count, file_name))
                 else:
-                    this_weeks_goal = [poss_thousands(int(x)) for x in data.split(',')]
+                    this_weeks_goal = poss_thousands_list(data)
             else:
                 print("WARNING", my_sections_file, "line", line_count, "unrecognized data", line.strip())
     if adjust_color_dict:
