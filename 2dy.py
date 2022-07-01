@@ -797,7 +797,7 @@ def read_2dy_cfg():
             elif prefix in ( 'stretch_offset', 'offset_stretch' ):
                 stretch_offset = int(data)
             elif prefix in ( 'stretch_special', 'special_stretch' ):
-                stretch_special = [ int(x) for x in data.split(',') ]
+                stretch_special = poss_thousands_list(data)
             elif prefix in ( 'post_stretch_max' ):
                 post_stretch_max = int(data)
             elif prefix.isdigit():
@@ -861,6 +861,7 @@ cmd_count = 1
 read_2dy_cfg()
 
 while cmd_count < len(sys.argv):
+    rawarg = sys.argv[cmd_count]
     (arg, num, valid_num) = mt.parnum(sys.argv[cmd_count], allow_float = True)
     if arg == 'f':
         files_back_wanted = num
@@ -977,6 +978,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'psf': put_stats(launch_iff_new_k = False)
     elif arg == 'bs': write_base_stats = False
     elif arg == 'us': unlimited_stretch_goals = True
+    elif rawarg[:3] == 'ss=':
+        stretch_special = poss_thousands_list(rawarg[3:])
     elif arg == 'ss': stat_sort()
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
