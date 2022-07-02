@@ -30,7 +30,7 @@ def usage(msg='General usage'):
     sys.exit()
 
 def is_likely_regex(my_string):
-    return '[' in my_string or ']' in my_string or '.' in my_string or '(' in my_string or ')' in my_string or '*' in my_string
+    return '[' in my_string or ']' in my_string or '.' in my_string or '(' in my_string or ')' in my_string or '*' in my_string or '\\' in my_string
 
 def print_my_rules(count_start, count_end, the_string):
     first_rule_line = the_string.split("\n")[0]
@@ -72,16 +72,20 @@ def look_for_string(my_string, this_file):
 
 param_array = sys.argv[1:]
 
+# first, we pull the potential regex string.
+# This could be done in the while loop, but it'd potentially cause the is_likely_regex to overwrite user parameters
+
 for x in param_array:
     if len(x) > 2:
         if my_string:
             sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
         else:
             my_string = x
+            print("Looking for", my_string)
             if is_likely_regex(my_string):
                 print("Assuming regex due to special character e.g. [].()*")
                 find_regex = True
-                param_array.remove(x)
+            param_array.remove(x)
 
 while cmd_count < len(param_array):
     arg = mt.nohy(param_array[cmd_count])
