@@ -1,4 +1,8 @@
-# sas.py: search all source for a specific string or regex
+#
+# sas.py: search all source for a specific string or regex in story.ni or extension files
+#
+# created 4/21/2022, put in source control 6/8/2022
+#
 
 from collections import defaultdict
 import re
@@ -23,10 +27,12 @@ cmd_count = 0
 
 def usage(msg='General usage'):
     print('=' * 30 + msg)
-    print("sas has semantic regex detection")
-    print("r  = print full rule, l = print line")
-    print("re = find regex not text, rn/nr turns it off")
-    print("s  = track story files only, e/x = track extension files only")
+    print("sas has semantic regex detection for regexes, so you don't need to specify any options below.")
+    print("However, if you do, they will override its semantic detection, so if you want to look for a string with a backslash, rn a\\b and a\\b rn are identical.")
+    print("r  = print full rule, l = print line.")
+    print("re = find regex not text, rn/nr turns it off.")
+    print("s  = track story files only, e/x = track extension files only.")
+    print("custom strings: um/use = \\buse max, for detecting deprecated Inform compiler constants.")
     sys.exit()
 
 def is_likely_regex(my_string):
@@ -95,12 +101,17 @@ while cmd_count < len(param_array):
         print_full_rule = False
     elif arg == 're':
         find_regex = True
+    elif arg in ( 'nr', 'rn' ):
+        find_regex = False
     elif arg == 's':
         track_story_files = True
         track_extension_files = False
-    elif arg == ( 'e', 'x' ):
+    elif arg in ( 'e', 'x' ):
         track_story_files = False
         track_extension_files = True
+    elif arg in ( 'um', 'use' ):
+        my_string = r"\buse max_"
+        find_regex = True
     elif arg == '?':
         usage()
     else:
