@@ -39,9 +39,14 @@ def is_likely_regex(my_string):
     return '[' in my_string or ']' in my_string or '.' in my_string or '(' in my_string or ')' in my_string or '*' in my_string or '\\' in my_string
 
 def print_my_rules(count_start, count_end, the_string):
-    first_rule_line = the_string.split("\n")[0]
-    line_list = "Lines {}-{}".format(count_start, count_end) if count_start != count_end else "Line {}".format(count_start)
-    print(colorama.Fore.YELLOW + "{} RULE HEADER {}:".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
+    the_string = the_string.rstrip()
+    lines_to_write = the_string.split("\n")
+    first_rule_line = lines_to_write[0]
+    if len(lines_to_write) > 1:
+        line_list = "Lines {}-{}".format(count_start, count_end)
+        print(colorama.Fore.YELLOW + "{} RULE HEADER {}".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
+    else:
+        print(colorama.Fore.YELLOW + "Lone line {}".format(count_start) + colorama.Style.RESET_ALL)
     print(colorama.Fore.GREEN + the_string + colorama.Style.RESET_ALL)
 
 def look_for_string(my_string, this_file):
