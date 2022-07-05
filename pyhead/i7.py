@@ -871,8 +871,10 @@ def cover_art(x, small = False, bail = True):
 def small_cover_art(x):
     return cover_art(x, small = True)
 
-def go_proj(x, my_subdir = "source", materials = False):
-    os.chdir(proj2dir(x, my_subdir, materials))
+def go_proj(x, my_subdir = "source", to_github = False, materials = False):
+    if materials and my_subdir == "source":
+        my_subdir = ""
+    os.chdir(proj2dir(x, my_subdir, to_github, materials))
     return
 
 go_p = proj_dir = to_proj = go_proj
@@ -921,7 +923,7 @@ def read_latest_project():
 
 read_latest_proj = read_latest_project
 
-def write_latest_project(proj_to_write, give_feedback = True):
+def write_latest_project(proj_to_write, give_success_feedback = True):
     file_write_string = ''
     any_diff = False
     any_current = False
@@ -949,7 +951,8 @@ def write_latest_project(proj_to_write, give_feedback = True):
     except:
         print("Tried to write over the temp-config file, but it didn't work.")
         return
-    print("Successfully changed latest-project to", abbr_to_write)
+    if give_success_feedback:
+        print("Successfully changed latest-project to", abbr_to_write)
 
 write_latest_proj = write_latest_project
 
