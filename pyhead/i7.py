@@ -367,6 +367,12 @@ def is_outline_start(a):
     if re.search(ovr, a.lower()): return re.sub(" .*", "", a.lower())
     return ""
 
+def outline_indent(a):
+    for x in outline_val_hash:
+        if a.lower().startswith(x):
+            return '  ' * outline_val_hash[x]
+    return ''
+
 def outline_type(a):
     return re.sub(" .*", "", a.strip().lower())
 
@@ -629,6 +635,8 @@ blo = bl_o = build_log_open
 def hdr(x, y, base=False, github=False):
     if proj_exp(y, False) and x in i7hfx and not proj_exp(x, False): (x, y) = (y, x) # if x is a header and not a project, flip x and y
     x = main_abb(x, use_given = True)
+    if y in ( 'ni', 'main', 'story' ):
+        return(main_src(x))
     base_file_name = '{:s} {:s}.i7x'.format(lpro(x, nonblank=True).title(), i7hfx[y].title() if y in i7hfx else y.title())
     temp = '{:s}\{:s}'.format(extdir, base_file_name)
     if base:
