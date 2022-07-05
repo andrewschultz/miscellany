@@ -3,6 +3,9 @@
 #
 # created 4/21/2022, put in source control 6/8/2022
 #
+# todo: search for more than just "table" if necessary for only_critical_lines
+# todo: 'use' and 'um' can both be put in a preformed_regex dictionary
+# todo: have a list of ignorable directories (probably in i7)
 
 from collections import defaultdict
 import re
@@ -44,30 +47,43 @@ def print_my_rules(count_start, count_end, the_string):
     first_rule_line = lines_to_write[0]
     if len(lines_to_write) > 1:
         line_list = "Lines {}-{}".format(count_start, count_end)
-        print(colorama.Fore.YELLOW + "{} RULE HEADER {}".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
+        print(colorama.Fore.YELLOW + "{} CODE CHUNK HEADER {}".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
     else:
         print(colorama.Fore.YELLOW + "Lone line {}".format(count_start) + colorama.Style.RESET_ALL)
     print(colorama.Fore.GREEN + the_string + colorama.Style.RESET_ALL)
 
 def look_for_string(my_string, this_file):
     print_this_rule = False
-    this_rule_string = ''
+    full_chunk_string = ''
+    critical_chunk_string = ''
     first_rule_line_count = 0
+    in_table = False
+    file_yet = False
     with codecs.open(this_file, "r", "utf-8", errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
             if not line.strip():
                 if print_this_rule:
-                    print_my_rules(first_rule_line_count, line_count - 1, this_rule_string)
+                    if not file_yet:
+                        print("Matches for", this_file)
+                        file_yet = True
+                    print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string)
                 print_this_rule = False
-                this_rule_string = ''
+                full_chunk_string = ''
+                critical_chunk_string = ''
+                in_table = False
             else:
-                if not this_rule_string:
+                if not full_chunk_string:
                     first_rule_line_count = line_count
-                this_rule_string += line
+                if not full_chunk_string and line.startswith("table of"):
+                    in_table = True
+                elif not full_chunk_string:
+                    critical_chunk_string += line
+                full_chunk_string += line
             if find_regex:
                 if re.search(my_string, line.lower()):
                     if print_full_rule:
                         print_this_rule = True
+                        critical_chunk_string += line
                     else:
                         print(line_count, this_file, line.strip())
                     continue
@@ -75,11 +91,14 @@ def look_for_string(my_string, this_file):
                 if my_string.lower() in line.lower():
                     if print_full_rule:
                         print_this_rule = True
+                        critical_chunk_string += line
                     else:
                         print(line_count, this_file, line.strip())
                     continue
     if print_this_rule:
-        print_my_rules(first_rule_line_count, 'END', this_rule_string)
+        if not file_yet:
+            print("Matches for", this_file)
+        print_my_rules(first_rule_line_count, 'END', critical_chunk_string if in_table else full_chunk_string)
 
 param_array = sys.argv[1:]
 
