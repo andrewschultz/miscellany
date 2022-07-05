@@ -645,7 +645,7 @@ def hdr(x, y, base=False, github=False):
         return '{:s}\{:s}\{:s}'.format(gh_dir, dict_val_or_similar(dict_val_or_similar(x, i7gx), i7x), base_file_name)
     return temp
 
-headerfile = header = hdrfile = hfile = hdr
+headerfile = header = hdrfile = hdr_file = hfile = hdr
 
 def invis_file(x, warning=False):
     try_1 = "c:/writing/scripts/invis/{:s}.txt".format(i7xr[x] if x in i7xr.keys() else x)
@@ -821,7 +821,7 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
         if materials:
             my_subdir = "Release"
         else:
-            my_subdir = "source"
+            my_subdir = "Source"
     if to_github:
         if x and os.path.isdir(os.path.join(gh_dir, x)):
             return os.path.normpath(os.path.join(gh_dir, x))
@@ -837,7 +837,7 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
         else:
             return ''
         return os.path.join(gh_dir, temp)
-    return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", "\\" + my_subdir if my_subdir else "")
+    return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", ("\\" + my_subdir) if my_subdir else "")
 
 sdir = p2d = proj2dir
 
