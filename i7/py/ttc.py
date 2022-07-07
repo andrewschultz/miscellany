@@ -27,6 +27,8 @@ show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
 custom_table_prefixes = defaultdict(list)
 
+okay_duplicates = 0
+
 def common_mistakes():
     print("You may need to run rbr.py if you changed a branch file recently.")
     print("If a test case is not in an rbr file, you may want to add it to EXTRAS.")
@@ -67,7 +69,7 @@ class TablePicker:
         self.stopper = ''
         self.untestables = []
         self.untestable_regexes = []
-        self.okay_duplicates = defaultdict(int)
+        self.okay_duplicate_counter = defaultdict(int)
         self.okay_duplicate_regexes = []
 
 odd_cases = defaultdict(list)
@@ -175,6 +177,7 @@ def get_cases(this_proj):
     return_dict = defaultdict(bool)
     table_line_count = 0
     any_dupes_yet = False
+    dupe_so_far = 0
     for matrix in matrices[this_proj]:
         mult_matrix = matrix[0].split(",")
         for x in range(1, len(matrix)):
@@ -195,8 +198,9 @@ def get_cases(this_proj):
         table_lines_undecided = 0
         table_overall_undecided = 0
         tables_found = defaultdict(bool)
-        dupe_orig = table_specs[this_proj][this_file].okay_duplicates.copy()
+        dupe_orig = table_specs[this_proj][this_file].okay_duplicate_counter.copy()
         these_table_gens = []
+        dupe_dict = defaultdict(int)
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -271,13 +275,16 @@ def get_cases(this_proj):
                             except:
                                 possible_text += '---'
                         possible_text = possible_text[1:]
-                        if test_case_name in table_specs[this_proj][this_file].okay_duplicates:
-                            table_specs[this_proj][this_file].okay_duplicates[test_case_name] -= 1
-                            if table_specs[this_proj][this_file].okay_duplicates[test_case_name] < 0:
-                                print("Potential error: too many duplicate listings for {} in {}. Check okdup statement.".format(test_case_name, this_file))
+                        if test_case_name in table_specs[this_proj][this_file].okay_duplicate_counter:
+                            table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] -= 1
+                            if table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] < 0:
+                                print("POTENTIAL ERROR: too many duplicate listings for {} in {}. Check okdup statement.".format(test_case_name, this_file))
+                        elif test_case_name in return_dict:
+                            print("POTENTIAL ERROR: source code provided duplicate test case/column entry {} at line {} of {}. Use okdup/okdupr if this is correct, or try the code below.".format(test_case_name, line_count, fb))
+                            if test_case_name not in dupe_dict:
+                                dupe_dict[test_case_name] = 1
+                            dupe_dict[test_case_name] += 1
                             continue
-                        if test_case_name in return_dict:
-                            print("POTENTIAL ERROR: source code provided duplicate test case/column entry {} at line {} of {}. Use okdup/okdupr if this is correct.".format(test_case_name, line_count, fb))
                         elif test_case_name in table_specs[this_proj][this_file].untestables:
                             if verbose_level > 0:
                                 print("UNTESTABLE ABSOLUTE", test_case_name)
@@ -294,13 +301,17 @@ def get_cases(this_proj):
                 else:
                     unique_tables = ''
                 print("{} table line{} from {}{} table{} still to decide on in ttc.txt for {}.".format(table_lines_undecided, mt.plur(table_lines_undecided), table_overall_undecided, unique_tables, mt.plur(table_overall_undecided), fb))
-        for dupe in table_specs[this_proj][this_file].okay_duplicates:
-            if table_specs[this_proj][this_file].okay_duplicates[dupe] == 0:
+        if len(dupe_dict):
+            print("=============================CFG FILE INFO SUGGESTIONS (replace ~ with \t)")
+        for dd in dupe_dict:
+            print(colorama.Fore.GREEN + "okdup={}~{}".format(dd, dupe_dict[dd]) + colorama.Style.RESET_ALL)
+        for dupe in table_specs[this_proj][this_file].okay_duplicate_counter:
+            if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] == 0:
                 continue
             if not any_dupes_yet:
                 any_dupes_yet = True
                 print(colorama.Fore.YELLOW + "NOTE: we count the number of duplicates, not the total number of occurrences." + colorama.Style.RESET_ALL)
-            print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicates[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicates[dupe]), dupe_orig[dupe]))
+            print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicate_counter[dupe]), dupe_orig[dupe]))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
@@ -409,6 +420,7 @@ def rbr_cases_of(my_line):
 
 # this verifies test cases are in rbr* or reg* files at least once, following ttc = first time, +ttc = those after.
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
+    global okay_duplicates
     global global_error_note
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -474,6 +486,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                         mt.add_postopen(my_rbr, line_count)
                     elif raw_case:
                         this_case_list[raw_case].found_yet = True
+                    if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
+                        okay_duplicates += 1
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
     if len(misses) == 0:
         print("No test cases were missed!")
@@ -597,6 +611,9 @@ def verify_case_placement(this_proj):
         print(colorama.Fore.GREEN + "NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful) + colorama.Style.RESET_ALL)
     else:
         print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, total_unsorted, total_double_sorted_cases, total_double_sorted_lines, total_wrong_file, total_successful))
+    global okay_duplicates
+    if okay_duplicates:
+        print("Total successful cases in reg-* files, including duplicates: {} + {} = {}.".format(total_successful, okay_duplicates, total_successful + okay_duplicates))
 
 cur_file = "<NONE>"
 
@@ -663,10 +680,10 @@ with open(ttc_cfg) as file:
                 print("WARNING: you probably want to put an OKDUP in a specific file.")
             for a in ary:
                 if '~' not in a:
-                    table_specs[cur_proj][cur_file].okay_duplicates[a] = 1
+                    table_specs[cur_proj][cur_file].okay_duplicate_counter[a] = 2
                 else:
                     a2 = a.split("~")
-                    table_specs[cur_proj][cur_file].okay_duplicates[a2[0]] = int(a2[1])
+                    table_specs[cur_proj][cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
         elif prefix == 'okdupr':
             if not cur_file:
                 print("WARNING: you probably want to put an OKDUP in a specific file.")
