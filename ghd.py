@@ -164,6 +164,11 @@ def check_prestored_command(run_cmd = True): # sample line misc:i7/pl/i7.pl;
         mt.win_or_print("NO CHANGES TODAY (yet)", this_header, windows_popup_box, bail = True)
     sys.exit()
 
+def any_blanks(my_list):
+    for x in my_list:
+        if not x.strip():
+            yield x
+
 def read_cfg_file():
     with open(ghd_info) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -175,6 +180,10 @@ def read_cfg_file():
                 base_dir = data
                 continue
             projects[prefix] = data.split(",")
+            temp = list(any_blanks(projects[prefix]))
+            if len(temp):
+                projects[prefix] = [x for x in projects[prefix] if x.strip()]
+                print("Warning: {} blank {} in {} line {}".format(len(temp), mt.plur(len(temp), choices=['entries', 'entry']), data, line_count))
 
 def read_cmd_line():
     cmd_count = 1
