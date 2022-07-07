@@ -27,9 +27,18 @@ show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
 custom_table_prefixes = defaultdict(list)
 
+def common_mistakes():
+    print("You may need to run rbr.py if you changed a branch file recently.")
+    print("If a test case is not in an rbr file, you may want to add it to EXTRAS.")
+    print("remember to add both a GENERATOR and CASEMAPR.")
+    sys.exit()
+
 def usage():
-    print("sp to clean up spaces is the only argument now.")
+    print("sp to clean up spaces is one argument.")
+    print("oa = open after, no = don't.")
+    print("na = no to all except test cases, ns = no syntax, nt = no text")
     print("q = quiet, no debug info and v[0-2] = debug info level")
+    print("?? = lists mistakes when everything seems right.")
     sys.exit()
 
 class TestCaseGenerator:
@@ -736,6 +745,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
+        usage()
+    elif arg == '??':
         usage()
     else:
         print("BAD ARGUMENT", arg)
