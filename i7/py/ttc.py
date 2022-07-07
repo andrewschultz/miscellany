@@ -25,6 +25,8 @@ global_error_note = False
 open_after = True
 show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
+collapse_extra_dashes = True
+
 custom_table_prefixes = defaultdict(list)
 
 okay_duplicates = 0
@@ -38,8 +40,9 @@ def common_mistakes():
 def usage():
     print("sp to clean up spaces is one argument.")
     print("oa = open after, no = don't.")
-    print("na = no to all except test cases, ns = no syntax, nt = no text")
-    print("q = quiet, no debug info and v[0-2] = debug info level")
+    print("na = no to all except test cases, ns = no syntax, nt = no text.")
+    print("ncd = don't collapse extra dashes.")
+    print("q = quiet, no debug info and v[0-2] = debug info level.")
     print("?? = lists mistakes when everything seems right.")
     sys.exit()
 
@@ -215,6 +218,7 @@ def get_cases(this_proj):
                     if current_table in table_specs[this_proj][this_file].ignore:
                         continue
                     in_table = True
+                    stray_table = False
                     these_table_gens = []
                     for tg in table_specs[this_proj][this_file].generators:
                         if tg.exact_match:
@@ -256,11 +260,21 @@ def get_cases(this_proj):
                         if x == -1:
                             subcase += '-{}'.format(table_line_count)
                         else:
-                            if columns[x].startswith('"'):
-                                columns[x] = re.sub(r'".*', '', columns[x][1:])
-                            subcase += '-{}'.format(columns[x]).replace('"', '')
+                            if columns[x] == 'a rule' or columns[x] == 'a thing':
+                                columns[x] = '--'
+                            try:
+                                if columns[x].startswith('"'):
+                                    columns[x] = re.sub(r'".*', '', columns[x][1:])
+                                subcase += '-{}'.format(columns[x]).replace('"', '')
+                            except:
+                                print("WARNING: no column", x, "at", this_file, "line", line_count, "so calling the entry blank.")
+                                subcase += '-'
+                                mt.add_post(this_file, line_count)
                     if not subcase.replace('-', '') or subcase == '-a rule' or subcase == 'a thing':
                         continue
+                    if collapse_extra_dashes:
+                        subcase = re.sub("--+", "-", subcase)
+                        subcase = re.sub("-+$", "", subcase)
                     for p in my_generator.prefix_list:
                         test_case_name = (p + '-' + current_table + subcase).lower().replace('"', '').replace(' ', '-').replace('--', '-').replace('/', '-')
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
@@ -288,13 +302,14 @@ def get_cases(this_proj):
                         elif test_case_name in table_specs[this_proj][this_file].untestables:
                             if verbose_level > 0:
                                 print("UNTESTABLE ABSOLUTE", test_case_name)
+                            continue
                         elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
                             if verbose_level > 0:
                                 print("UNTESTABLE REGEX", test_case_name)
-                        else:
-                            if possible_text.startswith('"') and possible_text.endswith('"'):
-                                possible_text = possible_text[1:-1]
-                            return_dict[test_case_name] = SimpleTestCase(possible_text)
+                            continue
+                        if possible_text.startswith('"') and possible_text.endswith('"'):
+                            possible_text = possible_text[1:-1]
+                        return_dict[test_case_name] = SimpleTestCase(possible_text)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
                     unique_tables = "/{}".format(len(tables_found))
@@ -439,6 +454,9 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         base = os.path.basename(my_rbr)
         flag_spacing = base.startswith("rbr-") or base.startswith("reg-")
         last_line_text = False
+        pre_asterisk_warn = False
+        can_write_testcases = not flag_spacing
+        tests_in_header = 0
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("+#"):
@@ -488,6 +506,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                         this_case_list[raw_case].found_yet = True
                     if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
                         okay_duplicates += 1
+        if tests_in_header > 0:
+            print(tests_in_header, "total tests to sort from header in", base)
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
     if len(misses) == 0:
         print("No test cases were missed!")
@@ -747,6 +767,8 @@ while cmd_count < len(sys.argv):
             verbose_level = num
         else:
             verbose_level = 1
+    elif mt.alfmatch(arg, 'ncd'):
+        collapse_extra_dashes = False
     elif arg in ( 'oa', 'ao' ):
         open_after = True
     elif arg in ( 'no', 'on' ):
