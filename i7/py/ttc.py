@@ -21,6 +21,7 @@ from string import ascii_lowercase
 rbr_globals = []
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
+global_error_note = False
 open_after = True
 show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
@@ -161,6 +162,7 @@ def get_mistakes(this_proj):
 
 # this function pulls the potential test cases from the source code.
 def get_cases(this_proj):
+    global global_error_note
     return_dict = defaultdict(bool)
     table_line_count = 0
     any_dupes_yet = False
@@ -222,7 +224,8 @@ def get_cases(this_proj):
                     continue
                 if not line.strip() or line.startswith('['): # we have reached the end of the table.
                     if stray_table:
-                        print("Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1))
+                        global_error_note = True
+                        print(colorama.Fore.RED + "Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1) + colorama.Style.RESET_ALL)
                         table_overall_undecided += 1
                         table_lines_undecided += table_line_count
                         tables_found[current_table] = True
@@ -397,6 +400,7 @@ def rbr_cases_of(my_line):
 
 # this verifies test cases are in rbr* or reg* files at least once, following ttc = first time, +ttc = those after.
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
+    global global_error_note
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
     test_file_glob = glob.glob(glob_string)
@@ -416,8 +420,23 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         last_line_text = False
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
+                if line.startswith("+#"):
+                    print("BACKWARDS RETEST CASE {} line {}: {}".format(base, line_count, line.strip()))
+                    mt.add_postopen(my_rbr, line_count)
+                if line.startswith("*"):
+                    can_write_testcases = True
+                if not can_write_testcases and valid_ttc(line, this_proj):
+                    tests_in_header += 1
+                    if pre_asterisk_warn:
+                        continue
+                    pre_asterisk_warn = True
+                    global_error_note = True
+                    print("WARNING test case still in header for copy/pasting {} line {}.".format(base, line_count))
+                    mt.add_postopen(my_rbr, line_count, priority=3) # high priority in reality but low priority since we know where the offending lines are: at the start of the file!
+                    continue
                 if flag_spacing:
                     if last_line_text and valid_ttc(line, this_proj):
+                        global_error_note = True
                         print("    Spacing issue {} line {}.".format(base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     if not spacing_pass(line):
@@ -426,18 +445,22 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                 for this_case in my_cases:
                     raw_case = base_of(this_case)
                     if raw_case not in this_case_list:
+                        global_error_note = True
                         print("Errant {} {}test case at {} line {}.".format(raw_case, 're-' if '+' in this_case else '', base, line_count))
                         look_for_similars(raw_case, this_case_list)
                         mt.add_postopen(my_rbr, line_count)
                         continue
                     if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
+                        global_error_note = True
                         print("Re-test before test case {} at {} line {}.".format(raw_case, base, line_count))
                         this_case_list[raw_case].found_yet = True
                         mt.add_postopen(my_rbr, line_count)
                     if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
+                        global_error_note = True
                         print("Duplicate test case {} at {} line {} must be acknowledged with preceding +.".format(raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     if raw_case not in this_case_list:
+                        global_error_note = True
                         print("Errant test case {} at {} line {}.".format(raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     elif raw_case:
@@ -447,6 +470,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         print("No test cases were missed!")
     else:
         print("missed test case{} listed below:".format(mt.plur(len(misses))))
+        global_error_note = True
         for m in sorted(misses):
             if show_suggested_file:
                 if this_case_list[m].expected_file:
@@ -561,11 +585,12 @@ def verify_case_placement(this_proj):
         total_successful += successful
         total_tests_in_file += tests_in_file
     if total_successful == total_tests_in_file:
-        print("NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful))
+        print(colorama.Fore.GREEN + "NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful) + colorama.Style.RESET_ALL)
     else:
         print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, total_unsorted, total_double_sorted_cases, total_double_sorted_lines, total_wrong_file, total_successful))
 
 cur_file = "<NONE>"
+
 with open(ttc_cfg) as file:
     for (line_count, line) in enumerate (file, 1):
         if line.startswith('#'):
@@ -725,6 +750,8 @@ case_list = get_cases(my_proj)
 case_list.update(get_mistakes(my_proj))
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
+
+if global_error_note: print("?? shows common errors, if the results weren't what you expected.")
 
 if open_after:
     mt.post_open()
