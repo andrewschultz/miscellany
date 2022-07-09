@@ -28,6 +28,7 @@ show_suggested_file = show_suggested_syntax = show_suggested_text = True
 collapse_extra_dashes = True
 
 custom_table_prefixes = defaultdict(list)
+global_stray_table_org = defaultdict(list)
 
 okay_duplicates = 0
 
@@ -204,6 +205,7 @@ def get_cases(this_proj):
         dupe_orig = table_specs[this_proj][this_file].okay_duplicate_counter.copy()
         these_table_gens = []
         dupe_dict = defaultdict(int)
+        header_compilation = "<unknown>"
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
@@ -227,17 +229,18 @@ def get_cases(this_proj):
                         else:
                             if re.search(tg.match_string, line.strip().lower()):
                                 these_table_gens.append(tg)
+                    table_header_next = True
                     if len(these_table_gens):
-                        table_header_next = True
+                        read_table_data = True
                     else:
                         stray_table = True
                         read_table_data = False
                         table_line_count = -1
                     continue
-                if table_header_next == True:
+                if table_header_next:
+                    header_compilation = ','.join([re.sub(" *\(.*", "", x) for x in line.strip().lower().split("\t")])
                     table_header_next = False
                     table_line_count = 0
-                    read_table_data = True
                     continue
                 if not line.strip() or line.startswith('['): # we have reached the end of the table.
                     if stray_table:
@@ -246,6 +249,7 @@ def get_cases(this_proj):
                         table_overall_undecided += 1
                         table_lines_undecided += table_line_count
                         tables_found[current_table] = True
+                        global_stray_table_org[header_compilation].append(current_table)
                     in_table = False
                     read_table_data = False
                     cur_wild_card = ''
@@ -262,6 +266,7 @@ def get_cases(this_proj):
                         else:
                             if columns[x] == 'a rule' or columns[x] == 'a thing':
                                 columns[x] = '--'
+                            columns[x] = columns[x].replace('|', '-')
                             try:
                                 if columns[x].startswith('"'):
                                     columns[x] = re.sub(r'".*', '', columns[x][1:])
@@ -437,9 +442,12 @@ def rbr_cases_of(my_line):
 def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     global okay_duplicates
     global global_error_note
+    already_suggested = defaultdict(bool)
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
     test_file_glob = glob.glob(glob_string)
+    dupes_flagged = 0
+    errant_cases = 0
     if len(test_file_glob) == 0:
         print("No test files found in", glob_string)
         return
@@ -485,8 +493,11 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     raw_case = base_of(this_case)
                     if raw_case not in this_case_list:
                         global_error_note = True
-                        print("Errant {} {}test case at {} line {}.".format(raw_case, 're-' if '+' in this_case else '', base, line_count))
-                        look_for_similars(raw_case, this_case_list)
+                        errant_cases += 1
+                        print("Errant {}test case #{} {} at {} line {}.".format('re-' if '+' in this_case else '', errant_cases, raw_case, base, line_count))
+                        if raw_case not in already_suggested:
+                            look_for_similars(raw_case, this_case_list)
+                            already_suggested[raw_case] = True
                         mt.add_postopen(my_rbr, line_count)
                         continue
                     if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
@@ -496,7 +507,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                         mt.add_postopen(my_rbr, line_count)
                     if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
                         global_error_note = True
-                        print("Duplicate test case {} at {} line {} must be acknowledged with preceding +.".format(raw_case, base, line_count))
+                        dupes_flagged += 1
+                        print("Duplicate test case #{} {} at {} line {} must be acknowledged with preceding +.".format(dupes_flagged, raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     if raw_case not in this_case_list:
                         global_error_note = True
@@ -802,6 +814,11 @@ case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
 
 if global_error_note: print("?? shows common errors, if the results weren't what you expected.")
+
+if len(global_stray_table_org):
+    print("Global stray table info")
+    for g in global_stray_table_org:
+        print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
 
 if open_after:
     mt.post_open()
