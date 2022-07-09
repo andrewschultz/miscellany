@@ -57,12 +57,14 @@ class TestCaseGenerator:
 
 class SimpleTestCase:
 
-    def __init__(self, suggested_text = 'None', command_text = '', condition_text = '', expected_file = ''):
+    def __init__(self, suggested_text = 'None', command_text = '', condition_text = '', expected_file = '', first_file_found = '<NONE>', first_line_found = 0):
         self.found_yet = False
         self.suggested_text = suggested_text
         self.command_text = command_text
         self.condition_text = condition_text
         self.expected_file = expected_file
+        self.first_file_found = first_file_found
+        self.first_line_found = first_line_found
 
 class TablePicker:
 
@@ -508,13 +510,16 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
                         global_error_note = True
                         dupes_flagged += 1
-                        print("Duplicate test case #{} {} at {} line {} must be acknowledged with preceding +.".format(dupes_flagged, raw_case, base, line_count))
+                        print("Duplicate test case #{} {} at {} line {} copies {}/{} (use + to note duplicate).".format(dupes_flagged, raw_case, base, line_count, this_case_list[raw_case].first_file_found, this_case_list[raw_case].first_line_found))
                         mt.add_postopen(my_rbr, line_count)
                     if raw_case not in this_case_list:
                         global_error_note = True
                         print("Errant test case {} at {} line {}.".format(raw_case, base, line_count))
                         mt.add_postopen(my_rbr, line_count)
                     elif raw_case:
+                        if not this_case_list[raw_case].found_yet:
+                            this_case_list[raw_case].first_file_found = base
+                            this_case_list[raw_case].first_line_found = line_count
                         this_case_list[raw_case].found_yet = True
                     if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
                         okay_duplicates += 1
