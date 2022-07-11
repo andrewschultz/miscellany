@@ -25,6 +25,7 @@ import matplotlib.dates as mdates
 import matplotlib
 import colorama
 import re
+from filecmp import cmp
 
 #init_sect = defaultdict(str)
 
@@ -46,6 +47,7 @@ super_stretch_delta = 10000
 stretch_offset = 0
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 post_stretch_max = 10
+weekly_start_bytes = 0
 
 stretch_special = []
 
@@ -758,6 +760,7 @@ def read_2dy_cfg():
     global goals_and_stretch
     global stretch_offset
     global stretch_special
+    global weekly_start_bytes
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -803,6 +806,8 @@ def read_2dy_cfg():
                 sect_ary.extend(sect_dict)
             elif prefix in ( 'offset_seconds', 'seconds_offset' ):
                 offset_seconds = int(data)
+            elif prefix in ( 'start_bytes', 'weekly_start_bytes' ):
+                weekly_start_bytes = int(data)
             elif prefix in ( 'stretch_delta', 'super_stretch_delta' ):
                 super_stretch_delta = int(data)
             elif prefix in ( 'stretch_offset', 'offset_stretch' ):
@@ -849,6 +854,33 @@ def weekly_compare(files_back = 1):
     mt.wm(readable, locked)
     sys.exit()
 
+def check_rewrite_init_weekly_size(my_file):
+    default_weekly_file = "c:/writing/temp/2dy-default-start.txt"
+    try:
+        if cmp(my_file, default_weekly_file):
+            return
+    except:
+        print("No default-beginning file, so I am creating a new one.")
+    new_size = os.stat(my_file).st_size
+    copy(my_file, default_weekly_file)
+    found_start_bytes = False
+    new_start_bytes = "startbytes={}\n".format(new_size)
+    my_lines = []
+    with open(my_sections_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            print(line_count, line)
+            if line.startswith(";") and not found_start_bytes:
+                my_lines.append(new_start_bytes)
+            if line.startswith("startbytes="):
+                my_lines.append(new_start_bytes)
+                continue
+            else:
+                my_lines.append(line)
+    f = open(my_sections_file, "w")
+    for ml in my_lines:
+        f.write(ml)
+    f.close()
+
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
     f = open(my_file, "w")
@@ -858,6 +890,7 @@ def create_new_file(my_file, launch = True):
     f.close()
     if write_base_stats and my_daily_dir == daily:
         put_stats(bail = False, create_graphics = False)
+    check_rewrite_init_weekly_size(my_file)
     if launch: mt.npo(my_file, bail=False)
 
 #
