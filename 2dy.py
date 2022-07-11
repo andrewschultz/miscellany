@@ -35,6 +35,7 @@ glob_string = "20*.txt"
 
 #d = pendulum.now()
 d = pendulum.today()
+# day_precise = pendulum.now() - offset_seconds # this so editing at 12:01 doesn't create a new file if you have an offset
 
 #these are covered in the config file, but keep them here to make sure
 max_days_new = 7
@@ -296,13 +297,19 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
     equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
     bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
+    green_if_goal = mt.green_red_comp(current_size, current_goal)
+    seconds_remaining = full_weekly_interval - weekly_interval_so_far
     if hit_all_stretch:
         mt.center(colorama.Fore.CYAN + "Total expected bytes this period: {:.2f}".format(bytes_per_hour_so_far * max_days_new * 24) + colorama.Style.RESET_ALL)
         mt.center(colorama.Fore.CYAN + "If you want to establish a new stretch goal, 2dy -e will do so." + colorama.Style.RESET_ALL)
     else:
         cur_time_readable = t_now.format("YYYY-MM-DD HH:mm:ss")
         time_dir_string = 'behind' if current_size < current_goal else 'ahead'
-        print(mt.green_red_comp(current_size, current_goal) + "Right now at {} you have {} bytes. To be on pace for {} before creating a file, you need to be at {}, so you're {} by {} right now.".format(cur_time_readable, current_size, stretch_metric_goal, current_goal, time_dir_string, abs(current_goal - current_size)))
+        print(green_if_goal + "Right now at {} you have {} bytes.".format(cur_time_readable, current_size))
+        print("To be on pace for {} before next week's file, you need to be at {} with your {} seconds left.".format(stretch_metric_goal, current_goal, seconds_remaining))
+        print("So you're {} by {} right now.".format(time_dir_string, abs(current_goal - current_size)) + colorama.Style.RESET_ALL)
+        if full_weekly_interval > 432000:
+            print(green_if_goal + "1 char per second sprint gets you to {}.".format(current_size + seconds_remaining) + colorama.Style.RESET_ALL)
         if time_dir_string == 'ahead':
             time_dir_string += ' of'
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
