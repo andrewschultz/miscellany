@@ -314,12 +314,13 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if unlimited_stretch_goals:
         current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) - stretch_offset) // super_stretch_delta) * super_stretch_delta + stretch_offset
         current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
+        stretch_special_mod = [ x for x in stretch_special if x > current_projected_bytes ]
         while current_extra_stretch <= current_projected_bytes:
             try:
-                if stretch_special[0] < current_extra_stretch:
-                    stretch_special.pop(0)
-                if stretch_special[0] < current_extra_stretch + super_stretch_delta:
-                    post_stretch_goals.append(stretch_special.pop(0))
+                if stretch_special_mod[0] < current_extra_stretch:
+                    stretch_special_mod.pop(0)
+                if stretch_special_mod[0] < current_extra_stretch + super_stretch_delta:
+                    post_stretch_goals.append(stretch_special_mod.pop(0))
                     if post_stretch_goals[-1] > current_projected_bytes:
                         break
                     continue
@@ -731,8 +732,11 @@ def poss_thousands(my_int):
         print("Uh oh", my_int, "should have been an integer.")
         return 0
 
-def poss_thousands_list(my_string):
-    return [ poss_thousands(x) for x in my_string.split(',') ]
+def poss_thousands_list(my_string, sort_list = True):
+    my_list = [ poss_thousands(x) for x in my_string.split(',') ]
+    if sort_list:
+        my_list = sorted(my_list)
+    return my_list
 
 def read_2dy_cfg():
     global sect_ary
@@ -980,6 +984,9 @@ while cmd_count < len(sys.argv):
     elif arg == 'us': unlimited_stretch_goals = True
     elif rawarg[:3] == 'ss=':
         stretch_special = poss_thousands_list(rawarg[3:])
+    elif rawarg[:3] == 'ss+':
+        stretch_special.extend(poss_thousands_list(rawarg[3:]))
+        stretch_special = sorted(stretch_special)
     elif arg == 'ss': stat_sort()
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
