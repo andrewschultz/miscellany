@@ -28,6 +28,7 @@ from pathlib import Path
 
 # variables potentially in CFG file
 
+
 max_overall = 100
 max_in_file = 25
 history_max = 100
@@ -181,7 +182,7 @@ def update_history_file(my_file, my_query, create_new_history = False):
     try:
         f = open(my_file, "r")
     except:
-        print("File open failed for", my_file, "so I'll make you create it with -newhist.")
+        print(colorama.Fore.RED + "File open failed for {} so I'll make you create it with -newhist.{}".format(my_file, colorama.Style.RESET_ALL))
         sys.exit()
     ary = [x.strip() for x in f.readlines()]
     f.close()
@@ -408,6 +409,7 @@ def read_args(my_arg_array, in_loop = False):
         arg_orig = my_arg_array[cmd_count].lower()
         poss_proj = i7.long_name(arg_orig, strip_dashes = False, use_given = False) # We want to differentiate between, say -proj (a flag) and proj (a project). If we want to use, say, ai as a search term, we use `ai
         if poss_proj:
+            print("Switching to project", poss_proj, "due to parameter", arg)
             my_proj = poss_proj
         elif arg == 'r':
             print("Using super-shortcut 'r' for A Roiling Original.")
