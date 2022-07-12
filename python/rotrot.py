@@ -2,6 +2,8 @@
 # rotrot.py: this takes a text file and goes through the Caesar Ciphers from 1 to 25.
 #
 
+from shutil import copy
+from filecmp import cmp
 import sys
 import glob
 import os
@@ -12,6 +14,9 @@ import mytools as mt
 print_number_rotations = True
 rotate_delta = 1
 rotate_both = False
+open_post = False
+
+temp_out = "c:/writing/temp/rotrot-out-temp.txt"
 
 def usage():
     print("Commands:")
@@ -48,7 +53,7 @@ def convert_prerot(file_name, this_delta = rotate_delta):
                 file_to_write = line[5:].strip()
                 if this_delta == 0:
                     file_to_write = file_to_write.replace(".", "-unrotated.")
-                f = open(file_to_write, "w")
+                f = open(temp_out, "w")
                 ever_wrote = True
                 am_writing = True
                 continue
@@ -81,7 +86,12 @@ def convert_prerot(file_name, this_delta = rotate_delta):
         if not ever_wrote:
             print("No FILE= command in the pre-file, so I don't know where to write to.")
             return
-        os.system(file_to_write)
+        if os.path.exists(file_to_write) and cmp(temp_out, file_to_write):
+            print("No changes in {}. Returning without opening/rewriting.".format(file_to_write))
+            return
+        copy(temp_out, file_to_write)
+        if open_post:
+            os.system(file_to_write)
 
 cmd_count = 1
 
@@ -96,6 +106,8 @@ while cmd_count < len(sys.argv):
         print_number_rotations = True
     elif arg in ( 'np', 'pn' ):
         print_number_rotations = False
+    elif arg in ( 'op', 'po' ):
+        open_post = True
     else:
         usage()
     cmd_count += 1
@@ -113,3 +125,5 @@ for f in my_glob:
     if rotate_both and rotate_delta:
         convert_prerot(f, this_delta = 0)
 
+if os.path.exists(temp_out):
+    os.remove(temp_out)
