@@ -2,10 +2,17 @@
 # rotrot.py: this takes a text file and goes through the Caesar Ciphers from 1 to 25.
 #
 
+import sys
 import glob
 import os
 from string import ascii_uppercase
 from string import ascii_lowercase
+import mytools as mt
+
+def usage():
+    print("Commands:")
+    print("r# changes the delta. Multiples of 2 and 13 are not recommended.")
+    sys.exit()
 
 def rotate_string(original_string, shift_by):
     shift_by %= 26
@@ -33,6 +40,8 @@ def convert_prerot(file_name):
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("FILE="):
                 file_to_write = line[5:].strip()
+                if rotate_delta == 0:
+                    file_to_write = file_to_write.replace(".", "-unrotated.")
                 f = open(file_to_write, "w")
                 ever_wrote = True
                 am_writing = True
@@ -44,7 +53,7 @@ def convert_prerot(file_name):
                 am_rotating = False
                 continue
             if am_writing:
-                if not am_rotating or not line.strip():
+                if not am_rotating:
                     f.write(line)
                     continue
                 current_rotate += rotate_delta
@@ -56,6 +65,17 @@ def convert_prerot(file_name):
             print("No FILE= command in the pre-file, so I don't know where to write to.")
             return
         os.system(file_to_write)
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    (arg, num, valid) = mt.parameter_with_number(sys.argv[cmd_count])
+    if arg == 'r':
+        if valid:
+            rotate_delta = num
+    else:
+        usage()
+    cmd_count += 1
 
 my_glob = glob.glob("prerot*")
 
