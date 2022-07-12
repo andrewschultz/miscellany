@@ -36,6 +36,7 @@ def convert_prerot(file_name):
     am_rotating = False
     am_writing = False
     ever_wrote = False
+    rotate_only = False
     with open(file_name) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("FILE="):
@@ -51,6 +52,14 @@ def convert_prerot(file_name):
                 continue
             if line.lower().startswith("==end-rotate"):
                 am_rotating = False
+                continue
+            if line.lower().startswith("==rotate-only"):
+                rotate_only = True
+                continue
+            if line.lower().startswith("==no-rotate-only"):
+                rotate_only = False
+                continue
+            if rotate_only and this_delta == 0:
                 continue
             if am_writing:
                 if not am_rotating:
