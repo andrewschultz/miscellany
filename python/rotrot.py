@@ -9,9 +9,15 @@ from string import ascii_uppercase
 from string import ascii_lowercase
 import mytools as mt
 
+print_number_rotations = True
+rotate_delta = 1
+rotate_both = False
+
 def usage():
     print("Commands:")
     print("r# changes the delta. Multiples of 2 and 13 are not recommended.")
+    print("rb lets you produce both rotated and non-rotated documents.")
+    print("p and np/pn toggle printing number-rotations of each line. This option is on by default.")
     sys.exit()
 
 def rotate_string(original_string, shift_by):
@@ -28,8 +34,6 @@ def rotate_string(original_string, shift_by):
         else:
             return_string += x
     return return_string
-
-rotate_delta = 1
 
 def convert_prerot(file_name, this_delta = rotate_delta):
     print("Rotating", file_name, "by", this_delta)
@@ -66,9 +70,12 @@ def convert_prerot(file_name, this_delta = rotate_delta):
                 if not am_rotating:
                     f.write(line)
                     continue
-                current_rotate += this_delta
-                if current_rotate > 26:
-                    current_rotate -= 26
+                if line.strip():
+                    current_rotate += this_delta
+                    if current_rotate >= 26:
+                        current_rotate -= 25
+                    if print_number_rotations and current_rotate:
+                        f.write("{:02d}:".format(current_rotate))
                 f.write(rotate_string(line, current_rotate))
         f.close()
         if not ever_wrote:
@@ -85,6 +92,10 @@ while cmd_count < len(sys.argv):
             rotate_delta = num
     elif arg in ( 'b', 'br', 'rb' ):
         rotate_both = True
+    elif arg == 'p':
+        print_number_rotations = True
+    elif arg in ( 'np', 'pn' ):
+        print_number_rotations = False
     else:
         usage()
     cmd_count += 1
@@ -93,6 +104,9 @@ my_glob = glob.glob("prerot*")
 
 if len(my_glob) == 0:
     sys.exit("You need a prerot-walkthrough file in this directory.")
+
+if rotate_both and not rotate_delta:
+    print("WARNING: you set rotate_delta to 0 and set rotate_both, but this would just output the unencrypted file twice.")
 
 for f in my_glob:
     convert_prerot(f)
