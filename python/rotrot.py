@@ -31,7 +31,8 @@ def rotate_string(original_string, shift_by):
 
 rotate_delta = 1
 
-def convert_prerot(file_name):
+def convert_prerot(file_name, this_delta = rotate_delta):
+    print("Rotating", file_name, "by", this_delta)
     current_rotate = 0
     am_rotating = False
     am_writing = False
@@ -41,7 +42,7 @@ def convert_prerot(file_name):
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("FILE="):
                 file_to_write = line[5:].strip()
-                if rotate_delta == 0:
+                if this_delta == 0:
                     file_to_write = file_to_write.replace(".", "-unrotated.")
                 f = open(file_to_write, "w")
                 ever_wrote = True
@@ -65,7 +66,7 @@ def convert_prerot(file_name):
                 if not am_rotating:
                     f.write(line)
                     continue
-                current_rotate += rotate_delta
+                current_rotate += this_delta
                 if current_rotate > 26:
                     current_rotate -= 26
                 f.write(rotate_string(line, current_rotate))
@@ -82,6 +83,8 @@ while cmd_count < len(sys.argv):
     if arg == 'r':
         if valid:
             rotate_delta = num
+    elif arg in ( 'b', 'br', 'rb' ):
+        rotate_both = True
     else:
         usage()
     cmd_count += 1
@@ -93,4 +96,6 @@ if len(my_glob) == 0:
 
 for f in my_glob:
     convert_prerot(f)
+    if rotate_both and rotate_delta:
+        convert_prerot(f, this_delta = 0)
 
