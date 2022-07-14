@@ -246,6 +246,7 @@ def check_yearly_pace():
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     year_seconds = (year_end-year_start).in_seconds()
     seconds_delta = (pnow - year_start).in_seconds()
+    print(seconds_delta / 86400, "days so far")
     this_year = pnow.year
     last_year = pnow.year - 1
     os.chdir("c:/writing/daily")
@@ -255,14 +256,16 @@ def check_yearly_pace():
         total_bytes += this_file_bytes
         if verbose:
             print(f, "adds", this_file_bytes)
-    print(total_bytes, "total bytes")
+    print(total_bytes, "total bytes so far")
+    print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
     print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
     if g[-1] < this_years_last_file:
         g0 = glob.glob("{}*.txt".format(last_year))
         this_file_bytes = os.stat(g0[-1]).st_size
         print(colorama.Fore.GREEN + "Adding last year's last-file: {}, {} bytes".format(g0[-1], this_file_bytes) + colorama.Style.RESET_ALL)
         total_bytes += this_file_bytes
-        print(total_bytes, "total bytes")
+        print(total_bytes, "total bytes so far")
+        print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
         print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes including last file")
     sys.exit()
 
