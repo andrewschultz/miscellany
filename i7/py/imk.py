@@ -42,9 +42,12 @@ def check_valid_combo(my_abbrev, abbrev_class, dict_of_abbrevs):
     sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing.".format(abbrev_class, my_abbrev))
 
 while count < len(sys.argv):
-    arg = sys.argv[count].lower()
-    if arg == '-o' or arg == '-of' or arg [0] == '-of': overwrite = True
-    elif arg == '-n' or arg == '-on' or arg == '-no': open_post_conversion = False
+    arg = mt.nohy(sys.argv[count])
+    if arg in ( 'o', 'of', 'fo'): overwrite = True
+        print("Overwrite option is on.")
+    elif arg in ( 'n', 'on', 'no' ):
+        print("Not opening post-conversion.")
+        open_post_conversion = False
     else:
         if ' ' in arg:
             file_args.append(sys.argv[count])
