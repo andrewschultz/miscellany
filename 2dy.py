@@ -271,6 +271,7 @@ def dhms(my_int):
     return '{:02d}d{:02d}h{:02d}m{:02d}s'.format(my_int // 86400, (my_int // 3600) % 24, (my_int // 60) % 60, my_int % 60)
 
 def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
+    global weekly_start_bytes
     os.chdir(my_dir)
     hit_all_stretch = False
     if not this_file:
@@ -294,12 +295,13 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     t_goal = t_base.add(days=max_days_new)
     weekly_interval_so_far = (t_now - t_base).in_seconds()
     full_weekly_interval = (t_goal - t_base).in_seconds()
+    actual_size = current_size - weekly_start_bytes
     current_goal = stretch_metric_goal * weekly_interval_so_far // full_weekly_interval
     seconds_delta_from_pace = (current_size - current_goal) * full_weekly_interval // basic_goal
-    current_pace_seconds_delta = weekly_interval_so_far * basic_goal / current_size
-    equivalent_time = t_base.add(seconds = current_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
-    bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
-    green_if_goal = mt.green_red_comp(current_size, current_goal)
+    current_pace_seconds_delta = weekly_interval_so_far * basic_goal / actual_size
+    equivalent_time = t_base.add(seconds = actual_size * full_weekly_interval // basic_goal).format("YYYY-MM-DD HH:mm:ss")
+    bytes_per_hour_so_far = actual_size * 3600 / weekly_interval_so_far
+    green_if_goal = mt.green_red_comp(actual_size, current_goal)
     seconds_remaining = full_weekly_interval - weekly_interval_so_far
     if hit_all_stretch:
         mt.center(colorama.Fore.CYAN + "Total expected bytes this period: {:.2f}".format(bytes_per_hour_so_far * max_days_new * 24) + colorama.Style.RESET_ALL)
@@ -315,14 +317,14 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         if time_dir_string == 'ahead':
             time_dir_string += ' of'
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
-        projection = current_size * full_weekly_interval // weekly_interval_so_far
+        projection = actual_size * full_weekly_interval // weekly_interval_so_far + weekly_start_bytes
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
     high_stretch_goal = goals_and_stretch[-1]
     if unlimited_stretch_goals:
         current_extra_stretch = ((max(current_size, goals_and_stretch[-1]) - stretch_offset) // super_stretch_delta) * super_stretch_delta + stretch_offset
-        current_projected_bytes = (current_size * full_weekly_interval) / weekly_interval_so_far
+        current_projected_bytes = (actual_size * full_weekly_interval) / weekly_interval_so_far + weekly_start_bytes
         stretch_special_mod = [ x for x in stretch_special if x > current_projected_bytes ]
         while current_extra_stretch <= current_projected_bytes:
             try:
@@ -349,26 +351,28 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     goal_array.extend(post_stretch_goals)
     prev_goal = 0
     for this_goal in goal_array:
+        actual_goal = this_goal - weekly_start_bytes
         if see_silly_max:
+            actual_size = actual_goal - 1
             current_size = this_goal - 1
-            bytes_per_hour_so_far = current_size * 3600 / weekly_interval_so_far
+            bytes_per_hour_so_far = actual_size * 3600 / weekly_interval_so_far
         if prev_goal > 0 and super_stretch_delta > 0 and this_goal - prev_goal > super_stretch_delta:
             mt.center('=' * 80)
         elif prev_goal == high_stretch_goal:
             mt.center('~' * 80)
-        current_pace_seconds_delta = weekly_interval_so_far * this_goal / current_size
+        current_pace_seconds_delta = weekly_interval_so_far * actual_goal / actual_size
         t_eta = t_base.add(seconds = current_pace_seconds_delta)
         seconds_remaining = full_weekly_interval - weekly_interval_so_far
         bytes_remaining = this_goal - current_size
         bytes_per_hour_to_go = bytes_remaining * 3600 / seconds_remaining
-        bytes_per_hour_overall = this_goal * 3600 / full_weekly_interval
-        t_pace_eta = t_now.add(seconds = (this_goal - current_size) * 3600 / bytes_per_hour_overall)
+        bytes_per_hour_overall = actual_goal * 3600 / full_weekly_interval
+        t_pace_eta = t_now.add(seconds = (actual_goal - actual_size) * 3600 / bytes_per_hour_overall)
         mt.center(colorama.Fore.YELLOW + "For the {}goal of {}: ETA (current pace) {}, {} away, ETA (baseline pace) {}, {} away.".format(nexty, this_goal, t_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_eta - t_now).in_seconds()), t_pace_eta.format("YYYY-MM-DD HH:mm:ss"), dhms((t_pace_eta - t_now).in_seconds())) + colorama.Style.RESET_ALL)
         so_far_pct = bytes_per_hour_so_far * 100 / bytes_per_hour_overall
         to_go_pct = bytes_per_hour_to_go * 100 / bytes_per_hour_overall
         catchup_ratio = bytes_per_hour_to_go / bytes_per_hour_so_far if bytes_per_hour_to_go > bytes_per_hour_so_far else bytes_per_hour_so_far / bytes_per_hour_to_go
         catchup_inverse = 1 / catchup_ratio
-        now_breakeven = this_goal * weekly_interval_so_far / full_weekly_interval
+        now_breakeven = actual_goal * weekly_interval_so_far / full_weekly_interval + weekly_start_bytes
         raw_plus_minus = current_size - now_breakeven
         prev_goal = this_goal
         mt.center(colorama.Fore.CYAN + "Bytes per hour to hit end-of-week goal: {:.2f} {:.2f}%. Bytes for exact pace: {:.2f}. Bytes done so far: {:.2f} {:.2f}% ({}{}{:.2f}{}). Catchup ratio: {}{:.3f}/{:.3f}.".format(bytes_per_hour_to_go, to_go_pct,
@@ -806,7 +810,7 @@ def read_2dy_cfg():
                 sect_ary.extend(sect_dict)
             elif prefix in ( 'offset_seconds', 'seconds_offset' ):
                 offset_seconds = int(data)
-            elif prefix in ( 'start_bytes', 'weekly_start_bytes' ):
+            elif prefix in ( 'startbytes', 'start_bytes', 'weekly_start_bytes' ):
                 weekly_start_bytes = int(data)
             elif prefix in ( 'stretch_delta', 'super_stretch_delta' ):
                 super_stretch_delta = int(data)
@@ -1032,6 +1036,8 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
     elif arg in ( 'td', 'dt' ): move_to_proc("c:/coding/perl/proj/from_drive")
+    elif arg in ( 'is', 'si' ):
+        weekly_start_bytes = 0
     elif re.match('[0-9]{3}', arg): # if this causes problems, use [0-1][0-9]{3} or [0-9]{5}
         open_latest_daily_from_glob(arg)
     elif arg.isdigit(): # this should be at the end since we have other digit wildcard checks
