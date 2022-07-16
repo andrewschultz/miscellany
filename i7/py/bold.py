@@ -18,6 +18,7 @@ import re
 import pyperclip
 import os
 from filecmp import cmp
+import colorama
 
 from collections import defaultdict
 
@@ -120,9 +121,9 @@ def get_ignores():
             if prefix.lower() in ( 'project', 'proj' ):
                 current_projs = bold_cfg_array_of(data)
                 continue
-            if prefix.lower == 'ruleignore':
+            if prefix.lower() == 'ruleignore':
                 rule_ignore[cp].append(data)
-            if prefix.lower == 'unignore':
+            if prefix.lower() == 'unignore':
                 if 'global' in current_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
                     continue
