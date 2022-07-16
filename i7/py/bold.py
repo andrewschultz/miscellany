@@ -32,6 +32,7 @@ counts = defaultdict(int)
 bail_at = defaultdict(list)
 unbail_at = defaultdict(list)
 rule_ignore = defaultdict(list)
+table_ignore = defaultdict(list)
 
 max_errors = 0
 stderr_now = False
@@ -123,6 +124,10 @@ def get_ignores():
                 continue
             if prefix.lower() == 'ruleignore':
                 rule_ignore[cp].append(data)
+                continue
+            if prefix.lower() == 'tableignore':
+                table_ignore[cp].extend(data.split(','))
+                continue
             if prefix.lower() == 'unignore':
                 if 'global' in current_projs:
                     print("CANNOT HAVE UNIGNORE IN GLOBAL SECTION. It is for specific projects.")
@@ -215,6 +220,12 @@ def rule_ignorable(my_line):
             return True
     return False
 
+def table_ignorable(my_line):
+    for r in table_ignore[my_project]:
+        if my_line.startswith(r):
+            return True
+    return False
+
 def process_potential_bolds(my_file):
     count_err_lines = 0
     count_total_bolds = 0
@@ -222,6 +233,7 @@ def process_potential_bolds(my_file):
         f = open(comp_file, "w", newline='')
     broken = False
     ignore_this_rule = False
+    ignore_this_table = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     mfb = os.path.basename(my_file)
     with open(my_file) as file:
@@ -234,11 +246,16 @@ def process_potential_bolds(my_file):
                 continue
             if not line.strip():
                 ignore_this_rule = False
-            if ignore_this_rule:
+                ignore_this_table = False
+            if ignore_this_rule or ignore_this_table:
                 continue
             if not line.startswith('\t'):
                 if rule_ignorable(line):
-                    ignore_whole_rule = True
+                    ignore_this_rule = True
+                    continue
+                if table_ignorable(line):
+                    print("IGNORING", line)
+                    ignore_this_table = True
                     continue
             if string_match(line, bail_at):
                 broken = True
@@ -267,7 +284,7 @@ def process_potential_bolds(my_file):
                     print(out_string)
             if write_comp_file:
                 f.write(out_string + "\n")
-    this_stderr_text = "{} {} has {} total bold line candidates, {} total bold word/phrase candidates.\n".format('=' * 50, mfb, count_err_lines, count_total_bolds)
+    this_stderr_text = (colorama.Fore.RED if count_err_lines else colorama.Fore.GREEN) + "{} {} has {} total bold line candidates, {} total bold word/phrase candidates.\n".format('=' * 50, mfb, count_err_lines, count_total_bolds) + colorama.Style.RESET_ALL
     if stderr_now:
         sys.stderr.write(this_stderr_text)
     else:
