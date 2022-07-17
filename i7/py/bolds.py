@@ -1,13 +1,14 @@
 #
 # bolds.py
 # looks for misplaced bold in story.ni locally
-# deprecated for the more general bold.py which has a better regex and error-ignoring
-#
+# DEPRECATED FOR THE MORE GENERAL BOLD.PY WHICH HAS A BETTER REGEX AND ERROR-IGNORING
+# SO DO NOT RUN THIS
 
 import re
 import i7
 import os
 import sys
+import colorama
 
 from collections import defaultdict
 
@@ -169,12 +170,12 @@ while count < len(sys.argv):
     count += 1
 
 if cmd_line_proj:
-    print("Changing dir to", cmd_line_proj)
+    print("Changing (or trying to change) dir to", cmd_line_proj)
     try:
-        os.chdir(i7.proj2dir(cmd_line_project))
+        os.chdir(i7.proj2dir(cmd_line_proj))
         my_project = cmd_line_proj
     except:
-        sys.exit("Can't map", cmd_line_proj, "to a directory.")
+        sys.exit("Can't map {} to a directory.".format(cmd_line_proj))
 else:
     my_project = i7.dir2proj(os.getcwd())
     try:
@@ -202,5 +203,5 @@ for f in file_array:
 for l in line_to_open:
     i7.npo(l, line_to_open[l], bail = False)
 
-print("WARNING: BOLD.PY is a better, and more recently updated, checker for bold text. You may wish to go with that instead.")
+print(colorama.Fore.RED + "WARNING: BOLD.PY is a better, and more recently updated, checker for bold text. You may wish to go with that instead." + colorama.Style.RESET_ALL)
 sys.exit()

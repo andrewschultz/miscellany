@@ -33,6 +33,7 @@ bail_at = defaultdict(list)
 unbail_at = defaultdict(list)
 rule_ignore = defaultdict(list)
 table_ignore = defaultdict(list)
+line_arrays = defaultdict(list)
 
 max_errors = 0
 stderr_now = False
@@ -236,6 +237,7 @@ def process_potential_bolds(my_file):
     ignore_this_table = False
     # sys.stderr.write("{} starting {}.\n".format('=' * 50, my_file))
     mfb = os.path.basename(my_file)
+    this_line_array = []
     with open(my_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if string_match(line, unbail_at):
@@ -248,13 +250,15 @@ def process_potential_bolds(my_file):
                 ignore_this_rule = False
                 ignore_this_table = False
             if ignore_this_rule or ignore_this_table:
+                f.write(line)
                 continue
             if not line.startswith('\t'):
                 if rule_ignorable(line):
                     ignore_this_rule = True
+                    f.write(line)
                     continue
                 if table_ignorable(line):
-                    print("IGNORING", line)
+                    f.write(line)
                     ignore_this_table = True
                     continue
             if string_match(line, bail_at):
@@ -269,7 +273,9 @@ def process_potential_bolds(my_file):
                     if write_comp_file:
                         f.write(line)
                     continue
+                mt.add_post(my_file, line_count)
                 count_err_lines += 1
+                this_line_array.append(line_count)
                 count_total_bolds += new_quote.count('[b]') - lr.count('[b]')
                 out_string = zap_nested_brax(out_string)
                 if show_line_count:
@@ -284,6 +290,8 @@ def process_potential_bolds(my_file):
                     print(out_string)
             if write_comp_file:
                 f.write(out_string + "\n")
+    if count_err_lines:
+        line_arrays[my_file] = this_line_array[:20]
     this_stderr_text = (colorama.Fore.RED if count_err_lines else colorama.Fore.GREEN) + "{} {} has {} total bold line candidates, {} total bold word/phrase candidates.\n".format('=' * 50, mfb, count_err_lines, count_total_bolds) + colorama.Style.RESET_ALL
     if stderr_now:
         sys.stderr.write(this_stderr_text)
@@ -370,6 +378,8 @@ while cmd_count < len(sys.argv):
         file_includes = arg[2:].split(',')
     elif arg.startswith( 'f-' ):
         file_excludes = arg[2:].split(',')
+    elif arg == 'o':
+        open_post = True
     else:
         usage()
     cmd_count += 1
@@ -434,3 +444,9 @@ if stderr_text:
 
 if write_comp_file and os.path.exists(comp_file):
     os.remove(comp_file)
+
+for l in line_arrays:
+    print(os.path.basename(l), ', '.join([str(x) for x in line_arrays[l]]))
+
+if open_post:
+    mt.post_open()
