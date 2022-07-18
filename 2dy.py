@@ -246,7 +246,7 @@ def check_yearly_pace():
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     year_seconds = (year_end-year_start).in_seconds()
     seconds_delta = (pnow - year_start).in_seconds()
-    print(seconds_delta / 86400, "days so far")
+    print("{:.2f} days so far".format(seconds_delta / 86400))
     this_year = pnow.year
     last_year = pnow.year - 1
     os.chdir("c:/writing/daily")
@@ -259,6 +259,8 @@ def check_yearly_pace():
     print(total_bytes, "total bytes so far")
     print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
     print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
+    yearly_goals = [ 3000000, 4000000 ]
+    days_to_go_shown = False
     if g[-1] < this_years_last_file:
         g0 = glob.glob("{}*.txt".format(last_year))
         this_file_bytes = os.stat(g0[-1]).st_size
@@ -267,6 +269,14 @@ def check_yearly_pace():
         print(total_bytes, "total bytes so far")
         print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
         print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes including last file")
+        seconds_delta = (year_end - pnow).in_seconds()
+        for y in yearly_goals:
+            if total_bytes > y:
+                continue
+            if not days_to_go_shown:
+                print("{:.2f} days to go".format(seconds_delta / 86400))
+                days_to_go_shown = True
+            print((y - total_bytes) * 86400 // seconds_delta, "remaining bytes per day to hit", y)
     sys.exit()
 
 def dhms(my_int):
