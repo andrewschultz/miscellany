@@ -238,26 +238,15 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def find_yearly_goals(goal_array, the_delta, total_bytes):
+def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
+    ary = [ g for g in goal_array if g > total_bytes ]
+    if not len(ary):
+        ary = [ ((total_bytes + 1) // 1000000) * 1000000 ]
     pnow = pendulum.now()
-    year_start = pendulum.now().set(month=1,day=1,hour=0,minute=0,second=0)
-    year_end = year_start.add(years=1)
-    year_seconds = (year_end-year_start).in_seconds()
-    seconds_delta_gone = (pnow - year_start).in_seconds()
-    seconds_delta_ahead = (year_end - pnow).in_seconds()
-    print("{:.2f} days so far".format(seconds_delta_gone / 86400))
-    days_to_go_shown = False
-    for g in goal_array:
-        if total_bytes > g:
-            continue
-        if not days_to_go_shown:
-            print("{:.2f} days to go".format(seconds_delta_ahead / 86400))
-            days_to_go_shown = True
-        print(total_bytes, "total bytes so far")
-        print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta_gone))
-        print(total_bytes * year_seconds // seconds_delta_gone, "projected yearly bytes including last file")
-        seconds_delta = (year_end - pnow).in_seconds()
-        print((g - total_bytes) * 86400 // seconds_delta_ahead, "remaining bytes per day to hit", g)
+    year_seconds = seconds_gone + seconds_left
+    print(total_bytes * year_seconds // seconds_gone, "projected yearly bytes")
+    for g in ary:
+        print((g - total_bytes) * 86400 // seconds_left, "remaining bytes per day to hit", g)
 
 def check_yearly_pace():
     pnow = pendulum.now()
@@ -279,8 +268,15 @@ def check_yearly_pace():
     print(total_bytes, "total bytes so far")
     print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
     print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
-    yearly_goals = [ 2500000, 3000000, 4000000 ]
-    find_yearly_goals(yearly_goals, 1000000, total_bytes)
+    year_end = year_start.add(years=1)
+    year_seconds = (year_end-year_start).in_seconds()
+    seconds_delta_gone = (pnow - year_start).in_seconds()
+    seconds_delta_ahead = (year_end - pnow).in_seconds()
+    print("{:.2f} days so far".format(seconds_delta_gone / 86400))
+    print("{:.2f} days left".format(seconds_delta_ahead / 86400))
+    print(seconds_delta_gone)
+    print(seconds_delta_ahead)
+    find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     if g[-1] < this_years_last_file:
@@ -288,7 +284,7 @@ def check_yearly_pace():
         this_file_bytes = os.stat(g0[-1]).st_size
         print(colorama.Fore.GREEN + "Adding last year's last-file: {}, {} bytes".format(g0[-1], this_file_bytes) + colorama.Style.RESET_ALL)
         total_bytes += this_file_bytes
-        find_yearly_goals(yearly_goals, 1000000, total_bytes)
+        find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     sys.exit()
 
 def dhms(my_int):
