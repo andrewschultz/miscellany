@@ -48,6 +48,7 @@ stretch_offset = 0
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 post_stretch_max = 10
 weekly_start_bytes = 0
+yearly_goals_array = [ ]
 
 stretch_special = []
 
@@ -789,6 +790,7 @@ def read_2dy_cfg():
     global stretch_offset
     global stretch_special
     global weekly_start_bytes
+    global yearly_goals_array
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -844,6 +846,10 @@ def read_2dy_cfg():
                 stretch_special = poss_thousands_list(data)
             elif prefix in ( 'post_stretch_max' ):
                 post_stretch_max = int(data)
+            elif prefix in ( 'yearly', 'yearly_goals') :
+                if len(yearly_goals_array):
+                    print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
+                yearly_goals_array = [ int(x) for x in data.split(',') ]
             elif prefix.isdigit():
                 if len(prefix) != 8:
                     print("WARNING suggested weekly file has wrong # of digits (should be 8) at line {}.".format(line_count))
