@@ -338,8 +338,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
         projection = actual_size * full_weekly_interval // weekly_interval_so_far + weekly_start_bytes
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
-    if full_weekly_interval > 432000:
-        print(green_if_goal + "1 char per second sprint gets you to {}.".format(current_size + seconds_remaining) + colorama.Style.RESET_ALL)
+    print(green_if_goal + "1 char per second sprint gets you to {} by day's end.".format(current_size + seconds_remaining % 86400) + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
     high_stretch_goal = goals_and_stretch[-1]
@@ -1050,6 +1049,11 @@ while cmd_count < len(sys.argv):
             put_stats()
     elif arg == 'psr': put_stats(launch_iff_new_k = True)
     elif arg == 'psf': put_stats(launch_iff_new_k = False)
+    elif arg == 'psm':
+        if valid_num:
+            post_stretch_max = num
+        else:
+            sys.exit("psm post-stretch-map variable (maximum listed) needs integer after it.")
     elif arg == 'bs': write_base_stats = False
     elif arg == 'us': unlimited_stretch_goals = True
     elif rawarg[:3] == 'ss=':
@@ -1078,7 +1082,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'ssm':
         see_silly_max = True
     elif arg == '?': usage()
-    else: usage("Bad parameter {:s}".format(arg))
+    else:
+        usage("Bad parameter {:s}".format(rawarg))
     cmd_count += 1
 
 if print_yearly_pace:
