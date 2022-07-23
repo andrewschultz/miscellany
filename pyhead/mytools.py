@@ -27,6 +27,7 @@ import pendulum
 mt_default_dict = defaultdict(str)
 
 this_year = pendulum.now().year
+initial_date = pendulum.from_timestamp(0, tz='local')
 
 gitbase = 'c:/users/andrew/documents/github'
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
@@ -313,6 +314,8 @@ def wait_until_npp_saved(my_file, bail = True):
             if bail:
                 sys.exit()
             return False
+        elif x == 1:
+            npo(my_file, bail = False)
     return True
 
 def conditional_notepad_open_my_file(my_file, open_if_already_there):
@@ -1142,7 +1145,7 @@ def zap_comment(my_line, zap_spaces_before = True, zap_brackets = True):
     if zap_spaces_before:
         temp = temp.strip()
     if zap_brackets:
-        temp = re.sub("\[[^\]]*\]$", "", temp)
+        temp = re.sub("\[[^\]]*\]$", "", temp).rstrip()
     return temp
 
 no_comment = no_comments = zap_comments = zap_comment
