@@ -407,8 +407,19 @@ def print_centralized(my_string, eliminate_control_chars = True):
 
 center = centralized = print_center = print_centralized
 
+def green_of(my_string, make_green = True):
+    if not make_green:
+        return my_string
+    return colorama.Fore.GREEN + my_string + colorama.Style.RESET_ALL
+
 def print_colored_centralized(my_string, color_string = colorama.Fore.GREEN, eliminate_control_chars = True):
     print_centralized(color_string + my_string + colorama.Back.BLACK + colorama.Style.RESET_ALL, eliminate_control_chars)
+
+colcent = centcol = print_colored_centralized
+
+def eq_print(my_text, equals_width = 20, centering = True, spacing = 1, color_info = ''):
+    final_text = color_info + '=' * equals_width + ' ' * spacing + my_text + ' ' * spacing + '=' * equals_width + (colorama.Style.RESET_ALL if color_info else '')
+    print_centralized(final_text)
 
 def green_red_comp(num_to_be_greater, num_to_be_lesser, yellow_on_equals = True):
     if num_to_be_greater > num_to_be_lesser:
@@ -584,6 +595,9 @@ def lines_of(file_name, read_blanks = True):
         temp = [x for x in lines_of if x.strip()]
     return temp
 
+def line_count_of(file_name, read_blanks = True):
+    return len(lines_of(file_name, read_blanks = read_blanks))
+
 HOST_MATCH_PERFECT = 1
 HOST_MATCH_IGNORE_WWW = 1>>1
 HOST_MATCH_SUBSITE = 1>>2
@@ -721,12 +735,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         bn2 = f2
     any_extra_lines = False
     if compare_tabbed:
-        tabbed_entries = [x for x in freq if '\t' in x]
+        tabbed_entries = [x for x in freq if '\t' in x and x.strip()]
         if len(tabbed_entries) == 0:
             pass
-        elif len(tabbed_entries) != 2:
-            print("WARNING found more than one tabbed line when comparing tabs")
-        else:
+        elif len(tabbed_entries) != 1:
+            print("WARNING found more than one tabbed line when comparing tabs:")
             if tabbed_entries[0] in f2_ary:
                 (tabbed_entries[0], tabbed_entries[1]) = (tabbed_entries[1], tabbed_entries[0])
             difs = [x for x in difs if '\t' not in x]
@@ -734,7 +747,8 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             tabs2 = tabbed_entries[1].split("\t")
             set1 = set(tabs1) - set(tabs2)
             set2 = set(tabs2) - set(tabs1)
-            print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE")
+            if (set1 or set2):
+                print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE" + colorama.Style.RESET_ALL)
             if set1:
                 print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + colorama.Style.RESET_ALL)
             if set2:
@@ -866,7 +880,7 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
             m = max(file_post_list[x])
             bnx = os.path.basename(x)
             if x in file_extra_edit:
-                print(file_extra_edit[x], "total extra edits for", bnx)
+                print("    {} additional suggested line-opening{} for {} {} ignored. If you're searching for errors, you may have to run things again.".format(file_extra_edit[x], plur(file_extra_edit[x]), bnx, plur(file_extra_edit[x], [ 'were', 'was' ])))
             el = len(file_post_list[x])
             if el > 1:
                 print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
@@ -1088,7 +1102,7 @@ def browser_or_native(file_name, print_action = True, bail = False, return_to_or
 open_in_browser = file_in_browser = file_in_browser_conditional = gib = g_i_b = graphics_in_browser = tib = t_i_b = text_in_browser = fib = f_i_b = browser_or_native
 
 def text_to_browser(my_text, delete_immediately = True, bail = False):
-    file_name = pendulum.now().format("YYYY-MM-DD-HH-mm-SS") + '.txt'
+    file_name = os.path.join("c:/writing/temp", pendulum.now().format("YYYY-MM-DD-HH-mm-SS") + '.txt')
     f = open(file_name, "w")
     f.write(my_text)
     f.close()
