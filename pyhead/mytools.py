@@ -164,6 +164,7 @@ def end_number_of(x):
     match_list = re.match('.*?([0-9]+)$', x)
     if not match_list:
         return 0
+    print("end_number_of deprecated, use parameter_with_number instead")
     return int(match_list.group(1))
 
 def is_basename(a):
@@ -212,20 +213,20 @@ def list_nums(my_list, separator=', '):
 
 num_list = nums_list = listnums = listnum = list_nums
 
-# main usage (arg, num) = parnum(sys.argv[count]) returns string/number tuple
+# main usage (arg, num, value_found) = parnum(sys.argv[count]) returns string/number tuple
 # see if we want to include a string instead of, say, a chopped off 1a2b3c
 
-def parnum(x, also_lower = True, default_value = 0, allow_float = False):
+def parameter_with_number(x, also_lower = True, default_value = 0, allow_float = False, include_numbers_in_main_parameter = True):
     if x[0] == '-': x = x[1:]
     if also_lower:
         x = x.lower()
     digit_offset = re.search(r"\d", x)
+    if not digit_offset:
+        return(x, default_value, False)
     letters = x[:digit_offset.start()]
     numbers = x[digit_offset.start():]
-    if not digit_offset:
-        return(letters, default_value)
     try:
-        return(letters, int(numbers))
+        return(letters, int(numbers), True)
     except:
         pass
     try:
@@ -233,10 +234,12 @@ def parnum(x, also_lower = True, default_value = 0, allow_float = False):
         if not allow_float:
             print("WARNING allow_float must be set to allow floats")
             return(letters, default_value)
-        return(letters, temp)
+        return(letters, temp, True)
     except:
         pass
-    return(letters, default_value)
+    return(x if include_numbers_in_main_parameter else letters, default_value, False)
+
+num_let = numlet = letnum = let_num = numbers_letters = parnum = par_num = parameter_with_number
 
 def nohy(x, also_lower = True): # mostly for command line argument usage, so -s is -S is s is S.
     if x[0] == '-': x = x[1:]
