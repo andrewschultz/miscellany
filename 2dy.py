@@ -49,6 +49,7 @@ offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calcul
 post_stretch_max = 10
 weekly_start_bytes = 0
 yearly_goals_array = [ ]
+previous_size = 0
 
 stretch_special = []
 
@@ -182,6 +183,13 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[file_index])
     my_size = os.stat(this_file).st_size
+    size_delta = my_size - previous_size
+
+    header_color = num_to_text_color(size_delta, goals_and_stretch[0] / 2) # checking every half hour should be a reasonable goal
+
+    mt.center(header_color + "Size delta from last try: {} = {} - {}.".format(size_delta, my_size, previous_size) + colorama.Style.RESET_ALL)
+
+    mt.change_cfg_line(my_sections_file, "previous_size", my_size)
 
     os.chdir(my_dir)
     f = open(stats_file, "r")
@@ -786,6 +794,7 @@ def read_2dy_cfg():
     global stretch_special
     global weekly_start_bytes
     global yearly_goals_array
+    global previous_size
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -841,6 +850,8 @@ def read_2dy_cfg():
                 stretch_special = poss_thousands_list(data)
             elif prefix in ( 'post_stretch_max' ):
                 post_stretch_max = int(data)
+            elif prefix in ( 'previous_size' ):
+                previous_size = int(data)
             elif prefix in ( 'yearly', 'yearly_goals') :
                 if len(yearly_goals_array):
                     print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
@@ -893,22 +904,8 @@ def check_rewrite_init_weekly_size(my_file):
     new_size = os.stat(my_file).st_size
     copy(my_file, default_weekly_file)
     found_start_bytes = False
-    new_start_bytes = "startbytes={}\n".format(new_size)
-    my_lines = []
-    with open(my_sections_file) as file:
-        for (line_count, line) in enumerate (file, 1):
-            print(line_count, line)
-            if line.startswith(";") and not found_start_bytes:
-                my_lines.append(new_start_bytes)
-            if line.startswith("startbytes="):
-                my_lines.append(new_start_bytes)
-                continue
-            else:
-                my_lines.append(line)
-    f = open(my_sections_file, "w")
-    for ml in my_lines:
-        f.write(ml)
-    f.close()
+    mt.change_cfg_line(my_sections_file, "previous_size", new_size)
+    mt.change_cfg_line(my_sections_file, "startbytes", new_size)
 
 def create_new_file(my_file, launch = True):
     print("Creating new daily file", my_file)
@@ -920,6 +917,7 @@ def create_new_file(my_file, launch = True):
     if write_base_stats and my_daily_dir == daily:
         put_stats(bail = False, create_graphics = False)
     check_rewrite_init_weekly_size(my_file)
+    mt.change_cfg_line(my_sections_file, "previous_size", my_size)
     if launch: mt.npo(my_file, bail=False)
 
 #
