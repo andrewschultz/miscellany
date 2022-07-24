@@ -266,32 +266,30 @@ def check_yearly_pace():
     year_start = pendulum.now().set(month=1,day=1,hour=0,minute=0,second=0)
     seconds_delta = (pnow - year_start).in_seconds()
     total_bytes = 0
-    os.chdir("c:/writing/daily")
-    g = glob.glob("{}*.txt".format(this_year))
-    for f in g:
-        this_file_bytes = os.stat(f).st_size
-        total_bytes += this_file_bytes
-        if verbose:
-            print(f, "adds", this_file_bytes)
-    print(total_bytes, "total bytes so far")
-    print("{:.2f} bytes per day".format(total_bytes * 86400 / seconds_delta))
-    print(total_bytes * year_seconds // seconds_delta, "projected yearly bytes")
     year_end = year_start.add(years=1)
     year_seconds = (year_end-year_start).in_seconds()
     seconds_delta_gone = (pnow - year_start).in_seconds()
     seconds_delta_ahead = (year_end - pnow).in_seconds()
     print("{:.2f} days so far".format(seconds_delta_gone / 86400))
     print("{:.2f} days left".format(seconds_delta_ahead / 86400))
-    print(seconds_delta_gone)
-    print(seconds_delta_ahead)
+    os.chdir("c:/writing/daily")
+    this_wildcard = "{}*.txt".format(this_year)
+    g = glob.glob(this_wildcard)
+    for f in g:
+        this_file_bytes = os.stat(f).st_size
+        total_bytes += this_file_bytes
+        if verbose:
+            print(f, "adds", this_file_bytes)
+    print(colorama.Fore.GREEN + "{} total bytes so far for {}".format(total_bytes, this_wildcard) + colorama.Style.RESET_ALL)
+    print("{:.2f} bytes per day so far".format(total_bytes * 86400 / seconds_delta))
     find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     if g[-1] < this_years_last_file:
         g0 = glob.glob("{}*.txt".format(last_year))
         this_file_bytes = os.stat(g0[-1]).st_size
-        print(colorama.Fore.GREEN + "Adding last year's last-file: {}, {} bytes".format(g0[-1], this_file_bytes) + colorama.Style.RESET_ALL)
         total_bytes += this_file_bytes
+        print(colorama.Fore.GREEN + "Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes) + colorama.Style.RESET_ALL)
         find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     sys.exit()
 
@@ -346,7 +344,8 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         print("That equates to {} second(s) {} the break-even time for your production, which is {}, {} away.".format(abs(seconds_delta_from_pace), time_dir_string, equivalent_time, dhms(seconds_delta_from_pace)) + colorama.Style.RESET_ALL)
         projection = actual_size * full_weekly_interval // weekly_interval_so_far + weekly_start_bytes
         mt.center(colorama.Fore.YELLOW + "Expected end-of-cycle/week goal: {} bytes, {}{} {} your basic goal.".format(projection, '+' if projection > goals_and_stretch[0] else '', abs(projection - basic_goal), 'ahead of' if projection > goals_and_stretch[0] else 'behind') + colorama.Style.RESET_ALL)
-    print(green_if_goal + "1 char per second sprint gets you to {} by day's end.".format(current_size + seconds_remaining % 86400) + colorama.Style.RESET_ALL)
+    now_time = t_now.format("YYYY-MM-DD HH:mm:SS")
+    print(green_if_goal + "At {}, you have {} seconds left today, so a 1 char per second sprint gets you to {} by day's end.".format(now_time, seconds_remaining % 86400, current_size + seconds_remaining % 86400) + colorama.Style.RESET_ALL)
     nexty = 'additional ' if hit_all_stretch else ('' if basic_goal == stretch_metric_goal else 'next ')
     post_stretch_goals = []
     high_stretch_goal = goals_and_stretch[-1]
