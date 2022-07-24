@@ -458,6 +458,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     last_time = pendulum.parse(last_ary[1])
     # print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
 
+    black_in_a_row = 0
     for r in relevant_stats:
         ary = r.strip().split("\t")
         my_time = pendulum.parse(ary[1])
@@ -474,7 +475,16 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
         else:
             shape_array.append(30)
         size_delta = sizes[-1] - sizes[-2]
-        color_array.append(mt.text_from_values(color_dict, size_delta))
+        this_color = mt.text_from_values(color_dict, size_delta)
+        if this_color == 'black':
+            black_in_a_row += 1
+        else:
+            black_in_a_row = 0
+        if black_in_a_row > 1:
+            this_hex = 25 * min(black_in_a_row, 9)
+            color_array.append("#{:x}{:x}{:x}".format(this_hex, this_hex, this_hex))
+        else:
+            color_array.append(this_color)
         if my_time.hour == last_time.hour:
             print("WARNING line", ' / '.join(ary), "has duplicate hour. Minutes are {} vs {}. You probably ran a test twice. It'd be best to delete it.\n    Run 2dy.py es/ed to do so.".format(last_time.minute, my_time.minute))
         elif my_time.hour - last_time.hour > 1:
@@ -668,7 +678,7 @@ def put_stats(bail = True, print_on_over = 0, launch_iff_new_k = False, create_g
             print("Thousands-floor increased from {} to {}, so I am opening a new graph".format(before_last_bytes, last_bytes))
             graph_stats(bail = bail)
         else:
-            print("Thousands-floor stayed constant at {}, so I am not going to create a new graph".format(last_bytes))
+            print("Thousands-floor stayed constant at {}, so I am not going to create a new graph. Use -psf to force things.".format(last_bytes))
     else:
         print("Forcing launch of graphics file.")
         graph_stats()
