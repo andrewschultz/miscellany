@@ -463,6 +463,38 @@ def no_colon(x):
 def no_equals(x):
     return chop_front(x, '=')
 
+def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report_error = True, print_success = False):
+    var_to_change = var_to_change.lower()
+    out_file = "c:/writing/temp/mytools_cfg_changed.txt"
+    out_string = ""
+    with open(file_name) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if re.search(r"^{}\b".format(var_to_change), line):
+                line = "{}{}{}\n".format(var_to_change, delimiter, new_value)
+            out_string += line
+            got_line = True
+    if not got_line:
+        print("WARNING attempt to change {} failed as no such line was in {}.".format(var_to_change, file_name))
+        return
+    f = open(out_file, "w")
+    f.write(out_string)
+    f.close()
+    if cmp(out_file, file_name):
+        print("WARNING nothing changed in {} even though we found a line starting with {}.".format(file_name, var_to_change))
+        return
+    try:
+        copy(out_file, file_name)
+    except:
+        print("Could not copy temp-file back.")
+        return
+    try:
+        os.remove(out_file)
+    except:
+        print("MYTOOLS change_cfg_line failed to delete temp-cfg-rewrite output file {}. No big deal, as it'll be overwritten anyway. Just a warning.".format(out_file))
+    if print_success:
+        print("Successfully updated", file_name)
+    return
+
 def cfgary(x, delimiter="\t"): # A:b,c,d -> [b, c, d] # deprecated for cfg_data_split below
     if ':' not in x:
         print("WARNING, cfgary called on line without starting colon")
