@@ -116,6 +116,11 @@ highlight_types = {
 }
 my_highlight = TAGS
 
+def specific_case_usage():
+    print("There are batch files that you may wish to use. GV = VVFF games, GS = I Heart High Art, GAI = Ailiphilia, GA = Alec Smart, GR = Roiling, etc.")
+    print("The flag I forget most is for weekly notes stuff. -pt / -npt (any order) twiddles searching there. It is on by default.")
+    sys.exit()
+
 def usage():
     print("You can type in 1-2 words to match. ` means to take a word literally: `as is needed for as. ! means negative lookbehind, ~ means negative lookahead, / means only nonalpha characters between matching words")
     print("    !~ can also use \b if you want to demarcate word boundaries. More than one word = ! ORs all but last, ~ ORs all but first. pon=y=ies searches for pony or ponies. # allows different words altogether.")
@@ -136,6 +141,7 @@ def usage():
     print("ml/nml/mln = whether or not to modify line where search results are found")
     print("tn/tb/t/ta = toggle testfiles to search. Default is off. ta=all, t=reg, tb=rbr, tn=none")
     print("rc = run suggested commands after")
+    print("specific common forgotten case usage with ??")
     sys.exit()
 
 def left_highlight(color_idx):
@@ -519,13 +525,15 @@ def read_args(my_arg_array, in_loop = False):
             return_value = -1
         elif arg == '?':
             usage()
+        elif arg == '??':
+            specific_case_usage()
         else:
             add_plural_suffix = True
             if verbose:
                 print("Adding searchable string", arg)
             if arg.startswith("?"):
                 arg = arg[1:]
-                print("Finding definition for", arg)
+                print(colorama.Fore.YELLOW + "Finding definition for {}.".format(arg) + colorama.Style.RESET_ALL)
                 os.system("start http://www.thefreedictionary.com/{}".format(arg))
             temp_replace = '{}[^a-z]*'.format('' if arg.endswith('/') else '(s)?')
             if arg.endswith('/'):
@@ -589,6 +597,9 @@ if not my_proj:
     else:
         print("Using default project", default_from_cwd, "from current directory")
         my_proj = default_from_cwd
+
+if my_proj in i7.i7comr:
+    my_proj = i7.i7comr[my_proj]
 
 daily_sections = section_maps[my_proj]
 
@@ -694,6 +705,7 @@ while first_loop or user_input:
                 for z in glob.glob(os.path.join(x, y)):
                     if not mt.is_daily(z):
                         continue
+
                     temp = find_text_in_file(match_string_raw, z, header_needed = daily_sections)
                     if temp != -1:
                         frequencies[os.path.basename(z)] = temp
