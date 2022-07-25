@@ -50,6 +50,7 @@ post_stretch_max = 10
 weekly_start_bytes = 0
 yearly_goals_array = [ ]
 previous_size = 0
+queries_this_period = 0
 
 stretch_special = []
 
@@ -189,7 +190,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     mt.center(header_color + "Size delta from last try: {} = {} - {}.".format(size_delta, my_size, previous_size) + colorama.Style.RESET_ALL)
 
-    mt.change_cfg_line(my_sections_file, "previous_size", my_size)
+    mt.change_cfg_line(my_sections_file, 'previous_size', my_size)
+    mt.change_cfg_line(my_sections_file, 'queries_this_period', queries_this_period + 1)
 
     os.chdir(my_dir)
     f = open(stats_file, "r")
@@ -804,6 +806,7 @@ def read_2dy_cfg():
     global weekly_start_bytes
     global yearly_goals_array
     global previous_size
+    global queries_this_period
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -861,6 +864,8 @@ def read_2dy_cfg():
                 post_stretch_max = int(data)
             elif prefix in ( 'previous_size' ):
                 previous_size = int(data)
+            elif prefix in ( 'queries_this_period' ):
+                queries_this_period = int(data)
             elif prefix in ( 'yearly', 'yearly_goals') :
                 if len(yearly_goals_array):
                     print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
@@ -903,20 +908,26 @@ def weekly_compare(files_back = 1):
     mt.wm(readable, locked)
     sys.exit()
 
-def check_rewrite_init_weekly_size(my_file):
+def weekly_new_file_cleanup(my_file):
+    global queries_this_period
     default_weekly_file = "c:/writing/temp/2dy-default-start.txt"
+    new_size = os.stat(my_file).st_size
+    mt.change_cfg_line(my_sections_file, 'previous_size', new_size)
+    mt.change_cfg_line(my_sections_file, 'startbytes', new_size)
+    mt.change_cfg_line(my_sections_file, 'queries_this_period', 0)
     try:
         if cmp(my_file, default_weekly_file):
             return
     except:
         print("No default-beginning file, so I am creating a new one.")
-    new_size = os.stat(my_file).st_size
     copy(my_file, default_weekly_file)
     found_start_bytes = False
-    mt.change_cfg_line(my_sections_file, "previous_size", new_size)
-    mt.change_cfg_line(my_sections_file, "startbytes", new_size)
+    f = open(stats_file, "a")
+    f.write("#queries this past period: {}\n".format(queries_this_period))
+    f.close()
 
 def create_new_file(my_file, launch = True):
+    global queries_this_period
     print("Creating new daily file", my_file)
     f = open(my_file, "w")
     if file_header:
@@ -925,8 +936,7 @@ def create_new_file(my_file, launch = True):
     f.close()
     if write_base_stats and my_daily_dir == daily:
         put_stats(bail = False, create_graphics = False)
-    check_rewrite_init_weekly_size(my_file)
-    mt.change_cfg_line(my_sections_file, "previous_size", my_size)
+    weekly_new_file_cleanup(my_file)
     if launch: mt.npo(my_file, bail=False)
 
 #
