@@ -152,6 +152,14 @@ def starts_with_text(my_line, my_file):
         return False
     return my_line[0].isalpha()
 
+def inform_extension_file(this_file):
+    this_file = this_file.replace('-', ' ')
+    first_try = os.path.join(i7.ext_dir, this_file)
+    if os.path.exists(first_try):
+        return first_try
+    if os.path.exists(first_try + '.i7x'):
+        return first_try + '.i7x'
+
 def get_mistakes(this_proj):
     mistake_file = i7.hdr(this_proj, "mi")
     mistake_dict = defaultdict(SimpleTestCase)
@@ -670,7 +678,7 @@ with open(ttc_cfg) as file:
             ary = data.split(",")
             for x in range(0, len(ary), 2):
                 if ary[x] in test_case_file_mapper_match[cur_proj]:
-                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                    print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                     mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
@@ -678,7 +686,7 @@ with open(ttc_cfg) as file:
             ary = data.split(",")
             for x in range(0, len(ary), 2):
                 if ary[x] in test_case_file_mapper_regex[cur_proj]:
-                    print("Duplicate test case {} in {} at line {}.".format(x, cur_proj, line_count))
+                    print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                     mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
@@ -689,7 +697,18 @@ with open(ttc_cfg) as file:
         elif prefix == 'extra':
             extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
         elif prefix == 'file':
-            cur_file = i7.hdr(cur_proj, data)
+            temp_cur_file = inform_extension_file(data)
+            if temp_cur_file:
+                cur_file = temp_file
+            if ',' in data:
+                ary = data.split(',')
+                temp_cur_file = i7.hdr(ary[0], ary[1])
+            else:
+                temp_cur_file = i7.hdr(cur_proj, data)
+            if not temp_cur_file:
+                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
+                continue
+            cur_file = temp_cur_file
             if cur_file in table_specs:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                 mt.add_postopen(ttc_cfg, line_count)
