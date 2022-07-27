@@ -208,6 +208,32 @@ carry out screening:
 	say "Screen reader support is now [on-off of screenread].";
 	the rule succeeds;
 
+section scying - not for release
+
+scying is an action out of world.
+
+understand the command "scy" as something new.
+
+understand "scy" as scying.
+
+carry out scying:
+	say "Screen reader support is forced on.";
+	now screenread is true;
+	the rule succeeds;
+
+section scning - not for release
+
+scning is an action out of world.
+
+understand the command "scn" as something new.
+
+understand "scn" as scning.
+
+carry out scning:
+	say "Screen reader support is forced off.";
+	now screenread is false;
+	the rule succeeds;
+
 chapter banishing
 
 banishing is an action applying to one visible thing.
