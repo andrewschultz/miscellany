@@ -18,6 +18,8 @@ definition: a thing (called qvc) is qv:
 	if qvc is enclosed by location of player, yes;
 	no;
 
+To decide what action name is the action-to-be: (- action_to_be -). [ this is "if action-to-be is the gotoing action: / not "if action-to-be is gotoing" used a lot for parser errors ]
+
 section debug state - not for release
 
 when play begins (this is the TN debug true rule):
@@ -250,7 +252,15 @@ carry out banishing:
 
 book footnotes on the fly
 
-to ital-say (x - text): say "[italic type][bracket]NOTE: [x][close bracket][roman type][line break]"; [NOTE: if we find an error here, try ital-txt instead]
+to ital-say (x - indexed text):
+	ital-say-nob x;
+	say "[line break]"; [NOTE: if we find an error here, try ital-txt instead]
+
+to ital-say-nob (x - indexed text): say "[i][bracket]NOTE: [x][close bracket][r]"; [NOTE: if we find an error here, try ital-txt instead]
+
+to ital-say-lb (x - indexed text):
+	say "[line break]";
+	ital-say x;
 
 to score-now:
 	increment the score;
