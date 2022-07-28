@@ -77,6 +77,7 @@ class TablePicker:
         self.untestable_regexes = []
         self.okay_duplicate_counter = defaultdict(int)
         self.okay_duplicate_regexes = []
+        self.absolute_string = []
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
@@ -295,15 +296,18 @@ def get_cases(this_proj):
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
                         possible_text = ''
-                        for c in my_generator.print_col_list:
-                            try:
-                                temp_text = columns[c]
-                                if temp_text.startswith('"'):
-                                    temp_text = re.sub(r'".*', '', temp_text[1:])
-                                possible_text += '-{}'.format(columns[c])
-                            except:
-                                possible_text += '---'
-                        possible_text = possible_text[1:]
+                        if type(my_generator.print_col_list[0]) == int:
+                            for c in my_generator.print_col_list:
+                                try:
+                                    temp_text = columns[c]
+                                    if temp_text.startswith('"'):
+                                        temp_text = re.sub(r'".*', '', temp_text[1:])
+                                    possible_text += '-{}'.format(columns[c])
+                                except:
+                                    possible_text += '---'
+                            possible_text = possible_text[1:]
+                        else:
+                            possible_text = my_generator.print_col_list[0]
                         if test_case_name in table_specs[this_proj][this_file].okay_duplicate_counter:
                             table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] -= 1
                             if table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] < 0:
@@ -668,7 +672,7 @@ with open(ttc_cfg) as file:
             continue
         if line.startswith(';'):
             break
-        (prefix, data) = mt.cfg_data_split(line)
+        (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
         if len(mt.mt_default_dict) and '$' in line:
             old_data = data
             data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
@@ -757,7 +761,12 @@ with open(ttc_cfg) as file:
             ary = data.split("\t")
             try:
                 my_prefixes = ary[3].split(',') if len(ary) > 3 else [ 'ttc' ]
-                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = [int(x) for x in ary[2].split(',')], prefix_list = my_prefixes)
+                my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
+                if ary[2][0] == '$':
+                    this_col_list = [ ary[2][1:] ]
+                else:
+                    this_col_list = [int(x) for x in ary[2].split(',')]
+                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes)
                 table_specs[cur_proj][cur_file].generators.append(this_generator)
             except:
                 print("Exception reading CFG", line_count, data)
