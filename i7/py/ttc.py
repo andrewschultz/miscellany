@@ -48,12 +48,13 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1]):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], command_generator_list = []):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
         self.read_col_list = read_col_list
         self.print_col_list = print_col_list
+        self.command_generator_list = command_generator_list
 
 class SimpleTestCase:
 
@@ -332,7 +333,12 @@ def get_cases(this_proj):
                             continue
                         if possible_text.startswith('"') and possible_text.endswith('"'):
                             possible_text = possible_text[1:-1]
-                        return_dict[test_case_name] = SimpleTestCase(possible_text)
+                        temp_command = ''
+                        if my_generator.command_generator_list:
+                            for col in my_generator.command_generator_list:
+                                temp_command += ' ' + columns[col].replace('"', '')
+                            temp_command = temp_command[1:]
+                        return_dict[test_case_name] = SimpleTestCase(possible_text, command_text = temp_command)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
                     unique_tables = "/{}".format(len(tables_found))
@@ -766,18 +772,20 @@ with open(ttc_cfg) as file:
         elif prefix in ('gen', 'generator', 'table'):
             ary = data.split("\t")
             try:
-                my_prefixes = ary[3].split(',') if len(ary) > 3 else [ 'ttc' ]
+                my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
+                my_command_generator_list = [ int(x) for x in ary[4].split(',') ] if len(ary) > 4 else [ ]
                 my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
                 if ary[2][0] == '$':
                     this_col_list = [ ary[2][1:] ]
                 else:
                     this_col_list = [int(x) for x in ary[2].split(',')]
-                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes)
+                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list)
                 table_specs[cur_proj][cur_file].generators.append(this_generator)
             except:
                 print("Exception reading CFG", line_count, data)
-                print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text")
+                print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text, 4th entry = columns that create command")
                 print("Also, make sure entries 2/3 are integers.")
+                sys.exit()
         elif prefix in ( 'untestable', 'untestables' ):
             ary = data.split(",")
             for a in ary:
