@@ -153,6 +153,10 @@ def starts_with_text(my_line, my_file):
         return False
     return my_line[0].isalpha()
 
+def check_suspicious_regex(my_regex, my_line):
+    if '-*' in my_regex:
+        print("-* in regex at line", my_line, "may result in a too-greedy regex. Maybe change to -.*")
+
 def inform_extension_file(this_file):
     this_file = this_file.replace('-', ' ')
     first_try = os.path.join(i7.ext_dir, this_file)
@@ -689,6 +693,7 @@ with open(ttc_cfg) as file:
         elif prefix == 'casemapr':
             ary = data.split(",")
             for x in range(0, len(ary), 2):
+                check_suspicious_regex(ary[x], line_count)
                 if ary[x] in test_case_file_mapper_regex[cur_proj]:
                     print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                     mt.add_postopen(ttc_cfg, line_count)
@@ -747,6 +752,7 @@ with open(ttc_cfg) as file:
         elif prefix == 'okdupr':
             if not cur_file:
                 print("WARNING: you probably want to put an OKDUP in a specific file.")
+            check_suspicious_regex(data, line_count)
             table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
         elif prefix in ( 'oddcase', 'oddcases' ):
             odd_cases[cur_proj].extend(data.split(','))
@@ -786,6 +792,7 @@ with open(ttc_cfg) as file:
         elif prefix in ( 'untestabler' ):
             ary = data.split(",")
             for a in ary:
+                check_suspicious_regex(a, line_count)
                 if a.startswith('#'):
                     print("Stripping # from untestable at line", line_count)
                     a = a[1:]
