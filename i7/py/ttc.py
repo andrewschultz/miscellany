@@ -154,9 +154,13 @@ def starts_with_text(my_line, my_file):
         return False
     return my_line[0].isalpha()
 
-def check_suspicious_regex(my_regex, my_line):
+def check_regex_in_absolute(my_data, my_line_count):
+    if '*' in my_data or '^' in my_data or '$' in my_data:
+        print("")
+
+def check_suspicious_regex(my_regex, my_line_count):
     if '-*' in my_regex:
-        print("-* in regex at line", my_line, "may result in a too-greedy regex. Maybe change to -.*")
+        print("-* in regex at line", my_line_count, "may result in a too-greedy regex. Maybe change to -.*")
 
 def inform_extension_file(this_file):
     this_file = this_file.replace('-', ' ')
@@ -691,6 +695,7 @@ with open(ttc_cfg) as file:
         elif prefix == 'casemap':
             ary = data.split(",")
             for x in range(0, len(ary), 2):
+                check_regex_in_absolute(ary[x], line_count)
                 if ary[x] in test_case_file_mapper_match[cur_proj]:
                     print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                     mt.add_postopen(ttc_cfg, line_count)
@@ -732,6 +737,7 @@ with open(ttc_cfg) as file:
         elif prefix == 'ignore':
             ary = data.split(',')
             for d in ary:
+                check_regex_in_absolute(ary[x], line_count)
                 if data in table_specs[cur_proj][cur_file].ignore:
                     print("WARNING duplicate ignore", cur_file, line_count, d)
                     mt.add_postopen(ttc_cfg, line_count)
@@ -750,6 +756,7 @@ with open(ttc_cfg) as file:
             if not cur_file:
                 print("WARNING: you probably want to put an OKDUP in a specific file.")
             for a in ary:
+                check_regex_in_absolute(a, line_count)
                 if '~' not in a:
                     table_specs[cur_proj][cur_file].okay_duplicate_counter[a] = 2
                 else:
@@ -789,6 +796,7 @@ with open(ttc_cfg) as file:
         elif prefix in ( 'untestable', 'untestables' ):
             ary = data.split(",")
             for a in ary:
+                check_regex_in_absolute(a, line_count)
                 if a.startswith('#'):
                     print("Stripping # from untestable at line", line_count)
                     a = a[1:]
