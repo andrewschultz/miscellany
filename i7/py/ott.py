@@ -49,7 +49,7 @@ def usage(message='general usage'):
 def is_valid_table_header(x, file_name):
     if x.startswith("table of") and file_name in force_table_read and not '\t' in x:
         return True # if table reading is forced in this file, and "table of" is not itself a table entry, force things
-    return x.lower() in tables_to_check[my_proj]
+    return x.lower().strip() in tables_to_check[my_proj]
 
 def check_my_loop(my_loop):
     loop_verified = True
@@ -407,6 +407,9 @@ for x in files_to_check[my_proj]:
         onces[my_proj][o] = False
     if write_out:
         write_dont_print(x)
+
+#for y in tables_to_check[my_proj]:
+#    print(my_proj, y, tables_to_check[my_proj][y])
 
 for x in tables_to_check[my_proj]:
     if not tables_to_check[my_proj][x]:

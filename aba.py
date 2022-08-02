@@ -2,8 +2,8 @@
 # andrew-basic stuff (reused comparing other files)
 
 def aba_usage():
-	print("File_to_alf, file_alf_compare, file_char_size, file_line_len are functions")
-	exit()
+    print("File_to_alf, file_alf_compare, file_char_size, file_line_len are functions")
+    sys.exit()
 
 def file_to_alf(fname, out_name, ignore_blanks = True):
     fo = open(fname, "rU")
@@ -40,4 +40,5 @@ def file_line_len(fname, count_blanks = False):
 if "aba.py" in main.__file__:
     if len(sys.argv) > 1:
         if sys.argv[1] == '?': aba_usage()
-	print("Not a valid argument for running the aba module directly. ? is the only one.")
+    print("Not a valid argument for running the aba module directly. ? is the only one.")
+    sys.exit()

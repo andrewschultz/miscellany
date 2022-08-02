@@ -55,7 +55,7 @@ with open('roomlist.txt') as f:
         if line[0] == '!':
             line = line[1:]
             if ignoreExclam == 0:
-                print 'skipping', line.rstrip()
+                print('skipping', line.rstrip())
                 continue
         if line[0] == '#':
             if line[1] == '#':
@@ -85,7 +85,7 @@ f1.close()
 
 if prefix:
     dest = './reg-' + prefix + '-noway.txt'
-    print dest
+    print(dest)
     copyfile(src, dest)
     os.remove(src)
 
