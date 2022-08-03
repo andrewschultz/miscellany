@@ -17,7 +17,17 @@ import re
 
 from collections import defaultdict
 
+dupes = defaultdict(int)
+title_of = defaultdict(str)
+
+brief = False
 print_all_pages = True
+
+def print_dupes():
+    if len(d2):
+        print("=================DUPLICATES")
+        for d in d2:
+            print("        ", dupe_page[d], d, title_of[d])
 
 def domain_of(my_url):
     x = re.sub(".*\/\/", "", my_url)
@@ -45,6 +55,8 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if '%s' in arg:
         template = arg
+    elif arg == 'b':
+        brief = True
     elif arg == 'p':
         print_all_pages = False
     elif arg in ( 'np', 'pn' ):
@@ -62,11 +74,18 @@ for f in files:
             i = t['index'] - 1
             count += 1
             my_url = t['entries'][i]['url']
+            my_title = t['entries'][i]['title']
+            title_of[my_url] = my_title
+            print(count, my_url, my_title)
             dupe_page[my_url] += 1
             my_domain = domain_of(my_url)
             domain_count[my_domain] += 1
 
 d2 = [x for x in dupe_page if dupe_page[x] > 1]
+
+if brief:
+    print_dupes()
+    sys.exit()
 
 def eq_print(*args):
     buffer = 30
@@ -86,3 +105,5 @@ for x in sorted(domain_count, key=lambda x:(domain_count[x], x), reverse=True):
 
 if print_all_pages:
     eq_print("ALL PAGES")
+
+print_dupes()
