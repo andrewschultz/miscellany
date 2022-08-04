@@ -850,7 +850,10 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link = True, print_full_path = False, my_opt_bail_msg = ''):
+def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, follow_open_link = True, print_full_path = False, my_opt_bail_msg = ''):
+    if to_stderr:
+        old_stdout = sys.stdout
+        sys.stdout = sys.stderr
     if not os.path.exists(my_file):
         print("WARNING:", my_file, "does not exist.")
     elif follow_open_link:
@@ -870,7 +873,9 @@ def npo(my_file, my_line = -1, print_cmd = True, bail = True, follow_open_link =
     if bail:
         if my_opt_bail_msg != '':
             print(colorama.Fore.GREEN + my_opt_bail_msg + colorama.Style.RESET_ALL)
-        exit()
+        sys.exit()
+    if to_stderr:
+        sys.stdout = old_stdout
 
 open_in_notepad = notepad_open = npo
 
@@ -882,7 +887,7 @@ def open_this(bail = True):
         print("Error thrown:")
         print(e)
         if bail:
-            exit()
+            sys.exit()
 
 def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10):
     if file_line <= 0 and reject_nonpositive_line: return
@@ -899,7 +904,7 @@ add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file
 NOTE_EMPTY = 1
 BAIL_ON_EMPTY = 2
 
-def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, min_priority = 0, empty_flags = 0):
+def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, min_priority = 0, empty_flags = 0, to_stderr = True):
     files_to_post = [x for x in file_post_list if max(file_post_list[x]) >= min_priority]
     if sort_type == SORT_ALPHA_FORWARD:
         files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x))
@@ -930,7 +935,7 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
             if test_run:
                 print("Would've opened", x, "at line", file_post_list[x][m])
             else:
-                npo(x, file_post_list[x][m], bail = False, print_full_path = full_file_paths)
+                npo(x, file_post_list[x][m], bail = False, print_full_path = full_file_paths, to_stderr = to_stderr)
             count += 1
             if count < len(file_post_list):
                 time.sleep(sleep_time)
@@ -1319,4 +1324,4 @@ def follow_link(x):
 if os.path.basename(main.__file__) == "mytools.py":
     print("mytools.py is a header file. It should not be run on its own.")
     print("Try running something else with the line import i7, instead, or ? to run a test.")
-    exit()
+    sys.exit()
