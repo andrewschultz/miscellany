@@ -908,6 +908,13 @@ def weekly_compare(files_back = 1):
     mt.wm(readable, locked)
     sys.exit()
 
+def write_old_weekly_data():
+    g = glob.glob("c:/writing/daily/" + glob_string)
+    last_file = os.path.normpath(g[-1])
+    f = open(stats_file, "a")
+    f.write("#{} queries: {}\n".format(last_file, weekly_queries_this_week))
+    f.close()
+
 def weekly_new_file_cleanup(my_file):
     global weekly_queries_this_week
     default_weekly_file = "c:/writing/temp/2dy-default-start.txt"
@@ -915,9 +922,6 @@ def weekly_new_file_cleanup(my_file):
     mt.change_cfg_line(my_sections_file, 'previous_size', new_size)
     mt.change_cfg_line(my_sections_file, 'startbytes', new_size)
     mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', 0)
-    f = open(stats_file, "a")
-    f.write("#queries this past week: {}\n".format(weekly_queries_this_week))
-    f.close()
     try:
         if cmp(my_file, default_weekly_file):
             return
@@ -1126,6 +1130,7 @@ if latest_daily:
         if os.path.exists(day_done_file): found_done_file = day_done_file
     if found_done_file: sys.exit("Found {:s} in done folder. Not opening new one.")
     print("Looking back", max_days_new, "days, daily file not found.")
+    write_old_weekly_data()
     create_new_file(see_back(d, my_daily_dir, 0))
     sys.exit()
 
