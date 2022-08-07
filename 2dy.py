@@ -50,6 +50,7 @@ post_stretch_max = 10
 weekly_start_bytes = 0
 yearly_goals_array = [ ]
 previous_size = 0
+yearly_queries_this_week = 0
 weekly_queries_this_week = 0
 
 stretch_special = []
@@ -293,6 +294,7 @@ def check_yearly_pace():
         total_bytes += this_file_bytes
         print(colorama.Fore.GREEN + "Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes) + colorama.Style.RESET_ALL)
         find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
+    mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     sys.exit()
 
 def dhms(my_int):
@@ -807,6 +809,7 @@ def read_2dy_cfg():
     global yearly_goals_array
     global previous_size
     global weekly_queries_this_week
+    global yearly_queries_this_week
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -866,6 +869,8 @@ def read_2dy_cfg():
                 previous_size = int(data)
             elif prefix in ( 'weekly_queries_this_week' ):
                 weekly_queries_this_week = int(data)
+            elif prefix in ( 'yearly_queries_this_week' ):
+                yearly_queries_this_week = int(data)
             elif prefix in ( 'yearly', 'yearly_goals') :
                 if len(yearly_goals_array):
                     print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
@@ -912,7 +917,8 @@ def write_old_weekly_data():
     g = glob.glob("c:/writing/daily/" + glob_string)
     last_file = os.path.normpath(g[-1])
     f = open(stats_file, "a")
-    f.write("#{} queries: {}\n".format(last_file, weekly_queries_this_week))
+    f.write("#{} weekly queries: {}\n".format(last_file, weekly_queries_this_week))
+    f.write("#{} yearly queries: {}\n".format(last_file, yearly_queries_this_week))
     f.close()
 
 def weekly_new_file_cleanup(my_file):
@@ -922,6 +928,7 @@ def weekly_new_file_cleanup(my_file):
     mt.change_cfg_line(my_sections_file, 'previous_size', new_size)
     mt.change_cfg_line(my_sections_file, 'startbytes', new_size)
     mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', 0)
+    mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', 0)
     try:
         if cmp(my_file, default_weekly_file):
             return
