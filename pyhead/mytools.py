@@ -850,7 +850,17 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
 
 cs = ca = compare_shuffled_lines = cal = calf = compare_alphabetized_lines
 
-def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, follow_open_link = True, print_full_path = False, my_opt_bail_msg = ''):
+def line_in_file(my_file, open_at_text, start_with = True):
+    with open(my_file) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if start_with and line.startswith(open_at_text):
+                return line_count
+            elif open_at_text in line:
+                return line_count
+    print("Was unable to find the line", open_at_text, "in", my_file)
+    return -1
+
+def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, follow_open_link = True, print_full_path = False, my_opt_bail_msg = '', open_at_text = ''):
     if to_stderr:
         old_stdout = sys.stdout
         sys.stdout = sys.stderr
@@ -861,6 +871,7 @@ def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, 
         if not os.path.exists(my_file):
             print("WARNING: linked-to file", my_file, "does not exist.")
     if os.path.exists(my_file):
+        my_line = line_in_file(my_file, open_at_text)
         line_to_open = "" if my_line == -1 else " -n{}".format(my_line)
         cmd = "start \"\" {:s} \"{:s}\"{}".format(np, my_file, line_to_open)
         if print_cmd: print("Launching {:s} {} in notepad++{:s}.".format(
@@ -905,6 +916,9 @@ NOTE_EMPTY = 1
 BAIL_ON_EMPTY = 2
 
 def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, min_priority = 0, empty_flags = 0, to_stderr = True):
+    if to_stderr:
+        old_stdout = sys.stdout
+        sys.stdout = sys.stderr
     files_to_post = [x for x in file_post_list if max(file_post_list[x]) >= min_priority]
     if sort_type == SORT_ALPHA_FORWARD:
         files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x))
@@ -949,6 +963,8 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
     if bail_after:
         sys.exit()
     file_post_list.clear()
+    if to_stderr:
+        sys.stdout = old_stdout
 
 post_open = postopen = postopen_files
 
