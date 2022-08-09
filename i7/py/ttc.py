@@ -17,10 +17,13 @@ import os
 import itertools
 import colorama
 from string import ascii_lowercase
+from shutil import copy
+from filecmp import cmp
 
 rbr_globals = []
 ttc_cfg = "c:/writing/scripts/ttc.txt"
 
+alphabetize = False
 global_error_note = False
 open_after = True
 show_suggested_file = show_suggested_syntax = show_suggested_text = True
@@ -169,6 +172,74 @@ def inform_extension_file(this_file):
         return first_try
     if os.path.exists(first_try + '.i7x'):
         return first_try + '.i7x'
+
+def alphabetize_this_rbr(this_file):
+    ever_alphabetized = am_alphabetizing = False
+    alphabet_array = []
+    out_string  = ''
+    ttc_alf = "c:/writing/temp/ttc-alphabetize.txt"
+    with open(this_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
+                err_suffix = " in {} line {}. Fix before continuing.".format(this_file, line_count)
+                if line.startswith("====alphabetize on"):
+                    if am_alphabetizing:
+                        print("Double alphabetize-on", err_suffix)
+                        return
+                    ever_alphabetized = am_alphabetizing = True
+                    out_string += line
+                    continue
+                if line.startswith("====alphabetize off"):
+                    if not am_alphabetizing:
+                        print("Double alphabetize-off", err_suffix)
+                        return
+                    alphabet_array = sorted(alphabet_array)
+                    for x in alphabet_array:
+                        out_string += x
+                    out_string += line
+                    am_alphabetizing = False
+                    alphabet_array = []
+                    continue
+                print("Invalid ====alphabetize needs on or off", err_suffix)
+                continue
+            if not am_alphabetizing:
+                out_string += line
+                continue
+            if line.startswith("#"):
+                alphabet_array.append(line)
+            else:
+                try:
+                    alphabet_array[-1] += line
+                except:
+                    print("Make sure you start an alphabetized section with a comment. {} line {} did not.".format(file, line_count))
+                    return
+    if am_alphabetizing:
+        print("Forgot to set alphabetize-off in", my_file)
+        return
+    if not ever_alphabetized:
+        print("Nothing to alphabetize in", this_file)
+        return
+    f = open(ttc_alf, "w")
+    f.write(out_string)
+    f.close()
+    if cmp(this_file, ttc_alf):
+        print("No changes to", this_file)
+        return
+    if not mt.alfcomp(this_file, ttc_alf):
+        print("UH OH data was lost/corrupted in sorting.")
+        return
+    mt.wm(this_file, ttc_alf)
+    raw = input("Y to copy over.")
+    if raw.lower()[0] == 'y':
+        copy(ttc_alf, this_file)
+
+def alphabetize_my_rbrs(this_proj, prefix = 'rbr'):
+    glob_string = prefix + "-*.txt"
+    to_alph = glob.glob(glob_string)
+    for this_file in to_alph:
+        print(this_file)
+        alphabetize_this_rbr(this_file)
+    sys.exit()
 
 def get_mistakes(this_proj):
     mistake_file = i7.hdr(this_proj, "mi")
@@ -837,6 +908,8 @@ while cmd_count < len(sys.argv):
             verbose_level = 1
     elif mt.alfmatch(arg, 'ncd'):
         collapse_extra_dashes = False
+    elif arg in ( 'a', 'alf' ):
+        alphabetize = True
     elif arg in ( 'oa', 'ao' ):
         open_after = True
     elif arg in ( 'no', 'on' ):
@@ -862,6 +935,10 @@ while cmd_count < len(sys.argv):
 if my_proj not in table_specs:
     print("{} not in table_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
     print("Here is which are:", ', '.join(sorted(table_specs)))
+    sys.exit()
+
+if alphabetize:
+    alphabetize_my_rbrs(my_proj)
     sys.exit()
 
 case_list = get_cases(my_proj)

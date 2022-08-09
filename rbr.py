@@ -462,6 +462,8 @@ def get_file(fname):
     fb = os.path.basename(fname)
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
+                continue
             line_orig = line.strip()
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
