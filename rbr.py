@@ -1,5 +1,4 @@
 # rbr.py: regression brancher
-# rbr.py: regression brancher
 #
 # takes an rbr*.txt file and separates it into many reg-*
 #
@@ -72,6 +71,7 @@ strict_name_force_off = False
 wrong_check = False
 show_unchanged = False
 
+max_undo_tracking = 8
 start_line = 0
 start_command = ''
 max_flag_brackets = 0
@@ -225,12 +225,13 @@ def branch_variable_adjust(var_line, err_stub, actives):
 def apostrophe_check(line, line_count, warns):
     if line.startswith('#'):
         return False
-    apost_line = i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj])
+    apost_line = i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj], color_punc_change = True)
     if line == apost_line:
         return False
     print(warns + 1, "Possible apostrophe-to-quote change needed line", line_count)
-    print("  Before:", "!" + line.strip() + "!")
-    print("   After:", "!" + apost_line.strip() + "!")
+    print(i7.text_convert("This is a 'test.", erase_brackets = False, color_punc_change = True))
+    print("  Before:", line.strip())
+    print("   After:", apost_line.strip())
     a1 = line.split(' ')
     a2 = apost_line.split(' ')
     mv = min(len(a1), len(a2))
@@ -422,6 +423,10 @@ def proj_of(file_name):
         return ""
     return temp
 
+def bracket_ignore_next(my_line):
+    mll = my_line.lower()
+    return mll.startswith("#brackets ok") or mll.startswith("#ok brackets") or mll.startswith("#ignore next bracket") or mll.startswith("#ignore bracket")
+
 def get_file(fname):
     global ignore_next_bracket
     check_main_file_change = False
@@ -543,7 +548,7 @@ def get_file(fname):
                     else:
                         untested_ignore.remove(x)
                 continue
-            if line.startswith("#OK-APOSTROPHE") or line.startswith("#APOSTROPHE-OK"):
+            if line.startswith("#OK-APOSTROPHE") or line.startswith("#APOSTROPHE-OK") or line.startswith("#OK APOSTROPHE") or line.startswith("#APOSTROPHE OK"):
                 skip_apostrophe_check = True
                 continue
             if line.startswith("ALSO-IGNORE:") or line.startswith("ALSO_IGNORE"):
@@ -589,7 +594,7 @@ def get_file(fname):
                         print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fb))
                     to_match[a] = this_abbrev
                 continue
-            if line.startswith("#brackets ok") or line.startswith("#ignore next bracket") or line.startswith("#ignore bracket"):
+            if bracket_ignore_next(line):
                 ignore_next_bracket = True
                 continue
             if line.startswith("*") and line[1] != '*': got_any_test_name = True
@@ -657,12 +662,6 @@ def get_file(fname):
                 continue
             if re.search("^(`|=\{|@)", line):
                 line = replace_mapping(line, fname, line_count)
-            if line.startswith('#--'):
-                if line.startswith("#--stable"):
-                    check_main_file_change = True
-                if line.startswith("#--strict"):
-                    strict_name_local = True
-                continue
             if temp_diverge and not line.strip():
                 temp_diverge = False
                 for x in range(len(actives)):
@@ -724,9 +723,9 @@ def get_file(fname):
                         balance_trace.append(line[1:].strip())
                         if track_balance_undos:
                             print('TRACE:', line_count, ' / '.join(balance_trace))
-                        if not balance_error_yet and len(balance_trace) > 10:
+                        if not balance_error_yet and len(balance_trace) > max_undo_tracking:
                             balance_error_yet = True
-                            print("Net undos over 10 in balanced block line {} file {}--Inform may not be able to go that far back.".format(line_count, fname))
+                            print("Net undos over {} in balanced block line {} file {}--Inform may not be able to go that far back.".format(max_undo_tracking, line_count, fname))
                             mt.add_postopen(fname, line_count)
                 if line.startswith(">>"):
                     print("ERROR: double prompt at line", line_count, "of", fname)
@@ -1242,6 +1241,7 @@ for x in my_file_list_valid:
     get_file(x)
 
 if len(apost_changes):
+    print("FLAGGED APOSTROPHE CHANGES/SUGGESTIONS/FREQUENCY (#OK-APOSTROPHE or #APOSTROPHE-OK to allow")
     for x in sorted(apost_changes, key=apost_changes.get, reverse=True):
         add_note = '(lower-case version is in apostrophes-to-ignore)' if x.lower() in apostrophes[exe_proj] else ''
         print(x, apost_changes[x], add_note)
