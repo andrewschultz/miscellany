@@ -323,14 +323,12 @@ def post_copy(file_array, in_file):
                 print(colorama.Fore.GREEN + q, "=>", ', '.join(changed_files[q]) + colorama.Style.RESET_ALL)
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
-            changed_files.clear()
         elif len(absent_files.keys()):
             print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
             for q in absent_files.keys():
                 print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
                 for r in absent_files[q]:
                     copy(r[0], r[1])
-            absent_files.clear()
         elif len(my_file_list_valid) == 1:
             print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
@@ -423,12 +421,51 @@ def proj_of(file_name):
         return ""
     return temp
 
+# most clear difference = 58 (53 is usual) for require UPPERCASE and require trailing space
+command_requirements = 0b110101
+max_cmd_req = (1<<6) - 1
+CMD_REQUIRE_LOWERCASE = 1
+CMD_REQUIRE_UPPERCASE = 2
+CMD_REQUIRE_NOTRAILINGSPACE = 4
+CMD_REQUIRE_TRAILINGSPACE = 8
+CMD_REQUIRE_PERIOD_ZAP = 16
+CMD_REQUIRE_HYPHEN_ZAP = 32
+
+def bad_command(my_line):
+    my_line = re.sub(" *#.*", "", my_line)
+    if not my_line.strip().startswith('>'):
+        return ''
+    if command_requirements & CMD_REQUIRE_LOWERCASE:
+        if my_line != my_line.lower():
+            return "needs all lower case"
+    if command_requirements & CMD_REQUIRE_UPPERCASE:
+        if my_line != my_line.upper():
+            return "needs all upper case"
+    if command_requirements & CMD_REQUIRE_NOTRAILINGSPACE:
+        if ' >' in my_line or '> ' in my_line:
+            return "needs to zap space before/after >"
+    if command_requirements & CMD_REQUIRE_TRAILINGSPACE:
+        if '>' in my_line and '> ' not in my_line and ' >' not in my_line:
+            return "needs inserted space before/after >"
+    if command_requirements & CMD_REQUIRE_PERIOD_ZAP:
+        if '.' in my_line:
+            return "needs to zap period"
+    if command_requirements & CMD_REQUIRE_HYPHEN_ZAP:
+        if '-' in my_line:
+            return "needs to zap hyphen"
+    return ''
+
 def bracket_ignore_next(my_line):
     mll = my_line.lower()
     return mll.startswith("#brackets ok") or mll.startswith("#ok brackets") or mll.startswith("#ignore next bracket") or mll.startswith("#ignore bracket")
 
 def get_file(fname):
     global ignore_next_bracket
+    global command_requirements
+    if not os.path.isfile(fname):
+        sys.exit(in_file + " not found.")
+    if (not ignore_unsaved_changes) and mt.is_npp_modified(fname):
+        print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(os.path.basename(fname)))
     check_main_file_change = False
     got_any_test_name = False
     dupe_val = 1
@@ -959,6 +996,8 @@ def internal_postproc_stuff():
             os.system(cmd)
     else:
         print("There are postproc commands, but no files were changed. Use -fp to force postproc.")
+    changed_files.clear()
+    absent_files.clear()
 
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
@@ -1143,10 +1182,6 @@ if exe_proj:
 my_file_list_valid = []
 
 if in_file:
-    if not os.path.isfile(in_file): sys.exit(in_file + " not found.")
-    if (not ignore_unsaved_changes) and mt.is_npp_modified(my_file):
-        sys.exit("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(os.path.basename(my_file)))
-
     os.chdir(os.path.dirname(os.path.abspath(in_file)))
     mydir = os.getcwd()
     if edit_main_branch:
