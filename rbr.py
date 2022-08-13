@@ -506,7 +506,20 @@ def get_file(fname):
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
                 continue
+            if line.startswith("cmdflags="):
+                try:
+                    cmd_temp = int(re.sub(".*=", "", line).strip())
+                    if cmd_temp > max_cmd_req or cmd_temp < 0:
+                        print("WARNING CMDFLAGS should be between 0 and {} at line but is {}", max_cmd_req, line_count, cmd_temp)
+                    command_requirements = cmd_temp
+                except:
+                    print("WARNING invalid CMDFLAGS at line", line_count, line.strip())
+                continue
             line_orig = line.strip()
+            temp = bad_command(line)
+            if temp:
+                print("WARNING bad command at line {} of {}: {} {}".format(line_count, fb, line_orig, temp))
+                mt.add_postopen(fname, line_count, priority=7)
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
                 if line.startswith("==") or line.startswith("@") or line.startswith("`"):
                     if any(x.isdigit() for x in line):
