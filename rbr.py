@@ -287,9 +287,13 @@ def replace_mapping(x, my_f, my_l):
         if q != q.strip():
             print("WARNING extra space {} line {} in file-mapping.".format(my_f, my_l))
             q = q.strip()
+        if '@' in q:
+            print("WARNING {} line {} has extra @ for {} -- it is only needed at the start. I am removing it.".format(my_f, my_l, q))
+            q = q.replace('@', '')
+            mt.add_post(my_f, my_l, priority=6)
         if q not in to_match.keys():
             print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
-            mt.npo(my_f, my_l)
+            mt.add_post(my_f, my_l)
             continue
         to_append = to_match[q].replace('t', '')
         if to_append in my_matches:
@@ -502,6 +506,10 @@ def get_file(fname):
     skip_apostrophe_check = False
     need_start_command = (start_command != '')
     fb = os.path.basename(fname)
+    is_last_blank = False
+    last_line = ''
+    old_grouping = ''
+    in_grouping = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
@@ -515,7 +523,27 @@ def get_file(fname):
                 except:
                     print("WARNING invalid CMDFLAGS at line", line_count, line.strip())
                 continue
+            if line.startswith("@"):
+                if old_grouping == line[1:].strip():
+                    print("Two groupings can be merged. The second is {} at line {}".format(line[1:].strip(), line_count))
+                    mt.add_postopen(fname, line_count, priority=5)
+                in_grouping = True
+                old_grouping = line[1:].strip()
+            elif not line.strip():
+                in_grouping = False
+            elif not in_grouping:
+                old_grouping = ""
+            if last_line == '\\\\' and not line.strip():
+                print("WARNING \\\\ followed by blank line in {} at line {}.".format(fb, line_count))
+                mt.add_postopen(fname, line_count - 1, priority=3)
+            last_line = line.strip()
+            if ignore_next_bracket and not '[' in line and not ']' in line:
+                print("WARNING Extraneous OK-BRACKETS {} line {}.".format(fb, line_count - 1))
+                mt.add_postopen(fname, line_count - 1, priority=3)
             line_orig = line.strip()
+            if is_last_blank and not line_orig:
+                print("WARNING (trivial) double spacing at line {} of {}.".format(line_count, fb))
+            is_last_blank = not line_orig
             temp = bad_command(line)
             if temp:
                 print("WARNING bad command at line {} of {}: {} {}".format(line_count, fb, line_orig, temp))
@@ -537,8 +565,11 @@ def get_file(fname):
                 balance_trace = []
                 balance_start = line_count
                 continue
+            elif line.startswith("#balance undo"):
+                print("WARNING {} line {}: need double-pound sign before balance undo.".format(fb, line_count))
+                mt.add_postopen(fname, line_count, priority=7)
             if potentially_faulty_regex(line):
-                print("WARNING", fname, line_count, "may need starting slash for regex:", line_orig)
+                print("WARNING {} line {} may need starting slash for regex:{}".format(fname, line_count, line_orig))
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
                 if "#skip test checking" in line:
                     last_atted_command = ""
@@ -555,7 +586,8 @@ def get_file(fname):
                 at_section = ''
                 if balance_undos:
                     if len(balance_trace):
-                        print("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
+                        print(colorama.Fore.RED + "ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.') + colorama.Style.RESET_ALL)
+                        mt.add_postopen(fname, line_count)
                     balance_undos = False
                 if line.startswith('@@'):
                     actives = [True] * len(actives)
