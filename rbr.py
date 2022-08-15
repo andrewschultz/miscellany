@@ -710,6 +710,12 @@ def get_file(fname):
                 for tf in temp_file_array:
                     postproc_if_changed[prt_temp_loc(tf)] += cmd_to_run
                 continue
+            if line.startswith('#--'):
+                if line.startswith("#--stable"):
+                    check_main_file_change = True
+                if line.startswith("#--strict"):
+                    strict_name_local = True
+                continue
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
@@ -959,14 +965,6 @@ def get_file(fname):
             if x2 in mwrites.keys():
                 for y in mwrites[x2].keys():
                     write_monty_file(x2, y)
-    if check_main_file_change:
-        x = file_array[0]
-        xb = os.path.basename(x)
-        print("Making sure {} / {} are identical.".format(x, xb))
-        if not ignore_first_file_changes and not cmp(x, xb):
-            print("Differences found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
-            mt.wm(x, xb)
-            sys.exit()
     for x in file_array:
         f = open(x, "w")
         # modifications below to avoid extra spacing. While we could define in_header, sweeping things up with a REGEX is probably easier
@@ -975,6 +973,25 @@ def get_file(fname):
         #modified_output = re.sub("\n+\*\*", "\n**", modified_output) # get rid of spacing in the header
         f.write(modified_output)
         f.close()
+        if check_main_file_change:
+            check_main_file_change = False
+            xb = os.path.basename(x)
+            print("Since #--stable was specified, I am making sure {} is not changed. I will bail if it is.".format(xb))
+            try:
+                if not cmp(x, xb):
+                    if not ignore_first_file_changes:
+                        print("Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
+                        mt.wm(x, xb)
+                        sys.exit()
+                    else:
+                        print("Difference(s) found in main file {} but ignored.".format(xb))
+            except:
+                if not os.path.exists(x):
+                    print("I could not find {}. It should be in the temp directory. You may wish to type:".format(x))
+                    print("    copy {} {}".format(xb, x))
+                else:
+                    print("Something went wrong checking {}. You may wish to remove #--stable temporarily.".format(xb))
+                sys.exit()
         xb = os.path.basename(x)
         prt_mirror = os.path.join(i7.prt, xb)
         if not os.path.exists(xb):
