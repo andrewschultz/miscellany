@@ -77,6 +77,7 @@ start_command = ''
 max_flag_brackets = 0
 cur_flag_brackets = 0
 ignore_next_bracket = False
+ignore_wrong_before = 0
 
 quiet = False
 copy_over_post = True
@@ -510,6 +511,7 @@ def get_file(fname):
     last_line = ''
     old_grouping = ''
     in_grouping = False
+    flag_wrong_at_end = 0
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
@@ -612,9 +614,15 @@ def get_file(fname):
                 for q in temp_file_fullname_array:
                     file_output[file_array[q]] += u
                 continue
-            if wrong_check and line.startswith("WRONG"):
-                wrong_lines.append(line_count)
-                mt.add_postopen(fname, line_count, priority=6)
+            if line.startswith("WRONG"):
+                if wrong_check:
+                    if line_count > ignore_wrong_before:
+                        print(colorama.Fore.RED + "WARNING we have a WRONG currently needing replacement at line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                        mt.add_postopen(fname, line_count, priority = 6)
+                    else:
+                        print(colorama.Fore.CYAN + "WARNING we have a WRONG eventually needing replacement at line {} before the user-chosen start line {}.".format(line_count, ignore_wrong_before))
+                else:
+                    flag_wrong_at_end += 1
             if line.startswith("OK-APOSTROPHE:"):
                 l = re.sub("^.*?:", "", line)
                 if not line.strip():
@@ -1016,11 +1024,9 @@ def get_file(fname):
         file_output.pop(x)
     for x in file_output:
         print(colorama.Fore.RED + "WARNING: there may be leftover output for the file_output key {}.".format(x) + colorama.Style.RESET_ALL)
-    if len(wrong_lines) > 1:
-        if wrong_check:
-            print("{} WRONG line{} to fix: {}".format(len(wrong_lines), mt.plur(len(wrong_lines)), ", ".join([str(x) for x in wrong_lines])))
-        else:
-            print("{} WRONG line{} were found. Use -wc to track them and potentially open the first error.".format(len(wrong_lines), mt.plur(len(wrong_lines))))
+    if flag_wrong_at_end:
+       print("{} WRONG line{} {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end)
+       , mt.plur(flag_wrong_at_end, [ 'were', 'was' ])))
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
         print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
@@ -1191,10 +1197,17 @@ while count < len(sys.argv):
     elif arg == 'np': copy_over_post = False
     elif arg == 'p': copy_over_post = True
     elif arg == 'fp': force_postproc = True
-    elif arg == 'wc': wrong_check = True
+    elif arg in ( 'w', 'wc', 'cw' ):
+        wrong_check = True
+    elif arg[0] == 'w' and arg[1:].isdigit():
+        wrong_check = True
+        ignore_wrong_before = int(arg[1:])
+    elif arg[:2] in ( 'wc', 'cw' ) and arg[2:].isdigit():
+        wrong_check = True
+        ignore_wrong_before = int(arg[2:])
     elif arg[:2] == 'sl': start_line = int(arg[2:])
     elif arg[:3] == 'sc:': start_command = arg[3:].replace('-', ' ')
-    elif arg in ( 'wcn', 'nwc'): wrong_check = False
+    elif arg in ( 'wcn', 'nwc', 'nw', 'wn'): wrong_check = False
     elif arg == 'f1': ignore_first_file_changes = True
     elif arg == 'st': strict_name_force_on = True
     elif arg in ( 'nst', 'stn'): strict_name_force_off = True
