@@ -22,6 +22,7 @@ import filecmp
 import shlex
 import colorama
 import subprocess
+import pendulum
 
 from collections import defaultdict
 
@@ -505,12 +506,15 @@ for x in project_array:
     elif x + '-b' in zups or x + 'b' in zups:
         print(colorama.Fore.GREEN + "{} likely has a beta project, so this is just a nag to check you want the release and not the beta.".format(x) + colorama.Style.RESET_ALL)
 
+this_date=pendulum.now().format("YYYYMMDD")
+
 for x in zups:
     if zups[x].out_name:
         zups[x].out_name = zups[x].out_name
     else:
         zups[x].out_name = '{}.zip'.format(x)
     zups[x].out_name = zups[x].out_name.replace("%", zups[x].version)
+    zups[x].out_name = zups[x].out_name.replace("@", this_date)
 
 out_temp = os.path.join(zip_dir, "temp.zip")
 
