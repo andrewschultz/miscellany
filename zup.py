@@ -30,6 +30,8 @@ class zip_project:
     def __init__(self, name): #alphabetical
         self.vertical = False
         self.build_type = 'b' if is_beta(name) else 'r'
+        self.butler_dir = ""
+        self.butler_files = []
         self.command_post_buffer = []
         self.command_pre_buffer = []
         self.dir_copy = []
@@ -45,6 +47,7 @@ class zip_project:
         self.size_compare = defaultdict(tuple)
         self.time_compare = []
         self.version = '1'
+        self.copy_over_stamped = defaultdict(str)
 
 zups = defaultdict(zip_project)
 
@@ -66,6 +69,7 @@ verbose = False
 copy_dropbox_after = False
 extract_after = False
 extract_only = False
+force_version = False
 
 def usage(header="Usage for zup.py"):
     print(header)
@@ -80,6 +84,15 @@ def usage(header="Usage for zup.py"):
     print("x = extract after, xo/ox = extract only")
     print("specify project(s) to zip on command line")
     exit()
+
+def date_version_stamp(my_string, my_version):
+    if force_version:
+        my_string = my_string.replace("^", "%")
+    else:
+        my_string = my_string.replace("^", "@")
+    my_string = my_string.replace("%", my_version)
+    my_string = my_string.replace("@", this_date)
+    return my_string
 
 def open_zips():
     if len(project_array) == 0:
@@ -256,6 +269,12 @@ def read_zup_txt():
 
             if prefix == 'build':
                 curzip.build_type = data
+            elif prefix == 'butler':
+                ary = data.split(',')
+                if '/' not in ary[0]:
+                    ary[0] = os.path.normpath(os.path.join("c:/scripts/butler", ary[0]))
+                curzip.butler_dir = ary[0]
+                curzip.butler_files = ary[1:]
             elif prefix == 'cmdpre':
                 curzip.command_pre_buffer.append(data)
             elif prefix == 'cmdpost':
@@ -303,6 +322,9 @@ def read_zup_txt():
                 file_to_dir = dir_array[1] if len(dir_array) > 1 else ''
                 if file_to_dir == '.':
                     file_to_dir = ''
+            elif prefix in ( 'cs', 'sc' ):
+                ary = data.split("\t")
+                curzip.copy_over_stamped[ary[0]] = ary[1]
             elif prefix in ( 'fn', 'n' ):
                 if not file_base_dir:
                     flag_cfg_error(line_count, "fn file-nested has no base dir for project {} at line {}.".format(cur_zip_proj, line_count))
@@ -321,7 +343,7 @@ def read_zup_txt():
                     continue
                 wild_cards = glob.glob(os.path.join(file_base_dir, data))
                 if len(wild_cards) == 0:
-                    flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
+                    flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_base_dir, cur_zip_proj, line_count))
                     continue
                 for x in wild_cards:
                     add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.basename(x)), line_count)
@@ -445,6 +467,10 @@ while cmd_count < len(sys.argv):
         project_array.append(arg)
         cmd_count += 1
         continue
+    elif arg.startswith('w+'):
+        my_proj = project_or_beta_name(arg[2:], False)
+        project_array.append(my_proj)
+        project_array.append(my_proj + '-web')
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'b':
         build_before_zipping = True
@@ -468,6 +494,10 @@ while cmd_count < len(sys.argv):
         copy_link_only = True
     elif arg in ( 'cd', 'dc' ):
         copy_dropbox_after = True
+    elif arg in ( 'vf', 'fv' ):
+        force_version = True # force date = false
+    elif arg in ( 'df', 'fd' ):
+        force_version = False # force date = true
     elif arg == 'oce':
         open_config_on_error = True
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
@@ -513,8 +543,7 @@ for x in zups:
         zups[x].out_name = zups[x].out_name
     else:
         zups[x].out_name = '{}.zip'.format(x)
-    zups[x].out_name = zups[x].out_name.replace("%", zups[x].version)
-    zups[x].out_name = zups[x].out_name.replace("@", this_date)
+    zups[x].out_name = date_version_stamp(zups[x].out_name, zups[x].version)
 
 out_temp = os.path.join(zip_dir, "temp.zip")
 
@@ -562,10 +591,18 @@ for p in project_array:
     if not skip_temp_out:
         shutil.move(out_temp, final_zip_file)
     print(colorama.Fore.GREEN + "    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p) + colorama.Style.RESET_ALL)
+    if zups[p].butler_dir:
+        for x in zups[p].butler_files:
+            shutil.copy(x, os.path.join(zups[p].butler_dir, os.path.basename(x)))
     for x in zups[p].command_post_buffer:
         print("Running post-command", x)
         print(shlex.split(x))
         subprocess.Popen(shlex.split(x))
+    for x in zups[p].copy_over_stamped:
+        temp_to = date_version_stamp(zups[p].copy_over_stamped[x], zups[p].version)
+        print("Copying", x)
+        print("     to", temp_to)
+        shutil.copy(x, temp_to)
     if copy_dropbox_after:
         if os.path.exists(os.path.join(dropbox_bin_dir, zups[p].out_name)):
             if filecmp.cmp(final_zip_file, os.path.join(dropbox_bin_dir, zups[p].out_name)):
