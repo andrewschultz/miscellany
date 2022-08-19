@@ -89,6 +89,7 @@ extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
+file_abbrev_maps = defaultdict(lambda: defaultdict(str))
 
 matrices = defaultdict(list)
 
@@ -639,10 +640,14 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         global_error_note = True
         for m in sorted(misses):
             if show_suggested_file:
-                if this_case_list[m].expected_file:
-                    print('@' + this_case_list[m].expected_file)
+                my_abbrev = this_case_list[m].expected_file if this_case_list[m].expected_file else expected_file(m, this_proj)
+                if my_abbrev in file_abbrev_maps[my_proj]:
+                    my_abbrev = file_abbrev_maps[my_proj][my_abbrev]
                 else:
-                    print('@' + expected_file(m, this_proj))
+                    alt_abbrev = re.sub(".*-", "", my_abbrev).replace('.txt', '')
+                    if alt_abbrev in file_abbrev_maps[my_proj]:
+                        my_abbrev = file_abbrev_maps[my_proj][alt_abbrev]
+                print('@' + my_abbrev)
             print('#' + m)
             if show_suggested_syntax:
                 if this_case_list[m].command_text:
@@ -772,6 +777,11 @@ with open(ttc_cfg) as file:
             data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
         if prefix.startswith("$"):
             mt.mt_default_dict[prefix[1:]] = data
+        elif prefix == 'abbr':
+            ary = data.split(",")
+            for a in ary:
+                ary2 = a.split('=')
+                file_abbrev_maps[cur_proj][ary2[0]] = ary2[1]
         elif prefix == 'casemap':
             ary = data.split(",")
             for x in range(0, len(ary), 2):
