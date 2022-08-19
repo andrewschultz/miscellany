@@ -180,8 +180,13 @@ a2q = apostrophe_to_quotes
 def to_table(x):
     return re.sub(" *\[.*", "", line.lower().strip())
 
-def is_outline_start(x, case_insensitive = True):
-    return re.sub(outline_re, x)
+def is_outline_start(x, case_insensitive = True, return_number = False):
+    temp = re.findall(outline_re, x.lower())
+    if not temp:
+        return False
+    if return_number:
+        return outline_val_hash[temp[0]]
+    return temp[0]
 
 oline = is_outline_start
 
@@ -362,11 +367,6 @@ def i7_usage():
     print("proj_exp = main function, short name to long. dir2proj = directory to project.")
     print("mifi tefi tafi = mistake test table files")
     exit()
-
-def is_outline_start(a):
-    ovr = r'^({:s}) '.format("|".join(outline_val_hash))
-    if re.search(ovr, a.lower()): return re.sub(" .*", "", a.lower())
-    return ""
 
 def outline_indent(a):
     for x in outline_val_hash:
