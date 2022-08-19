@@ -51,13 +51,14 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], command_generator_list = []):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], command_generator_list = [], eliminate_blank_suggestions = False):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
         self.read_col_list = read_col_list
         self.print_col_list = print_col_list
         self.command_generator_list = command_generator_list
+        self.eliminate_blank_suggestions = eliminate_blank_suggestions
 
 class SimpleTestCase:
 
@@ -110,6 +111,12 @@ def tweak_text(column_entry):
         return column_entry
     qary = column_entry.split('"')
     return qary[1]
+
+def has_meaningful_content(my_string):
+    my_string = re.sub("\[.*?\]$", "", my_string).strip()
+    if not my_string.replace('-', ''):
+        return False
+    return True
 
 def renumber(entry, my_dict):
     number_to_add = 2
@@ -413,6 +420,8 @@ def get_cases(this_proj):
                             for col in my_generator.command_generator_list:
                                 temp_command += ' ' + columns[col].replace('"', '')
                             temp_command = temp_command[1:]
+                        if my_generator.eliminate_blank_suggestions and not has_meaningful_content(possible_text):
+                            continue
                         return_dict[test_case_name] = SimpleTestCase(possible_text, command_text = temp_command)
             if table_lines_undecided > 0:
                 if table_overall_undecided != len(tables_found):
@@ -784,7 +793,6 @@ with open(ttc_cfg) as file:
         elif prefix == 'custpref':
             ary = data.split('\t')
             custom_table_prefixes[ary[0]] = ary[1].split(',')
-            print(ary[0], custom_table_prefixes[ary[0]])
         elif prefix == 'extra':
             extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
         elif prefix == 'file':
@@ -853,11 +861,15 @@ with open(ttc_cfg) as file:
                 my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
                 my_command_generator_list = [ int(x) for x in ary[4].split(',') ] if len(ary) > 4 else [ ]
                 my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
+                any_negative_columns = False
                 if ary[2][0] == '$':
                     this_col_list = [ ary[2][1:] ]
                 else:
                     this_col_list = [int(x) for x in ary[2].split(',')]
-                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list)
+                    for l in this_col_list:
+                        any_negative_columns |= (l < 0)
+                    this_col_list = [abs(x) for x in this_col_list]
+                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, eliminate_blank_suggestions = any_negative_columns)
                 table_specs[cur_proj][cur_file].generators.append(this_generator)
             except:
                 print("Exception reading CFG", line_count, data)
