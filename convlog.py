@@ -15,6 +15,7 @@ last_success = defaultdict(int)
 last_success_time_taken = defaultdict(int)
 last_run = defaultdict(int)
 last_run_time_taken = defaultdict(int)
+last_run_time_float = defaultdict(int)
 last_errs = defaultdict(int)
 last_lines = defaultdict(int)
 blank = defaultdict(int)
@@ -270,6 +271,7 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
         last_run[ary[0]] = now_of(ary[2])
         timestamp[ary[0]] = round(float(ary[2]))
         last_run_time_taken[ary[0]] = "{:.2f} sec".format(float(ary[3]))
+        last_run_time_float[ary[0]] = float(ary[3])
         last_errs[ary[0]] = int(ary[1])
         this_latest_file = latest_file(ary[0])
         if ary[0] not in last_lines:
@@ -408,11 +410,11 @@ if write_errors_to_script:
             print("No commands were sent to the command file with wildcard {}, even though error files were found.".format(wild_cards))
 
 if still_times:
-    print("# time for files still left: {}".format(still_times))
+    print("# time for files still left: {:.3f}".format(still_times))
 if never_times:
-    print("# time for files never passed: {}".format(never_times))
+    print("# time for files never passed: {:.3f}".format(never_times))
 if still_times and never_times:
-    print("# total time for files still to pass: {}".format(still_times + never_times))
+    print("# total time for files still to pass: {:.3f}".format(still_times + never_times))
 
 if write_current_project:
     i7.write_latest_project(my_proj, give_success_feedback = True)
