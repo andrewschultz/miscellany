@@ -257,7 +257,7 @@ if not my_proj:
     else:
         print("Pulling project from current directory", my_proj)
 
-out_file = os.path.join(i7.prt, "logpy-{}.htm".format(my_proj))
+out_file = os.path.normpath(os.path.join(i7.prt, "logpy-{}.htm".format(my_proj)))
 
 prefix = "reg-{}".format(my_proj)
 
@@ -413,7 +413,7 @@ print("Spoiler alert: {} never passed, {} still have errors, {} passed.".format(
 
 total_errs = len(still_errs) + len(never_pass)
 
-still_times = never_times = 0
+all_times = still_times = never_times = 0
 
 if len(still_errs):
     my_max = max(still_errs, key=last_errs.get)
@@ -422,6 +422,12 @@ if len(still_errs):
 if len(never_pass):
     my_max = max(never_pass, key=last_errs.get)
     print("Most never-pass is {} with {}".format(my_max, last_errs[my_max]))
+
+all_times = sum([float_stub(last_run_time_taken[x]) for x in last_errs])
+
+still_times = sum([float_stub(last_run_time_taken[x]) for x in still_errs if not wild_cards or re.search(wild_cards, x)])
+
+never_times = sum([float_stub(last_run_time_taken[x]) for x in never_pass if not wild_cards or re.search(wild_cards, x)])
 
 if write_errors_to_script:
     if total_errs == 0:
@@ -435,13 +441,11 @@ if write_errors_to_script:
             if not wild_cards or re.search(wild_cards, x):
                 f.write("r1a {}\n".format(x))
                 total_commands += 1
-                still_times += float_stub(last_run_time_taken[x])
         f.write("##################still has errors above, never passed below\n")
         for x in never_pass:
             if not wild_cards or re.search(wild_cards, x):
                 f.write("r1a {}\n".format(x))
                 total_commands += 1
-                never_times += float_stub(last_run_time_taken[x])
         if still_times:
             f.write("# time for files still left: {}\n".format(still_times))
         if never_times:
@@ -459,6 +463,8 @@ if never_times:
     print("# time for files never passed: {:.3f}".format(never_times))
 if still_times and never_times:
     print("# total time for files still to pass: {:.3f}".format(still_times + never_times))
+if all_times:
+    print("# time for all files: {:.3f}".format(all_times))
 
 if read_subproj_times and my_proj in subconfigs:
     my_sub_times = defaultdict(float)
@@ -477,6 +483,7 @@ if len(never_pass) or len(still_errs) or (force_open):
     os.system(os.path.normpath(out_file))
 else:
     print(colorama.Fore.GREEN + "Not opening the log file since everything succeeded!" + colorama.Style.RESET_ALL)
+    print(colorama.Fore.GREEN + "To do so, use the -f flag or directly open {}".format(out_file) + colorama.Style.RESET_ALL)
 
 #g = glob.glob("c:/games/inform/prt/reg-{}-*.txt".format(my_proj))
 
