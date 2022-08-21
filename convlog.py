@@ -24,11 +24,15 @@ mod_link = defaultdict(str)
 frame_link = defaultdict(str)
 timestamp = defaultdict(int)
 orphaned_files = defaultdict(int)
+subconfigs = defaultdict(list)
+
+my_cfg = "c:/writing/scripts/convlog.txt"
 
 extra_data_file_flags = 3
 
 wild_cards = ''
 
+read_subproj_times = True
 force_frame_rewrite = False
 write_errors_to_script = False
 write_current_project = False
@@ -63,6 +67,26 @@ def usage(header = 'usage'):
     print("fr = force frame rewrite, f = force open when all successful")
     print("s# = sort type, most recent=0, most bugs=1, total time=2, bugs per second=3")
     sys.exit()
+
+def read_subproj_configs():
+    with open(my_cfg) as file:
+        for (line_count, line) in enumerate(file, 1):
+            if line.startswith("#"):
+                continue
+            if line.startswith(";"):
+                break
+            if line.count('=') != 1:
+                print("Bad line must have proj=CSVs {}".format(line_count))
+                print("    {}".format(line.strip()))
+            ary0 = line.strip().lower().split('=')
+            subconfigs[ary0[0]] = ary0[1].split(',')
+
+def hyphen_strip(x):
+    if x[-1] == '-':
+        x = x[:-1]
+    if x[0] == '-':
+        x = x[1:]
+    return x
 
 def lines_of(my_file):
     try:
@@ -200,6 +224,8 @@ while cmd_count < len(sys.argv):
         force_open = True
     elif arg in ( 'fr', 'rf' ):
         force_frame_rewrite = True
+    elif arg in ( 'st', 'st' ):
+        read_subproj_times = True
     elif arg == '?':
         usage()
     else:
@@ -210,6 +236,8 @@ if delete_array:
     zap_files(delete_array)
     print("Deleting files causes a bail before we read/export to HTML.")
     sys.exit()
+
+read_subproj_configs()
 
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
@@ -415,6 +443,13 @@ if never_times:
     print("# time for files never passed: {:.3f}".format(never_times))
 if still_times and never_times:
     print("# total time for files still to pass: {:.3f}".format(still_times + never_times))
+
+if read_subproj_times and my_proj in subconfigs:
+    my_sub_times = defaultdict(float)
+    for m in subconfigs[my_proj]:
+        my_sub_times[m] = sum([float_stub(last_run_time_taken[x]) for x in last_errs if m in x])
+    for m in sorted(subconfigs[my_proj], key=my_sub_times.get):
+        print("{} wildcard {} total time {:.2f}".format(my_proj, hyphen_strip(m), my_sub_times[m]))
 
 if write_current_project:
     i7.write_latest_project(my_proj, give_success_feedback = True)
