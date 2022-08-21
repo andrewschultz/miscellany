@@ -190,7 +190,12 @@ while cmd_count < len(sys.argv):
     if temp_proj:
         my_proj = temp_proj
     elif arg[:2] == 'd=':
-        delete_array = arg[2:].split(',')
+        if '/' in arg:
+            a0 = arg.split('/')
+            a1 = a0[1].split(',')
+            delete_array = [a0[0] + x for x in a1]
+        else:
+            delete_array = arg[2:].split(',')
     elif arg == 'w':
         write_errors_to_script = True
     elif arg.startswith("w="):
@@ -274,6 +279,7 @@ if save_old_copy:
         print("Could not find {} to back up.".format(out_file))
 
 with open(os.path.join(i7.prt, runs_logfile)) as file:
+    to_delete = []
     for (line_count, line) in enumerate (file, 1):
         if not line.startswith(prefix):
             continue
@@ -282,11 +288,13 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
             original_file = os.path.join(original_dir, ary[0])
             if not os.path.exists(original_file):
                 if original_file not in extra_data_files:
+                    print(original_file, "doesn't exist")
+                    print("Not in", extra_data_files, "either")
                     extra_data_files.append(original_file)
                     if extra_data_file_flags | EXTRA_DATA_WARN:
                         orphan_count += 1
                         print("Found extra-data file (data, but not in original source directory) {} line {} of {}: {}".format(orphan_count, line_count, runs_logfile, ary[0]))
-                        del_cmd += "    convlog.py d={}\n".format(ary[0])
+                        to_delete.append(ary[0])
                         prt_file = os.path.normpath(os.path.join(i7.prt, ary[0]))
                         if os.path.exists(prt_file):
                             print("You may also wish to erase {}".format(prt_file))
@@ -306,6 +314,12 @@ with open(os.path.join(i7.prt, runs_logfile)) as file:
             last_lines[ary[0]] = lines_of(this_latest_file)
         if not my_binary:
             my_binary = find_binary_in(ary[0])
+
+for a in to_delete:
+    print("    convlog.py d={}".format(a))
+if len(to_delete):
+    print("    convlog.py d={}".format(','.join(to_delete)))
+
 
 never_pass = [x for x in last_errs if x not in last_success]
 still_errs = [x for x in last_errs if x in last_success and last_run[x] > last_success[x]]
