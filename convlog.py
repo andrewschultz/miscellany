@@ -42,6 +42,17 @@ logfile_temp = os.path.join(i7.prt, 'logfile-temp.txt')
 my_binary = ''
 my_proj = ''
 
+SORT_MOST_RECENT = SORT_DEFAULT = 0
+SORT_TOTAL_BUGS = 1
+SORT_TOTAL_TIME = 2
+SORT_BUGS_PER_SECOND = 3
+SORT_MAX = 3
+
+sort_types = [ 'By most recent run', 'By total bugs', 'By total time', 'By bugs per second' ]
+
+my_sort_option = SORT_DEFAULT
+my_reverse_order = True
+
 def usage(header = 'usage'):
     print('=' * 20 + header + '=' * 20)
     print("w = write to file")
@@ -49,6 +60,7 @@ def usage(header = 'usage'):
     print("wp/pw = write current project to i7 data file")
     print("o# = orphaned file flags, 1=warn 2=don't process, oa=all")
     print("fr = force frame rewrite, f = force open when all successful")
+    print("s# = sort type, most recent=0, most bugs=1, total time=2, bugs per second=3")
     sys.exit()
 
 def lines_of(my_file):
@@ -159,6 +171,17 @@ while cmd_count < len(sys.argv):
     elif arg.startswith("w="):
         write_errors_to_script = True
         wild_cards = arg[2:]
+    elif arg == 's' and valid_num:
+        if num > SORT_MAX:
+            print("Can only have a sort order of up to", SORT_MAX)
+            sys.exit()
+        my_sort_option = num
+    elif arg == 'sn' and valid_num:
+        if num > SORT_MAX:
+            print("Can only have a sort order of up to", SORT_MAX)
+            sys.exit()
+        my_sort_option = num
+        my_reverse_order = False
     elif arg in ( 'so', 'os' ):
         save_old_copy = True
     elif mt.alfmatch('nso', arg):
@@ -287,25 +310,42 @@ f = open(out_file, "w")
 
 f.write("<html><title>LOG RUNS FOR {}</title>\n<body>\n".format(my_proj))
 
+f.write("<center><font size=+4>{}, 1={} priority</font></center>\n".format(sort_types[my_sort_option], 'highest' if my_reverse_order else 'lowest'))
+
+def last_run_filtered(my_dict, sort_option = SORT_DEFAULT, reverse_order = True):
+    sorted_list = list(my_dict)
+    sorted_list = sorted(sorted_list, key=lambda x: last_errs[x], reverse=reverse_order) # this default is in, in case a try/except falls through
+    if sort_option == SORT_MOST_RECENT:
+        sorted_list = sorted(sorted_list, key=lambda x: last_run[x], reverse=reverse_order)
+    elif sort_option == SORT_TOTAL_BUGS:
+        sorted_list = sorted(sorted_list, key=lambda x: last_errs[x], reverse=reverse_order)
+    elif sort_option == SORT_TOTAL_TIME:
+        for x in sorted_list:
+            print(x, last_run_time_taken[x])
+        print("!")
+        sorted_list = sorted(sorted_list, key=lambda x: (last_run_time_float[x]), reverse=reverse_order)
+        for x in sorted_list:
+            print(x, last_run_time_taken[x])
+    elif sort_option == SORT_BUGS_PER_SECOND:
+        try:
+            sorted_list = sorted(sorted_list, key=lambda x: last_errs[x] / float(last_run_time_float[x]), reverse=reverse_order)
+        except:
+            pass
+    temp_dict = defaultdict(str)
+    for x in my_dict:
+        temp_dict[x] = last_run[x] + " ({})".format(sorted_list.index(x) + 1)
+    return temp_dict
+
 if len(never_pass) == 0:
     f.write("<center><font size=+3>All files have passed at one time or another.</font></center>\n")
 else:
     center_write("Never passed", len(never_pass))
-    html_table_make(last_run_filtered(never_pass), [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link, frame_link], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified', 'Frame' ])
-
-by_time = defaultdict(str)
-
-def last_run_filtered(my_dict):
-    time_sort = sorted([last_run[x] for x in my_dict], reverse=True)
-    temp_dict = defaultdict(str)
-    for x in my_dict:
-        temp_dict[x] = last_run[x] + " ({})".format(time_sort.index(last_run[x]) + 1)
-    return temp_dict
+    html_table_make(last_run_filtered(never_pass, my_sort_option), [ raw_link, last_run, last_errs, last_run_time_taken, last_lines, mod_link, frame_link], header_array = [ 'Name', 'Original', 'Last time run', 'Last errs', 'Last test run length', 'Last lines', 'Modified', 'Frame' ])
 
 center_write("Still errors", len(still_errs))
-html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run_filtered(still_errs), last_run_time_taken, last_lines, last_errs, mod_link, frame_link ])
+html_table_make(still_errs, [ raw_link, last_success, last_success_time_taken, last_run_filtered(still_errs, my_sort_option), last_run_time_taken, last_lines, last_errs, mod_link, frame_link ])
 center_write("Passing", len(passed))
-html_table_make(passed, [ raw_link, last_run_filtered(passed), last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
+html_table_make(passed, [ raw_link, last_run_filtered(passed, my_sort_option), last_run_time_taken, last_lines, mod_link ], header_array = [ 'Name', 'Original', 'Last time of day', 'Last test run length', 'Last lines', 'Modified' ])
 
 if len(extra_data_files):
     f.write("\n<font size=+4>ORPHANED FILES ({}):</font>\n<ul>\n".format(len(extra_data_files)))
