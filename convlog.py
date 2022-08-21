@@ -189,6 +189,8 @@ while cmd_count < len(sys.argv):
     temp_proj = i7.main_abb(arg)
     if temp_proj:
         my_proj = temp_proj
+    elif arg.startswith('scramble'):
+        my_proj = arg
     elif arg[:2] == 'd=':
         if '/' in arg:
             a0 = arg.split('/')
@@ -262,7 +264,7 @@ prefix = "reg-{}".format(my_proj)
 os.chdir(i7.prt)
 
 extra_data_files = []
-original_dir = i7.proj2dir(my_proj)
+original_dir = i7.proj2dir(my_proj, optional_prefix='scramble-')
 
 EXTRA_DATA_WARN = 1
 EXTRA_DATA_SKIPCHECKING = 2
