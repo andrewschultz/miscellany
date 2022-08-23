@@ -191,10 +191,7 @@ def is_outline_start(x, case_insensitive = True, return_number = False):
 oline = is_outline_start
 
 def zap_end_brax(x):
-    x = x.strip()
-    while x.endswith("]"):
-        x = re.sub(" *\[.*?\]", "", x)
-    return x
+    return re.sub("( *\[.*?\])+", "", x.strip())
 
 def first_table_text(my_line, include_quotes = False):
     ary = my_line.strip().split("\t")
@@ -817,7 +814,9 @@ def inform_short_name(my_file, acknowledge_dailies = True):
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True):
+def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True, optional_prefix = ''):
+    if x.startswith(optional_prefix):
+        x = x.replace(optional_prefix, '')
     if default_subdir and not my_subdir:
         if materials:
             my_subdir = "Release"
