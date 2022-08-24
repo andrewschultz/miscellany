@@ -67,6 +67,7 @@ force_stats = False
 show_all_goals = False
 unlimited_stretch_goals = False
 print_yearly_pace = False
+see_one_year_ago = True
 see_silly_max = False
 
 daily = "c:/writing/daily"
@@ -288,12 +289,18 @@ def check_yearly_pace():
     find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
+    g0 = glob.glob("{}*.txt".format(last_year))
     if g[-1] < this_years_last_file:
-        g0 = glob.glob("{}*.txt".format(last_year))
         this_file_bytes = os.stat(g0[-1]).st_size
         total_bytes += this_file_bytes
         print(colorama.Fore.GREEN + "Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes) + colorama.Style.RESET_ALL)
         find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
+    if see_one_year_ago:
+        g2 = [y for y in (g0 + g) if y >= pnow.subtract(years=1).format("YYYYMMDD")]
+        print(g2)
+        total_bytes = sum([os.stat(x).st_size for x in g2])
+        print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
+        print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     sys.exit()
 
