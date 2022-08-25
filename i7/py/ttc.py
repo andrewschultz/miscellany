@@ -62,7 +62,7 @@ class TestCaseGenerator:
 
 class SimpleTestCase:
 
-    def __init__(self, suggested_text = 'None', command_text = '', condition_text = '', expected_file = '', first_file_found = '<NONE>', first_line_found = 0):
+    def __init__(self, suggested_text = 'No suggested text', command_text = '', condition_text = '', expected_file = '', first_file_found = '<NONE>', first_line_found = 0):
         self.found_yet = False
         self.suggested_text = suggested_text
         self.command_text = command_text
@@ -175,7 +175,7 @@ def starts_with_text(my_line, my_file):
 
 def check_regex_in_absolute(my_data, my_line_count):
     if '*' in my_data or '^' in my_data or '$' in my_data:
-        print("")
+        print("Possible regex appears in absolute definition {} at line {}.".format(my_data, my_line_count))
 
 def check_suspicious_regex(my_regex, my_line_count):
     if '-*' in my_regex:
@@ -372,8 +372,12 @@ def get_cases(this_proj):
                         if x == -1:
                             subcase += '-{}'.format(table_line_count)
                         else:
-                            if columns[x] == 'a rule' or columns[x] == 'a thing':
-                                columns[x] = '--'
+                            try:
+                                if columns[x] == 'a rule' or columns[x] == 'a thing':
+                                    columns[x] = '--'
+                            except:
+                                print("Too few columns", line_count, line.strip(), fb, "missing column", x)
+                                sys.exit()
                             columns[x] = columns[x].replace('|', '-')
                             try:
                                 if columns[x].startswith('"'):
@@ -702,6 +706,9 @@ def verify_case_placement(this_proj):
         successful = 0
         tests_in_file = 0
         fb = os.path.basename(file_name)
+        if not os.path.exists(fb):
+            print("Likely stale link for", fb, "so skipping.")
+            continue
         with open(file_name) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not valid_ttc(line):
