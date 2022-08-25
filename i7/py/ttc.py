@@ -84,6 +84,14 @@ class TablePicker:
         self.okay_duplicate_regexes = []
         self.absolute_string = []
 
+class MatrixSpecs:
+
+    def __init__(self, matrix = [], out_file = '<FILE>', out_verb = 'FILL IN VERB', out_text = 'FILL IN TEXT'):
+        self.matrix = matrix
+        self.out_file = out_file
+        self.out_verb = out_verb
+        self.out_text = out_text
+
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
@@ -91,7 +99,7 @@ test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 file_abbrev_maps = defaultdict(lambda: defaultdict(str))
 
-matrices = defaultdict(list)
+test_case_matrices = defaultdict(list)
 
 verbose_level = 0
 
@@ -281,13 +289,14 @@ def get_cases(this_proj):
     table_line_count = 0
     any_dupes_yet = False
     dupe_so_far = 0
-    for matrix in matrices[this_proj]:
-        mult_matrix = matrix[0].split(",")
-        for x in range(1, len(matrix)):
-            mult_matrix = list(itertools.product(mult_matrix, [a.strip() for a in matrix[x].split(',')]))
+    for this_matrix in test_case_matrices[this_proj]:
+        main_matrix = this_matrix.matrix
+        mult_matrix = main_matrix[0].split(",")
+        for x in range(1, len(main_matrix)):
+            mult_matrix = list(itertools.product(mult_matrix, [a.strip() for a in main_matrix[x].split(',')]))
         for f in mult_matrix:
             f0 = 'testcase-' + '-'.join(f)
-            return_dict[f0] = SimpleTestCase("WHAT WE EXPECT FROM " + f0)
+            return_dict[f0] = SimpleTestCase(command_text = this_matrix.out_verb, expected_file = this_matrix.out_file, suggested_text=this_matrix.out_text)
     for this_file in table_specs[this_proj]:
         if verbose_level > 0:
             print("Reading file", this_file, "for test cases...")
@@ -839,7 +848,19 @@ with open(ttc_cfg) as file:
             else:
                 table_specs[cur_proj][cur_file].ignore_wild.append(data)
         elif prefix == 'matrix':
-            matrices[cur_proj].append(data.split("\t"))
+            temp_in_ary = data.split("\t")
+            temp_out_array = []
+            temp_out_file = temp_verb = temp_test_text = ''
+            for a in temp_in_ary:
+                if a.startswith('f=') or a.startswith('o='):
+                    temp_out_file = a[2:]
+                elif a.startswith('v='):
+                    temp_verb = a[2:]
+                elif a.startswith('t='):
+                    temp_test_text = a[2:]
+                else:
+                    temp_out_array.append(a)
+            test_case_matrices[cur_proj].append(MatrixSpecs(matrix = temp_out_array, out_file = temp_out_file, out_verb = temp_verb, out_text = temp_test_text))
         elif prefix == 'okdup':
             ary = data.split(",")
             if not cur_file:
