@@ -192,7 +192,7 @@ for elem in e.iter('File'):
     if q in slink:
         link_warnings += 1
         print("LINK WARNING: {} file and symbolic link both in notepad:".format(link_warnings))
-        print(t, '=>', q)
+        print(slink[q], '=>', q)
     slink[q].append(t.lower())
     #print(elem.get('filename'))
 

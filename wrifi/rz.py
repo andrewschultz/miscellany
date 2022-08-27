@@ -25,7 +25,7 @@ from_local = to_local = False
 
 cmd_count = 1
 
-def usage():
+def usage(header = "=" * 20 + "usage" + "=" * 20):
     print("a appends to the output file. Otherwise, we overwrite it.")
     print("b backs up, nb/bn disables backup. Default is backup.")
     print("c uses cache file already present, shortcircuiting other options.")
@@ -146,6 +146,7 @@ while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'rz':
         print("Ignoring RZ argument # {}".format(cmd_count))
+        cmd_count += 1
         continue
     if arg.startswith('rz'):
         print("Stripping RZ from argument {} to {} as you probably forgot to execute a full command.".format(arg, arg[2:]))
@@ -191,7 +192,7 @@ while cmd_count < len(sys.argv):
     elif arg == '?':
         usage()
     elif len(arg) == 1:
-        usage("Bad argument {}".format(arg))
+        usage(header = "Bad argument {}".format(arg))
     else:
         words_to_rhyme.append(arg)
     cmd_count += 1

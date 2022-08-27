@@ -296,8 +296,7 @@ def check_yearly_pace():
         print(colorama.Fore.GREEN + "Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes) + colorama.Style.RESET_ALL)
         find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     if see_one_year_ago:
-        g2 = [y for y in (g0 + g) if y >= pnow.subtract(years=1).format("YYYYMMDD")]
-        print(g2)
+        g2 = [y for y in (g0 + g) if y >= pnow.subtract(days=371).format("YYYYMMDD")]
         total_bytes = sum([os.stat(x).st_size for x in g2])
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
