@@ -100,10 +100,19 @@ def rbr_scramble(my_file, max_shuffles = 120):
         print("Fix errors before shuffling. We want to make sure what's meant to be shuffled, is.")
         return
     permutation_array = list(controlled_permutations_of(overall_index, max_shuffles))
-    for x in permutation_array:
-        x2 = [str(a) for a in x]
-        new_file = my_file.replace('reg-', 'reg-scramble{}-'.format(''.join(x2)))
+    for this_perm in permutation_array:
+        x2 = [str(a) for a in this_perm]
+        file_array = my_file.split('-')
+        file_array.insert(1, 'scramble')
+        file_array.insert(3, ''.join(x2))
+        new_file = '-'.join(file_array)
         print(new_file)
+        f = open(new_file, "w")
+        for x in range(0, len(shuffles)):
+            f.write(fixed[x])
+            f.write(shuffles[this_perm[x]])
+        f.write(fixed[-1])
+        f.close()
 
 def rbr_scramble_all(glob_str):
     my_glob = glob.glob(glob_str)
