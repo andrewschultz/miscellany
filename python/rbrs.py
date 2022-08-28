@@ -67,7 +67,14 @@ def rbr_scramble(my_file, max_shuffles = 120):
     bail_before_shuffle = False
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
-            if line.startswith("##RBRSHUFFLESTART="):
+            if not line.startswith("##RBRS-"):
+                if in_fixed:
+                    fixed[overall_index] += line
+                else:
+                    shuffles[overall_index] += line
+                continue
+            (prefix, data) = mt.cfg_data_split(line.strip(), lowercase_prefix = False)
+            if prefix == '##RBRS-SHUFFLESTART':
                 if not in_fixed:
                     print("WARNING line", line_count, "tries to SHUFFLESTART in a shuffle. Bailing.")
                     bail_before_shuffle = True
@@ -81,8 +88,7 @@ def rbr_scramble(my_file, max_shuffles = 120):
                     bail_before_shuffle = True
                 in_fixed = False
                 shuffles.append('')
-                continue
-            if line.startswith("##RBRSHUFFLEEND="):
+            elif prefix == '##RBRS-SHUFFLEEND':
                 if in_fixed:
                     print("WARNING line", line_count, "tries to SHUFFLEEND outside a shuffle. Bailing.")
                     bail_before_shuffle = True
@@ -97,11 +103,14 @@ def rbr_scramble(my_file, max_shuffles = 120):
                 fixed.append('')
                 overall_index += 1
                 in_fixed = True
-                continue
-            if in_fixed:
-                fixed[overall_index] += line
+            elif prefix == '##RBRS-SHUFFLECONDITION':
+                if in_fixed:
+                    print("WARNING line", line_count, "tries to SHUFFLECONDITION outside a shuffle. Bailing.")
+                    bail_before_shuffle = True
+                else:
+                    shuffles[overall_index] += line
             else:
-                shuffles[overall_index] += line
+                print("WARNING unrecognized rbrs- prefix line {} = {}".format(line_count, prefix))
     if overall_index < 2:
         print("WARNING overall index was 0, so we cannot test permutations.")
         bail_before_shuffle = True
