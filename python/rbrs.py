@@ -59,6 +59,35 @@ def constraints_of(my_file):
         print("WARNING there is no constraints string in", my_file)
     return rbr_constraints_string
 
+def should_print(my_ary, my_permutation):
+    for a in my_ary:
+        if '>' in a:
+            a2 = a.split(">")
+            if my_permutation.index(int(a2[0])) < my_permutation.index(int(a2[1])):
+                return False
+        elif '<' in a:
+            a2 = a.split("<")
+            if my_permutation.index(int(a2[0])) > my_permutation.index(int(a2[1])):
+                return False
+    return True
+
+def modified_output(my_raw_text, my_permutation):
+    return_string = ''
+    text_array = my_raw_text.split("\n")
+    this_line_out = True
+    for t in text_array:
+        if t.startswith("##RBRS-SHUFFLECONDITION="):
+            t_data = re.sub("^.*?=", "", t)
+            if t_data == '!':
+                this_line_out = not this_line_out
+            else:
+                ary = t_data.split(",")
+                this_line_out = should_print(ary, my_permutation)
+            continue
+        if this_line_out:
+            return_string += t + "\n"
+    return return_string
+
 def rbr_scramble(my_file, max_shuffles = 120):
     fixed = [ '' ]
     shuffles = [ ]
@@ -127,11 +156,12 @@ def rbr_scramble(my_file, max_shuffles = 120):
         file_array.insert(1, 'scramble')
         file_array.insert(3, ''.join(x2))
         new_file = '-'.join(file_array)
-        print(new_file)
+        print("Writing", new_file)
+        file_string = ''
         f = open(new_file, "w")
         for x in range(0, len(shuffles)):
             f.write(fixed[x])
-            f.write(shuffles[this_perm[x]])
+            f.write(modified_output(shuffles[this_perm[x]], this_perm))
         f.write(fixed[-1])
         f.close()
     if only_one_file:
