@@ -8,6 +8,18 @@ import re
 import sys
 from itertools import permutations
 
+import mytools as mt
+
+only_one_file = True
+
+def usage(my_arg = '')
+    print("Bad argument", my_arg)
+    print('=' * 50)
+    print()
+    print("Possible arguments:")
+    print("a = all files, o = only one")
+    sys.exit()
+
 def proper_constraints(my_permutation, constraints_array):
     for c in constraints_array:
         tries = [int(x) for x in re.split('[<>]', c)]
@@ -113,11 +125,25 @@ def rbr_scramble(my_file, max_shuffles = 120):
             f.write(shuffles[this_perm[x]])
         f.write(fixed[-1])
         f.close()
+    if only_one_file:
+        sys.exit()
 
 def rbr_scramble_all(glob_str):
     my_glob = glob.glob(glob_str)
     for g in my_glob:
         rbr_scramble(os.path.basename(g))
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'a':
+        only_one_file = False
+    elif arg == 'o':
+        only_one_file = True
+    else:
+        usage(arg)
+    cmd_count += 1
 
 my_constraints = constraints_of("rbr-lljj-thru.txt")
 
