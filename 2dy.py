@@ -69,6 +69,7 @@ unlimited_stretch_goals = False
 print_yearly_pace = False
 see_one_year_ago = True
 see_silly_max = False
+quick_compare = False
 
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
@@ -180,20 +181,13 @@ def date_match(line_1, line_2):
         sys.exit()
     return d1[0] == d2[0] and d1[1][:10] == d2[1][:10] # we may need to tighten this up later e.g. x.replace('-', '')[:8], but the dates have dashes for now
 
-def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False):
+def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, quick_compare = False):
     os.chdir(my_dir)
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
         this_file = os.path.basename(g[file_index])
     my_size = os.stat(this_file).st_size
     size_delta = my_size - previous_size
-
-    header_color = num_to_text_color(size_delta, goals_and_stretch[0] / 2) # checking every half hour should be a reasonable goal
-
-    mt.center(header_color + "Size delta from last try: {} = {} - {}.".format(size_delta, my_size, previous_size) + colorama.Style.RESET_ALL)
-
-    mt.change_cfg_line(my_sections_file, 'previous_size', my_size)
-    mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', weekly_queries_this_week + 1)
 
     os.chdir(my_dir)
     f = open(stats_file, "r")
@@ -202,6 +196,23 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     ary = raw_stat_lines[-1].split("\t")
     last_size = int(ary[-1])
+
+    if quick_compare:
+        my_thou = my_size // 1000
+        last_thou = last_size // 1000
+        header_color = colorama.Fore.GREEN if my_thou > last_thou else colorama.Fore.RED
+        print(header_color + "        Thousands quick-delta: {} vs. {}.".format(my_thou, last_thou) + colorama.Style.RESET_ALL)
+        print(colorama.Fore.YELLOW + "        Overall delta: {} vs. {}.".format(my_size, last_size) + colorama.Style.RESET_ALL)
+        if bail:
+            sys.exit()
+        return
+
+    header_color = num_to_text_color(size_delta, goals_and_stretch[0] / 2) # checking every half hour should be a reasonable goal
+
+    mt.center(header_color + "Size delta from last try: {} - {} = {}.".format(my_size, size_delta, previous_size) + colorama.Style.RESET_ALL)
+
+    mt.change_cfg_line(my_sections_file, 'previous_size', my_size)
+    mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', weekly_queries_this_week + 1)
 
     todays_points = [ x for x in raw_stat_lines if date_match(x, raw_stat_lines[-1]) ]
     todays_min = int(todays_points[0].split("\t")[2])
@@ -1096,6 +1107,8 @@ while cmd_count < len(sys.argv):
         stretch_special.extend(poss_thousands_list(rawarg[3:]))
         stretch_special = sorted(stretch_special)
     elif arg == 'ss': stat_sort()
+    elif arg == 'qc':
+        compare_thousands(quick_compare = True)
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
