@@ -96,7 +96,7 @@ np = '"{}"'.format(npnq)
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
 
-def string_expand(my_string, my_expand_dictionary = mt_default_dict, force_lower = False):
+def string_expand(my_string, my_expand_dictionary = mt_default_dict, force_lower = True):
     if '$' not in my_string:
         return my_string
     full_join = "|".join(my_expand_dictionary)
@@ -871,7 +871,8 @@ def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, 
         if not os.path.exists(my_file):
             print("WARNING: linked-to file", my_file, "does not exist.")
     if os.path.exists(my_file):
-        my_line = line_in_file(my_file, open_at_text)
+        if open_at_text:
+            my_line = line_in_file(my_file, open_at_text)
         line_to_open = "" if my_line == -1 else " -n{}".format(my_line)
         cmd = "start \"\" {:s} \"{:s}\"{}".format(np, my_file, line_to_open)
         if print_cmd: print("Launching {:s} {} in notepad++{:s}.".format(
@@ -900,7 +901,7 @@ def open_this(bail = True):
         if bail:
             sys.exit()
 
-def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10):
+def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10, note_open_try = True):
     if file_line <= 0 and reject_nonpositive_line: return
     if file_name in file_post_list:
         try:
