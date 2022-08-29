@@ -916,7 +916,7 @@ add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file
 NOTE_EMPTY = 1
 BAIL_ON_EMPTY = 2
 
-def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, min_priority = 0, empty_flags = 0, to_stderr = True):
+def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, sort_by_max_priority = False, min_priority = 0, empty_flags = 0, to_stderr = True):
     if to_stderr:
         old_stdout = sys.stdout
         sys.stdout = sys.stderr
@@ -925,6 +925,8 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
         files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x))
     elif sort_type == SORT_ALPHA_BACKWARD:
         files_to_post = sorted(files_to_post, key=lambda x:os.path.basename(x), reverse = True)
+    if sort_by_max_priority:
+        files_to_post = sorted(files_to_post, key=lambda x:-max(file_post_list[x]))
     if len(file_post_list):
         got_yet = defaultdict(bool)
         l = len(files_to_post)
