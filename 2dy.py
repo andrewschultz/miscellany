@@ -203,6 +203,13 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         header_color = colorama.Fore.GREEN if my_thou > last_thou else colorama.Fore.RED
         print(header_color + "        Thousands quick-delta: {} vs. {}.".format(my_thou, last_thou) + colorama.Style.RESET_ALL)
         print(colorama.Fore.YELLOW + "        Overall delta: {} vs. {}.".format(my_size, last_size) + colorama.Style.RESET_ALL)
+        if my_thou <= last_thou:
+            right_now = pendulum.now()
+            bytes_to_go = (last_thou + 1) * 1000 - my_size
+            now_mod = right_now.subtract(minutes = 3)
+            time_goal = now_mod.set(minute=3, second=0).add(hours=1)
+            second_delta = (time_goal - now_mod).in_seconds()
+            print(colorama.Fore.CYAN + "        To hit the next thousands plateau: {} in {} seconds, {:.2f} per second and {:.2f} per minute.".format(bytes_to_go, second_delta, bytes_to_go / second_delta, 60 * bytes_to_go / second_delta) + colorama.Style.RESET_ALL)
         if bail:
             sys.exit()
         return
