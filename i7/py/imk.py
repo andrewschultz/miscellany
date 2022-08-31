@@ -62,6 +62,16 @@ while count < len(sys.argv):
             to_create = sys.argv[1].split(',')
     count += 1
 
+this_proj = i7.dir2proj()
+
+if len(to_create) == 1:
+    intended_out = os.path.exists(i7.hdr(this_proj, to_create[1]))
+    if os.path.exists(intended_out):
+        sys.exit("The intended output file already exists, and besides, you forgot to specify the project, too. Add a project of {}.".format(i7.dir2proj(to_abbrev = True)))
+    if intended_out:
+        sys.exit("Creating a new include file is a rare enough occurrence, we want to specify the project. The implicit one from this directory is {}.".format(i7.dir2proj(to_abbrev = True)))
+    sys.exit("Could not find a valid project/header combination. Bailing.")
+
 if len(to_create) < 2 or len(to_create) > 3:
     sys.exit("You need to specify project, header, (optional other project directed to).")
 
@@ -121,4 +131,9 @@ except:
     print("Run this command from a prompt with administrative rights:")
     print(link_command)
 
-if open_post_conversion: i7.npo(github_file)
+if open_post_conversion:
+    mt.npo(github_file, bail=False)
+    my_open_text = "HEADERS:{}=".format(i7.long_name(to_create[0]))
+    mt.npo(i7.i7_cfg_file, bail=False, open_at_text = my_open_text)
+    print("Be sure to tack on {} to {} in the i7p.txt file.".format(i7.i7hfx[to_create[1]], my_open_text))
+    sys.exit()
