@@ -1022,6 +1022,13 @@ def alphabetize_lines(x, ignore_punctuation_and_articles = True):
         temp = x.split("\n")
     return "\n".join(sorted(temp, key=lambda x:strip_punctuation(x) if ignore_punctuation_and_articles else x.lower())) + "\n"
 
+def quote_spaced_file(my_file):
+    if '"' in my_file:
+        return my_file
+    if ' ' in my_file:
+        return '"' + my_file + '"'
+    return my_file
+
 def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True, quiet = True):
     a1 = "c:/writing/temp/alpha-1.txt"
     a2 = "c:/writing/temp/alpha-2.txt"
