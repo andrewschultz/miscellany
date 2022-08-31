@@ -6,6 +6,8 @@
 # todo: search for more than just "table" if necessary for only_critical_lines
 # todo: 'use' and 'um' can both be put in a preformed_regex dictionary
 # todo: have a list of ignorable directories (probably in i7)
+# todo: force only-critical-lines with option
+# todo: verbose/debug
 
 from collections import defaultdict
 import re
@@ -16,6 +18,7 @@ import glob
 import colorama
 
 import mytools as mt
+import i7
 
 default_string = "aqueduct"
 my_string = ''
@@ -26,6 +29,9 @@ print_full_rule = True
 track_story_files = True
 track_extension_files = True
 
+post_open = False
+
+local_max_open = 5
 cmd_count = 0
 
 def usage(msg='General usage'):
@@ -81,6 +87,7 @@ def look_for_string(my_string, this_file):
                 full_chunk_string += line
             if find_regex:
                 if re.search(my_string, line.lower()):
+                    mt.add_postopen(this_file, line_count)
                     if print_full_rule:
                         print_this_rule = True
                         critical_chunk_string += line
@@ -89,6 +96,7 @@ def look_for_string(my_string, this_file):
                     continue
             else:
                 if my_string.lower() in line.lower():
+                    mt.add_postopen(this_file, line_count)
                     if print_full_rule:
                         print_this_rule = True
                         critical_chunk_string += line
@@ -123,6 +131,8 @@ while cmd_count < len(param_array):
         print_full_rule = True
     elif arg == 'l':
         print_full_rule = False
+    elif arg in ('p', 'op', 'po'):
+        post_open = True
     elif arg == 're':
         find_regex = True
     elif arg in ( 'nr', 'rn' ):
@@ -154,6 +164,9 @@ if track_story_files:
     for d in ary:
         if not os.path.isdir(d):
             continue
+        db = os.path.basename(d)
+        if db.lower() in i7.i7ignore or re.sub("\..*", "", db.lower()) in i7.i7ignore:
+            continue
         temp = os.path.realpath(d)
         if temp in done_dict:
             print(temp, "already covered by another symlink")
@@ -175,3 +188,8 @@ if track_extension_files:
         else:
             done_dict[temp] = True
         look_for_string(my_string, a)
+
+if post_open:
+    mt.postopen_files(max_opens = local_max_open)
+else:
+    print("There are source files you could post-open with p/op/po.")
