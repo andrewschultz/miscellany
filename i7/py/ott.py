@@ -209,7 +209,7 @@ def shorthand_of(header_line):
         temp = re.sub(":.*", "", temp)
     elif ("(this is the" in header_line and "rule" in header_line) or header_line.startswith("this is the"):
         temp = re.sub("^.*?this is the ", "", temp.strip().lower())
-        temp = re.sub(":.*", "", temp).strip()
+        temp = re.sub("(\))?:.*", "", temp).strip()
     return (temp, is_common_error)
 
 def loop_breaker(my_line):

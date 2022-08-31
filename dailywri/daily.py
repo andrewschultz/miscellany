@@ -55,7 +55,7 @@ def read_daily_abbrev():
     daily_dir_cfg = "c:/writing/scripts/daily-abbrev.txt"
     with open(daily_dir_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
-            (prefix, data) = mt.cfg_data_split(line)
+            (prefix, data) = mt.cfg_data_split(line, delimiter = '=')
             temp_dict[prefix] = data
             if line.startswith('#'):
                 continue

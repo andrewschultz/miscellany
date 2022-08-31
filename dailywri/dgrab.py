@@ -448,7 +448,7 @@ def send_mapping(sect_name, file_name, change_files = False):
                 if found_sect_name:
                     print("WARNING -- (no information lost) 2 section types similar to", sect_name, "from", my_reg, "line", found_sect_name, line_count, file_name)
                 if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
-                if not re.search(r'^\\{}\n'.format(sect_name), lls): print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
+                if not re.search(r"^\\{}$".format(sect_name), lls): print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
                 found_sect_name = line_count
                 in_sect = True
                 continue
