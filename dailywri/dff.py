@@ -521,7 +521,14 @@ def read_comment_cfg():
         conditional_bail()
 
 def is_valid_limerick(this_limerick):
-    return ('==' in this_limerick) and (this_limerick.count("\n") == 6)
+    if not '====' in this_limerick:
+        return False
+    if this_limerick.count("\n") == 6:
+        return True
+    slashes = this_limerick.count("/")
+    if len(this_limerick) > 20 * (slashes + 1) and slashes + this_limerick.count("\n") == 6:
+        return True
+    return False
 
 def limerick_flip(complete_section, incomplete_section):
     d1 = complete_section.strip().split("\n")
@@ -846,7 +853,7 @@ def sort_raw(raw_long):
     default_streak = last_default = 0
     if protect_empties:
         for x in empty_to_protect:
-            sections[x] = ''
+            sections[x] = '' # protected empty sections are defined as ones that pop up in 2dy.txt, the file that creates a section outline to start the week
     mt.wait_until_npp_saved(raw_long)
     with open(raw_long, mode='r', encoding='utf-8') as file:
         for (line_count, line) in enumerate(file, 1):
@@ -989,9 +996,7 @@ def sort_raw(raw_long):
         sections['nam'] = sanitize(sections['nam'], start_tab = True)
     if 'lim' in sections or 'lip' in sections:
         ( sections['lim'], sections['lip'] ) = limerick_flip(sections['lim'], sections['lip'])
-        if not sections['lim'].strip():
-            sections.pop('lim')
-        if not sections['lip'].strip():
+        if not sections['lip'].strip(): # don't pop LIM, as it is one of our default sections, and if we sort things early in the week, we'll want to keep LIM. However, if LIP's part-limericks are fixed, pop them, as it can be deleted/created at will.
             sections.pop('lip')
     if 'important' in sections:
         if in_important_file(raw_long, important_file):
