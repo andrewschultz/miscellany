@@ -23,6 +23,16 @@ max_to_list = 10
 max_needed = 1
 total_so_far = 0
 
+def paths_of(my_file_name):
+    return_list = []
+    for x in os.environ["PATH"].split(';'):
+        temp = os.path.join(x, my_file_name)
+        if os.path.exists(temp):
+            temp = os.path.realpath(temp)
+            if temp not in return_list:
+                return_list.append(temp)
+    return return_list
+
 def try_line_open(my_file):
     global total_so_far
     if total_so_far >= max_needed:
@@ -66,10 +76,15 @@ try:
     temp = sys.argv[1]
     if temp.isdigit():
         max_needed = int(temp)
-    else:
-        g = [ sys.argv[1] ]
 except:
-    print("You can put in an integer as an argument to open multiple files.")
+    print("You can put in an integer as an argument to open multiple files. You can also specify a wild card or search for a specific file. I will just default to all files now.")
+
+if '*' in temp:
+    g = glob.glob("./{}.py".format(temp))
+else:
+    g = paths_of(sys.argv[1])
+    if not g:
+        sys.exit("Could not find {} in path.".format(sys.argv[1]))
 
 if not g:
     my_dir = "c:\\writing\\scripts"
