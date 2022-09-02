@@ -4,6 +4,8 @@ Version 1/140928 of Trivial Niceties by Andrew Schultz begins here.
 
 volume stuff I've used multiple games
 
+use OMIT_UNUSED_ROUTINES of 1. [ this may not be strictly necessary with the 6.40 compiler in place, but just in case I need to revert, I want it here. It means up to 0x5000 memory saved if I'm trying to compress a game into Z5. ]
+
 debug-state is a truth state that varies.
 
 in-beta is a truth state that varies.
