@@ -33,6 +33,7 @@ import calendar
 import time
 import pendulum
 import mytools as mt
+import colorama
 
 retired_file = 'c:/writing/scripts/hrcheck.txt'
 hrcheck_list = 'c:/writing/scripts/hrcheck-list.txt'
@@ -115,20 +116,25 @@ def last_day_of_month(date):
 def usage():
     print("=" * 50)
     print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
-    print("rp/p/r decides whether to print or run current commands")
     print("l/ul/lu = lock the lockfile, u = unlock the lockfile, q = run the queue file, lq = list queue, kq/qk=keep queue file, qm = max to run in queue")
     print("id specifies initial delay")
-    print("e=edit main file, ea=edit all ex=edit extra ep=edit private")
     print("b= = bookmarks to run, bp prints bookmarks")
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     print("v = verbose")
     print("f/s(c):(string) = find string in file, c = look in comments too")
+    print(' ' * 20, '====MAIN STUFF TO RUN====')
+    print(colorama.Fore.YELLOW + "rp/p/r decides whether to print or run current commands")
+    print("e=edit main file, ea=edit all ex=edit extra ep=edit private" + colorama.Style.RESET_ALL)
     sys.exit()
 
 def get_file_list_by_priority():
     temp_array = []
     with open(hrcheck_list) as file:
         for (line_count, line) in enumerate (file, 1):
+            if line.startswith('#'):
+                continue
+            if line.startswith(';'):
+                break
             temp_array.extend(line.strip().split(","))
     return temp_array
 
@@ -149,12 +155,14 @@ def my_time(x):
             return int(x[:-1]) * 4 + hr[q]
     return int(x) * 4
 
-def make_time_array(j, k, line_count):
+def make_time_array(j, k, line_count, file_name):
+    fb = os.path.basename(file_name)
     quarter_delta = 0
     my_weekday = 0
     my_monthday = 0
     monthday_array = []
     weekday_array = []
+    hour_array = []
     day_array = []
     j = garbage_collect(j)
     slash_array = j.split("/")
@@ -167,12 +175,14 @@ def make_time_array(j, k, line_count):
         elif q.startswith("q="):
             quarter_delta = int(q[2:])
         elif q.startswith("m") or q.startswith("d") or q.startswith("q"):
-            print("Uh oh, line {0} has time starting with m/d/q and not m=/d=/q=. Fix this.".format(line_count), j, q)
+            print("Uh oh, line {} in {} has time starting with m/d/q and not m=/d=/q=. Fix this.".format(line_count, fb), j, q)
+            mt.add_post(file_name, line_count)
             return
         else:
             hour_array = [my_time(x) for x in q.split(",")]
     if not hour_array:
-        print("Uh oh, line {} does not define an hour array along with a month or day: {}".format(line_count, j))
+        print("Uh oh, line {} in {} does not define an hour array along with a month or day: {}".format(line_count, fb, j))
+        mt.add_post(file_name, line_count)
     if len(monthday_array):
         for m in monthday_array:
             for h in hour_array:
@@ -204,11 +214,13 @@ def read_hourly_check(a):
     bookmark_last_line = 0
     ab = os.path.basename(a)
     if show_warnings > -1: print("reading", ab)
+    semicolon_line = 0
     with open(a) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(";"):
-                if line_count < 6:
-                    print("WARNING: {} may have had a semicolon near the top (line {}) for testing/skipping purposes.".format(a, line_count))
+                if semicolon_line:
+                    semicolon_line = line_count
+                    print("WARNING: {}/{} are two lines starting with semicolons in {}. You probably forgot to undo some testing.".format(line_count, semicolon_line, a))
                     mt.add_post(a, line_count)
                 break
             if line.startswith("#"): continue
@@ -278,7 +290,7 @@ def read_hourly_check(a):
                 except:
                     sys.exit("Bad now-time formatting line {}: {}".format(line_count, a1))
             a3 = re.sub("\t", "\n", a1[-1])
-            make_time_array(a1[0].lower(), a3, line_count)
+            make_time_array(a1[0].lower(), a3, line_count, a)
             if bookmark_string:
                 bookmark_file[bookmark_string] = a
                 bookmark_dict[bookmark_string] += a1[-1].split("\t")
@@ -295,6 +307,8 @@ def check_print_run(x, msg="(no message)"):
     if not x: return 0
     if print_cmd: print("***running", msg, x)
     if run_cmd:
+        if x.startswith("message:"):
+            mt.text_to_browser(re.sub("^.*?:", "", x))
         if x.startswith("+host"):
             mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = True)
         elif x.startswith("-host"):
