@@ -1,5 +1,7 @@
 #reg2test
-# this tests
+#
+# this creates a TEST command in Inform 7 given something Zarf's test scripts
+#
 
 from collections import defaultdict
 import os
@@ -10,8 +12,9 @@ import mytools as mt
 import i7
 import colorama
 import pyperclip
+from shutil import copy
 
-ignorables = [ 'posf', 'score', 'thisalt' ]
+ignorables = [ 'posf', 'score', 'thisalt', 'pf' ]
 
 write_test_file = True
 tests_to_clipboard = False
@@ -19,6 +22,7 @@ verify_test = False
 truncate_hyphens = True
 to_print = defaultdict(str)
 write_out = defaultdict(tuple)
+compare_before_recopy = True
 
 my_proj = i7.dir2proj()
 
@@ -31,6 +35,8 @@ temp_out = "c:/writing/temp/reg2test-temp.txt"
 def usage(my_header = 'USAGE FOR REG2TEST'):
     print(my_header)
     print("nh/hn/th/ht = truncate hyphens, h/hy/yh = don't truncate hyphens")
+    print("v = verify test, w = write, wc = compare before copy, c = send to clipboard")
+    print("remember to put w= before wild cards")
     sys.exit()
 
 def match_any(my_string, my_wild_cards):
@@ -122,8 +128,9 @@ while cmd_count < len(sys.argv):
         verify_test = True
     elif arg == 'c':
         tests_to_clipboard = True
-    elif arg == 'w':
+    elif arg in ( 'w', 'nw', 'wn' ):
         write_test_file = True
+        compare_before_recopy = False
     elif arg in ( 'wc', 'cw' ):
         write_test_file = True
         compare_before_recopy = True
