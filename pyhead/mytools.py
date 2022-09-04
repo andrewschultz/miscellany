@@ -993,9 +993,12 @@ def create_temp_alf(file_1, file_2, comments, spaces):
         f2.write(x)
     f2.close()
 
-def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = '', lowercase_it = True, remove_comments = False):
+def strip_punctuation(q, zap_bounding_apostrophe = False, other_chars_to_zap = '', lowercase_it = True, remove_comments = False, ignore_after = []):
     if remove_comments and '#' in q:
         q = zap_comment(q)
+    for y in ignore_after:
+        if y in q:
+            q = re.sub(y + ".*", "", q)
     q = q.replace('"', '')
     if zap_bounding_apostrophe:
         q = re.sub("(\b'|'\b)", "", q)

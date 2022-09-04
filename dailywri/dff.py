@@ -884,7 +884,7 @@ def sort_raw(raw_long):
                 continue
             if line.strip():
                 raw_sections[current_section] += line
-            no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=')
+            no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=', ignore_after = ['===='])
             if no_punc and no_punc in this_file_lines:
                 print("WARNING duplicate line", ll, line_count, this_file_lines[no_punc])
                 dupe_edit_lines.append(line_count)
@@ -1115,7 +1115,7 @@ def sort_raw(raw_long):
     return 1
 
 def is_outline_text(my_line):
-    if my_line == '====':
+    if my_line.startswith('===='):
         return True
     if my_line.startswith("\\"):
         return True
