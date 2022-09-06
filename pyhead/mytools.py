@@ -749,7 +749,7 @@ def first_string_diff(string_1, string_2):
         return min_length
     return -1
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False): # returns true if identical (option to get rid of blanks,) false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False, sections_to_ignore = []): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -759,10 +759,25 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     total = defaultdict(int)
     f1_ary = lines_of(f1)
     f2_ary = lines_of(f2)
+    ignore_stuff = False
     for line in f1_ary:
+        for q in sections_to_ignore:
+            if line.startswith(q):
+                ignore_stuff = True
+        if not line.strip():
+            ignore_stuff = False
+        if ignore_stuff:
+            continue
         freq[line.lower().strip()] += 1
         total[line.lower().strip()] += 1
     for line in f2_ary:
+        for q in sections_to_ignore:
+            if line.startswith(q):
+                ignore_stuff = True
+        if not line.strip():
+            ignore_stuff = False
+        if ignore_stuff:
+            continue
         freq[line.lower().strip()] -= 1
         total[line.lower().strip()] += 1
     difs = [x for x in freq if freq[x]]
