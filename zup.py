@@ -81,6 +81,7 @@ def usage(header="Usage for zup.py"):
     print("cd = copies to dropbox after")
     print("cl/clo = copy link/copy link only")
     print("v = verbose")
+    print("w+ = web version as well as regular version")
     print("x = extract after, xo/ox = extract only")
     print("specify project(s) to zip on command line")
     exit()
@@ -467,10 +468,13 @@ while cmd_count < len(sys.argv):
         project_array.append(arg)
         cmd_count += 1
         continue
-    elif arg.startswith('w+'):
-        my_proj = project_or_beta_name(arg[2:], False)
+    elif arg.startswith('w+') or arg.startswith('+'):
+        my_proj = project_or_beta_name(re.sub("^.*?\+", "", arg), False)
         project_array.append(my_proj)
-        project_array.append(my_proj + '-web')
+        project_array.append(my_proj + '-w')
+        print(project_array)
+        cmd_count += 1
+        continue
     arg = mt.nohy(sys.argv[cmd_count])
     if arg == 'b':
         build_before_zipping = True
