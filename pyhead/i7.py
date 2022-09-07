@@ -630,17 +630,24 @@ def build_log_open(x):
 
 blo = bl_o = build_log_open
 
-def hdr(x, y, base=False, github=False):
-    if proj_exp(y, False) and x in i7hfx and not proj_exp(x, False): (x, y) = (y, x) # if x is a header and not a project, flip x and y
-    x = main_abb(x, use_given = True)
-    if y in ( 'ni', 'main', 'story' ):
-        return(main_src(x))
-    base_file_name = '{:s} {:s}.i7x'.format(lpro(x, nonblank=True).title(), i7hfx[y].title() if y in i7hfx else y.title())
+def hdr(main_project, header_file_name, base=False, github=False, github_project = '', add_prefix = True):
+    if proj_exp(header_file_name, False) and main_project in i7hfx and not proj_exp(main_project, False): (main_project, header_file_name) = (header_file_name, main_project) # if main_project is a header and not a project, flip main_project and header_file_name
+    main_project = main_abb(main_project, use_given = True)
+    if main_project == '-':
+        main_project = ''
+    elif main_project and not github_project:
+        github_project = main_project
+    if header_file_name in ( 'ni', 'main', 'story' ):
+        return(main_src(main_project))
+    base_file_name = '{:s}.i7x'.format(i7hfx[header_file_name].title() if header_file_name in i7hfx else header_file_name.title())
+    if add_prefix and main_project:
+        base_file_name = lpro(main_project, nonblank=True).title() + ' ' + base_file_name
+    #base_file_name = '{:s} {:s}.i7x'.format(lpro(file_prefix, nonblank=True).title())
     temp = '{:s}\{:s}'.format(extdir, base_file_name)
     if base:
         return os.path.basename(temp)
     if github:
-        return '{:s}\{:s}\{:s}'.format(gh_dir, dict_val_or_similar(dict_val_or_similar(x, i7gx), i7x), base_file_name)
+        return '{:s}\{:s}\{:s}'.format(gh_dir, dict_val_or_similar(dict_val_or_similar(github_project, i7gx), i7x), base_file_name)
     return temp
 
 headerfile = header = hdrfile = hdr_file = hfile = hdr
@@ -1192,19 +1199,33 @@ with open(i7_cfg_file) as file:
             continue
         combos = False
         l0 = line.lower().strip().split("=")
-        l0p = re.sub(".*:", "", l0[0])
+        header_project = re.sub(".*:", "", l0[0]) # this is the project name
         l1 = l0[1].split(",")
         if l0[0].startswith("headers:"):
-            if l0p in i7com:
-                i7f[l0p] = []
-                i7fg[l0p] = []
+            if header_project in i7com:
+                i7f[header_project] = []
+                i7fg[header_project] = []
             else:
-                i7f[l0p] = [ src(l0p) ]
-                i7fg[l0p] = [ gh_src(l0p) ]
-            for q in l1:
-                i7f[l0p].append(hdr(l0p, q))
-                i7fg[l0p].append(hdr(l0p, q, github=True))
+                i7f[header_project] = [ src(header_project) ]
+                i7fg[header_project] = [ gh_src(header_project) ]
+            for header_abbrev in l1:
+                main_project = gh_project = header_project
+                if '/' in header_abbrev:
+                    if header_abbrev.count('/') != 2:
+                        print("WARNING i7p.txt needs 2 slashes from from/to syntax at line", line_count)
+                        mt.add_post(i7_cfg_file, line_count)
+                        continue
+                    proj_ary = header_abbrev.split('/')
+                    main_project = header_project if not proj_ary[0] else proj_ary[0]
+                    gh_project = header_project if not proj_ary[1] else proj_ary[1]
+                    header_abbrev = proj_ary[2]
+                from_file = hdr(main_project, header_abbrev, github=False)
+                i7f[header_project].append(from_file)
+                to_file = hdr(main_project, header_abbrev, github=True, github_project=gh_project, add_prefix = (main_project != '-'))
+                i7fg[header_project].append(to_file)
             continue
+            if 'utilities' in line.lower():
+                break
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
             continue
