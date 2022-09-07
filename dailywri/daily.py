@@ -45,6 +45,8 @@ file_regex = defaultdict(str)
 globs = defaultdict(str)
 where_to_insert = defaultdict(str)
 
+timestamps = set()
+
 default_sect = ""
 glob_default = "da"
 
@@ -122,6 +124,9 @@ def read_section_sort_cfg(cfg_bail = False):
                     regex_sect[q] = my_regex_1
                     regex_comment[q] = my_regex_2
                     where_to_insert[q] = lary[2]
+                    if len(lary) > 3:
+                        if 'timestamp' in lary[3].lower():
+                            timestamps.add(q)
             elif line.startswith("DEFAULT="): default_sect = lary[0]
             elif line.startswith("GLOBDEF="): glob_default = lary[0]
             elif line.startswith("PRINTIGNOREDFILES="): print_ignored_files = is_true_string(lary[0])

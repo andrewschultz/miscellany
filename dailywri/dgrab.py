@@ -451,6 +451,7 @@ def send_mapping(sect_name, file_name, change_files = False):
                 if not re.search(r"^\\{}$".format(sect_name), lls): print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
                 found_sect_name = line_count
                 in_sect = True
+                print(sect_name)
                 continue
             if in_sect:
                 if line.startswith("\\"): sys.exit("Being pedantic that " + file_name + " has bad sectioning. Bailing.")
@@ -535,6 +536,8 @@ def send_mapping(sect_name, file_name, change_files = False):
                     continue
                 if write_next_blank and not line.strip():
                     print("Will start writing at line", line_count)
+                    if sect_name in daily.timestamps:
+                        f.write('# start {}\n'.format(my_date_for_file))
                     f.write(sect_text)
                     f.write("\n")
                     write_next_blank = False
