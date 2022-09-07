@@ -8,6 +8,8 @@
 #
 # for STS nitxt.py -tests,random +sts
 #
+# todo: create file with forbidden words by project and create dicts of define default word lists
+#
 
 from collections import defaultdict
 import i7
@@ -22,6 +24,10 @@ errors_only = False
 
 count = 0
 
+default_word_list = []
+
+words_to_find = []
+word_dict = defaultdict(int)
 already_got = defaultdict(bool)
 
 rub_brackets = True
@@ -31,7 +37,7 @@ ignores = []
 accepts = []
 
 forbidden_words = []
-forbiddens = 0
+forbidden_lines = []
 
 my_name = "Andrew Schultz"
 my_dir = "c:/program files (x86)/inform 7/inform7/Extensions/Andrew Schultz"
@@ -46,8 +52,25 @@ def ext_2_brax(file_name):
     if file_name.endswith('ni'): return True
     return False
 
-def get_text(file_name, get_include):
-    global forbiddens
+def find_words(this_file, this_dict):
+    fb = os.path.basename(this_file)
+    with open(this_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            quoted_line = ' '.join(line.split('"')[1::2])
+            stuff_after = []
+            for x in this_dict:
+                if this_dict[x] >= 5:
+                    continue
+                if x in line and re.search(r"\b{}\b".format(x), quoted_line):
+                    this_dict[x] += 1
+                    stuff_after.append(x)
+            if len(stuff_after):
+                    print("{:30} {:5d} {}".format(fb, line_count, ', '.join(stuff_after)))
+                    print("          " + line.strip())
+    return this_dict
+
+def get_text(file_name, get_include, only_get_include_files = False):
+    global forbidden_lines
     if file_name in already_got:
         print(("=" * 30) + "Already got", file_name)
         return
@@ -105,8 +128,7 @@ def get_text(file_name, get_include):
                     continue
                 for f in forbidden_words:
                     if f.lower() in temp.lower():
-                        sys.stderr.write("Forbidden word {} present in {} at line {}: {}.\n".format(f, fb, line_count, y))
-                        forbiddens += 1
+                        forbidden_lines.append("Forbidden word {} present in {} at line {}: {}.\n".format(f, fb, line_count, y))
             cur_line = ""
 
 count = 1
@@ -141,6 +163,8 @@ while count < len(sys.argv):
         author_only = True
     elif arg == 'eo':
         errors_only = True
+    elif arg[:2] == 'cd':
+        words_to_find = default_word_list
     elif arg[:2] == 'n=':
         author_name = arg[2:]
     elif arg == 'ss':
@@ -162,7 +186,13 @@ if not os.path.exists(file_name): sys.exit("Can't find file {}".format(file_name
 if rub_brackets_from_file:
     rub_brackets = ext_2_brax(file_name)
 
-get_text(file_name, True)
+if len(words_to_find):
+    for x in words_to_find:
+        word_dict[x] = 0
+    word_dict = find_words(file_name, word_dict)
+    get_text(file_name, True, only_get_include_files = True)
+else:
+    get_text(file_name, True)
 
 for x in include_files:
     xb = os.path.basename(x)
@@ -184,10 +214,21 @@ for x in include_files:
             ignore_skip = True
     if ignore_skip:
         continue
-    get_text(x, False)
+    if len(words_to_find):
+        word_dict = find_words(x, word_dict)
+    else:
+        get_text(x, False)
+
+if len(words_to_find):
+    maxes = [x for x in word_dict if word_dict[x] >= 5]
+    nones = [x for x in word_dict if word_dict[x] == 0]
+    print("At the maximum:", maxes)
+    print("No matches:", nones)
 
 if len(forbidden_words):
-    if forbiddens:
-        print("Forbidden words found:", forbiddens)
+    if len(forbidden_lines):
+        print("Forbidden words found:", len(forbidden_lines))
+        for x in forbidden_lines:
+            sys.stderr.write(x)
     else:
         print("Forbidden words were all redacted!")
