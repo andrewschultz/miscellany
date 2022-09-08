@@ -88,9 +88,13 @@ def process_input(my_input):
     bad_string = False
     match_only_unique = False
     this_global = False
-    if my_input.startswith("/"):
+    if my_input.startswith('/'):
         this_global = True
         my_input = my_input[1:]
+    if my_input.startswith('?'):
+        print("Global clues so far:")
+        for x in cond_match_global:
+            print("  " + x)
     if my_input.startswith("\\"):
         cond_match_global = []
         negative_letters_global = ''
