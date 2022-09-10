@@ -26,8 +26,7 @@ import pendulum
 
 mt_default_dict = defaultdict(str)
 
-this_year = pendulum.now().year
-initial_date = pendulum.from_timestamp(0, tz='local')
+########################string constants
 
 gitbase = 'c:/users/andrew/documents/github'
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
@@ -47,7 +46,14 @@ file_extra_edit = defaultdict(lambda: defaultdict(int))
 
 daily_wildcard = "20*.txt"
 
-########################constants
+daily_warning_bumper = "**MODIFY DAILY INSTEAD(?)\n"
+
+########################date constants
+
+this_year = pendulum.now().year
+initial_date = pendulum.from_timestamp(0, tz='local')
+
+########################numerical constants
 
 DASH_TO_UNDERSCORE = 1
 KEEP_DASH_UNDERSCORE = 0
