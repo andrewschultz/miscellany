@@ -318,6 +318,7 @@ def check_yearly_pace():
         total_bytes = sum([os.stat(x).st_size for x in g2])
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
+        print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     sys.exit()
 
@@ -752,7 +753,19 @@ def move_to_proc(my_dir = "c:/writing/daily"):
                     continue
             if q not in g2:
                 print(q, "needs to be moved to to-proc and set read-only. Let's do that now!")
-                copy(q, "to-proc/{}".format(q))
+                new_file = "to-proc/{}".format(q)
+                f = open(new_file, "w")
+                got_name = False
+                with open(q) as file:
+                    for (line_count, line) in enumerate (file, 1):
+                        f.write(q)
+                        if line.startswith("\\"):
+                            if line.startswith("\\nam"):
+                                got_name = True
+                            f.write(mt.daily_warning_bumper + "\n")
+                if got_name:
+                    f.write("\n\n" + mt.daily_warning_bumper + "\n")
+                f.close()
                 os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
             else:
                 if os.access(q, os.W_OK):
