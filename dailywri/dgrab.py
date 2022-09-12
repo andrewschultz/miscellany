@@ -35,6 +35,7 @@ import daily
 import mytools as mt
 from pathlib import Path
 import pendulum
+import colorama
 
 delete_empties = True
 
@@ -50,6 +51,7 @@ flat_temp = os.path.basename(dg_temp)
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
 blank_sect = defaultdict(int) # not orphan_sect since this is literally the blank stuff we want to dump elsewhere, and the section name may change
+bad_bumpers = set()
 
 max_process = 0
 open_notes = 0
@@ -536,14 +538,18 @@ def send_mapping(sect_name, file_name, change_files = False):
                     continue
                 if write_next_blank and not line.strip():
                     print("Will start writing at line", line_count)
-                    if sect_name in daily.timestamps:
+                    if sect_name in daily.timestamps or force_timestamp:
                         f.write('# start {}\n'.format(my_date_for_file))
                     f.write(sect_text)
                     f.write("\n")
                     write_next_blank = False
                     remain_written = True
                     continue
-                f.write(line)
+                if not line.startswith(mt.daily_warning_bumper):
+                    f.write(line)
+                    if line.startswith("**") and (duplicate_bumpers or line.strip() not in bad_bumpers):
+                        print(colorama.Fore.RED + "WARNING: unusual daily warning bumper {} line {}: {}".format(fn, line_count, line.strip()) + colorama.Style.RESET_ALL)
+                        bad_bumpers.add(line.strip())
         if write_next_blank:
             print("Need CR at end of section for {:s}. Writing at end of file anyway.".format(sect_name))
             f.write("\n<from daily/keep file {:s}>\n".format(file_name) + sect_text)
@@ -627,7 +633,9 @@ while cmd_count < len(sys.argv):
         orig_vs_proc(arg[1:])
     elif arg == 'e':
         os.system(daily.dg_cfg)
-        exit()
+        sys.exit()
+    elif arg in ( 'fts', 'ts', 'ft' ):
+        force_timestamp = True
     elif arg == 'o': open_notes_after = True
     elif arg == 'pi': print_ignored_files = True
     elif arg == 'npi' or arg == 'pin': print_ignored_files = False
