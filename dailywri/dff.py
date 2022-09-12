@@ -855,7 +855,7 @@ def sort_raw(raw_long):
         for x in empty_to_protect:
             sections[x] = '' # protected empty sections are defined as ones that pop up in 2dy.txt, the file that creates a section outline to start the week
     mt.wait_until_npp_saved(raw_long)
-    with open(raw_long, mode='r', encoding='utf-8') as file:
+    with open(raw_long, mode='r', encoding='utf-8', errors='ignore') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line

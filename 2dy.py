@@ -758,13 +758,13 @@ def move_to_proc(my_dir = "c:/writing/daily"):
                 got_name = False
                 with open(q) as file:
                     for (line_count, line) in enumerate (file, 1):
-                        f.write(q)
+                        f.write(line)
                         if line.startswith("\\"):
                             if line.startswith("\\nam"):
                                 got_name = True
-                            f.write(mt.daily_warning_bumper + "\n")
+                            f.write(mt.daily_warning_bumper)
                 if got_name:
-                    f.write("\n\n" + mt.daily_warning_bumper + "\n")
+                    f.write("\n\n" + mt.daily_warning_bumper)
                 f.close()
                 os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
             else:

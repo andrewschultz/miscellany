@@ -115,7 +115,7 @@ def usage(header="GENERAL USAGE"):
     print("  dgrab.py -dr s=vvff for processing VVFF sections in Google Drive files")
     print("  dgrab.py -dk s=ai for processing Ailihphilia sections in Google Keep files")
     print("  dga.bat s=my processes all sections labeled my for daily/drive/keep.")
-    exit()
+    sys.exit()
 
 def cmd_param_of(my_dir):
     if 'daily' in my_dir: return "-da"
@@ -141,7 +141,7 @@ def find_section_in_daily(sec_to_find, the_files):
                     break
     if not got_one:
         print("Found nothing.")
-        exit()
+        sys.exit()
     if sec_to_find not in daily.mapping:
         print(sec_to_find, "is not visible in the daily mapping. You may wish to open dgrab.txt.")
         sys.exit()
@@ -150,7 +150,7 @@ def find_section_in_daily(sec_to_find, the_files):
             if line.startswith(daily.where_to_insert[sec_to_find]):
                 mt.npo(daily.mapping[sec_to_find], line_count)
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
-    exit()
+    sys.exit()
 
 def find_first_orphan(the_files):
     for f in sorted(the_files):
@@ -164,7 +164,7 @@ def find_first_orphan(the_files):
                     mt.npo(f, line_count)
                 should_start_outline = False
     print("No orphaned/orphan lines! Yay!")
-    exit()
+    sys.exit()
 
 def find_all_orphans(the_files):
     if not len(the_files):
@@ -227,7 +227,7 @@ def open_destination_doc(sec_to_find, look_for_end = True):
         print("Section {} ended the file.".format(daily.where_to_insert[sec_to_find]) if sec_to_find in daily.where_to_insert and daily.where_to_insert[sec_to_find] else "This may be a file without sections.", "We will open at the end.")
         mt.npo(daily.mapping[sec_to_find], temp_open_line)
     print("Did not find", daily.where_to_insert[sec_to_find], "in", daily.mapping[sec_to_find])
-    exit()
+    sys.exit()
 
 def orig_vs_proc(file_to_compare, ask_before = False):
     file_to_compare = os.path.basename(file_to_compare)
@@ -244,7 +244,7 @@ def orig_vs_proc(file_to_compare, ask_before = False):
         mt.wm(orig_file, proc_file)
     else:
         print("OK, but if you want, wm", orig_file, proc_file)
-    exit()
+    sys.exit()
 
 def attempt_line(poss_header):
     otls = glob.glob("c:/writing/*.otl")
@@ -325,7 +325,7 @@ def analyze_to_proc(my_dir):
         orig_vs_proc(file_to_open, ask_before = True)
     elif open_cluttered:
         print("No files to de-clutter. Nice going.")
-    exit()
+    sys.exit()
 
 def append_one_important(my_file, my_dir):
     important_file = os.path.join(my_dir, "important.txt")
@@ -371,7 +371,7 @@ def append_one_important(my_file, my_dir):
         mt.wm(important_file, important_file_2)
         os.remove(my_file_back)
         os.remove(important_file_2)
-        exit()
+        sys.exit()
     mt.wm(my_file, my_file_back)
     mt.wm(important_file, important_file_2)
     copy(my_file_back, my_file)
@@ -397,14 +397,14 @@ def search_regex_in_section(section_name, regex, my_dir):
                         print(a, line_count, line.strip())
     if not got_one:
         print("Found no regex ({})".format(regex), "in section", "\\" + section_name, "in dir", my_dir)
-    exit()
+    sys.exit()
 
 def append_all_important(my_dir):
     appended = 0
     for a in mt.dailies_of(my_dir):
         appended += append_one_important(a, my_dir)
     print(appended, "total important sections appended")
-    exit()
+    sys.exit()
 
 def get_list_data(this_fi):
     bn = os.path.basename(this_fi)
@@ -704,11 +704,11 @@ os.chdir(dir_to_proc)
 
 if append_importants:
     append_all_important(dir_to_proc)
-    exit()
+    sys.exit()
 
 if just_analyze:
     analyze_to_proc(dir_to_proc)
-    exit()
+    sys.exit()
 
 the_glob = glob.glob(dir_to_proc + "/20*.txt")
 my_file_list = [u for u in the_glob if daily.valid_file(os.path.basename(u), dir_to_proc)]
@@ -724,19 +724,19 @@ if latest_file_only:
 
 if analyze_orphans:
     find_all_blanks(the_glob)
-    exit()
+    sys.exit()
 
 if look_for_orphan:
     find_first_blank(the_glob)
-    exit()
+    sys.exit()
 
 if section_to_find:
     find_section_in_daily(section_to_find, the_glob)
-    exit()
+    sys.exit()
 
 if len(search_ary):
     search_regex_in_section(search_ary[0],search_ary[1], dir_to_proc)
-    exit()
+    sys.exit()
 
 if not my_sect:
     if not default_by_dir or default_by_dir not in daily.mapping:
@@ -787,7 +787,7 @@ if list_it:
         print("{:s} ({:d}) = {:s}".format(x, len(file_list[x]), ", ".join(fl2)))
     if mins_ignored: print(mins_ignored, "list entries below minimum ignored.")
     print(", ".join("{:s}={:d}".format(x, sect_lines[x]) for x in sorted(sect_lines, key=sect_lines.get, reverse=True)))
-    exit()
+    sys.exit()
 
 if processed == 0:
     print("Could not find anything to process for {} in {}.".format(my_sect, dir_to_proc))
