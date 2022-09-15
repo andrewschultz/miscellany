@@ -53,6 +53,9 @@ previous_size = 0
 yearly_queries_this_week = 0
 weekly_queries_this_week = 0
 
+last_yearly_projection = 'N/A'
+yearly_bytes_array = []
+
 stretch_special = []
 
 GRAPH_LAUNCH_NEVER = 0
@@ -274,7 +277,9 @@ def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
         ary = [ ((total_bytes + 1) // 1000000) * 1000000 ]
     pnow = pendulum.now()
     year_seconds = seconds_gone + seconds_left
-    print(total_bytes * year_seconds // seconds_gone, "projected yearly bytes")
+    proj_bytes = total_bytes * year_seconds // seconds_gone
+    print(proj_bytes, "projected yearly bytes")
+    yearly_bytes_array.append(proj_bytes)
     for g in ary:
         print((g - total_bytes) * 86400 // seconds_left, "remaining bytes per day to hit", g)
 
@@ -304,6 +309,7 @@ def check_yearly_pace():
             print(f, "adds", this_file_bytes)
     print(colorama.Fore.GREEN + "{} total bytes so far for {}".format(total_bytes, this_wildcard) + colorama.Style.RESET_ALL)
     print("{:.2f} bytes per day so far".format(total_bytes * 86400 / seconds_delta))
+    print(colorama.Fore.CYAN + last_yearly_projection + colorama.Style.RESET_ALL)
     find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
@@ -320,6 +326,7 @@ def check_yearly_pace():
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
         print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
+    mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
 
 def dhms(my_int):
@@ -843,6 +850,7 @@ def read_2dy_cfg():
     global stretch_offset
     global stretch_special
     global weekly_start_bytes
+    global last_yearly_projection
     global yearly_goals_array
     global previous_size
     global weekly_queries_this_week
@@ -906,6 +914,8 @@ def read_2dy_cfg():
                 previous_size = int(data)
             elif prefix in ( 'weekly_queries_this_week' ):
                 weekly_queries_this_week = int(data)
+            elif prefix in ( 'last_yearly_projection' ):
+                last_yearly_projection = data
             elif prefix in ( 'yearly_queries_this_week' ):
                 yearly_queries_this_week = int(data)
             elif prefix in ( 'yearly', 'yearly_goals') :
