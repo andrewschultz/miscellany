@@ -1,9 +1,11 @@
 # dglo.py: sends variables to global or definitions file
 
+import sys
 import re
 import os
 import i7
 import mytools as mt
+import colorama
 
 globals = []
 main_file = []
@@ -27,6 +29,8 @@ def valid_variable(my_line):
     return False
 
 def track_globals(main_file, global_file):
+    if main_file == global_file:
+        return
     globals = []
     non_globals = []
     dupe_set = set()
@@ -35,13 +39,14 @@ def track_globals(main_file, global_file):
             if valid_variable(line):
                 x = re.sub(" .*", "", line.strip())
                 if x in dupe_set:
-                    print("WARNING DUPLICATE {} {}".format(x, line_count))
+                    print(colorama.Fore.YELLOW + "WARNING DUPLICATE {} {}".format(x, line_count) + colorama.Style.RESET_ALL)
                 else:
                     dupe_set.add(x)
                     globals.append(line)
             else:
                 non_globals.append(line)
     if not len(globals):
+        print(colorama.Fore.RED + "No globals found to shift over in {}.".format(main_file) + colorama.Style.RESET_ALL)
         return
     if not os.path.exists(global_file):
         for x in globals:
@@ -77,4 +82,5 @@ def track_globals(main_file, global_file):
 
 x = i7.dir2proj()
 
-track_globals(i7.main_src(x), i7.hdr(x, 'glo'))
+for fi in i7.i7f[x]:
+    track_globals(fi, i7.hdr(x, 'glo'))
