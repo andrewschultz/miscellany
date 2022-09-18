@@ -570,6 +570,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     test_file_glob = glob.glob(glob_string)
     dupes_flagged = 0
     errant_cases = 0
+    last_abbrev = ''
     if len(test_file_glob) == 0:
         print("No test files found in", glob_string)
         return
@@ -616,7 +617,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if raw_case not in this_case_list:
                         global_error_note = True
                         errant_cases += 1
-                        print("Errant {}test case #{} {} at {} line {}.".format('re-' if '+' in this_case else '', errant_cases, raw_case, base, line_count))
+                        print("Errant {}test case #{:3d} {} at {} line {}.".format('re-' if '+' in this_case else '', errant_cases, raw_case, base, line_count))
                         if raw_case not in already_suggested:
                             look_for_similars(raw_case, this_case_list)
                             already_suggested[raw_case] = True
@@ -660,7 +661,11 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     alt_abbrev = re.sub(".*-", "", my_abbrev).replace('.txt', '')
                     if alt_abbrev in file_abbrev_maps[my_proj]:
                         my_abbrev = file_abbrev_maps[my_proj][alt_abbrev]
-                print('@' + my_abbrev)
+                if my_abbrev == last_abbrev:
+                    print('\\\\')
+                else:
+                    print('@' + my_abbrev)
+                    last_abbrev = my_abbrev
             print('#' + m)
             if show_suggested_syntax:
                 if this_case_list[m].command_text:
