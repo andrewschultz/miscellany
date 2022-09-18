@@ -189,30 +189,52 @@ def inform_extension_file(this_file):
     if os.path.exists(first_try + '.i7x'):
         return first_try + '.i7x'
 
-def alphabetize_this_rbr(this_file):
+def cr_tweak_sorted(my_array, line_count):
+    if len(my_array) < 2:
+        print(colorama.Fore.YELLOW + "Oops, array of length {} at line {}.".format(len(my_array), line_count) + colorama.Style.RESET_ALL)
+    new_array = sorted([re.sub(r"(\\\\\n)+$", "", x) for x in my_array])
+    return '\\\\\n'.join(new_array)
+
+def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
     ever_alphabetized = am_alphabetizing = False
     alphabet_array = []
     out_string  = ''
     ttc_alf = "c:/writing/temp/ttc-alphabetize.txt"
+    need_nontrivial_alphabetize = False
+    got_alphabetize_header = False
+    last_section_start = -1
+    test_cases_this_chunk = 0
     with open(this_file) as file:
         for (line_count, line) in enumerate (file, 1):
-            if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
+            if need_nontrivial_alphabetize:
+                if line.startswith("#testcase") or line.startswith("#ttc") or line.startswith("#+testcase") or line.startswith("#+ttc"): # ?? put this in a better function
+                    test_cases_this_chunk += 1
+                    #print(line_count, am_alphabetizing, need_nontrivial_alphabetize, test_cases_this_chunk)
+            if line.strip() in check_cues:
+                need_nontrivial_alphabetize = True
+                got_alphabetize_header = False
+                last_section_start = line_count + 1
+                test_cases_this_chunk = 0
+            if line.startswith("====alphabetize"):
                 err_suffix = " in {} line {}. Fix before continuing.".format(this_file, line_count)
                 if line.startswith("====alphabetize on"):
                     if am_alphabetizing:
                         print("Double alphabetize-on", err_suffix)
                         return
-                    ever_alphabetized = am_alphabetizing = True
+                    ever_alphabetized = am_alphabetizing = got_alphabetize_header = True
                     out_string += line
+                    test_cases_this_chunk = True
                     continue
                 if line.startswith("====alphabetize off"):
                     if not am_alphabetizing:
                         print("Double alphabetize-off", err_suffix)
                         return
-                    alphabet_array = sorted(alphabet_array)
-                    for x in alphabet_array:
-                        out_string += x
+                    if need_nontrivial_alphabetize and not got_alphabetize_header and test_cases_this_chunk > 1:
+                        print(colorama.Fore.YELLOW + "WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count) + colorama.Style.RESET_ALL)
+                        mt.add_post(this_file, line_count)
+                    out_string += cr_tweak_sorted(alphabet_array, line_count)
                     out_string += line
+                    need_nontrivial_alphabetize = False
                     am_alphabetizing = False
                     alphabet_array = []
                     continue
@@ -220,14 +242,33 @@ def alphabetize_this_rbr(this_file):
                 continue
             if not am_alphabetizing:
                 out_string += line
+                if not line.strip() and need_nontrivial_alphabetize and not got_alphabetize_header:
+                    if test_cases_this_chunk > 1:
+                        print(colorama.Fore.YELLOW + "WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count) + colorama.Style.RESET_ALL)
+                        mt.add_post(this_file, last_section_start)
+                    need_nontrivial_alphabetize = False
+                    test_cases_this_chunk = 0
                 continue
-            if line.startswith("#"):
+            else:
+                if not line.strip():
+                    print(colorama.Fore.YELLOW + "WARNING line {} needs ====alphabetize off instead of a blank line, but this may be added anyway.".format(line_count) + colorama.Style.RESET_ALL)
+                    am_alphabetizing = False
+                    mt.add_post(this_file, line_count)
+                    out_string += cr_tweak_sorted(alphabet_array, line_count)
+                    out_string += "====alphabetize off\n"
+                    out_string += line
+                    need_nontrivial_alphabetize = False
+                    alphabet_array = []
+                    continue
+            if line.startswith("#testcase") or line.startswith("#ttc") or line.startswith("#+testcase") or line.startswith("#+ttc"): # ?? put this in a better function
                 alphabet_array.append(line)
             else:
                 try:
                     alphabet_array[-1] += line
                 except:
-                    print("Make sure you start an alphabetized section with a comment. {} line {} did not.".format(file, line_count))
+                    print("Make sure you start an alphabetized section with a test case. {} line {} did not.".format(this_file, line_count))
+                    mt.add_post(this_file, line_count, priority=13)
+                    mt.post_open()
                     return
     if am_alphabetizing:
         print("Forgot to set alphabetize-off in", my_file)
@@ -240,9 +281,11 @@ def alphabetize_this_rbr(this_file):
     f.close()
     if cmp(this_file, ttc_alf):
         print("No changes to", this_file)
+        mt.post_open()
         return
     if not mt.alfcomp(this_file, ttc_alf):
         print("UH OH data was lost/corrupted in sorting.")
+        mt.post_open()
         return
     mt.wm(this_file, ttc_alf)
     raw = input("Y to copy over.")
