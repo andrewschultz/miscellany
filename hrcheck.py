@@ -318,6 +318,8 @@ def check_print_run(x, msg="(no message)"):
                 x = x.replace('^&', '&')
                 print("WARNING: get rid of ^& and replace with &, as we are using os.startfile for websites and not os.system.")
             os.startfile(x)
+        elif x.startswith("t2b:"):
+            mt.open_in_browser(x[4:])
         else:
             for y in cmds_to_ignore:
                 if y in x:
