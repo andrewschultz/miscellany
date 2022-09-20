@@ -189,10 +189,15 @@ def inform_extension_file(this_file):
     if os.path.exists(first_try + '.i7x'):
         return first_try + '.i7x'
 
+def retest_agnostic(x):
+    if x[1] == '+':
+        return x[0] + x[2:]
+    return x
+
 def cr_tweak_sorted(my_array, line_count):
     if len(my_array) < 2:
         print(colorama.Fore.YELLOW + "Oops, array of length {} at line {}.".format(len(my_array), line_count) + colorama.Style.RESET_ALL)
-    new_array = sorted([re.sub(r"(\\\\\n)+$", "", x) for x in my_array])
+    new_array = sorted([re.sub(r"(\\\\\n)+$", "", x) for x in my_array], key=lambda x:retest_agnostic(x))
     return '\\\\\n'.join(new_array)
 
 def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
