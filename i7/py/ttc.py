@@ -194,6 +194,13 @@ def retest_agnostic(x):
         return x[0] + x[2:]
     return x
 
+def retest_agnostic_starts(my_comment):
+    my_comment = retest_agnostic(my_comment)
+    for s in ['#testcase-', '#ttc-']:
+        if my_comment.startswith(s):
+            return True
+    return False
+
 def cr_tweak_sorted(my_array, line_count):
     if len(my_array) < 2:
         print(colorama.Fore.YELLOW + "Oops, array of length {} at line {}.".format(len(my_array), line_count) + colorama.Style.RESET_ALL)
@@ -212,7 +219,7 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
     with open(this_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if need_nontrivial_alphabetize:
-                if line.startswith("#testcase") or line.startswith("#ttc") or line.startswith("#+testcase") or line.startswith("#+ttc"): # ?? put this in a better function
+                if retest_agnostic_starts(line):
                     test_cases_this_chunk += 1
                     #print(line_count, am_alphabetizing, need_nontrivial_alphabetize, test_cases_this_chunk)
             if line.strip() in check_cues:
@@ -265,7 +272,7 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
                     need_nontrivial_alphabetize = False
                     alphabet_array = []
                     continue
-            if line.startswith("#testcase") or line.startswith("#ttc") or line.startswith("#+testcase") or line.startswith("#+ttc"): # ?? put this in a better function
+            if retest_agnostic_starts(line):
                 alphabet_array.append(line)
             else:
                 try:
