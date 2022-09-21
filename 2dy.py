@@ -55,6 +55,7 @@ weekly_queries_this_week = 0
 
 last_yearly_projection = 'N/A'
 yearly_bytes_array = []
+daily_data_points = []
 
 stretch_special = []
 
@@ -204,6 +205,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         my_thou = my_size // 1000
         last_thou = last_size // 1000
         header_color = colorama.Fore.GREEN if my_thou > last_thou else colorama.Fore.RED
+        print(colorama.Fore.MAGENTA + "        Weekly start-of-day: {}.".format(' / '.join(daily_data_points))  + colorama.Fore.CYAN + " ({} done today)".format(my_size - int(daily_data_points[-1])) + colorama.Style.RESET_ALL)
         print(header_color + "        Thousands quick-delta: {} vs. {}.".format(my_thou, last_thou) + colorama.Style.RESET_ALL)
         print(colorama.Fore.YELLOW + "        Overall delta: {} vs. {}.".format(my_size, last_size) + colorama.Style.RESET_ALL)
         if my_thou <= last_thou:
@@ -446,7 +448,7 @@ def check_weekly_rate(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     if bail:
         sys.exit()
 
-def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = GRAPH_LAUNCH_NEVER, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0, temp_file = False, data_back = 0):
+def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_index = -1, overwrite = False, launch_present = GRAPH_LAUNCH_NEVER, graph_type = TOTAL_BYTES, weight = .5, floor_hourly = 0, temp_file = False, data_back = 0, add_daily_data = False):
     data_back = abs(data_back)
     if not this_file:
         g = glob.glob(my_dir + "/" + glob_string)
@@ -493,6 +495,10 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
     last_size = int(last_ary[2])
     last_time = pendulum.parse(last_ary[1])
     # print(current_size, last_size, first_size, first_size, first_time, last_size, last_time, (last_time - first_time).total_seconds())
+
+    if add_daily_data:
+        daily_data_points.append(str(last_size))
+        mt.change_cfg_line(my_sections_file, 'daily_data_points', ','.join(daily_data_points))
 
     black_in_a_row = 0
     for r in relevant_stats:
@@ -853,6 +859,7 @@ def read_2dy_cfg():
     global last_yearly_projection
     global yearly_goals_array
     global previous_size
+    global daily_data_points
     global weekly_queries_this_week
     global yearly_queries_this_week
     this_weeks_goal = []
@@ -912,6 +919,8 @@ def read_2dy_cfg():
                 post_stretch_max = int(data)
             elif prefix in ( 'previous_size' ):
                 previous_size = int(data)
+            elif prefix in ( 'daily_data_points' ):
+                daily_data_points = data.split(',')
             elif prefix in ( 'weekly_queries_this_week' ):
                 weekly_queries_this_week = int(data)
             elif prefix in ( 'last_yearly_projection' ):
@@ -974,6 +983,7 @@ def weekly_new_file_cleanup(my_file):
     new_size = os.stat(my_file).st_size
     mt.change_cfg_line(my_sections_file, 'previous_size', new_size)
     mt.change_cfg_line(my_sections_file, 'startbytes', new_size)
+    mt.change_cfg_line(my_sections_file, 'daily_data_points', new_size)
     mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', 0)
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', 0)
     try:
@@ -1117,6 +1127,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'gso': graph_stats(overwrite = True)
     elif arg == 'gst': graph_stats(overwrite = True, temp_file = True)
     elif arg == 'gsu': graph_stats(overwrite = False)
+    elif arg == 'gsud':
+        graph_stats(overwrite = False, add_daily_data = True)
     elif arg == 'ps':
         if num:
             put_stats(print_on_over = int(arg[2:]))
