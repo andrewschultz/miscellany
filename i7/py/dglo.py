@@ -143,17 +143,41 @@ def track_globals(main_file, global_file):
     gin.close()
     gout.close()
     mout.close()
-    mt.wm(main_file, new_main_temp)
-    mt.wm(global_file, new_global_temp)
+    if copy_back:
+        copy(main_file, new_main_temp)
+        copy(global_file, new_global_temp)
+    else:
+        mt.wm(main_file, new_main_temp)
+        mt.wm(global_file, new_global_temp)
     return True
 
-x = i7.dir2proj()
+default_proj = i7.dir2proj()
+user_proj = ''
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = mt.nohy(sys.argv[cmd_count])
+    if arg == 'c':
+        copy_back = True
+    elif i7.main_abb(arg):
+        arg = i7.long_name(arg)
+        print("Switching to project", arg)
+        user_proj = arg
+    else:
+        sys.exit("Bad argument {}.".format(arg))
+    cmd_count += 1
+
+if user_proj:
+    this_proj = user_proj
+else:
+    this_proj = default_proj
 
 results = 0
 
-for fi in i7.i7f[x]:
-    results += track_globals(fi, i7.hdr(x, 'glo'))
-    results += track_definitions(fi, i7.hdr(x, 'def'))
+for fi in i7.i7f[this_proj]:
+    results += track_globals(fi, i7.hdr(this_proj, 'glo'))
+    results += track_definitions(fi, i7.hdr(this_proj, 'def'))
 
 if not results:
     print(colorama.Back.GREEN + colorama.Fore.BLACK + "No changes were needed!" + colorama.Style.RESET_ALL)
