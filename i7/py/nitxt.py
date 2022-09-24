@@ -45,12 +45,25 @@ my_dir = "c:/program files (x86)/inform 7/inform7/Extensions/Andrew Schultz"
 def usage(header = 'main usage'):
     print('=' * 20, header, '=' * 20)
     print("Main usage is nitxt.py f=(forbidden word)")
+    print("Usage for STS is nitxt.py -tests,random +sts")
+    print("c= / cd checks with a text file. The default is", default_word_list)
     sys.exit()
 
 def ext_2_brax(file_name):
     if file_name.endswith('xvn'): return False # Marnix Van Den Bos's XVAN system. For the sample game Escape.
     if file_name.endswith('ni'): return True
     return False
+
+def file_read_clipboard(my_file):
+    the_array = []
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith("#"):
+                continue
+            if line.startswith(";"):
+                continue
+            the_array += line.strip().split(',')
+    return the_array
 
 def find_words(this_file, this_dict):
     fb = os.path.basename(this_file)
@@ -165,6 +178,10 @@ while count < len(sys.argv):
         errors_only = True
     elif arg[:2] == 'cd':
         words_to_find = default_word_list
+    elif arg[:2] == 'c=':
+        words_to_find = file_read_clipboard(arg[2:])
+    elif arg == 'cl':
+        words_to_find = pyperclip.paste().split("\n")
     elif arg[:2] == 'n=':
         author_name = arg[2:]
     elif arg == 'ss':
