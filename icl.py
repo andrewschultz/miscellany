@@ -359,4 +359,5 @@ for x in build_projects:
 
 if not tried_one:
     sys.exit("You need to specify a build: b/eta, d/ebug or r/elease.")
-
+elif not launch_after:
+    print("You can use -l to launch after.")

@@ -125,9 +125,10 @@ f.close()
 print("Running link command", link_command)
 
 try:
-    os.system(link_command)
+    os.symlink(github_file, orig_file)
     print("Linking from {} to {} was successful.".format(orig_file, github_file))
 except:
+    print("Linking from {} to {} was unsuccessful.".format(orig_file, github_file))
     print("Run this command from a prompt with administrative rights:")
     print(link_command)
 
