@@ -71,6 +71,9 @@ extract_after = False
 extract_only = False
 force_version = False
 
+stamp_binaries = False
+any_stamped_binaries = 0
+
 def usage(header="Usage for zup.py"):
     print(header)
     print("=" * 50)
@@ -87,10 +90,13 @@ def usage(header="Usage for zup.py"):
     exit()
 
 def date_version_stamp(my_string, my_version):
-    if force_version:
-        my_string = my_string.replace("^", "%")
+    if stamp_binaries:
+        if force_version:
+            my_string = my_string.replace("^", "%")
+        else:
+            my_string = my_string.replace("^", "@")
     else:
-        my_string = my_string.replace("^", "@")
+        my_string = re.sub("-?[\^%@]", "", my_string)
     my_string = my_string.replace("%", my_version)
     my_string = my_string.replace("@", this_date)
     return my_string
@@ -504,6 +510,10 @@ while cmd_count < len(sys.argv):
         force_version = False # force date = true
     elif arg == 'oce':
         open_config_on_error = True
+    elif arg == 'sb':
+        stamp_binaries = True
+    elif mt.alfmatch('nbs', arg):
+        stamp_binaries = False
     elif arg == 'skiptemp': # this is a hidden option, because I really don't want to expose it unless I have to
         skip_temp_out = True
     elif arg == 'x':
@@ -547,7 +557,15 @@ for x in zups:
         zups[x].out_name = zups[x].out_name
     else:
         zups[x].out_name = '{}.zip'.format(x)
+    old_name = zups[x].out_name
+    if re.search("[\^@%]", zups[x].out_name):
+        if x in project_array:
+            print(zups[x].out_name)
+            any_stamped_binaries += 1
     zups[x].out_name = date_version_stamp(zups[x].out_name, zups[x].version)
+
+if any_stamped_binaries:
+    print(colorama.Fore.CYAN + "NOTE: I output {} potentially stamped binar{} which can be toggled with SBN/NSB or SB.".format(any_stamped_binaries, 'y' if any_stamped_binaries == 1 else 'ies') + colorama.Style.RESET_ALL)
 
 out_temp = os.path.join(zip_dir, "temp.zip")
 
