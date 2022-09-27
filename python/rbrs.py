@@ -20,20 +20,12 @@ def usage(my_arg = '')
     print("a = all files, o = only one")
     sys.exit()
 
-def proper_constraints(my_permutation, constraints_array):
-    for c in constraints_array:
-        tries = [int(x) for x in re.split('[<>]', c)]
-        first_smaller = my_permutation.index(tries[0]) < my_permutation.index(tries[1])
-        if first_smaller != ('<' in c):
-            return False
-    return True
-
 def controlled_permutations_of(how_many_numbers, max_shuffles):
     overall_count = 0
     initial_array = list(range(0, how_many_numbers))
     constraints_array = my_constraints.split(',')
     for p in permutations(initial_array):
-        if proper_constraints(p, constraints_array):
+        if mt.proper_constraints(p, constraints_array):
             l = list(p)
             if l == initial_array:
                 continue

@@ -1303,6 +1303,16 @@ def latest_of(file_array, latest = True):
     if not new_ret: sys.exit("Can't get latest of {}".format(', '.join(file_array)))
     return new_ret
 
+def proper_constraints(my_permutation, constraints_array):
+    for c in constraints_array:
+        if not c:
+            continue
+        tries = [int(x) for x in re.split('[<>]', c)]
+        first_smaller = my_permutation.index(tries[0]) < my_permutation.index(tries[1])
+        if first_smaller != ('<' in c):
+            return False
+    return True
+
 def first_timed_file_of(file_array, latest = True):
     new_ret = ''
     first_time = time.time()
