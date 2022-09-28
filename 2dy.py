@@ -312,6 +312,7 @@ def check_yearly_pace():
     print(colorama.Fore.GREEN + "{} total bytes so far for {}".format(total_bytes, this_wildcard) + colorama.Style.RESET_ALL)
     print("{:.2f} bytes per day so far".format(total_bytes * 86400 / seconds_delta))
     print(colorama.Fore.CYAN + last_yearly_projection + colorama.Style.RESET_ALL)
+    old_bytes_array = [int(x) for x in last_yearly_projection.split('/')]
     find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
@@ -327,6 +328,9 @@ def check_yearly_pace():
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
         print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
+    yearly_bytes_array.append(os.stat(g[-1]).st_size)
+    deltas = [a[0] - a[1] for a in zip(yearly_bytes_array, old_bytes_array)]
+    print("Deltas from last = {}.".format('/'.join([str(x) for x in deltas])))
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
@@ -775,7 +779,8 @@ def move_to_proc(my_dir = "c:/writing/daily"):
                         if line.startswith("\\"):
                             if line.startswith("\\nam"):
                                 got_name = True
-                            f.write(mt.daily_warning_bumper)
+                            else:
+                                f.write(mt.daily_warning_bumper)
                 if got_name:
                     f.write("\n\n" + mt.daily_warning_bumper)
                 f.close()
