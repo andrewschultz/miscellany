@@ -36,10 +36,16 @@ def usage():
     print("-o / -f / -fo = overwrite file")
     print("-n / -on / -no = don't open post conversion. Default = open.")
 
+def possible_mod(my_arg):
+    if my_arg.startswith("+"):
+        return my_arg[1:].replace('-', ' ').title()
+    return my_arg
+
 def check_valid_combo(my_abbrev, abbrev_class, dict_of_abbrevs):
     if my_abbrev in dict_of_abbrevs: return
     if my_abbrev in dict_of_abbrevs.values(): return
-    sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing.".format(abbrev_class, my_abbrev))
+    if my_abbrev.startswith("+"): return
+    sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing. Or you can use + to force things.".format(abbrev_class, my_abbrev))
 
 to_create = []
 
@@ -89,6 +95,8 @@ combos_and_projects.extend(i7.i7com)
 check_valid_combo(to_create[0], 'project', combos_and_projects)
 check_valid_combo(to_create[1], 'header file', i7.i7hfx)
 check_valid_combo(to_create[2], 'project', combos_and_projects)
+
+to_create = [possible_mod(x) for x in to_create]
 
 orig_file = i7.hdr(to_create[0], to_create[1])
 base_file = i7.hdr(to_create[0], to_create[1], base = True)
