@@ -1,6 +1,8 @@
 #
 # ttc.py
-# tables to test cases in Inform 7
+# track test cases in Inform 7
+#
+# originally "tables to test cases" but non-table test cases can be tracked
 #
 # requires auxiliary ttc.txt file
 #
@@ -681,6 +683,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     if this_case_list[raw_case].found_yet == False and this_case.startswith('#+'):
                         global_error_note = True
                         print("Re-test before test case {} at {} line {}.".format(raw_case, base, line_count))
+                        this_case_list[raw_case].first_file_found = base
+                        this_case_list[raw_case].first_line_found = line_count
                         this_case_list[raw_case].found_yet = True
                         mt.add_postopen(my_rbr, line_count)
                     if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
