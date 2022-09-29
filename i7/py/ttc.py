@@ -96,6 +96,7 @@ class MatrixSpecs:
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
+rules_specs = defaultdict(lambda:defaultdict(str))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
@@ -359,7 +360,7 @@ def get_rule_cases(this_proj):
     in_rules = False
     any_if_yet = False
     ifs_depth_array = []
-    for this_file in table_specs[this_proj]:
+    for this_file in rules_specs[this_proj]:
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not line.strip():
@@ -940,7 +941,25 @@ with open(ttc_cfg) as file:
             custom_table_prefixes[ary[0]] = ary[1].split(',')
         elif prefix == 'extra':
             extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
-        elif prefix == 'file':
+        elif prefix in ( 'rule_file', 'rules_file' ):
+            temp_cur_file = inform_extension_file(data)
+            if temp_cur_file:
+                cur_file = temp_file
+            if ',' in data:
+                ary = data.split(',')
+                temp_cur_file = i7.hdr(ary[0], ary[1])
+            else:
+                temp_cur_file = i7.hdr(cur_proj, data)
+            if not temp_cur_file:
+                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
+                continue
+            cur_file = temp_cur_file
+            if cur_file in table_specs[cur_proj]:
+                print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                mt.add_postopen(ttc_cfg, line_count)
+            else:
+                rules_specs[cur_proj][cur_file] = True
+        elif prefix in ( 'table_file', 'tables_file' ):
             temp_cur_file = inform_extension_file(data)
             if temp_cur_file:
                 cur_file = temp_file
