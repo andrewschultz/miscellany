@@ -339,8 +339,63 @@ def get_mistakes(this_proj):
             mistake_dict[test_case] = SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
     return mistake_dict
 
-# this function pulls the potential test cases from the source code.
-def get_cases(this_proj):
+def start_tabs_of(x):
+    count = 0
+    while len(x) < count and x[count] == '\t':
+        count += 1
+    return count
+
+def if_to_testcase(if_line):
+    new_line = re.sub("[,:].*", "", if_line).strip()
+    if not (new_line.startswith('unless') or new_line.startswith('if') or new_line.startswith('else')):
+        return ''
+    new_line = new_line.replace('"', '').replace(' ', '-')
+    return new_line
+
+def get_rule_cases(this_proj):
+    global global_error_note
+    return_dict = defaultdict(bool)
+    rule_line_count = 0
+    in_rules = False
+    any_if_yet = False
+    ifs_depth_array = []
+    for this_file in table_specs[this_proj]:
+        with open(this_file) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if not line.strip():
+                    in_rules = False
+                if line.startswith("this is the hint-"):
+                    in_rules = True
+                    any_if_yet = False
+                    this_rule = re.sub(".*this is the +", "", line.strip())
+                    this_rule = re.sub(":.*", "", this_rule)
+                    test_case_sub_name = 'default'
+                if not in_rules:
+                    continue
+                st = start_tabs_of(line)
+                temp = if_to_testcase(line)
+                if st == 1 and not temp:
+                    test_case_sub_name = "default" if any_if_yet else "after-ifs"
+                elif temp == 'else':
+                    ifs_depth_array = ifs_depth_array[:st+1]
+                    test_case_sub_name = 'else-' + '-'.join(ifs_depth_array[:st+1])
+                elif temp:
+                    ifs_depth_array = ifs_depth_array[:st]
+                    ifs_depth_array.append(temp)
+                    test_case_sub_name = '-'.join(ifs_depth_array)
+                if temp:
+                    test_case_full_name = 'testcase-rules-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
+                    if test_case_full_name not in return_dict:
+                        return_dict[test_case_full_name] = SimpleTestCase(suggested_text = '<nothing>', command_text = 'hint', condition_text = '', expected_file = 'hfull')
+                if 'say "' in line:
+                    what_said = re.sub('^.*?say +"', "", line.strip())
+                    what_said = re.sub('".*', '', what_said)
+                    return_dict[test_case_full_name].suggested_text += "\n" + what_said
+    #sys.exit()
+    return return_dict
+
+# this function pulls the potential test cases from tables in the source code.
+def get_table_cases(this_proj):
     global global_error_note
     return_dict = defaultdict(bool)
     table_line_count = 0
@@ -1055,7 +1110,8 @@ if alphabetize:
     alphabetize_my_rbrs(my_proj)
     sys.exit()
 
-case_list = get_cases(my_proj)
+case_list = get_table_cases(my_proj)
+case_list.update(get_rule_cases(my_proj))
 case_list.update(get_mistakes(my_proj))
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
