@@ -96,7 +96,7 @@ class MatrixSpecs:
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
-rules_specs = defaultdict(lambda:defaultdict(str))
+rules_specs = defaultdict(lambda:defaultdict(list))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
@@ -353,6 +353,13 @@ def if_to_testcase(if_line):
     new_line = new_line.replace('"', '').replace(' ', '-')
     return new_line
 
+def rule_test_prefix(my_line, my_prefix_list):
+    for prefix in my_prefix_list:
+        for regex in my_prefix_list[prefix]:
+            if re.search(regex, my_line):
+                return prefix
+    return ''
+
 def get_rule_cases(this_proj):
     global global_error_note
     return_dict = defaultdict(bool)
@@ -365,7 +372,10 @@ def get_rule_cases(this_proj):
             for (line_count, line) in enumerate (file, 1):
                 if not line.strip():
                     in_rules = False
-                if line.startswith("this is the hint-"):
+                if not in_rules:
+                    my_prefix = rule_test_prefix(line, rules_specs[this_proj][this_file])
+                    if not my_prefix:
+                        continue
                     ifs_depth_array = []
                     in_rules = True
                     any_if_yet = False
@@ -410,7 +420,8 @@ def get_rule_cases(this_proj):
                     what_said = "<" + line.strip() + ">"
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
-                test_case_full_name = 'testcase-rules-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
+                test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
+                test_case_full_name = test_case_full_name.replace('--', '-')
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = 'hfull')
                 else:
@@ -976,11 +987,14 @@ with open(ttc_cfg) as file:
                 print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
                 continue
             cur_file = temp_cur_file
-            if cur_file in table_specs[cur_proj]:
+            if cur_file in rules_specs[cur_proj]:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                 mt.add_postopen(ttc_cfg, line_count)
             else:
-                rules_specs[cur_proj][cur_file] = True
+                rules_specs[cur_proj][cur_file] = defaultdict(list)
+        elif prefix in ( 'rule_picker', 'rules_picker' ):
+            ary = data.split('\t')
+            rules_specs[cur_proj][cur_file][ary[0]].extend(ary[1:])
         elif prefix in ( 'table_file', 'tables_file' ):
             temp_cur_file = inform_extension_file(data)
             if temp_cur_file:
