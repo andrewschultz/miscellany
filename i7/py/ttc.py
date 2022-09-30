@@ -73,6 +73,13 @@ class SimpleTestCase:
         self.first_file_found = first_file_found
         self.first_line_found = first_line_found
 
+class RulesPicker:
+
+    def __init__(self):
+        self.valid_hint_regexes = defaultdict(list)
+        self.rules_on_lines = []
+        self.rules_off_lines = []
+
 class TablePicker:
 
     def __init__(self):
@@ -96,7 +103,7 @@ class MatrixSpecs:
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
-rules_specs = defaultdict(lambda:defaultdict(list))
+rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
 test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
@@ -367,13 +374,24 @@ def get_rule_cases(this_proj):
     in_rules = False
     any_if_yet = False
     ifs_depth_array = []
+    scan_current_text = True
     for this_file in rules_specs[this_proj]:
+        if len(rules_specs[this_proj][this_file].rules_on_lines) or len(rules_specs[this_proj][this_file].rules_off_lines):
+            scan_current_text = False
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not line.strip():
                     in_rules = False
+                for x in rules_specs[this_proj][this_file].rules_on_lines:
+                    if line.startswith(x):
+                        scan_current_text = True
+                for x in rules_specs[this_proj][this_file].rules_off_lines:
+                    if line.startswith(x):
+                        scan_current_text = False
+                if not scan_current_text:
+                    continue
                 if not in_rules:
-                    my_prefix = rule_test_prefix(line, rules_specs[this_proj][this_file])
+                    my_prefix = rule_test_prefix(line, rules_specs[this_proj][this_file].valid_hint_regexes)
                     if not my_prefix:
                         continue
                     ifs_depth_array = []
@@ -991,10 +1009,16 @@ with open(ttc_cfg) as file:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                 mt.add_postopen(ttc_cfg, line_count)
             else:
-                rules_specs[cur_proj][cur_file] = defaultdict(list)
+                rules_specs[cur_proj][cur_file] = RulesPicker()
         elif prefix in ( 'rule_picker', 'rules_picker' ):
             ary = data.split('\t')
-            rules_specs[cur_proj][cur_file][ary[0]].extend(ary[1:])
+            rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].extend(ary[1:])
+        elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
+            ary = data.split('\t')
+            rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
+        elif prefix in ( 'rules_no', 'rule_no', 'rules_off', 'rule_off' ):
+            ary = data.split('\t')
+            rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
         elif prefix in ( 'table_file', 'tables_file' ):
             temp_cur_file = inform_extension_file(data)
             if temp_cur_file:
