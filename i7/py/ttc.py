@@ -37,6 +37,8 @@ global_stray_table_org = defaultdict(list)
 
 okay_duplicates = 0
 
+valid_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
+
 def common_mistakes():
     print("You may need to run rbr.py if you changed a branch file recently.")
     print("If a test case is not in an rbr file, you may want to add it to EXTRAS.")
@@ -355,10 +357,11 @@ def start_tabs_of(x):
 
 def if_to_testcase(if_line):
     new_line = re.sub("[,:].*", "", if_line).strip()
-    if not (new_line.startswith('unless') or new_line.startswith('if') or new_line.startswith('else')):
-        return ''
-    new_line = new_line.replace('"', '').replace(' ', '-')
-    return new_line
+    for x in valid_starts:
+        if new_line.startswith(x):
+            new_line = new_line.replace('"', '').replace(' ', '-')
+            return new_line
+    return ''
 
 def rule_test_prefix(my_line, my_prefix_list):
     for prefix in my_prefix_list:
@@ -378,6 +381,7 @@ def get_rule_cases(this_proj):
     for this_file in rules_specs[this_proj]:
         if len(rules_specs[this_proj][this_file].rules_on_lines) or len(rules_specs[this_proj][this_file].rules_off_lines):
             scan_current_text = False
+        fb = os.path.basename(this_file)
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not line.strip():
@@ -410,6 +414,9 @@ def get_rule_cases(this_proj):
                 if not in_rules:
                     continue
                 st = start_tabs_of(line)
+                if st > len(ifs_depth_array) + 1:
+                    print(colorama.Fore.YELLOW + "WARNING TABS EXCEED ARRAY LENGTH BY MORE THAN ONE: {} {} {} {} {}".format(fb, line_count, st, len(ifs_depth_array), line.strip()[:50]) + colorama.Style.RESET_ALL)
+                    mt.add_post(this_file, line_count, priority=4)
                 temp = if_to_testcase(line)
                 write_test_case = not (not line.strip())
                 fixed_case_name = False
