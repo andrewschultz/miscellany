@@ -402,7 +402,7 @@ def get_rule_cases(this_proj):
                     in_rules = True
                     any_if_yet = False
                     this_rule = re.sub(".*this is the +", "", line.strip())
-                    this_rule = re.sub(":.*", "", this_rule)
+                    this_rule = re.sub(" *\)? *:.*", "", this_rule)
                     this_rule = this_rule.replace(' ', '-')
                     test_case_sub_name = 'default'
                     test_case_full_name = 'testcase-rules-{}-default'.format(this_rule)
@@ -446,7 +446,7 @@ def get_rule_cases(this_proj):
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
-                test_case_full_name = test_case_full_name.replace('--', '-')
+                test_case_full_name = test_case_full_name.replace('--', '-').lower()
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = 'hfull')
                 else:
@@ -1039,7 +1039,7 @@ with open(ttc_cfg) as file:
                 print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
                 continue
             cur_file = temp_cur_file
-            if cur_file in table_specs:
+            if cur_file in table_specs[cur_proj]:
                 print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                 mt.add_postopen(ttc_cfg, line_count)
             else:
