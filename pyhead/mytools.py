@@ -23,6 +23,7 @@ import xml.etree.ElementTree as ET
 import codecs
 import colorama
 import pendulum
+import traceback
 
 mt_default_dict = defaultdict(str)
 
@@ -926,6 +927,17 @@ def open_this(bail = True):
 
 def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10, note_open_try = True):
     if file_line <= 0 and reject_nonpositive_line: return
+    if type(file_name) != str:
+        print(colorama.Fore.RED + "WARNING: YOU PROBABLY TRIED TO SEND A FILE STREAM TO ADD_POSTOPEN")
+        for my_arg in traceback.format_stack()[:-1]:
+            ary = my_arg.split("\n")
+            any_yet = False
+            for a in ary:
+                if a:
+                    print(("    " if any_yet else "----") + a)
+                    any_yet = True
+        print(WTXT, end='')
+        return
     if file_name in file_post_list:
         try:
             file_extra_edit[file_name] += 1
