@@ -26,6 +26,8 @@ import pendulum
 
 mt_default_dict = defaultdict(str)
 
+WTXT = colorama.Style.RESET_ALL
+
 ########################string constants
 
 gitbase = 'c:/users/andrew/documents/github'
@@ -419,15 +421,15 @@ center = centralized = print_center = print_centralized
 def green_of(my_string, make_green = True):
     if not make_green:
         return my_string
-    return colorama.Fore.GREEN + my_string + colorama.Style.RESET_ALL
+    return colorama.Fore.GREEN + my_string + WTXT
 
 def print_colored_centralized(my_string, color_string = colorama.Fore.GREEN, eliminate_control_chars = True):
-    print_centralized(color_string + my_string + colorama.Back.BLACK + colorama.Style.RESET_ALL, eliminate_control_chars)
+    print_centralized(color_string + my_string + colorama.Back.BLACK + WTXT, eliminate_control_chars)
 
 colcent = centcol = print_colored_centralized
 
 def eq_print(my_text, equals_width = 20, centering = True, spacing = 1, color_info = ''):
-    final_text = color_info + '=' * equals_width + ' ' * spacing + my_text + ' ' * spacing + '=' * equals_width + (colorama.Style.RESET_ALL if color_info else '')
+    final_text = color_info + '=' * equals_width + ' ' * spacing + my_text + ' ' * spacing + '=' * equals_width + (WTXT if color_info else '')
     print_centralized(final_text)
 
 def green_red_comp(num_to_be_greater, num_to_be_lesser, yellow_on_equals = True):
@@ -812,11 +814,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             set1 = set(tabs1) - set(tabs2)
             set2 = set(tabs2) - set(tabs1)
             if (set1 or set2):
-                print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE" + colorama.Style.RESET_ALL)
+                print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE" + WTXT)
             if set1:
-                print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + colorama.Style.RESET_ALL)
+                print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + WTXT)
             if set2:
-                print(colorama.Fore.GREEN + "     NEW:", ', '.join(['{} idx {}'.format(x, tabbed_entries[1].index(x) + 1) for x in set2]) + colorama.Style.RESET_ALL)
+                print(colorama.Fore.GREEN + "     NEW:", ', '.join(['{} idx {}'.format(x, tabbed_entries[1].index(x) + 1) for x in set2]) + WTXT)
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
@@ -846,7 +848,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                     elif not green_regexp:
                         color_flags |= 1
                 color_array = [ colorama.Fore.WHITE, colorama.Fore.RED, colorama.Fore.GREEN, colorama.Fore.YELLOW ]
-                print_string = color_array[color_flags] + print_string + colorama.Style.RESET_ALL
+                print_string = color_array[color_flags] + print_string + WTXT
                 print(print_string)
             elif max and totals == max + 1:
                 print("Went over maximum of", max)
@@ -864,7 +866,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             sys.exit()
         return False
     elif verify_alphabetized_true:
-        print_centralized(colorama.Back.GREEN + "THERE ARE NO DIFFERENCES BETWEEN {} AND {}.".format(bn1, bn2) + colorama.Style.RESET_ALL)
+        print_centralized(colorama.Back.GREEN + "THERE ARE NO DIFFERENCES BETWEEN {} AND {}.".format(bn1, bn2) + WTXT)
     if verbose:
         print("No shuffle-diffs")
     return True
@@ -905,7 +907,7 @@ def npo(my_file, my_line = -1, print_cmd = True, to_stderr = True, bail = True, 
         print("Unable to find", my_file)
     if bail:
         if my_opt_bail_msg != '':
-            print(colorama.Fore.GREEN + my_opt_bail_msg + colorama.Style.RESET_ALL)
+            print(colorama.Fore.GREEN + my_opt_bail_msg + WTXT)
         sys.exit()
     if to_stderr:
         sys.stdout = old_stdout
