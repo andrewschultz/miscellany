@@ -328,9 +328,13 @@ def check_yearly_pace():
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
         print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
-    yearly_bytes_array.append(os.stat(g[-1]).st_size)
+    if yearly_queries_this_week > 0:
+        yearly_bytes_array.append(os.stat(g[-1]).st_size)
+    else:
+        old_bytes_array = old_bytes_array[:-1]
     deltas = [a[0] - a[1] for a in zip(yearly_bytes_array, old_bytes_array)]
-    print("Deltas from last = {}.".format('/'.join([str(x) for x in deltas])))
+    print(colorama.Fore.MAGENTA + "Deltas from last (year pace, year pace+, file size){} {}, current file size {}.".format(" and actual file size =" if yearly_queries_this_week else "", '/'.join([str(x) for x in deltas]), os.stat(g[-1]).st_size) + mt.WTXT)
+    sys.exit()
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
