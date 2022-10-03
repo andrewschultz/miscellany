@@ -1019,10 +1019,11 @@ def open_source_config(bail = True):
 
 oc = o_c = open_config = open_source_config
 
-def create_temp_alf(file_1, file_2, comments, spaces):
+def create_temp_alf(file_1, file_2, comments, spaces, ignorable_strings=[]):
     l = sorted(open(file_1).readlines())
     f2 = open(file_2, "w")
     for x in l:
+        if x.strip() not in ignorable_strings: continue
         if spaces == False and not x.strip(): continue
         if comments == False and x.startswith("#"): continue
         f2.write(x)
@@ -1067,7 +1068,7 @@ def quote_spaced_file(my_file):
         return '"' + my_file + '"'
     return my_file
 
-def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True, quiet = True):
+def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True, quiet = True, ignorable_strings=[]):
     a1 = "c:/writing/temp/alpha-1.txt"
     a2 = "c:/writing/temp/alpha-2.txt"
     if acknowledge_comparison and not quiet:
