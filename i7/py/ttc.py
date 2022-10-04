@@ -1187,9 +1187,11 @@ while cmd_count < len(sys.argv):
         print("BAD ARGUMENT", arg)
         usage()
 
-if my_proj not in table_specs:
-    print("{} not in table_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
-    print("Here is which are:", ', '.join(sorted(table_specs)))
+all_specs = set(list(table_specs)).union(set(list(rules_specs)))
+
+if my_proj not in all_specs:
+    print("{} not in table_specs or rules_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
+    print("Here is which are:", ', '.join(sorted(all_specs)))
     sys.exit()
 
 if alphabetize:
