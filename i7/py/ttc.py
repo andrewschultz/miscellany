@@ -35,6 +35,8 @@ collapse_extra_dashes = True
 custom_table_prefixes = defaultdict(list)
 global_stray_table_org = defaultdict(list)
 
+say_equivalents = defaultdict(str)
+
 okay_duplicates = 0
 
 valid_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
@@ -371,6 +373,13 @@ def rule_test_prefix(my_line, my_prefix_list):
                 return prefix
     return ''
 
+def is_say_line(this_line, this_proj):
+    return re.search('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), this_line)
+
+def say_line_of(this_line, this_proj):
+    ret_val = re.sub('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), "", this_line)
+    return re.sub('".*', '', ret_val)
+
 def get_rule_cases(this_proj):
     global global_error_note
     return_dict = defaultdict(bool)
@@ -439,9 +448,8 @@ def get_rule_cases(this_proj):
                         write_test_case = False
                 if not write_test_case:
                     continue
-                if 'say "' in line:
-                    what_said = re.sub('^.*?say +"', "", line.strip())
-                    what_said = re.sub('".*', '', what_said)
+                if is_say_line(line, this_proj):
+                    what_said = say_line_of(line, this_proj)
                 else:
                     what_said = "<" + line.strip() + ">"
                 if not fixed_case_name:
@@ -1099,6 +1107,8 @@ with open(ttc_cfg) as file:
             if not cur_proj:
                 print("WARNING bad project specified line {}: {}".format(line_count, data))
                 mt.add_postopen(ttc_cfg, line_count)
+        elif prefix == 'say':
+            say_equivalents[cur_proj] = data
         elif prefix == 'stopper':
             table_specs[cur_proj][cur_file].stopper = data
         elif prefix in ('gen', 'generator', 'table'):
