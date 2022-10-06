@@ -5,6 +5,7 @@ from collections import defaultdict
 from string import ascii_lowercase
 from string import ascii_uppercase
 
+wordle = defaultdict(bool)
 words = defaultdict(bool)
 
 cond_match_global = []
@@ -38,7 +39,7 @@ def print_best_remaining(my_lets, word_freq, local_word_dict = words, show_total
         else:
             output_string += ' / '
         count += 1
-        output_string += "{} {} {}".format(count, x, word_tuple[x])
+        output_string += "{} {} {}".format(count, x.upper() if x in wordle else x, word_tuple[x])
     print(output_string.strip())
     if count > 1:
         print("All", len(word_tuple), "possibilities listed above.")
@@ -142,6 +143,11 @@ def process_input(my_input):
             print(('===> ' + w.upper() if w in in_word else w), let_freq[w], word_freq[w])
     print_best_remaining(my_lets, word_freq, to_add, show_total_poss = True, known_letters = known_letters, header_string = 'Guesses with all known letters')
     print_best_remaining(my_lets, word_freq, known_letters = known_letters, header_string = 'Best guesses to eliminate words')
+
+with open("c:/writing/dict/wordle.txt") as file:
+    for (line_count, line) in enumerate (file, 1):
+        for x in line.lower().strip().split(' '):
+            wordle[x] = True
 
 with open("c:/writing/dict/words-5.txt") as file:
     for (line_count, line) in enumerate (file, 1):

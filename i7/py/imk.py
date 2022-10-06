@@ -43,7 +43,6 @@ def possible_mod(my_arg):
 
 def check_valid_combo(my_abbrev, abbrev_class, dict_of_abbrevs):
     if my_abbrev in dict_of_abbrevs: return
-    if my_abbrev in dict_of_abbrevs.values(): return
     if my_abbrev.startswith("+"): return
     sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing. Or you can use + to force things.".format(abbrev_class, my_abbrev))
 

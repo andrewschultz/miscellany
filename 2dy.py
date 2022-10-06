@@ -334,7 +334,6 @@ def check_yearly_pace():
         old_bytes_array = old_bytes_array[:-1]
     deltas = [a[0] - a[1] for a in zip(yearly_bytes_array, old_bytes_array)]
     print(colorama.Fore.MAGENTA + "Deltas from last (year pace, year pace+, file size){} {}, current file size {}.".format(" and actual file size =" if yearly_queries_this_week else "", '/'.join([str(x) for x in deltas]), os.stat(g[-1]).st_size) + mt.WTXT)
-    sys.exit()
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
