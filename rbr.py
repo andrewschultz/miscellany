@@ -153,7 +153,7 @@ def should_be_nudge(x):
     return False
 
 def fill_vars(my_line, file_idx, line_count, print_errs):
-    for q in re.findall("\{[A-Z]+\}", my_line):
+    for q in re.findall("\{[A-Z][A-Z0-9]+\}", my_line):
         #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
         qt = q[1:-1]
         if qt not in branch_variables:
@@ -165,7 +165,7 @@ def fill_vars(my_line, file_idx, line_count, print_errs):
 
 def string_fill(var_line, line_count):
     temp = var_line
-    for q in re.findall("\{\$[A-Z]+\}", var_line):
+    for q in re.findall("\{\$[A-Z][A-Z0-9]+\}", var_line):
         q0 = q[2:-1]
         if q0 not in my_strings:
             print("WARNING line {} unrecognized string {}.".format(line_count, q0)) #?? printed more than once e.g. put in a bogus string at end
@@ -535,6 +535,9 @@ def get_file(fname):
                 in_grouping = False
             elif not in_grouping:
                 old_grouping = ""
+            if last_line.startswith("@") and line.startswith('\\\\'):
+                print("WARNING \\\\ follows @ section start in {} at line {}.".format(fb, line_count))
+                mt.add_postopen(fname, line_count - 1, priority=3)
             if last_line == '\\\\' and not line.strip():
                 print("WARNING \\\\ followed by blank line in {} at line {}.".format(fb, line_count))
                 mt.add_postopen(fname, line_count - 1, priority=3)
@@ -545,6 +548,7 @@ def get_file(fname):
             line_orig = line.strip()
             if is_last_blank and not line_orig:
                 print("WARNING (trivial) double spacing at line {} of {}.".format(line_count, fb))
+                mt.add_postopen(fname, line_count - 1, priority=2)
             is_last_blank = not line_orig
             temp = bad_command(line)
             if temp:
@@ -1020,8 +1024,8 @@ def get_file(fname):
     for x in file_output:
         print(colorama.Fore.RED + "WARNING: there may be leftover output for the file_output key {}.".format(x) + colorama.Style.RESET_ALL)
     if flag_wrong_at_end:
-       print("{} WRONG line{} {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end)
-       , mt.plur(flag_wrong_at_end, [ 'were', 'was' ])))
+       print(colorama.Fore.CYAN + "{} WRONG line{} {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end)
+       , mt.plur(flag_wrong_at_end, [ 'were', 'was' ])) + colorama.Style.RESET_ALL)
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
         print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
