@@ -31,7 +31,7 @@ WTXT = colorama.Style.RESET_ALL
 
 ########################string constants
 
-gitbase = 'c:/users/andrew/documents/github'
+gh_dir = gitbase = 'c:/users/andrew/documents/github'
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
 my_creds = "c:/coding/perl/proj/mycreds.txt"

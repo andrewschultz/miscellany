@@ -72,7 +72,6 @@ prt_temp = os.path.join(prt, "temp")
 i7_cfg_file = "c:/writing/scripts/i7p.txt"
 i7_temp_config = "c:/writing/scripts/i7d.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
-gh_dir = "c:\\users\\andrew\\documents\\GitHub"
 beta_dir = "c:/games/inform/beta Materials/Release"
 latest_project_abbr = latest_project_long = ''
 
@@ -539,7 +538,7 @@ def gh_src(x = os.getcwd(), give_source = True):
     temp = proj_exp(x, to_github = True)
     if temp in i7gx:
         temp = i7gx[temp]
-    retval = os.path.join(gh_dir, temp)
+    retval = os.path.join(mt.gh_dir, temp)
     if give_source: retval = os.path.join(retval, "story.ni")
     return os.path.normpath(retval)
 
@@ -647,7 +646,7 @@ def hdr(main_project, header_file_name, base=False, github=False, github_project
     if base:
         return os.path.basename(temp)
     if github:
-        return '{:s}\{:s}\{:s}'.format(gh_dir, dict_val_or_similar(dict_val_or_similar(github_project, i7gx), i7x), base_file_name)
+        return '{:s}\{:s}\{:s}'.format(mt.gh_dir, dict_val_or_similar(dict_val_or_similar(github_project, i7gx), i7x), base_file_name)
     return temp
 
 headerfile = header = hdrfile = hdr_file = hfile = hdr
@@ -830,8 +829,8 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
         else:
             my_subdir = "Source"
     if to_github:
-        if x and os.path.isdir(os.path.join(gh_dir, x)):
-            return os.path.normpath(os.path.join(gh_dir, x))
+        if x and os.path.isdir(os.path.join(mt.gh_dir, x)):
+            return os.path.normpath(os.path.join(mt.gh_dir, x))
         temp = main_abb(x)
         if not temp:
             temp = x
@@ -843,7 +842,7 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
             sys.exit("Didn't find github repo to dir2proj for {}. Bailing.".format(x))
         else:
             return ''
-        return os.path.join(gh_dir, temp)
+        return os.path.join(mt.gh_dir, temp)
     return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", ("\\" + my_subdir) if my_subdir else "")
 
 sdir = p2d = proj2dir
