@@ -984,22 +984,17 @@ def get_file(fname):
         if check_main_file_change:
             check_main_file_change = False
             xb = os.path.basename(x)
-            print("Since #--stable was specified, I am making sure {} is not changed. I will bail if it is.".format(xb))
-            try:
-                if not cmp(x, xb):
-                    if not ignore_first_file_changes:
-                        print("Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
-                        mt.wm(x, xb)
-                        sys.exit()
-                    else:
-                        print("Difference(s) found in main file {} but ignored.".format(xb))
-            except:
-                if not os.path.exists(x):
-                    print("I could not find {}. It should be in the temp directory. You may wish to type:".format(x))
-                    print("    copy {} {}".format(xb, x))
-                else:
-                    print("Something went wrong checking {}. You may wish to remove #--stable temporarily.".format(xb))
+            if not os.path.exists(xb):
+                print(colorama.Fore.RED + "I could not find {}. It should be in the temp directory. You may wish to disable --stable in the RBR file or type:".format(x) + mt.WTXT)
+                print(colorama.Fore.RED + "    copy {} {}".format(x, xb) + mt.WTXT)
                 sys.exit()
+            if not cmp(x, xb):
+                if not ignore_first_file_changes:
+                    print(colorama.Fore.RED + "#--stable was set. Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb) + colorama.Style.RESET_ALL)
+                    mt.wm(x, xb)
+                    sys.exit()
+                else:
+                    print(colorama.Fore.YELLOW + "Difference(s) found in main file {} but overriden by -f1 command line parameter.".format(xb) + colorama.Style.RESET_ALL)
         xb = os.path.basename(x)
         prt_mirror = os.path.join(i7.prt, xb)
         if not os.path.exists(xb):
