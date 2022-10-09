@@ -679,9 +679,9 @@ def my_section(l):
     if '\t' in l or l.count('  ') > 2:
         if l.count('\t') == 0:
             if not space_to_tab_conversion:
-                print("LOOK out name section may require space-to-tab conversion with -tc")
+                print(colorama.Fore.Yellow + "LOOK OUT name section may require space-to-tab conversion with -tc" + mt.WTXT)
         elif l.count(' ') - l.count('\t') > 2:
-            print("LOOK OUT name section may have errant tab(s):", l.strip())
+            print(colorama.Fore.Yellow + "LOOK OUT name section may have errant tab(s): {}".format(l.strip()) + mt.WTXT)
         return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
@@ -855,6 +855,7 @@ def sort_raw(raw_long):
         for x in empty_to_protect:
             sections[x] = '' # protected empty sections are defined as ones that pop up in 2dy.txt, the file that creates a section outline to start the week
     mt.wait_until_npp_saved(raw_long)
+    odd_tab_found = False
     with open(raw_long, mode='r', encoding='utf-8', errors='ignore') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -905,6 +906,10 @@ def sort_raw(raw_long):
                 if "\t\t" in line:
                     print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
                 old_names.extend(tab_split(line.lower().strip()))
+            elif current_section and '\t' in line:
+                print(colorama.Fore.RED + "NOTE: tab in non-name section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                odd_tab_found = True
+                mt.add_post(raw_long, line_count)
             temp = section_from_prefix(ll)
             if temp:
                 if temp in prefixes and temp in delete_marker:
@@ -969,6 +974,9 @@ def sort_raw(raw_long):
                 else:
                     from_blank += 1
             sections['sh'] += line
+    if odd_tab_found:
+        print("Tabs need fixing. Opening document.")
+        mt.post_open()
     if space_to_tab_conversion:
         sections['nam'] = spaces_to_tabs(sections['nam'])
     if len(dupe_edit_lines):
