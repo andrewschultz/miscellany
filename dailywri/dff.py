@@ -226,6 +226,7 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
         count = 0
         globdir = relevant_daily_glob(di)
         print("Checking directory", di)
+        change_lines = []
         for f in globdir:
             if not re.search("[0-9]{8}\.txt$", f):
                 print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
@@ -242,11 +243,13 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
                         subcount += 1
                         print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
                         line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
+                        change_lines.append(line_count)
                     if line != remove_speechtotext_space(line):
                         if not speech_to_text_lines:
                             print(count, 'of', len(globdir), "Found speech-to-text spaces in", f)
                         speech_to_text_lines += 1
                         line = remove_speechtotext_space(line)
+                        change_lines.append(line_count)
                     apos_out.write(line)
             apos_out.close()
             if speech_to_text_lines:
@@ -255,18 +258,35 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
                 continue
             else:
                 mt.wm(f, temp_apostrophe_file)
-                x = input("Copy back? (Y does, O doesn't but opens, Q quits, E edits = opens and quits, anything else is ignored)")
+                print('FLAGGED FOR CHANGE:', ', '.join(["{}: {}".format(change_lines.index(x) + 1, x) for x in change_lines]))
+                x = input("Copy back? (Y does, O doesn't but opens, Q quits, E edits = opens and quits, #/E# opens at a specific line, anything else is ignored)")
                 xl = x.strip().lower()
                 if not xl:
                     pass
+                if xl[0] == 'e':
+                    if xl == 'e':
+                        mt.npo(f, change_lines[0])
+                    if xl.isdigit():
+                        xl = xl[1:]
+                if xl.isdigit():
+                    xd = int(x)
+                    if xd in change_lines:
+                        mt.npo(f, xd)
+                    elif xd <= len(change_lines) and xd >= 0:
+                        if xd > 0:
+                            xd -= 1
+                        mt.npo(f, change_lines[xd])
                 elif xl[0] == 'y':
                     copy(temp_apostrophe_file, f)
                 elif xl[0] == 'e':
-                    mt.npo(f, bail=True)
+                    if xl[1:].isdigit():
+                        mt.npo(f, int(x1[1:]))
                 elif xl[0] == 'q':
                     sys.exit()
                 elif xl[0] == 'o':
-                    mt.npo(f, bail=False)
+                    mt.npo(f, change_line, bail=False)
+                else:
+                    print(colorama.Fore.YELLOW + xl + "ignored." + mt.WTXT)
     sys.exit()
 
 def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
