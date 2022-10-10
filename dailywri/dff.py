@@ -225,6 +225,7 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
     for di in dir_list:
         count = 0
         globdir = relevant_daily_glob(di)
+        print("Checking directory", di)
         for f in globdir:
             if not re.search("[0-9]{8}\.txt$", f):
                 print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
@@ -232,28 +233,39 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
             count += 1
             apos_out = open(temp_apostrophe_file, "w")
             subcount = 0
+            speech_to_text_lines = 0
             with open(f) as file:
                 for (line_count, line) in enumerate (file, 1):
                     for x in set(re.findall(apostrophe_regex, line, re.IGNORECASE)):
                         if subcount == 0:
-                            print(count, 'of', len(globdir), "Found stuff in", f)
+                            print(count, 'of', len(globdir), "Found apostrophes to add in", f)
                         subcount += 1
                         print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
                         line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
+                    if line != remove_speechtotext_space(line):
+                        if not speech_to_text_lines:
+                            print(count, 'of', len(globdir), "Found speech-to-text spaces in", f)
+                        speech_to_text_lines += 1
+                        line = remove_speechtotext_space(line)
                     apos_out.write(line)
             apos_out.close()
+            if speech_to_text_lines:
+                print(speech_to_text_lines, "speech-to-text lines with space concatenations in", f)
             if cmp(f, temp_apostrophe_file):
                 continue
             else:
                 mt.wm(f, temp_apostrophe_file)
-                x = input("Copy back? (Y does, O doesn't but opens, Q quits, anything else doesn't)")
-                if not x.strip():
+                x = input("Copy back? (Y does, O doesn't but opens, Q quits, E edits = opens and quits, anything else is ignored)")
+                xl = x.strip().lower()
+                if not xl:
                     pass
-                elif x.strip().lower()[0] == 'y':
+                elif xl[0] == 'y':
                     copy(temp_apostrophe_file, f)
-                elif x.strip().lower()[0] == 'q':
+                elif xl[0] == 'e':
+                    mt.npo(f, bail=True)
+                elif xl[0] == 'q':
                     sys.exit()
-                elif x.strip().lower()[0] == 'o':
+                elif xl[0] == 'o':
                     mt.npo(f, bail=False)
     sys.exit()
 
@@ -828,6 +840,9 @@ def spaces_to_tabs(name_sect):
         return name_sect
     return re.sub(" {2,}", "\t", name_sect)
 
+def remove_speechtotext_space(my_str):
+	return re.sub(r" +(,|\.[^.]|$)", r'\1', my_str)
+
 def sort_raw(raw_long):
     overflow = 0
     raw_long = os.path.normpath(raw_long)
@@ -851,6 +866,7 @@ def sort_raw(raw_long):
     old_names = []
     this_file_lines = defaultdict(int)
     default_streak = last_default = 0
+    found_speech_to_text = 0
     if protect_empties:
         for x in empty_to_protect:
             sections[x] = '' # protected empty sections are defined as ones that pop up in 2dy.txt, the file that creates a section outline to start the week
@@ -860,6 +876,9 @@ def sort_raw(raw_long):
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
+            if line != remove_speechtotext_space(line):
+                print(colorama.Fore.MAGENTA + "WARNING: Line {} {}{} should be speechtotexted.".format(line_count, line.strip()[:40], '...' if len(line.strip()) > 40 else '') + mt.WTXT)
+                found_speech_to_text += 1
             if in_header:
                 if line.startswith("#"):
                     header_to_write += line
@@ -1033,6 +1052,8 @@ def sort_raw(raw_long):
         elif x != 'nam':
             fout.write("\n\n")
     fout.close()
+    if found_speech_to_text:
+        print("You may want to run STT/apostrophe checking with -apo. There were {} prespaces found.".format(found_speech_to_text))
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
