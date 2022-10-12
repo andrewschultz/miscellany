@@ -94,7 +94,11 @@ space_to_tab_conversion = False
 last_file_first = True
 ignore_limerick_headers_in_stats = True
 
-run_apostrophe_check = False
+RUN_NO_APOSTROPHE = 0
+RUN_LATEST_APOSTROPHE = 1
+RUN_ALL_APOSTROPHE = 2
+
+run_apostrophe_check = RUN_NO_APOSTROPHE
 
 STATS_EXT_OFF = 0
 STATS_EXT_ALPHABETICALLY = 1
@@ -861,7 +865,8 @@ def spaces_to_tabs(name_sect):
     return re.sub(" {2,}", "\t", name_sect)
 
 def remove_speechtotext_space(my_str):
-	return re.sub(r" +(,|\.[^.]|$)", r'\1', my_str)
+    my_str = re.sub(r" ([,.])([a-zA-Z])", r'\1 \2', my_str)
+    return re.sub(r" +(,|\.[^.0-9]|$)", r'\1', my_str)
 
 def sort_raw(raw_long):
     overflow = 0
@@ -1428,8 +1433,10 @@ while cmd_count < len(sys.argv):
         print("Maxfile is now", my_max_file)
     elif arg == 'tc':
         space_to_tab_conversion = True
-    elif arg in ( 'ap', 'apo' ):
-        run_apostrophe_check = True
+    elif arg in ( 'ap', 'apo', 'apa', 'apoa' ):
+        run_apostrophe_check = RUN_ALL_APOSTROPHE
+    elif arg in ( 'ap1', 'apo1', 'apl', 'apol' ):
+        run_apostrophe_check = RUN_LATEST_APOSTROPHE
     elif arg == '?':
         usage()
     elif arg == '??':
@@ -1497,8 +1504,10 @@ os.chdir(dir_to_scour)
 read_daily_cfg()
 read_comment_cfg()
 
-if run_apostrophe_check:
+if run_apostrophe_check == RUN_ALL_APOSTROPHE:
     check_apostrophes_in_file()
+elif run_apostrophe_check == RUN_LATEST_APOSTROPHE:
+    check_apostrophes_in_file(dir_list = [ 'c:/writing/daily' ])
 
 if run_test_file:
     test_file_name = "c:/writing/temp/dff-test-file-{}.txt".format(test_file_index)
