@@ -275,11 +275,10 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
 def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
     ary = [ g for g in goal_array if g > total_bytes ]
-    if not len(ary):
-        ary = [ ((total_bytes + 1) // 1000000) * 1000000 ]
     pnow = pendulum.now()
     year_seconds = seconds_gone + seconds_left
     proj_bytes = total_bytes * year_seconds // seconds_gone
+    ary.extend([x * 1000000 for x in range(1 + total_bytes // 1000000, proj_bytes // 1000000 + 2) if x * 1000000 > ary[-1] ])
     print(proj_bytes, "projected yearly bytes")
     yearly_bytes_array.append(proj_bytes)
     for g in ary:
