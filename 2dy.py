@@ -44,6 +44,7 @@ max_days_back = 1000
 goals_and_stretch = [ 7000 ] # deliberately low but will be changed a lot and also is defined in CFG file
 minimum_seconds_between = 3000
 super_stretch_delta = 10000
+yearly_stretch_delta = 1000000
 stretch_offset = 0
 offset_seconds = 180 # my script runs at 3 and 33 past the hour, and thus calculations should start 180 seconds past the half/top of the hour
 post_stretch_max = 10
@@ -278,7 +279,7 @@ def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
     pnow = pendulum.now()
     year_seconds = seconds_gone + seconds_left
     proj_bytes = total_bytes * year_seconds // seconds_gone
-    ary.extend([x * 1000000 for x in range(1 + total_bytes // 1000000, proj_bytes // 1000000 + 2) if x * 1000000 > ary[-1] ])
+    ary.extend([x * yearly_stretch_delta for x in range(1 + total_bytes // yearly_stretch_delta, proj_bytes // yearly_stretch_delta + 2) if x * yearly_stretch_delta > ary[-1] ])
     print(proj_bytes, "projected yearly bytes")
     yearly_bytes_array.append(proj_bytes)
     for g in ary:
@@ -869,6 +870,7 @@ def read_2dy_cfg():
     global daily_data_points
     global weekly_queries_this_week
     global yearly_queries_this_week
+    global yearly_stretch_delta
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -934,10 +936,12 @@ def read_2dy_cfg():
                 last_yearly_projection = data
             elif prefix in ( 'yearly_queries_this_week' ):
                 yearly_queries_this_week = int(data)
-            elif prefix in ( 'yearly', 'yearly_goals') :
+            elif prefix in ( 'yearly', 'yearly_goals'):
                 if len(yearly_goals_array):
                     print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
                 yearly_goals_array = [ int(x) for x in data.split(',') ]
+            elif prefix == 'yearly_stretch_delta':
+                yearly_stretch_delta = int(data)
             elif prefix.isdigit():
                 if len(prefix) != 8:
                     print("WARNING suggested weekly file has wrong # of digits (should be 8) at line {}.".format(line_count))
