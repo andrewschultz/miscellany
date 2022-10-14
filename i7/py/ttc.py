@@ -100,11 +100,12 @@ class TablePicker:
 
 class MatrixSpecs:
 
-    def __init__(self, matrix = [], out_file = '<FILE>', out_verb = 'FILL IN VERB', out_text = 'FILL IN TEXT'):
+    def __init__(self, matrix = [], out_file = '<FILE>', out_verb = 'FILL IN VERB', out_text = 'FILL IN TEXT', can_repeat = True):
         self.matrix = matrix
         self.out_file = out_file
         self.out_verb = out_verb
         self.out_text = out_text
+        self.can_repeat = can_repeat
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
@@ -470,11 +471,12 @@ def get_table_cases(this_proj):
     any_dupes_yet = False
     dupe_so_far = 0
     for this_matrix in test_case_matrices[this_proj]:
-        main_matrix = this_matrix.matrix
-        mult_matrix = main_matrix[0].split(",")
-        for x in range(1, len(main_matrix)):
-            mult_matrix = list(itertools.product(mult_matrix, [a.strip() for a in main_matrix[x].split(',')]))
-        for f in mult_matrix:
+        main_matrix = [x.split(',') for x in this_matrix.matrix]
+        out_matrix = itertools.product(*main_matrix)
+        for f in out_matrix:
+            print(f)
+            if not this_matrix.can_repeat and len(set(f)) < len(f):
+                continue
             f0 = 'testcase-' + '-'.join(f)
             return_dict[f0] = SimpleTestCase(command_text = this_matrix.out_verb, expected_file = this_matrix.out_file, suggested_text=this_matrix.out_text)
     for this_file in table_specs[this_proj]:
@@ -1070,7 +1072,7 @@ with open(ttc_cfg) as file:
                 mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file].ignore_wild.append(data)
-        elif prefix == 'matrix':
+        elif prefix in ( 'matrix', 'matrixr' ):
             temp_in_ary = data.split("\t")
             temp_out_array = []
             temp_out_file = temp_verb = temp_test_text = ''
@@ -1083,7 +1085,7 @@ with open(ttc_cfg) as file:
                     temp_test_text = a[2:]
                 else:
                     temp_out_array.append(a)
-            test_case_matrices[cur_proj].append(MatrixSpecs(matrix = temp_out_array, out_file = temp_out_file, out_verb = temp_verb, out_text = temp_test_text))
+            test_case_matrices[cur_proj].append(MatrixSpecs(matrix = temp_out_array, out_file = temp_out_file, out_verb = temp_verb, out_text = temp_test_text, can_repeat = (prefix == 'matrix')))
         elif prefix == 'okdup':
             ary = data.split(",")
             if not cur_file:
