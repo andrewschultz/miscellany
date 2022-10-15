@@ -32,6 +32,8 @@ show_suggested_file = show_suggested_syntax = show_suggested_text = True
 
 collapse_extra_dashes = True
 
+duplicate_test_force = duplicate_test_prevent = False
+
 custom_table_prefixes = defaultdict(list)
 global_stray_table_org = defaultdict(list)
 
@@ -852,16 +854,25 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                 else:
                     print('@' + my_abbrev)
                     last_abbrev = my_abbrev
-            print('#' + m)
-            if show_suggested_syntax:
-                if this_case_list[m].command_text:
-                    print(">{}".format(this_case_list[m].command_text))
-                else:
-                    print(">VERB {}".format(m.replace('-', ' ')))
-            if show_suggested_text:
-                print(this_case_list[m].suggested_text)
-                if this_case_list[m].condition_text:
-                    print("#condition: {}".format(this_case_list[m].condition_text))
+            if duplicate_test_force:
+                upper_range = 2
+            elif duplicate_test_prevent:
+                upper_range = 1
+            elif '[if' in this_case_list[m].suggested_text or '[one of]' in this_case_list[m].suggested_text or '[unless' in this_case_list[m].suggested_text:
+                upper_range = 2
+            else:
+                upper_range = 1
+            for i in range(0, upper_range):
+                print('#' + ('+' if i else '') + m)
+                if show_suggested_syntax:
+                    if this_case_list[m].command_text:
+                        print(">{}".format(this_case_list[m].command_text))
+                    else:
+                        print(">VERB {}".format(m.replace('-', ' ')))
+                if show_suggested_text:
+                    print(this_case_list[m].suggested_text)
+                    if this_case_list[m].condition_text:
+                        print("#condition: {}".format(this_case_list[m].condition_text))
         if len(misses) > 0:
             print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
     return
@@ -1191,6 +1202,10 @@ while cmd_count < len(sys.argv):
         open_after = True
     elif arg in ( 'no', 'on' ):
         open_after = False
+    elif arg in ( 'dt', 'td' ):
+        duplicate_test_force = True
+    elif mt.alfmatch(arg, 'ndt'):
+        duplicate_test_prevent = True
     elif arg in ( 'na', 'an' ):
         show_suggested_syntax = show_suggested_text = show_suggested_file = False
     elif mt.alfmatch(arg, 'nst') or arg in ( 'qt', 'tq' ):
