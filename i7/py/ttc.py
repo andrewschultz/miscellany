@@ -36,12 +36,13 @@ duplicate_test_force = duplicate_test_prevent = False
 
 custom_table_prefixes = defaultdict(list)
 global_stray_table_org = defaultdict(list)
+ignorable_rule_lines = defaultdict(list)
 
 say_equivalents = defaultdict(str)
 
 okay_duplicates = 0
 
-valid_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
+valid_fork_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
 
 def common_mistakes():
     print("You may need to run rbr.py if you changed a branch file recently.")
@@ -363,7 +364,7 @@ def start_tabs_of(x):
 
 def if_to_testcase(if_line):
     new_line = re.sub("[,:].*", "", if_line).strip()
-    for x in valid_starts:
+    for x in valid_fork_starts:
         if new_line.startswith(x):
             new_line = new_line.replace('"', '').replace(' ', '-')
             return new_line
@@ -382,6 +383,15 @@ def is_say_line(this_line, this_proj):
 def say_line_of(this_line, this_proj):
     ret_val = re.sub('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), "", this_line)
     return re.sub('".*', '', ret_val)
+
+def is_ruleshift_line(this_line):
+    return re.search(r'^\t+(abide|follow|process|consider) +', this_line)
+
+def ignorable_line(my_line, this_proj):
+    for r in ignorable_rule_lines[this_proj]:
+        if r in my_line:
+            return True
+    return False
 
 def get_rule_cases(this_proj):
     global global_error_note
@@ -414,6 +424,7 @@ def get_rule_cases(this_proj):
                     ifs_depth_array = []
                     in_rules = True
                     any_if_yet = False
+                    any_rule_yet = False
                     this_rule = re.sub(".*this is the +", "", line.strip())
                     this_rule = re.sub(" *\)? *:.*", "", this_rule)
                     this_rule = this_rule.replace(' ', '-')
@@ -426,6 +437,8 @@ def get_rule_cases(this_proj):
                         line = ''
                 if not in_rules:
                     continue
+                if ignorable_line(line, this_proj):
+                    continue
                 st = start_tabs_of(line)
                 if st > len(ifs_depth_array) + 1:
                     print(colorama.Fore.YELLOW + "WARNING TABS EXCEED ARRAY LENGTH BY MORE THAN ONE: {} {} {} {} {}".format(fb, line_count, st, len(ifs_depth_array), line.strip()[:50]) + colorama.Style.RESET_ALL)
@@ -434,7 +447,7 @@ def get_rule_cases(this_proj):
                 write_test_case = not (not line.strip())
                 fixed_case_name = False
                 if st == 1 and not temp:
-                    test_case_sub_name = "fallthrough" if any_if_yet else "default"
+                    test_case_sub_name = "fallthrough" if (any_if_yet or any_rule_yet) else "default"
                     fixed_case_name = True
                 elif temp == 'else':
                     ifs_depth_array = ifs_depth_array[:st+1]
@@ -453,6 +466,10 @@ def get_rule_cases(this_proj):
                     continue
                 if is_say_line(line, this_proj):
                     what_said = say_line_of(line, this_proj)
+                elif st == 1 and is_ruleshift_line(line):
+                    test_case_sub_name = re.sub(';.*', "", line.strip()).replace(' ', '-')
+                    what_said = test_case_sub_name
+                    any_rule_yet = True
                 else:
                     what_said = "<" + line.strip() + ">"
                 if not fixed_case_name:
@@ -1018,6 +1035,11 @@ with open(ttc_cfg) as file:
                     mt.add_postopen(ttc_cfg, line_count)
                 else:
                     test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
+        elif prefix == 'code_to_ignore':
+            if '\t' in data:
+                ignorable_rule_lines[cur_proj].extend(data.split('\t'))
+            else:
+                ignorable_rule_lines[cur_proj].extend(data.split(','))
         elif prefix == 'custpref':
             ary = data.split('\t')
             custom_table_prefixes[ary[0]] = ary[1].split(',')
@@ -1127,7 +1149,6 @@ with open(ttc_cfg) as file:
         elif prefix in ('gen', 'generator', 'table'):
             ary = data.split("\t")
             try:
-                print(line_count, ary)
                 my_fixed_command = ''
                 my_command_generator_list = []
                 my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
