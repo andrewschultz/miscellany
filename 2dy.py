@@ -65,6 +65,8 @@ GRAPH_LAUNCH_NO_K_JUMP = 1
 GRAPH_LAUNCH_ONLY_K_JUMP = 2
 GRAPH_LAUNCH_ALWAYS = GRAPH_LAUNCH_NO_K_JUMP | GRAPH_LAUNCH_ONLY_K_JUMP
 
+just_testing = False
+
 latest_daily = True
 write_base_stats = True
 run_weekly_check = False
@@ -117,6 +119,11 @@ def latest_editable(my_file):
 
 def open_editable(my_file):
     mt.npo(latest_editable(my_file))
+
+def cfg_change_notests(*args):
+    if just_testing:
+        return
+    mt.change_cfg_line(*args)
 
 def see_back(this_file = d, my_dir = ".", days_back = max_days_new):
     my_file = this_file.subtract(days=days_back).format('YYYYMMDD') + ".txt"
@@ -224,8 +231,8 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
 
     mt.center(header_color + "Size delta from last try: {} - {} = {}.".format(my_size, size_delta, previous_size) + colorama.Style.RESET_ALL)
 
-    mt.change_cfg_line(my_sections_file, 'previous_size', my_size)
-    mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', weekly_queries_this_week + 1)
+    cfg_change_notests(my_sections_file, 'previous_size', my_size)
+    cfg_change_notests(my_sections_file, 'weekly_queries_this_week', weekly_queries_this_week + 1)
 
     todays_points = [ x for x in raw_stat_lines if date_match(x, raw_stat_lines[-1]) ]
     todays_min = int(todays_points[0].split("\t")[2])
@@ -334,8 +341,8 @@ def check_yearly_pace():
         old_bytes_array = old_bytes_array[:-1]
     deltas = [a[0] - a[1] for a in zip(yearly_bytes_array, old_bytes_array)]
     print(colorama.Fore.MAGENTA + "Deltas from last (year pace, year pace+, file size){} {}, current file size {}.".format(" and actual file size =" if yearly_queries_this_week else "", '/'.join([str(x) for x in deltas]), os.stat(g[-1]).st_size) + mt.WTXT)
-    mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
-    mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
+    cfg_change_notests(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
+    cfg_change_notests(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
 
 def dhms(my_int):
@@ -505,7 +512,7 @@ def graph_stats(my_dir = "c:/writing/daily", bail = True, this_file = "", file_i
 
     if add_daily_data:
         daily_data_points.append(str(last_size))
-        mt.change_cfg_line(my_sections_file, 'daily_data_points', ','.join(daily_data_points))
+        cfg_change_notests(my_sections_file, 'daily_data_points', ','.join(daily_data_points))
 
     black_in_a_row = 0
     for r in relevant_stats:
@@ -992,11 +999,11 @@ def weekly_new_file_cleanup(my_file):
     global weekly_queries_this_week
     default_weekly_file = "c:/writing/temp/2dy-default-start.txt"
     new_size = os.stat(my_file).st_size
-    mt.change_cfg_line(my_sections_file, 'previous_size', new_size)
-    mt.change_cfg_line(my_sections_file, 'startbytes', new_size)
-    mt.change_cfg_line(my_sections_file, 'daily_data_points', new_size)
-    mt.change_cfg_line(my_sections_file, 'weekly_queries_this_week', 0)
-    mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', 0)
+    cfg_change_notests(my_sections_file, 'previous_size', new_size)
+    cfg_change_notests(my_sections_file, 'startbytes', new_size)
+    cfg_change_notests(my_sections_file, 'daily_data_points', new_size)
+    cfg_change_notests(my_sections_file, 'weekly_queries_this_week', 0)
+    cfg_change_notests(my_sections_file, 'yearly_queries_this_week', 0)
     try:
         if cmp(my_file, default_weekly_file):
             return
@@ -1140,6 +1147,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'gsu': graph_stats(overwrite = False)
     elif arg == 'gsud':
         graph_stats(overwrite = False, add_daily_data = True)
+    elif arg == 'jt':
+        just_testing = True
     elif arg == 'ps':
         if num:
             put_stats(print_on_over = int(arg[2:]))
