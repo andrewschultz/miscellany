@@ -286,7 +286,7 @@ def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
     pnow = pendulum.now()
     year_seconds = seconds_gone + seconds_left
     proj_bytes = total_bytes * year_seconds // seconds_gone
-    ary.extend([x * yearly_stretch_delta for x in range(1 + total_bytes // yearly_stretch_delta, proj_bytes // yearly_stretch_delta + 2) if x * yearly_stretch_delta > ary[-1] ])
+    ary.extend([x * yearly_stretch_delta for x in range(1 + total_bytes // yearly_stretch_delta, proj_bytes // yearly_stretch_delta + 2) if len(ary) == 0 or x * yearly_stretch_delta > ary[-1] ])
     print(proj_bytes, "projected yearly bytes")
     yearly_bytes_array.append(proj_bytes)
     for g in ary:
