@@ -85,6 +85,7 @@ class RulesPicker:
 
     def __init__(self):
         self.valid_hint_regexes = defaultdict(list)
+        self.regex_to_abbr = defaultdict(str)
         self.rules_on_lines = []
         self.rules_off_lines = []
 
@@ -327,7 +328,7 @@ def alphabetize_my_rbrs(this_proj, prefix = 'rbr'):
     glob_string = prefix + "-*.txt"
     to_alph = glob.glob(glob_string)
     for this_file in to_alph:
-        print(this_file)
+        print("Alphabetizing", this_file)
         alphabetize_this_rbr(this_file)
     sys.exit()
 
@@ -476,8 +477,9 @@ def get_rule_cases(this_proj):
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
                 test_case_full_name = test_case_full_name.replace('--', '-').lower()
+                my_expected_file = rules_specs[cur_proj][cur_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[cur_proj][cur_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
-                    return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = 'hfull')
+                    return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = my_expected_file)
                 else:
                     return_dict[test_case_full_name].suggested_text += "\n" + what_said
     return return_dict
@@ -493,7 +495,6 @@ def get_table_cases(this_proj):
         main_matrix = [x.split(',') for x in this_matrix.matrix]
         out_matrix = itertools.product(*main_matrix)
         for f in out_matrix:
-            print(f)
             if not this_matrix.can_repeat and len(set(f)) < len(f):
                 continue
             f0 = 'testcase-' + '-'.join(f)
@@ -1066,6 +1067,11 @@ with open(ttc_cfg) as file:
         elif prefix in ( 'rule_picker', 'rules_picker' ):
             ary = data.split('\t')
             rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].extend(ary[1:])
+            try:
+                rules_specs[cur_proj][cur_file].regex_to_abbr[ary[1]] = ary[2]
+            except:
+                print(colorama.Fore.YELLOW + "Rules specs needs brief output file line {}.".format(line_count) + mt.WTXT)
+                mt.add_postopen(ttc_cfg, line_count)
         elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
             ary = data.split('\t')
             rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
