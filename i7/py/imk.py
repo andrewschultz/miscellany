@@ -20,6 +20,7 @@ import sys
 import datetime
 from pathlib import Path # this forces us to use Python 3.4 but it's worth it
 import mytools as mt
+import colorama
 
 count = 1
 file_args = []
@@ -124,7 +125,15 @@ else:
     print(github_file, "does not exist. Creating.")
 
 now = datetime.datetime.now()
-f = open(github_file, "w")
+
+try:
+    f = open(github_file, "w")
+except:
+    print(colorama.Fore.RED + "You may not have created the GitHub directory to place this new file. Run these commands:" + mt.WTXT)
+    print(colorama.Fore.RED + "cd \\users\\andrew\\documents\\github" + mt.WTXT)
+    print(colorama.Fore.RED + "git clone https://github.com/andrewschultz/{}".format(i7.i7x[to_create[0]]) + mt.WTXT)
+    sys.exit()
+
 f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"This should briefly describe the purpose of {:s}.\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, base_file_noxt))
 f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
 f.close()
