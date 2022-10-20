@@ -20,11 +20,13 @@ import sys
 import datetime
 from pathlib import Path # this forces us to use Python 3.4 but it's worth it
 import mytools as mt
+import pyperclip
 import colorama
 
 count = 1
 file_args = []
 
+to_clipboard = True
 overwrite = False
 open_post_conversion = True
 
@@ -57,6 +59,12 @@ while count < len(sys.argv):
     elif arg in ( 'n', 'on', 'no' ):
         print("Not opening post-conversion.")
         open_post_conversion = False
+    elif arg in ( 'c', 'tc' ):
+        print("Header include sent to clipboard.")
+        to_clipboard = True
+    elif mt.alpha_match('nc', arg) or mt.alpha_match('cnt', arg):
+        print("Header include not sent to clipboard.")
+        to_clipboard = False
     else:
         if to_create:
             sys.exit("You can't create more than one file per run.")
@@ -106,10 +114,10 @@ github_dir = i7.proj2dir(to_create[2], to_github = True)
 github_file = github_dir + "\\" + base_file
 link_command = "mklink \"{}\" \"{}\"".format(orig_file, github_file)
 
-print(base_file_noxt)
-print(orig_file)
-print(github_file)
-print(link_command)
+if to_clipboard:
+    include_text = "include {} by Andrew Schultz.".format(base_file_noxt)
+    pyperclip.copy(include_text)
+    print(colorama.Fore.GREEN + include_text + mt.WTXT, "sent to clipboard, but in the Inform IDE, you'll need a carriage return after.")
 
 if os.path.exists(orig_file) and not overwrite:
     sys.exit("{} exists. Delete it or use the -o flag to overwrite.".format(orig_file))
