@@ -481,6 +481,8 @@ def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report
     with open(file_name) as file:
         for (line_count, line) in enumerate (file, 1):
             if re.search(r"^{}\b".format(var_to_change), line):
+                old_value = re.sub(r"^[^\b]*?", "", line.rstrip())
+                print("Changing line", line_count, var_to_change, "from", old_value)
                 got_line = True
                 line = new_line
             out_string += line
@@ -491,14 +493,16 @@ def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report
             out_string += new_line
             print("Tacked on the new data to line's end. Be sure to check to make sure it is reachable by the CFG reader.")
         else:
-            print("WARNING attempt to change {} failed as no such line was in {}. Insert a line {}{} manually.".format(var_to_change, file_name, var_to_change, delimiter))
+            print(colorama.Fore.RED + "WARNING attempt to change {} failed as no such line was in {}. Insert a line {}{} manually.".format(var_to_change, file_name, var_to_change, delimiter) + WTXT)
             return
     f = open(out_file, "w")
     f.write(out_string)
     f.close()
-    if cmp(out_file, file_name):
-        print("WARNING nothing changed in {} even though we found a line starting with {}--variable was already set to {}.".format(file_name, var_to_change, new_value))
+    if cmp(out_file, file_name, shallow=False):
+        print(colorama.Fore.YELLOW + "WARNING nothing changed in {} even though we found a line starting with {}--variable was already set to {}.".format(file_name, var_to_change, new_value) + WTXT)
         return
+    else:
+        print(colorama.Fore.GREEN + "Changes seen between {} and {}. Copying.".format(out_file, file_name) + WTXT)
     try:
         copy(out_file, file_name)
     except:
@@ -507,7 +511,7 @@ def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report
     try:
         os.remove(out_file)
     except:
-        print("MYTOOLS change_cfg_line failed to delete temp-cfg-rewrite output file {}. No big deal, as it'll be overwritten anyway. Just a warning.".format(out_file))
+        print(colorama.Fore.YELLOW + "MYTOOLS change_cfg_line failed to delete temp-cfg-rewrite output file {}. No big deal, as it'll be overwritten anyway. Just a warning.".format(out_file) + WTXT)
     if print_success:
         print("Successfully updated", file_name, "option", var_to_change, "to", new_value)
     return
