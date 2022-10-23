@@ -258,6 +258,10 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
             apos_out.close()
             if speech_to_text_lines:
                 print(speech_to_text_lines, "speech-to-text lines with space concatenations in", f)
+                old_size = os.stat(f).st_size
+                new_size = os.stat(temp_apostrophe_file).st_size
+                size_delta = new_size - old_size
+                print("Size delta: {} vs {} = {}.".format(old_size, new_size, size_delta))
             if cmp(f, temp_apostrophe_file):
                 continue
             else:
