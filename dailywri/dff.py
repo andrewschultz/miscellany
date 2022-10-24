@@ -248,11 +248,11 @@ def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive
                         print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
                         line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
                         change_lines.append(line_count)
-                    if line != remove_speechtotext_space(line):
+                    if line != speech_to_text_minor_tweaks(line):
                         if not speech_to_text_lines:
                             print(count, 'of', len(globdir), "Found speech-to-text spaces in", f)
                         speech_to_text_lines += 1
-                        line = remove_speechtotext_space(line)
+                        line = speech_to_text_minor_tweaks(line)
                         change_lines.append(line_count)
                     apos_out.write(line)
             apos_out.close()
@@ -868,9 +868,14 @@ def spaces_to_tabs(name_sect):
         return name_sect
     return re.sub(" {2,}", "\t", name_sect)
 
-def remove_speechtotext_space(my_str):
-    my_str = re.sub(r" ([,.])([a-zA-Z])", r'\1 \2', my_str)
-    return re.sub(r" +(,|\.[^.0-9]|$)", r'\1', my_str)
+def speech_to_text_minor_tweaks(my_str):
+    if ' .' in my_str or ' ,' in my_str: # this changes x ,y to x, y. The if-statement is to save regex time
+        my_str = re.sub(r" ([,.])([a-zA-Z])", r'\1 \2', my_str)
+    my_str = re.sub(r" +(,|\.[^.0-9]|$)", r'\1', my_str)
+    if my_str.startswith("#1") or my_str.lower().startswith("number one"):
+        my_str = re.sub(r'#([0-9]+)', r'\1', my_str)
+        my_str = re.sub(r'^number one', '1', my_str, flags=re.IGNORECASE)
+    return my_str
 
 def sort_raw(raw_long):
     overflow = 0
@@ -905,7 +910,7 @@ def sort_raw(raw_long):
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
-            if line != remove_speechtotext_space(line):
+            if line != speech_to_text_minor_tweaks(line):
                 print(colorama.Fore.MAGENTA + "WARNING: Line {} {}{} should be speechtotexted.".format(line_count, line.strip()[:40], '...' if len(line.strip()) > 40 else '') + mt.WTXT)
                 found_speech_to_text += 1
             if in_header:
