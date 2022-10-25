@@ -560,9 +560,9 @@ for x in zups:
     old_name = zups[x].out_name
     if re.search("[\^@%]", zups[x].out_name):
         if x in project_array:
-            print(zups[x].out_name)
+            print(zups[x].out_name, "attempted change")
             any_stamped_binaries += 1
-    zups[x].out_name = date_version_stamp(zups[x].out_name, zups[x].version)
+            zups[x].out_name = date_version_stamp(zups[x].out_name, zups[x].version)
 
 if any_stamped_binaries:
     print(colorama.Fore.CYAN + "NOTE: I output {} potentially stamped binar{} which can be toggled with SBN/NSB or SB.".format(any_stamped_binaries, 'y' if any_stamped_binaries == 1 else 'ies') + colorama.Style.RESET_ALL)
