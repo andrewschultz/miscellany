@@ -269,7 +269,7 @@ def vet_potential_errors(line, line_count, cur_pot):
 
 def replace_mapping(x, my_f, my_l):
     add_negation = False
-    if x.startswith('@') or x.startswith('`'):
+    if x.startswith('@'):
         y = x[1:]
         if y[0] == '!':
             add_negation = True
@@ -555,7 +555,7 @@ def get_file(fname):
                 print("WARNING bad command at line {} of {}: {} {}".format(line_count, fb, line_orig, temp))
                 mt.add_postopen(fname, line_count, priority=7)
             if strict_name_force_on or (strict_name_local and not strict_name_force_off):
-                if line.startswith("==") or line.startswith("@") or line.startswith("`"):
+                if line.startswith("==") or line.startswith("@"):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
@@ -580,7 +580,7 @@ def get_file(fname):
                 if "#skip test checking" in line:
                     last_atted_command = ""
                 continue
-            if (line.startswith('@') and not line.startswith('@@')) or line.startswith('`'):
+            if (line.startswith('@') and not line.startswith('@@')):
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif line.startswith('@@') or not line.strip():
@@ -610,6 +610,8 @@ def get_file(fname):
             if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
                 vta_before = re.sub("\}.*", "", line.strip())
                 vta_after = re.sub("^.*?\}", "", line.strip())
+                if not (vta_after.startswith('#') or vta_after.startswith('>')):
+                    last_atted_command = ''
                 temp_file_fullname_array = abbrevs_to_ints(vta_before[3:].split(","))
                 if "\\n" in line:
                     print("WARNING {} line {} needs \\\\ and not \\n for line-changes for temporary one-line edit.".format(fname, line_count))
@@ -749,7 +751,7 @@ def get_file(fname):
             if line.startswith("}$"):
                 temp_ary = line[2:].strip().split("=")
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
-                last_atted_command = ""
+                last_atted_command = ''
                 continue
             if line.startswith("}}"):
                 if len(file_array) == 0:
@@ -760,7 +762,7 @@ def get_file(fname):
             if line.strip() == "==!" or line.strip() == "@!":
                 actives = [not x for x in actives]
                 continue
-            if re.search("^(`|=\{|@)", line):
+            if re.search("^(=\{|@)", line):
                 line = replace_mapping(line, fname, line_count)
             if temp_diverge and not line.strip():
                 temp_diverge = False
@@ -918,7 +920,7 @@ def get_file(fname):
                 warns += 1
             if debug and line.startswith(">"): print(act(actives), line.strip())
             if last_atted_command and not line.startswith("#") and not line.startswith(">"):
-                last_atted_command = ""
+                last_atted_command = ''
             first_file = True
             if line.startswith("~="):
                 line = line.replace("~", "=") # hack to allow ==== headers
