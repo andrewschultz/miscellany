@@ -201,13 +201,24 @@ def check_suspicious_regex(my_regex, my_line_count):
     if '-*' in my_regex:
         print("-* in regex at line", my_line_count, "may result in a too-greedy regex. Maybe change to -.*")
 
-def inform_extension_file(this_file):
-    this_file = this_file.replace('-', ' ')
-    first_try = os.path.join(i7.ext_dir, this_file)
+def inform_extension_file(file_abbrev, my_proj):
+    if file_abbrev == 'story' or file_abbrev == 'main':
+        return i7.main_src(my_proj)
+    first_try = os.path.join(i7.ext_dir, file_abbrev)
     if os.path.exists(first_try):
         return first_try
     if os.path.exists(first_try + '.i7x'):
         return first_try + '.i7x'
+    if ',' in file_abbrev:
+        ary = file_abbrev.split(',')
+        temp_cur_file = i7.hdr(ary[0], ary[1])
+        if temp_cur_file:
+            return temp_cur_file
+    else:
+        temp_cur_file = i7.hdr(my_proj, file_abbrev)
+        if temp_cur_file:
+            return temp_cur_file
+    return ''
 
 def retest_agnostic(x):
     if x[1] == '+':
@@ -1047,16 +1058,9 @@ with open(ttc_cfg) as file:
         elif prefix == 'extra':
             extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
         elif prefix in ( 'rule_file', 'rules_file' ):
-            temp_cur_file = inform_extension_file(data)
-            if temp_cur_file:
-                cur_file = temp_file
-            if ',' in data:
-                ary = data.split(',')
-                temp_cur_file = i7.hdr(ary[0], ary[1])
-            else:
-                temp_cur_file = i7.hdr(cur_proj, data)
+            temp_cur_file = inform_extension_file(data, cur_proj)
             if not temp_cur_file:
-                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
+                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
                 continue
             cur_file = temp_cur_file
             if cur_file in rules_specs[cur_proj]:
@@ -1079,16 +1083,9 @@ with open(ttc_cfg) as file:
             ary = data.split('\t')
             rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
         elif prefix in ( 'table_file', 'tables_file' ):
-            temp_cur_file = inform_extension_file(data)
-            if temp_cur_file:
-                cur_file = temp_file
-            if ',' in data:
-                ary = data.split(',')
-                temp_cur_file = i7.hdr(ary[0], ary[1])
-            else:
-                temp_cur_file = i7.hdr(cur_proj, data)
+            temp_cur_file = inform_extension_file(data, cur_proj)
             if not temp_cur_file:
-                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_file, line_count))
+                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
                 continue
             cur_file = temp_cur_file
             if cur_file in table_specs[cur_proj]:
