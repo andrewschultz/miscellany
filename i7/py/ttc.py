@@ -81,6 +81,13 @@ class SimpleTestCase:
         self.first_file_found = first_file_found
         self.first_line_found = first_line_found
 
+class ValuesPicker:
+
+    def __init__(self, which_command = 'CMD', expected_file = 'HINT', expected_text = 'TEXT'):
+        self.which_command = which_command
+        self.expected_file = expected_file
+        self.expected_text = expected_text
+
 class RulesPicker:
 
     def __init__(self):
@@ -113,6 +120,7 @@ class MatrixSpecs:
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
+value_specs = defaultdict(lambda: defaultdict(lambda: defaultdict(ValuesPicker)))
 rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
@@ -404,6 +412,28 @@ def ignorable_line(my_line, this_proj):
         if r in my_line:
             return True
     return False
+
+def get_value_cases(this_proj):
+    global global_error_note
+    return_dict = defaultdict(bool)
+    for this_file in value_specs[this_proj]:
+        if not value_specs[this_proj][this_file]:
+            return return_dict
+        fb = os.path.basename(this_file)
+        with open(this_file) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if line.startswith('\t'):
+                    continue
+                my_stuff = i7.i7_code_sentences_of(line)
+                for txt in value_specs[this_proj][this_file]:
+                    for m in my_stuff:
+                        if txt in m:
+                            test_case_name = 'testcase-values-{}'.format(m.replace(' ', '-').lower())
+                            if test_case_name not in return_dict:
+                                return_dict[test_case_name] = SimpleTestCase(suggested_text = 'BLATHER', command_text = 'DO SOMETHING', condition_text = '', expected_file = 'WHATEVER')
+                            else:
+                                print("Ignoring duplicate test case {} line {}".format())
+    return return_dict
 
 def get_rule_cases(this_proj):
     global global_error_note
@@ -1093,6 +1123,21 @@ with open(ttc_cfg) as file:
                 mt.add_postopen(ttc_cfg, line_count)
             else:
                 table_specs[cur_proj][cur_file] = TablePicker()
+        elif prefix in ( 'value_file', 'values_file' ):
+            temp_cur_file = inform_extension_file(data, cur_proj)
+            if not temp_cur_file:
+                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
+                continue
+            cur_file = temp_cur_file
+            if cur_file in table_specs[cur_proj]:
+                print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                mt.add_postopen(ttc_cfg, line_count)
+        elif prefix in ( 'value_picker', 'values_picker' ):
+            ary = data.split('\t')
+            while len(ary) < 4:
+                ary.append('<UNDEF>')
+            value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(which_command = ary[1], expected_file = ary[2], expected_text = ary[3])
+            #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
         elif prefix == 'ignore':
             ary = data.split(',')
             for d in ary:
@@ -1262,6 +1307,7 @@ if alphabetize:
 case_list = get_table_cases(my_proj)
 case_list.update(get_rule_cases(my_proj))
 case_list.update(get_mistakes(my_proj))
+case_list.update(get_value_cases(my_proj))
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
 
