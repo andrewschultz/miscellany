@@ -165,6 +165,30 @@ def renumber(entry, my_dict):
         candidate_entry = "{}-{}".format(entry, number_to_add)
     return candidate_entry
 
+def testcase_match(my_verb):
+    guesses = defaultdict(str)
+    global rbr_globals
+    if not rbr_globals:
+        rbr_globals = glob.glob("rbr-*")
+    last_line = ''
+    line_start = '>' + my_verb
+    for x in rbr_globals:
+        with open(x) as file:
+            for (line_count, line) in enumerate (file, 1):
+                ls = line.strip()
+                if ls == line_start or re.search(r'^{} +[a-z]+'.format(line_start), line):
+                    if not retest_agnostic_starts(last_line, include_null = True):
+                        print(colorama.Fore.YELLOW + "Line {} has {} without test case above it.".format(line_count, ls) + mt.WTXT)
+                        if ls in guesses:
+                            print(colorama.Fore.YELLOW + "    SUGGESTION: {}".format(guesses[ls]) + mt.WTXT)
+                        mt.add_post_open(x, line_count)
+                    elif ls not in guesses:
+                        guesses[ls] = last_line.strip()
+                last_line = line
+    mt.post_open()
+    print(colorama.Fore.GREEN + "Every {} has a test case!".format(line_start) + mt.WTXT)
+    sys.exit()
+
 def mark_rbr_open(file_name, orig_line_count, comp_line):
     global rbr_globals
     if not rbr_globals:
@@ -238,10 +262,13 @@ def retest_agnostic(x):
         pass
     return x
 
-def retest_agnostic_starts(my_comment):
+def retest_agnostic_starts(my_comment, include_null = False):
     my_comment = retest_agnostic(my_comment)
     for s in ['#testcase-', '#ttc-']:
         if my_comment.startswith(s):
+            return True
+    if include_null:
+        if my_comment.startswith("#null-testcase") or my_comment.startswith("#null testcase") or my_comment.startswith("#null test case"):
             return True
     return False
 
@@ -1315,6 +1342,8 @@ while cmd_count < len(sys.argv):
         show_suggested_syntax = False
     elif arg in ( 'nt', 'tn' ):
         show_suggested_text = False
+    elif arg.startswith('tm='):
+        testcase_match(arg[3:])
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
