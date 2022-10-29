@@ -279,7 +279,7 @@ def cr_tweak_sorted(my_array, line_count):
     new_array = sorted([re.sub(r"(\\\\\n)+$", "", x) for x in my_array], key=lambda x:retest_agnostic(x))
     return '\\\\\n'.join(new_array)
 
-def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
+def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]): # todo: focus on specific test case, or focus on first/last command (minor options)
     ever_alphabetized = am_alphabetizing = False
     alphabet_array = []
     out_string  = ''
@@ -288,6 +288,7 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
     got_alphabetize_header = False
     last_section_start = -1
     test_cases_this_chunk = 0
+    in_testcase_group = False
     with open(this_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if need_nontrivial_alphabetize:
@@ -344,11 +345,13 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
                     need_nontrivial_alphabetize = False
                     alphabet_array = []
                     continue
-            if retest_agnostic_starts(line):
+            if retest_agnostic_starts(line) and not in_testcase_group:
                 alphabet_array.append(line)
+                in_testcase_group = True
             else:
                 try:
                     alphabet_array[-1] += line
+                    in_testcase_group = False
                 except:
                     print("Make sure you start an alphabetized section with a test case. {} line {} did not.".format(this_file, line_count))
                     mt.add_post(this_file, line_count, priority=13)
@@ -372,9 +375,14 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]):
         mt.post_open()
         return
     mt.wm(this_file, ttc_alf)
-    raw = input("Y to copy over.")
+    raw = input("Y to copy over, O to open first difference >")
+    if not raw:
+        sys.exit()
     if raw.lower()[0] == 'y':
         copy(ttc_alf, this_file)
+    elif raw.lower()[0] == 'o':
+        mt.open_first_diff(this_file, ttc_alf)
+    sys.exit()
 
 def alphabetize_my_rbrs(this_proj, prefix = 'rbr'):
     glob_string = prefix + "-*.txt"
