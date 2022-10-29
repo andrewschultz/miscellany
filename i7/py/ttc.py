@@ -231,8 +231,11 @@ def inform_extension_file(file_abbrev, my_proj):
     return ''
 
 def retest_agnostic(x):
-    if x[1] == '+':
-        return x[0] + x[2:]
+    try:
+        if x[1] == '+':
+            return x[0] + x[2:]
+    except:
+        pass
     return x
 
 def retest_agnostic_starts(my_comment):
@@ -444,8 +447,8 @@ def get_rule_cases(this_proj):
     in_rules = False
     any_if_yet = False
     ifs_depth_array = []
-    scan_current_text = True
     for this_file in rules_specs[this_proj]:
+        scan_current_text = True
         if len(rules_specs[this_proj][this_file].rules_on_lines) or len(rules_specs[this_proj][this_file].rules_off_lines):
             scan_current_text = False
         fb = os.path.basename(this_file)
