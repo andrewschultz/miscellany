@@ -95,6 +95,8 @@ class RulesPicker:
         self.regex_to_abbr = defaultdict(str)
         self.rules_on_lines = []
         self.rules_off_lines = []
+        self.rules_on_found = defaultdict(bool)
+        self.rules_off_found = defaultdict(bool)
 
 class TablePicker:
 
@@ -454,9 +456,11 @@ def get_rule_cases(this_proj):
                 for x in rules_specs[this_proj][this_file].rules_on_lines:
                     if line.startswith(x):
                         scan_current_text = True
+                        rules_specs[this_proj][this_file].rules_on_found[x] = True
                 for x in rules_specs[this_proj][this_file].rules_off_lines:
                     if line.startswith(x):
                         scan_current_text = False
+                        rules_specs[this_proj][this_file].rules_off_found[x] = True
                 if not scan_current_text:
                     continue
                 if not in_rules:
@@ -523,6 +527,14 @@ def get_rule_cases(this_proj):
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = my_expected_file)
                 else:
                     return_dict[test_case_full_name].suggested_text += "\n" + what_said
+        for x in rules_specs[this_proj][this_file].rules_on_found:
+            if not rules_specs[this_proj][this_file].rules_on_found[x]:
+                print(colorama.Fore.YELLOW + "WARNING: rules-on token {} not found in {}.".format(x, fb) + mt.WTXT)
+        for x in rules_specs[this_proj][this_file].rules_off_found:
+            if not rules_specs[this_proj][this_file].rules_off_found[x]:
+                print(colorama.Fore.YELLOW + "WARNING: rules-off token {} not found in {}.".format(x, fb) + mt.WTXT)
+        if scan_current_text and len(rules_specs[this_proj][this_file].rules_off_found):
+            print(colorama.Fore.YELLOW + "WARNING: scan-current-text is on at end of file with rules_on and rules_off markers." + mt.WTXT)
     return return_dict
 
 # this function pulls the potential test cases from tables in the source code.
@@ -1109,9 +1121,13 @@ with open(ttc_cfg) as file:
         elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
             ary = data.split('\t')
             rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
+            for a in ary:
+                rules_specs[cur_proj][cur_file].rules_on_found[a] = False
         elif prefix in ( 'rules_no', 'rule_no', 'rules_off', 'rule_off' ):
             ary = data.split('\t')
             rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
+            for a in ary:
+                rules_specs[cur_proj][cur_file].rules_off_found[a] = False
         elif prefix in ( 'table_file', 'tables_file' ):
             temp_cur_file = inform_extension_file(data, cur_proj)
             if not temp_cur_file:
