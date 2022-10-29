@@ -387,6 +387,12 @@ def start_tabs_of(x):
         count += 1
     return count
 
+def has_valid_fork_starts(my_line):
+    for x in valid_fork_starts:
+        if my_line.startswith(x):
+            return True
+    return False
+
 def if_to_testcase(if_line):
     new_line = re.sub("[,:].*", "", if_line).strip()
     for x in valid_fork_starts:
@@ -406,7 +412,7 @@ def is_say_line(this_line, this_proj):
     return re.search('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), this_line)
 
 def say_line_of(this_line, this_proj):
-    ret_val = re.sub('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), "", this_line)
+    ret_val = re.sub('^\t+(say|{}) +"'.format(say_equivalents[this_proj]), "", this_line.rstrip())
     return re.sub('".*', '', ret_val)
 
 def is_ruleshift_line(this_line):
@@ -520,14 +526,19 @@ def get_rule_cases(this_proj):
                     what_said = test_case_sub_name
                     any_rule_yet = True
                 else:
-                    what_said = "<" + line.strip() + ">"
+                    if '"' in line.strip() and has_valid_fork_starts(line.strip()):
+                        what_said = line.strip().split('"')[1]
+                    else:
+                        what_said = "<" + line.strip() + ">"
+                if not what_said:
+                    what_said = "<no data found>"
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
                 test_case_full_name = test_case_full_name.replace('--', '-').lower()
                 my_expected_file = rules_specs[cur_proj][cur_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[cur_proj][cur_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
-                    return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'hint', condition_text = '', expected_file = my_expected_file)
+                    return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
                 else:
                     return_dict[test_case_full_name].suggested_text += "\n" + what_said
         for x in rules_specs[this_proj][this_file].rules_on_found:
@@ -800,7 +811,7 @@ def look_for_similars(my_test_case, all_test_cases):
         end_match_ary.append(x)
         max_end_match = temp
     if len(end_match_ary):
-        print("Possible match(es):", end_match_ary)
+        print("Possible match(es):", end_match_ary[:5], '' if len(end_match_ary) < 5 else '(5 of {} total)'.format(len(end_match_ary)))
 
 def base_of(my_str):
     if my_str.startswith("#+"):
@@ -947,6 +958,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                     print(this_case_list[m].suggested_text)
                     if this_case_list[m].condition_text:
                         print("#condition: {}".format(this_case_list[m].condition_text))
+                if i < upper_range - 1:
+                    print("\\\\")
         if len(misses) > 0:
             print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
     return
