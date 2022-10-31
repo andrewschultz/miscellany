@@ -1112,220 +1112,233 @@ def verify_case_placement(this_proj):
 
 cur_file = "<NONE>"
 
-with open(ttc_cfg) as file:
-    for (line_count, line) in enumerate (file, 1):
-        if line.startswith('#'):
-            continue
-        if line.startswith(';'):
-            break
-        (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
-        if len(mt.mt_default_dict) and '$' in line:
-            old_data = data
-            data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
-        if prefix.startswith("$"):
-            mt.mt_default_dict[prefix[1:]] = data
-        elif prefix == 'abbr':
-            ary = data.split(",")
-            for a in ary:
-                ary2 = a.split('=')
-                file_abbrev_maps[cur_proj][ary2[0]] = ary2[1]
-        elif prefix == 'casemap':
-            ary = data.split(",")
-            for x in range(0, len(ary), 2):
-                check_regex_in_absolute(ary[x], line_count)
-                if ary[x] in test_case_file_mapper_match[cur_proj]:
-                    print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
-                    mt.add_postopen(ttc_cfg, line_count)
-                else:
-                    test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
-        elif prefix == 'casemapr':
-            ary = data.split(",")
-            for x in range(0, len(ary), 2):
-                check_suspicious_regex(ary[x], line_count)
-                if ary[x] in test_case_file_mapper_regex[cur_proj]:
-                    print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
-                    mt.add_postopen(ttc_cfg, line_count)
-                else:
-                    test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
-        elif prefix == 'code_to_ignore':
-            if '\t' in data:
-                ignorable_rule_lines[cur_proj].extend(data.split('\t'))
-            else:
-                ignorable_rule_lines[cur_proj].extend(data.split(','))
-        elif prefix == 'custpref':
-            ary = data.split('\t')
-            custom_table_prefixes[ary[0]] = ary[1].split(',')
-        elif prefix == 'extra':
-            extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
-        elif prefix in ( 'rule_file', 'rules_file' ):
-            temp_cur_file = inform_extension_file(data, cur_proj)
-            if not temp_cur_file:
-                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
+def read_cfg_file(this_cfg):
+    #global table_specs
+    #global rules_specs
+    with open(this_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('#'):
                 continue
-            cur_file = temp_cur_file
-            if cur_file in rules_specs[cur_proj]:
-                print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
-                mt.add_postopen(ttc_cfg, line_count)
-            else:
-                rules_specs[cur_proj][cur_file] = RulesPicker()
-        elif prefix in ( 'rule_picker', 'rules_picker' ):
-            ary = data.split('\t')
-            rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].extend(ary[1:])
-            try:
-                rules_specs[cur_proj][cur_file].regex_to_abbr[ary[1]] = ary[2]
-            except:
-                print(colorama.Fore.YELLOW + "Rules specs needs brief output file line {}.".format(line_count) + mt.WTXT)
-                mt.add_postopen(ttc_cfg, line_count)
-        elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
-            ary = data.split('\t')
-            rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
-            for a in ary:
-                rules_specs[cur_proj][cur_file].rules_on_found[a] = False
-        elif prefix in ( 'rules_no', 'rule_no', 'rules_off', 'rule_off' ):
-            ary = data.split('\t')
-            rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
-            for a in ary:
-                rules_specs[cur_proj][cur_file].rules_off_found[a] = False
-        elif prefix in ( 'table_file', 'tables_file' ):
-            temp_cur_file = inform_extension_file(data, cur_proj)
-            if not temp_cur_file:
-                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
+            if line.startswith(';'):
+                break
+            if line.startswith('<'):
+                ls = line.strip()
+                if not ls.endswith('>'):
+                    print("WARNING need <> at line {} in {}.".format(line_count, this_cfg))
+                    continue
+                if '/' not in ls and '\\' not in ls:
+                    file_to_find = os.path.join('c:/writing/scripts', ls[1:-1])
+                    read_cfg_file(file_to_find)
                 continue
-            cur_file = temp_cur_file
-            if cur_file in table_specs[cur_proj]:
-                print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
-                mt.add_postopen(ttc_cfg, line_count)
-            else:
-                table_specs[cur_proj][cur_file] = TablePicker()
-        elif prefix in ( 'value_file', 'values_file' ):
-            temp_cur_file = inform_extension_file(data, cur_proj)
-            if not temp_cur_file:
-                print("WARNING could not get file from {} at {} line {}.".format(data, ttc_cfg, line_count))
-                continue
-            cur_file = temp_cur_file
-            if cur_file in table_specs[cur_proj]:
-                print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
-                mt.add_postopen(ttc_cfg, line_count)
-        elif prefix in ( 'value_picker', 'values_picker' ):
-            ary = data.split('\t')
-            while len(ary) < 4:
-                ary.append('<UNDEF>')
-            value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(which_command = ary[1], expected_file = ary[2], expected_text = ary[3])
-            #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
-        elif prefix == 'ignore':
-            ary = data.split(',')
-            for d in ary:
-                check_regex_in_absolute(ary[x], line_count)
-                if data in table_specs[cur_proj][cur_file].ignore:
-                    print("WARNING duplicate ignore", cur_file, line_count, d)
-                    mt.add_postopen(ttc_cfg, line_count)
-                else:
-                    table_specs[cur_proj][cur_file].ignore.append(d)
-        elif prefix in ( 'ignorew', 'igw' ):
-            if data in table_specs[cur_proj][cur_file].ignore_wild:
-                print("WARNING duplicate ignore", cur_file, line_count, data)
-                mt.add_postopen(ttc_cfg, line_count)
-            else:
-                table_specs[cur_proj][cur_file].ignore_wild.append(data)
-        elif prefix in ( 'matrix', 'matrixr' ):
-            temp_in_ary = data.split("\t")
-            temp_out_array = []
-            temp_out_file = temp_verb = temp_test_text = ''
-            for a in temp_in_ary:
-                if a.startswith('f=') or a.startswith('o='):
-                    temp_out_file = a[2:]
-                elif a.startswith('v='):
-                    temp_verb = a[2:]
-                elif a.startswith('t='):
-                    temp_test_text = a[2:]
-                else:
-                    temp_out_array.append(a)
-            test_case_matrices[cur_proj].append(MatrixSpecs(matrix = temp_out_array, out_file = temp_out_file, out_verb = temp_verb, out_text = temp_test_text, can_repeat = (prefix == 'matrix')))
-        elif prefix == 'okdup':
-            ary = data.split(",")
-            if not cur_file:
-                print("WARNING: you probably want to put an OKDUP in a specific file.")
-            for a in ary:
-                check_regex_in_absolute(a, line_count)
-                if '~' not in a:
-                    table_specs[cur_proj][cur_file].okay_duplicate_counter[a] = 2
-                else:
-                    a2 = a.split("~")
-                    table_specs[cur_proj][cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
-        elif prefix == 'okdupr':
-            if not cur_file:
-                print("WARNING: you probably want to put an OKDUP in a specific file.")
-            check_suspicious_regex(data, line_count)
-            table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
-        elif prefix in ( 'oddcase', 'oddcases' ):
-            odd_cases[cur_proj].extend(data.split(','))
-        elif prefix == 'project':
-            cur_proj = i7.long_name(data)
-            if not cur_proj:
-                print("WARNING bad project specified line {}: {}".format(line_count, data))
-                mt.add_postopen(ttc_cfg, line_count)
-        elif prefix == 'say':
-            say_equivalents[cur_proj] = data
-        elif prefix == 'stopper':
-            table_specs[cur_proj][cur_file].stopper = data
-        elif prefix in ('gen', 'generator', 'table'):
-            ary = data.split("\t")
-            try:
-                my_fixed_command = ''
-                my_command_generator_list = []
-                my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
-                if len(ary) > 5:
-                    this_regex_to_check = ary[5]
-                else:
-                    this_regex_to_check = ''
-                if len(ary) > 4:
-                    if ary[4].startswith('f='):
-                        my_fixed_command = ary[4][2:]
+            (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
+            if len(mt.mt_default_dict) and '$' in line:
+                old_data = data
+                data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
+            if prefix.startswith("$"):
+                mt.mt_default_dict[prefix[1:]] = data
+            elif prefix == 'abbr':
+                ary = data.split(",")
+                for a in ary:
+                    ary2 = a.split('=')
+                    file_abbrev_maps[cur_proj][ary2[0]] = ary2[1]
+            elif prefix == 'casemap':
+                ary = data.split(",")
+                for x in range(0, len(ary), 2):
+                    check_regex_in_absolute(ary[x], line_count)
+                    if ary[x] in test_case_file_mapper_match[cur_proj]:
+                        print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
+                        mt.add_postopen(this_cfg, line_count)
                     else:
-                        my_command_generator_list = [ int(x) for x in ary[4].split(',') ] if len(ary) > 4 else [ ]
-                my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
-                any_negative_columns = False
-                if ary[2][0] == '$':
-                    this_col_list = [ ary[2][1:].replace("\\n", "\n") ]
+                        test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
+            elif prefix == 'casemapr':
+                ary = data.split(",")
+                for x in range(0, len(ary), 2):
+                    check_suspicious_regex(ary[x], line_count)
+                    if ary[x] in test_case_file_mapper_regex[cur_proj]:
+                        print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
+                        mt.add_postopen(this_cfg, line_count)
+                    else:
+                        test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
+            elif prefix == 'code_to_ignore':
+                if '\t' in data:
+                    ignorable_rule_lines[cur_proj].extend(data.split('\t'))
                 else:
-                    this_col_list = [int(x) for x in ary[2].split(',')]
-                    for l in this_col_list:
-                        any_negative_columns |= (l < 0)
-                    this_col_list = [abs(x) for x in this_col_list]
-                this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
-                table_specs[cur_proj][cur_file].generators.append(this_generator)
-            except:
-                print("Exception reading CFG", line_count, data)
-                print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text, 4th entry = columns that create command")
-                print("Also, make sure entries 2/3 are integers.")
-                sys.exit()
-        elif prefix in ( 'untestable', 'untestables' ):
-            ary = data.split(",")
-            for a in ary:
-                check_regex_in_absolute(a, line_count)
-                if a.startswith('#'):
-                    print("Stripping # from untestable at line", line_count)
-                    a = a[1:]
-                    mt.add_postopen(ttc_cfg, line_count, priority = 4)
-                if a in table_specs[cur_proj][cur_file].untestables:
-                    print("Duplicate untestable", a)
+                    ignorable_rule_lines[cur_proj].extend(data.split(','))
+            elif prefix == 'custpref':
+                ary = data.split('\t')
+                custom_table_prefixes[ary[0]] = ary[1].split(',')
+            elif prefix == 'extra':
+                extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
+            elif prefix in ( 'rule_file', 'rules_file' ):
+                temp_cur_file = inform_extension_file(data, cur_proj)
+                if not temp_cur_file:
+                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     continue
-                table_specs[cur_proj][cur_file].untestables.append(a)
-        elif prefix in ( 'untestabler' ):
-            ary = data.split(",")
-            for a in ary:
-                check_suspicious_regex(a, line_count)
-                if a.startswith('#'):
-                    print("Stripping # from untestable at line", line_count)
-                    a = a[1:]
-                    mt.add_postopen(ttc_cfg, line_count, priority = 4)
-                if a in table_specs[cur_proj][cur_file].untestable_regexes:
-                    print("Duplicate regex", a, cur_proj, line_count)
+                cur_file = temp_cur_file
+                if cur_file in rules_specs[cur_proj]:
+                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.add_postopen(this_cfg, line_count)
+                else:
+                    rules_specs[cur_proj][cur_file] = RulesPicker()
+            elif prefix in ( 'rule_picker', 'rules_picker' ):
+                ary = data.split('\t')
+                rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].extend(ary[1:])
+                try:
+                    rules_specs[cur_proj][cur_file].regex_to_abbr[ary[1]] = ary[2]
+                except:
+                    print(colorama.Fore.YELLOW + "Rules specs needs brief output file line {}.".format(line_count) + mt.WTXT)
+                    mt.add_postopen(this_cfg, line_count)
+            elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
+                ary = data.split('\t')
+                rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
+                for a in ary:
+                    rules_specs[cur_proj][cur_file].rules_on_found[a] = False
+            elif prefix in ( 'rules_no', 'rule_no', 'rules_off', 'rule_off' ):
+                ary = data.split('\t')
+                rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
+                for a in ary:
+                    rules_specs[cur_proj][cur_file].rules_off_found[a] = False
+            elif prefix in ( 'table_file', 'tables_file' ):
+                temp_cur_file = inform_extension_file(data, cur_proj)
+                if not temp_cur_file:
+                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     continue
-                table_specs[cur_proj][cur_file].untestable_regexes.append(a)
-        else:
-            print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
+                cur_file = temp_cur_file
+                if cur_file in table_specs[cur_proj]:
+                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.add_postopen(this_cfg, line_count)
+                else:
+                    table_specs[cur_proj][cur_file] = TablePicker()
+            elif prefix in ( 'value_file', 'values_file' ):
+                temp_cur_file = inform_extension_file(data, cur_proj)
+                if not temp_cur_file:
+                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    continue
+                cur_file = temp_cur_file
+                if cur_file in table_specs[cur_proj]:
+                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.add_postopen(this_cfg, line_count)
+            elif prefix in ( 'value_picker', 'values_picker' ):
+                ary = data.split('\t')
+                while len(ary) < 4:
+                    ary.append('<UNDEF>')
+                value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(which_command = ary[1], expected_file = ary[2], expected_text = ary[3])
+                #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
+            elif prefix == 'ignore':
+                ary = data.split(',')
+                for d in ary:
+                    check_regex_in_absolute(ary[x], line_count)
+                    if data in table_specs[cur_proj][cur_file].ignore:
+                        print("WARNING duplicate ignore", cur_file, line_count, d)
+                        mt.add_postopen(this_cfg, line_count)
+                    else:
+                        table_specs[cur_proj][cur_file].ignore.append(d)
+            elif prefix in ( 'ignorew', 'igw' ):
+                if data in table_specs[cur_proj][cur_file].ignore_wild:
+                    print("WARNING duplicate ignore", cur_file, line_count, data)
+                    mt.add_postopen(this_cfg, line_count)
+                else:
+                    table_specs[cur_proj][cur_file].ignore_wild.append(data)
+            elif prefix in ( 'matrix', 'matrixr' ):
+                temp_in_ary = data.split("\t")
+                temp_out_array = []
+                temp_out_file = temp_verb = temp_test_text = ''
+                for a in temp_in_ary:
+                    if a.startswith('f=') or a.startswith('o='):
+                        temp_out_file = a[2:]
+                    elif a.startswith('v='):
+                        temp_verb = a[2:]
+                    elif a.startswith('t='):
+                        temp_test_text = a[2:]
+                    else:
+                        temp_out_array.append(a)
+                test_case_matrices[cur_proj].append(MatrixSpecs(matrix = temp_out_array, out_file = temp_out_file, out_verb = temp_verb, out_text = temp_test_text, can_repeat = (prefix == 'matrix')))
+            elif prefix == 'okdup':
+                ary = data.split(",")
+                if not cur_file:
+                    print("WARNING: you probably want to put an OKDUP in a specific file.")
+                for a in ary:
+                    check_regex_in_absolute(a, line_count)
+                    if '~' not in a:
+                        table_specs[cur_proj][cur_file].okay_duplicate_counter[a] = 2
+                    else:
+                        a2 = a.split("~")
+                        table_specs[cur_proj][cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
+            elif prefix == 'okdupr':
+                if not cur_file:
+                    print("WARNING: you probably want to put an OKDUP in a specific file.")
+                check_suspicious_regex(data, line_count)
+                table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
+            elif prefix in ( 'oddcase', 'oddcases' ):
+                odd_cases[cur_proj].extend(data.split(','))
+            elif prefix == 'project':
+                cur_proj = i7.long_name(data)
+                if not cur_proj:
+                    print("WARNING bad project specified line {}: {}".format(line_count, data))
+                    mt.add_postopen(this_cfg, line_count)
+            elif prefix == 'say':
+                say_equivalents[cur_proj] = data
+            elif prefix == 'stopper':
+                table_specs[cur_proj][cur_file].stopper = data
+            elif prefix in ('gen', 'generator', 'table'):
+                ary = data.split("\t")
+                try:
+                    my_fixed_command = ''
+                    my_command_generator_list = []
+                    my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
+                    if len(ary) > 5:
+                        this_regex_to_check = ary[5]
+                    else:
+                        this_regex_to_check = ''
+                    if len(ary) > 4:
+                        if ary[4].startswith('f='):
+                            my_fixed_command = ary[4][2:]
+                        else:
+                            my_command_generator_list = [ int(x) for x in ary[4].split(',') ] if len(ary) > 4 else [ ]
+                    my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
+                    any_negative_columns = False
+                    if ary[2][0] == '$':
+                        this_col_list = [ ary[2][1:].replace("\\n", "\n") ]
+                    else:
+                        this_col_list = [int(x) for x in ary[2].split(',')]
+                        for l in this_col_list:
+                            any_negative_columns |= (l < 0)
+                        this_col_list = [abs(x) for x in this_col_list]
+                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
+                    table_specs[cur_proj][cur_file].generators.append(this_generator)
+                except:
+                    print("Exception reading CFG", line_count, data)
+                    print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text, 4th entry = columns that create command")
+                    print("Also, make sure entries 2/3 are integers.")
+                    sys.exit()
+            elif prefix in ( 'untestable', 'untestables' ):
+                ary = data.split(",")
+                for a in ary:
+                    check_regex_in_absolute(a, line_count)
+                    if a.startswith('#'):
+                        print("Stripping # from untestable at line", line_count)
+                        a = a[1:]
+                        mt.add_postopen(this_cfg, line_count, priority = 4)
+                    if a in table_specs[cur_proj][cur_file].untestables:
+                        print("Duplicate untestable", a)
+                        continue
+                    table_specs[cur_proj][cur_file].untestables.append(a)
+            elif prefix in ( 'untestabler' ):
+                ary = data.split(",")
+                for a in ary:
+                    check_suspicious_regex(a, line_count)
+                    if a.startswith('#'):
+                        print("Stripping # from untestable at line", line_count)
+                        a = a[1:]
+                        mt.add_postopen(this_cfg, line_count, priority = 4)
+                    if a in table_specs[cur_proj][cur_file].untestable_regexes:
+                        print("Duplicate regex", a, cur_proj, line_count)
+                        continue
+                    table_specs[cur_proj][cur_file].untestable_regexes.append(a)
+            else:
+                print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
+read_cfg_file(ttc_cfg)
 my_proj = i7.dir2proj()
 
 cmd_count = 1
