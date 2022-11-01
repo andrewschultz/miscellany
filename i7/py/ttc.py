@@ -23,7 +23,11 @@ from shutil import copy
 from filecmp import cmp
 
 rbr_globals = []
-ttc_cfg = "c:/writing/scripts/ttc.txt"
+
+ttc_base = "ttc.txt"
+ttc_dir = "c:/writing/scripts"
+
+ttc_cfg = os.path.normpath(os.path.join(ttc_dir, ttc_base))
 
 alphabetize = False
 global_error_note = False
@@ -1115,6 +1119,7 @@ cur_file = "<NONE>"
 def read_cfg_file(this_cfg):
     #global table_specs
     #global rules_specs
+    already_included[this_cfg] = True
     with open(this_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
@@ -1127,7 +1132,10 @@ def read_cfg_file(this_cfg):
                     print("WARNING need <> at line {} in {}.".format(line_count, this_cfg))
                     continue
                 if '/' not in ls and '\\' not in ls:
-                    file_to_find = os.path.join('c:/writing/scripts', ls[1:-1])
+                    file_to_find = os.path.normpath(os.path.join(ttc_dir, ls[1:-1]))
+                    if file_to_find in already_included:
+                        print("WARNING duplicate inclusion of {} at {} line {}.".format(file_to_find, this_cfg, line_count))
+                        continue
                     read_cfg_file(file_to_find)
                 continue
             (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
@@ -1338,6 +1346,7 @@ def read_cfg_file(this_cfg):
             else:
                 print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
 
+already_included = defaultdict(bool)
 read_cfg_file(ttc_cfg)
 my_proj = i7.dir2proj()
 
