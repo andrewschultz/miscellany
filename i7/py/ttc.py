@@ -1363,6 +1363,26 @@ while cmd_count < len(sys.argv):
             verbose_level = num
         else:
             verbose_level = 1
+    elif arg[0] == '/':
+        if not arg[1:]:
+            mt.npo(ttc_cfg)
+        proj_look = arg[1:]
+        if proj_look not in i7.i7x:
+            sys.exit("No i7x key for {}.".format(proj_look))
+        temp = i7.i7x[proj_look]
+        my_stuff = [x for x in i7.i7x if i7.i7x[x] == temp]
+        current_cfg = ''
+        for m in my_stuff:
+            this_cfg = os.path.join(ttc_dir, "ttc-{}.txt".format(m))
+            if os.path.exists(os.path.join(ttc_dir, "ttc-{}.txt".format(m))):
+                if current_cfg:
+                    print("WARNING duplicate cfg")
+                    print("FIRST", current_cfg)
+                    print("NOW", this_cfg)
+                current_cfg = this_cfg
+        if current_cfg:
+            mt.npo(current_cfg)
+        sys.exit("No CFGs found for {}.".format(temp))
     elif mt.alfmatch(arg, 'ncd'):
         collapse_extra_dashes = False
     elif arg in ( 'a', 'alf' ):
