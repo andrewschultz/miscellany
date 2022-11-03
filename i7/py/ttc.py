@@ -25,7 +25,7 @@ from filecmp import cmp
 rbr_globals = []
 
 ttc_base = "ttc.txt"
-ttc_dir = "c:/writing/scripts"
+ttc_dir = "c:/Users/Andrew/Documents/github/configs/ttc"
 
 ttc_cfg = os.path.normpath(os.path.join(ttc_dir, ttc_base))
 
@@ -576,7 +576,7 @@ def get_rule_cases(this_proj):
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
                 test_case_full_name = test_case_full_name.replace('--', '-').lower()
-                my_expected_file = rules_specs[cur_proj][cur_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[cur_proj][cur_file].regex_to_abbr else 'undef'
+                my_expected_file = rules_specs[this_proj][this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_proj][this_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
                 else:
@@ -1136,6 +1136,8 @@ def read_cfg_file(this_cfg):
                     if file_to_find in already_included:
                         print("WARNING duplicate inclusion of {} at {} line {}.".format(file_to_find, this_cfg, line_count))
                         continue
+                    if verbose_level > 0:
+                        print("Checking through {}".format(file_to_find))
                     read_cfg_file(file_to_find)
                 continue
             (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
@@ -1235,7 +1237,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'ignore':
                 ary = data.split(',')
                 for d in ary:
-                    check_regex_in_absolute(ary[x], line_count)
+                    check_regex_in_absolute(d, line_count)
                     if data in table_specs[cur_proj][cur_file].ignore:
                         print("WARNING duplicate ignore", cur_file, line_count, d)
                         mt.add_postopen(this_cfg, line_count)
@@ -1416,6 +1418,9 @@ while cmd_count < len(sys.argv):
         usage()
 
 all_specs = set(list(table_specs)).union(set(list(rules_specs)))
+
+if not my_proj:
+    sys.exit("You need to be in a valid project directory or specify a project.")
 
 if my_proj not in all_specs:
     print("{} not in table_specs or rules_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
