@@ -48,6 +48,15 @@ okay_duplicates = 0
 
 valid_fork_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
 
+FIND_ABSOLUTE_CASE = 0
+FIND_REGEX_CASE = 1
+IGNORE_ABSOLUTE_CASE = 2
+IGNORE_REGEX_CASE = 3
+#
+#case_mapper[this_proj]
+#test_case_file_mapper_match = defaultdict(lambda: defaultdict(str)) CASEMAP
+#test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str)) CASEMAPR
+
 def common_mistakes():
     print("You may need to run rbr.py if you changed a branch file recently.")
     print("If a test case is not in an rbr file, you may want to add it to EXTRAS.")
@@ -125,14 +134,19 @@ class MatrixSpecs:
         self.out_text = out_text
         self.can_repeat = can_repeat
 
+class TestCaseMapper:
+
+    def __init__(self):
+        self.mappers_in_order = []
+        self.text_and_type_map = defaultdict(tuple)
+
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
 value_specs = defaultdict(lambda: defaultdict(lambda: defaultdict(ValuesPicker)))
 rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
-test_case_file_mapper_match = defaultdict(lambda: defaultdict(str))
-test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str))
 file_abbrev_maps = defaultdict(lambda: defaultdict(str))
+case_mapper = defaultdict(TestCaseMapper)
 
 test_case_matrices = defaultdict(list)
 
@@ -781,16 +795,17 @@ def change_dir_if_needed(new_dir = ''):
         os.chdir(new_dir)
 
 def expected_file(my_case, this_proj):
-    for q in test_case_file_mapper_match[this_proj]:
+    for q in case_mapper[this_proj].mappers_in_order:
+        the_case = case_mapper[this_proj].text_and_type_map[q][1]
+        if the_case == IGNORE_ABSOLUTE_CASE or the_case == IGNORE_REGEX_CASE:
+            continue
         q1 = q.replace(' ', '-')
-        if q1 in my_case:
-            temp = test_case_file_mapper_match[this_proj][q]
+        if the_case == FIND_ABSOLUTE_CASE and q1 in my_case:
+            temp = case_mapper[this_proj].text_and_type_map[q][0]
             temp = temp.replace('reg-', '').replace('.*', '')
             return temp
-    for q in test_case_file_mapper_regex[this_proj]:
-        q1 = q.replace(' ', '-')
-        if re.search(q1, my_case):
-            temp = test_case_file_mapper_regex[this_proj][q]
+        if the_case == FIND_REGEX_CASE and q1 in my_case:
+            temp = case_mapper[this_proj].text_and_type_map[q][0]
             temp = temp.replace('reg-', '').replace('.*', '')
             return temp
     return "<NO GUESS>"
@@ -1054,27 +1069,32 @@ def verify_case_placement(this_proj):
                     is_retest = True
                 match_array = []
                 this_success = True
-                for t in test_case_file_mapper_match[this_proj]:
+#    for q in case_mapper[this_proj].mappers_in_order:
+#        the_case = case_mapper[this_proj].text_and_type_map[1]
+                for t in case_mapper[this_proj].mappers_in_order:
+                    case_type = case_mapper[this_proj].text_and_type_map[t][1]
+                    case_file = case_mapper[this_proj].text_and_type_map[t][0]
                     t1 = t.replace(' ', '-')
-                    if re.search(t, line_mod):
-                        if re.search(t, line_mod):
-                            match_array.append(t)
-                        if not re.search(test_case_file_mapper_match[this_proj][t], fb):
-                            print("Test case", line_mod, "sorted into wrong file", fb, "should have wild card", test_case_file_mapper_match[this_proj][t])
+                    if case_type == 0:
+                        if t1 not in line_mod:
+                            continue
+                        if case_file in fb:
+                            match_array.append(t1)
+                        else:
+                            print("Test case", line_mod, "sorted into wrong file", fb, "should have absolute wild card", test_case_file_mapper_match[this_proj][t])
                             mark_rbr_open(file_name, line_count, line)
                             wrong_file += 1
                             this_success = False
-                for t in test_case_file_mapper_regex[this_proj]:
-                    t1 = t.replace(' ', '-')
-                    if not re.search(t1, line_mod):
-                        continue
-                    if re.search(t1, line_mod):
-                        match_array.append(t1)
-                    if not re.search(test_case_file_mapper_regex[this_proj][t], fb):
-                        print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
-                        mark_rbr_open(file_name, line_count, line)
-                        wrong_file += 1
-                        this_success = False
+                    elif case_type == 1:
+                        if not re.search(t1, line_mod):
+                            continue
+                        if re.search(case_file, fb):
+                            match_array.append(t1)
+                        else:
+                            print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
+                            mark_rbr_open(file_name, line_count, line)
+                            wrong_file += 1
+                            this_success = False
                 total_matches = len(match_array)
                 if total_matches == 0:
                     unsorted += 1
@@ -1151,24 +1171,46 @@ def read_cfg_file(this_cfg):
                 for a in ary:
                     ary2 = a.split('=')
                     file_abbrev_maps[cur_proj][ary2[0]] = ary2[1]
+            elif prefix == 'caseignore':
+                ary = data.split(",")
+                for x in range(0, len(ary), 2):
+                    check_regex_in_absolute(ary[x], line_count)
+                    if ary[x] in case_mapper[cur_proj].mappers_in_order:
+                        print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
+                        mt.add_postopen(this_cfg, line_count)
+                    else:
+                        case_mapper[cur_proj].mappers_in_order.append(ary[x])
+                        case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], IGNORE_ABSOLUTE_CASE)
+            elif prefix == 'caseignorer':
+                ary = data.split(",")
+                for x in range(0, len(ary), 2):
+                    check_suspicious_regex(ary[x], line_count)
+                    if ary[x] in case_mapper[cur_proj].mappers_in_order:
+                        print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
+                        mt.add_postopen(this_cfg, line_count)
+                    else:
+                        case_mapper[cur_proj].mappers_in_order.append(ary[x])
+                        case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], FIND_REGEX_CASE)
             elif prefix == 'casemap':
                 ary = data.split(",")
                 for x in range(0, len(ary), 2):
                     check_regex_in_absolute(ary[x], line_count)
-                    if ary[x] in test_case_file_mapper_match[cur_proj]:
+                    if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                         mt.add_postopen(this_cfg, line_count)
                     else:
-                        test_case_file_mapper_match[cur_proj][ary[x]] = ary[x+1]
+                        case_mapper[cur_proj].mappers_in_order.append(ary[x])
+                        case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], FIND_ABSOLUTE_CASE)
             elif prefix == 'casemapr':
                 ary = data.split(",")
                 for x in range(0, len(ary), 2):
                     check_suspicious_regex(ary[x], line_count)
-                    if ary[x] in test_case_file_mapper_regex[cur_proj]:
+                    if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                         mt.add_postopen(this_cfg, line_count)
                     else:
-                        test_case_file_mapper_regex[cur_proj][ary[x]] = ary[x+1]
+                        case_mapper[cur_proj].mappers_in_order.append(ary[x])
+                        case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], FIND_REGEX_CASE)
             elif prefix == 'code_to_ignore':
                 if '\t' in data:
                     ignorable_rule_lines[cur_proj].extend(data.split('\t'))
@@ -1286,6 +1328,10 @@ def read_cfg_file(this_cfg):
                 if not cur_proj:
                     print("WARNING bad project specified line {}: {}".format(line_count, data))
                     mt.add_postopen(this_cfg, line_count)
+                if cur_proj in case_mapper:
+                    print("WARNING redefined case_mapper for {} line {} of {}.".format(cur_proj, line_count, this_cfg))
+                else:
+                    case_mapper[cur_proj] = TestCaseMapper()
             elif prefix == 'say':
                 say_equivalents[cur_proj] = data
             elif prefix == 'stopper':
