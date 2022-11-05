@@ -23,6 +23,7 @@ from pathlib import Path # this forces us to use Python 3.4 but it's worth it
 import mytools as mt
 import pyperclip
 import colorama
+from collections import defaultdict
 
 count = 1
 file_args = []
@@ -75,7 +76,18 @@ def default_search(max_files = 5):
                 mt.add_open(x, hdt)
                 got_any = True
     if len(extras):
-        print(len(extras), "Extras:", ', '.join(extras))
+        extra_dict = defaultdict(list)
+        for e in extras:
+            extra_dict[e[:5]].append(e)
+        for d in sorted(extra_dict):
+            if len(extra_dict[d]) == 1:
+                print("    --", extra_dict[d][0])
+            else:
+                o = os.path.commonprefix(extra_dict[d])
+                where_to_start = o
+                where_2 = max(x for x in range(0, len(o)) if o[x] == ' ')
+                o = o[:where_2]
+                print("    {}: {}".format(o, ', '.join([x[len(o):].strip() for x in extra_dict[d]])))
     if not cur_files:
         print("All purposes written in!")
     mt.post_open()
