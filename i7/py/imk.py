@@ -17,6 +17,7 @@ import os
 import re
 import i7
 import sys
+import glob
 import datetime
 from pathlib import Path # this forces us to use Python 3.4 but it's worth it
 import mytools as mt
@@ -49,6 +50,36 @@ def check_valid_combo(my_abbrev, abbrev_class, dict_of_abbrevs):
     if my_abbrev.startswith("+"): return
     sys.exit("You may need to define a valid {} abbreviation--{} turned up nothing. Or you can use + to force things.".format(abbrev_class, my_abbrev))
 
+def has_default_text(x):
+    with open(x) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('"'):
+                if 'This should briefly' in line:
+                    return line_count
+                else:
+                    return 0
+    return 0
+
+def default_search(max_files = 5):
+    extras = []
+    cur_files = 0
+    for x in glob.glob(i7.ext_dir + "/*.i7x"):
+        hdt = has_default_text(x)
+        if hdt:
+            xb = os.path.basename(x)
+            cur_files += 1
+            if cur_files > max_files:
+                extras.append(xb)
+            else:
+                print("Opening", xb, "line", hdt)
+                mt.add_open(x, hdt)
+                got_any = True
+    if len(extras):
+        print(len(extras), "Extras:", ', '.join(extras))
+    if not cur_files:
+        print("All purposes written in!")
+    mt.post_open()
+
 to_create = []
 
 while count < len(sys.argv):
@@ -65,6 +96,9 @@ while count < len(sys.argv):
     elif mt.alpha_match('nc', arg) or mt.alpha_match('cnt', arg):
         print("Header include not sent to clipboard.")
         to_clipboard = False
+    elif arg in ('ds', 'sd'):
+        default_search()
+        sys.exit()
     else:
         if to_create:
             sys.exit("You can't create more than one file per run.")
