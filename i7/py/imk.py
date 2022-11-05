@@ -40,6 +40,8 @@ def usage():
     print("=" * 50)
     print("-o / -f / -fo = overwrite file")
     print("-n / -on / -no = don't open post conversion. Default = open.")
+    print("-ds / -sd = verify. Number after changes max files to open.")
+    sys.exit()
 
 def possible_mod(my_arg):
     if my_arg.startswith("+"):
@@ -94,6 +96,9 @@ def default_search(max_files = 5):
 
 to_create = []
 
+if len(sys.argv) == 1:
+    usage()
+
 while count < len(sys.argv):
     arg = mt.nohy(sys.argv[count])
     if arg in ( 'o', 'of', 'fo'):
@@ -111,9 +116,13 @@ while count < len(sys.argv):
     elif arg in ('ds', 'sd'):
         default_search()
         sys.exit()
+    elif arg[2] in ('ds', 'sd') and arg[2:].isdigit():
+        default_search(max_files = int(arg[2:]))
+    elif arg == '?':
+        usage()
     else:
         if to_create:
-            sys.exit("You can't create more than one file per run.")
+            sys.exit("You can't create more than one file per run. Run with ? or no arguments to see what works.")
         if ',' not in arg:
             if count == 1:
                 to_create = sys.argv[1:]
