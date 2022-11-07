@@ -51,6 +51,7 @@ ignores = defaultdict(str)
 apost_changes = defaultdict(int)
 
 rbr_config = 'c:/writing/scripts/rbr.txt'
+rbr_wild_card = ''
 
 branch_timestamp_skip_check = True
 
@@ -1215,6 +1216,8 @@ while count < len(sys.argv):
     elif arg in ( 'pf', 'pc', 'cp' ): copy_over_post = force_all_regs = True
     elif arg == 'iuc':
         ignore_unsaved_changed = True
+    elif arg.startswith('='):
+        rbr_wild_card = arg[1:]
     elif arg.startswith('p='):
         if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         exe_proj = i7.i7x[arg[2:]]
@@ -1348,6 +1351,9 @@ if len(my_file_list_valid) == 0:
 for x in my_file_list_valid:
     if branch_timestamp_skip_check and no_new_branch_edits(x):
         print("Skipping", x, "for no new edits.")
+        continue
+    if rbr_wild_card and rbr_wild_card not in x:
+        print("Skipping", x, "which does not match wild card.")
         continue
     get_file(x)
 
