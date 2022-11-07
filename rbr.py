@@ -325,16 +325,18 @@ def post_copy(file_array, in_file):
             for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
         elif len(changed_files.keys()):
             print("Copying changed files over to {} directory.".format(prt_color))
-            for q in changed_files.keys():
+            for q in list(changed_files.keys()):
                 print(colorama.Fore.GREEN + q, "=>", ', '.join(changed_files[q]) + colorama.Style.RESET_ALL)
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
+                changed_files.pop(q)
         elif len(absent_files.keys()):
             print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
-            for q in absent_files.keys():
+            for q in list(absent_files.keys()):
                 print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
                 for r in absent_files[q]:
                     copy(r[0], r[1])
+                absent_files.pop(q)
         elif len(my_file_list_valid) == 1:
             print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
@@ -528,8 +530,10 @@ def get_file(fname):
                 continue
             if line.startswith("@"):
                 if old_grouping == line[1:].strip():
-                    print("Two groupings can be merged. The second is {} at line {}".format(line[1:].strip(), line_count))
+                    print(colorama.Fore.YELLOW + "Two groupings can/should be merged. The second is {} at line {}".format(line[1:].strip(), line_count) + mt.WTXT)
                     mt.add_postopen(fname, line_count, priority=5)
+                    if in_grouping:
+                        continue
                 in_grouping = True
                 old_grouping = line[1:].strip()
             elif not line.strip():
@@ -572,9 +576,15 @@ def get_file(fname):
                 balance_trace = []
                 balance_start = line_count
                 continue
-            elif line.startswith("#balance undo"):
+            elif balance_undos and line.startswith("#balance undo"):
                 print("WARNING {} line {}: need double-pound sign before balance undo.".format(fb, line_count))
                 mt.add_postopen(fname, line_count, priority=7)
+            if line.startswith("##end undo") or line.startswith("##end balance undo"):
+                if len(balance_trace):
+                    print(colorama.Fore.RED + "ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.') + colorama.Style.RESET_ALL)
+                    mt.add_postopen(fname, line_count)
+                balance_undos = False
+                continue
             if potentially_faulty_regex(line):
                 print("WARNING {} line {} may need starting slash for regex:{}".format(fname, line_count, line_orig))
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
