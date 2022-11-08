@@ -129,11 +129,33 @@ def bail_if_not(f, file_desc = ""):
 def filelines_no_comments(file_stream):
     return [ x for x in file_stream.readlines() if x.strip() and not x.startswith('#') and not x.startswith(";") ]
 
+def is_alpha_match_special(my_string):
+    return '>' in my_string or '<' in my_string or '|' in my_string
+
 def alpha_match(var1, var2, case_insensitive = True):
+    if is_alpha_match_special(var2):
+        if is_alpha_match_special(var1):
+            print(colorama.Fore.YELLOW + "WARNING: ALPHA_MATCH TRIES TO COMPARE TWO CHARACTERS WITH WILD CARDS" + WTXT)
+            return False
+        return alpha_match(var2, var1, case_insensitive = case_insensitive)
     if case_insensitive:
         var1 = var1.lower()
         var2 = var2.lower()
-    return sorted(var1) == sorted(var2)
+    if '|' in var1:
+        a = var1.index('|')
+        left_side = sorted(var1[:a]) == sorted(var2[:a])
+        right_side = sorted(var1[a+1:]) == sorted(var2[a:])
+    elif '<' in var1:
+        a = var1.index('<')
+        left_side = sorted(var1[:a]) == sorted(var2[:a])
+        right_side = var1[a+1:] == var2[a:]
+    elif '>' in var1:
+        a = var1.index('>')
+        left_side = var1[:a] == var2[:a]
+        right_side = sorted(var1[a+1:]) == sorted(var2[a:])
+    else:
+        return sorted(var1) == sorted(var2)
+    return left_side and right_side
 
 alf_match = alfmatch = alphamatch = alpha_match
 
