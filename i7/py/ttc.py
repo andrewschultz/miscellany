@@ -73,12 +73,13 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], command_generator_list = [], fixed_command = '', eliminate_blank_suggestions = False, regex_to_check = ''):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], print_absolute = '', command_generator_list = [], fixed_command = '', eliminate_blank_suggestions = False, regex_to_check = ''):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
         self.read_col_list = read_col_list
         self.print_col_list = print_col_list
+        self.print_absolute = print_absolute
         self.command_generator_list = command_generator_list
         self.fixed_command = fixed_command
         self.eliminate_blank_suggestions = eliminate_blank_suggestions
@@ -726,7 +727,9 @@ def get_table_cases(this_proj):
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
                         possible_text = ''
-                        if type(my_generator.print_col_list[0]) == int:
+                        if my_generator.print_absolute:
+                            possible_text = my_generator.print_absolute
+                        else:
                             for c in my_generator.print_col_list:
                                 try:
                                     temp_text = columns[c]
@@ -736,8 +739,6 @@ def get_table_cases(this_proj):
                                 except:
                                     possible_text += '---'
                             possible_text = possible_text[1:]
-                        else:
-                            possible_text = my_generator.print_col_list[0]
                         if test_case_name in table_specs[this_proj][this_file].okay_duplicate_counter:
                             table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] -= 1
                             if table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] < 0:
@@ -1342,6 +1343,7 @@ def read_cfg_file(this_cfg):
                     my_fixed_command = ''
                     my_command_generator_list = []
                     my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
+                    this_print_absolute = ''
                     if len(ary) > 5:
                         this_regex_to_check = ary[5]
                     else:
@@ -1354,13 +1356,13 @@ def read_cfg_file(this_cfg):
                     my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
                     any_negative_columns = False
                     if ary[2][0] == '$':
-                        this_col_list = [ ary[2][1:].replace("\\n", "\n") ]
+                        this_print_absolute = ary[2][1:].replace("\\n", "\n")
                     else:
-                        this_col_list = [int(x) for x in ary[2].split(',')]
-                        for l in this_col_list:
+                        this_print_col_list = [int(x) for x in ary[2].split(',')]
+                        for l in this_print_col_list:
                             any_negative_columns |= (l < 0)
-                        this_col_list = [abs(x) for x in this_col_list]
-                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_col_list, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
+                        this_print_col_list = [abs(x) for x in this_print_col_list]
+                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
                     table_specs[cur_proj][cur_file].generators.append(this_generator)
                 except:
                     print("Exception reading CFG", line_count, data)
