@@ -258,21 +258,27 @@ def reg_verify_file(my_file):
         return -1
     return 0
 
-def reg_verify_dir():
+def reg_verify_dir(open_unmarked = False):
     max_open = 5
     cur_open = 0
+    actual_open = 0
     for g in glob.glob("reg-*"):
         temp = reg_verify_file(g)
-        if temp < 1:
+        if temp < 1 and not open_unmarked:
+            continue
+        elif temp == 0:
             continue
         else:
             cur_open += 1
             if cur_open <= max_open:
-                mt.add_post(g, temp)
+                actual_open += 1
+                mt.add_post(g, 1 if temp == -1 else temp)
             else:
-                print(colorama.Fore.GREEN + "UNOPENED file needs fixing: {}".format(os.path.basename(g))  + my.wtxt)
+                print(colorama.Fore.GREEN + "UNOPENED file needs fixing: {}".format(os.path.basename(g))  + mt.WTXT)
     if cur_open == 0:
         print(colorama.Fore.GREEN + "All {} reg- files verified as properly annotated." + mt.WTXT)
+    else:
+        print(colorama.Fore.BLUE + "{} to fix of {}".format(actual_open, cur_open) + mt.WTXT)
     mt.post_open()
     sys.exit()
 
@@ -1273,6 +1279,8 @@ while count < len(sys.argv):
     elif arg == 'gh': github_okay = True
     elif arg in ( 'rv', 'vr' ):
         reg_verify_dir()
+    elif arg in ( 'rva', 'vra' ):
+        reg_verify_dir(open_unmarked = True)
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':
