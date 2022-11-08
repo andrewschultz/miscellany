@@ -242,6 +242,40 @@ def apostrophe_check(line, line_count, warns):
             apost_changes[a1[x]] += 1
     return True
 
+def reg_verify_file(my_file):
+    mb = os.path.basename(my_file)
+    positive_found = False
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('##') and re.sub("^#+ *", "", line).startswith('reg'):
+                if mb in line:
+                    positive_found = True
+                    continue
+                print(colorama.Fore.RED + "ERROR {} had mis-identifying line {} {}".format(mb, line_count, line.strip()) + mt.WTXT)
+                return line_count
+    if not positive_found:
+        print(colorama.Fore.YELLOW + "WARNING {} had no positive test file identification.".format(mb) + mt.WTXT)
+        return -1
+    return 0
+
+def reg_verify_dir():
+    max_open = 5
+    cur_open = 0
+    for g in glob.glob("reg-*"):
+        temp = reg_verify_file(g)
+        if temp < 1:
+            continue
+        else:
+            cur_open += 1
+            if cur_open <= max_open:
+                mt.add_post(g, temp)
+            else:
+                print(colorama.Fore.GREEN + "UNOPENED file needs fixing: {}".format(os.path.basename(g))  + my.wtxt)
+    if cur_open == 0:
+        print(colorama.Fore.GREEN + "All {} reg- files verified as properly annotated." + mt.WTXT)
+    mt.post_open()
+    sys.exit()
+
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
     if '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
@@ -1237,6 +1271,8 @@ while count < len(sys.argv):
     elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
+    elif arg in ( 'rv', 'vr' ):
+        reg_verify_dir()
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':
