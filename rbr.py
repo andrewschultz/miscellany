@@ -25,6 +25,7 @@ import os
 import i7
 import glob
 import subprocess
+import codecs
 from collections import defaultdict
 from shutil import copy
 from filecmp import cmp
@@ -245,9 +246,9 @@ def apostrophe_check(line, line_count, warns):
 def reg_verify_file(my_file):
     mb = os.path.basename(my_file)
     positive_found = False
-    with open(my_file) as file:
+    with codecs.open(my_file, encoding='utf8', errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
-            if line.startswith('##') and re.sub("^#+ *", "", line).startswith('reg'):
+            if line.startswith('##') and re.sub("^#+ (file name: *)?", "", line).startswith('reg'):
                 if mb in line:
                     positive_found = True
                     continue
@@ -258,11 +259,21 @@ def reg_verify_file(my_file):
         return -1
     return 0
 
-def reg_verify_dir(open_unmarked = False):
+def reg_verify_dir(open_unmarked = False, bail = True):
     max_open = 5
     cur_open = 0
     actual_open = 0
-    for g in glob.glob("reg-*"):
+    my_glob = glob.glob("reg-*.txt")
+    if len(my_glob) == 0:
+        if bail:
+            sys.exit()
+        return
+    this_proj = i7.dir2proj(os.getcwd())
+    print(this_proj, "has", len(my_glob), "REG files") # this is odd! Why do I have different results with the default?
+    for g in my_glob:
+        if g.endswith('.bak'):
+            print(colorama.Fore.CYAN + "IGNORED backup file {}, which you probably want to delete.".format(g))
+            continue
         temp = reg_verify_file(g)
         if temp < 1 and not open_unmarked:
             continue
@@ -276,10 +287,19 @@ def reg_verify_dir(open_unmarked = False):
             else:
                 print(colorama.Fore.GREEN + "UNOPENED file needs fixing: {}".format(os.path.basename(g))  + mt.WTXT)
     if cur_open == 0:
-        print(colorama.Fore.GREEN + "All {} reg- files verified as properly annotated." + mt.WTXT)
+        print(colorama.Fore.GREEN + "All {} reg- files in {} verified as properly annotated.".format(len(my_glob), this_proj) + mt.WTXT)
     else:
-        print(colorama.Fore.BLUE + "{} to fix of {}".format(actual_open, cur_open) + mt.WTXT)
+        print(colorama.Fore.BLUE + "{} opened of total {} to fix.".format(actual_open, cur_open) + mt.WTXT)
     mt.post_open()
+    if bail:
+        sys.exit()
+
+def reg_verify_all_dirs(open_unmarked = False):
+    for g in glob.glob("c:/games/inform/*.inform"):
+        if not os.path.isdir(g):
+            continue
+        os.chdir(os.path.join(g, "source"))
+        reg_verify_dir(open_unmarked, bail = False)
     sys.exit()
 
 def vet_potential_errors(line, line_count, cur_pot):
@@ -1278,9 +1298,13 @@ while count < len(sys.argv):
     elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
     elif arg in ( 'rv', 'vr' ):
-        reg_verify_dir()
+        reg_verify_dir(open_unmarked = False)
     elif arg in ( 'rva', 'vra' ):
         reg_verify_dir(open_unmarked = True)
+    elif mt.alfmatch('rv<d', arg):
+        reg_verify_all_dirs(open_unmarked = False)
+    elif mt.alfmatch('rv|ad', arg):
+        reg_verify_all_dirs(open_unmarked = True)
     elif arg == '?': usage()
     elif arg in abbrevs.keys(): poss_abbrev.append(arg)
     elif arg[0] == 'f':
