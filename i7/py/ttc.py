@@ -1141,6 +1141,7 @@ def read_cfg_file(this_cfg):
     #global table_specs
     #global rules_specs
     already_included[this_cfg] = True
+    tb = os.path.basename(this_cfg)
     with open(this_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
@@ -1339,30 +1340,46 @@ def read_cfg_file(this_cfg):
                 table_specs[cur_proj][cur_file].stopper = data
             elif prefix in ('gen', 'generator', 'table'):
                 ary = data.split("\t")
+                any_negative_columns = False
+                my_prefixes = [ 'ttc' ]
+                my_command_generator_list = []
+                this_col_list = []
                 try:
                     my_fixed_command = ''
                     my_command_generator_list = []
-                    my_prefixes = ary[3].split(',') if len(ary) > 3 and ary[3].replace('-', '') else [ 'ttc' ]
+                    this_regex_to_check = ''
+                    this_print_col_list = []
                     this_print_absolute = ''
-                    if len(ary) > 5:
-                        this_regex_to_check = ary[5]
-                    else:
-                        this_regex_to_check = ''
-                    if len(ary) > 4:
-                        if ary[4].startswith('f='):
-                            my_fixed_command = ary[4][2:]
+                    this_read_col_list = [ 0 ]
+                    generator_dict = defaultdict(str)
+                    for idx in range(1, len(ary)):
+                        if '=' not in ary[idx]:
+                            print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                            continue
+                        sub_array = ary[idx].split('=', 1)
+                        generator_type = sub_array[0]
+                        generator_data = sub_array[1]
+                        if generator_type in generator_dict:
+                            print("WARNING duplicate generator type {} line {} TSV entry {} = {}".format(generator_type, line_count, idx, generator_type))
+                        if generator_type == "cmdgen":
+                            my_command_generator_list = [ int(x) for x in generator_data.split(',') ]
+                        elif generator_type == "coltoprint":
+                            my_col_print = [int(x) for x in generator_data.split(',')]
+                        elif generator_type == "fc":
+                            my_fixed_command = generator_data
+                        elif generator_type == "prefixes":
+                            my_prefixes = generator_data.split(',')
+                        elif generator_type == "printfixed":
+                            this_print_absolute = generator_data.replace("\\n", "\n")
+                        elif generator_type == "printfromcol":
+                            this_print_col_list = [ int(x) for x in generator_data.split(',') ]
+                        elif generator_type == 'readcol':
+                            this_read_col_list = [int(x) for x in generator_data.split(',')]
+                        elif generator_type == 'regcheck':
+                            this_regex_to_check = generator_data
                         else:
-                            my_command_generator_list = [ int(x) for x in ary[4].split(',') ] if len(ary) > 4 else [ ]
-                    my_col_print = [ ary[2][1:] ] if ary[2][0] == '$' else [int(x) for x in ary[2].split(',')]
-                    any_negative_columns = False
-                    if ary[2][0] == '$':
-                        this_print_absolute = ary[2][1:].replace("\\n", "\n")
-                    else:
-                        this_print_col_list = [int(x) for x in ary[2].split(',')]
-                        for l in this_print_col_list:
-                            any_negative_columns |= (l < 0)
-                        this_print_col_list = [abs(x) for x in this_print_col_list]
-                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = [int(x) for x in ary[1].split(',')], print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
+                            print("WARNING unidentified start {} line {} TSV entry {} = {}".format(tb, line_count, idx, generator_type))
+                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = this_read_col_list, print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
                     table_specs[cur_proj][cur_file].generators.append(this_generator)
                 except:
                     print("Exception reading CFG", line_count, data)
