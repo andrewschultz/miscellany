@@ -73,7 +73,7 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], print_absolute = '', command_generator_list = [], fixed_command = '', eliminate_blank_suggestions = False, regex_to_check = ''):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], print_absolute = '', command_generator_list = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
@@ -82,8 +82,8 @@ class TestCaseGenerator:
         self.print_absolute = print_absolute
         self.command_generator_list = command_generator_list
         self.fixed_command = fixed_command
-        self.eliminate_blank_suggestions = eliminate_blank_suggestions
         self.regex_to_check = regex_to_check
+        self.ignore_blank_print = ignore_blank_print
 
 class SimpleTestCase:
 
@@ -766,7 +766,7 @@ def get_table_cases(this_proj):
                             for col in my_generator.command_generator_list:
                                 temp_command += ' ' + columns[col].replace('"', '')
                             temp_command = temp_command[1:]
-                        if my_generator.eliminate_blank_suggestions and not has_meaningful_content(possible_text):
+                        if my_generator.ignore_blank_print and not has_meaningful_content(possible_text):
                             continue
                         return_dict[test_case_name] = SimpleTestCase(possible_text, command_text = temp_command)
             if table_lines_undecided > 0:
@@ -1340,18 +1340,18 @@ def read_cfg_file(this_cfg):
                 table_specs[cur_proj][cur_file].stopper = data
             elif prefix in ('gen', 'generator', 'table'):
                 ary = data.split("\t")
-                any_negative_columns = False
                 my_prefixes = [ 'ttc' ]
                 my_command_generator_list = []
                 this_col_list = []
+                my_fixed_command = ''
+                my_command_generator_list = []
+                this_regex_to_check = ''
+                this_print_col_list = []
+                this_print_absolute = ''
+                this_read_col_list = [ 0 ]
+                this_ignore_blank_suggestions = False
+                generator_dict = defaultdict(str)
                 try:
-                    my_fixed_command = ''
-                    my_command_generator_list = []
-                    this_regex_to_check = ''
-                    this_print_col_list = []
-                    this_print_absolute = ''
-                    this_read_col_list = [ 0 ]
-                    generator_dict = defaultdict(str)
                     for idx in range(1, len(ary)):
                         if '=' not in ary[idx]:
                             print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
@@ -1371,6 +1371,8 @@ def read_cfg_file(this_cfg):
                             my_prefixes = generator_data.split(',')
                         elif generator_type == "printfixed":
                             this_print_absolute = generator_data.replace("\\n", "\n")
+                        elif generator_type == "ignoreblankprint":
+                            this_ignore_blank_print = int(generator_data)
                         elif generator_type == "printfromcol":
                             this_print_col_list = [ int(x) for x in generator_data.split(',') ]
                         elif generator_type == 'readcol':
@@ -1379,7 +1381,7 @@ def read_cfg_file(this_cfg):
                             this_regex_to_check = generator_data
                         else:
                             print("WARNING unidentified start {} line {} TSV entry {} = {}".format(tb, line_count, idx, generator_type))
-                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = this_read_col_list, print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, eliminate_blank_suggestions = any_negative_columns, regex_to_check = this_regex_to_check)
+                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = this_read_col_list, print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, regex_to_check = this_regex_to_check, ignore_blank_print = this_ignore_blank_print)
                     table_specs[cur_proj][cur_file].generators.append(this_generator)
                 except:
                     print("Exception reading CFG", line_count, data)
