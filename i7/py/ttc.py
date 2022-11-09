@@ -38,6 +38,8 @@ collapse_extra_dashes = True
 
 duplicate_test_force = duplicate_test_prevent = False
 
+testcase_wild_card = testcase_wild_card_negative = ''
+
 custom_table_prefixes = defaultdict(list)
 global_stray_table_org = defaultdict(list)
 ignorable_rule_lines = defaultdict(list)
@@ -991,6 +993,10 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         print("missed test case{} listed below:".format(mt.plur(len(misses))))
         global_error_note = True
         for m in sorted(misses):
+            if testcase_wild_card and not re.search(testcase_wild_card, m):
+                continue
+            if testcase_wild_card_negative and re.search(testcase_wild_card_negative, m):
+                continue
             if show_suggested_file:
                 my_abbrev = this_case_list[m].expected_file if this_case_list[m].expected_file else expected_file(m, this_proj)
                 if my_abbrev in file_abbrev_maps[my_proj]:
@@ -1241,12 +1247,25 @@ def read_cfg_file(this_cfg):
                     rules_specs[cur_proj][cur_file] = RulesPicker()
             elif prefix in ( 'rule_picker', 'rules_picker' ):
                 ary = data.split('\t')
-                rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].extend(ary[1:])
-                try:
-                    rules_specs[cur_proj][cur_file].regex_to_abbr[ary[1]] = ary[2]
-                except:
-                    print(colorama.Fore.YELLOW + "Rules specs needs brief output file line {}.".format(line_count) + mt.WTXT)
+                my_to_file = "unknown"
+                my_regex = ""
+                for idx in range(1, len(ary)):
+                    if '=' not in ary[idx]:
+                        print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                        continue
+                    sub_array = ary[idx].split('=', 1)
+                    generator_type = sub_array[0]
+                    generator_data = sub_array[1]
+                    if generator_type == 'regex':
+                        my_regex = generator_data
+                    elif generator_type == 'testfile':
+                        my_to_file = generator_data
+                if not my_regex:
+                    print(colorama.Fore.YELLOW + "Rules specs needs a regex line {}.".format(line_count) + mt.WTXT)
                     mt.add_postopen(this_cfg, line_count)
+                    continue
+                rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].append(my_regex)
+                rules_specs[cur_proj][cur_file].regex_to_abbr[my_regex] = my_to_file
             elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
                 ary = data.split('\t')
                 rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
@@ -1479,6 +1498,10 @@ while cmd_count < len(sys.argv):
         show_suggested_text = False
     elif arg.startswith('tm='):
         testcase_match(arg[3:])
+    elif arg.startswith('tw='):
+        testcase_wild_card = arg[3:]
+    elif arg.startswith('twn='):
+        testcase_wild_card_negative = arg[4:]
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
