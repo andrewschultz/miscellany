@@ -46,6 +46,7 @@ say_equivalents = defaultdict(str)
 
 okay_duplicates = 0
 
+blank_stuff = [ 'a rule', 'a topic', 'a text' ]
 valid_fork_starts = [ 'unless ', 'if ', 'else', 'repeat', 'while' ]
 
 FIND_ABSOLUTE_CASE = 0
@@ -174,6 +175,8 @@ def tweak_text(column_entry):
 def has_meaningful_content(my_string):
     my_string = re.sub("\[.*?\]$", "", my_string).strip()
     if not my_string.replace('-', ''):
+        return False
+    if my_string in blank_stuff:
         return False
     return True
 
@@ -1001,7 +1004,9 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                 else:
                     print('@' + my_abbrev)
                     last_abbrev = my_abbrev
-            if duplicate_test_force:
+            if not show_suggested_text:
+                upper_range = 1
+            elif duplicate_test_force:
                 upper_range = 2
             elif duplicate_test_prevent:
                 upper_range = 1
