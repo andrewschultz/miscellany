@@ -55,10 +55,6 @@ FIND_ABSOLUTE_CASE = 0
 FIND_REGEX_CASE = 1
 IGNORE_ABSOLUTE_CASE = 2
 IGNORE_REGEX_CASE = 3
-#
-#case_mapper[this_proj]
-#test_case_file_mapper_match = defaultdict(lambda: defaultdict(str)) CASEMAP
-#test_case_file_mapper_regex = defaultdict(lambda: defaultdict(str)) CASEMAPR
 
 def common_mistakes():
     print("You may need to run rbr.py if you changed a branch file recently.")
@@ -197,6 +193,7 @@ def testcase_match(my_verb):
         rbr_globals = glob.glob("rbr-*")
     last_line = ''
     line_start = '>' + my_verb
+    need_case = got_case = 0
     for x in rbr_globals:
         with open(x) as file:
             for (line_count, line) in enumerate (file, 1):
@@ -207,11 +204,18 @@ def testcase_match(my_verb):
                         if ls in guesses:
                             print(colorama.Fore.YELLOW + "    SUGGESTION: {}".format(guesses[ls]) + mt.WTXT)
                         mt.add_post_open(x, line_count)
+                        need_case += 1
                     elif ls not in guesses:
                         guesses[ls] = last_line.strip()
+                        got_case += 1
                 last_line = line
+    if need_case + got_case == 0:
+        print(colorama.Fore.YELLOW + "No test cases for command {} found!".format(line_start) + mt.WTXT)
+    elif need_case > 0:
+        print(colorama.Fore.RED + "{} successful, {} need test cases for {}.".format(got_case, need_case, line_start) + mt.WTXT)
+    else:
+        print(colorama.Fore.GREEN + "Every {} has a test case!".format(line_start) + mt.WTXT)
     mt.post_open()
-    print(colorama.Fore.GREEN + "Every {} has a test case!".format(line_start) + mt.WTXT)
     sys.exit()
 
 def mark_rbr_open(file_name, orig_line_count, comp_line):
@@ -1087,36 +1091,40 @@ def verify_case_placement(this_proj):
                     case_type = case_mapper[this_proj].text_and_type_map[t][1]
                     case_file = case_mapper[this_proj].text_and_type_map[t][0]
                     t1 = t.replace(' ', '-')
-                    if case_type == 0:
+                    if case_type == FIND_ABSOLUTE_CASE:
                         if t1 not in line_mod:
                             continue
                         if case_file in fb:
                             match_array.append(t1)
                         else:
-                            print("Test case", line_mod, "sorted into wrong file", fb, "should have absolute wild card", test_case_file_mapper_match[this_proj][t])
+                            print("Test case", line_mod, "sorted into wrong file", fb, "should have absolute wild card", case_mapper[this_proj].text_and_type_map[t])
                             mark_rbr_open(file_name, line_count, line)
                             wrong_file += 1
                             this_success = False
-                    elif case_type == 1:
+                    elif case_type == FIND_REGEX_CASE:
                         if not re.search(t1, line_mod):
                             continue
                         if re.search(case_file, fb):
                             match_array.append(t1)
                         else:
-                            print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", test_case_file_mapper_regex[this_proj][t])
+                            print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", case_mapper[this_proj].text_and_type_map[t])
                             mark_rbr_open(file_name, line_count, line)
                             wrong_file += 1
                             this_success = False
                 total_matches = len(match_array)
                 if total_matches == 0:
+                    case_type = 'test'
+                    if line_mod.startswith('+'):
+                        line_mod = line_mod[1:]
+                        case_type = 'retest'
                     unsorted += 1
-                    print("WARNING ({}) test case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line_mod in case_list else 'invalid', fb, line_count, line_mod))
+                    print("WARNING ({}) {} case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line_mod in case_list else 'invalid', case_type, fb, line_count, line_mod))
                     mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
                     double_sorted_lines += 1
-                    print("WARNING test case potentially sorted into two files:", line_mod, "line_mod", line_count, ' / '.join(match_array))
+                    print("WARNING {} case potentially sorted into two files:".format(case_type), line_mod, "line_mod", line_count, ' / '.join(match_array))
                     mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 else:
