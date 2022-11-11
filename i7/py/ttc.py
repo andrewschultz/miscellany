@@ -994,13 +994,15 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
     if len(misses) == 0:
         print("No test cases were missed!")
     else:
-        print("missed test case{} listed below:".format(mt.plur(len(misses))))
+        print(colorama.Fore.YELLOW + "missed test case{} listed below:".format(mt.plur(len(misses))) + mt.WTXT)
         global_error_note = True
+        cases_printed = 0
         for m in sorted(misses):
             if testcase_wild_card and not re.search(testcase_wild_card, m):
                 continue
             if testcase_wild_card_negative and re.search(testcase_wild_card_negative, m):
                 continue
+            cases_printed += 1
             if show_suggested_file:
                 my_abbrev = this_case_list[m].expected_file if this_case_list[m].expected_file else expected_file(m, this_proj)
                 if my_abbrev in file_abbrev_maps[my_proj]:
@@ -1038,7 +1040,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                 if i < upper_range - 1:
                     print("\\\\")
         if len(misses) > 0:
-            print("{} missed test case{} seen above.".format(len(misses), mt.plur(len(misses))))
+            print((colorama.Fore.YELLOW if cases_printed != len(misses) else colorama.Fore.BLUE) + "{} of {} missed test case{} seen above.".format(cases_printed, len(misses), mt.plur(len(misses))) + mt.WTXT)
     return
 
 def valid_ttc(my_line, my_proj=''):
