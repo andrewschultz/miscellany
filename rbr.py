@@ -801,6 +801,8 @@ def get_file(fname):
                 if line.startswith("#--strict"):
                     strict_name_local = True
                 continue
+            if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
+                continue
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
