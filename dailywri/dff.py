@@ -1444,8 +1444,10 @@ while cmd_count < len(sys.argv):
         space_to_tab_conversion = True
     elif arg in ( 'ap', 'apo', 'apa', 'apoa' ):
         run_apostrophe_check = RUN_ALL_APOSTROPHE
+        print("APL runs latest apostrophe check.")
     elif arg in ( 'ap1', 'apo1', 'apl', 'apol' ):
         run_apostrophe_check = RUN_LATEST_APOSTROPHE
+        print("APO runs all apostrophe checks.")
     elif arg == '?':
         usage()
     elif arg == '??':
@@ -1538,6 +1540,8 @@ if read_most_recent:
         daily_count += 1
         if daily_count == daily_files_back:
             sort_raw(r)
+            if read_most_recent and ask_to_copy_back:
+                print(colorama.Fore.YELLOW + "REMINDER: use APL and not APO to adjust apostrophes/spaces on latest file." + mt.WTXT)
             sys.exit()
     if daily_count == 0:
         print("No recent daily to read.")
