@@ -903,13 +903,14 @@ def rbr_cases_of(my_line):
     return [x for x in re.split("\\\\", my_line) if is_ttc_comment(x)]
 
 # this verifies test cases are in rbr* or reg* files at least once, following ttc = first time, +ttc = those after.
-def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
+def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*' ]):
     global okay_duplicates
     global global_error_note
     already_suggested = defaultdict(bool)
     change_dir_if_needed()
-    glob_string = prefix + "-*.txt"
-    test_file_glob = glob.glob(glob_string)
+    test_file_glob = []
+    for m in my_globs:
+        test_file_glob.extend(glob.glob(m))
     dupes_flagged = 0
     errant_cases = 0
     last_abbrev = ''
@@ -930,6 +931,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
         pre_asterisk_warn = False
         can_write_testcases = not flag_spacing
         tests_in_header = 0
+        this_file_dupes = []
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
                 if line.startswith("+#"):
@@ -977,6 +979,7 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                         dupes_flagged += 1
                         print("Duplicate test case #{} {} at {} line {} copies {}/{} (use + to note duplicate).".format(dupes_flagged, raw_case, base, line_count, this_case_list[raw_case].first_file_found, this_case_list[raw_case].first_line_found))
                         mt.add_postopen(my_rbr, line_count)
+                        this_file_dupes.append(line_count)
                     if raw_case not in this_case_list:
                         global_error_note = True
                         print("Errant test case {} at {} line {}.".format(raw_case, base, line_count))
@@ -988,6 +991,8 @@ def verify_cases(this_proj, this_case_list, prefix = 'rbr'):
                         this_case_list[raw_case].found_yet = True
                     if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
                         okay_duplicates += 1
+        if len(this_file_dupes):
+            print(colorama.Fore.YELLOW + "This file's duplicates: {}".format(','.join([str(x) for x in this_file_dupes])))
         if tests_in_header > 0:
             print(tests_in_header, "total tests to sort from header in", base)
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
