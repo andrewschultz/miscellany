@@ -25,6 +25,10 @@ import pyperclip
 import colorama
 from collections import defaultdict
 
+my_quotes = defaultdict(str)
+
+imk_cfg = "c:/writing/scripts/imk.txt"
+
 count = 1
 file_args = []
 
@@ -96,6 +100,15 @@ def default_search(max_files = 5):
 
 to_create = []
 
+with open(imk_cfg) as file:
+    for (line_count, line) in enumerate (file, 1):
+        if line.startswith(';'):
+            break
+        elif line.startswith(';'):
+            continue
+        ary = line.strip().split('=', 1)
+        my_quotes[ary[0]] = ary[1]
+
 if len(sys.argv) == 1:
     usage()
 
@@ -152,6 +165,9 @@ if len(to_create) == 2:
     print("Assuming project-to is project-from.")
     to_create.append(to_create[0])
 
+if to_create[1] not in my_quotes:
+    sys.exit("Edit imk.txt to add a to-create for {}.".format(to_create[1]))
+
 combos_and_projects = list(i7.i7x)
 combos_and_projects.extend(i7.i7com)
 
@@ -197,7 +213,9 @@ except:
     print(colorama.Fore.RED + "git clone https://github.com/andrewschultz/{}".format(i7.i7x[to_create[0]]) + mt.WTXT)
     sys.exit()
 
-f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"This should briefly describe the purpose of {:s}.\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, base_file_noxt))
+definition_quote = my_quotes[to_create[1]].format(i7.long_name(to_create[0]).replace('-', ' ').title())
+
+f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"{}\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, definition_quote))
 f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
 f.close()
 
