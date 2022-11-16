@@ -186,31 +186,42 @@ def renumber(entry, my_dict):
         candidate_entry = "{}-{}".format(entry, number_to_add)
     return candidate_entry
 
-def testcase_match(my_verb):
+def testcase_match(my_verb = ''):
+    possible_verbs = [ 'n', 's', 'e', 'w', 'undo' ]
     guesses = defaultdict(str)
     global rbr_globals
     if not rbr_globals:
         rbr_globals = glob.glob("rbr-*")
     last_line = ''
-    line_start = '>' + my_verb
+    line_start = '>' + (my_verb if my_verb else 'general command')
     need_case = got_case = 0
     for x in rbr_globals:
         with open(x) as file:
             for (line_count, line) in enumerate (file, 1):
-                ls = line.strip()
-                if ls == line_start or re.search(r'^{} +[a-z]+'.format(line_start), line):
-                    if not retest_agnostic_starts(last_line, include_null = True):
-                        print(colorama.Fore.YELLOW + "Line {} has {} without test case above it.".format(line_count, ls) + mt.WTXT)
-                        if ls in guesses:
-                            print(colorama.Fore.YELLOW + "    SUGGESTION: {}".format(guesses[ls]) + mt.WTXT)
-                        mt.add_post_open(x, line_count)
-                        need_case += 1
-                    elif ls not in guesses:
-                        guesses[ls] = last_line.strip()
-                        got_case += 1
+                if not line.startswith(">"):
+                    last_line = line
+                    continue
+                ls = line[1:].strip()
+                if my_verb:
+                    if not ls.startswith(my_verb):
+                        last_line = line
+                        continue
+                else:
+                    if ls in possible_verbs:
+                        last_line = line
+                        continue
+                if not retest_agnostic_starts(last_line, include_null = True):
+                    print(colorama.Fore.YELLOW + "Line {} has {} without test case above it.".format(line_count, ls) + mt.WTXT)
+                    if ls in guesses:
+                        print(colorama.Fore.YELLOW + "    SUGGESTION: {}".format(guesses[ls]) + mt.WTXT)
+                    mt.add_post_open(x, line_count)
+                    need_case += 1
+                elif ls not in guesses:
+                    guesses[ls] = last_line.strip()
+                    got_case += 1
                 last_line = line
     if need_case + got_case == 0:
-        print(colorama.Fore.YELLOW + "No test cases for command {} found!".format(line_start) + mt.WTXT)
+        print(colorama.Fore.YELLOW + "No test cases for >{} found!".format(line_start) + mt.WTXT)
     elif need_case > 0:
         print(colorama.Fore.RED + "{} successful, {} need test cases for {}.".format(got_case, need_case, line_start) + mt.WTXT)
     else:
@@ -1513,6 +1524,8 @@ while cmd_count < len(sys.argv):
         show_suggested_text = False
     elif arg.startswith('tm='):
         testcase_match(arg[3:])
+    elif arg.startswith('tma'):
+        testcase_match()
     elif arg.startswith('tw='):
         testcase_wild_card = arg[3:]
     elif arg.startswith('twn='):
