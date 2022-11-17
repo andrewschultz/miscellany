@@ -29,10 +29,14 @@ ttc_dir = "c:/Users/Andrew/Documents/github/configs/ttc"
 
 ttc_cfg = os.path.normpath(os.path.join(ttc_dir, ttc_base))
 
+got_cfg_errors = False
+
 alphabetize = False
 global_error_note = False
 open_after = True
 show_suggested_file = show_suggested_syntax = show_suggested_text = True
+
+cfg_error_bail = True
 
 collapse_extra_dashes = True
 
@@ -1179,6 +1183,7 @@ def read_cfg_file(this_cfg):
     #global rules_specs
     already_included[this_cfg] = True
     tb = os.path.basename(this_cfg)
+    local_cfg_errors = total_cfg_errors = 0
     with open(this_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
@@ -1197,7 +1202,7 @@ def read_cfg_file(this_cfg):
                         continue
                     if verbose_level > 0:
                         print("Checking through {}".format(file_to_find))
-                    read_cfg_file(file_to_find)
+                    total_cfg_errors += read_cfg_file(file_to_find)
                 continue
             (prefix, data) = mt.cfg_data_split(line, lowercase_data = False)
             if len(mt.mt_default_dict) and '$' in line:
@@ -1216,7 +1221,9 @@ def read_cfg_file(this_cfg):
                     check_regex_in_absolute(ary[x], line_count)
                     if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
-                        mt.add_postopen(this_cfg, line_count)
+                        if cfg_error_bail:
+                            mt.add_postopen(this_cfg, line_count)
+                            local_cfg_errors += 1
                     else:
                         case_mapper[cur_proj].mappers_in_order.append(ary[x])
                         case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], IGNORE_ABSOLUTE_CASE)
@@ -1226,7 +1233,9 @@ def read_cfg_file(this_cfg):
                     check_suspicious_regex(ary[x], line_count)
                     if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
-                        mt.add_postopen(this_cfg, line_count)
+                        if cfg_error_bail:
+                            mt.add_postopen(this_cfg, line_count)
+                            local_cfg_errors += 1
                     else:
                         case_mapper[cur_proj].mappers_in_order.append(ary[x])
                         case_mapper[cur_proj].text_and_type_map[ary[x]] = (ary[x+1], FIND_REGEX_CASE)
@@ -1259,16 +1268,24 @@ def read_cfg_file(this_cfg):
                 ary = data.split('\t')
                 custom_table_prefixes[ary[0]] = ary[1].split(',')
             elif prefix == 'extra':
-                extra_project_files[cur_proj].extend([x.strip() for x in data.split(',')])
+                for x in data.split(','):
+                    if re.search('^reg.*-lone-.*txt', x):
+                        print(colorama.Fore.YELLOW + "WARNING possible redundant test file ... reg-lone is covered in the big glob, so duplicate cases may be erroneously flagged." + mt.WTXT)
+                    extra_project_files[cur_proj].append(x)
             elif prefix in ( 'rule_file', 'rules_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
                     print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    if cfg_error_bail:
+                        mt.add_postopen(this_cfg, line_count)
+                        local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
                 if cur_file in rules_specs[cur_proj]:
                     print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
-                    mt.add_postopen(this_cfg, line_count)
+                    if cfg_error_bail:
+                        mt.add_postopen(this_cfg, line_count)
+                        local_cfg_errors += 1
                 else:
                     rules_specs[cur_proj][cur_file] = RulesPicker()
             elif prefix in ( 'rule_picker', 'rules_picker' ):
@@ -1278,13 +1295,17 @@ def read_cfg_file(this_cfg):
                 for idx in range(1, len(ary)):
                     if '=' not in ary[idx]:
                         print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                        if cfg_error_bail:
+                            mt.add_postopen(this_cfg, line_count)
+                            local_cfg_errors += 1
+                        mt.add_post_open(this_cfg, line_count)
                         continue
                     sub_array = ary[idx].split('=', 1)
                     generator_type = sub_array[0]
                     generator_data = sub_array[1]
-                    if generator_type == 'regex':
+                    if generator_type in ( 'r', 'regex' ):
                         my_regex = generator_data
-                    elif generator_type == 'testfile':
+                    elif generator_type in ( 'fileabbr', 'file_abbr', 't', 'tf', 'testfile' ):
                         my_to_file = generator_data
                 if not my_regex:
                     print(colorama.Fore.YELLOW + "Rules specs needs a regex line {}.".format(line_count) + mt.WTXT)
@@ -1306,6 +1327,9 @@ def read_cfg_file(this_cfg):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
                     print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    if cfg_error_bail:
+                        mt.add_postopen(this_cfg, line_count)
+                        local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
                 if cur_file in table_specs[cur_proj]:
@@ -1316,6 +1340,9 @@ def read_cfg_file(this_cfg):
             elif prefix in ( 'value_file', 'values_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
+                    if cfg_error_bail:
+                        mt.add_postopen(this_cfg, line_count)
+                        local_cfg_errors += 1
                     print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     continue
                 cur_file = temp_cur_file
@@ -1401,29 +1428,36 @@ def read_cfg_file(this_cfg):
                 this_read_col_list = [ 0 ]
                 this_ignore_blank_suggestions = False
                 generator_dict = defaultdict(str)
+                this_ignore_blank_print = False
                 try:
                     for idx in range(1, len(ary)):
                         if '=' not in ary[idx]:
                             print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                            if cfg_error_bail:
+                                mt.add_postopen(this_cfg, line_count)
+                                local_cfg_errors += 1
                             continue
                         sub_array = ary[idx].split('=', 1)
                         generator_type = sub_array[0]
                         generator_data = sub_array[1]
                         if generator_type in generator_dict:
                             print("WARNING duplicate generator type {} line {} TSV entry {} = {}".format(generator_type, line_count, idx, generator_type))
-                        if generator_type == "cmdgen":
+                            if cfg_error_bail:
+                                mt.add_postopen(this_cfg, line_count)
+                                local_cfg_errors += 1
+                        if generator_type == 'cmdgen':
                             my_command_generator_list = [ int(x) for x in generator_data.split(',') ]
-                        elif generator_type == "coltoprint":
+                        elif generator_type == 'coltoprint':
                             my_col_print = [int(x) for x in generator_data.split(',')]
-                        elif generator_type == "fc":
+                        elif generator_type in ( 'fc', 'fixedcommand' ):
                             my_fixed_command = generator_data
-                        elif generator_type == "prefixes":
+                        elif generator_type in ( 'prefix', 'prefixes' ):
                             my_prefixes = generator_data.split(',')
-                        elif generator_type == "printfixed":
-                            this_print_absolute = generator_data.replace("\\n", "\n")
-                        elif generator_type == "ignoreblankprint":
+                        elif generator_type == 'printfixed':
+                            this_print_absolute = generator_data.replace('\\n', '\n')
+                        elif generator_type == 'ignoreblankprint':
                             this_ignore_blank_print = int(generator_data)
-                        elif generator_type == "printfromcol":
+                        elif generator_type == 'printfromcol':
                             this_print_col_list = [ int(x) for x in generator_data.split(',') ]
                         elif generator_type == 'readcol':
                             this_read_col_list = [int(x) for x in generator_data.split(',')]
@@ -1431,6 +1465,9 @@ def read_cfg_file(this_cfg):
                             this_regex_to_check = generator_data
                         else:
                             print("WARNING unidentified start {} line {} TSV entry {} = {}".format(tb, line_count, idx, generator_type))
+                            if cfg_error_bail:
+                                mt.add_postopen(this_cfg, line_count)
+                                local_cfg_errors += 1
                     this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = this_read_col_list, print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, regex_to_check = this_regex_to_check, ignore_blank_print = this_ignore_blank_print)
                     table_specs[cur_proj][cur_file].generators.append(this_generator)
                 except:
@@ -1464,9 +1501,23 @@ def read_cfg_file(this_cfg):
                     table_specs[cur_proj][cur_file].untestable_regexes.append(a)
             else:
                 print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
+    total_cfg_errors += local_cfg_errors
+    if local_cfg_errors > 0:
+        print((colorama.Fore.RED + "Errors ({}) were found in {}. Setting -ncb disables cfg error bail, which is on by default.".format(local_cfg_errors, ' / '.join([os.path.basename(x) for x in mt.file_post_list])) + mt.WTXT))
+    return total_cfg_errors
 
 already_included = defaultdict(bool)
-read_cfg_file(ttc_cfg)
+
+if 'ncb' in sys.argv:
+    sys.argv.remove('ncb')
+    cfg_error_bail = False
+
+my_cfg_errors = read_cfg_file(ttc_cfg)
+
+if my_cfg_errors and cfg_error_bail: # we could do this in the function, but what if there is more than one error file?
+    print(my_cfg_errors)
+    mt.post_open()
+
 my_proj = i7.dir2proj()
 
 cmd_count = 1
@@ -1567,6 +1618,9 @@ if len(global_stray_table_org):
     print("Global stray table info")
     for g in global_stray_table_org:
         print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
+
+if my_cfg_errors:
+    print(colorama.Fore.YELLOW + "This is a warning to note CFG files had parsing errors. Remove NCB to keep the focus on what the errors are." + mt.WTXT)
 
 if open_after:
     mt.post_open()
