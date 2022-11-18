@@ -159,6 +159,10 @@ verbose_level = 0
 def strip_end_comments(my_string):
     return re.sub("\[.*?\]$", "", my_string.strip())
 
+def test_case_of(x):
+    temp = x.lower().replace('"', '').replace(' ', '-').replace('/', '-').replace('(', '').replace(')', '')
+    return re.sub('--+', '-', temp)
+
 def wild_card_match(my_string_to_match, my_cards, to_lower = True):
     if to_lower:
         my_string_to_match = my_string_to_match.lower()
@@ -613,8 +617,7 @@ def get_rule_cases(this_proj):
                     what_said = "<no data found>"
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
-                test_case_full_name = my_prefix + '-' + this_rule.replace(' ', '-') + '-' + test_case_sub_name
-                test_case_full_name = test_case_full_name.replace('--', '-').lower()
+                test_case_full_name = test_case_of(my_prefix + '-' + this_rule + '-' + test_case_sub_name)
                 my_expected_file = rules_specs[this_proj][this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_proj][this_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
@@ -747,7 +750,7 @@ def get_table_cases(this_proj):
                         if my_generator.regex_to_check:
                             if not re.search(my_generator.regex_to_check, raw_case):
                                 continue
-                        test_case_name = (p + '-' + current_table + subcase).lower().replace('"', '').replace(' ', '-').replace('--', '-').replace('/', '-')
+                        test_case_name = test_case_of(p + '-' + current_table + subcase)
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
                         possible_text = ''
