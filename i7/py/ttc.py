@@ -1010,7 +1010,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
                     if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
                         okay_duplicates += 1
         if len(this_file_dupes):
-            print(colorama.Fore.YELLOW + "This file's duplicates: {}".format(','.join([str(x) for x in this_file_dupes])))
+            print(colorama.Fore.YELLOW + "This file's duplicates: {}".format(','.join([str(x) for x in this_file_dupes])) + mt.WTXT)
         if tests_in_header > 0:
             print(tests_in_header, "total tests to sort from header in", base)
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
@@ -1057,7 +1057,10 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
                     else:
                         print(">VERB {}".format(m.replace('-', ' ')))
                 if show_suggested_text:
-                    print(this_case_list[m].suggested_text)
+                    if this_case_list[m].suggested_text:
+                        print(this_case_list[m].suggested_text)
+                    else:
+                        print('<TEST CASE HAD NO SUGGESTED TEXT>')
                     if this_case_list[m].condition_text:
                         print("#condition: {}".format(this_case_list[m].condition_text))
                 if i < upper_range - 1:
