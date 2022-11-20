@@ -73,7 +73,7 @@ strict_name_force_off = False
 wrong_check = False
 show_unchanged = False
 
-max_undo_tracking = 8
+max_undo_tracking = 10
 start_line = 0
 start_command = ''
 max_flag_brackets = 0
@@ -232,7 +232,6 @@ def apostrophe_check(line, line_count, warns):
     if line == apost_line:
         return False
     print(warns + 1, "Possible apostrophe-to-quote change needed line", line_count)
-    print(i7.text_convert("This is a 'test.", erase_brackets = False, color_punc_change = True))
     print("  Before:", line.strip())
     print("   After:", apost_line.strip())
     a1 = line.split(' ')
@@ -589,13 +588,23 @@ def get_file(fname):
                     print("WARNING invalid CMDFLAGS at line", line_count, line.strip())
                 continue
             if line.startswith("@"):
-                if old_grouping == line[1:].strip():
-                    print(colorama.Fore.YELLOW + "Two groupings can/should be merged. The second is {} at line {}".format(line[1:].strip(), line_count) + mt.WTXT)
+                line = line.strip()
+                flag_repeat_groupings = True
+                if line.endswith("+"):
+                    flag_repeat_groupings = False
+                    line = re.sub("\++$", "", line)
+                if flag_repeat_groupings and old_grouping == line[1:]:
+                    print(colorama.Fore.YELLOW + "Two groupings can/should be merged, or you should put a + after. The second is {} at line {}".format(line[1:].strip(), line_count) + mt.WTXT)
+                    mt.add_postopen(fname, line_count, priority=5)
+                    if in_grouping:
+                        continue
+                elif not flag_repeat_groupings and not (old_grouping == line[1:]):
+                    print(colorama.Fore.YELLOW + "False repeat grouping marker for {} at line {}".format(line[1:], line_count) + mt.WTXT)
                     mt.add_postopen(fname, line_count, priority=5)
                     if in_grouping:
                         continue
                 in_grouping = True
-                old_grouping = line[1:].strip()
+                old_grouping = line[1:]
             elif not line.strip():
                 in_grouping = False
             elif not in_grouping:
