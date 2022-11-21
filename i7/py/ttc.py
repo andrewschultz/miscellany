@@ -160,7 +160,7 @@ def strip_end_comments(my_string):
     return re.sub("\[.*?\]$", "", my_string.strip())
 
 def test_case_of(x):
-    temp = x.lower().replace('"', '').replace(' ', '-').replace('/', '-').replace('(', '').replace(')', '')
+    temp = x.lower().replace('"', '').replace(' ', '-').replace('|', '-').replace('/', '-').replace('(', '').replace(')', '')
     return re.sub('--+', '-', temp)
 
 def wild_card_match(my_string_to_match, my_cards, to_lower = True):
@@ -791,7 +791,7 @@ def get_table_cases(this_proj):
                             temp_command = my_generator.fixed_command
                         elif my_generator.command_generator_list:
                             for col in my_generator.command_generator_list:
-                                temp_command += ' ' + columns[col].replace('"', '')
+                                temp_command += ' ' + columns[col].replace('"', '').replace('|', '-') # we don't want to replace dashes with spaces because we want to note, yes, we want to change things
                             temp_command = temp_command[1:]
                         if my_generator.ignore_blank_print and not has_meaningful_content(possible_text):
                             continue
@@ -1066,7 +1066,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
                 if i < upper_range - 1:
                     print("\\\\")
         if len(misses) > 0:
-            print((colorama.Fore.YELLOW if cases_printed != len(misses) else colorama.Fore.BLUE) + "{} of {} missed test case{} seen above.".format(cases_printed, len(misses), mt.plur(len(misses))) + mt.WTXT)
+            print((colorama.Fore.MAGENTA if cases_printed == 0 else colorama.Fore.YELLOW if cases_printed != len(misses) else colorama.Fore.BLUE) + "{} of {} missed test case{} seen above.".format(cases_printed, len(misses), mt.plur(len(misses))) + mt.WTXT)
     return
 
 def valid_ttc(my_line, my_proj=''):
