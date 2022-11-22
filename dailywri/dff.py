@@ -877,6 +877,13 @@ def speech_to_text_minor_tweaks(my_str):
         my_str = re.sub(r'^number one', '1', my_str, flags=re.IGNORECASE)
     return my_str
 
+def dupe_ignorable(x, force_lower = False):
+    if force_lower:
+        x = x.lower()
+    if x.startswith("**modify daily instead"):
+        return True
+    return False
+
 def sort_raw(raw_long):
     overflow = 0
     raw_long = os.path.normpath(raw_long)
@@ -906,6 +913,7 @@ def sort_raw(raw_long):
             sections[x] = '' # protected empty sections are defined as ones that pop up in 2dy.txt, the file that creates a section outline to start the week
     mt.wait_until_npp_saved(raw_long)
     odd_tab_found = False
+    rbase = os.path.basename(raw_long)
     with open(raw_long, mode='r', encoding='utf-8', errors='ignore') as file:
         for (line_count, line) in enumerate(file, 1):
             if '\t' in line:
@@ -933,14 +941,14 @@ def sort_raw(raw_long):
             ll = line.strip().lower()
             if ll.startswith("\\"):
                 if current_section:
-                    print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, os.path.basename(raw_long)))
+                    print("WARNING: may be missing space, reassigning section {} to {} at line {} of {}.".format(current_section, ll[1:], line_count, rbase))
                 current_section = ll[1:]
                 continue
             if line.strip():
                 raw_sections[current_section] += line
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=', ignore_after = ['===='])
-            if no_punc and no_punc in this_file_lines:
-                print("WARNING duplicate line", ll, line_count, this_file_lines[no_punc])
+            if no_punc and no_punc in this_file_lines and not dupe_ignorable(no_punc):
+                print(colorama.Fore.YELLOW + "WARNING duplicate line {} in {}: {}".format(line_count, rbase, ll) + mt.WTXT)
                 dupe_edit_lines.append(line_count)
             else:
                 this_file_lines[no_punc] = line_count
@@ -1014,7 +1022,7 @@ def sort_raw(raw_long):
                             if not overflow:
                                 print(colorama.Fore.RED + "    <note: lines-in-a-row (x, x+1) exceeded max_consecutive_blank_section_lines at line {}.>".format(line_count) + colorama.Style.RESET_ALL)
                             overflow += 1
-                        else:
+                        elif not dupe_ignorable(line, force_lower = True):
                             print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
                             blank_edit_lines.append(line_count)
                         default_streak += 1
