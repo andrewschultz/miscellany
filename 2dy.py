@@ -54,6 +54,7 @@ previous_size = 0
 yearly_queries_this_week = 0
 weekly_queries_this_week = 0
 
+last_day = ''
 last_yearly_projection = 'N/A'
 yearly_bytes_array = []
 daily_data_points = []
@@ -181,6 +182,33 @@ def num_to_text_color(my_num, goal_per_file, deltas='basic'):
     else:
         retval += colorama.Fore.MAGENTA
     return retval
+
+def open_closest_file(mmdd):
+    g = glob.glob("c:/writing/daily/2*.txt")
+    g.reverse()
+    current_file = "?"
+    exact = False
+    got_any = False
+    mmdd = str(mmdd)
+    if mmdd > '1231' or mmdd < '0101':
+        sys.exit("When going back dates, we need an MMDD from 0101 to 1231, inclusive.")
+    if mmdd < d.format("MMDD"):
+        full = d.format("YYYY") + mmdd
+    else:
+        full = d.add(years=1).format("YYYY") + mmdd
+    for f in g:
+        b = os.path.basename(f)
+        current_file = f
+        if full > b[:8]:
+            break
+        got_any = True
+        if full == b[:8]:
+            exact = True
+            break
+    if not got_any:
+        sys.exit("Couldn't find anything for {}/{}".format(mmdd, full))
+    print("Got exact match" if exact else "Got next-lowest", current_file)
+    mt.npo(current_file)
 
 def date_match(line_1, line_2):
     try:
@@ -1190,10 +1218,15 @@ while cmd_count < len(sys.argv):
         stretch_offset = num
     elif arg == 'ssm':
         see_silly_max = True
+    elif not arg and valid_num:
+        last_day = num
     elif arg == '?': usage()
     else:
         usage("Bad parameter {:s}".format(rawarg))
     cmd_count += 1
+
+if last_day:
+    open_closest_file(last_day)
 
 if print_yearly_pace:
     check_yearly_pace()
