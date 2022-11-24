@@ -79,6 +79,8 @@ see_one_year_ago = True
 see_silly_max = False
 quick_compare = False
 
+yearly_fragment = 0
+
 daily = "c:/writing/daily"
 daily_proc = "c:/writing/daily/to-proc"
 daily_done = "c:/writing/daily/done"
@@ -352,6 +354,8 @@ def check_yearly_pace():
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     g0 = glob.glob("{}*.txt".format(last_year))
+    print("With fragment")
+    find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes + yearly_fragment)
     if g[-1] < this_years_last_file:
         this_file_bytes = os.stat(g0[-1]).st_size
         total_bytes += this_file_bytes
@@ -361,6 +365,7 @@ def check_yearly_pace():
         g2 = [y for y in (g0 + g) if y >= pnow.subtract(days=371).format("YYYYMMDD")]
         total_bytes = sum([os.stat(x).st_size for x in g2])
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
+        print(colorama.Fore.GREEN + "Total bytes from new year's to now, using fragment: {}.".format(total_bytes - os.stat(g2[0]).st_size + yearly_fragment) + colorama.Style.RESET_ALL)
         print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
         print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
     if yearly_queries_this_week > 0:
@@ -369,8 +374,10 @@ def check_yearly_pace():
         old_bytes_array = old_bytes_array[:-1]
     deltas = [a[0] - a[1] for a in zip(yearly_bytes_array, old_bytes_array)]
     print(colorama.Fore.MAGENTA + "Deltas from last (year pace, year pace+, file size){} {}, current file size {}.".format(" and actual file size =" if yearly_queries_this_week else "", '/'.join([str(x) for x in deltas]), os.stat(g[-1]).st_size) + mt.WTXT)
-    cfg_change_notests(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
-    cfg_change_notests(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
+    #cfg_change_notests(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
+    #cfg_change_notests(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
+    mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
+    mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     sys.exit()
 
 def dhms(my_int):
@@ -906,6 +913,7 @@ def read_2dy_cfg():
     global weekly_queries_this_week
     global yearly_queries_this_week
     global yearly_stretch_delta
+    global yearly_fragment
     this_weeks_goal = []
     temp_glob = []
     adjust_color_dict = False
@@ -971,6 +979,8 @@ def read_2dy_cfg():
                 last_yearly_projection = data
             elif prefix in ( 'yearly_queries_this_week' ):
                 yearly_queries_this_week = int(data)
+            elif prefix == 'yearly_fragment':
+                yearly_fragment = int(data)
             elif prefix in ( 'yearly', 'yearly_goals'):
                 if len(yearly_goals_array):
                     print("WARNING two goals arrays defined. Second is at line {} and overwrites the first.".format(line_count))
