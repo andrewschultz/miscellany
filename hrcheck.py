@@ -81,7 +81,7 @@ def find_in_one_checkfile(my_string, f, find_comments):
     base_name = os.path.basename(f)
     with open(f) as file:
         for (line_count, line) in enumerate (file, 1):
-            if not find_comments and line.startswith("#"):
+            if find_comments != line.startswith("#"):
                 continue
             if my_string in line.lower():
                 print("Found instance of <<{}>> at line {} of {}.".format(my_string, line_count, base_name))
@@ -95,7 +95,7 @@ def find_in_checkfiles(my_string, find_comments_first_pass, ignore_comments):
         find_in_one_checkfile(my_string, x, find_comments_first_pass)
     if not find_comments_first_pass and not ignore_comments: # second pass through, this time looking for comments, assuming we ignored them first time
         for x in hrcheck_array:
-            find_in_one_checkfile(my_string, x, find_comments_first_pass)
+            find_in_one_checkfile(my_string, x, True)
     mt.postopen()
     print("Nothing found for <<{}>>.".format(my_string))
     sys.exit()

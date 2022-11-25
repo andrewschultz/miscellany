@@ -323,6 +323,9 @@ def find_yearly_goals(goal_array, seconds_gone, seconds_left, total_bytes):
         print((g - total_bytes) * 86400 // seconds_left, "remaining bytes per day to hit", g)
 
 def check_yearly_pace():
+    g = glob.glob(this_wildcard)
+    if not len(g):
+        sys.exit("No projections because there are no files for this year yet, so they'd be even more nonsensical than usual.")
     pnow = pendulum.now()
     this_year = pnow.year
     last_year = pnow.year - 1
@@ -340,7 +343,6 @@ def check_yearly_pace():
     print("{:.2f} days left".format(seconds_delta_ahead / 86400))
     os.chdir("c:/writing/daily")
     this_wildcard = "{}*.txt".format(this_year)
-    g = glob.glob(this_wildcard)
     for f in g:
         this_file_bytes = os.stat(f).st_size
         total_bytes += this_file_bytes
