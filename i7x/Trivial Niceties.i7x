@@ -2,6 +2,10 @@ Version 1/140928 of Trivial Niceties by Andrew Schultz begins here.
 
 "This puts in stubs I've used often and probably will again. The non-Z-only in Trivial Niceties includes these and also has functions that takes up more memory e.g. indexed text."
 
+volume includes
+
+include Trivial Text Shortcuts by Andrew Schultz.
+
 volume stuff I've used multiple games
 
 use OMIT_UNUSED_ROUTINES of 1. [ this may not be strictly necessary with the 6.40 compiler in place, but just in case I need to revert, I want it here. It means up to 0x5000 memory saved if I'm trying to compress a game into Z5. ]
@@ -155,16 +159,6 @@ to decide which number is boolval of (ts - a truth state): [boolval of x + boolv
 	decide on 0;
 
 book style abbreviations
-
-to say r: say "[roman type]";
-
-to say i: say "[italic type]";
-
-to say b: say "[bold type]";
-
-to say fw: say "[fixed letter spacing]"
-
-to say vw: say "[variable letter spacing]"
 
 to say on-off of (t - a truth state): say "[if t is true]on[else]off[end if]";
 
