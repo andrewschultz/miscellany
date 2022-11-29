@@ -1420,6 +1420,37 @@ def follow_link(x):
         temp = temp[4:]
     return temp
 
+def section_of(my_file, my_section_name, absolute_name = False, return_line_count = True):
+    got_section = False
+    in_section = False
+    section_string = ''
+    start_line = 0
+    if not my_section_name.startswith("\\"):
+        my_section_name = "\\" + my_section_name
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if not in_section and line.startswith(my_section_name):
+                if not absolute_name:
+                    in_section = True
+                    got_section = True
+                else:
+                    title = re.sub("=.*", "", line.strip())
+                    if title == my_section_name:
+                        start_line = line_count
+                        in_section = True
+                        got_section = True
+            if in_section and not line.strip():
+                in_section = False
+            if in_section:
+                section_string += line
+    if not got_section:
+        print(colorama.Fore.YELLOW + "WARNING: could not find section {} in {}.".format(my_section_name, my_file) + WTXT)
+    if return_line_count:
+        return (section_string, start_line)
+    return section_string
+
+my_section_of = section_of
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
