@@ -86,7 +86,7 @@ def github_root_of(my_path = os.getcwd()):
         return ''
     return os.path.join(pathlib.Path(*ary[:github_index+2]))
 
-def progfile_of(my_path):
+def progfile_of(my_path): # largely deprecated with most apps now being up to date
     if os.path.exists(my_path):
         return my_path
     path_array = os.path.normpath(my_path).split(os.sep)
@@ -100,7 +100,7 @@ def progfile_of(my_path):
 
 default_browser_exe = firefox_browser = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
 chrome_browser_exe = progfile_of("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
-opera_browser_exe = "C:\\Users\\Andrew\\AppData\\Local\\Programs\\Opera\\78.0.4093.147\\opera.exe"
+opera_browser_exe = "C:\\Users\\Andrew\\AppData\\Local\\Programs\\Opera\\opera.exe"
 
 npnq = progfile_of("c:\\program files\\notepad++\\notepad++.exe")
 np = '"{}"'.format(npnq)
@@ -257,22 +257,22 @@ def parameter_with_number(x, also_lower = True, default_value = 0, allow_float =
         x = x.lower()
     digit_offset = re.search(r"\d", x)
     if not digit_offset:
-        return(x, default_value, False)
+        return (x, default_value, False)
     letters = x[:digit_offset.start()]
     numbers = x[digit_offset.start():]
     try:
-        return(letters, int(numbers), True)
+        return (letters, int(numbers), True)
     except:
         pass
     try:
         temp = float(numbers)
         if not allow_float:
             print("WARNING allow_float must be set to allow floats")
-            return(letters, default_value)
-        return(letters, temp, True)
+            return (letters, default_value)
+        return (letters, temp, True)
     except:
         pass
-    return(x if include_numbers_in_main_parameter else letters, default_value, False)
+    return (x if include_numbers_in_main_parameter else letters, default_value, False)
 
 num_let = numlet = letnum = let_num = numbers_letters = parnum = par_num = parameter_with_number
 
@@ -566,14 +566,14 @@ def cfg_data_split(x, delimiter=":=", to_tuple = True, strip_line = True, dash_t
         if blank_second:
             return (ary[0], '')
         else:
-            return('', ary[0])
+            return ('', ary[0])
     if strip_line:
         ary[1] = ary[1].strip()
     if to_tuple:
-        return(ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
+        return (ary[0], ary[1].split(array_splitter) if array_splitter else ary[1])
     return ary # (prefix, data) = general usage in programs
 
-cfg_split = cfg_to_data = data_cfg_split = cfg_data_split
+cfg_split = cfg_to_data = data_cfg_split = split_cfg_data = cfg_split_data = cfg_data_split
 
 def quick_dict_from_line(my_line, init_separator=':', outer_separator = ',', inner_separator = '=', use_ints = False, use_floats = False, delete_before_colon = True, need_init_delimiter = True):
     my_line = my_line.strip()
@@ -609,7 +609,7 @@ def quick_dict_from_line(my_line, init_separator=':', outer_separator = ',', inn
 def prefix_div(my_arg, delimiters = ":="):
     r = re.compile(r'[{}]'.format(delimiters))
     if not r.search(my_arg):
-        return('', my_arg)
+        return ('', my_arg)
     return r.split(my_arg, 1)
 
 def text_from_values(my_dict, my_num):
@@ -1287,7 +1287,7 @@ def zap_comment(my_line, zap_spaces_before = True, zap_brackets = True):
         temp = re.sub("\[[^\]]*\]$", "", temp).rstrip()
     return temp
 
-no_comment = no_comments = zap_comments = zap_comment
+no_comment = no_comments = comment_zap = comments_zap = zapcomments = zapcomment = zap_comments = zap_comment
 
 def is_comment_or_blank(my_line):
     return not zap_comment(my_line).strip()
