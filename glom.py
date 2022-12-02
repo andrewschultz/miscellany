@@ -230,8 +230,11 @@ while cmd_count < len(sys.argv):
         check_sectioning = True
     elif arg == '?':
         usage()
+    elif arg in my_gloms:
+            print("p= also works.")
+            my_project = arg
     else:
-        usage("Unknown parameter {}".format(arg))
+        usage("Unknown parameter {}.".format(arg))
     cmd_count += 1
 
 if not my_project:
