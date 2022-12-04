@@ -1257,27 +1257,42 @@ def text_to_browser(my_text, delete_immediately = True, bail = False):
     if bail:
         sys.exit()
 
-def comment_combine(my_lines, cr_at_end = True):
+COMMENT_COMBINE_NONE = 0
+COMMENT_COMBINE_CASE_SENSITIVE = 1
+COMMENT_COMBINE_CASE_INSENSITIVE = 2
+
+def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_COMBINE_CASE_INSENSITIVE):
     if type(cr_at_end) != bool and type(cr_at_end) != int:
         raise ValueError('You probably sent a couple strings instead of an array of strings: <<{} / {}>>'.format(my_lines, cr_at_end)) from None
-    uncomment = ""
-    comment = ""
+    main_line_string = ""
     any_comment = False
+    comment_array = []
     for x in my_lines:
         if '#' in x:
             any_comment = True
         else:
-            uncomment += " " + x.strip()
+            main_line_string += " " + x.strip()
             continue
-        comment_array = x.strip().split("#", 1)
-        uncomment += " " + comment_array[0].strip()
-        if comment: comment += " / "
-        comment += comment_array[1].strip()
+        temp_ary = x.strip().split("#", 1)
+        main_line_string += " " + temp_ary[0].strip()
+        comment_array.append(temp_ary[1].strip())
+    if conflate_duplicates == COMMENT_COMBINE_NONE:
+        final_array = comment_array
+    else:
+        final_array = []
+        final_array_lower = []
+        for c in comment_array:
+            if c in final_array:
+                continue
+            if (conflate_duplicates == COMMENT_COMBINE_CASE_INSENSITIVE) and c.lower() in final_array_lower:
+                continue
+            final_array.append(c)
+            final_array_lower.append(c.lower())
     if any_comment:
-        uncomment += " # " + comment
+        main_line_string += " # " + " / ".join(final_array)
     if cr_at_end:
-        uncomment += "\n"
-    return uncomment.lstrip()
+        main_line_string += "\n"
+    return main_line_string.lstrip()
 
 comcom = comment_combine
 
