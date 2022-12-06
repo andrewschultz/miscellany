@@ -510,7 +510,8 @@ def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report
         for (line_count, line) in enumerate (file, 1):
             if re.search(r"^{}\b".format(var_to_change), line):
                 old_value = re.sub(r"^[^\b]*?", "", line.rstrip())
-                print("Changing line", line_count, var_to_change, "from", old_value)
+                if print_success:
+                    print("Changing line", line_count, var_to_change, "from", old_value)
                 got_line = True
                 line = new_line
             out_string += line
@@ -529,7 +530,7 @@ def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report
     if cmp(out_file, file_name, shallow=False):
         print(colorama.Fore.YELLOW + "WARNING nothing changed in {} even though we found a line starting with {}--variable was already set to {}.".format(file_name, var_to_change, new_value) + WTXT)
         return
-    else:
+    elif print_success:
         print(colorama.Fore.GREEN + "Changes seen between {} and {}. Copying.".format(out_file, file_name) + WTXT)
     try:
         copy(out_file, file_name)
