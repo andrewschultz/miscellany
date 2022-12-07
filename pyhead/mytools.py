@@ -793,7 +793,7 @@ def first_string_diff(string_1, string_2):
         return min_length
     return -1
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False, sections_to_ignore = []): # returns true if identical (option to get rid of blanks,) false if not
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False, sections_to_ignore = [], case_insensitive = False): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -803,6 +803,9 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
     total = defaultdict(int)
     f1_ary = lines_of(f1)
     f2_ary = lines_of(f2)
+    if case_insensitive:
+        f1_ary = [x.lower() for x in f1_ary]
+        f2_ary = [x.lower() for x in f2_ary]
     ignore_stuff = False
     for line in f1_ary:
         for q in sections_to_ignore:
