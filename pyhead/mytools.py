@@ -1447,7 +1447,7 @@ def follow_link(x):
         temp = temp[4:]
     return temp
 
-def section_of(my_file, my_section_name, absolute_name = False, return_line_count = True):
+def section_of(my_file, my_section_name, absolute_name = False, return_line_count = True, return_header = True):
     got_section = False
     in_section = False
     section_string = ''
@@ -1460,12 +1460,16 @@ def section_of(my_file, my_section_name, absolute_name = False, return_line_coun
                 if not absolute_name:
                     in_section = True
                     got_section = True
+                    if not return_header:
+                        continue
                 else:
                     title = re.sub("=.*", "", line.strip())
                     if title == my_section_name:
                         start_line = line_count
                         in_section = True
                         got_section = True
+                        if not return_header:
+                            continue
             if in_section and not line.strip():
                 in_section = False
             if in_section:
