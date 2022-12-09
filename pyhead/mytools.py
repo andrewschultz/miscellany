@@ -1121,6 +1121,29 @@ def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = Fals
         if bail_on_show_winmerge: sys.exit()
     return temp
 
+def first_diff(x1, x2, one_based = True):
+    f = open(x1, 'r')
+    r1 = f.readlines()
+    f.close()
+    f = open(x2, 'r')
+    r2 = f.readlines()
+    f.close()
+    ml = min(len(r1), len(r2))
+    for x in range(0, ml):
+        if r1[x] != r2[x]:
+            return x
+    if x == len(r2) and x == len(r1):
+        return -1
+    return len(r1)
+
+def open_first_diff(x1, x2, bail = True):
+    which_line = first_diff(x1, x2)
+    if which_line > -1:
+        npo(x1, which_line)
+    print("No differences between {} and {}!".format(x1, x2))
+    if bail:
+        sys.exit()
+
 def wm(x1, x2, ignore_if_identical = True, quiet = False):
     if ignore_if_identical and cmp(x1, x2):
         if not quiet:
