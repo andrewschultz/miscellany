@@ -1398,6 +1398,11 @@ def proper_constraints(my_permutation, constraints_array):
     for c in constraints_array:
         if not c:
             continue
+        if '@' in c:
+            ary = c.split('@')
+            if my_permutation.index(int(ary[0])) != int(ary[1]):
+                return False
+            continue
         tries = [int(x) for x in re.split('[<>]', c)]
         first_smaller = my_permutation.index(tries[0]) < my_permutation.index(tries[1])
         if first_smaller != ('<' in c):
