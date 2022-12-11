@@ -1398,9 +1398,16 @@ def proper_constraints(my_permutation, constraints_array):
     for c in constraints_array:
         if not c:
             continue
+        if '!' in c:
+            ary = c.split('!')
+            ary2 = [ int[x] for x in c[1].split(',') ]
+            if my_permutation.index(int(ary[0])) in ary2:
+                return False
+            continue
         if '@' in c:
             ary = c.split('@')
-            if my_permutation.index(int(ary[0])) != int(ary[1]):
+            ary2 = [ int[x] for x in c[1].split(',') ]
+            if my_permutation.index(int(ary[0])) not in ary2:
                 return False
             continue
         tries = [int(x) for x in re.split('[<>]', c)]
