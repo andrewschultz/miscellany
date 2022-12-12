@@ -1249,7 +1249,9 @@ def first_word_of(x, allow_dashes = False, additional_chars = ""):
 first_word = first_word_of
 
 def browser_or_native(file_name, print_action = True, bail = False, return_to_orig = True, open_in_web = True, my_browser = ''): # was text in browser but we can also view PNGs there
-    file_name = os.path.abspath(file_name)
+    is_url = file_name.startswith("http:") or file_name.startswith("https:")
+    if not is_url:
+        file_name = os.path.abspath(file_name)
     if not open_in_web:
         os.system(file_name)
     else:
@@ -1266,7 +1268,7 @@ def browser_or_native(file_name, print_action = True, bail = False, return_to_or
         if print_action:
             print("Opening {} with {}.".format(file_name, browser_path))
         old_window = win32gui.GetForegroundWindow()
-        subprocess.call([browser_path, pathlib.Path(file_name).as_uri()])
+        subprocess.call([browser_path, file_name if is_url else pathlib.Path(file_name).as_uri()])
     if return_to_orig:
         time.sleep(.05) # for whatever reason, we need a fraction of a second before this comes back
         win32gui.SetForegroundWindow(old_window)
