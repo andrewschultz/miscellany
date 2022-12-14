@@ -1293,7 +1293,7 @@ COMMENT_COMBINE_NONE = 0
 COMMENT_COMBINE_CASE_SENSITIVE = 1
 COMMENT_COMBINE_CASE_INSENSITIVE = 2
 
-def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_COMBINE_CASE_INSENSITIVE, to_flag = []):
+def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_COMBINE_CASE_INSENSITIVE, to_flag = [], add_to_blank = 'noted more than once'):
     if type(cr_at_end) != bool and type(cr_at_end) != int:
         raise ValueError('You probably sent a couple strings instead of an array of strings: <<{} / {}>>'.format(my_lines, cr_at_end)) from None
     main_line_string = ""
@@ -1304,7 +1304,6 @@ def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_CO
             continue
         temp_ary = [y.strip() for y in x.strip().split("#", 1)]
         main_line_string += " " + temp_ary[0].strip()
-        print("!", temp_ary[1], to_flag)
         if temp_ary[1] in to_flag:
             print(WARN + "Weeded out {} from {}.".format(temp_ary[1], temp_ary[0]) + WTXT)
             continue
@@ -1321,6 +1320,8 @@ def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_CO
                 continue
             final_array.append(c)
             final_array_lower.append(c.lower())
+    if not len(final_array) and add_to_blank:
+        final_array.append(add_to_blank)
     if len(final_array):
         main_line_string += " # " + " / ".join(final_array)
     if cr_at_end:
