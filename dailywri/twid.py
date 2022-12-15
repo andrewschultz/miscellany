@@ -534,7 +534,9 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
     else:
         print("No changes in", x)
 
-for x in from_and_to:
+from_to_local = list(set(my_twiddle_projects[my_project].from_file.values()) | set(my_twiddle_projects[my_project].to_file.values()))
+
+for x in from_to_local:
     if write_out_files(x) == NO_CHANGES:
         continue
     to_of_x = this_twiddle.to_temp[x]
