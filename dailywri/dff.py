@@ -1,8 +1,9 @@
 # dff.py: daily file find
 #
-# sorts notes from google keep/drive and modifies them a bit if necessary
+# sorts notes in daily files e.g. moves #RoL to RoL
 # todo: pull COMMENTS from DDD
 # todo: in a = b lines, flag both a and b and get all the comments. Have actual_info array along with my_comment_list
+# todo: if DFF'ing completed weekly file and new section is added, add **MODIFY DAILY INSTEAD (bumper) to start
 
 import daily
 import codecs
@@ -573,8 +574,16 @@ def is_valid_limerick(this_limerick):
 def limerick_flip(complete_section, incomplete_section):
     d1 = complete_section.strip().split("\n")
     d2 = incomplete_section.strip().split("\n")
+    add_bumpers = False
+    if d1[0] == mt.daily_warning_bumper.strip():
+        d1 = d1[1:]
+        add_bumpers = True
+    if len(d2) and d2[0] == mt.daily_warning_bumper.strip():
+        d2 = d2[1:]
+        add_bumpers = True
     done_limericks = ''
     undone_limericks = ''
+    daily_modify_lines = 0
     for d in [ d1, d2 ]:
         current_limerick = ''
         for x in d:
@@ -590,6 +599,11 @@ def limerick_flip(complete_section, incomplete_section):
             done_limericks += current_limerick
         else:
             undone_limericks += current_limerick.lstrip()
+    if add_bumpers:
+        if done_limericks:
+            done_limericks = mt.daily_warning_bumper + done_limericks
+        if undone_limericks:
+            undone_limericks = mt.daily_warning_bumper + undone_limericks
     return(done_limericks, undone_limericks)
 
 def is_in_procs(my_file):
