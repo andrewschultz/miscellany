@@ -21,11 +21,14 @@ import colorama
 import pathlib
 import ctypes
 import pendulum
+import pyperclip
 
 DEFAULT_SORT = daily.DAILY
 
 max_consecutive_blank_section_lines = 10
 max_adjustment_summary = 100
+
+dff_clipboard = "c:/writing/temp/dff-clipboard.txt"
 
 force_backup = "c:/writing/temp/dff-forcecopy-backup.txt"
 test_file_index = 0
@@ -91,6 +94,7 @@ ask_to_copy_back = False
 show_stat_numbers = False
 
 space_to_tab_conversion = False
+clipboard_file = False
 
 last_file_first = True
 ignore_limerick_headers_in_stats = True
@@ -319,7 +323,6 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
     for com in sorted(start_comments, key=start_comments.get, reverse = True):
         print("{} instance{} of {}".format(start_comments[com], mt.plur(start_comments[com]), com if com else 'no comment'))
     if clipboard_msg:
-        import pyperclip
         print(colorama.Fore.CYAN + "Copying header to clipboard: {}".format(clipboard_msg.strip()) + colorama.Style.RESET_ALL)
         pyperclip.copy(clipboard_msg)
     mt.post_open(full_file_paths = True)
@@ -1062,7 +1065,7 @@ def sort_raw(raw_long):
         print((colorama.Fore.CYAN if section_change > 0 else '') + "{} section change{}, {} sorted from blank, {} to name-section from blank.".format(section_change, mt.plur(section_change), from_blank, to_names), colorama.Style.RESET_ALL)
     if overflow:
         print("NOTE: consecutive-line overflow (line not fitting in any section) was detected. Inspection showed a total of {} overflow line{}.".format(overflow, mt.plur(overflow)))
-    if edit_blank_to_blank and len(blank_edit_lines):
+    if edit_blank_to_blank and len(blank_edit_lines) and not clipboard_file:
         print("Lines to edit to put in section: {} total, list = {}".format(len(blank_edit_lines), mt.listnums(blank_edit_lines)))
         mt.npo(raw_long, blank_edit_lines[0])
     if len(old_names):
@@ -1189,6 +1192,8 @@ def sort_raw(raw_long):
             copy_then_test = False
             open_raw = True
             return 1
+    if clipboard_file:
+        os.system(temp_out_file)
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
@@ -1308,6 +1313,8 @@ while cmd_count < len(sys.argv):
         copy_then_test = True
         test_no_copy = False
         max_files = 2
+    elif arg == 'cl':
+        clipboard_file = True
     elif arg[:2] == 'lb':
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
@@ -1541,6 +1548,13 @@ if run_apostrophe_check == RUN_ALL_APOSTROPHE:
     check_apostrophes_in_file()
 elif run_apostrophe_check == RUN_LATEST_APOSTROPHE:
     check_apostrophes_in_file(dir_list = [ 'c:/writing/daily' ])
+
+if clipboard_file:
+    f = open(dff_clipboard, "w")
+    f.write(pyperclip.paste())
+    f.close()
+    sort_raw(dff_clipboard)
+    sys.exit()
 
 if run_test_file:
     test_file_name = "c:/writing/temp/dff-test-file-{}.txt".format(test_file_index)
