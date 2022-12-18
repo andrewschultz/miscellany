@@ -47,6 +47,7 @@ dg_temp = "c:/writing/temp/dgrab-temp.txt"
 dg_temp_2 = "c:/writing/temp/dgrab-temp-2.txt"
 dg_preview = "c:/writing/temp/dgrab-preview.txt"
 flat_temp = os.path.basename(dg_temp)
+move_log = "c:/writing/temp/dgrab-move-log.txt"
 
 file_list = defaultdict(list)
 sect_lines = defaultdict(int)
@@ -483,6 +484,9 @@ def send_mapping(sect_name, file_name, change_files = False):
         global change_list
         change_list.append(fn)
         return False
+    f = open(move_log, "a")
+    f.write("Moving over {} lines in section {} for file {} on {}.\n".format(sect_text.count("\n"), sect_name, file_name, my_date))
+    f.close()
     if preview_moved_text:
         if sect_text:
             global preview_any_yet
