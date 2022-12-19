@@ -59,6 +59,7 @@ open_notes = 0
 days_before_ignore = 0 # this used to make sure we didn't hack into a current daily file, but now we have a processing subdirectory, we don't need that
 min_for_list = 0
 
+force_timestamp = False
 open_cluttered = False
 just_analyze = False
 look_for_lines = False
@@ -543,7 +544,7 @@ def send_mapping(sect_name, file_name, change_files = False):
                 if write_next_blank and not line.strip():
                     print("Will start writing at line", line_count)
                     if sect_name in daily.timestamps or force_timestamp:
-                        f.write('# start {}\n'.format(my_date_for_file))
+                        f.write('# start {} {}\n'.format(fn, my_date_for_file))
                     f.write(sect_text)
                     f.write("\n")
                     write_next_blank = False
@@ -640,6 +641,8 @@ while cmd_count < len(sys.argv):
         sys.exit()
     elif arg in ( 'fts', 'ts', 'ft' ):
         force_timestamp = True
+    elif arg in ( 'ftn', 'nft', 'ntf' ):
+        force_timestamp = False
     elif arg == 'o': open_notes_after = True
     elif arg == 'pi': print_ignored_files = True
     elif arg == 'npi' or arg == 'pin': print_ignored_files = False
