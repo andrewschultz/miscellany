@@ -82,6 +82,7 @@ preview_moved_text = False
 preview_any_yet = False
 launch_backup_log = True
 section_dump_yet = False
+duplicate_bumpers = False
 
 dir_search_flag = daily.TOPROC
 
@@ -537,6 +538,7 @@ def send_mapping(sect_name, file_name, change_files = False):
                     if line.startswith("\\"):
                         print("Section to append starts at line", line_count)
                         write_next_blank = True
+                        duplicate_bumpers = False
                     else:
                         f.write("<from daily/keep file {:s}>\n".format(file_name) + sect_text)
                         remain_written = True
@@ -676,6 +678,8 @@ while cmd_count < len(sys.argv):
         just_analyze = True
         look_for_lines = 'l' in arg
         open_cluttered = 'c' in arg
+    elif arg == 'dub':
+        duplicate_bumpers = True
     elif arg == '?': usage()
     else:
         usage("BAD PARAMETER {:s}".format(sys.argv[cmd_count]))
