@@ -435,6 +435,14 @@ def file_len(fname):
 
 def send_mapping(sect_name, file_name, change_files = False):
     global section_dump_yet
+    if sect_name == 'lim':
+        alt_section = ''
+        alt_section_reject = True
+    else:
+        alt_section = ''
+        alt_section_reject = False
+    alt_section_found = in_alt_section = False
+    alt_lines = 0
     temp_time = os.stat(file_name)
     fn = os.path.basename(file_name)
     time_delta = time.time() - temp_time.st_mtime
@@ -452,18 +460,31 @@ def send_mapping(sect_name, file_name, change_files = False):
             if re.search(r"{}\b".format(my_reg), line):
                 if found_sect_name:
                     print("WARNING -- (no information lost) 2 section types similar to", sect_name, "from", my_reg, "line", found_sect_name, line_count, file_name)
-                if verbose: print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
-                if not re.search(r"^\\{}$".format(sect_name), lls): print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
+                if verbose:
+                    print(file_name, "line", line_count, "has {:s} section".format("extra" if found_sect_name else "a"), sect_name)
+                if not re.search(r"^\\{}$".format(sect_name), lls):
+                    print("    NOTE: alternate section name from {:s} is {:s} line {} in {}".format(sect_name, line.strip(), line_count, file_name))
                 found_sect_name = line_count
                 in_sect = True
-                print(sect_name)
+                if change_files:
+                    print(sect_name, "section found in {}, parsing begins...".format(fn))
                 continue
+            if not line.strip():
+                in_alt_section = False
+                in_sect = False
+            if in_alt_section:
+                alt_lines += 1
+            if not alt_section_found:
+                if line.strip() == '\\' + alt_section:
+                    alt_section_found = True
+                    in_alt_section = True
             if in_sect:
-                if line.startswith("\\"): sys.exit("Being pedantic that " + file_name + " has bad sectioning. Bailing.")
-                if not line.strip():
-                    in_sect = False
-                    continue
-                sect_text += line
+                if line.startswith("\\"):
+                    sys.exit("Being pedantic that " + file_name + " has bad sectioning. Bailing.")
+                if line == mt.daily_warning_bumper:
+                    pass
+                else:
+                    sect_text += line
             elif re.search(my_reg_comment, lls):
                 sect_text += line
             else:
@@ -489,6 +510,11 @@ def send_mapping(sect_name, file_name, change_files = False):
     f = open(move_log, "a")
     f.write("Moving over {} lines in section {} for file {} on {}.\n".format(sect_text.count("\n"), sect_name, file_name, my_date))
     f.close()
+    if alt_section_reject and alt_section_found:
+        print("Alt section of {} ({}) found. Not copying over ... yet.".format(sect_name, alt_section))
+        print("Lines in {}: {}.".format(sect_name, sect_text.count('\n')))
+        print("Lines in {}: {}.".format(alt_section, alt_lines))
+        return False
     if preview_moved_text:
         if sect_text:
             global preview_any_yet
