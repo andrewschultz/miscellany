@@ -19,6 +19,8 @@
 # todo: utf8 to ascii, open first nonorphan, open first bad header
 #
 # note: dga.bat (section name) copies the section name over
+#
+# todo: insert stuff at start or end of output file/section
 
 import codecs
 import datetime
@@ -829,10 +831,11 @@ if list_it:
 if processed == 0:
     print("Could not find anything to process for {} in {}.".format(my_sect, dir_to_proc))
 else:
-    print("Processed", processed, "total file(s)")
+    print("Processed", processed, "total file{}".format(mt.plur(processed)))
 
 if len(change_list):
-    print("Files still to process:", ', '.join(change_list))
+    print("{} File{} still to process, probably since we had a ceiling on the number to generate:".format(len(change_list), 's' if len(change_list) > 1 else ''), ', '.join(change_list))
+
 if max_process > 0: print("Got {:d} of {:d} files.".format(processed, max_process))
 
 if launch_backup_log:
