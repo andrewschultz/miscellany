@@ -11,10 +11,11 @@
 import sys
 from collections import defaultdict
 import re
-import mytools as mt
 import shutil
 import filecmp
 from daily import last_daily_file
+import mytools as mt
+import i7
 
 cfg_file = "c:/writing/scripts/glom.txt"
 
@@ -238,11 +239,19 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if not my_project:
-    if default_from_cfg:
-        my_project = default_from_cfg
-        print("Going with default cfg project {}.".format(my_project))
-    else:
-        sys.exit("Could not find project {}.".format(my_project))
+    this_try = i7.dir2proj(to_abbrev = True)
+    if this_try:
+        if this_try in my_gloms:
+            print(mt.PASS + "Since we are in an Inform project directory with a GLOM project, we are going with {}.".format(this_try) + mt.WTXT)
+            my_project = this_try
+        else:
+            print(mt.WARN + "We are in an Inform project directory, but it has no GLOM project. Edit glom.txt to fix this." + mt.WTXT)
+    if not my_project:
+        if default_from_cfg:
+            my_project = default_from_cfg
+            print("Going with default cfg project {}.".format(my_project))
+        else:
+            sys.exit("Could not find project {}, and we are in a directory.".format(my_project))
 
 if my_project not in my_gloms:
     sys.exit("No glom project for {}.".format(my_project))
