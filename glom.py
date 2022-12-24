@@ -30,6 +30,7 @@ class glom_project:
         self.tempfile = ''
         self.splitregex = []
         self.alphabetize = defaultdict(bool)
+        self.flaggables = []
 
 my_gloms = defaultdict(glom_project)
 
@@ -141,7 +142,7 @@ def run_one_regex(line_array, my_regex):
                     print("Went over max changes of", max_changes)
                     break
                 for a in after_array:
-                    l = mt.comment_combine([l, first_separator_of(my_regex, l) + line_array[a]], cr_at_end = False)
+                    l = mt.comment_combine([l, first_separator_of(my_regex, l) + line_array[a]], cr_at_end = False, to_flag = this_glom.flaggables)
                 #print("New combined line:", l)
                 new_split = l.split('#')
                 #print("new split", new_split)
@@ -198,6 +199,8 @@ def read_cfg_file():
                 sys.exit("Need a current project before actual options at line {}.".format(line_count))
             if prefix == 'file':
                 this_glom.file = data
+            elif prefix == 'flag':
+                this_glom.flaggables.extend(data.split(','))
             elif prefix == 'tempfile':
                 this_glom.tempfile = data
             elif prefix == 'splitregex':
