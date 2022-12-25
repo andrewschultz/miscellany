@@ -38,7 +38,7 @@ my_gloms = defaultdict(glom_project)
 
 check_sectioning = False
 copy_back = False
-max_changes = 10
+max_changes = 25
 user_max_line = 0
 
 # dictionaries
@@ -139,7 +139,7 @@ def run_one_regex(line_array, my_regex):
             if len(after_array):
                 cur_changes += 1
                 if max_changes and cur_changes == max_changes + 1:
-                    print("Went over max changes of", max_changes)
+                    print("Went over max listable changes of", max_changes)
                     break
                 for a in after_array:
                     l = mt.comment_combine([l, first_separator_of(my_regex, l) + line_array[a]], cr_at_end = False, to_flag = this_glom.flaggables)
@@ -181,7 +181,7 @@ def read_cfg_file():
             if line.startswith(";"): break
             if line.startswith("#"): continue
             if not line.strip(): continue
-            (prefix, data) = mt.cfg_data_split(line)
+            (prefix, data) = mt.cfg_data_split(line, strip_data_right_only = True)
             if prefix == 'default':
                 if default_from_cfg:
                     print("WARNING default from cfg renamed at line", line_count)
