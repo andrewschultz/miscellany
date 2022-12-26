@@ -469,7 +469,7 @@ def read_comment_cfg():
             if prefix in ( 'apostrophe', 'apostrophes' ):
                 for e in entries:
                     if "'" not in e:
-                        print("WARNING line {} has {} which does not have an apostrophe.")
+                        print(mt.WARN + "WARNING line {} in config file has {} for apostrophe-checking, but it does not have an apostrophe: {}".format(line_count, e, line[:50].strip()) + mt.WTXT)
                         continue
                     er = e.replace("'", '')
                     if er in apostrophe_check:
@@ -501,9 +501,9 @@ def read_comment_cfg():
             elif prefix == 'keyword':
                 section_words[ary[0]] = ary[1]
             elif prefix in ( 'noname', 'nonames' ):
-                for x in vals:
+                for x in entries:
                     if x in no_names:
-                        print("Duplicate no-name {} line {}".format(x, count))
+                        print("Duplicate no-name {} line {}".format(x, line_count))
                     no_names[x] = True
             elif prefix == "prefix":
                 for u in entries:
@@ -936,7 +936,8 @@ def sort_raw(raw_long):
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if line != speech_to_text_minor_tweaks(line):
-                print(colorama.Fore.MAGENTA + "WARNING: Line {} {}{} should be speechtotexted.".format(line_count, line.strip()[:40], '...' if len(line.strip()) > 40 else '') + mt.WTXT)
+                print(colorama.Fore.MAGENTA + "WARNING: Line {} {}{} may have been speechtotexted. Unexpected spaces were found.".format(line_count, line.strip()[:40], '...' if len(line.strip()) > 40 else '') + mt.WTXT)
+                mt.add_post(raw_long, line_count, priority=4)
                 found_speech_to_text += 1
             if in_header:
                 if line.startswith("#"):
@@ -965,7 +966,7 @@ def sort_raw(raw_long):
                 raw_sections[current_section] += line
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=', ignore_after = ['===='])
             if no_punc and no_punc in this_file_lines and not dupe_ignorable(no_punc):
-                print(colorama.Fore.YELLOW + "WARNING duplicate line {} in {}: {}".format(line_count, rbase, ll) + mt.WTXT)
+                print(colorama.Fore.YELLOW + "WARNING duplicate line {} in {} copies {}: {}".format(line_count, rbase, this_file_lines[no_punc], ll) + mt.WTXT)
                 dupe_edit_lines.append(line_count)
             else:
                 this_file_lines[no_punc] = line_count
@@ -982,8 +983,8 @@ def sort_raw(raw_long):
                     continue
             if current_section == 'nam':
                 if "\t\t" in line:
-                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
-                old_names.extend(tab_split(line.lower().strip()))
+                    offsets = [str(m.start()) for m in re.finditer('\t{2,}', line)]
+                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}, offset{} {} of {}.".format(line_count, mt.plur(len(offsets)), ', '.join(offsets), len(line)) + colorama.Style.RESET_ALL)
             elif current_section and '\t' in line:
                 print(colorama.Fore.RED + "NOTE: tab in non-name section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
                 odd_tab_found = True
@@ -1161,6 +1162,7 @@ def sort_raw(raw_long):
         if test_no_copy:
             if not ask_to_copy_back:
                 print("Not modifying", raw_long, "even though differences were found. Set -co force changes with no question or add a Q to a parameter to get a verification question.")
+                mt.post_open(bail_after=False)
             if show_differences:
                 mt.wm(raw_long, temp_out_file)
             if ask_to_copy_back:
@@ -1200,8 +1202,6 @@ def sort_raw(raw_long):
     if open_raw:
         print("Opening raw", raw_long)
         os.system(raw_long)
-    print("Opening", raw_long)
-    os.system(raw_long)
     return 1
 
 def is_outline_text(my_line):
