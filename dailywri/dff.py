@@ -901,6 +901,11 @@ def dupe_ignorable(x, force_lower = False):
         return True
     return False
 
+def bumper_at_start(section_name):
+    if section_name == 'nam':
+        return False
+    return True
+
 def sort_raw(raw_long):
     overflow = 0
     raw_long = os.path.normpath(raw_long)
@@ -931,8 +936,11 @@ def sort_raw(raw_long):
     mt.wait_until_npp_saved(raw_long)
     odd_tab_found = False
     rbase = os.path.basename(raw_long)
+    in_to_proc = 'to-proc' in raw_long or 'to_proc' in raw_long
     with open(raw_long, mode='r', encoding='utf-8', errors='ignore') as file:
         for (line_count, line) in enumerate(file, 1):
+            if line.startswith(mt.daily_warning_bumper_short):
+                continue
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if line != speech_to_text_minor_tweaks(line):
@@ -1104,6 +1112,13 @@ def sort_raw(raw_long):
         for x in sorted(sect_move):
             print("To {}: {}".format(x, ', '.join(["{} {}".format(a if a else '<blank>', sect_move[x][a]) for a in sect_move[x]])))
     for x in sorted(sections, key=lambda x:(priority_sort[x], header_tweak[x] if x in header_tweak else x)): # note this is a tuple that's used to push current hot projects to the bottom
+        if in_to_proc:
+            if bumper_at_start(x):
+                sections[x] = mt.daily_warning_bumper + sections[x]
+            else:
+                if not sections[x].endswith('\n'):
+                    sections[x] += '\n'
+                sections[x] += mt.daily_warning_bumper
         sections[x] = sections[x].rstrip()
         fout.write("\\{0}\n".format(x))
         fout.write(sections[x])
