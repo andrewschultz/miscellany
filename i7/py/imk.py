@@ -104,10 +104,12 @@ with open(imk_cfg) as file:
     for (line_count, line) in enumerate (file, 1):
         if line.startswith(';'):
             break
-        elif line.startswith(';'):
+        elif line.startswith('#'):
             continue
         ary = line.strip().split('=', 1)
-        my_quotes[ary[0]] = ary[1]
+        if '"' in ary[1]:
+            mt.warn("Replacing double quotes with single quotes in summary for {} header file type.".format(ary[0]))
+        my_quotes[ary[0]] = ary[1].replace('"', "'")
 
 if len(sys.argv) == 1:
     usage()
@@ -129,7 +131,7 @@ while count < len(sys.argv):
     elif arg in ('ds', 'sd'):
         default_search()
         sys.exit()
-    elif arg[2] in ('ds', 'sd') and arg[2:].isdigit():
+    elif arg[:2] in ('ds', 'sd') and arg[2:].isdigit():
         default_search(max_files = int(arg[2:]))
     elif arg == '?':
         usage()
