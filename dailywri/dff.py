@@ -99,6 +99,8 @@ clipboard_file = False
 last_file_first = True
 ignore_limerick_headers_in_stats = True
 
+keep_directive_text = False
+
 RUN_NO_APOSTROPHE = 0
 RUN_LATEST_APOSTROPHE = 1
 RUN_ALL_APOSTROPHE = 2
@@ -999,11 +1001,17 @@ def sort_raw(raw_long):
                 mt.add_post(raw_long, line_count)
             temp = section_from_prefix(ll)
             if temp:
-                if temp in prefixes and temp in delete_marker:
+                if (temp in prefixes and temp in delete_marker) or not keep_directive_text:
                     line = re.sub("^.*?:", "", line).lstrip()
                 sections[temp] += line
                 if temp != current_section:
                     section_change += 1
+                continue
+            temp = section_from_suffix(line, search_type = SUFFIX_START)
+            if temp:
+                if not keep_directive_text and section_from_suffix(line, search_type = SUFFIX_EXACT):
+                    line = re.sub(" *#.*", "", line)
+                sections[temp] += line
                 continue
             temp = my_section(line)
             if temp:
@@ -1484,6 +1492,8 @@ while cmd_count < len(sys.argv):
     elif arg in ( 'ma=', 'max=' ):
         my_max_file = str(num)
         print("Maxfile is now", my_max_file)
+    elif arg in ( 'kd', 'dk') or mt.alfmatch('kdt', arg):
+        keep_directive_text = True
     elif arg == 'tc':
         space_to_tab_conversion = True
     elif arg in ( 'ap', 'apo', 'apa', 'apoa' ):
