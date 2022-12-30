@@ -674,7 +674,7 @@ def is_risque_spoonerism(l):
     for dig in double_digits:
         if probably_numerical(dig[0]): continue
         if re.search("[dfs]\*{3}", dig[0], re.IGNORECASE): continue
-        if re.search(r'[1-9]', dig[0]): continue
+        if re.search(r'[1-9]\.', dig[0]): continue # this isn't perfect! If we type 99 then 2 spaces, a period will appear on the phone. But we can check that by hand.
         if '****' in dig[0]: continue
         return True
     return False
@@ -732,9 +732,6 @@ def my_section(l):
     l = l.strip()
     if mt.is_limerick(l, accept_comments = True): return 'lim' # this comes first because limericks are limericks
     if l.startswith('wfl'): return 'pc'
-    temp = section_from_suffix(l, exact = True)
-    if temp:
-        return temp
     if '\t' in l or l.count('  ') > 2:
         if l.count('\t') == 0:
             if not space_to_tab_conversion:
@@ -908,7 +905,7 @@ def bumper_at_start(section_name):
         return False
     return True
 
-def sort_raw(raw_long):
+def sort_raw(raw_long, open_temp_out = False):
     overflow = 0
     raw_long = os.path.normpath(raw_long)
     global test_no_copy
@@ -1196,11 +1193,6 @@ def sort_raw(raw_long):
                     copy(temp_out_file, raw_long)
             else:
                 print("Add q or g to question/get copy-back, or use cq/qc as a separate argument, or co to force copying back.")
-            if only_one:
-                if open_raw:
-                    os.system(raw_long)
-                print("Bailing now we've read our one file. Multiple files can be processed with -mu.")
-                sys.exit()
         if mt.is_npp_modified(raw_long):
             if force_copy:
                 print("Force-copying despite {} being unsaved in notepad++. I hope you know what you're doing, but you can always click <NO> and compare.")
@@ -1219,12 +1211,12 @@ def sort_raw(raw_long):
             return 1
     if clipboard_file:
         os.system(temp_out_file)
-    if only_one:
-        print("Bailing after first file converted, since only_one is set to True.")
-        sys.exit()
     if open_raw:
         print("Opening raw", raw_long)
         os.system(raw_long)
+    if only_one:
+        print("Bailing after first file converted, since only_one is set to True.")
+        sys.exit()
     return 1
 
 def is_outline_text(my_line):
@@ -1308,6 +1300,7 @@ while cmd_count < len(sys.argv):
     (arg, num, value_found) = mt.parameter_with_number(sys.argv[cmd_count], default_value = 1)
     if arg in ( 'f', 'fb'):
         max_files = num
+        only_one = False
     elif arg[:2] == 'g=': # there may be a letter here so we can't rely on num
         raw_glob = num if num else arg[2:]
     elif arg in ( 'k', 'dk' ):
@@ -1345,6 +1338,7 @@ while cmd_count < len(sys.argv):
     elif arg == 'c':
         sys.exit("While C is the natural command-line parameter for copy, we want to avoid accidents, so you need to type co.")
     elif arg == 'mu':
+        max_files = -1
         only_one = False
     elif arg == 'oo':
         only_one = True
@@ -1603,6 +1597,7 @@ if read_most_recent:
             sort_raw(r)
             if read_most_recent and ask_to_copy_back:
                 print(colorama.Fore.YELLOW + "REMINDER: use APL and not APO to adjust apostrophes/spaces on latest file." + mt.WTXT)
+            print("Got to back of daily files! Exiting.")
             sys.exit()
     if daily_count == 0:
         print("No recent daily to read.")
