@@ -679,13 +679,19 @@ def is_risque_spoonerism(l):
         return True
     return False
 
-def section_from_suffix(my_line, exact = False):
+SUFFIX_ANYWHERE = 0
+SUFFIX_START = 1
+SUFFIX_EXACT = 2
+
+def section_from_suffix(my_line, search_type = SUFFIX_ANYWHERE):
     if '#' not in my_line and ' zz' not in my_line: return
     ml2 = re.sub(".*(#| zz)", "", my_line).strip().lower()
     for x in suffixes:
-        if not exact and ml2.startswith(x):
+        if search_type == SUFFIX_EXACT and ml2 == x:
             return suffixes[x]
-        if exact and ml2.startswith(x) and re.search(r'{}\b'.format(x), ml2):
+        if search_type == SUFFIX_START and ml2.startswith(x):
+            return suffixes[x]
+        if search_type == SUFFIX_ANYWHERE and re.search(r'\b{}\b'.format(x), ml2):
             return suffixes[x]
     return ""
 
@@ -754,7 +760,7 @@ def my_section(l):
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
-    temp = section_from_suffix(l, exact = False)
+    temp = section_from_suffix(l, search_type = SUFFIX_ANYWHERE)
     if temp:
         return temp
     return ""
@@ -1026,7 +1032,7 @@ def sort_raw(raw_long, open_temp_out = False):
                     sections[temp] += mt.slash_to_limerick(line)
                 else:
                     if temp in suffixes and temp in delete_marker:
-                        sfs = section_from_suffix(line, exact=True)
+                        sfs = section_from_suffix(line, search_type = True)
                         if sfs:
                             line = re.sub(r'( zz| *#).*'.format(sfs), "", line, re.IGNORECASE)
                     sections[temp] += line
@@ -1134,7 +1140,7 @@ def sort_raw(raw_long, open_temp_out = False):
     fout.close()
     if found_speech_to_text:
         print("You may want to run STT/apostrophe checking with -apo. There were {} prespaces found.".format(found_speech_to_text))
-    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent)
+    mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent, case_insensitive = True, comment_note_level = mt.CAL_PASS_COMMENTS)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
     no_changes = os.path.exists(raw_long) and cmp(raw_long, temp_out_file)
