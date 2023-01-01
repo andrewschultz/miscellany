@@ -1220,6 +1220,9 @@ def sort_raw(raw_long, open_temp_out = False):
     if open_raw:
         print("Opening raw", raw_long)
         os.system(raw_long)
+    if open_temp_out:
+        print("Opening tempfile", temp_out_file)
+        os.system(temp_out_file)
     if only_one:
         print("Bailing after first file converted, since only_one is set to True.")
         sys.exit()
@@ -1337,6 +1340,9 @@ while cmd_count < len(sys.argv):
         max_files = 2
     elif arg == 'cl':
         clipboard_file = True
+    elif arg in ( 'clo', 'ocl'):
+        clipboard_file = True
+        open_raw = False
     elif arg[:2] == 'lb':
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
@@ -1576,9 +1582,9 @@ elif run_apostrophe_check == RUN_LATEST_APOSTROPHE:
 
 if clipboard_file:
     f = open(dff_clipboard, "w")
-    f.write(pyperclip.paste())
+    f.write(pyperclip.paste().replace('\r\n', '\n'))
     f.close()
-    sort_raw(dff_clipboard)
+    sort_raw(dff_clipboard, open_temp_out = True)
     sys.exit()
 
 if run_test_file:
