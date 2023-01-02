@@ -64,6 +64,9 @@ print_stats = False
 alphabetical_comparisons = True
 overall_comparisons = True
 
+strict_ordering = False
+catastrophic_bail = False
+
 track_line_delta = True
 
 check_sectioning = False
@@ -363,6 +366,8 @@ while cmd_count < len(sys.argv):
         track_line_delta = True
     elif arg == 'nld' or arg == 'ldn':
         track_line_delta = False
+    elif arg == 'so':
+        strict_ordering = True
     elif arg[:2] == 'p=' or arg[:2] == 'p:':
         my_project = arg[2:]
     elif arg[:2] == 'mt' or arg[:2] == 'tm':
@@ -480,6 +485,10 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                     last_section = current_section
                 elif last_section:
                     post_text[last_section] += line
+                elif past_start and strict_ordering:
+                    mt.fail("Currently with strict ordering we bail if something is not right. In this case there may be a line break splitting sections up wrong.")
+                    catastrophic_bail = True
+                    mt.add_post(x, line_count)
                 current_section = ''
                 continue
             if current_section:
@@ -533,6 +542,10 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
         print("Total changes in {}: {}".format(x, cur_file_changes))
     else:
         print("No changes in", x)
+
+if catastrophic_bail:
+    print("Catastrophic bail. Opening files.")
+    mt.postopen_files()
 
 from_to_local = list(set(my_twiddle_projects[my_project].from_file.values()) | set(my_twiddle_projects[my_project].to_file.values()))
 
