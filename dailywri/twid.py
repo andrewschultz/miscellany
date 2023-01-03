@@ -31,6 +31,8 @@ class twiddle_project:
 
         self.movefrom_locked = defaultdict(str) # don't move anything from this section
         self.moveto_locked = defaultdict(str) # don't move anything to this section
+        self.zap_comments = defaultdict(bool) # zap comments after moving from this section
+        self.only_shift_to = defaultdict(list) # from this section, only move to a specific section or sections
 
         self.flag_text_chunks = []
         self.flag_regexes = []
@@ -176,6 +178,10 @@ def get_twiddle_mappings():
                 elif write_status == 'toonly' or write_status == 'blockfrom' or write_status == 'fromblock':
                     cur_twiddle.movefrom_locked[ary[1]] = True
                     continue
+                elif write_status.startswith('onlyshiftto:'):
+                    cur_twiddle.only_shift_to[ary[1]] = re.sub('^.*?:', '', write_status).split(',')
+                elif write_status == 'nocomment':
+                    cur_twiddle.zap_comments[ary[1]] = True
                 elif write_status == 'locked':
                     cur_twiddle.movefrom_locked[ary[1]] = cur_twiddle.moveto_locked[ary[1]] = True
                     continue
@@ -307,6 +313,14 @@ def force_lock_wildcard(string_to_process):
             print("Switching", l, flags)
             my_twiddle_projects[my_project].moveto_locked[l] = flags & TO_LOCKED_FLAG
             my_twiddle_projects[my_project].movefrom_locked[l] = flags & FROM_LOCKED_FLAG
+
+def shift_allowed(to_section, from_section_array):
+    if not len(from_section_array):
+        return True
+    for x in from_section_array:
+        if to_section in x:
+            return True
+    return False
 
 ################################### main file
 
@@ -526,6 +540,8 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                 if not max_file_reached and not max_overall_reached:
                     cur_file_changes += 1
                     overall_changes += 1
+                    if this_twiddle.zap_comments[temp]:
+                        line = re.sub("#.*", "", line).strip() + "\n"
                     section_text[temp] += line
                     continue
             if current_section:
