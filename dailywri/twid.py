@@ -40,6 +40,8 @@ class twiddle_project:
         self.shuffle_end = ''
         self.shuffle_start = ''
 
+        self.smart_dir = ''
+
 #####################end classes
 
 NO_CHANGES = 0
@@ -109,6 +111,14 @@ def usage(arg = "general usage"):
     print("Specify project with p= or p:. Default is", my_default_project)
     exit()
 
+def guess_default_project():
+    cwd = os.getcwd()
+    for t in my_twiddle_projects:
+        if my_twiddle_projects[t].smart_dir:
+            if my_twiddle_projects[t].smart_dir in cwd:
+                return t
+    return ''
+
 def get_twiddle_mappings():
     current_project = ""
     global my_default_project
@@ -146,6 +156,9 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'shufstart':
                 cur_twiddle.shuffle_start = (data)
+                continue
+            elif prefix == 'smartdir':
+                cur_twiddle.smart_dir = data
                 continue
             elif prefix == 'text':
                 cur_twiddle.flag_text_chunks.append(data)
@@ -408,7 +421,12 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if not my_project:
-    if my_default_project:
+    gdp = guess_default_project()
+    sys.exit(gdp)
+    if gdp:
+        print("Going with guessed project", gdp)
+        my_project = gdp
+    elif my_default_project:
         print("Going with default project", my_default_project)
         my_project = my_default_project
     else:
