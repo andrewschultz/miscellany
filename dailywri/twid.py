@@ -13,6 +13,7 @@ import re
 from collections import defaultdict
 from filecmp import cmp
 from shutil import copy
+import i7
 
 #####################start classes
 
@@ -41,6 +42,7 @@ class twiddle_project:
         self.shuffle_start = ''
 
         self.smart_dir = ''
+        self.smart_project = ''
 
 #####################end classes
 
@@ -117,6 +119,29 @@ def guess_default_project():
         if my_twiddle_projects[t].smart_dir:
             if my_twiddle_projects[t].smart_dir in cwd:
                 return t
+    poss_proj = i7.dir2proj(to_abbrev = True)
+    poss_proj_x = i7.dir2proj(to_abbrev = False)
+    if not poss_proj:
+        return ''
+    for t in my_twiddle_projects:
+        if poss_proj == my_twiddle_projects[t].smart_project:
+            return t
+    if poss_proj_x not in i7.i7comr:
+        return
+    x = i7.i7comr[poss_proj_x]
+    for t in my_twiddle_projects:
+        if t in i7.i7x and i7.i7x[t] == x:
+            return t
+    for t in my_twiddle_projects:
+        temp = my_twiddle_projects[t].smart_project
+        if temp not in i7.i7x:
+            continue
+        temp = i7.i7x[temp]
+        if temp not in i7.i7comr:
+            continue
+        temp = i7.i7comr[temp]
+        if temp == x:
+            return t
     return ''
 
 def get_twiddle_mappings():
@@ -159,6 +184,9 @@ def get_twiddle_mappings():
                 continue
             elif prefix == 'smartdir':
                 cur_twiddle.smart_dir = data
+                continue
+            elif prefix == 'smartproj':
+                cur_twiddle.smart_project = data
                 continue
             elif prefix == 'text':
                 cur_twiddle.flag_text_chunks.append(data)
