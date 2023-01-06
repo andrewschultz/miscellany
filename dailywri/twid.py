@@ -252,16 +252,24 @@ def write_out_files(my_file):
     twiddle_file = twiddle_of(my_twiddle_projects[my_project].to_temp[my_file])
     f = open(twiddle_file, "w")
     got_line_delta = False
+    verify_written = defaultdict(bool)
+    for s in section_text:
+        verify_written[s] = False
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("\\"):
                 ls = line.strip()
+                if not ls:
+                    current_section = ''
+                    f.write(line)
+                    continue
                 if ls not in section_text:
                     sys.exit("Uh oh, section", ls, "vanished.")
                 else:
                     pass
                     # print("Processing", ls, "section")
                 current_section = ls
+                verify_written[current_section] = True
                 f.write(line)
                 if track_line_delta:
                     if before_lines[ls] == section_text[ls].count("\n"):
@@ -279,6 +287,13 @@ def write_out_files(my_file):
             # if we are in a section, we already wrote the section text, so continue
             continue
     f.close()
+    local_bail = False
+    for s in verify_written:
+        if not verify_written[s] and s != 'blank':
+            print("Oh no! TWID.PY tried to write to section {} in {} but failed. This section may not exist. Bailing.".format(s, my_file))
+            local_bail = True
+    if local_bail: # in case there are 2 sections unwritten to. Unlikely, but we should check.
+        sys.exit()
     if got_line_delta:
         print("    ----> nld/ldn will remove section text line delta notifications.")
     if cmp(my_file, twiddle_file): # just bail if nothing happened
