@@ -177,10 +177,10 @@ def get_twiddle_mappings():
                 cur_twiddle.flag_regexes.append(data)
                 continue
             elif prefix == 'shufend':
-                cur_twiddle.shuffle_end = (data)
+                cur_twiddle.shuffle_end = data
                 continue
             elif prefix == 'shufstart':
-                cur_twiddle.shuffle_start = (data)
+                cur_twiddle.shuffle_start = data
                 continue
             elif prefix == 'smartdir':
                 cur_twiddle.smart_dir = data
@@ -317,11 +317,11 @@ def pattern_check(my_line):
                 return this_match[2]
     return ""
 
-def copy_back_from_temp(this_twiddle, from_and_to):
+def copy_back_from_temp(this_twiddle, from_to_local):
     changed = []
     unchanged = []
 
-    for x in from_and_to:
+    for x in from_to_local:
         twid_from = twiddle_of(this_twiddle.to_temp[x])
         if cmp(x, twid_from):
             print("Skipping", x, twid_from, "no changes.")
@@ -640,7 +640,7 @@ for x in from_to_local:
 if not copy_over:
     print("-co to copy over")
 else:
-    copy_back_from_temp(this_twiddle, from_and_to)
+    copy_back_from_temp(this_twiddle, from_to_local)
 
 if postopen_to_fix:
     mt.postopen_files()
