@@ -330,7 +330,7 @@ def copy_back_from_temp(this_twiddle, from_to_local):
         if secure_backup:
             print("Backing up", x, twid_from)
             copy(x, os.path.join(my_twiddle_dir, "bak", os.path.basename(x)))
-        temp = mt.alfcomp(x, twid_from, show_winmerge = False, acknowledge_comparison = False)
+        temp = mt.alfcomp(x, twid_from, acknowledge_comparison = False)
         print("{} and {} {}have identical information.".format(x, twid_from, '' if temp else 'do not '))
 
         if not temp:
@@ -591,7 +591,7 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
                                 break
                             print("Flagged exact bad-regex match <{}> at line {} of {}: {}".format(r_match, line_count, xb, line.strip()))
                             mt.add_postopen(x, line_count)
-            if temp and current_section != temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached:
+            if temp and current_section != temp and not this_twiddle.movefrom_locked[current_section] and not this_twiddle.moveto_locked[temp] and not max_file_reached and not max_overall_reached and shift_allowed(temp, this_twiddle.only_shift_to[temp]):
                 if max_changes_overall and overall_changes == max_changes_overall:
                     print("You went over the maximum overall changes allowed in all files.")
                     max_overall_reached = True
@@ -611,6 +611,13 @@ for x in this_twiddle.to_temp: # I changed this once. The "to-temp," remember, p
             if last_section:
                 post_text[last_section] += line
             section_text['blank'] += line
+    if past_start and not past_ignore:
+        if this_twiddle.shuffle_end:
+            print(mt.WARN + "WARNING: did not find ending marker {} in {}".format(this_twiddle.shuffle_end, xb) + mt.WTXT)
+        else:
+            print(mt.WARN + "WARNING: no ending marker defined for {}".format(xb) + mt.WTXT)
+    if not past_start:
+        print(mt.WARN + "WARNING: did not find starting marker {} in {}.".format(this_twiddle.shuffle_start, xb) + mt.WTXT)
     if cur_text_tweaks:
         print("{} suggested lines to tweak based on crude regexes.".format(cur_text_tweaks))
     else:
