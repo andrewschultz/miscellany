@@ -219,9 +219,9 @@ def testcase_match(my_verb = ''):
                         last_line = line
                         continue
                 if not retest_agnostic_starts(last_line, include_null = True):
-                    print(colorama.Fore.YELLOW + "Line {} has {} without test case above it.".format(line_count, ls) + mt.WTXT)
+                    mt.warn("Line {} has {} without test case above it.".format(line_count, ls))
                     if ls in guesses:
-                        print(colorama.Fore.YELLOW + "    SUGGESTION: {}".format(guesses[ls]) + mt.WTXT)
+                        mt.warn("    SUGGESTION: {}".format(guesses[ls]))
                     mt.add_post_open(x, line_count)
                     need_case += 1
                 elif ls not in guesses:
@@ -229,11 +229,11 @@ def testcase_match(my_verb = ''):
                     got_case += 1
                 last_line = line
     if need_case + got_case == 0:
-        print(colorama.Fore.YELLOW + "No test cases for >{} found!".format(line_start) + mt.WTXT)
+        mt.warn("No test cases for >{} found!".format(line_start))
     elif need_case > 0:
-        print(colorama.Fore.RED + "{} successful, {} need test cases for {}.".format(got_case, need_case, line_start) + mt.WTXT)
+        mt.fail("{} successful, {} need test cases for {}.".format(got_case, need_case, line_start))
     else:
-        print(colorama.Fore.GREEN + "Every {} has a test case!".format(line_start) + mt.WTXT)
+        mt.okay("Every {} has a test case!".format(line_start))
     mt.post_open()
     sys.exit()
 
@@ -322,7 +322,7 @@ def retest_agnostic_starts(my_comment, include_null = False):
 
 def cr_tweak_sorted(my_array, line_count):
     if len(my_array) < 2:
-        print(colorama.Fore.YELLOW + "Oops, array of length {} at line {}.".format(len(my_array), line_count) + colorama.Style.RESET_ALL)
+        mt.warn("Oops, array of length {} at line {}.".format(len(my_array), line_count))
     new_array = sorted([re.sub(r"(\\\\\n)+$", "", x) for x in my_array], key=lambda x:retest_agnostic(x))
     return '\\\\\n'.join(new_array)
 
@@ -362,7 +362,7 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]): # todo: focus on s
                         print("Double alphabetize-off", err_suffix)
                         return
                     if need_nontrivial_alphabetize and not got_alphabetize_header and test_cases_this_chunk > 1:
-                        print(colorama.Fore.YELLOW + "WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count) + colorama.Style.RESET_ALL)
+                        mt.warn("WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count))
                         mt.add_post(this_file, line_count)
                     out_string += cr_tweak_sorted(alphabet_array, line_count)
                     out_string += line
@@ -376,14 +376,14 @@ def alphabetize_this_rbr(this_file, check_cues = [ '@mis' ]): # todo: focus on s
                 out_string += line
                 if not line.strip() and need_nontrivial_alphabetize and not got_alphabetize_header:
                     if test_cases_this_chunk > 1:
-                        print(colorama.Fore.YELLOW + "WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count) + colorama.Style.RESET_ALL)
+                        mt.warn("WARNING section line {}-{} needs ====alphabetize on to start nontrivial protected section.".format(last_section_start, line_count))
                         mt.add_post(this_file, last_section_start)
                     need_nontrivial_alphabetize = False
                     test_cases_this_chunk = 0
                 continue
             else:
                 if not line.strip():
-                    print(colorama.Fore.YELLOW + "WARNING line {} needs ====alphabetize off instead of a blank line, but this may be added anyway.".format(line_count) + colorama.Style.RESET_ALL)
+                    mt.warn("WARNING line {} needs ====alphabetize off instead of a blank line, but this may be added anyway.".format(line_count))
                     am_alphabetizing = False
                     mt.add_post(this_file, line_count)
                     out_string += cr_tweak_sorted(alphabet_array, line_count)
@@ -579,7 +579,7 @@ def get_rule_cases(this_proj):
                     continue
                 st = start_tabs_of(line)
                 if st > len(ifs_depth_array) + 1:
-                    print(colorama.Fore.YELLOW + "WARNING TABS EXCEED ARRAY LENGTH BY MORE THAN ONE: {} {} {} {} {}".format(fb, line_count, st, len(ifs_depth_array), line.strip()[:50]) + colorama.Style.RESET_ALL)
+                    mt.warn("WARNING TABS EXCEED ARRAY LENGTH BY MORE THAN ONE: {} {} {} {} {}".format(fb, line_count, st, len(ifs_depth_array), line.strip()[:50]))
                     mt.add_post(this_file, line_count, priority=4)
                 temp = if_to_testcase(line)
                 write_test_case = not (not line.strip())
@@ -625,12 +625,12 @@ def get_rule_cases(this_proj):
                     return_dict[test_case_full_name].suggested_text += "\n" + what_said
         for x in rules_specs[this_proj][this_file].rules_on_found:
             if not rules_specs[this_proj][this_file].rules_on_found[x]:
-                print(colorama.Fore.YELLOW + "WARNING: rules-on token {} not found in {}.".format(x, fb) + mt.WTXT)
+                mt.warn("WARNING: rules-on token {} not found in {}.".format(x, fb))
         for x in rules_specs[this_proj][this_file].rules_off_found:
             if not rules_specs[this_proj][this_file].rules_off_found[x]:
-                print(colorama.Fore.YELLOW + "WARNING: rules-off token {} not found in {}.".format(x, fb) + mt.WTXT)
+                mt.warn("WARNING: rules-off token {} not found in {}.".format(x, fb))
         if scan_current_text and len(rules_specs[this_proj][this_file].rules_off_found):
-            print(colorama.Fore.YELLOW + "WARNING: scan-current-text is on at end of file with rules_on and rules_off markers." + mt.WTXT)
+            mt.warn("WARNING: scan-current-text is on at end of file with rules_on and rules_off markers.")
     return return_dict
 
 # this function pulls the potential test cases from tables in the source code.
@@ -704,7 +704,7 @@ def get_table_cases(this_proj):
                 if not line.strip() or line.startswith('['): # we have reached the end of the table.
                     if stray_table:
                         global_error_note = True
-                        print(colorama.Fore.RED + "Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1) + colorama.Style.RESET_ALL)
+                        mt.fail("Stray table {} ({} line{}, {}-{}) should be put into test cases or ignore=.".format(current_table, table_line_count, mt.plur(table_line_count), line_count - table_line_count, line_count - 1))
                         table_overall_undecided += 1
                         table_lines_undecided += table_line_count
                         tables_found[current_table] = True
@@ -805,13 +805,13 @@ def get_table_cases(this_proj):
         if len(dupe_dict):
             print("=============================CFG FILE INFO SUGGESTIONS (replace ~ with \t)")
         for dd in dupe_dict:
-            print(colorama.Fore.GREEN + "okdup={}~{}".format(dd, dupe_dict[dd]) + colorama.Style.RESET_ALL)
+            mt.okay("okdup={}~{}".format(dd, dupe_dict[dd]))
         for dupe in table_specs[this_proj][this_file].okay_duplicate_counter:
             if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] == 0:
                 continue
             if not any_dupes_yet:
                 any_dupes_yet = True
-                print(colorama.Fore.YELLOW + "NOTE: we count the number of duplicates, not the total number of occurrences." + colorama.Style.RESET_ALL)
+                mt.warn("NOTE: we count the number of duplicates, not the total number of occurrences.")
             print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicate_counter[dupe]), dupe_orig[dupe]))
     return return_dict
 
@@ -1010,14 +1010,14 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
                     if this_case_list[raw_case].found_yet == True and this_case.startswith('#+'):
                         okay_duplicates += 1
         if len(this_file_dupes):
-            print(colorama.Fore.YELLOW + "This file's duplicates: {}".format(','.join([str(x) for x in this_file_dupes])) + mt.WTXT)
+            mt.warn("This file's duplicates: {}".format(','.join([str(x) for x in this_file_dupes])))
         if tests_in_header > 0:
             print(tests_in_header, "total tests to sort from header in", base)
     misses = [x for x in this_case_list if this_case_list[x].found_yet == False]
     if len(misses) == 0:
         print("No test cases were missed!")
     else:
-        print(colorama.Fore.YELLOW + "missed test case{} listed below:".format(mt.plur(len(misses))) + mt.WTXT)
+        mt.warn("missed test case{} listed below:".format(mt.plur(len(misses))))
         global_error_note = True
         cases_printed = 0
         for m in sorted(misses):
@@ -1066,7 +1066,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
                 if i < upper_range - 1:
                     print("\\\\")
         if len(misses) > 0:
-            print((colorama.Fore.MAGENTA if cases_printed == 0 else colorama.Fore.YELLOW if cases_printed != len(misses) else colorama.Fore.BLUE) + "{} of {} missed test case{} seen above.".format(cases_printed, len(misses), mt.plur(len(misses))) + mt.WTXT)
+            sys.stderr.write((colorama.Fore.MAGENTA if cases_printed == 0 else colorama.Fore.YELLOW if cases_printed != len(misses) else colorama.Fore.BLUE) + "{} of {} missed test case{} seen above.".format(cases_printed, len(misses), mt.plur(len(misses))) + mt.WTXT + "\n")
     return
 
 def valid_ttc(my_line, my_proj=''):
@@ -1175,7 +1175,7 @@ def verify_case_placement(this_proj):
         total_successful += successful
         total_tests_in_file += tests_in_file
     if total_successful == total_tests_in_file:
-        print(colorama.Fore.GREEN + "NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful) + colorama.Style.RESET_ALL)
+        mt.okay("NO MISPLACED TEST CASES FOUND ANYWHERE IN GENERATED FILES: {} total successes.".format(total_successful))
     else:
         print("{} unsorted={} Double sorted cases/lines={}/{} case-in-wrong-file={} successful={}".format(fb, total_unsorted, total_double_sorted_cases, total_double_sorted_lines, total_wrong_file, total_successful))
     global okay_duplicates
@@ -1276,7 +1276,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'extra':
                 for x in data.split(','):
                     if re.search('^reg.*-lone-.*txt', x):
-                        print(colorama.Fore.YELLOW + "WARNING possible redundant test file ... reg-lone is covered in the big glob, so duplicate cases may be erroneously flagged." + mt.WTXT)
+                        mt.warn("WARNING possible redundant test file ... reg-lone is covered in the big glob, so duplicate cases may be erroneously flagged.")
                     extra_project_files[cur_proj].append(x)
             elif prefix in ( 'rule_file', 'rules_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
@@ -1314,7 +1314,7 @@ def read_cfg_file(this_cfg):
                     elif generator_type in ( 'fileabbr', 'file_abbr', 't', 'tf', 'testfile' ):
                         my_to_file = generator_data
                 if not my_regex:
-                    print(colorama.Fore.YELLOW + "Rules specs needs a regex line {}.".format(line_count) + mt.WTXT)
+                    mt.warn("Rules specs needs a regex line {}.".format(line_count))
                     mt.add_postopen(this_cfg, line_count)
                     continue
                 rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].append(my_regex)
@@ -1509,7 +1509,7 @@ def read_cfg_file(this_cfg):
                 print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
     total_cfg_errors += local_cfg_errors
     if local_cfg_errors > 0:
-        print((colorama.Fore.RED + "Errors ({}) were found in {}. Setting -ncb disables cfg error bail, which is on by default.".format(local_cfg_errors, ' / '.join([os.path.basename(x) for x in mt.file_post_list])) + mt.WTXT))
+        mt.fail("Errors ({}) were found in {}. Setting -ncb disables cfg error bail, which is on by default.".format(local_cfg_errors, ' / '.join([os.path.basename(x) for x in mt.file_post_list])))
     return total_cfg_errors
 
 already_included = defaultdict(bool)
@@ -1626,7 +1626,7 @@ if len(global_stray_table_org):
         print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
 
 if my_cfg_errors:
-    print(colorama.Fore.YELLOW + "This is a warning to note CFG files had parsing errors. Remove NCB to keep the focus on what the errors are." + mt.WTXT)
+    mt.warn("This is a warning to note CFG files had parsing errors. Remove NCB to keep the focus on what the errors are.")
 
 if open_after:
     mt.post_open()
