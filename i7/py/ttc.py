@@ -199,7 +199,7 @@ def testcase_match(my_verb = ''):
     guesses = defaultdict(str)
     global rbr_globals
     if not rbr_globals:
-        rbr_globals = glob.glob("rbr-*")
+        rbr_globals = glob.glob("rbr-*.txt")
     last_line = ''
     line_start = '>' + (my_verb if my_verb else 'general command')
     need_case = got_case = 0
@@ -240,7 +240,7 @@ def testcase_match(my_verb = ''):
 def mark_rbr_open(file_name, orig_line_count, comp_line):
     global rbr_globals
     if not rbr_globals:
-        rbr_globals = glob.glob("rbr-*")
+        rbr_globals = glob.glob("rbr-*.txt")
     for x in rbr_globals:
         with open(x) as file:
             for (line_count, line) in enumerate (file, 1):
@@ -442,6 +442,9 @@ def alphabetize_my_rbrs(this_proj, prefix = 'rbr'):
 def get_mistakes(this_proj):
     mistake_file = i7.hdr(this_proj, "mi")
     mistake_dict = defaultdict(SimpleTestCase)
+    if not os.path.exists(mistake_file):
+        mt.warn("Skipping mistake file for {}.".format(this_proj))
+        return mistake_dict
     test_prefix = 'testcase-mistake-{}-'.format(this_proj)
     with open(mistake_file) as file:
         for (line_count, line) in enumerate (file, 1):
