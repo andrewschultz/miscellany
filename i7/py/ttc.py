@@ -636,6 +636,21 @@ def get_rule_cases(this_proj):
             mt.warn("WARNING: scan-current-text is on at end of file with rules_on and rules_off markers.")
     return return_dict
 
+def csv_or_range(x, throw_warning = False):
+    if x.startswith('o='):
+        throw_warning = False
+    if ',' in x:
+        return x.split(',')
+    if '~' in x:
+        step = 1
+        temp = [int(y) for y in x.split('~')]
+        if len(temp) > 2:
+            step = temp[2]
+        return [str(x) for x in range(temp[0], temp[1] + 1, step)]
+    if throw_warning:
+        mt.warn("CFG file has potential matrix without commas or tildes: {}.".format(x))
+    return [x]
+
 # this function pulls the potential test cases from tables in the source code.
 def get_table_cases(this_proj):
     global global_error_note
@@ -644,7 +659,10 @@ def get_table_cases(this_proj):
     any_dupes_yet = False
     dupe_so_far = 0
     for this_matrix in test_case_matrices[this_proj]:
-        main_matrix = [x.split(',') for x in this_matrix.matrix]
+        any_yet = False
+        main_matrix = []
+        for x in this_matrix.matrix:
+            main_matrix.append(csv_or_range(x, any_yet))
         out_matrix = itertools.product(*main_matrix)
         for f in out_matrix:
             if not this_matrix.can_repeat and len(set(f)) < len(f):
