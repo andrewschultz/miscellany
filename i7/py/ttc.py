@@ -279,9 +279,10 @@ def check_regex_in_absolute(my_data, my_line_count):
     if '*' in my_data or '^' in my_data or '$' in my_data:
         print("Possible regex appears in absolute definition {} at line {}.".format(my_data, my_line_count))
 
-def check_suspicious_regex(my_regex, my_line_count):
+def check_suspicious_regex(my_regex, my_line_count, my_file = '<UNKNOWN>'):
     if '-*' in my_regex:
-        print("-* in regex at line", my_line_count, "may result in a too-greedy regex. Maybe change to -.*")
+        print("-* in regex {} line {} may result in a too-greedy regex. Maybe change to -.*".format(my_file, my_line_count))
+        mt.add_post(my_file, my_line_count)
 
 def inform_extension_file(file_abbrev, my_proj):
     if file_abbrev == 'story' or file_abbrev == 'main':
@@ -1257,7 +1258,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'caseignorer':
                 ary = data.split(",")
                 for x in range(0, len(ary), 2):
-                    check_suspicious_regex(ary[x], line_count)
+                    check_suspicious_regex(ary[x], line_count, this_cfg)
                     if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                         if cfg_error_bail:
@@ -1279,7 +1280,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'casemapr':
                 ary = data.split(",")
                 for x in range(0, len(ary), 2):
-                    check_suspicious_regex(ary[x], line_count)
+                    check_suspicious_regex(ary[x], line_count, this_cfg)
                     if ary[x] in case_mapper[cur_proj].mappers_in_order:
                         print("Duplicate test case {} in {} at line {} of the cfg file.".format(ary[x], cur_proj, line_count))
                         mt.add_postopen(this_cfg, line_count)
@@ -1425,7 +1426,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'okdupr':
                 if not cur_file:
                     print("WARNING: you probably want to put an OKDUP in a specific file.")
-                check_suspicious_regex(data, line_count)
+                check_suspicious_regex(data, line_count, this_cfg)
                 table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
             elif prefix in ( 'oddcase', 'oddcases' ):
                 odd_cases[cur_proj].extend(data.split(','))
@@ -1517,7 +1518,7 @@ def read_cfg_file(this_cfg):
             elif prefix in ( 'untestabler' ):
                 ary = data.split(",")
                 for a in ary:
-                    check_suspicious_regex(a, line_count)
+                    check_suspicious_regex(a, line_count, this_cfg)
                     if a.startswith('#'):
                         print("Stripping # from untestable at line", line_count)
                         a = a[1:]
