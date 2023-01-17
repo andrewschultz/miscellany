@@ -1534,6 +1534,52 @@ def read_cfg_file(this_cfg):
         mt.fail("Errors ({}) were found in {}. Setting -ncb disables cfg error bail, which is on by default.".format(local_cfg_errors, ' / '.join([os.path.basename(x) for x in mt.file_post_list])))
     return total_cfg_errors
 
+def add_rbr_testcase_nums(my_string):
+    adjust_out = "c:/writing/temp/ttc-adjust-numbers.txt"
+    final_string = ''
+    global rbr_globals
+    if not rbr_globals:
+        rbr_globals = glob.glob("rbr-*.txt")
+    x = 0
+    increment = 1
+    while x < len(my_string) and not my_string[x].isalpha():
+        x += 1
+    if x == my_string:
+        mt.failbail("PLUS needs a string and a starting number, separated by commas.")
+    ary = my_string[x:].split(',')
+    try:
+        starter = int(ary[1])
+    except:
+        sys.exit("2nd CSV must be a number.")
+    try:
+        increment = int(ary(2))
+    except:
+        print("Default increment of 1, no INT in 2nd CSV")
+    wild_card = ary[0]
+    with open(rbr_globals[0]) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if not line.startswith('#'):
+                final_string += line
+                continue
+            if not (wild_card in my_string):
+                final_string += line
+                continue
+            ary = line.strip().split('-')
+            new_ary = []
+            for a in ary:
+                if a.isdigit() and int(a) >= starter:
+                    b = str(int(a) + increment)
+                    new_ary.append(b)
+                else:
+                    new_ary.append(a)
+            new_str = '-'.join(new_ary)
+            final_string += new_str + "\n"
+    f = open(adjust_out, "w")
+    f.write(final_string)
+    f.close()
+    mt.wm(rbr_globals[0], adjust_out)
+    sys.exit()
+
 already_included = defaultdict(bool)
 
 if 'ncb' in sys.argv:
@@ -1551,7 +1597,8 @@ my_proj = i7.dir2proj()
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
-    (arg, num, valfound) = mt.parnum(sys.argv[cmd_count])
+    argraw = sys.argv[cmd_count]
+    (arg, num, valfound) = mt.parnum(argraw)
     cmd_count += 1
     if arg == 'sp':
         clean_up_spaces(my_proj)
@@ -1609,6 +1656,8 @@ while cmd_count < len(sys.argv):
         testcase_wild_card = arg[3:]
     elif arg.startswith('twn='):
         testcase_wild_card_negative = arg[4:]
+    elif arg.startswith('plus'):
+        add_rbr_testcase_nums(argraw)
     elif arg == 'q':
         verbose_level = 0
     elif arg == '?':
