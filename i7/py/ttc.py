@@ -806,8 +806,8 @@ def get_table_cases(this_proj):
                             if verbose_level > 0:
                                 print("UNTESTABLE REGEX", test_case_name)
                             continue
-                        if possible_text.startswith('"') and possible_text.endswith('"'):
-                            possible_text = possible_text[1:-1]
+                        if possible_text.startswith('"') and possible_text.count('"') == 2:
+                            possible_text = re.sub("\".*", "", possible_text[1:])
                         temp_command = ''
                         if my_generator.fixed_command:
                             temp_command = my_generator.fixed_command
@@ -943,7 +943,7 @@ def rbr_cases_of(my_line):
     return [x for x in re.split("\\\\", my_line) if is_ttc_comment(x)]
 
 # this verifies test cases are in rbr* or reg* files at least once, following ttc = first time, +ttc = those after.
-def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*' ]):
+def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lone-*.txt' ]):
     global okay_duplicates
     global global_error_note
     already_suggested = defaultdict(bool)
@@ -955,7 +955,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*', 'reg-*-lone-*'
     errant_cases = 0
     last_abbrev = ''
     if len(test_file_glob) == 0:
-        print("No test files found in", glob_string)
+        print("No test files found in", my_globs)
         return
     for ext in extra_project_files[this_proj]:
         if os.path.exists(ext):
@@ -1146,6 +1146,7 @@ def verify_case_placement(this_proj):
                             continue
                         if case_file in fb:
                             match_array.append(t1)
+                            break
                         else:
                             print("Test case", line_mod, "sorted into wrong file", fb, "should have absolute wild card", case_mapper[this_proj].text_and_type_map[t])
                             mark_rbr_open(file_name, line_count, line)
@@ -1156,6 +1157,7 @@ def verify_case_placement(this_proj):
                             continue
                         if re.search(case_file, fb):
                             match_array.append(t1)
+                            break
                         else:
                             print("Test case", line_mod, "sorted into wrong file", fb, "should have regex", case_mapper[this_proj].text_and_type_map[t])
                             mark_rbr_open(file_name, line_count, line)
