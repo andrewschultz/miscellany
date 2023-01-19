@@ -176,6 +176,23 @@ def string_fill(var_line, line_count):
         temp = re.sub("\{\$" + q0 + "\}", my_strings[q0], temp)
     return temp
 
+def score_search(my_search):
+    my_search = my_search.replace('.', ' ').replace('-', ' ')
+    g = glob.glob("rbr-*.txt")
+    blank_before = False
+    for f in g:
+        with open(f) as file:
+            for (line_count, line) in enumerate(file, 1):
+                if not line.strip():
+                    blank_before = True
+                    continue
+                if blank_before and line.startswith(">") and my_search in line.lower():
+                    mt.okay("Found score {} {}".format(f, line_count))
+                    mt.add_post(f, line_count)
+                blank_before = False
+    mt.post_open()
+    mt.warnbail("No scoring/command string found for {}.".format(my_search))
+
 def branch_variable_adjust(var_line, err_stub, actives):
     if '+' not in var_line and '-' not in var_line and '=' not in var_line:
         print("ERROR need +/-/= in variable-adjust {}.".format(err_stub))
@@ -1322,6 +1339,8 @@ while count < len(sys.argv):
         flag_all_brackets = True
         if arg[1:].isdigit():
             max_flag_brackets = int(arg[1:])
+    elif arg[:2] == 's:' or arg[:2] == 's=':
+        score_search(arg[2:])
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
