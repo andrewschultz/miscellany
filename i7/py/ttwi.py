@@ -28,18 +28,26 @@ def print_whats_missing():
     print("Your input was missing something...")
     if not table_to_find: print("Need to give me a table to find--that can be any text.")
     if not switch_array: print("You need a CSV of numbers.")
-    exit()
+    sys.exit()
+
+def print_examples():
+    print("ttwi.py big stuff -> searches for table of big stuff")
+    print("ttwi.py s /level.*stuff -> searches for level one/two/three stuff, in the source file.")
+    print("Default is the table file.")
+    sys.exit()
 
 def usage():
     print("=" * 40, "USAGE")
     print("A comma separated value denotes the new order of rows. To shift the first 5 over left, it would be 1,2,3,4,0.")
-    print("We also need a table name. 'table of' is not needed to start.")
+    print("We also need a table name or a regex. A slash indicates a regex. 'table of' is not needed to start.")
     print("Currently you have to have a permutation of (0, ..., n) as the program does not fill the other numbers in.")
-    print("-c/-2c = to clipboard")
-    print("-u/-w toggles newline")
-    exit()
+    print("-c/-2c = to clipboard.")
+    print("-u/-w toggles newline.")
+    print("")
+    print("?? gives examples.")
+    sys.exit()
 
-def increasing(q):
+def zero_to_n_shuffle(q):
     q2 = list(range(0, len(q)))
     return Counter(q2) == Counter(q)
 
@@ -63,12 +71,16 @@ while count < len(sys.argv):
         table_to_find = re.sub("-", " ", table_to_find)
     elif re.search("[0-9]", arg):
         switch_array = [int(x) for x in arg.split(",")]
-    elif '?' in arg: usage()
+    elif arg == '?':
+        usage()
+    elif arg == '??':
+        print_examples()
     count += 1
 
 if not table_to_find or not switch_array: print_whats_missing()
 
-if not increasing(switch_array): sys.exit("You need the switch-array to be a permutation of 0, ..., n.")
+if not zero_to_n_shuffle(switch_array):
+    sys.exit("You need the switch-array to be a permutation of 0, ..., n.")
 
 if not os.path.exists("story.ni"): sys.exit("Need to move to a directory with story.ni.")
 
