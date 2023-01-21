@@ -13,6 +13,7 @@ import pyperclip
 
 switch_array = []
 table_to_find = ""
+table_regex = ""
 clipboard_string = ""
 
 count = 1
@@ -62,6 +63,8 @@ while count < len(sys.argv):
     elif arg == 'd': detailed_notes = True
     elif arg == 'u': out_newline = '\n'
     elif arg == 'w': out_newline = '\r\n'
+    elif arg.startswith ('/'):
+        table_regex = arg[1:]
     elif re.search("[a-z]", arg):
         if arg.startswith("table-of-"):
             print("No need to start the table name with table-of-.")
@@ -77,18 +80,23 @@ while count < len(sys.argv):
         print_examples()
     count += 1
 
-if not table_to_find or not switch_array: print_whats_missing()
+if not switch_array:
+    print_whats_missing()
+
+if (not table_to_find) == (not table_regex):
+    mt.bail("You need exactly one of absolute string or a regex.")
 
 if not zero_to_n_shuffle(switch_array):
-    sys.exit("You need the switch-array to be a permutation of 0, ..., n.")
+    mt.bail("You need the switch-array to be a permutation of 0, ..., n.")
 
-if not os.path.exists("story.ni"): sys.exit("Need to move to a directory with story.ni.")
+if not os.path.exists("story.ni"):
+    sys.exit("Need to move to a directory with story.ni.")
 
 in_header_row = False
 
 with open("story.ni") as file:
     for (line_count, line) in enumerate(file, 1):
-        if line.startswith(table_to_find):
+        if table_to_find and line.startswith(table_to_find):
             print("Got", table_to_find, "at line", line_count)
             t_start = line_count
             in_table = got_table = True
