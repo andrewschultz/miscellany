@@ -10,11 +10,16 @@ import os
 import re
 import sys
 import pyperclip
+import i7
+import mytools as mt
 
 switch_array = []
 table_to_find = ""
 table_regex = ""
 clipboard_string = ""
+
+header_name = 'ta'
+project_name = ''
 
 count = 1
 to_clipboard = False
@@ -63,6 +68,8 @@ while count < len(sys.argv):
     elif arg == 'd': detailed_notes = True
     elif arg == 'u': out_newline = '\n'
     elif arg == 'w': out_newline = '\r\n'
+    elif arg.startswith('p='):
+        project_name = arg[2:]
     elif arg.startswith ('/'):
         table_regex = arg[1:]
     elif re.search("[a-z]", arg):
@@ -84,10 +91,15 @@ if not switch_array:
     print_whats_missing()
 
 if (not table_to_find) == (not table_regex):
-    mt.bail("You need exactly one of absolute string or a regex.")
+    mt.bailfail("You need exactly one of absolute string or a regex.")
 
 if not zero_to_n_shuffle(switch_array):
-    mt.bail("You need the switch-array to be a permutation of 0, ..., n.")
+    mt.bailfail("You need the switch-array to be a permutation of 0, ..., n.")
+
+if not project_name:
+    project_name = i7.dir2proj()
+    if not project_name:
+        mt.bailfail("You need to go to a project directory or specify one with p=.")
 
 if not os.path.exists("story.ni"):
     sys.exit("Need to move to a directory with story.ni.")
