@@ -20,6 +20,7 @@ clipboard_string = ""
 
 header_name = 'ta'
 project_name = ''
+story_file = False
 
 count = 1
 to_clipboard = False
@@ -70,6 +71,10 @@ while count < len(sys.argv):
     elif arg == 'w': out_newline = '\r\n'
     elif arg.startswith('p='):
         project_name = arg[2:]
+    elif arg.startswith('h='):
+        header_name = arg[2:]
+    elif arg == 's':
+        story_file = True
     elif arg.startswith ('/'):
         table_regex = arg[1:]
     elif re.search("[a-z]", arg):
@@ -101,12 +106,19 @@ if not project_name:
     if not project_name:
         mt.bailfail("You need to go to a project directory or specify one with p=.")
 
-if not os.path.exists("story.ni"):
-    sys.exit("Need to move to a directory with story.ni.")
+if story_file:
+    my_file = i7.main_src(project_name)
+    print("Going with main source file", my_file)
+else:
+    my_file = i7.hdr(project_name, header_name)
+    print("Going with header file", my_file)
+
+if not os.path.exists(my_file):
+    mt.failbail("Could not locate file {}.".format(my_file))
 
 in_header_row = False
 
-with open("story.ni") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if table_to_find and line.startswith(table_to_find):
             print("Got", table_to_find, "at line", line_count)
