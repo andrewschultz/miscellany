@@ -9,6 +9,8 @@ import i7
 
 to_project = i7.dir2proj()
 
+goto_github = False
+
 def usage(header="Generic usage writeup"):
     mt.okay(header)
     print("This is a quasi-replacement for the batch file ni.bat.")
@@ -25,7 +27,9 @@ if len(sys.argv) == 1:
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
-    if arg == 't':
+    if arg == 'gh':
+        goto_github = True
+    elif arg == 't':
         get_main_source = True
     elif arg == '?':
         usage("USAGE")
