@@ -9,6 +9,8 @@ import i7
 
 to_project = i7.dir2proj()
 
+force_batch_move = False
+source_opened = False
 get_main_source = False
 goto_github = False
 hfx_ary = []
@@ -34,6 +36,8 @@ while cmd_count < len(sys.argv):
         goto_github = True
     elif arg == 't':
         get_main_source = True
+    elif arg == '-':
+        force_batch_move = True
     elif arg == '?':
         usage("USAGE")
     elif arg in i7.i7hfx:
@@ -53,12 +57,17 @@ if not to_project:
         mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
-    os.system(i7.main_src(to_project))
+    mt.npo(i7.main_src(to_project))
+    source_opened = True
 
 for h in hfx_ary:
     this_file = i7.hdr(to_project, h)
     if os.path.exists(this_file):
         mt.okay("Opening", this_file)
         mt.npo(this_file, bail=False)
+        source_opened = True
     else:
         mt.bailfail("Could not open {}.".format(this_file))
+
+if force_batch_move or not source_opened:
+    print("cd {}".format(i7.proj2dir(to_project, to_github = goto_github)))
