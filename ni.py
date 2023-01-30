@@ -16,6 +16,8 @@ goto_github = False
 hfx_ary = []
 user_project = ''
 
+temp_batch_file = "c:\\writing\\temp\\ni-temp.bat"
+
 def usage(header="Generic usage writeup"):
     mt.okay(header)
     print("This is a quasi-replacement for the batch file ni.bat.")
@@ -50,11 +52,10 @@ while cmd_count < len(sys.argv):
         usage("Bad parameter {}.".format(arg))
     cmd_count += 1
 
-if not to_project:
-    if user_project:
-        to_project = user_project
-    else:
-        mt.bailfail("Could not find project to act on.")
+if user_project:
+    to_project = user_project
+elif not to_project:
+    mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
     mt.npo(i7.main_src(to_project))
@@ -69,5 +70,14 @@ for h in hfx_ary:
     else:
         mt.bailfail("Could not open {}.".format(this_file))
 
-if force_batch_move or not source_opened:
-    print("cd {}".format(i7.proj2dir(to_project, to_github = goto_github)))
+if not force_batch_move and source_opened:
+    sys.exit()
+
+if os.path.exists(temp_batch_file):
+    os.remove(temp_batch_file)
+
+f = open(temp_batch_file, "w")
+f.write("@echo off\n\n")
+f.write("cd {}\n".format(i7.proj2dir(to_project, to_github = goto_github)))
+f.close()
+
