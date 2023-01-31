@@ -58,14 +58,15 @@ elif not to_project:
     mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
-    mt.npo(i7.main_src(to_project))
+    print("Opening {} main source...".format(to_project))
+    mt.npo(i7.main_src(to_project), print_cmd = False, bail = False)
     source_opened = True
 
 for h in hfx_ary:
     this_file = i7.hdr(to_project, h)
     if os.path.exists(this_file):
         mt.okay("Opening", this_file)
-        mt.npo(this_file, bail=False)
+        mt.npo(this_file, bail=False, print_cmd = False)
         source_opened = True
     else:
         mt.bailfail("Could not open {}.".format(this_file))
