@@ -25,6 +25,8 @@ def usage(header="Generic usage writeup"):
     mt.warn("Examples of usage:")
     print("ni t opens the source file in the current directory.")
     print("ni vf ta opens up VVFF's tables.")
+    print()
+    print("ni otf / dtf = opens / deletes temp file.")
     sys.exit()
 
 cmd_count = 1
@@ -40,6 +42,18 @@ while cmd_count < len(sys.argv):
         get_main_source = True
     elif arg == '-':
         force_batch_move = True
+    elif arg == 'dtf':
+        if os.path.exists(temp_batch_file):
+            os.remove(temp_batch_file)
+        else:
+            mt.failbail("No {} to delete.".format(temp_batch_file))
+        mt.bailokay("{} deleted.".format(temp_batch_file))
+    elif arg == 'otf':
+        if os.path.exists(temp_batch_file):
+            mt.okay("Opening temp batch file {}.".format(temp_batch_file))
+            mt.npo(temp_batch_file, print_cmd = False)
+        else:
+            mt.failbail("{} is not present.".format(temp_batch_file))
     elif arg == '?':
         usage("USAGE")
     elif arg in i7.i7hfx:
