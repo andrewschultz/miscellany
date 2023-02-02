@@ -34,10 +34,10 @@ by_end_of_year = False
 def commit_maybe_push(cmd):
     os.system(cmd)
     if push_after_commit:
-        print("Pushing changes after... (-np/-pn disables)")
+        mt.warn("Pushing changes after... (-np/-pn disables)")
         os.system("git push")
     else:
-        print("Use -p to push changes after...")
+        mt.warn("Use -p to push changes after...")
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -79,6 +79,8 @@ def usage(arg = ""):
     print("    Also logm.py -lf -r 'commit message' for serious backdating.")
     print()
     print("A number specifies the days back to look. If it is before midnight, nothing happens.")
+    print()
+    mt.warn("LBA (string) fast-tracks logm.py -r -at with lba.bat, the most common usage (note to self: batch file uses %~1 for string with spaces)")
     exit()
 
 def per_day_metrics(days, end_goal = 'month'):
