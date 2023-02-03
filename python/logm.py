@@ -26,6 +26,7 @@ days_back = 0
 push_after_commit = False
 no_verify = False
 actual_time_commit_stamp = False
+suppress_batch_nudge = False
 
 by_end_of_month = False
 by_end_of_week = False
@@ -38,6 +39,8 @@ def commit_maybe_push(cmd):
         os.system("git push")
     else:
         mt.warn("Use -p to push changes after...")
+    if not suppress_batch_nudge:
+        mt.warn("You may wish to use LBA.BAT instead. Did you forget?")
 
 def my_time(t):
     return time.strftime("%a %b %d %H:%M:%S", time.localtime(t))
@@ -271,6 +274,8 @@ while count < len(sys.argv):
         by_end_of_week = 'w' in arg
         by_end_of_month = 'm' in arg
         by_end_of_year = 'y' in arg
+    elif arg == 'sn':
+        suppress_batch_nudge = True
     elif arg == '?': usage()
     else: usage(arg)
     count += 1
