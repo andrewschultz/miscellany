@@ -8,6 +8,8 @@
 # in_quotes only gets text in quotes
 # proj_exp = project expansion
 #
+# todo: broproj function
+#
 
 import xml.etree.ElementTree as ET
 from collections import defaultdict
@@ -165,6 +167,33 @@ def in_dict_or_abbrev(my_key, my_dict):
     return False
 
 inish = in_dict_or_abbrev
+
+def i7_code_sentences_of(x, strip_end_sentence = True, include_quotes = False):
+    x = x.strip()
+    if not include_quotes:
+        x = re.sub(r'".*?"', "", x)
+        out_ary = x.split('.')
+        if strip_end_sentence and len(out_ary) and not out_ary[-1].strip():
+            out_ary = out_ary[:-1]
+        return out_ary
+    in_ary = x.split('.')
+    out_ary = []
+    previous_string = ''
+    c = 0
+    for a in in_ary:
+        c += a.count('"')
+        print(a, c)
+        if c & 1:
+            previous_string += a + '.'
+        else:
+            out_ary.append(previous_string + a)
+            previous_string = ''
+            c = 0
+    if previous_string:
+        out_ary.append(previous_string)
+    if strip_end_sentence and len(out_ary) and not out_ary[-1].strip():
+        out_ary = out_ary[:-1]
+    return out_ary
 
 def apostrophe_to_quotes(x):
     temp = re.sub(" '", ' "', x)
