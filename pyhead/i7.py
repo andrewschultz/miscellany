@@ -344,6 +344,12 @@ def topics_to_array(x, div_char = "/", convert_to_spaces = True, double_dash_to_
 
 topx2ary = topics_to_array
 
+def is_section_header(this_line):
+    for x in outline_val:
+        if this_line.lower().startswith(x + ' '):
+            return True
+    return False
+
 def is_beta_include(this_line):
     tll = this_line.lower()
     return tll.startswith("include") and " beta" in tll
