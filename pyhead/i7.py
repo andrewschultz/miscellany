@@ -76,6 +76,7 @@ i7_temp_config = "c:/writing/scripts/i7d.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 beta_dir = "c:/games/inform/beta Materials/Release"
 latest_project_abbr = latest_project_long = ''
+gloco = "c:\\Users\\Andrew\\Documents\\github\\gloco"
 
 # these are default values for binaries--debug is assumed to be most important
 # since it is the one I'll be using the most.

@@ -38,6 +38,8 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg == 'gh':
         goto_github = True
+    elif arg in ('ggl', 'gglo'):
+        mt.npo(i7.gloco)
     elif arg == 't':
         get_main_source = True
     elif arg == '-':
@@ -69,6 +71,9 @@ while cmd_count < len(sys.argv):
 if user_project:
     to_project = user_project
 elif not to_project:
+    if 'glo' in hfx_ary:
+        mt.warn("Since global headers were in the array, I'm opening the general GLOCO file.")
+        mt.npo(i7.gloco)
     mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
@@ -82,6 +87,9 @@ for h in hfx_ary:
         mt.okay("Opening", this_file)
         mt.npo(this_file, bail=False, print_cmd = False)
         source_opened = True
+    elif h == "glo":
+        mt.warn("Since global headers were in the array, and {} has no global header, I'm opening the general GLOCO file.".format(to_project))
+        mt.npo(i7.gloco)
     else:
         mt.bailfail("Could not open {}.".format(this_file))
 
