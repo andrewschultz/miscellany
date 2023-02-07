@@ -1159,7 +1159,9 @@ with open(i7_cfg_file) as file:
         if line.startswith('#'): continue
         ll = line.lower().strip()
         lln = re.sub("^.*?:", "", ll)
-        if ':' not in ll and '=' not in ll: print("WARNING line", line_count, "in i7p.txt needs = or :.")
+        if ':' not in ll and '=' not in ll:
+            mt.warn("WARNING line", line_count, "in i7p.txt needs = or :.")
+            continue
         lla = lln.split("=")
         lli = re.sub(":.*", "", ll)
         if ll.startswith("headname:"):
@@ -1268,8 +1270,12 @@ with open(i7_cfg_file) as file:
             print("WARNING line", line.strip(), "needs ; # or =")
             continue
         for my_l in l1:
-            if combos: i7com[my_l] = l1
+            if combos:
+                i7com[my_l] = l1
             else:
+                if my_l in i7x:
+                    print("WARNING: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
+                    continue
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
     for q in i7x.keys():
