@@ -1,6 +1,10 @@
 # ni.py
 # python based replacement (of sorts) for batch files ni.bat and gh.bat
 # they will be renamed niold.bat and ghold.bat
+#
+# check them for odd oneoffs to add to the flags before getting rid of the old file
+#
+# rememeber to check i7clash.py ni.py frequently as I add commands
 
 import sys
 import os
@@ -12,6 +16,7 @@ to_project = i7.dir2proj()
 force_batch_move = False
 source_opened = False
 get_main_source = False
+get_notes = False
 goto_github = False
 hfx_ary = []
 user_project = ''
@@ -44,6 +49,8 @@ while cmd_count < len(sys.argv):
         get_main_source = True
     elif arg == '-':
         force_batch_move = True
+    elif arg == 'no':
+        get_notes = True
     elif arg == 'dtf':
         if os.path.exists(temp_batch_file):
             os.remove(temp_batch_file)
@@ -77,7 +84,18 @@ elif not to_project:
     mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
-    print("Opening {} main source...".format(to_project))
+    main_source = i7.main_src(to_project)
+    if not os.path.exists(main_source):
+        mt.fail("Uh oh. This is bad. {} does not exist. Check for it in github, maybe?".format(main_source))
+    print("Opening {} main source {}...".format(to_project, main_source))
+    mt.npo(main_source, print_cmd = False, bail = False)
+    source_opened = True
+
+if get_notes:
+    notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
+    if not os.path.exists(notes_file):
+        mt.bailfail(notes_file, "does not exist. We may need to create it with noc or cno.")
+    print("Opening {} notes...".format(to_project))
     mt.npo(i7.main_src(to_project), print_cmd = False, bail = False)
     source_opened = True
 
