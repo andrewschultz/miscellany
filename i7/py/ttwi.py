@@ -120,16 +120,23 @@ in_header_row = False
 
 with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
-        if table_to_find and line.startswith(table_to_find):
-            print("Got", table_to_find, "at line", line_count)
-            t_start = line_count
-            in_table = got_table = True
-            in_header_row = True
+        if line.startswith("table of"):
+            if table_to_find and table_to_find in line.lower():
+                print("Got table name ", table_to_find, "at line", line_count)
+                t_start = line_count
+                in_table = got_table = True
+                in_header_row = True
+            elif table_regex and re.search(table_regex, line.lower(), flags=re.IGNORECASE):
+                print("Got table regex", table_regex, "at line", line_count)
+                t_start = line_count
+                in_table = got_table = True
+                in_header_row = True
             continue
-        if not in_table: continue
+        if not in_table:
+            continue
         if not line.strip() or line.startswith("["):
             print("Table ends line", line_count)
-            break
+            continue
         ll = line.strip()
         cur_row = line_count - t_start - 1
         if cur_row:
@@ -165,7 +172,8 @@ with open(my_file) as file:
         else:
             print(this_row_string)
 
-if not got_table: sys.exit("Could not find {:s} in story.ni.".format(table_to_find))
+if not got_table:
+    mt.bailfail("Could not find {} {:s} in story.ni.".format('absolute text' if table_to_find else 'regex', table_to_find if table_to_find else table_regex))
 
 if to_clipboard:
     print("String sent to clipboard.")
