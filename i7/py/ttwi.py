@@ -12,6 +12,10 @@ import sys
 import pyperclip
 import i7
 import mytools as mt
+from filecmp import cmp
+
+write_for_compare = True
+ttwi_temp = "c:/writing/temp/ttwi-after.txt"
 
 switch_array = []
 table_to_find = ""
@@ -118,6 +122,8 @@ if not os.path.exists(my_file):
 
 in_header_row = False
 
+file_out_string = ""
+
 with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("table of"):
@@ -131,11 +137,15 @@ with open(my_file) as file:
                 t_start = line_count
                 in_table = got_table = True
                 in_header_row = True
+            file_out_string += line
             continue
         if not in_table:
+            file_out_string += line
             continue
         if not line.strip() or line.startswith("["):
             print("Table ends line", line_count)
+            file_out_string += line
+            in_table = False
             continue
         ll = line.strip()
         cur_row = line_count - t_start - 1
@@ -144,7 +154,11 @@ with open(my_file) as file:
         else:
             #ll = re.sub(" ?\([^\)]*\)", "", ll)
             cols = len(line.split("\t"))
-            if cols < len(switch_array): sys.exit("Switch array is too big, {:d} vs {:d}.".format(len(switch_array), cols))
+            if cols < len(switch_array):
+                mt.warn("Line {} switch array is too big, {:d} vs {:d}.".format(line_count, len(switch_array), cols))
+                in_table = False
+                file_out_string += line
+                continue
             if cols > len(switch_array):
                 ol = len(switch_array)
                 for x in range(0, cols):
@@ -167,13 +181,24 @@ with open(my_file) as file:
         new_ar = []
         for x in switch_array: new_ar.append(lm[x])
         this_row_string = "\t".join(new_ar)
+        file_out_string += this_row_string
         if to_clipboard:
             clipboard_string += this_row_string + '\n'
         else:
-            print(this_row_string)
+            print(line_count, this_row_string)
 
 if not got_table:
     mt.bailfail("Could not find {} {:s} in story.ni.".format('absolute text' if table_to_find else 'regex', table_to_find if table_to_find else table_regex))
+
+if write_for_compare:
+    f = open(ttwi_temp, "w")
+    f.write(file_out_string)
+    f.close()
+    if cmp(my_file, ttwi_temp):
+        mt.wm(my_file, ttwi_temp)
+        mt.warn("No changes.")
+    else:
+        mt.wm(my_file, ttwi_temp)
 
 if to_clipboard:
     print("String sent to clipboard.")
