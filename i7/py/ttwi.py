@@ -26,6 +26,8 @@ header_name = 'ta'
 project_name = ''
 story_file = False
 
+max_tables = 0
+
 count = 1
 to_clipboard = False
 in_table = got_table = False
@@ -94,6 +96,11 @@ while count < len(sys.argv):
         header_name = arg[2:]
     elif arg == 's':
         story_file = True
+    elif arg.startswith("m="):
+        try:
+            max_tables = int(arg[2:])
+        except:
+            mt.warn("Need number after m=.")
     elif arg.startswith ('/'):
         table_regex = arg[1:]
     elif ',' in arg:
@@ -137,12 +144,13 @@ if not os.path.exists(my_file):
 in_header_row = False
 
 file_out_string = ""
+tables_rejigged = 0
 
 with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("table of"):
             if table_to_find and table_to_find in line.lower():
-                print("Got table name ", table_to_find, "at line", line_count)
+                print("Got table name", line.strip(), "at line", line_count)
                 t_start = line_count
                 in_table = got_table = True
                 in_header_row = True
@@ -186,6 +194,13 @@ with open(my_file) as file:
                     if x not in switch_array: switch_array.append(x)
                 print("Added", ", ".join([str(q) for q in switch_array[ol:]]))
                 print("New array", switch_array)
+            tables_rejigged += 1
+            if max_tables and tables_rejigged > max_tables:
+                if tables_rejigged == max_tables + 1:
+                    mt.warn("Line {} went over maximum # of tables to re-sort.".format(line_count))
+                in_table = False
+                file_out_string += line
+                continue
             lma = str(ll)
         lm = lma.split("\t")
         if in_header_row:
