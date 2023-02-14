@@ -2,7 +2,7 @@
 #
 # switch columns as directed for given table and CSV of numbers
 #
-# usage = ttwi.py table-of-goodacts 2,3,4,5,6,7,8,9,0,1
+# usage = ttwi.py <table name or part of it> <2,3,4,5,6,7,8,9,0,1 e.g. array of old columns to new. Names also acceptable.>
 #
 
 from collections import Counter
@@ -32,6 +32,7 @@ count = 1
 to_clipboard = False
 in_table = got_table = False
 t_start = 0
+try_all_tables = False
 
 detailed_notes = False
 
@@ -39,8 +40,10 @@ out_newline = '\n'
 
 def print_whats_missing():
     print("Your input was missing something...")
-    if not table_to_find: print("Need to give me a table to find--that can be any text.")
-    if not switch_array_base: print("You need a CSV of numbers.")
+    if not table_to_find:
+        print("Need to give me a table to find--that can be any text.")
+    if not switch_array_base:
+        print("You need a CSV of numbers.")
     sys.exit()
 
 def print_examples():
@@ -51,8 +54,8 @@ def print_examples():
 
 def usage():
     print("=" * 40, "USAGE")
-    print("A comma separated value denotes the new order of rows. To shift the first 5 over left, it would be 1,2,3,4,0.")
-    print("We also need a table name or a regex. A slash indicates a regex. 'table of' is not needed to start.")
+    print("A comma separated value denotes the new order of rows. To shift the first 5 over left, it would be 1,2,3,4,0. You can also give column names.")
+    print("We also need a for all tables, a table name or a regex. A slash indicates a regex. 'table of' is not needed to start.")
     print("Currently you have to have a permutation of (0, ..., n) as the program does not fill the other numbers in.")
     print("-c/-2c = to clipboard.")
     print("-u/-w toggles newline.")
@@ -75,7 +78,7 @@ def ordering_of(my_base, this_header):
         try:
             return_array.append(this_header.index(m))
         except:
-            print(m, "not in array", this_header)
+            #print(m, "not in array", this_header)
             return []
     return return_array
 
@@ -85,11 +88,18 @@ if len(sys.argv) == 1:
 
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
-    if arg[0] == '-': arg = arg[1:]
-    if arg == 'c' or arg == '2c': to_clipboard = True
-    elif arg == 'd': detailed_notes = True
-    elif arg == 'u': out_newline = '\n'
-    elif arg == 'w': out_newline = '\r\n'
+    if arg[0] == '-':
+        arg = arg[1:]
+    if arg == 'c' or arg == '2c':
+        to_clipboard = True
+    elif arg == 'a':
+        try_all_tables = True
+    elif arg == 'd':
+        detailed_notes = True
+    elif arg == 'u':
+        out_newline = '\n'
+    elif arg == 'w':
+        out_newline = '\r\n'
     elif arg.startswith('p='):
         project_name = arg[2:]
     elif arg.startswith('h='):
@@ -123,7 +133,10 @@ while count < len(sys.argv):
 if not switch_array_base:
     print_whats_missing()
 
-if (not table_to_find) == (not table_regex):
+if try_all_tables:
+    if table_to_find or table_regex:
+        mt.warn("Try all tables overrides table_to_find/table_regex.")
+elif (not table_to_find) == (not table_regex):
     mt.bailfail("You need exactly one of absolute string or a regex.")
 
 if not project_name:
@@ -149,7 +162,7 @@ tables_rejigged = 0
 with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("table of"):
-            if table_to_find and table_to_find in line.lower():
+            if table_to_find and try_all_tables or (table_to_find in line.lower()):
                 print("Got table name", line.strip(), "at line", line_count)
                 t_start = line_count
                 in_table = got_table = True
@@ -191,7 +204,8 @@ with open(my_file) as file:
             if cols > len(switch_array):
                 ol = len(switch_array)
                 for x in range(0, cols):
-                    if x not in switch_array: switch_array.append(x)
+                    if x not in switch_array:
+                        switch_array.append(x)
                 print("Added", ", ".join([str(q) for q in switch_array[ol:]]))
                 print("New array", switch_array)
             tables_rejigged += 1
@@ -213,9 +227,11 @@ with open(my_file) as file:
             #print(line_count, lm)
         if cur_row == 0:
             for q in lm:
-                if re.search(" [a-z]", q.lower()): print("WARNING space in header", q)
+                if re.search(" [a-z]", q.lower()):
+                    print("WARNING space in header", q)
         new_ar = []
-        for x in switch_array: new_ar.append(lm[x])
+        for x in switch_array:
+            new_ar.append(lm[x])
         this_row_string = "\t".join(new_ar) + "\n"
         file_out_string += this_row_string
         if to_clipboard:
