@@ -34,7 +34,7 @@ in_table = got_table = False
 t_start = 0
 try_all_tables = False
 
-detailed_notes = False
+detailed_notes = 0
 
 out_newline = '\n'
 
@@ -95,7 +95,9 @@ while count < len(sys.argv):
     elif arg == 'a':
         try_all_tables = True
     elif arg == 'd':
-        detailed_notes = True
+        detailed_notes = 1
+    elif arg == 'd2':
+        detailed_notes = 2
     elif arg == 'u':
         out_newline = '\n'
     elif arg == 'w':
@@ -163,12 +165,14 @@ with open(my_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith("table of"):
             if table_to_find and try_all_tables or (table_to_find in line.lower()):
-                print("Got table name", line.strip(), "at line", line_count)
+                if detailed_notes:
+                    print("Got table name", line.strip(), "at line", line_count)
                 t_start = line_count
                 in_table = got_table = True
                 in_header_row = True
             elif table_regex and re.search(table_regex, line.lower(), flags=re.IGNORECASE):
-                print("Got table regex", table_regex, "at line", line_count)
+                if detailed_notes:
+                    print("Got table regex", table_regex, "at line", line_count)
                 t_start = line_count
                 in_table = got_table = True
                 in_header_row = True
@@ -178,7 +182,8 @@ with open(my_file) as file:
             file_out_string += line
             continue
         if not line.strip() or line.startswith("["):
-            print("Table ends line", line_count)
+            if detailed_notes:
+                print("Table ends line", line_count)
             file_out_string += line
             in_table = False
             continue
@@ -206,8 +211,9 @@ with open(my_file) as file:
                 for x in range(0, cols):
                     if x not in switch_array:
                         switch_array.append(x)
-                print("Added", ", ".join([str(q) for q in switch_array[ol:]]))
-                print("New array", switch_array)
+                if detailed_notes:
+                    print("Added", ", ".join([str(q) for q in switch_array[ol:]]))
+                    print("New array", switch_array)
             tables_rejigged += 1
             if max_tables and tables_rejigged > max_tables:
                 if tables_rejigged == max_tables + 1:
@@ -221,7 +227,7 @@ with open(my_file) as file:
             required_size = len(lm)
             in_header_row = False
         if len(lm) < required_size:
-            if detailed_notes:
+            if detailed_notes >= 2:
                 print("Extending line {} by {}.".format(line_count, required_size - len(lm)))
             lm.extend(['--'] * (required_size - len(lm)))
             #print(line_count, lm)
@@ -247,7 +253,7 @@ if write_for_compare:
     f.write(file_out_string)
     f.close()
     if cmp(my_file, ttwi_temp):
-        mt.warn("No changes.")
+        mt.warn("No changes for all of {}.".format(my_file))
     else:
         mt.wm(my_file, ttwi_temp)
 
