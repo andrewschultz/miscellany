@@ -33,6 +33,7 @@ to_clipboard = False
 in_table = got_table = False
 t_start = 0
 try_all_tables = False
+force_changes = False
 
 detailed_notes = 0
 
@@ -59,6 +60,7 @@ def usage():
     print("Currently you have to have a permutation of (0, ..., n) as the program does not fill the other numbers in.")
     print("-c/-2c = to clipboard.")
     print("-u/-w toggles newline.")
+    print("-f = force changes.")
     print("")
     print("?? gives examples.")
     sys.exit()
@@ -98,6 +100,8 @@ while count < len(sys.argv):
         detailed_notes = 1
     elif arg == 'd2':
         detailed_notes = 2
+    elif arg == 'f':
+        force_changes = True
     elif arg == 'u':
         out_newline = '\n'
     elif arg == 'w':
@@ -254,8 +258,17 @@ if write_for_compare:
     f.close()
     if cmp(my_file, ttwi_temp):
         mt.warn("No changes for all of {}.".format(my_file))
+    elif force_changes:
+        copy(ttwi_temp, my_file)
+        print("Recopied {} over.".format(my_file))
     else:
         mt.wm(my_file, ttwi_temp)
+        if cmp(my_file, ttwi_temp):
+            mt.warn("Things changed inside WinMerge, no nag to copy over.")
+        else:
+            x = input("Keep changes? (y to keep, anything else not to. Note -f forces changes.)")
+            if x.strip().startswith('y'):
+                copy(ttwi_temp, my_file)
 
 if to_clipboard:
     print("String sent to clipboard.")
