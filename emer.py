@@ -5,11 +5,13 @@
 # * account for weeklies
 # * allow copying over
 # * allow editing emer.txt
+# * delete old copies
 
 import sys
 import os
 import pendulum
 from collections import defaultdict
+from shutil import copy
 
 type_of = defaultdict(str)
 shortcuts = defaultdict(str)
@@ -51,4 +53,5 @@ out_file = os.path.normpath(os.path.join('c:/writing/emergency', out_file))
 if os.path.exists(out_file):
     mt.bailfail(out_file, "already exists. Not copying over.")
 else:
-    print("copy {} {}".format(file_name, out_file))
+    copy(file_name, out_file)
+    mt.okay("Copied {} to {}.".format(file_name, out_file))
