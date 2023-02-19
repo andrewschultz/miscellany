@@ -18,7 +18,11 @@ shortcuts = defaultdict(str)
 
 valid_types = [ 'h', 'd', 'w' ]
 
-with open("emer.txt") as file:
+my_short = ''
+
+cfg_file = "c:\\writing\\scripts\\emer.txt"
+
+with open(cfg_file) as file:
     for (line_count, line) in enumerate (file, 1):
         a = line.strip().split("\t")
         if not os.path.exists(a[0]):
@@ -30,13 +34,20 @@ with open("emer.txt") as file:
         type_of[a[0]] = a[1]
         shortcuts[a[2]] = a[0]
 
-try:
-    if sys.argv[1] not in shortcuts:
-        sys.exit("{} is not a valid shortcut. Check emer.txt for those.".format(sys.argv[1]))
-except:
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count]
+    if arg in shortcuts:
+        if my_short:
+            sys.exit("Can only backup one file at a time.")
+        my_short = arg
+    cmd_count += 1
+
+if not my_short:
     sys.exit("Need an argument, preferably a shortcut from {}".format(list(shortcuts)))
 
-file_name = shortcuts[sys.argv[1]]
+file_name = shortcuts[my_short]
 
 t = pendulum.now()
 
