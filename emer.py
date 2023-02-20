@@ -4,7 +4,6 @@
 # todo:
 # * account for weeklies
 # * allow copying over
-# * allow editing emer.txt
 # * delete old copies
 
 import sys
@@ -12,6 +11,7 @@ import os
 import pendulum
 from collections import defaultdict
 from shutil import copy
+import mytools as mt
 
 type_of = defaultdict(str)
 shortcuts = defaultdict(str)
@@ -38,7 +38,9 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
-    if arg in shortcuts:
+    if arg == 'e':
+        mt.open(cfg_file)
+    elif arg in shortcuts:
         if my_short:
             sys.exit("Can only backup one file at a time.")
         my_short = arg
