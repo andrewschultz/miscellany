@@ -20,6 +20,8 @@ valid_types = [ 'h', 'd', 'w' ]
 
 my_short = ''
 
+find_daily = False
+
 cfg_file = "c:\\writing\\scripts\\emer.txt"
 
 with open(cfg_file) as file:
@@ -38,6 +40,8 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
+    if arg == 'da':
+        find_daily = True
     if arg == 'e':
         mt.open(cfg_file)
     elif arg in shortcuts:
@@ -46,16 +50,20 @@ while cmd_count < len(sys.argv):
         my_short = arg
     cmd_count += 1
 
-if not my_short:
+if find_daily:
+    my_type = 'h'
+    file_name = mt.last_daily_of(full_return_path = True)
+elif not my_short:
     sys.exit("Need an argument, preferably a shortcut from {}".format(list(shortcuts)))
-
-file_name = shortcuts[my_short]
+else:
+    file_name = shortcuts[my_short]
+    my_type = type_of[file_name]
 
 t = pendulum.now()
 
 fb = os.path.basename(file_name)
 
-if type_of[file_name] == 'h':
+if my_type == 'h':
     format_string = 'YYYY-MM-DD-HH'
 else:
     format_string = 'YYYY-MM-DD'
