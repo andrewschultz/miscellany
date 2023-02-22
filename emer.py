@@ -68,7 +68,9 @@ if my_type == 'h':
 else:
     format_string = 'YYYY-MM-DD'
 
-out_file = '{}-{}'.format(fb, t.format(format_string))
+a = fb.rsplit('.', 1)
+a[0] = '{}-{}'.format(a[0], t.format(format_string))
+out_file = '.'.join(a)
 out_file = os.path.normpath(os.path.join('c:/writing/emergency', out_file))
 
 if os.path.exists(out_file):
