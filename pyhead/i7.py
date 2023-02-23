@@ -61,8 +61,6 @@ i7gh = [] # list of github repos
 auth = "Andrew Schultz"
 ext_root = extroot = r'c:\Program Files (x86)\Inform 7\Inform7\Extensions'
 ext_dir = extdir = os.path.join(extroot, auth) # NOTE: the x86 is right, here. No need or desire for mt.progfile.
-nice = nz = nicez = os.path.join(extdir, "Trivial Niceties Z-Only.i7x")
-niceg = ng = os.path.join(extdir, "Trivial Niceties.i7x")
 tmp_hdr = temp_hdr = tmp_header = temp_header = os.path.join(extdir, "temp.i7x")
 np = mt.np
 npnq = mt.npnq
@@ -919,7 +917,7 @@ def go_proj(x, my_subdir = "source", to_github = False, materials = False):
     os.chdir(proj2dir(x, my_subdir, to_github, materials))
     return
 
-go_p = proj_dir = to_proj = go_proj
+go_dir = godir = go_p = proj_dir = to_proj = go_proj
 
 sproj = d2p = dir2proj
 
@@ -1274,7 +1272,7 @@ with open(i7_cfg_file) as file:
                 i7com[my_l] = l1
             else:
                 if my_l in i7x:
-                    print("WARNING: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
+                    mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
                     continue
                 i7x[my_l] = l0[0]
                 i7xr[l0[0]] = l1[0]
