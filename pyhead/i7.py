@@ -1162,6 +1162,9 @@ with open(i7_cfg_file) as file:
             continue
         lla = lln.split("=")
         lli = re.sub(":.*", "", ll)
+        if ll.startswith("author:") or ll.startswith("auth:") or ll.startswith("authname:"):
+            auth = lln
+            continue
         if ll.startswith("headname:"):
             for x in lla[1].split(","): i7hfx[x] = lla[0]
             continue
