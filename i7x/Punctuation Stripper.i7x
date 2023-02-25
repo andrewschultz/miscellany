@@ -2,6 +2,8 @@ Version 1/200614 of Punctuation Stripper by Andrew Schultz begins here.
 
 volume I6 stuff
 
+"I took the highest-priority bits from Emily Short's Punctuation Removal for this. When including this, I probably want to insert the punctuation-munge rule from here where appropriate in after reading the player's command."
+
 include (-
 
 Global dashwarn = 0;
@@ -18,11 +20,18 @@ Global aposwarn = 0;
 ];
 
 [
-	ParsePunc   ix iy li found;
+	ParsePunc   ix iy li found buffer_length;
 
 	found = 0;
 
-	for (ix=0 : ix<buffer-->0 : ix++)
+#ifdef TARGET_ZCODE;
+	buffer_length = (buffer->1)+(WORDSIZE-1);
+#endif;
+#ifdef TARGET_GLULX;
+	buffer_length = (buffer-->0)+(1-1);
+#endif;
+
+	for (ix=0 : ix<buffer_length : ix++)
 		if (buffer->(WORDSIZE+ix) == '-')
 		{
 			buffer->(WORDSIZE+ix) = ' ';
@@ -35,8 +44,12 @@ Global aposwarn = 0;
 	}
 	found = 0;
 	iy = 0;
-	for (ix=0 : ix<buffer-->0 : ix++)
+	! print WORDSIZE;
+	! print " = word size.^";
+	for (ix=0 : ix<buffer_length : ix++)
 	{
+	    ! print buffer->(WORDSIZE+ix);
+		! print "^";
 		if (iy ~= ix)
 		{
 			buffer->(WORDSIZE+iy) = buffer->(WORDSIZE+ix);
@@ -55,12 +68,23 @@ Global aposwarn = 0;
 		if (aposwarn == 0)
 		{
 			aposwarn = 1;
-			print "NOTE: found an apostrophe and removed it. You never need to use apostrophes in commands. ", (string) Story, " will eliminate apostrophes without nagging you in the future.^";
+			style underline;
+			print "[NOTE: ";
+			print "found an apostrophe and removed it. You never need to use apostrophes in commands. ", (string) Story, " will eliminate apostrophes without nagging you in the future.]^";
+			print "^";
+			style roman;
 		}
-		buffer-->0 = iy;
-		buffer->(WORDSIZE+iy) = 0;
+#ifdef TARGET_ZCODE;
+	buffer->1 = iy;
+	buffer->(WORDSIZE+iy-1) = 0;
+#endif;
+#ifdef TARGET_GLULX;
+	buffer-->0 = iy;
+	buffer->(WORDSIZE+iy) = 0;
+#endif;
 		! print "New command: ";
 	}
+	! print iy, " of ", buffer_length, " kept.^";
 	VM_Tokenise(buffer, parse);
 	rtrue;
 ];
