@@ -1155,21 +1155,25 @@ with open(i7_cfg_file) as file:
     for (line_count, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
-        ll = line.lower().strip()
-        lln = re.sub("^.*?:", "", ll)
+        ll = mt.zap_comment(line.lower().strip())
         if ':' not in ll and '=' not in ll:
             mt.warn("WARNING line", line_count, "in i7p.txt needs = or :.")
             continue
-        lla = lln.split("=")
-        lli = re.sub(":.*", "", ll)
+        if ':' not in ll:
+            ll = "projmap:" + ll
+            mt.warn("WARNING line {} in i7p.txt {} should have new PROJMAP: for project mapping.".format(line_count, my_parts[1]))
+        my_parts = ll.split(":")
+        this_var = my_parts[0]
+        this_data = my_parts[1]
+        lla = my_parts[1].split("=")
         if ll.startswith("author:") or ll.startswith("auth:") or ll.startswith("authname:"):
-            auth = lln
+            auth = this_data
             continue
         if ll.startswith("headname:"):
             for x in lla[1].split(","): i7hfx[x] = lla[0]
             continue
         if ll.startswith("ignore:"):
-            i7ignore.extend(lln.split(','))
+            i7ignore.extend(my_parts[1].split(','))
             continue
         if ll.startswith("nonhdr:"):
             for x in lla[1].split(","): i7nonhdr[x] = lla[0]
@@ -1181,7 +1185,7 @@ with open(i7_cfg_file) as file:
             i7gh = re.sub(".*:", "", ll).split(",")
             continue
         if ll.startswith("curdef:"):
-            curdef = lln
+            curdef = this_data
             continue
         if ll.startswith("release:"):
             i7rn[lla[0]] = lla[1]
@@ -1190,7 +1194,7 @@ with open(i7_cfg_file) as file:
             i7triz[lla[0]] = lla[1]
             continue
         if ll.startswith("trizmaps:"):
-            llproj = lln.split(":")
+            llproj = my_parts[1].split("~")
             llpre = llproj[1].split(",")
             for llp in llpre:
                 temp = llp.split("=")
@@ -1224,7 +1228,7 @@ with open(i7_cfg_file) as file:
                 i7aux[temp] = lla[1].split(",")
             continue
         if ll.startswith("compile-"):
-            this_bin = i7gbx[re.sub(".*-", "", lli)]
+            this_bin = i7gbx[re.sub(".*-", "", this_var)]
             for x in lla[0].split(","):
                 if not main_abb(x):
                     print("Line {} has faulty project/abbreviation {} for compile binary extensions.".format(line_count, x))
@@ -1264,21 +1268,20 @@ with open(i7_cfg_file) as file:
             continue
             if 'utilities' in line.lower():
                 break
+        if this_var == 'projmap':
+            for my_l in l1:
+                if combos:
+                    i7com[my_l] = l1
+                else:
+                    if my_l in i7x:
+                        mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
+                        continue
+                    i7x[my_l] = l0[0]
+                    i7xr[l0[0]] = l1[0]
+            continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
             continue
-        if "=" not in line:
-            print("WARNING line", line.strip(), "needs ; # or =")
-            continue
-        for my_l in l1:
-            if combos:
-                i7com[my_l] = l1
-            else:
-                if my_l in i7x:
-                    mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
-                    continue
-                i7x[my_l] = l0[0]
-                i7xr[l0[0]] = l1[0]
     for q in i7x.keys():
         if i7x[q] in i7com.keys():
             i7com[q] = i7com[i7x[q]]
