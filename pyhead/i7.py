@@ -1227,9 +1227,9 @@ with open(i7_cfg_file) as file:
             for temp in lla[0].split(","):
                 i7aux[temp] = lla[1].split(",")
             continue
-        if ll.startswith("compile-"):
-            this_bin = i7gbx[re.sub(".*-", "", this_var)]
-            for x in lla[0].split(","):
+        if ll.startswith("compile:"):
+            this_bin = i7gbx[lla[0]]
+            for x in lla[1].split(","):
                 if not main_abb(x):
                     print("Line {} has faulty project/abbreviation {} for compile binary extensions.".format(line_count, x))
                 if main_abb(x) in i7pbx:
