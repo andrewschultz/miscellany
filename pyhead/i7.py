@@ -1160,40 +1160,44 @@ with open(i7_cfg_file) as file:
             mt.warn("WARNING line", line_count, "in i7p.txt needs = or :.")
             continue
         if ':' not in ll:
+            mt.warn("WARNING line {} in i7p.txt {} should have new PROJMAP: for project mapping.".format(line_count, ll))
             ll = "projmap:" + ll
-            mt.warn("WARNING line {} in i7p.txt {} should have new PROJMAP: for project mapping.".format(line_count, my_parts[1]))
         my_parts = ll.split(":")
         this_var = my_parts[0]
         this_data = my_parts[1]
         lla = my_parts[1].split("=")
-        if ll.startswith("author:") or ll.startswith("auth:") or ll.startswith("authname:"):
+        try:
+            l1 = lla[1].split(',')
+        except:
+            l1 = []
+        if this_var in ( 'author', 'auth', 'authname' ):
             auth = this_data
             continue
-        if ll.startswith("headname:"):
+        if this_var == 'headname':
             for x in lla[1].split(","): i7hfx[x] = lla[0]
             continue
-        if ll.startswith("ignore:"):
+        if this_var == 'ignore':
             i7ignore.extend(my_parts[1].split(','))
             continue
-        if ll.startswith("nonhdr:"):
+        if this_var == 'nonhdr':
             for x in lla[1].split(","): i7nonhdr[x] = lla[0]
             continue
-        if ll.startswith("bitbucket:"):
-            i7bb = re.sub(".*:", "", ll).split(",")
+        if this_var == 'bitbucket':
+            i7bb = re.sub(".*", "", ll).split(",")
             continue
-        if ll.startswith("github:"):
-            i7gh = re.sub(".*:", "", ll).split(",")
+        if this_var == 'github':
+            i7gh = re.sub(".*", "", ll).split(",")
             continue
-        if ll.startswith("curdef:"):
+        if this_var == 'curdef':
             curdef = this_data
             continue
-        if ll.startswith("release:"):
+        if this_var == 'release':
             i7rn[lla[0]] = lla[1]
             continue
-        if ll.startswith("trizbort:"):
+        if this_var == 'trizbort':
             i7triz[lla[0]] = lla[1]
             continue
-        if ll.startswith("trizmaps:"):
+        if this_var == 'trizmaps':
             llproj = my_parts[1].split("~")
             llpre = llproj[1].split(",")
             for llp in llpre:
@@ -1205,29 +1209,29 @@ with open(i7_cfg_file) as file:
                 for q in temp[0].split("/"):
                     i7trizmaps[llproj[0]][q]=temp[1]
             continue
-        if ll.startswith("combo:"):
+        if this_var == 'combo':
             i7com[lla[0]] = lla[1]
             subproj = lla[1].split(",")
             for x in range(0, len(subproj)):
                 i7comord[lla[0]][subproj[x]] = x + 1
                 i7comr[subproj[x]] = lla[0]
             continue
-        if ll.startswith("ghproj:"):
+        if this_var == 'ghproj':
             i7gx[lla[1]] = lla[0]
             i7gxr[lla[0]] = lla[1]
             continue
-        if ll.startswith("genshort:"):
+        if this_var == 'genshort':
             i7gsn[lla[0]] = lla[1]
             continue
-        if ll.startswith("binext:"):
+        if this_var == 'binext':
             for temp in lla[0].split(","):
                 i7gbx[temp] = lla[1].split(",")
             continue
-        if ll.startswith("auxfile:"):
+        if this_var == 'auxfile':
             for temp in lla[0].split(","):
                 i7aux[temp] = lla[1].split(",")
             continue
-        if ll.startswith("compile:"):
+        if this_var == 'compile':
             this_bin = i7gbx[lla[0]]
             for x in lla[1].split(","):
                 if not main_abb(x):
@@ -1236,14 +1240,12 @@ with open(i7_cfg_file) as file:
                     print("Redefinition of {}/{} project binaries at line {}.".format(x, main_abb(x), line_count))
                 i7pbx[main_abb(x)] = this_bin
             continue
-        if ll.startswith("binname:"):
+        if this_var == 'binname':
             i7binname[lla[0]] = re.sub(".*=", "", line.strip()) # I want to keep case here
             continue
-        combos = False
-        l0 = line.lower().strip().split("=")
-        header_project = re.sub(".*:", "", l0[0]) # this is the project name
-        l1 = l0[1].split(",")
-        if l0[0].startswith("headers:"):
+        if this_var == 'headers':
+            header_project = lla[0]
+            print(line_count, header_project, l1)
             if header_project in i7com:
                 i7f[header_project] = []
                 i7fg[header_project] = []
@@ -1269,15 +1271,13 @@ with open(i7_cfg_file) as file:
             if 'utilities' in line.lower():
                 break
         if this_var == 'projmap':
+            l1 = lla[1].split(',')
             for my_l in l1:
-                if combos:
-                    i7com[my_l] = l1
-                else:
-                    if my_l in i7x:
-                        mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
-                        continue
-                    i7x[my_l] = l0[0]
-                    i7xr[l0[0]] = l1[0]
+                if my_l in i7x:
+                    mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
+                    continue
+                i7x[my_l] = lla[0]
+                i7xr[lla[0]] = l1[0]
             continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
