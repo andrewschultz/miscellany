@@ -28,7 +28,6 @@ from pathlib import Path
 
 # variables potentially in CFG file
 
-
 max_overall = 100
 max_in_file = 25
 history_max = 100
@@ -606,6 +605,7 @@ daily_sections = section_maps[my_proj]
 while first_loop or user_input:
     found_overall = 0
     overall_nonduplicate = 0
+    max_overall_switch = False
     frequencies.clear()
 
     if user_input:
@@ -760,6 +760,9 @@ while first_loop or user_input:
     temp_array = [i7.inform_short_name(x) for x in frequencies if frequencies[x] == -1 and not ignore_in_log(x)]
     if len(temp_array):
         print("Left untested:", ', '.join(temp_array))
+
+    if max_overall_switch:
+        print(colorama.Fore.YELLOW + "WARNING: Max in file ({}) > max_overall ({}), so they were switched." + mt.WTXT)
 
     if write_history:
         update_history_file(history_file, ' '.join(sorted(match_string_raw)), create_new_history)
