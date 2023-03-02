@@ -662,10 +662,10 @@ while first_loop or user_input:
                 continue
             if not os.path.exists(projfile):
                 if 'story.ni' in projfile:
-                    if proj in i7.i7com:
-                        print("Skipping nonexistent story file for umbrella project {}. We probably don't need one.".format(proj))
+                    if proj in i7.i7com or i7.main_abb(proj) in i7.i7com:
+                        mt.okay("Skipping nonexistent story file for umbrella project {}. We probably don't need one.".format(proj))
                     else:
-                        print("Skipping nonexistent story file for {}. Maybe we should have one.".format(proj))
+                        mt.fail("Skipping nonexistent story file for {}. Maybe we should have one.".format(proj))
                     continue
                 print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
                 continue
