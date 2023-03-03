@@ -80,6 +80,8 @@ dgrab_latest_prompt = defaultdict(bool)
 dgrab_general_prompt = defaultdict(bool)
 congruences = defaultdict(lambda:defaultdict(str))
 
+show_mklink_suggestions = True
+
 ALL=0
 INSIDE=1
 OUTSIDE=2
@@ -429,6 +431,8 @@ def read_args(my_arg_array, in_loop = False):
             post_open_warnings = False
         elif arg in ( 'ow', 'wo'):
             post_open_warnings = True
+        elif arg in ( 'mn', 'nm'):
+            show_mklink_suggestions = False
         elif arg in ( 'o', '.' ):
             all_similar_projects = False
         elif arg == 'a':
@@ -667,7 +671,12 @@ while first_loop or user_input:
                     else:
                         mt.fail("Skipping nonexistent story file for {}. Maybe we should have one.".format(proj))
                     continue
-                print("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
+                mt.warn("Uh oh,", projfile, "does not exist. It probably should. Skipping.")
+                if show_mklink_suggestions:
+                    this_to_file = os.path.join(i7.ghbase, proj, os.path.basename(projfile))
+                    mt.okay('mklink "{}" "{}"'.format(projfile, this_to_file))
+                    if not os.path.exists(this_to_file):
+                        mt.fail(this_to_file, "does not exist, so you may need to search for it, if I misdirected it.")
                 continue
             if i7.inform_short_name(projfile) in frequencies:
                 continue
