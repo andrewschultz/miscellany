@@ -113,7 +113,7 @@ def strip_name_punc(x, remove_apostrophe = True, space_dash = True):
 
 strip_name = name_strip = strip_name_punc
 
-def long_name(x, debug = False, strip_dashes = False, use_given = False):
+def long_name(x, debug = False, strip_dashes = False, use_given = False, allow_combo_projects = True):
     if x in i7x:
         temp = i7x[x]
         if strip_dashes:
@@ -121,6 +121,11 @@ def long_name(x, debug = False, strip_dashes = False, use_given = False):
         return temp
     if x in i7xr:
         return x
+    if allow_combo_projects:
+        if x in i7com:
+            return x
+        if x in i7comr:
+            return i7comr[x]
     if debug:
         print("Warning: finding long name for", x," failed.")
     if not use_given:
@@ -1245,7 +1250,6 @@ with open(i7_cfg_file) as file:
             continue
         if this_var == 'headers':
             header_project = lla[0]
-            print(line_count, header_project, l1)
             if header_project in i7com:
                 i7f[header_project] = []
                 i7fg[header_project] = []
