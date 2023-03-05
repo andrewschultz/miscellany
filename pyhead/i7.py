@@ -74,6 +74,7 @@ i7_temp_config = "c:/writing/scripts/i7d.txt"
 triz_dir = "c:\\games\\inform\\triz\\mine"
 beta_dir = "c:/games/inform/beta Materials/Release"
 latest_project_abbr = latest_project_long = ''
+ghbase = "c:\\Users\\Andrew\\Documents\\github"
 gloco = "c:\\Users\\Andrew\\Documents\\github\\gloco"
 
 # these are default values for binaries--debug is assumed to be most important
@@ -1266,10 +1267,12 @@ with open(i7_cfg_file) as file:
                     proj_ary = header_abbrev.split('/')
                     main_project = header_project if not proj_ary[0] else proj_ary[0]
                     gh_project = header_project if not proj_ary[1] else proj_ary[1]
-                    header_abbrev = proj_ary[2]
-                from_file = hdr(main_project, header_abbrev, github=False)
+                    from_file = hdr(main_project, proj_ary[2], github=False, add_prefix = False)
+                    to_file = hdr(main_project, proj_ary[2], github=True, github_project = gh_project, add_prefix = False)
+                else:
+                    from_file = hdr(main_project, header_abbrev, github=False)
+                    to_file = hdr(main_project, header_abbrev, github=True, github_project=gh_project)
                 i7f[header_project].append(from_file)
-                to_file = hdr(main_project, header_abbrev, github=True, github_project=gh_project, add_prefix = (main_project != '-'))
                 i7fg[header_project].append(to_file)
             continue
             if 'utilities' in line.lower():
