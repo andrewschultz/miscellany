@@ -71,6 +71,8 @@ post_open_matches = False
 post_open_warnings = True
 hide_results = False
 
+file_open_regex = ''
+
 include_notes = True
 
 modify_line = True
@@ -364,6 +366,8 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     print(colorama.Back.RED + "    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
+                elif file_open_regex and re.search(file_open_regex, projfile, flags=re.IGNORECASE):
+                    mt.add_postopen(projfile, line_count)
     if verbose and not found_so_far:
         print("Nothing found in", projfile)
     return found_so_far
@@ -411,6 +415,7 @@ def read_args(my_arg_array, in_loop = False):
     global my_proj
     global hide_results
     global search_to_proc
+    global file_open_regex
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
         arg_orig = my_arg_array[cmd_count].lower()
@@ -425,8 +430,12 @@ def read_args(my_arg_array, in_loop = False):
             run_commands_after = True
         elif arg in ( 'npo', 'pon' ):
             post_open_matches = False
-        elif arg == 'po':
+        elif arg in ( 'po', 'op' ):
             post_open_matches = True
+        elif arg.startswith('o='):
+            if len(arg) == 2:
+                mt.bail("o= needs argument after for file regex.")
+            file_open_regex = arg[2:]
         elif arg in ( 'nw', 'wn'): # NOW or OWN or so forth are actual words, hence why it's different from above.
             post_open_warnings = False
         elif arg in ( 'ow', 'wo'):
@@ -762,6 +771,10 @@ while first_loop or user_input:
                     print(colorama.Back.MAGENTA + "      dgrab.py s={}".format(dp) + colorama.Style.RESET_ALL)
                 for dp in dgrab_latest_prompt:
                     print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
+        if not post_open_matches and not file_open_regex:
+            mt.warn("You can set the PO / OP flag to post-open the first occurrence in each file, or O= can specify regex of file names to open.")
+        if file_open_regex and len(mt.file_post_list) == 0:
+            mt.warn("The regex given {} did not open any files with the search text.".format(file_open_regex))
     else:
         print("    {}---- NOTHING FOUND IN ANY FILES{}".format(colorama.Back.RED + colorama.Fore.BLACK, colorama.Back.BLACK + colorama.Style.RESET_ALL))
         print("    " + ", ".join([x for x in frequencies if not ignore_in_log(x)]))
