@@ -4,7 +4,11 @@
 #
 # check them for odd oneoffs to add to the flags before getting rid of the old file
 #
-# rememeber to check i7clash.py ni.py frequently as I add commands
+# remember to check i7clash.py ni.py frequently as I add commands
+#
+# also, ni-remaining.bat will have a lot of stuff for special commands
+# we want to go through them. This is intended to be a can-opener.
+# special case: STS UNI universal (don't expand STS to stale-tales-slate? Or change the name? Or make i7.hdr(x) look for lower case as well or give it an option?)
 
 import sys
 import os
@@ -96,7 +100,7 @@ if get_notes:
     if not os.path.exists(notes_file):
         mt.bailfail(notes_file, "does not exist. We may need to create it with noc or cno.")
     print("Opening {} notes...".format(to_project))
-    mt.npo(i7.main_src(to_project), print_cmd = False, bail = False)
+    mt.npo(notes_file, print_cmd = False, bail = False)
     source_opened = True
 
 for h in hfx_ary:
