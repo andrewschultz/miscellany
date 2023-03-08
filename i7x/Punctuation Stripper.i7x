@@ -1,13 +1,18 @@
 Version 1/200614 of Punctuation Stripper by Andrew Schultz begins here.
 
-volume I6 stuff
-
 "I took the highest-priority bits from Emily Short's Punctuation Removal for this. When including this, I probably want to insert the punctuation-munge rule from here where appropriate in after reading the player's command."
+
+volume I7 definition(s)
+
+remove-commas is a truth state that varies. remove-commas is true.
+
+volume I6 stuff
 
 include (-
 
 Global dashwarn = 0;
 Global aposwarn = 0;
+Global commawarn = 0;
 
 [
 	isComment;
@@ -30,6 +35,24 @@ Global aposwarn = 0;
 #ifdef TARGET_GLULX;
 	buffer_length = (buffer-->0)+(1-1);
 #endif;
+
+	if ( (+ remove-commas +) == true)
+	{
+		for (ix=0 : ix<buffer_length : ix++)
+			if (buffer->(WORDSIZE+ix) == ',')
+			{
+				buffer->(WORDSIZE+ix) = ' ';
+				found++;
+			}
+	}
+
+	if ((found > 0) && (commawarn == 0))
+	{
+		commawarn = 1;
+		print "NOTE: found a comma and replaced it with a space. You never need to use commas in commands. ", (string) Story, " will replace commas without nagging you in the future.^^" ;
+	}
+
+	found = 0;
 
 	for (ix=0 : ix<buffer_length : ix++)
 		if (buffer->(WORDSIZE+ix) == '-')

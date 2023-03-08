@@ -39,6 +39,7 @@ write_history = True
 main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
 search_to_proc = False
 run_commands_after = False
+squash_duplicates = False
 
 verbose = False
 quiet_procedural_notes = False
@@ -293,6 +294,7 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
     bf = i7.inform_short_name(projfile)
     if found_overall == max_overall:
         return -1
+    dupes_here = 0
     found_so_far = 0
     local_nonduplicate = 0
     current_table = ""
@@ -363,11 +365,16 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                         else:
                             dgrab_general_prompt[current_daily_section] = True
                 else:
-                    print(colorama.Back.RED + "    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
+                    if squash_duplicates:
+                        dupes_here += 1
+                    else:
+                        mt.fail("    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
                 elif file_open_regex and re.search(file_open_regex, projfile, flags=re.IGNORECASE):
                     mt.add_postopen(projfile, line_count)
+    if dupes_here:
+        mt.warn("{} duplicate{} found in {}. Remove -sd to see them all.".format(dupes_here, mt.plur(dupes_here), projfile))
     if verbose and not found_so_far:
         print("Nothing found in", projfile)
     return found_so_far
@@ -416,6 +423,7 @@ def read_args(my_arg_array, in_loop = False):
     global hide_results
     global search_to_proc
     global file_open_regex
+    global squash_duplicates
     while cmd_count < len(my_arg_array):
         arg = mt.nohy(my_arg_array[cmd_count])
         arg_orig = my_arg_array[cmd_count].lower()
@@ -466,6 +474,8 @@ def read_args(my_arg_array, in_loop = False):
                 sys.exit("MO needs a number after it.")
         elif arg == 'hr':
             hide_results = True
+        elif arg in ( 'sd', 'ds' ):
+            squash_duplicates = True
         elif arg == 'vh':
             view_history = True
         elif arg == 'vho':
