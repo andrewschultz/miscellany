@@ -5,6 +5,8 @@ Version 1/200614 of Punctuation Stripper by Andrew Schultz begins here.
 volume I7 definition(s)
 
 remove-commas is a truth state that varies. remove-commas is true.
+remove-apostrophes is a truth state that varies. remove-apostrophes is true.
+remove-dashes is a truth state that varies. remove-dashes is true.
 
 volume I6 stuff
 
@@ -54,21 +56,27 @@ Global commawarn = 0;
 
 	found = 0;
 
-	for (ix=0 : ix<buffer_length : ix++)
-		if (buffer->(WORDSIZE+ix) == '-')
-		{
-			buffer->(WORDSIZE+ix) = ' ';
-			found++;
-		}
+	if ( (+ remove-dashes +) == true )
+	{
+		for (ix=0 : ix<buffer_length : ix++)
+			if (buffer->(WORDSIZE+ix) == '-')
+			{
+				buffer->(WORDSIZE+ix) = ' ';
+				found++;
+			}
+	}
+
 	if ((found > 0) && (dashwarn == 0))
 	{
 		dashwarn = 1;
-		print "NOTE: found a hyphen and replaced it with a space. You never need to use hyphens in commands. ", (string) Story, " will replace hyphens without nagging you in the future.^" ;
+		print "NOTE: found a hyphen and replaced it with a space. You never need to use hyphens in commands. ", (string) Story, " will replace hyphens without nagging you in the future.^^" ;
 	}
+
 	found = 0;
 	iy = 0;
 	! print WORDSIZE;
 	! print " = word size.^";
+
 	for (ix=0 : ix<buffer_length : ix++)
 	{
 	    ! print buffer->(WORDSIZE+ix);
