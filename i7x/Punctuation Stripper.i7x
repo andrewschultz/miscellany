@@ -77,32 +77,34 @@ Global commawarn = 0;
 	! print WORDSIZE;
 	! print " = word size.^";
 
-	for (ix=0 : ix<buffer_length : ix++)
+	if ( (+ remove-apostrophes +) == true )
 	{
-	    ! print buffer->(WORDSIZE+ix);
-		! print "^";
-		if (iy ~= ix)
+		for (ix=0 : ix<buffer_length : ix++)
 		{
-			buffer->(WORDSIZE+iy) = buffer->(WORDSIZE+ix);
-		}
-		if ((buffer->(WORDSIZE+ix) == 39) || (buffer->(WORDSIZE+ix) == 45))
-		{
-			found++;
-		}
-		else
-		{
-			iy++;
+			! print buffer->(WORDSIZE+ix);
+			! print "^";
+			if (iy ~= ix)
+			{
+				buffer->(WORDSIZE+iy) = buffer->(WORDSIZE+ix);
+			}
+			if ((buffer->(WORDSIZE+ix) == 39) || (buffer->(WORDSIZE+ix) == 45))
+			{
+				found++;
+			}
+			else
+			{
+				iy++;
+			}
 		}
 	}
+
 	if (found > 0)
 	{
 		if (aposwarn == 0)
 		{
 			aposwarn = 1;
 			style underline;
-			print "[NOTE: ";
-			print "found an apostrophe and removed it. You never need to use apostrophes in commands. ", (string) Story, " will eliminate apostrophes without nagging you in the future.]^";
-			print "^";
+			print "[NOTE: found an apostrophe and removed it. You never need to use apostrophes in commands. ", (string) Story, " will eliminate apostrophes without nagging you in the future.]^^";
 			style roman;
 		}
 #ifdef TARGET_ZCODE;
