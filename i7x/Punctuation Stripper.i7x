@@ -128,14 +128,27 @@ to decide whether is-comment: (- isComment() -)
 
 to parse-continue: (- ParsePunc(); -)
 
-this is the punctuation-munge rule:
+after reading a command (this is the punctuation-munge rule):
 	if is-comment, reject the player's command;
 	parse-continue;
 
 volume sample code
 
-[after reading a command: abide by the punctuation-munge rule;]
-
 Punctuation Stripper ends here.
 
 ---- DOCUMENTATION ----
+
+We shouldn't have to do more than include Punctuation Stripper to get it to run. However, it can be modified if we don't want to eliminate some punctuation.
+
+The main tweaks to the code are in this rule. If all booleans were switched, this extension would have no effect. The most likely one to switch is remove-commas, so you can use "PERSON, COMMAND" if wanted.
+
+Note that commas and hyphens are replaced with spaces, but apostrophes are removed completely. This isn't a one-size-fits-all solution, but it seems the most likely to be what the player intended.
+
+	when play begins:
+		now remove-commas is false;
+		now remove-dashes is false;
+		now remove-apostrophes is false;
+
+You also may wish to add this line in case rules conflict:
+
+	the punctuation-munge rule is listed first in the after reading a command rule.
