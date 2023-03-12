@@ -14,6 +14,7 @@ import sys
 import os
 import mytools as mt
 import i7
+from shutil import move
 
 to_project = i7.dir2proj()
 
@@ -26,6 +27,7 @@ hfx_ary = []
 user_project = ''
 
 temp_batch_file = "c:\\writing\\temp\\ni-temp.bat"
+temp_batch_file_backup = "c:\\writing\\temp\\ni-temp-backup.bat"
 
 def usage(header="Generic usage writeup"):
     mt.okay(header)
@@ -115,11 +117,11 @@ for h in hfx_ary:
     else:
         mt.bailfail("Could not open {}.".format(this_file))
 
-if not force_batch_move and source_opened:
-    sys.exit()
-
 if os.path.exists(temp_batch_file):
-    os.remove(temp_batch_file)
+    move(temp_batch_file, temp_batch_file_backup)
+
+if (not force_batch_move) and source_opened:
+    sys.exit()
 
 f = open(temp_batch_file, "w")
 f.write("@echo off\n\n")
