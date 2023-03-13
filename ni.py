@@ -12,6 +12,7 @@
 
 import sys
 import os
+from collections import defaultdict
 import mytools as mt
 import i7
 from shutil import move
@@ -29,6 +30,10 @@ user_project = ''
 temp_batch_file = "c:\\writing\\temp\\ni-temp.bat"
 temp_batch_file_backup = "c:\\writing\\temp\\ni-temp-backup.bat"
 
+ni_cfg = "c:/writing/scripts/ni.txt"
+
+map_to = defaultdict(str) # this maps command line arguments to a specific file e.g. gglo (general global) = c:\Users\Andrew\Documents\github\gloco
+
 def usage(header="Generic usage writeup"):
     mt.okay(header)
     print("This is a quasi-replacement for the batch file ni.bat.")
@@ -40,10 +45,31 @@ def usage(header="Generic usage writeup"):
     print("ni otf / dtf = opens / deletes temp file.")
     sys.exit()
 
+def read_special_commands():
+    with open(ni_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            l = line.lower().strip()
+            if '~' not in l:
+                continue
+            a1 = l.split('=')
+            if len(a1) > 2:
+                mt.warn("WARNING line {} has >1 =.".format(len(a1)))
+            a2 = a1[0].split(',')
+            if not os.path.exists(a1[1]):
+                mt.fail("NO SUCH FILE {} line {}".format(a1[1], line_count))
+                continue
+            for a in a2:
+                if a in map_to:
+                    mt.warn("Duplicate instance of {} in mapto file.".format(a))
+                else:
+                    map_to[a] = a1[1]
+
 cmd_count = 1
 
 if len(sys.argv) == 1:
     usage("No commands given")
+
+read_special_commands()
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
@@ -69,6 +95,13 @@ while cmd_count < len(sys.argv):
             mt.npo(temp_batch_file, print_cmd = False)
         else:
             mt.failbail("{} is not present.".format(temp_batch_file))
+    elif arg.startswith('s='):
+        temp = arg[2:]
+        if temp in map_to:
+            mt.npo(map_to[temp])
+        else:
+            print(map_to)
+            mt.bailfail("Bad value {} for s=.".format(temp))
     elif arg == '?':
         usage("USAGE")
     elif arg in i7.i7hfx:
@@ -77,6 +110,9 @@ while cmd_count < len(sys.argv):
         if user_project:
             mt.bailfail("Defined 2 projects: {} and {}.".format(user_project, arg))
         user_project = arg
+    elif arg in map_to:
+        mt.warn(arg, "is in the map_to file, but it's safest to prefix it with s=.")
+        mt.npo(map_to[temp])
     else:
         usage("Bad parameter {}.".format(arg))
     cmd_count += 1
