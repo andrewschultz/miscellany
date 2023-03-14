@@ -42,7 +42,7 @@ def usage(header="Generic usage writeup"):
     print("ni t opens the source file in the current directory.")
     print("ni vf ta opens up VVFF's tables.")
     print()
-    print("ni otf / dtf = opens / deletes temp file.")
+    print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
     sys.exit()
 
 def read_special_commands():
@@ -83,18 +83,24 @@ while cmd_count < len(sys.argv):
         force_batch_move = True
     elif arg == 'no':
         get_notes = True
-    elif arg == 'dtf':
+    elif arg in ( 'd', 'dtf', 'dt', 'tfd', 'td' ):
         if os.path.exists(temp_batch_file):
             os.remove(temp_batch_file)
         else:
             mt.failbail("No {} to delete.".format(temp_batch_file))
         mt.bailokay("{} deleted.".format(temp_batch_file))
-    elif arg == 'otf':
+    elif arg in ( 'o', 'otf', 'ot', 'otf', 'tfo', 'to' ):
         if os.path.exists(temp_batch_file):
             mt.okay("Opening temp batch file {}.".format(temp_batch_file))
             mt.npo(temp_batch_file, print_cmd = False)
         else:
             mt.failbail("{} is not present.".format(temp_batch_file))
+    elif arg in ( 'b', 'btf', 'bt', 'btf', 'tfb', 'tb' ):
+        if os.path_exists(temp_batch_file_backup):
+            mt.okay("Opening backup temp batch file {}.".format(temp_batch_file_backup))
+            mt.npo(temp_batch_file_backup, print_cmd = False)
+        else:
+            mt.failbail("{} is not present.".format(temp_batch_file_backup))
     elif arg.startswith('s='):
         temp = arg[2:]
         if temp in map_to:
