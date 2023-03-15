@@ -65,6 +65,9 @@ def look_for_string(my_string, this_file):
     first_rule_line_count = 0
     in_table = False
     file_yet = False
+    if not os.path.exists(this_file):
+        mt.warn("WARNING: couldn't access {}. Possible bad symlink. Skipping.".format(this_file))
+        return
     with codecs.open(this_file, "r", "utf-8", errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
             if not line.strip():
