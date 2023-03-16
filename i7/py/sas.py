@@ -120,11 +120,13 @@ for x in param_array:
     if len(x) > 2:
         if my_string:
             sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
+        elif x.startswith('r=') or x.startswith('a='):
+            pass
         else:
             my_string = x
             print("Looking for", my_string)
             if is_likely_regex(my_string):
-                print("Assuming regex due to special character e.g. [].()*")
+                mt.warn("Assuming regex due to special character e.g. [].()* ... if you want to fix things, use r= or a=.")
                 find_regex = True
             param_array.remove(x)
 
@@ -140,6 +142,16 @@ while cmd_count < len(param_array):
         find_regex = True
     elif arg in ( 'nr', 'rn' ):
         find_regex = False
+    elif arg.startswith('r='):
+        if arg == 'r=':
+            mt.bailfail("Need to define a regex after r=.")
+        find_regex = True
+        my_string = arg[2:]
+    elif arg.startswith('a='):
+        if arg == 'a=':
+            mt.bailfail("Need to define an absolute string after r=.")
+        find_regex = True
+        my_string = arg[2:]
     elif arg == 's':
         track_story_files = True
         track_extension_files = False
