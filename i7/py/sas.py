@@ -36,10 +36,18 @@ cmd_count = 0
 
 def usage(msg='General usage'):
     print('=' * 30 + msg)
-    print("sas has semantic regex detection for regexes, so you don't need to specify any options below.")
-    print("However, if you do, they will override its semantic detection, so if you want to look for a string with a backslash, rn a\\b and a\\b rn are identical.")
+    print("sas has semantic regex detection for regexes. However, you can force detection in various ways.")
+    print("r=(text) means regex, a=(text) means absolute text.")
+    print()
+    print("re = find regex not text, rn/nr finds text not regex. They can be placed before or after the string.")
+    print("To see rarer options, go with ??.")
+    print()
+    print("To see examples of tricky regexes, go with ?x and x?.")
+    sys.exit()
+
+def usage_rarer():
+    print('=' * 30 + "rarer options")
     print("r  = print full rule, l = print line.")
-    print("re = find regex not text, rn/nr turns it off.")
     print("s  = track story files only, e/x = track extension files only.")
     print("custom strings: um/use = \\buse max, for detecting deprecated Inform compiler constants.")
     sys.exit()
@@ -163,6 +171,8 @@ while cmd_count < len(param_array):
         find_regex = True
     elif arg == '?':
         usage()
+    elif arg == '??':
+        usage_rarer()
     else:
         usage('Bad command {}'.format(arg))
     cmd_count += 1
