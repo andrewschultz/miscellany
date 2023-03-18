@@ -53,7 +53,10 @@ def usage_rarer():
     sys.exit()
 
 def is_likely_regex(my_string):
-    return '[' in my_string or ']' in my_string or '.' in my_string or '(' in my_string or ')' in my_string or '*' in my_string or '\\' in my_string
+    for x in '[].(){{}}*\\|':
+        if x in my_string:
+            return True
+    return False
 
 def print_my_rules(count_start, count_end, the_string):
     the_string = the_string.rstrip()
