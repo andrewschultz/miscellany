@@ -52,6 +52,12 @@ def usage_rarer():
     print("custom strings: um/use = \\buse max, for detecting deprecated Inform compiler constants.")
     sys.exit()
 
+def usage_examples():
+    print("Remember, for exact quotes, if your string has a space, you need to put quotes around it e.g. sas \"shuffling around\"")
+    print()
+    print("Regexes with the or operator need to be of the form sas.py Andrew^|Schultz for Windows command line. That's the main one, but ^ is the general escape character.")
+    sys.exit()
+
 def is_likely_regex(my_string):
     for x in '[].(){{}}*\\|':
         if x in my_string:
@@ -176,6 +182,8 @@ while cmd_count < len(param_array):
         usage()
     elif arg == '??':
         usage_rarer()
+    elif arg in ( '?x', 'x?' ):
+        usage_examples()
     else:
         usage('Bad command {}'.format(arg))
     cmd_count += 1
