@@ -64,16 +64,18 @@ def is_likely_regex(my_string):
             return True
     return False
 
-def print_my_rules(count_start, count_end, the_string):
+def print_my_rules(count_start, count_end, the_string, table_name = ''):
     the_string = the_string.rstrip()
     lines_to_write = the_string.split("\n")
     first_rule_line = lines_to_write[0]
     if len(lines_to_write) > 1:
         line_list = "Lines {}-{}".format(count_start, count_end)
-        print(colorama.Fore.YELLOW + "{} CODE CHUNK HEADER {}".format(line_list, first_rule_line) + colorama.Style.RESET_ALL)
+        mt.warn("{} CODE CHUNK HEADER {}".format(line_list, first_rule_line))
+    elif table_name:
+        mt.warn("{} line {}".format(table_name, count_start))
     else:
-        print(colorama.Fore.YELLOW + "Lone line {}".format(count_start) + colorama.Style.RESET_ALL)
-    print(colorama.Fore.GREEN + the_string + colorama.Style.RESET_ALL)
+        mt.warn("Lone line {}".format(count_start))
+    mt.okay(the_string)
 
 def look_for_string(my_string, this_file):
     print_this_rule = False
@@ -82,6 +84,7 @@ def look_for_string(my_string, this_file):
     first_rule_line_count = 0
     in_table = False
     file_yet = False
+    table_name = ''
     if not os.path.exists(this_file):
         mt.warn("WARNING: couldn't access {}. Possible bad symlink. Skipping.".format(this_file))
         return
@@ -92,16 +95,18 @@ def look_for_string(my_string, this_file):
                     if not file_yet:
                         print("Matches for", this_file)
                         file_yet = True
-                    print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string)
+                    print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string, table_name = table_name)
                 print_this_rule = False
                 full_chunk_string = ''
                 critical_chunk_string = ''
                 in_table = False
+                table_name = ''
             else:
                 if not full_chunk_string:
                     first_rule_line_count = line_count
                 if not full_chunk_string and line.startswith("table of"):
                     in_table = True
+                    table_name = i7.zap_i7_comments(line)
                 elif not full_chunk_string:
                     critical_chunk_string += line
                 full_chunk_string += line
@@ -126,7 +131,7 @@ def look_for_string(my_string, this_file):
     if print_this_rule:
         if not file_yet:
             print("Matches for", this_file)
-        print_my_rules(first_rule_line_count, 'END', critical_chunk_string if in_table else full_chunk_string)
+        print_my_rules(first_rule_line_count, 'END', critical_chunk_string if in_table else full_chunk_string, table_name = table_name)
 
 param_array = sys.argv[1:]
 
