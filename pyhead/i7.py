@@ -426,6 +426,13 @@ def words_file(x):
 
 w_f = words_file
 
+def zap_i7_comments(my_line):
+    quote_breakdown = my_line.split('"')
+    for x in range(0, len(quote_breakdown), 2):
+        quote_breakdown[x] = re.sub("\[.*?\]", "", quote_breakdown[x])
+    new_string = '"'.join(quote_breakdown)
+    return new_string.rstrip()
+
 def in_quotes(x, get_second=True, get_comments=False):
     j = x.split('"')[get_second::2]
     retval = ' '.join(j)
