@@ -36,6 +36,7 @@ i7gx = {} # github project renaming e.g. compound -> the_problems_compound. Most
 i7gxr = {} # github project renaming reversed e.g. the_problems_compound -> compound. Most of the time this won't matter--GH = what's on my computer
 i7x = {} # mapping abbreviation to main project e.g. ai = ailihphilia
 i7xr = {} # mapping main project to unique/main abbreviation e.g. buck-the-past<=>btp but compound -> pc not 15 as pc is 1st
+i7xa = {} # mapping main project to all abbreviations
 i7com = {} # combos e.g. opo = 3d and 4d
 i7comr = {} # combos reversed
 i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
@@ -1292,6 +1293,7 @@ with open(i7_cfg_file) as file:
                     continue
                 i7x[my_l] = lla[0]
                 i7xr[lla[0]] = l1[0]
+                i7xa[lla[0]] = l1
             continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
