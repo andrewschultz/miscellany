@@ -1287,13 +1287,15 @@ with open(i7_cfg_file) as file:
                 break
         if this_var == 'projmap':
             l1 = lla[1].split(',')
+            if lla[0] in i7xa or lla[0] in i7x or lla[0] in i7xr:
+                mt.warn("Redefining main project {} map at line {} of i7p.txt.".format(lla[0], line_count))
             for my_l in l1:
                 if my_l in i7x:
                     mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
                     continue
                 i7x[my_l] = lla[0]
-                i7xr[lla[0]] = l1[0]
-                i7xa[lla[0]] = l1
+            i7xr[lla[0]] = l1[0]
+            i7xa[lla[0]] = l1
             continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
