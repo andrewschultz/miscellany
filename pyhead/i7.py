@@ -1176,7 +1176,7 @@ with open(i7_cfg_file) as file:
         if ':' not in ll:
             mt.warn("WARNING line {} in i7p.txt {} should have new PROJMAP: for project mapping.".format(line_count, ll))
             ll = "projmap:" + ll
-        my_parts = ll.split(":")
+        my_parts = ll.split(":", 1)
         this_var = my_parts[0]
         this_data = my_parts[1]
         lla = my_parts[1].split("=")
