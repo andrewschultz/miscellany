@@ -871,6 +871,10 @@ def proj2root(x = dir2proj()):
 def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True, optional_prefix = ''):
     if x.startswith(optional_prefix):
         x = x.replace(optional_prefix, '')
+    if not x:
+        mt.warn("Couldn't get proj2dir for {}.".format(x if x else 'a blank entry'))
+        if bail_if_nothing:
+            sys.exit()
     if default_subdir and not my_subdir:
         if materials:
             my_subdir = "Release"
