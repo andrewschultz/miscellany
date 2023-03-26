@@ -249,13 +249,17 @@ read_subproj_configs()
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
-        my_proj = i7.read_latest_proj()[0]
-        read_i7_default_project = True
-        if not my_proj:
-            sys.exit("No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project.")
-        print("Pulling project from CFG", my_proj)
+        my_proj = mt.val_from_cfg(i7.rbr_config, "default")
+        if my_proj:
+            mt.warn("Going with default from RBR file, {}.".format(my_proj))
+        else:
+            my_proj = i7.curdef
+            if not my_proj:
+                mt.bailfail("No project from CWD, and no project is defined in rbr.txt or i7p.txt. Bailing.")
+            mt.warn("Going with default from i7p.txt file, {}.".format(my_proj))
+            read_i7_default_project = True
     else:
-        print("Pulling project from current directory", my_proj)
+        mt.warn("No project on command line. Going with default pulled from directory.")
 
 out_file = os.path.normpath(os.path.join(i7.prt, "logpy-{}.htm".format(my_proj)))
 

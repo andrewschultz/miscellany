@@ -77,6 +77,7 @@ beta_dir = "c:/games/inform/beta Materials/Release"
 latest_project_abbr = latest_project_long = ''
 ghbase = "c:\\Users\\Andrew\\Documents\\github"
 gloco = "c:\\Users\\Andrew\\Documents\\github\\gloco"
+rbr_config = 'c:/writing/scripts/rbr.txt'
 
 # these are default values for binaries--debug is assumed to be most important
 # since it is the one I'll be using the most.
