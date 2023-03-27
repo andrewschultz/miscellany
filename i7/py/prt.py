@@ -30,6 +30,8 @@ force_extension = ''
 write_current_project = False
 read_i7_default_project = False
 
+copy_all = False
+
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
     if arg.startswith("fx"):
@@ -38,6 +40,8 @@ while cmd_count < len(sys.argv):
         sys.exit(colorama.Fore.RED + "Duplicate project definition attempt." + colorama.Style.RESET_ALL)
     elif arg in ( 'wp', 'pw' ):
         write_current_project = True
+    elif arg == 'a':
+        copy_all = True
     else:
         my_proj = i7.long_name(arg)
     cmd_count += 1
@@ -98,26 +102,25 @@ if force_extension:
 
 if len(y) == 0:
     sys.exit("No non-blorb binary found in {}".format(build_dir))
-elif len(y) > 1:
+elif len(y) > 1 and copy_all is False:
     print(colorama.Fore.YELLOW + "Multiple non-blorb binaries found in {}. Delete one and try again, or use fx(extension) to force extension.".format(build_dir) + colorama.Style.RESET_ALL)
     for y0 in y:
         print("    " + y0)
     sys.exit()
 
-my_copy_file = y[0]
+for my_copy_file in y:
+    (_, my_ext) = os.path.splitext(my_copy_file)
 
-(_, my_ext) = os.path.splitext(my_copy_file)
+    file_dest = os.path.normpath(os.path.join(i7.prt, "debug-{}{}".format(i7.long_name(my_proj), my_ext)))
 
-file_dest = os.path.normpath(os.path.join(i7.prt, "debug-{}{}".format(i7.long_name(my_proj), my_ext)))
+    binary_change = False
 
-binary_change = False
-
-if os.path.exists(file_dest) and filecmp.cmp(my_copy_file, file_dest):
-    print("No binary file change.")
-else:
-    print(colorama.Fore.GREEN + "New binary file needed! Copying {} to {}.".format(my_copy_file, file_dest) + colorama.Style.RESET_ALL)
-    shutil.copy(y[0], file_dest)
-    binary_change = True
+    if os.path.exists(file_dest) and filecmp.cmp(my_copy_file, file_dest):
+        print("No binary file change.")
+    else:
+        print(colorama.Fore.GREEN + "New binary file needed! Copying {} to {}.".format(my_copy_file, file_dest) + colorama.Style.RESET_ALL)
+        shutil.copy(my_copy_file, file_dest)
+        binary_change = True
 
 if not changes:
     print("No test scripts changed--note that RBR.PY may run PRT.PY automatically.")
