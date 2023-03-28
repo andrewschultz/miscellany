@@ -49,11 +49,15 @@ while cmd_count < len(sys.argv):
 if not my_proj:
     my_proj = i7.main_abb(i7.dir2proj())
     if not my_proj:
-        my_proj = i7.read_latest_proj()[0]
-        read_i7_default_project = True
-        if not my_proj:
-            sys.exit(colorama.Fore.RED + "No temporary current project specified in i7d.txt. Specify a project or move to a directory with a project." + colorama.Style.RESET_ALL)
-        print(colorama.Fore.GREEN + "Pulling project from CFG: {}.".format(my_proj) + colorama.Style.RESET_ALL)
+        my_proj = mt.val_from_cfg(i7.rbr_config, "default")
+        if my_proj:
+            mt.warn("Going with default from RBR file, {}.".format(my_proj))
+        else:
+            my_proj = i7.curdef
+            if not my_proj:
+                mt.bailfail("No project from CWD, and no project is defined in rbr.txt or i7p.txt. Bailing.")
+            mt.warn("Going with default from i7p.txt file, {}.".format(my_proj))
+            read_i7_default_project = True
     else:
         print(colorama.Fore.YELLOW + "No project on command line. Going with default pulled from directory." + colorama.Style.RESET_ALL)
 
