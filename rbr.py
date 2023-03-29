@@ -51,7 +51,6 @@ postproc_if_changed = defaultdict(list)
 ignores = defaultdict(str)
 apost_changes = defaultdict(int)
 
-rbr_config = 'c:/writing/scripts/rbr.txt'
 rbr_wild_card = ''
 
 branch_timestamp_skip_check = True
@@ -1170,7 +1169,9 @@ def internal_postproc_stuff():
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
 
-with open(rbr_config) as file:
+def_proj = i7.curdef
+
+with open(i7.rbr_config) as file:
     for (lc, line) in enumerate(file, 1):
         if line.startswith(';'): break
         if line.startswith('#'): continue
