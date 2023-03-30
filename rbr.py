@@ -100,13 +100,12 @@ def postopen_stub():
     print("Reminder that -np disables copy-over-post and -p enables it. Default is to copy the REG files over to the {} directory.".format(prt_color))
     mt.postopen_files()
 
-def abbrevs_to_ints(my_ary):
+def abbrevs_to_ints(my_ary, line_count = '(undef)'):
     my_ary_1 = [to_match[x] if x in to_match else x for x in my_ary]
     try:
         my_ary_2 = [int(x[1:]) for x in my_ary_1]
     except:
-        print("Bad array", my_ary, my_ary_1)
-        sys.exit()
+        return []
     return my_ary_2
 
 def name_or_num(my_string):
@@ -708,7 +707,12 @@ def get_file(fname):
                 vta_after = re.sub("^.*?\}", "", line.strip())
                 if not (vta_after.startswith('#') or vta_after.startswith('>')):
                     last_atted_command = ''
-                temp_file_fullname_array = abbrevs_to_ints(vta_before[3:].split(","))
+                try:
+                    temp_file_fullname_array = abbrevs_to_ints(vta_before[3:].split(","), line_count)
+                except:
+                    mt.warn("Bad init-array line {}. Sample: file=reg-bbgg-thru-min.txt,min,minimum walkthrough".format(line_count))
+                    mt.warn("    " + llo)
+                    mt.npo(fname, line_count)
                 if "\\n" in line:
                     print("WARNING {} line {} needs \\\\ and not \\n for line-changes for temporary one-line edit.".format(fname, line_count))
                     mt.add_post(fname, line_count)
