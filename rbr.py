@@ -157,8 +157,10 @@ def fill_vars(my_line, file_idx, line_count, print_errs):
         #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
         qt = q[1:-1]
         if qt not in branch_variables:
-            if print_errs: print("Bad variable", qt, "at", line_count)
-            if qt in my_strings: print("  Maybe add a $ as there is such a string variable.")
+            if print_errs:
+                mt.warn("Bad variable", qt, "at", line_count)
+            if qt in my_strings:
+                mt.okay("    Maybe just add a $ to {} as there is such a string variable.".format(qt))
             continue
         my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
     return my_line
@@ -168,8 +170,9 @@ def string_fill(var_line, line_count):
     for q in re.findall("\{\$[A-Z][A-Z0-9]+\}", var_line):
         q0 = q[2:-1]
         if q0 not in my_strings:
-            print("WARNING line {} unrecognized string {}.".format(line_count, q0)) #?? printed more than once e.g. put in a bogus string at end
-            if q0 in branch_variables: print("  Maybe get rid of the $ as there is such a variable.")
+            mt.warn("WARNING line {} unrecognized string {}.".format(line_count, q0)) #?? printed more than once e.g. put in a bogus string at end
+            if q0 in branch_variables:
+                mt.okay("    Maybe just get rid of the leading $ as there is a numerical variable {}.".format(q0))
             continue
         temp = re.sub("\{\$" + q0 + "\}", my_strings[q0], temp)
     return temp
@@ -400,7 +403,7 @@ def post_copy(file_array, in_file):
         elif len(changed_files.keys()):
             print("Copying changed files over to {} directory.".format(prt_color))
             for q in list(changed_files.keys()):
-                print(colorama.Fore.GREEN + q, "=>", ', '.join(changed_files[q]) + colorama.Style.RESET_ALL)
+                mt.okay(q, "=>", ', '.join(changed_files[q]))
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
                 changed_files.pop(q)
@@ -609,7 +612,7 @@ def get_file(fname):
                     flag_repeat_groupings = False
                     line = re.sub("\++$", "", line)
                 if flag_repeat_groupings and old_grouping == line[1:]:
-                    print(colorama.Fore.YELLOW + "Two groupings can/should be merged, or you should put a + after. The second is {} at line {}".format(line[1:].strip(), line_count) + mt.WTXT)
+                    mt.warn("Two groupings can/should be merged, or you should put a + after. The second is \"{}\" at line {}.".format(line[1:].strip(), line_count))
                     mt.add_postopen(fname, line_count, priority=5)
                     if in_grouping:
                         continue
@@ -652,7 +655,9 @@ def get_file(fname):
                 ignore_next_balance = True
             if line.startswith("##balance undo"):
                 if balance_undos:
-                    print("WARNING {} line {}: another balance-undo block is already operational.".format(fb, line_count))
+                    mt.warn("WARNING {} line {}: another balance-undo block is already operational. Add AGAIN to line to avoid this warning.".format(fb, line_count))
+                    if len(balance_trace):
+                        mt.fail("Not only that, but undos are imbalanced. You have {} commands left over.".format(len(balance_trace)))
                 balance_error_yet = False
                 balance_undos = True
                 track_balance_undos = 'trace' in line or 'track' in line
@@ -979,7 +984,7 @@ def get_file(fname):
                 continue
             if line.startswith("==t"):
                 if temp_diverge:
-                    print("ERROR: located second file branch array in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
+                    mt.fail("ERROR: located second file branch array in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
                     if not temp_diverge_warned:
                         print("    (to make a temporary branch, use brackets and dashes as so: {--F1,F2}")
                         temp_diverge_warned = True
