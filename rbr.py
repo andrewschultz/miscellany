@@ -850,6 +850,13 @@ def get_file(fname):
                         file_output[long_name] += '## truncated branches before command {}, so run withough -sc:\n'.format(start_command)
                     actives.append(True)
                 continue
+            if line.startswith("}}"):
+                if len(file_array) == 0:
+                    mt.fail("RBR.PY requires }} variable meta-commands to be after files=, because even initialization is tricky.\nWe could, of course, have a list of initialized variables once file= hits, but that'd be a bit of programming I don't want to deal with right now.")
+                    mt.npo(fname, line_count)
+                branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
+                last_atted_command = ""
+                continue
             if not len(file_array): continue # allows for comments at the start
             if line.startswith(")"):
                 print("WARNING line starting with ) may need to start with } instead.", fname, line_count)
@@ -859,12 +866,6 @@ def get_file(fname):
                 temp_ary = line[2:].strip().split("=")
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
                 last_atted_command = ''
-                continue
-            if line.startswith("}}"):
-                if len(file_array) == 0:
-                    sys.exit("BAILING. RBR.PY requires }} variable meta-commands to be after files=, because each file needs to know when to access that array.")
-                branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
-                last_atted_command = ""
                 continue
             if line.strip() == "==!" or line.strip() == "@!":
                 actives = [not x for x in actives]
