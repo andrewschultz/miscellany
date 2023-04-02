@@ -592,6 +592,7 @@ def get_file(fname):
     old_grouping = ''
     in_grouping = False
     flag_wrong_at_end = 0
+    fatal_error = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
@@ -987,8 +988,10 @@ def get_file(fname):
                 if temp_diverge:
                     mt.fail("ERROR: located second file branch array in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
                     if not temp_diverge_warned:
+                        mt.fail("Output files will not be created as a safety measure.")
                         print("    (to make a temporary branch, use brackets and dashes as so: {--F1,F2}")
                         temp_diverge_warned = True
+                    fatal_error = True
                     mt.add_postopen(fname, line_count)
                 old_actives = list(actives)
                 temp_diverge = True
@@ -1087,6 +1090,9 @@ def get_file(fname):
             if x2 in mwrites.keys():
                 for y in mwrites[x2].keys():
                     write_monty_file(x2, y)
+    if fatal_error:
+        mt.fail("Found fatal error. Not copying files over.")
+        return 0
     for x in file_array:
         f = open(x, "w")
         # modifications below to avoid extra spacing. While we could define in_header, sweeping things up with a REGEX is probably easier
