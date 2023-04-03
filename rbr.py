@@ -557,7 +557,9 @@ def get_file(fname):
     warns = 0
     last_cmd = ""
     file_output = defaultdict(str)
+    file_descriptions = []
     file_array = []
+    file_array_base = []
     line_count = 0
     dupe_file_name = ""
     temp_diverge = False
@@ -838,6 +840,24 @@ def get_file(fname):
                 continue
             if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
                 continue
+            if line.startswith("file="):
+                my_array = re.sub("^.*=", "", line.strip()).split(',')
+                long_name = prt_temp_loc(my_array[0])
+                file_array_base.append(my_array[0])
+                file_output[long_name] = ''
+                ary2 = my_array[1].split('/')
+                for a in ary2:
+                    if a in to_match:
+                        print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fb))
+                    to_match[a] = 't{}'.format(len(file_array))
+                file_array.append(long_name)
+                try:
+                    file_descriptions.append(my_array[2])
+                except:
+                    mt.fail("{} line {} does not have 3 entries.".format(fname, line_count))
+                    mt.npo(fname, line_count)
+                actives.append(True)
+                continue
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
                 file_array_base = re.sub(".*=", "", line.lower().strip()).split(',')
@@ -1035,6 +1055,12 @@ def get_file(fname):
             first_file = True
             if line.startswith("~="):
                 line = line.replace("~", "=") # hack to allow ==== headers
+            if not len(file_descriptions):
+                mt.fail(fname, "needs the new file descriptions. See bbkk, the first to be converted.")
+                mt.fail("A blueprint below:")
+                mt.fail("  files= must be split up into lines.")
+                mt.fail("  the TSV (tab separated values) going to the end of each.")
+                mt.failbail("  CSV's in ~t2, etc. should be converted to slashes.")
             for ct in range(0, len(file_array)):
                 if actives[ct]:
                     this_file = file_array[ct]
@@ -1049,6 +1075,7 @@ def get_file(fname):
                             continue
                     line_write = re.sub("\*file", os.path.basename(this_file), line, 0, re.IGNORECASE)
                     line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
+                    line_write = re.sub("\*description", file_descriptions[ct], line_write, 0, re.IGNORECASE)
                     if "{$" in line_write:
                         #print("BEFORE:", line_write.strip())
                         line_write = string_fill(line_write, line_count)
