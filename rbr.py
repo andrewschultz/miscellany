@@ -1412,20 +1412,7 @@ if exe_proj:
 
 my_file_list_valid = []
 
-if in_file:
-    os.chdir(os.path.dirname(os.path.abspath(in_file)))
-    mydir = os.getcwd()
-    if edit_main_branch:
-        print("Opening branch file", in_file)
-        os.system(in_file)
-    else:
-        my_file_list_valid = [in_file]
-        get_file(in_file)
-        internal_postproc_stuff()
-        postopen_stub()
-    sys.exit()
-
-if not exe_proj:
+if not exe_proj: # I moved this and chdir above if in_file. It should be okay, but I note it for later reference.
     myd = os.getcwd()
     if i7.dir2proj(myd):
         exe_proj = i7.dir2proj(myd, True)
@@ -1439,6 +1426,20 @@ if not exe_proj:
 old_dir = os.getcwd()
 new_dir = i7.proj2dir(exe_proj)
 os.chdir(new_dir)
+
+if in_file:
+    os.chdir(os.path.dirname(os.path.abspath(in_file)))
+    mydir = os.getcwd()
+    if edit_main_branch:
+        print("Opening branch file", in_file)
+        os.system(in_file)
+    else:
+        my_file_list_valid = [in_file]
+        temp = get_file(in_file)
+        post_copy(in_file)
+        internal_postproc_stuff(temp > 0)
+        postopen_stub()
+    sys.exit()
 
 if os.path.normpath(old_dir).lower() != os.path.normpath(new_dir).lower():
     print("We changed PWD from {} to {}.".format(old_dir, new_dir))
