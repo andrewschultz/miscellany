@@ -395,7 +395,7 @@ def search_for(x):
     if not got_count: print("Found nothing for", x)
     sys.exit()
 
-def post_copy(file_array, in_file):
+def post_copy(in_file, file_array = []):
     if copy_over_post:
         if force_all_regs:
             print("Copying all files over to {} directory.".format(prt_color))
@@ -406,14 +406,14 @@ def post_copy(file_array, in_file):
                 mt.okay(q, "=>", ', '.join(changed_files[q]))
                 for r in changed_files[q]:
                     copy(r, os.path.join(i7.prt, os.path.basename(r)))
-                changed_files.pop(q)
+                #changed_files.pop(q)
         elif len(absent_files.keys()):
             print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
             for q in list(absent_files.keys()):
                 print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
                 for r in absent_files[q]:
                     copy(r[0], r[1])
-                absent_files.pop(q)
+                #absent_files.pop(q)
         elif len(my_file_list_valid) == 1:
             print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
@@ -545,6 +545,8 @@ def bracket_ignore_next(my_line):
     return mll.startswith("#brackets ok") or mll.startswith("#ok brackets") or mll.startswith("#ignore next bracket") or mll.startswith("#ignore bracket")
 
 def get_file(fname):
+    global absent_files
+    global changed_files
     global ignore_next_bracket
     global command_requirements
     if not os.path.isfile(fname):
@@ -1172,7 +1174,7 @@ def get_file(fname):
     if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
         print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
         print("Just a warning.")
-    post_copy(file_array_base, fname)
+    return len(absent_files) + len(changed_files)
 
 def show_csv(my_dict, my_msg):
     ret_val = 0
@@ -1501,6 +1503,8 @@ for x in my_file_list: # this is probably not necessary, but it is worth catchin
 if len(my_file_list_valid) == 0:
     sys.exit("Uh oh, no valid files left after initial check. Bailing.")
 
+sweeping_changes = 0
+
 for x in my_file_list_valid:
     if branch_timestamp_skip_check and no_new_branch_edits(x):
         print("Skipping", x, "for no new edits.")
@@ -1508,7 +1512,8 @@ for x in my_file_list_valid:
     if rbr_wild_card and rbr_wild_card not in x:
         print("Skipping", x, "which does not match wild card.")
         continue
-    get_file(x)
+    sweeping_changes += get_file(x)
+    post_copy(x)
 
 if len(apost_changes):
     print("FLAGGED APOSTROPHE CHANGES/SUGGESTIONS/FREQUENCY (#OK-APOSTROPHE or #APOSTROPHE-OK to allow")
