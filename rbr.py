@@ -599,6 +599,7 @@ def get_file(fname):
     fatal_error = False
     with open(fname) as file:
         for (line_count, line) in enumerate(file, 1):
+            llo = line.lower()
             if line.startswith("====alphabetize"): # this is to work in conjunction with ttc
                 continue
             if line.startswith("cmdflags="):
@@ -610,6 +611,8 @@ def get_file(fname):
                 except:
                     print("WARNING invalid CMDFLAGS at line", line_count, line.strip())
                 continue
+            if line.startswith("=>"):
+                line = line[1:] # cheap trick so I can search for priority point-scoring
             if line.startswith("@"):
                 line = line.strip()
                 flag_repeat_groupings = True
@@ -656,9 +659,9 @@ def get_file(fname):
                     if any(x.isdigit() for x in line):
                         print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
                         mt.add_postopen(fname, line_count, priority=8)
-            if line.startswith("##nobalance"):
+            if llo.startswith("##nobalance"):
                 ignore_next_balance = True
-            if line.startswith("##balance undo"):
+            if llo.startswith("##balance undo"):
                 if balance_undos:
                     mt.warn("WARNING {} line {}: another balance-undo block is already operational. Add AGAIN to line to avoid this warning.".format(fb, line_count))
                     if len(balance_trace):
@@ -673,7 +676,7 @@ def get_file(fname):
             elif balance_undos and line.startswith("#balance undo"):
                 print("WARNING {} line {}: need double-pound sign before balance undo.".format(fb, line_count))
                 mt.add_postopen(fname, line_count, priority=7)
-            if line.startswith("##end undo") or line.startswith("##end balance undo"):
+            if line.startswith("##end undo") or line.startswith("##end balance undo") or (balance_undos and line.startswith('@!')):
                 if len(balance_trace):
                     print(colorama.Fore.RED + "ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.') + colorama.Style.RESET_ALL)
                     mt.add_postopen(fname, line_count)
