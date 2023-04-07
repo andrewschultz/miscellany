@@ -1179,6 +1179,31 @@ def get_file(fname):
         print("Just a warning.")
     return len(absent_files) + len(changed_files)
 
+def scrape_cmds(my_file, my_cmds, add_after = True): # this looks for a point-scoring/point scoring command
+    retval = False
+    need_point = False
+    add_edit = False
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if 'by one point' in line and need_point:
+                if add_after:
+                    add_edit = True
+                else:
+                    mt.add_post(my_file, line_count - 2)
+                retval = True
+                continue
+            if not line.strip():
+                if add_edit:
+                    mt.add_post(my_file, line_count)
+                need_point = False
+                continue
+            if not line.startswith(">"):
+                continue
+            for x in my_cmds:
+                if x in line:
+                    need_point = True
+    return retval
+
 def show_csv(my_dict, my_msg):
     ret_val = 0
     for q in my_dict:
@@ -1317,6 +1342,8 @@ with open(i7.rbr_config) as file:
 
 count = 1
 
+cmds_to_find = []
+
 projs = []
 poss_abbrev = []
 my_file_list = []
@@ -1348,6 +1375,8 @@ while count < len(sys.argv):
     elif arg == 'fp': force_postproc = True
     elif arg in ( 'w', 'wc', 'cw' ):
         wrong_check = True
+    elif arg[:3] in ( 'pt=', 'pt:' ) or arg[:2] in ( 'p=', 'p:' ):
+        cmds_to_find.append(re.sub("^.*?[=:]", "", arg).replace('-', ' ').replace('.', ' '))
     elif arg[0] == 'w' and arg[1:].isdigit():
         wrong_check = True
         ignore_wrong_before = int(arg[1:])
@@ -1497,6 +1526,12 @@ if not len(my_file_list):
             sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
         print("No valid files specified on command line. Going with default", ', '.join(branch_list[exe_proj]))
+
+if cmds_to_find:
+    for x in my_file_list:
+        scrape_cmds(x, cmds_to_find)
+    mt.open_post(empty_flags = mt.NOTE_EMPTY)
+    sys.exit()
 
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
     if os.path.exists(x): my_file_list_valid.append(x)
