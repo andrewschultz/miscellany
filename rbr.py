@@ -1212,13 +1212,13 @@ def show_csv(my_dict, my_msg):
         ret_val += lmd
     return ret_val
 
-def internal_postproc_stuff():
+def internal_postproc_stuff(anything_changed):
     total_csv = show_csv(new_files, "new file") + show_csv(changed_files, "changed file")
     if show_unchanged:
         total_csv += show_csv(unchanged_files, "unchanged file")
-    if total_csv or force_postproc:
+    if anything_changed or force_postproc:
         run_postproc = defaultdict(bool)
-        if not total_csv: print("Forcing postproc even though nothing changed.")
+        if not anything_changed: print("Forcing postproc even though nothing changed.")
         to_proc = []
         for x in new_files:
             to_proc += list(new_files[x])
@@ -1559,6 +1559,6 @@ if len(apost_changes):
         add_note = '(lower-case version is in apostrophes-to-ignore)' if x.lower() in apostrophes[exe_proj] else ''
         print(x, apost_changes[x], add_note)
 
-internal_postproc_stuff()
+internal_postproc_stuff(sweeping_changes)
 
 postopen_stub()
