@@ -269,10 +269,10 @@ def reg_verify_file(my_file):
                 if mb in line:
                     positive_found = True
                     continue
-                print(colorama.Fore.RED + "ERROR {} had mis-identifying line {} {}".format(mb, line_count, line.strip()) + mt.WTXT)
+                mt.fail("ERROR {} had mis-identifying line {} {}".format(mb, line_count, line.strip()))
                 return line_count
     if not positive_found:
-        print(colorama.Fore.YELLOW + "WARNING {} had no positive test file identification.".format(mb) + mt.WTXT)
+        mt.warn("WARNING {} had no positive test file identification.".format(mb))
         return -1
     return 0
 
@@ -302,9 +302,9 @@ def reg_verify_dir(open_unmarked = False, bail = True):
                 actual_open += 1
                 mt.add_post(g, 1 if temp == -1 else temp)
             else:
-                print(colorama.Fore.GREEN + "UNOPENED file needs fixing: {}".format(os.path.basename(g))  + mt.WTXT)
+                mt.warn("UNOPENED file needs fixing: {}".format(os.path.basename(g)))
     if cur_open == 0:
-        print(colorama.Fore.GREEN + "All {} reg- files in {} verified as properly annotated.".format(len(my_glob), this_proj) + mt.WTXT)
+        mt.okay("All {} reg- files in {} verified as properly annotated.".format(len(my_glob), this_proj))
     else:
         print(colorama.Fore.BLUE + "{} opened of total {} to fix.".format(actual_open, cur_open) + mt.WTXT)
     mt.post_open()
@@ -410,7 +410,7 @@ def post_copy(in_file, file_array = []):
         elif len(absent_files.keys()):
             print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
             for q in list(absent_files.keys()):
-                print(colorama.Fore.GREEN + q, "=>", ', '.join([x[1] for x in absent_files[q]]) + colorama.Style.RESET_ALL)
+                mt.okay(q, "=>", ', '.join([x[1] for x in absent_files[q]]))
                 for r in absent_files[q]:
                     copy(r[0], r[1])
                 #absent_files.pop(q)
@@ -625,7 +625,7 @@ def get_file(fname):
                     if in_grouping:
                         continue
                 elif not flag_repeat_groupings and not (old_grouping == line[1:]):
-                    print(colorama.Fore.YELLOW + "False repeat grouping marker for {} at line {}".format(line[1:], line_count) + mt.WTXT)
+                    mt.warn("False repeat grouping marker for {} at line {}".format(line[1:], line_count))
                     mt.add_postopen(fname, line_count, priority=5)
                     if in_grouping:
                         continue
@@ -678,10 +678,11 @@ def get_file(fname):
                 mt.add_postopen(fname, line_count, priority=7)
             if line.startswith("##end undo") or line.startswith("##end balance undo") or (balance_undos and line.startswith('@!')):
                 if len(balance_trace):
-                    print(colorama.Fore.RED + "ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.') + colorama.Style.RESET_ALL)
+                    mt.fail("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
                     mt.add_postopen(fname, line_count)
                 balance_undos = False
-                continue
+                if not line.startswith('@!'):
+                    continue
             if potentially_faulty_regex(line):
                 print("WARNING {} line {} may need starting slash for regex:{}".format(fname, line_count, line_orig))
             if is_rbr_bookmark(line) or line.startswith("###"): #triple comments are ignored
@@ -700,7 +701,7 @@ def get_file(fname):
                 at_section = ''
                 if balance_undos:
                     if len(balance_trace):
-                        print(colorama.Fore.RED + "ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.') + colorama.Style.RESET_ALL)
+                        mt.fail("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
                         mt.add_postopen(fname, line_count)
                     balance_undos = False
                 if line.startswith('@@'):
@@ -736,7 +737,7 @@ def get_file(fname):
             if line.startswith("WRONG"):
                 if wrong_check:
                     if line_count > ignore_wrong_before:
-                        print(colorama.Fore.RED + "WARNING we have a WRONG currently needing replacement at line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                        mt.fail("WARNING we have a WRONG currently needing replacement at line {}.".format(line_count))
                         mt.add_postopen(fname, line_count, priority = 6)
                     else:
                         print(colorama.Fore.CYAN + "WARNING we have a WRONG eventually needing replacement at line {} before the user-chosen start line {}.".format(line_count, ignore_wrong_before))
@@ -1137,16 +1138,16 @@ def get_file(fname):
             check_main_file_change = False
             xb = os.path.basename(x)
             if not os.path.exists(xb):
-                print(colorama.Fore.RED + "I could not find {}. It should be in the temp directory. You may wish to disable --stable in the RBR file or type:".format(x) + mt.WTXT)
-                print(colorama.Fore.RED + "    copy {} {}".format(x, xb) + mt.WTXT)
+                mt.fail("I could not find {}. It should be in the temp directory. You may wish to disable --stable in the RBR file or type:".format(x))
+                mt.fail("    copy {} {}".format(x, xb))
                 sys.exit()
             if not cmp(x, xb):
                 if not ignore_first_file_changes:
-                    print(colorama.Fore.RED + "#--stable was set. Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb) + colorama.Style.RESET_ALL)
+                    mt.fail("#--stable was set. Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
                     mt.wm(x, xb)
                     sys.exit()
                 else:
-                    print(colorama.Fore.YELLOW + "Difference(s) found in main file {} but overriden by -f1 command line parameter.".format(xb) + colorama.Style.RESET_ALL)
+                    mt.warn("Difference(s) found in main file {} but overriden by -f1 command line parameter.".format(xb))
         xb = os.path.basename(x)
         prt_mirror = os.path.join(i7.prt, xb)
         if not os.path.exists(xb):
@@ -1170,7 +1171,7 @@ def get_file(fname):
         os.remove(x)
         file_output.pop(x)
     for x in file_output:
-        print(colorama.Fore.RED + "WARNING: there may be leftover output for the file_output key {}.".format(x) + colorama.Style.RESET_ALL)
+        mt.fail("WARNING: there may be leftover output for the file_output key {}.".format(x))
     if flag_wrong_at_end:
        print(colorama.Fore.CYAN + "{} WRONG line{} {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end)
        , mt.plur(flag_wrong_at_end, [ 'were', 'was' ])) + colorama.Style.RESET_ALL)
@@ -1258,6 +1259,8 @@ with open(i7.rbr_config) as file:
             times[ja[0]] = int(ja[1])
             continue
         if ll.startswith('default'):
+            if def_proj == i7.main_abb(vars):
+                mt.warn("NOTE: we are redefining the rbr-specific default in rbr.txt to the general default in i7p.txt. This is harmless overkill.")
             def_proj = i7.main_abb(vars)
             continue
         if ll.startswith('project') or ll.startswith('projname'):
@@ -1534,7 +1537,8 @@ if cmds_to_find:
     sys.exit()
 
 for x in my_file_list: # this is probably not necessary, but it is worth catching in case we do make odd files somehow.
-    if os.path.exists(x): my_file_list_valid.append(x)
+    if os.path.exists(x):
+        my_file_list_valid.append(x)
     else:
         print("Ignoring bad/nonexistent branch file", x)
 
