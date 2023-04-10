@@ -1438,8 +1438,12 @@ if my_dir == "c:\\games\\inform\\prt":
     sys.exit("Can't run from the {} directory. Move to an Inform source directory.".format(prt_color))
 
 if 'github' in my_dir.lower():
-    if not github_okay:
-        sys.exit("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory.")
+    newpath = i7.proj2dir(i7.dir2proj(), bail_if_nothing = True)
+    if newpath:
+        mt.warn("Moving to non-github directory {}, since the REG files created may fork.".format(newpath))
+        os.chdir(newpath)
+    elif not github_okay:
+        mt.bailfail("GITHUB is in your path. Mark this as okay with a -gh flag, or move to your regular directory. You probably want to move to the non-github directory.")
 
 if exe_proj:
     try:
