@@ -20,6 +20,12 @@ import colorama
 import mytools as mt
 import i7
 
+fullname = { 'ab':'abouting',
+  'cr':'creditsing',
+  've':'verbsing',
+  'ta':'table of',
+}
+
 default_string = "aqueduct"
 my_string = ''
 
@@ -33,6 +39,8 @@ post_open = False
 
 local_max_open = 5
 cmd_count = 0
+
+my_sections = []
 
 def usage(msg='General usage'):
     print('=' * 30 + msg)
@@ -77,7 +85,15 @@ def print_my_rules(count_start, count_end, the_string, table_name = ''):
         mt.warn("Lone line {}".format(count_start))
     mt.okay(the_string)
 
-def look_for_string(my_string, this_file):
+def matchable(my_line, my_sects):
+    if not my_sects:
+        return True
+    for s in my_sects:
+        if s in my_line:
+            return True
+    return False
+
+def look_for_string(my_string, this_file, sections = []):
     print_this_rule = False
     full_chunk_string = ''
     critical_chunk_string = ''
@@ -92,24 +108,26 @@ def look_for_string(my_string, this_file):
         for (line_count, line) in enumerate (file, 1):
             if not line.strip():
                 if print_this_rule:
-                    if not file_yet:
-                        print("Matches for", this_file)
-                        file_yet = True
-                    print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string, table_name = table_name)
+                    if matchable(my_first_line, sections):
+                        if not file_yet:
+                            print("Matches for", this_file)
+                            file_yet = True
+                        print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string, table_name = table_name)
                 print_this_rule = False
                 full_chunk_string = ''
                 critical_chunk_string = ''
                 in_table = False
                 table_name = ''
-            else:
-                if not full_chunk_string:
-                    first_rule_line_count = line_count
-                if not full_chunk_string and line.startswith("table of"):
-                    in_table = True
-                    table_name = i7.zap_i7_comments(line)
-                elif not full_chunk_string:
-                    critical_chunk_string += line
-                full_chunk_string += line
+                continue
+            if not full_chunk_string:
+                my_first_line = line.strip()
+                first_rule_line_count = line_count
+            if not full_chunk_string and line.startswith("table of"):
+                in_table = True
+                table_name = i7.zap_i7_comments(line)
+            elif not full_chunk_string:
+                critical_chunk_string += line
+            full_chunk_string += line
             if find_regex:
                 if re.search(my_string, line.lower()):
                     mt.add_postopen(this_file, line_count)
@@ -180,6 +198,13 @@ while cmd_count < len(param_array):
     elif arg in ( 'e', 'x' ):
         track_story_files = False
         track_extension_files = True
+    elif arg == 'meta':
+        my_sections = [ 'abouting', 'creditsing', 'verbsing' ]
+    elif arg.startswith("s="):
+        if len(arg) == 2:
+            sys.exit("Can't specify blank sections.")
+        my_array = [ fullname[x] if x in fullname else x for x in arg[2:].split(',') ]
+        my_sections.extend(my_array)
     elif arg in ( 'um', 'use' ):
         my_string = r"\buse max_"
         find_regex = True
@@ -216,7 +241,7 @@ if track_story_files:
         if not os.path.exists(my_ni_file):
             print("WARNING no story file", my_ni_file)
             continue
-        look_for_string(my_string, my_ni_file)
+        look_for_string(my_string, my_ni_file, sections=my_sections)
 
 if track_extension_files:
     ary = glob.glob("C:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/*.i7x")
@@ -228,9 +253,11 @@ if track_extension_files:
             continue
         else:
             done_dict[temp] = True
-        look_for_string(my_string, a)
+        look_for_string(my_string, a, sections=my_sections)
 
 if post_open:
     mt.postopen_files(max_opens = local_max_open)
 else:
-    print("There are source files you could post-open with p/op/po.")
+    to_open = len(mt.file_post_list)
+    print("You have {} source file{} to post-open with p/op/po: {}.".format(to_open, mt.plur(to_open), ', '.join([i7.inform_short_name(x) for x in mt.file_post_list])))
+
