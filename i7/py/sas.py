@@ -95,6 +95,7 @@ def matchable(my_line, my_sects):
 
 def look_for_string(my_string, this_file, sections = []):
     print_this_rule = False
+    line_count_to_open = 0
     full_chunk_string = ''
     critical_chunk_string = ''
     first_rule_line_count = 0
@@ -113,11 +114,13 @@ def look_for_string(my_string, this_file, sections = []):
                             print("Matches for", this_file)
                             file_yet = True
                         print_my_rules(first_rule_line_count, line_count - 1, critical_chunk_string if in_table else full_chunk_string, table_name = table_name)
+                        mt.add_postopen(this_file, line_count_to_open)
                 print_this_rule = False
                 full_chunk_string = ''
                 critical_chunk_string = ''
                 in_table = False
                 table_name = ''
+                line_count_to_open = 0
                 continue
             if not full_chunk_string:
                 my_first_line = line.strip()
@@ -130,7 +133,7 @@ def look_for_string(my_string, this_file, sections = []):
             full_chunk_string += line
             if find_regex:
                 if re.search(my_string, line.lower()):
-                    mt.add_postopen(this_file, line_count)
+                    line_count_to_open = line_count
                     if print_full_rule:
                         print_this_rule = True
                         critical_chunk_string += line
@@ -139,7 +142,7 @@ def look_for_string(my_string, this_file, sections = []):
                     continue
             else:
                 if my_string.lower() in line.lower():
-                    mt.add_postopen(this_file, line_count)
+                    line_count_to_open = line_count
                     if print_full_rule:
                         print_this_rule = True
                         critical_chunk_string += line
@@ -260,4 +263,3 @@ if post_open:
 else:
     to_open = len(mt.file_post_list)
     print("You have {} source file{} to post-open with p/op/po: {}.".format(to_open, mt.plur(to_open), ', '.join([i7.inform_short_name(x) for x in mt.file_post_list])))
-
