@@ -110,7 +110,7 @@ while cmd_count < len(sys.argv):
             mt.bailfail("Bad value {} for s=.".format(temp))
     elif arg == '?':
         usage("USAGE")
-    elif arg in i7.i7hfx:
+    elif arg in i7.i7hfx or arg in i7.i7hfxr:
         hfx_ary.append(arg)
     elif arg in i7.i7x:
         if user_project:
