@@ -157,6 +157,12 @@ for h in hfx_ary:
         mt.warn("Since global headers were in the array, and {} has no global header, I'm opening the general GLOCO file.".format(to_project))
         mt.npo(i7.gloco)
     else:
+        if to_project in i7.i7comr:
+            umbrella_proj = i7.i7comr[to_project]
+            umbrella_file = i7.hdr(umbrella_proj, h)
+            if os.path.exists(umbrella_file):
+                mt.warn(f"{to_project} had no {h} header, but the umbrella project {umbrella_proj} did. So I'm opening that.")
+                mt.npo(umbrella_file)
         mt.bailfail("Could not open {}.".format(this_file))
 
 if os.path.exists(temp_batch_file):
