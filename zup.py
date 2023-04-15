@@ -224,6 +224,7 @@ def read_zup_txt():
     file_to_dir = ''
     current_file = ''
     to_base_dir = ''
+    release_replace_yet = False
     cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -236,6 +237,7 @@ def read_zup_txt():
                     file_base_dir = ''
                     file_to_dir = ''
                     to_base_dir = ''
+                    release_replace_yet = False
                 continue
             if line.startswith("$"):
                 if '=' not in line:
@@ -249,6 +251,7 @@ def read_zup_txt():
                 continue
             if '%' in line:
                 line = line.replace('%', zups[proj_candidate].version)
+                release_replace_yet = True
             if '$' in line:
                 for x in re.findall("\$.*\$", line):
                     if x not in cfg_string_table:
@@ -439,6 +442,8 @@ def read_zup_txt():
                 else:
                     curzip.time_compare.append((time_array[1], time_array[0], time_msg))
             elif prefix in ( 'v', 'version' ):
+                if release_replace_yet:
+                    flag_cfg_error(line_count, "WARNING version assignment at line {} should be above string assignment with %. I could program things so you don't have to, but I'm too lazy.".format(line_count))
                 if re.search("[^0-9\.]", data):
                     flag_cfg_error(line_count, "WARNING version must only contain integers or decimals at line {}".format(line_count))
                 zups[proj_candidate].version = data
