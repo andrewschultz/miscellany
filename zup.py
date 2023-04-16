@@ -75,19 +75,22 @@ stamp_binaries = False
 any_stamped_binaries = 0
 
 def usage(header="Usage for zup.py"):
-    print(header)
+    mt.fail(header)
     print("=" * 50)
+    print("The easiest way to run zup.py is to specify project(s) to zip on command line.")
+    print()
+    print("w+ = web version as well as regular version. You can use proj-w or w-proj for only the web version of a project.")
+    print()
+    print("c/ce/e = open config file for editing")
+    print("v = verbose")
+    print()
     print("b = build before zipping")
     print("bby/ybb bbn/nbb = bail on first build error, or not")
     print("bcy/ybc bcn/nbc = bail on first cfg read error, or not")
-    print("c/ce/e = open config file for editing")
     print("cd = copies to dropbox after")
     print("cl/clo = copy link/copy link only")
-    print("v = verbose")
-    print("w+ = web version as well as regular version")
     print("x = extract after, xo/ox = extract only")
-    print("specify project(s) to zip on command line")
-    exit()
+    sys.exit()
 
 def date_version_stamp(my_string, my_version):
     if stamp_binaries:
