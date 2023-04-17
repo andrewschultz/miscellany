@@ -228,6 +228,7 @@ def read_zup_txt():
     current_file = ''
     to_base_dir = ''
     release_replace_yet = False
+    string_with_replacements_found = False
     cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -241,8 +242,11 @@ def read_zup_txt():
                     file_to_dir = ''
                     to_base_dir = ''
                     release_replace_yet = False
+                    string_with_replacements_found = False
                 continue
             if line.startswith("$"):
+                if string_with_replacements_found:
+                    flag_cfg_error(line_count, "Line {} defines strings, but the project already uses strings. Move lines formatted $X$=Y to the top.".format(line_count))
                 if '=' not in line:
                     flag_cfg_error(line_count, "= needed in string definition")
                     continue
@@ -256,6 +260,7 @@ def read_zup_txt():
                 line = line.replace('%', zups[proj_candidate].version)
                 release_replace_yet = True
             if '$' in line:
+                string_with_replacements_found = True
                 for x in re.findall("\$.*\$", line):
                     if x not in cfg_string_table:
                         flag_cfg_error(line_count, "Invalid $...$ {} referenced".format(x))
