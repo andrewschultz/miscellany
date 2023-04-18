@@ -487,11 +487,12 @@ while cmd_count < len(sys.argv):
         project_array.append(arg)
         cmd_count += 1
         continue
-    elif arg.startswith('w+') or arg.startswith('+'):
-        my_proj = project_or_beta_name(re.sub("^.*?\+", "", arg), False)
-        project_array.append(my_proj)
+    elif arg.startswith('w+') or arg.startswith('+') or arg.startswith("w-"):
+        temp = re.sub("^.*?[-+]", "", arg)
+        my_proj = project_or_beta_name(temp, False)
+        if "+" in arg:
+            project_array.append(my_proj)
         project_array.append(my_proj + '-w')
-        print(project_array)
         cmd_count += 1
         continue
     arg = mt.nohy(sys.argv[cmd_count])
