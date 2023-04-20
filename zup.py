@@ -609,7 +609,7 @@ for p in project_array:
         is_beta = p.endswith("-b")
         p2 = p[:-2] if zups[p].build_type == "b" else p
         tempcmd = "icl.py {} {}".format(zups[p].build_type, p2)
-    final_zip_file = os.path.join(zip_dir, zups[p].out_name)
+    final_zip_file = os.path.normpath(os.path.join(zip_dir, zups[p].out_name))
     init_zip_file = final_zip_file if skip_temp_out else out_temp
     zip = zipfile.ZipFile(init_zip_file, 'w')
     if p not in zups:
@@ -631,9 +631,16 @@ for p in project_array:
         flag_zip_build_error(colorama.Fore.CYAN + "ARCHIVE OVER MAX SIZE {} {} > {}".format(final_zip_file, zip_size, zups[p].max_zip_size) + colorama.Style.RESET_ALL)
     if zip_size < zups[p].min_zip_size:
         flag_zip_build_error(colorama.Fore.CYAN + "ARCHIVE UNDER MIN SIZE {} {} < {}".format(final_zip_file, zip_size, zups[p].min_zip_size) + colorama.Style.RESET_ALL)
+    notify_success = True
     if not skip_temp_out:
-        shutil.move(out_temp, final_zip_file)
-    print(colorama.Fore.GREEN + "    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p) + colorama.Style.RESET_ALL)
+        if os.path.exists(final_zip_file) and filecmp.cmp(out_temp, final_zip_file):
+            mt.warn("New version of {} created is the same as the old one. Temp file deleted.".format(final_zip_file))
+            notify_success = False
+            os.remove(out_temp)
+        else:
+            shutil.move(out_temp, final_zip_file)
+    if notify_success:
+        print(colorama.Fore.GREEN + "    SUCCESSFULLY wrote {} from {}.".format(final_zip_file, p) + colorama.Style.RESET_ALL)
     if zups[p].butler_dir:
         for x in zups[p].butler_files:
             shutil.copy(x, os.path.join(zups[p].butler_dir, os.path.basename(x)))
