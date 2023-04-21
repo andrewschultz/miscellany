@@ -102,6 +102,8 @@ def date_version_stamp(my_string, my_version):
         my_string = re.sub("-?[\^%@]", "", my_string)
     my_string = my_string.replace("%", my_version)
     my_string = my_string.replace("@", this_date)
+    my_string = my_string.replace(' .', '.')
+    my_string = my_string.replace('-.', '.')
     return my_string
 
 def open_zips():
