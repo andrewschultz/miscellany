@@ -128,7 +128,11 @@ while cmd_count < len(sys.argv):
 if not param_project:
     param_project = i7.dir2proj()
     if not param_project:
-        sys.exit("Could not get project from current directory or not find one from the command line.")
+        x = os.getcwd()
+        if 'beta' in x.lower():
+            param_project = 'beta'
+        else:
+            sys.exit("Could not get project from current directory or find one from the command line.")
 
 i7.go_proj(param_project, materials=True)
 
