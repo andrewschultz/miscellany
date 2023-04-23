@@ -23,12 +23,14 @@ def usage():
     print("-o = bail once over # lines (no space)")
     exit()
 
-def found_todo_text(ll):
+def found_todo_text(ll, simple_search = False):
+    if simple_search:
+        return '??' in ll
     if re.search("\[[^\]]*(\?\?|\btodo).*\]", ll): return True
     if re.search("too-generic", ll) and "\t" not in ll: return True
     return False
 
-def file_hunt(x):
+def file_hunt(x, simple_search = False):
     # print("HUNTING TODOS in", x)
     bad_lines = []
     any_yet = False
@@ -36,7 +38,7 @@ def file_hunt(x):
     with open(x) as file:
         for (line_count, line) in enumerate(file, 1):
             ll = line.lower()
-            if found_todo_text(ll):
+            if found_todo_text(ll, simple_search = simple_search):
                 if max_line and line_count > max_line:
                     if verbose: print("Ignoring match above line", max_line, "at line", line_count, ":", line.strip())
                     ignored.append(line_count)
