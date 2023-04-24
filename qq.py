@@ -149,6 +149,9 @@ if len(sys.argv) > 1:
             searchables.append(i7.i7x[ll])
         elif ll in i7.i7x.values():
             searchables.append(ll)
+        elif os.path.exists(ll):
+            file_hunt(ll, simple_search = True)
+            sys.exit()
         else:
             print("WARNING!", ll, "is not in i7x.keys.")
         count += 1
