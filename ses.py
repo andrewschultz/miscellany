@@ -26,6 +26,7 @@ file_name = mt.np_xml
 
 dfiles = []
 
+recents = 0
 totals = 0
 unnamed = 0
 named = 0
@@ -175,11 +176,14 @@ if open_wildcard:
 
 for elem in e.iter('File'):
     t = elem.get('filename')
+    totals += 1
     if t.startswith('new '):
         base_name = t
         long_name = elem.get('backupFilePath')
         if not os.path.exists(long_name):
             print("You may have recently deleted {}/{}, so I am skipping it.".format(t, long_name))
+            totals -= 1
+            recents += 1
             continue
         unnamed += 1
         timestamp = re.sub(".*@", "", long_name)
@@ -232,7 +236,7 @@ if len(slink):
     for y in sorted(slink):
         print("    " + y)
 
-print(link_warnings, "link warnings", unnamed, "unnamed/new files", named, "standard files", totals, "total tabs open in Notepad")
+print("{} unnamed/\"new ###\" files, {} standard files ({} link warnings), {} possibly recently tweaked files, {}{} total files".format(unnamed, named, link_warnings, recents, '' if not recents else '{}/'.format(totals-recents), totals))
 
 if open_in_browser:
     sys.stdout.close()
