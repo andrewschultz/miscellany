@@ -26,6 +26,7 @@ file_name = mt.np_xml
 
 dfiles = []
 
+orphans = defaultdict(int)
 recents = 0
 totals = 0
 unnamed = 0
@@ -192,7 +193,12 @@ for elem in e.iter('File'):
         continue
     else:
         named += 1
-    q = os.path.realpath(t).lower()
+    if '\\' in t or '//' in t:
+        q = os.path.realpath(t).lower()
+    else:
+        mt.warn("No path for {}. It must be an orphan. I will not try to guess its path.".format(t))
+        orphans[t] += 1
+        continue
     if q in slink:
         link_warnings += 1
         print("LINK WARNING: {} file and symbolic link both in notepad:".format(link_warnings))
@@ -236,7 +242,7 @@ if len(slink):
     for y in sorted(slink):
         print("    " + y)
 
-print("{} unnamed/\"new ###\" files, {} standard files ({} link warnings), {} possibly recently tweaked files, {}{} total files".format(unnamed, named, link_warnings, recents, '' if not recents else '{}/'.format(totals-recents), totals))
+print("{}/{} orphan file names/total files, {} unnamed/\"new ###\" files, {} standard files ({} link warnings), {} possibly recently tweaked files, {}{} total files".format(len(orphans), sum(orphans.values()), unnamed, named, link_warnings, recents, '' if not recents else '{}/'.format(totals-recents), totals))
 
 if open_in_browser:
     sys.stdout.close()
