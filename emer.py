@@ -5,6 +5,12 @@
 # * account for weeklies
 # * allow copying over
 # * delete old copies
+# * delete wildcard
+# * delete/open most recent
+#
+# main usage:
+# emer.py nps (back up notepad file, daily)
+# emer.py da (back up daily file)
 
 import sys
 import os
@@ -24,6 +30,12 @@ find_daily = False
 
 cfg_file = "c:\\writing\\scripts\\emer.txt"
 
+def usage(heading="Basic EMER.PY usage"):
+    print("Emer.py cannot be run without an argument.")
+    print("Emer.py da copies over the daily file.")
+    print("Emer.py nps copies over the notepad sessions file.")
+    sys.exit()
+
 with open(cfg_file) as file:
     for (line_count, line) in enumerate (file, 1):
         a = line.strip().split("\t")
@@ -42,12 +54,16 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg == 'da':
         find_daily = True
-    if arg == 'e':
+    elif arg == 'e':
         mt.open(cfg_file)
     elif arg in shortcuts:
         if my_short:
             sys.exit("Can only backup one file at a time.")
         my_short = arg
+    elif arg == '?':
+        usage('BRIEF USAGE')
+    else:
+        usage('UNKNOWN COMMAND LINE ARGUMENT{}'.format(arg))
     cmd_count += 1
 
 if find_daily:
