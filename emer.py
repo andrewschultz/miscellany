@@ -28,6 +28,7 @@ my_short = ''
 
 find_daily = False
 
+emergency_dir = "c:\\writing\\emergency"
 cfg_file = "c:\\writing\\scripts\\emer.txt"
 
 def usage(heading="Basic EMER.PY usage"):
@@ -87,7 +88,7 @@ else:
 a = fb.rsplit('.', 1)
 a[0] = '{}-{}'.format(a[0], t.format(format_string))
 out_file = '.'.join(a)
-out_file = os.path.normpath(os.path.join('c:/writing/emergency', out_file))
+out_file = os.path.normpath(os.path.join(emergency_dir, out_file))
 
 if os.path.exists(out_file):
     mt.bailfail(out_file, "already exists. Not copying over.")
