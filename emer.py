@@ -14,10 +14,13 @@
 
 import sys
 import os
+import re
 import pendulum
 from collections import defaultdict
 from shutil import copy
 import mytools as mt
+import glob
+import time
 
 type_of = defaultdict(str)
 shortcuts = defaultdict(str)
@@ -30,11 +33,40 @@ find_daily = False
 
 emergency_dir = "c:\\writing\\emergency"
 cfg_file = "c:\\writing\\scripts\\emer.txt"
+delete_days = 14
+delete_files = False
 
 def usage(heading="Basic EMER.PY usage"):
     print("Emer.py cannot be run without an argument.")
     print("Emer.py da copies over the daily file.")
     print("Emer.py nps copies over the notepad sessions file.")
+    sys.exit()
+
+def delete_old_files(short_to_delete, days_back):
+    deleted_files = 0
+    this_time = time.time()
+    base_file = os.path.basename(shortcuts[short_to_delete])
+    base_file_array = base_file.split('.', -1)
+    base_search_string = base_file_array[0] + "-"
+    glob_string = os.path.join(emergency_dir, base_search_string + "*")
+    regex_search_string = base_search_string + "[0-9]{4}(-[0-9]{2})+"
+    if len(base_file_array) > 1:
+        regex_search_string += "\." + base_file_array[1]
+    regex_search_string = '^{}$'.format(regex_search_string)
+    g = glob.glob(glob_string)
+    g0 = [x for x in g if re.search(regex_search_string, os.path.basename(x))]
+    for f in g0:
+        f = os.path.join(emergency_dir, f)
+        my_time = os.stat(f).st_mtime
+        delta = (this_time - my_time) / 86400
+        if delta > days_back:
+            print("Deleting {} as it is {:.2f} days back, above the threshold of {}.".format(f, delta, days_back))
+            os.remove(f)
+            deleted_files += 1
+    if deleted_files:
+        mt.okay("Deleted {} file{}.".format(deleted_files, mt.plur(deleted_files)))
+    else:
+        mt.warn("Deleted no files.")
     sys.exit()
 
 with open(cfg_file) as file:
@@ -53,7 +85,14 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
-    if arg == 'da':
+    if arg == 'd':
+        sys.exit("You need to tell how many days back to delete after d.")
+    elif arg[0] == 'd' and arg[1:].isdigit():
+        delete_files = True
+        delete_days = int(arg[1:])
+        if delete_days == 0:
+            sys.exit("Deletion must be at least one day back.")
+    elif arg == 'da':
         find_daily = True
     elif arg == 'e':
         mt.open(cfg_file)
@@ -66,6 +105,9 @@ while cmd_count < len(sys.argv):
     else:
         usage('UNKNOWN COMMAND LINE ARGUMENT{}'.format(arg))
     cmd_count += 1
+
+if delete_files:
+    delete_old_files(my_short, delete_days)
 
 if find_daily:
     my_type = 'h'
