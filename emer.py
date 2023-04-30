@@ -35,6 +35,7 @@ emergency_dir = "c:\\writing\\emergency"
 cfg_file = "c:\\writing\\scripts\\emer.txt"
 delete_days = 14
 delete_files = False
+test_mode = False
 
 def usage(heading="Basic EMER.PY usage"):
     print("Emer.py cannot be run without an argument.")
@@ -42,7 +43,7 @@ def usage(heading="Basic EMER.PY usage"):
     print("Emer.py nps copies over the notepad sessions file.")
     sys.exit()
 
-def delete_old_files(short_to_delete, days_back):
+def delete_old_files(short_to_delete, days_back, test_mode = False):
     deleted_files = 0
     this_time = time.time()
     base_file = os.path.basename(shortcuts[short_to_delete])
@@ -61,10 +62,13 @@ def delete_old_files(short_to_delete, days_back):
         delta = (this_time - my_time) / 86400
         if delta > days_back:
             print("Deleting {} as it is {:.2f} days back, above the threshold of {}.".format(f, delta, days_back))
-            os.remove(f)
+            if not test_mode:
+                os.remove(f)
             deleted_files += 1
     if deleted_files:
         mt.okay("Deleted {} file{}.".format(deleted_files, mt.plur(deleted_files)))
+        if test_mode:
+            mt.fail("Not really. You need to set the test_mode flag. I assume this is just testing a new feature.")
     else:
         mt.warn("Deleted no files.")
     sys.exit()
@@ -96,6 +100,8 @@ while cmd_count < len(sys.argv):
         find_daily = True
     elif arg == 'e':
         mt.open(cfg_file)
+    elif arg == 't':
+        test_mode = True
     elif arg in shortcuts:
         if my_short:
             sys.exit("Can only backup one file at a time.")
@@ -107,7 +113,7 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if delete_files:
-    delete_old_files(my_short, delete_days)
+    delete_old_files(my_short, delete_days, test_mode = test_mode)
 
 if find_daily:
     my_type = 'h'
