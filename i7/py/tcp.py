@@ -9,6 +9,7 @@ import pyperclip
 temp_file = "c:\\writing\\temp\\from_webpage_transcript.txt"
 
 max_width = 100
+breaks_after = 5
 
 x = pyperclip.paste()
 ary = x.split("\r\n")
@@ -16,6 +17,7 @@ ary = x.split("\r\n")
 def spacing_stuff(word_array, our_max_width):
     this_line = ''
     big_string = ''
+    break_counter = 0
     for w in word_array:
         if not len(this_line):
             this_line = w
@@ -24,6 +26,10 @@ def spacing_stuff(word_array, our_max_width):
                 this_line += " " + w
             else:
                 big_string += this_line + "\n"
+                break_counter += 1
+                if break_counter == breaks_after:
+                    break_counter = 0
+                    big_string += "\n"
                 this_line = w
     if this_line:
         big_string += this_line
