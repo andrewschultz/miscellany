@@ -3,6 +3,7 @@
 #
 
 import os
+import sys
 import re
 import pyperclip
 
@@ -38,6 +39,21 @@ def spacing_stuff(word_array, our_max_width):
 def is_time_marker(my_string):
     x = my_string.strip()
     return re.search("[0-9]+:[0-9]+", x)
+
+cmd_count = 1
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count]
+    if arg.isdigit():
+        max_width = int(arg)
+    elif (arg.replace('b', '').isdigit()):
+        my_num = int(arg.replace('b', ''))
+        breaks_after = my_num
+    elif (arg.replace('w', '').isdigit()):
+        max_width = int(arg)
+        print("TRIVIA: You don't need a w before or after a number to establish width. It is chosen by default.")
+    else:
+        sys.exit("Need a # for max_width or #b/b# for carriage returns before extra break.")
+    cmd_count += 1
 
 transcript_next = False
 to_file = True
