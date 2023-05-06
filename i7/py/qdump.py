@@ -4,6 +4,7 @@ import sys
 import os
 import re
 import i7
+import mytools as mt
 
 ignored = [ 'trivial niceties', 'intro restore skip', 'old school verb total carnage', 'basic screen effects' ]
 
@@ -31,7 +32,13 @@ def file_from_source(my_line):
     start_title = ' '.join(a[1:b])
     author = ' '.join(a[b+1:])
     author = re.sub("\..*", "", author)
-    return "c:/program files (x86)/Inform 7/Inform7/Extensions/{}/{}.i7x".format(author, start_title)
+    try_1 = "c:/program files (x86)/Inform 7/Inform7/Extensions/{}/{}.i7x".format(author, start_title)
+    try_2 = "C:/Users/Andrew/Documents/inform/Extensions/{}/{}.i7x".format(author, start_title)
+    if os.path.exists(try_1):
+        return try_1
+    if os.path.exists(try_2):
+        return try_2
+    return ''
 
 def headers_of(my_file, already_counted):
     bname = os.path.basename(my_file)
@@ -49,6 +56,9 @@ def headers_of(my_file, already_counted):
             if ' by ' not in lls:
                 continue
             x = file_from_source(lls)
+            if not x:
+                mt.fail("Skipping line", lls)
+                continue
             if x not in already_counted and x not in ignored:
                 this_set.add(x)
                 this_set = this_set | headers_of(x, already_counted)
