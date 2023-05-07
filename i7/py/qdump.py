@@ -1,4 +1,12 @@
+#
 # qdump.py: quoted text dump from inform game source.
+#
+# alternate names: quick text dump, quick quote dump.
+#
+# arguments: qdump.py (project or abbreviation)
+#
+# to do: cfg file to spin off ignored?
+#        optionally get rid of line count?
 
 import sys
 import os
@@ -6,7 +14,7 @@ import re
 import i7
 import mytools as mt
 
-ignored = [ 'trivial niceties', 'intro restore skip', 'old school verb total carnage', 'basic screen effects' ]
+ignored = [ 'trivial niceties', 'intro restore skip', 'old school verb total carnage', 'basic screen effects', 'property checking' ]
 
 global_include = set()
 
