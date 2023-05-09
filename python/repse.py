@@ -12,8 +12,28 @@ import sys
 
 default_in = 'st'
 default_out = 'b'
+my_in = ''
+my_out = ''
 
 from collections import defaultdict
+
+cmd_count = 1
+
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count].lower()
+    if ',' in arg:
+        a = arg.split(',')
+        if len(a) != 2:
+            sys.exit("CSVs need 2 arguments.")
+        (my_in, my_out) = (a[0], a[1])
+    cmd_count += 1
+
+if not my_in or not my_out:
+    print("Forgot to define defaults.")
+    if not my_in:
+        my_in = default_in
+    if not my_out:
+        my_out = default_out
 
 words_by_length = defaultdict(set)
 
