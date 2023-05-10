@@ -19,6 +19,9 @@ from collections import defaultdict
 
 cmd_count = 1
 
+search_end = False
+search_start = True
+
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
     if ',' in arg:
@@ -26,6 +29,14 @@ while cmd_count < len(sys.argv):
         if len(a) != 2:
             sys.exit("CSVs need 2 arguments.")
         (my_in, my_out) = (a[0], a[1])
+    elif arg == 'e':
+        search_end = True
+        search_start = False
+    elif arg == 's':
+        search_start = True
+        search_end = False
+    elif arg in ( 'b', 'es', 'se' ):
+        search_end = search_start = True
     cmd_count += 1
 
 if not my_in or not my_out:
@@ -53,7 +64,13 @@ for y in the_range:
     if z not in the_range:
         continue
     for w in wbl[y]:
-        if w.endswith(default_in):
-            w0 = w.replace(default_in, default_out, -1)
-            if w0 in wbl[z]:
-                print(w, w0)
+        if search_end:
+            if w.endswith(default_in):
+                w0 = w.replace(default_in, default_out, -1)
+                if w0 in wbl[z]:
+                    print(w, w0)
+        if search_start:
+            if w.startswith(default_in):
+                w0 = w.replace(default_in, default_out, 1)
+                if w0 in wbl[z]:
+                    print(w, w0)
