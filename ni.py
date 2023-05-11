@@ -19,6 +19,7 @@ from shutil import move
 
 to_project = i7.dir2proj()
 
+materials_subdir = False
 force_batch_move = False
 source_opened = False
 get_main_source = False
@@ -41,9 +42,16 @@ def usage(header="Generic usage writeup"):
     mt.warn("Examples of usage:")
     print("ni t opens the source file in the current directory.")
     print("ni vf ta opens up VVFF's tables.")
+    print("ni m opens up materials directory.")
     print()
     print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
     sys.exit()
+
+def write_chdir_batch_file(my_chdir):
+    f = open(temp_batch_file, "w")
+    f.write("@echo off\n\n")
+    f.write("cd {}\n".format(my_chdir))
+    f.close()
 
 def read_special_commands():
     with open(ni_cfg) as file:
@@ -81,6 +89,8 @@ while cmd_count < len(sys.argv):
         get_main_source = True
     elif arg == '-':
         force_batch_move = True
+    elif arg == 'm':
+        materials_subdir = True
     elif arg == 'no':
         get_notes = True
     elif arg in ( 'd', 'dtf', 'dt', 'tfd', 'td' ):
@@ -171,8 +181,4 @@ if os.path.exists(temp_batch_file):
 if (not force_batch_move) and source_opened:
     sys.exit()
 
-f = open(temp_batch_file, "w")
-f.write("@echo off\n\n")
-f.write("cd {}\n".format(i7.proj2dir(to_project, to_github = goto_github)))
-f.close()
-
+write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github, materials = materials_subdir))
