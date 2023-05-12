@@ -15,7 +15,7 @@ import os
 from collections import defaultdict
 import mytools as mt
 import i7
-from shutil import move
+from shutil import move, copy
 
 to_project = i7.dir2proj()
 
@@ -46,6 +46,14 @@ def usage(header="Generic usage writeup"):
     print()
     print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
     sys.exit()
+
+def back_up_existing_temp(keep_original = False):
+    if not os.path.exists(temp_batch_file):
+        return
+    if keep_original:
+        copy(temp_batch_file, temp_batch_file_backup)
+    else:
+        move(temp_batch_file, temp_batch_file_backup)
 
 def write_chdir_batch_file(my_chdir):
     f = open(temp_batch_file, "w")
@@ -175,8 +183,7 @@ for h in hfx_ary:
                 mt.npo(umbrella_file)
         mt.bailfail("Could not open {}.".format(this_file))
 
-if os.path.exists(temp_batch_file):
-    move(temp_batch_file, temp_batch_file_backup)
+back_up_existing_temp()
 
 if (not force_batch_move) and source_opened:
     sys.exit()
