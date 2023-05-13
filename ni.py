@@ -65,8 +65,12 @@ def read_special_commands():
     with open(ni_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             l = line.lower().strip()
-            if '~' not in l:
-                continue
+            if '=' not in l:
+                if '~' in l:
+                    mt.warn("Line {} should have = not ~. Replacing.")
+                    l = l.replace('~', '-', 1)
+                else:
+                    continue
             a1 = l.split('=')
             if len(a1) > 2:
                 mt.warn("WARNING line {} has >1 =.".format(len(a1)))
@@ -107,6 +111,8 @@ while cmd_count < len(sys.argv):
         else:
             mt.failbail("No {} to delete.".format(temp_batch_file))
         mt.bailokay("{} deleted.".format(temp_batch_file))
+    elif arg in ( 'c', 'e' ):
+        mt.npo(ni_cfg)
     elif arg in ( 'o', 'otf', 'ot', 'otf', 'tfo', 'to' ):
         if os.path.exists(temp_batch_file):
             mt.okay("Opening temp batch file {}.".format(temp_batch_file))
