@@ -95,8 +95,6 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg == 'gh':
         goto_github = True
-    elif arg in ('ggl', 'gglo'):
-        mt.npo(i7.gloco)
     elif arg == 't':
         get_main_source = True
     elif arg == '-':
@@ -147,13 +145,18 @@ while cmd_count < len(sys.argv):
         usage("Bad parameter {}.".format(arg))
     cmd_count += 1
 
+if 'glo' in hfx_ary:
+    mt.warn("Just a general note that for the global general file, you use {}.".format(' or '.join([m for m in map_to if 'gloco' in map_to[m]])))
+
 if user_project:
     to_project = user_project
 elif not to_project:
-    if 'glo' in hfx_ary:
-        mt.warn("Since global headers were in the array, I'm opening the general GLOCO file.")
-        mt.npo(i7.gloco)
-    mt.bailfail("Could not find project to act on.")
+    if i7.curdef:
+        mt.warn("Going with default project from i7.txt, {}.".format(i7.curdef))
+        to_project = i7.curdef
+    else:
+        back_up_existing_temp()
+        mt.bailfail("Could not find project to act on.")
 
 if get_main_source:
     main_source = i7.main_src(to_project)
