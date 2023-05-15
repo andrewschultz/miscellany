@@ -140,7 +140,15 @@ while cmd_count < len(sys.argv):
         user_project = arg
     elif arg in map_to:
         mt.warn(arg, "is in the map_to file, but it's safest to prefix it with s=.")
-        mt.npo(map_to[temp])
+        m = map_to[arg]
+        if os.path.isfile(m):
+            mt.npo(map_to[arg])
+        elif os.path.isdir(m):
+            write_chdir_batch_file(m)
+            sys.exit()
+        else:
+            mt.fail(m, "is not a valid file or directory. You may need to fix the CFG file.")
+            mt.npo(ni_cfg)
     else:
         usage("Bad parameter {}.".format(arg))
     cmd_count += 1
