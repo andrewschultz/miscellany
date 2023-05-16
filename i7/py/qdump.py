@@ -18,6 +18,8 @@ ignored = [ 'trivial niceties', 'intro restore skip', 'old school verb total car
 
 global_include = set()
 
+show_lines = False
+
 def print_quotes_of(my_file):
     print("Printing quotes for", my_file)
     with open(my_file) as file:
@@ -27,7 +29,10 @@ def print_quotes_of(my_file):
             x = line.lower().split('"')
             text_raw = ' '.join(x[1::2])
             text_raw = re.sub("\[.*.]", " ", text_raw)
-            print(line_count, text_raw)
+            if show_lines:
+                print(line_count, text_raw)
+            else:
+                print(text_raw)
 
 def file_from_source(my_line):
     #print("Sourcing", my_line)
@@ -84,7 +89,12 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
-    project_specified = arg
+    if arg in ( 's', 'l', 'sl', 'ls' ):
+        show_lines = True
+    elif mt.alfmatch('nl', arg) or mt.alfmatch('ns', arg) or mt.alfmatch('nsl', arg):
+        show_lines = False
+    else:
+        project_specified = arg
     cmd_count += 1
 
 if project_specified:
