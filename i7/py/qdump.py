@@ -53,13 +53,16 @@ def file_from_source(my_line):
         return try_2
     return ''
 
-def headers_of(my_file, already_counted):
-    bname = os.path.basename(my_file)
+def short_look(file_name):
+    return os.path.basename(file_name.lower()).replace('.i7x', '')
+
+def headers_of(my_file):
     if my_file in global_include:
         return set()
-    if bname in ignored:
-        return set()
     global_include.add(my_file)
+    base_match = short_look(my_file)
+    if base_match in ignored:
+        return set()
     this_set = set()
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -72,15 +75,16 @@ def headers_of(my_file, already_counted):
             if not x:
                 mt.fail("Skipping line", lls)
                 continue
-            if x not in already_counted and x not in ignored:
+            x_match = short_look(x)
+            if x not in global_include and x_match not in ignored:
                 this_set.add(x)
-                this_set = this_set | headers_of(x, already_counted)
+                this_set = this_set | headers_of(x)
     return this_set
 
 def main_and_headers(file_names):
     new_set = set()
     for f in file_names:
-        new_set = new_set | (headers_of(f, new_set))
+        new_set = new_set | headers_of(f)
     return new_set
 
 project_specified = ''
