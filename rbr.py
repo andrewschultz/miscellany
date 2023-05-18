@@ -128,6 +128,27 @@ def can_make_rbr(x, verbose = False):
         return x + ".txt" # small but real possibility there may be something like vv.txt which would mess things up
     return ""
 
+def make_new_reg(this_file, overwrite = False):
+    this_proj = i7.dir2proj(to_abbrev = True)
+    local_file_name = "reg-{}-{}.txt".format(this_proj, this_file)
+    github_file_name = "{}\\Testing\\standalone\\{}".format(i7.proj2dir(this_proj, to_github = True), local_file_name)
+    print("Opening", local_file_name)
+    print("Opening", github_file_name)
+    if os.path.exists(github_file_name):
+        if overwrite:
+            mt.warn("Overwriting", github_file_name)
+        else:
+            mt.warn(github_file_name, "exists. Skipping. Use -o to overwrite.")
+            return
+    f = open(github_file_name, "w")
+    f.write("## reg-wp-lone-warpon.txt\n\
+** game: /home/andrew/prt/debug-{}.z8\n\
+** interpreter: /home/andrew/prt/dfrotz -m -w5000 -h25\n\n\
+* main\n\n".format(i7.dir2proj()))
+    f.close()
+    mt.npo(github_file_name)
+    sys.exit()
+
 def no_new_branch_edits(x):
     return False
 
@@ -1386,6 +1407,14 @@ while count < len(sys.argv):
     elif arg[:2] in ( 'wc', 'cw' ) and arg[2:].isdigit():
         wrong_check = True
         ignore_wrong_before = int(arg[2:])
+    elif arg.startswith('m:') or arg.startswith('m='):
+        for a in arg[2:].split(','):
+            make_new_reg(arg[2:], overwrite = False)
+        sys.exit()
+    elif arg.startswith('mo:') or arg.startswith('mo='):
+        for a in arg[3:].split(','):
+            make_new_reg(arg[3:], overwrite = True)
+        sys.exit()
     elif arg[:2] == 'sl': start_line = int(arg[2:])
     elif arg[:3] == 'sc:': start_command = arg[3:].replace('-', ' ')
     elif arg in ( 'wcn', 'nwc', 'nw', 'wn'): wrong_check = False
