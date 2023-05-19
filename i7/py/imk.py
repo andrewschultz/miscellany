@@ -224,12 +224,14 @@ f.close()
 print("Running link command", link_command)
 
 try:
+    if os.path.exists(orig_file):
+        os.remove(orig_file)
     os.symlink(github_file, orig_file)
-    print("Linking from {} to {} was successful.".format(orig_file, github_file))
+    mt.okay("Linking from {} to {} was successful.".format(orig_file, github_file))
 except:
-    print("Linking from {} to {} was unsuccessful.".format(orig_file, github_file))
+    mt.fail("Linking from {} to {} was unsuccessful.".format(orig_file, github_file))
     print("Run this command from a prompt with administrative rights:")
-    print(link_command)
+    mt.warn(link_command)
 
 if open_post_conversion:
     mt.npo(github_file, bail=False)
