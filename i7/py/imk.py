@@ -139,11 +139,10 @@ while count < len(sys.argv):
         if to_create:
             sys.exit("You can't create more than one file per run. Run with ? or no arguments to see what works.")
         if ',' not in arg:
-            if count == 1:
-                to_create = sys.argv[1:]
-                break
+            to_create = sys.argv[count:]
+            break
         else:
-            to_create = sys.argv[1].split(',')
+            to_create = sys.argv[count].split(',')
     count += 1
 
 this_proj = i7.dir2proj()
