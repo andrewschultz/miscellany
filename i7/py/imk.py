@@ -67,6 +67,31 @@ def has_default_text(x):
                     return 0
     return 0
 
+def write_up_file(my_file_name, my_header_type = ''):
+
+    now = datetime.datetime.now()
+    base_file = os.path.basename(my_file_name)
+    base_file_noxt = re.sub("\..*", "", base_file)
+
+    try:
+        f = open(my_file_name, "w")
+    except:
+        print(colorama.Fore.RED + "You may not have created a GitHub directory to place this new file. Run these commands:" + mt.WTXT)
+        print(colorama.Fore.RED + "cd \\users\\andrew\\documents\\github" + mt.WTXT)
+        print(colorama.Fore.RED + "git clone https://github.com/andrewschultz/{}".format(i7.i7x[to_create[0]]) + mt.WTXT)
+        sys.exit()
+
+    if my_header_type:
+        definition_quote = my_quotes[my_header_type].format(i7.long_name(to_create[0]).replace('-', ' ').title())
+    else:
+        definition_quote = "This is a specially created header file, so I'll have to rewrite this to detail what it actually does."
+
+    f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"{}\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth.title(), definition_quote))
+    f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
+    f.close()
+
+    print(my_file_name, "written successfully.")
+
 def default_search(max_files = 5):
     extras = []
     cur_files = 0
@@ -147,13 +172,27 @@ while count < len(sys.argv):
 
 this_proj = i7.dir2proj()
 
+# this could be changed up so that we detect a space anywhere and also leave a github file
+
 if len(to_create) == 1:
-    intended_out = os.path.exists(i7.hdr(this_proj, to_create[1]))
+    if ' ' in to_create[0]:
+        if to_create[0].endswith('.i7x'):
+            mt.warn("No need for extension!")
+        elif '.' in to_create[0]:
+            mt.bailfail("Periods aren't allowed in the file name.")
+        else:
+            to_create[0] += '.i7x'
+        full_file = os.path.join(i7.extdir, to_create[0])
+        print("Forcing file name", full_file)
+        write_up_file(full_file)
+        mt.npo(full_file)
+        sys.exit()
+    intended_out = i7.hdr(this_proj, to_create[0])
     if os.path.exists(intended_out):
-        sys.exit("The intended output file already exists, and besides, you forgot to specify the project, too. Add a project of {}.".format(i7.dir2proj(to_abbrev = True)))
+        mt.bailfail("The intended output file {} already exists. Also, you forgot to specify the project, too, and I'm extra cautious about adding new files. Add a project of {} and change the header.".format(intended_out, i7.dir2proj(to_abbrev = True)))
     if intended_out:
-        sys.exit("Creating a new include file is a rare enough occurrence, we want to specify the project. The implicit one from this directory is {}.".format(i7.dir2proj(to_abbrev = True)))
-    sys.exit("Could not find a valid project/header combination. Bailing.")
+        mt.bailfail("Creating a new include file such as {} is a rare enough occurrence, we want to specify the project. The implicit one from this directory is {}, so you'll want to add it.".format(intended_out, i7.dir2proj(to_abbrev = True)))
+    mt.bailfail("Could not find a valid project/header combination. Bailing.")
 
 if len(to_create) < 2 or len(to_create) > 3:
     sys.exit("You need to specify project, header, (optional other project directed to).")
@@ -196,29 +235,22 @@ if os.path.exists(orig_file) and not overwrite:
 
 if os.path.exists(github_file) and not overwrite:
     if not open_post_conversion: sys.exit("With open post conversion set to off, there is nothing to do here. Bailing.")
+    if not os.path.exists(orig_file):
+        print("{} exists, but {} does not.".format(github_file, orig_file))
+        if reestablish_link:
+            os.symlink(github_file, orig_file)
+            mt.okaybail("Reestablished symlink!")
+        else:
+            mt.warnbail("    Run again with -re to reestablish symlink.")
     print(github_file, "exists. Opening and not creating. Use the -o flag to overwrite.")
     mt.npo(github_file)
+
+write_up_file(github_file, i7.i7hfx[to_create[1]] if to_create[1] in i7.i7hfx else to_create[1])
 
 if overwrite:
     print(github_file, "exists but overwriting.")
 else:
     print(github_file, "does not exist. Creating.")
-
-now = datetime.datetime.now()
-
-try:
-    f = open(github_file, "w")
-except:
-    print(colorama.Fore.RED + "You may not have created the GitHub directory to place this new file. Run these commands:" + mt.WTXT)
-    print(colorama.Fore.RED + "cd \\users\\andrew\\documents\\github" + mt.WTXT)
-    print(colorama.Fore.RED + "git clone https://github.com/andrewschultz/{}".format(i7.i7x[to_create[0]]) + mt.WTXT)
-    sys.exit()
-
-definition_quote = my_quotes[to_create[1]].format(i7.long_name(to_create[0]).replace('-', ' ').title())
-
-f.write("Version 1/{:02d}{:02d}{:02d} of {:s} by {:s} begins here.\n\n\"{}\"\n\n".format(now.year % 100, now.month, now.day, base_file_noxt, i7.auth, definition_quote))
-f.write("{:s} ends here.\n\n---- DOCUMENTATION ----\n".format(base_file_noxt))
-f.close()
 
 print("Running link command", link_command)
 
