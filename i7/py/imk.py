@@ -35,6 +35,7 @@ file_args = []
 to_clipboard = True
 overwrite = False
 open_post_conversion = True
+reestablish_link = False
 
 base_file_noxt = ""
 
@@ -45,6 +46,7 @@ def usage():
     print("-o / -f / -fo = overwrite file")
     print("-n / -on / -no = don't open post conversion. Default = open.")
     print("-ds / -sd = verify. Number after changes max files to open.")
+    print("-re = reestablish link.")
     sys.exit()
 
 def possible_mod(my_arg):
@@ -158,6 +160,8 @@ while count < len(sys.argv):
         sys.exit()
     elif arg[:2] in ('ds', 'sd') and arg[2:].isdigit():
         default_search(max_files = int(arg[2:]))
+    elif arg == 're':
+        reestablish_link = True
     elif arg == '?':
         usage()
     else:
