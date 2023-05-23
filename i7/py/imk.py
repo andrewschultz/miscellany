@@ -209,8 +209,8 @@ if len(to_create) == 2:
     print("Assuming project-to is project-from.")
     to_create.append(to_create[0])
 
-if to_create[1] not in my_quotes:
-    sys.exit("Edit imk.txt to add a to-create for {}.".format(to_create[1]))
+#if to_create[1] not in my_quotes:
+#    sys.exit("Edit imk.txt to add a to-create for {}.".format(to_create[1]))
 
 combos_and_projects = list(i7.i7x)
 combos_and_projects.extend(i7.i7com)
@@ -223,14 +223,13 @@ to_create = [possible_mod(x) for x in to_create]
 
 orig_file = i7.hdr(to_create[0], to_create[1])
 base_file = i7.hdr(to_create[0], to_create[1], base = True)
-base_file_noxt = re.sub("\..*", "", base_file)
 
 github_dir = i7.proj2dir(to_create[2], to_github = True)
-github_file = github_dir + "\\" + base_file
+github_file = os.path.normpath(github_dir + "\\" + base_file)
 link_command = "mklink \"{}\" \"{}\"".format(orig_file, github_file)
 
 if to_clipboard:
-    include_text = "include {} by Andrew Schultz.".format(base_file_noxt)
+    include_text = "include {} by Andrew Schultz.".format(re.sub("\...*", "", base_file))
     pyperclip.copy(include_text)
     print(colorama.Fore.GREEN + include_text + mt.WTXT, "sent to clipboard, but in the Inform IDE, you'll need a carriage return after.")
 
