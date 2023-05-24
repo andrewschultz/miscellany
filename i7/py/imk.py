@@ -136,7 +136,8 @@ with open(imk_cfg) as file:
         ary = line.strip().split('=', 1)
         if '"' in ary[1]:
             mt.warn("Replacing double quotes with single quotes in summary for {} header file type.".format(ary[0]))
-        my_quotes[ary[0]] = ary[1].replace('"', "'")
+        the_index = i7.i7hfx[ary[0]] if ary[0] in i7.i7hfx else ary[0]
+        my_quotes[the_index] = ary[1].replace('"', "'")
 
 if len(sys.argv) == 1:
     usage()
