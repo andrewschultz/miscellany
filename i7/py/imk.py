@@ -166,14 +166,14 @@ while count < len(sys.argv):
     elif arg == '?':
         usage()
     else:
-        if to_create:
-            sys.exit("You can't create more than one file per run. Run with ? or no arguments to see what works.")
         if ',' not in arg:
-            to_create = sys.argv[count:]
-            break
+            to_create.append(arg)
         else:
             to_create = sys.argv[count].split(',')
     count += 1
+
+if len(to_create) > 2:
+    sys.exit("Too many parameters: {}".format(', '.join(to_create)))
 
 this_proj = i7.dir2proj()
 
