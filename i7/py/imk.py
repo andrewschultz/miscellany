@@ -192,6 +192,8 @@ if len(to_create) == 1:
         write_up_file(full_file)
         mt.npo(full_file)
         sys.exit()
+    if to_create[0] not in i7.i7hfx and to_create[0] not in i7.i7hfxr:
+        mt.bailfail("{} is {}not a header. To define a custom file, use a string with spaces.".format(to_create[0], 'a project name but ' if to_create[0] in i7.i7xr or to_create[0] in i7.i7x else ''))
     intended_out = i7.hdr(this_proj, to_create[0])
     if os.path.exists(intended_out):
         mt.bailfail("The intended output file {} already exists. Also, you forgot to specify the project, too, and I'm extra cautious about adding new files. Add a project of {} and change the header.".format(intended_out, i7.dir2proj(to_abbrev = True)))
