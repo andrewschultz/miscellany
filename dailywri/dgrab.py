@@ -60,6 +60,7 @@ max_process = 0
 open_notes = 0
 days_before_ignore = 0 # this used to make sure we didn't hack into a current daily file, but now we have a processing subdirectory, we don't need that
 min_for_list = 0
+total_lines_moved = 0
 
 force_timestamp = False
 open_cluttered = False
@@ -554,6 +555,10 @@ def send_mapping(sect_name, file_name, change_files = False):
     g.write("Results of {} section dump from {} to {}:\n".format(sect_name, file_name, to_file))
     g.write(sect_text + "\n")
     g.close()
+    global total_lines_moved
+    total_lines_moved += sect_text.count("\n")
+    if sect_text.startswith("**"):
+        total_lines_moved -= 1
     if daily.where_to_insert[sect_name]:
         print("Specific insert token found for {:s}, inserting there in {:s}.".format(sect_name, to_file))
         write_next_blank = False
@@ -831,7 +836,7 @@ if list_it:
 if processed == 0:
     print("Could not find anything to process for {} in {}.".format(my_sect, dir_to_proc))
 else:
-    print("Processed", processed, "total file{}".format(mt.plur(processed)))
+    print("Processed", processed, "total file{}{}".format(mt.plur(processed), '' if processed == 1 else ", {} lines".format(total_lines_moved)))
 
 if len(change_list):
     print("{} File{} still to process, probably since we had a ceiling on the number to generate:".format(len(change_list), 's' if len(change_list) > 1 else ''), ', '.join(change_list))
