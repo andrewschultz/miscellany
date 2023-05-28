@@ -444,6 +444,7 @@ def send_mapping(sect_name, file_name, change_files = False):
     else:
         alt_section = ''
         alt_section_reject = False
+    last_line = ''
     alt_section_found = in_alt_section = False
     alt_lines = 0
     temp_time = os.stat(file_name)
@@ -491,7 +492,9 @@ def send_mapping(sect_name, file_name, change_files = False):
             elif re.search(my_reg_comment, lls):
                 sect_text += line
             else:
-                file_remain_text += line
+                if line.strip() or last_line.strip():
+                    file_remain_text += line
+                last_line = line
     if time_delta < days_before_ignore * 86400 and found_sect_name:
         print("Something was found, but time delta was not long enough for {:s}. It is {:d} and needs to be at least {:d}. Set with d(b)#.".format(file_name, int(time_delta), days_before_ignore * 86400))
         return 0
