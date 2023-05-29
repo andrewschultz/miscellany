@@ -229,79 +229,84 @@ def relevant_daily_glob(my_dir):
 def add_apostrophe(match):
     return match.group(1) + convert_apos_case(match.group(2)) + match.group(3)
 
-def check_apostrophes_in_file(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
+def check_apostrophes_in_file(my_file, first_find_message = ''):
     #apostrophe_regex = r"[^a-z']({})[^a-z']".format("|".join(list(apostrophe_check)))
     apostrophe_regex = r"(^|[^a-z'])({})($|[^a-z'])".format("|".join(list(apostrophe_check)))
     temp_apostrophe_file = "c:/writing/temp/dff-apostrophe.txt"
+    change_lines = []
+    apos_out = open(temp_apostrophe_file, "w")
+    subcount = 0
+    stt_lines = []
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            for x in set(re.findall(apostrophe_regex, line, re.IGNORECASE)):
+                if subcount == 0 and first_find_message:
+                    print(first_find_message)
+                subcount += 1
+                print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
+                line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
+                change_lines.append(line_count)
+            if force_speech_to_text and line != speech_to_text_minor_tweaks(line):
+                if subcount == 0 and first_find_message:
+                    print(first_find_message)
+                subcount += 1
+                stt_lines.append(str(line_count))
+                line = speech_to_text_minor_tweaks(line)
+            apos_out.write(line)
+    apos_out.close()
+    if cmp(my_file, temp_apostrophe_file):
+        return 0
+    mt.wm(my_file, temp_apostrophe_file)
+    old_size = os.stat(my_file).st_size
+    new_size = os.stat(temp_apostrophe_file).st_size
+    size_delta = new_size - old_size
+    print("Size delta: {} vs {} = {}.".format(old_size, new_size, size_delta))
+    if len(change_lines):
+        print('APOSTROPHES FLAGGED FOR CHANGE:', ', '.join(["{}: {}".format(change_lines.index(x) + 1, x) for x in change_lines]))
+    if len(stt_lines):
+        print('LINES WITH STT SPACING: {}'.format(', '.join(stt_lines)))
+    x = input("Copy back? (Y does, O doesn't but opens, Q quits, E edits = opens and quits, #/E# opens at a specific line, anything else is ignored)")
+    xl = x.strip().lower()
+    if not xl:
+        return len(change_lines)
+    if xl[0] == 'e':
+        if xl == 'e':
+            mt.npo(my_file, change_lines[0])
+        if xl.isdigit():
+            xl = xl[1:]
+    if xl.isdigit():
+        xd = int(x)
+        if xd in change_lines:
+            mt.npo(my_file, xd)
+        elif xd <= len(change_lines) and xd >= 0:
+            if xd > 0:
+                xd -= 1
+            mt.npo(my_file, change_lines[xd])
+    elif xl[0] == 'y':
+        copy(temp_apostrophe_file, my_file)
+    elif xl[0] == 'e':
+        if xl[1:].isdigit():
+            mt.npo(my_file, int(x1[1:]))
+    elif xl[0] == 'q':
+        sys.exit()
+    elif xl[0] == 'o':
+        mt.npo(my_file, change_lines[0], bail=False)
+    else:
+        print(colorama.Fore.YELLOW + xl + "ignored." + mt.WTXT)
+    return len(change_lines)
+
+def check_apostrophes_in_dir(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
     for di in dir_list:
         count = 0
         globdir = relevant_daily_glob(di)
+        lgd = len(globdir)
         print("Checking directory", di)
-        change_lines = []
         for f in globdir:
             if not re.search("[0-9]{8}\.txt$", f):
                 print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
                 continue
             count += 1
-            apos_out = open(temp_apostrophe_file, "w")
-            subcount = 0
-            speech_to_text_lines = 0
-            with open(f) as file:
-                for (line_count, line) in enumerate (file, 1):
-                    for x in set(re.findall(apostrophe_regex, line, re.IGNORECASE)):
-                        if subcount == 0:
-                            print(count, 'of', len(globdir), "Found apostrophes to add in", f)
-                        subcount += 1
-                        print("    ", subcount, line_count, x[1], "->", convert_apos_case(x[1]))
-                        line = re.sub(r"(^|[^a-z'])({})($|[^a-z'])".format(x[1]), add_apostrophe, line)
-                        change_lines.append(line_count)
-                    if line != speech_to_text_minor_tweaks(line):
-                        if not speech_to_text_lines:
-                            print(count, 'of', len(globdir), "Found speech-to-text spaces in", f)
-                        speech_to_text_lines += 1
-                        line = speech_to_text_minor_tweaks(line)
-                        change_lines.append(line_count)
-                    apos_out.write(line)
-            apos_out.close()
-            if speech_to_text_lines:
-                print(speech_to_text_lines, "speech-to-text lines with space concatenations in", f)
-                old_size = os.stat(f).st_size
-                new_size = os.stat(temp_apostrophe_file).st_size
-                size_delta = new_size - old_size
-                print("Size delta: {} vs {} = {}.".format(old_size, new_size, size_delta))
-            if cmp(f, temp_apostrophe_file):
-                continue
-            else:
-                mt.wm(f, temp_apostrophe_file)
-                print('FLAGGED FOR CHANGE:', ', '.join(["{}: {}".format(change_lines.index(x) + 1, x) for x in change_lines]))
-                x = input("Copy back? (Y does, O doesn't but opens, Q quits, E edits = opens and quits, #/E# opens at a specific line, anything else is ignored)")
-                xl = x.strip().lower()
-                if not xl:
-                    pass
-                if xl[0] == 'e':
-                    if xl == 'e':
-                        mt.npo(f, change_lines[0])
-                    if xl.isdigit():
-                        xl = xl[1:]
-                if xl.isdigit():
-                    xd = int(x)
-                    if xd in change_lines:
-                        mt.npo(f, xd)
-                    elif xd <= len(change_lines) and xd >= 0:
-                        if xd > 0:
-                            xd -= 1
-                        mt.npo(f, change_lines[xd])
-                elif xl[0] == 'y':
-                    copy(temp_apostrophe_file, f)
-                elif xl[0] == 'e':
-                    if xl[1:].isdigit():
-                        mt.npo(f, int(x1[1:]))
-                elif xl[0] == 'q':
-                    sys.exit()
-                elif xl[0] == 'o':
-                    mt.npo(f, change_line, bail=False)
-                else:
-                    print(colorama.Fore.YELLOW + xl + "ignored." + mt.WTXT)
+            check_apostrophes_in_file(f, first_find_message = "File {} of {} in glob found apostrophe/space tweak(s): {}".format(count, lgd, f))
     sys.exit()
 
 def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc" ], clipboard_msg = ''):
@@ -1576,9 +1581,9 @@ read_daily_cfg()
 read_comment_cfg()
 
 if run_apostrophe_check == RUN_ALL_APOSTROPHE:
-    check_apostrophes_in_file()
+    check_apostrophes_in_dir()
 elif run_apostrophe_check == RUN_LATEST_APOSTROPHE:
-    check_apostrophes_in_file(dir_list = [ 'c:/writing/daily' ])
+    check_apostrophes_in_dir(dir_list = [ 'c:/writing/daily' ])
 
 if clipboard_file:
     f = open(dff_clipboard, "w")
