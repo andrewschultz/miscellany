@@ -81,6 +81,8 @@ edit_blank_to_blank = True
 run_test_file = False
 ignore_duplicate = False
 
+force_speech_to_text = False
+
 show_total_jumps = False
 
 pop_up_if_clean = False
@@ -954,6 +956,8 @@ def sort_raw(raw_long, open_temp_out = False):
             if '\t' in line:
                 line = re.sub("\t+$", "", line) # trivial fix for stuff at end of line
             if line != speech_to_text_minor_tweaks(line):
+                if force_speech_to_text:
+                    line = speech_to_text_minor_tweaks(line)
                 print(colorama.Fore.MAGENTA + "WARNING: Line {} {}{} may have been speechtotexted. Unexpected spaces were found.".format(line_count, line.strip()[:40], '...' if len(line.strip()) > 40 else '') + mt.WTXT)
                 mt.add_post(raw_long, line_count, priority=4)
                 found_speech_to_text += 1
@@ -1144,7 +1148,7 @@ def sort_raw(raw_long, open_temp_out = False):
             fout.write("\n\n")
     fout.close()
     if found_speech_to_text:
-        print("You may want to run STT/apostrophe checking with -apo. There were {} prespaces found.".format(found_speech_to_text))
+        print("You may want to run STT/apostrophe checking with -stt/-apo. There were {} prespaces found.".format(found_speech_to_text))
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent, case_insensitive = True, comment_note_level = mt.CAL_PASS_COMMENTS)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
@@ -1383,6 +1387,8 @@ while cmd_count < len(sys.argv):
         verbose = 1
     elif arg == 'q':
         verbose = 0
+    elif arg == 'stt':
+        force_speech_to_text = True
     elif arg == 'tf':
         run_test_file = True
     elif arg == 'igdup':
