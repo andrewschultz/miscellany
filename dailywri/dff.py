@@ -1347,8 +1347,9 @@ while cmd_count < len(sys.argv):
         copy_then_test = True
         test_no_copy = False
         max_files = 2
-    elif arg == 'cl':
+    elif arg in ('cly', 'ycl'):
         clipboard_file = True
+        open_raw = True
     elif arg in ( 'clo', 'ocl'):
         clipboard_file = True
         open_raw = False
@@ -1596,6 +1597,7 @@ if clipboard_file:
     f.write(pyperclip.paste().replace('\r\n', '\n'))
     f.close()
     sort_raw(dff_clipboard, open_temp_out = True)
+    mt.okay("REMEMBER: cly/ycl = open raw and final files, cln/ncl=only open final file.")
     sys.exit()
 
 if run_test_file:
