@@ -332,13 +332,10 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
     for com in sorted(start_comments, key=start_comments.get, reverse = True):
         print("{} instance{} of {}".format(start_comments[com], mt.plur(start_comments[com]), com if com else 'no comment'))
     if clipboard_msg:
-        print(colorama.Fore.CYAN + "Copying header to clipboard: {}".format(clipboard_msg.strip()) + colorama.Style.RESET_ALL)
+        mt.cyan("Copying header to clipboard: {}".format(clipboard_msg.strip()))
         pyperclip.copy(clipboard_msg)
     mt.post_open(full_file_paths = True)
     sys.exit()
-
-def blue_print(my_str):
-    print(colorama.Fore.CYAN + my_str + colorama.Style.RESET_ALL)
 
 def conditional_bail():
     if bail_on_warnings:
@@ -390,18 +387,18 @@ def show_size_stats(my_sections, trailer = ''):
         trailer = trailer.strip() + ' '
     if show_ext_stats == STATS_EXT_ALPHABETICALLY:
         ary = sorted(my_sections)
-        blue_print("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
+        mt.cyan("    {}SIZES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_SECTION_SIZE:
         ary = sorted(my_sections, key=lambda x:len(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
+        mt.cyan("    {}SECTION SIZE IN BYTES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_LINES:
         ary = sorted(my_sections, key=lambda x:idea_count(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
+        mt.cyan("    {}SECTION SIZE BY LINES: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
     elif show_ext_stats == STATS_EXT_BY_AVERAGE:
         ary = sorted(my_sections, key=lambda x:len(my_sections[x]) / idea_count(my_sections[x]), reverse=True)
-        blue_print("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(title_tweak(x), div_results_of(my_sections[x])) for x in ary])))
+        mt.cyan("    {}SECTION AVG SIZE: {}".format(trailer, ' / '.join(['{} {:.2f}'.format(title_tweak(x), div_results_of(my_sections[x])) for x in ary])))
     else:
-        blue_print("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
+        mt.cyan("    {}SECTION SIZE: {}".format(trailer, ' / '.join(['{} {} {}'.format(title_tweak(x), my_sections[x][0], my_sections[x][1]) for x in ary])))
 
 def short_cfg_prefix(my_line):
     if my_line[1] != ':':
@@ -416,7 +413,7 @@ def sanitize(tabbed_names, start_tab = False):
     new_ary = []
     for x in tab_split(tabbed_names):
         if x.lower() in low_case_dict:
-            blue_print("WARNING deleting duplicate name (case-insensitive) {}".format(x))
+            mt.cyan("WARNING deleting duplicate name (case-insensitive) {}".format(x))
         else:
             new_ary.append(x)
             low_case_dict[x.lower()] = True
