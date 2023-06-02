@@ -674,7 +674,7 @@ def is_spoonerism_rated(l):
     return False
 
 def is_risque_spoonerism(l):
-    double_digits = re.findall(r'([^0\*]([0\*])\2{1,2}[^0\*])', l)
+    double_digits = re.findall(r'([^0-9\*]([0\*])\2{1,2}[^0\*])', l)
     for dig in double_digits:
         if probably_numerical(dig[0]): continue
         if re.search("[dfs]\*{3}", dig[0], re.IGNORECASE): continue
@@ -1230,7 +1230,7 @@ def sort_raw(raw_long, open_temp_out = False):
         print("Opening tempfile", temp_out_file)
         os.system(temp_out_file)
     if only_one:
-        print("Bailing after first file converted, since only_one is set to True.")
+        mt.warn("Bailing after first file converted, since only_one is set to True. Change this with -fb or -f or cap number of files changed with -f# or -fb#.")
         sys.exit()
     return 1
 
@@ -1647,7 +1647,9 @@ for fi in file_list:
         continue
     print("Parsing file {} of {}: {}".format(list_count, len(file_list), fbn))
     files_done += sort_raw(fi)
-    if files_done == max_files: break
+    if files_done == max_files:
+        print("Hit max_files of {}. You can change this with -f# or -fb#.".format(max_files))
+        break
 
 if not files_done:
     print("No files sorted.")
