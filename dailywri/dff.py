@@ -222,7 +222,7 @@ def convert_apos_case(x):
 def relevant_daily_glob(my_dir):
     gwarning = [x for x in glob(my_dir + "/20*.txt") if not re.search("[0-9]{8}\.txt$", x)]
     if len(gwarning):
-        print(colorama.Fore.YELLOW + "WARNING: nonrelevant daily files {} found in {}.".format(', '.join(gwarning), my_dir) + colorama.Style.RESET_ALL)
+        mt.warn("WARNING: nonrelevant daily files {} found in {}.".format(', '.join(gwarning), my_dir))
     gbase = [x for x in glob(my_dir + "/20*.txt") if re.search("[0-9]{8}\.txt$", x)]
     if 'to-proc' in my_dir:
         return gbase
@@ -305,7 +305,7 @@ def check_apostrophes_in_dir(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_
         print("Checking directory", di)
         for f in globdir:
             if not re.search("[0-9]{8}\.txt$", f):
-                print(colorama.Fore.YELLOW + "SKIPPING possible backup file {}.".format(f) + colorama.Style.RESET_ALL)
+                mt.warn("SKIPPING possible backup file {}.".format(f))
                 continue
             count += 1
             check_apostrophes_in_file(f, first_find_message = "File {} of {} in glob found apostrophe/space tweak(s): {}".format(count, lgd, f))
@@ -326,7 +326,7 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
                 smallest_file_list.append(this_dir_file)
         if this_dir_to_fix:
             smallest_file_list = sorted(smallest_file_list, key=lambda x: os.stat(x).st_size)
-            print(colorama.Fore.YELLOW + "{} to add headers to in {}".format(this_dir_to_fix, di) + colorama.Style.RESET_ALL)
+            mt.warn("{} to add headers to in {}".format(this_dir_to_fix, di))
             print(smallest_file_list[0], "has size", os.stat(smallest_file_list[0]).st_size, "with maximum size", os.stat(smallest_file_list[-1]).st_size)
             mt.add_open(smallest_file_list[0])
     for com in sorted(start_comments, key=start_comments.get, reverse = True):
@@ -339,7 +339,7 @@ def verify_weekly_headers_in_dirs(dir_list = [ raw_daily_dir + "/to-proc", raw_d
 
 def conditional_bail():
     if bail_on_warnings:
-        sys.exit(colorama.Fore.RED + "Bailing on warning. Set -nbw to change this." + colorama.Style.RESET_ALL)
+        mt.bailfail("Bailing on warning. Set -nbw to change this.")
 
 def div_results_of(a_tuple):
     try:
@@ -475,7 +475,7 @@ def read_comment_cfg():
             if prefix in ( 'apostrophe', 'apostrophes' ):
                 for e in entries:
                     if "'" not in e:
-                        print(mt.WARN + "WARNING line {} in config file has {} for apostrophe-checking, but it does not have an apostrophe: {}".format(line_count, e, line[:50].strip()) + mt.WTXT)
+                        mt.warn("WARNING line {} in config file has {} for apostrophe-checking, but it does not have an apostrophe: {}".format(line_count, e, line[:50].strip()))
                         continue
                     er = e.replace("'", '')
                     if er in apostrophe_check:
@@ -797,8 +797,8 @@ def lock_it(proc_file):
     f.close()
 
 def process_blank_details(temp_out_file):
-    print(colorama.Fore.YELLOW + " NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)) + colorama.Style.RESET_ALL)
-    print(colorama.Fore.YELLOW + "NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)) + colorama.Style.RESET_ALL)
+    mt.warn(" NO BLANKS: {}".format(stats_of(temp_out_file, count_blanks = False)))
+    mt.warn("NO HEADERS: {}".format(stats_of(temp_out_file, count_blanks = False, count_headings = False)))
 
 def stats_of(text_file, count_blanks = True, count_headings = True, to_exclude = []):
     f = open(text_file, "r")
@@ -1003,9 +1003,9 @@ def sort_raw(raw_long, open_temp_out = False):
             if current_section == 'nam':
                 if "\t\t" in line:
                     offsets = [str(m.start()) for m in re.finditer('\t{2,}', line)]
-                    print(colorama.Fore.YELLOW + "NOTE: repeat tab in NAME section in line {}, offset{} {} of {}.".format(line_count, mt.plur(len(offsets)), ', '.join(offsets), len(line)) + colorama.Style.RESET_ALL)
+                    mt.warn("NOTE: repeat tab in NAME section in line {}, offset{} {} of {}.".format(line_count, mt.plur(len(offsets)), ', '.join(offsets), len(line)))
             elif current_section and '\t' in line:
-                print(colorama.Fore.RED + "NOTE: tab in non-name section in line {}.".format(line_count) + colorama.Style.RESET_ALL)
+                mt.fail("NOTE: tab in non-name section in line {}.".format(line_count))
                 odd_tab_found = True
                 mt.add_post(raw_long, line_count)
             temp = section_from_prefix(ll)
@@ -1049,7 +1049,7 @@ def sort_raw(raw_long, open_temp_out = False):
                         from_blank += 1
                 continue
             if one_word_names and is_likely_name(line, current_section) and 'nam' not in local_block_move and current_section != 'nam':
-                print(colorama.Fore.CYAN + "    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section if current_section else '<none>', line_count, line.strip()) + colorama.Style.RESET_ALL)
+                mt.cyan("    ----> NOTE: moved likely-name from section {} to \\nam at line {}: {}.".format(current_section if current_section else '<none>', line_count, line.strip()))
                 sections['nam'] += "\t" + line.strip()
                 name_line[line.strip()] = line_count
                 to_names += 1
@@ -1063,7 +1063,7 @@ def sort_raw(raw_long, open_temp_out = False):
                     if show_blank_to_blank:
                         if line_count == last_default + 1 and default_streak > max_consecutive_blank_section_lines:
                             if not overflow:
-                                print(colorama.Fore.RED + "    <note: lines-in-a-row (x, x+1) exceeded max_consecutive_blank_section_lines at line {}.>".format(line_count) + colorama.Style.RESET_ALL)
+                                mt.fail("    <note: lines-in-a-row (x, x+1) exceeded max_consecutive_blank_section_lines at line {}.>".format(line_count))
                             overflow += 1
                         elif not dupe_ignorable(line, force_lower = True):
                             print("BLANK-TO-DEFAULT: {} = {}".format(line_count, line.strip()))
@@ -1156,9 +1156,9 @@ def sort_raw(raw_long, open_temp_out = False):
             messageBox2 = ctypes.windll.user32.MessageBoxA
             messageBox2(None, "Popup to mention that weekly file is sorted OK.\n\nThis should usually only be run at week's end.".encode('ascii'), "HOORAY!".encode('ascii'), 0x0)
     if show_stat_numbers:
-        print(colorama.Fore.GREEN + "    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)) + colorama.Style.RESET_ALL)
+        mt.okay("    {}: {}".format('  FULL' if no_changes else 'BEFORE', stats_of(raw_long)))
         without_names = os.stat(temp_out_file).st_size - len(sections['nam'])
-        print(colorama.Fore.CYAN + "  NO NAMES: {}".format(stats_of(temp_out_file, to_exclude = 'nam')) + colorama.Style.RESET_ALL)
+        mt.cyan("  NO NAMES: {}".format(stats_of(temp_out_file, to_exclude = 'nam')))
         if not no_changes:
             print("     AFTER: {}".format(stats_of(temp_out_file)))
         process_blank_details(temp_out_file)
@@ -1175,7 +1175,7 @@ def sort_raw(raw_long, open_temp_out = False):
             for x in raw_sections:
                 raw_nums[x] = ( len(raw_sections[x]), idea_count(raw_sections[x]) )
             if '' in raw_nums:
-                print(colorama.Fore.YELLOW + "    Got rid of {}/{} characters/line{} from unsectioned.".format(raw_nums[''][0], raw_nums[''][1], mt.plur(raw_nums[''][1])) + colorama.Style.RESET_ALL) # no PLUR for characters since we can assume an idea has more than one character
+                mt.warn("    Got rid of {}/{} characters/line{} from unsectioned.".format(raw_nums[''][0], raw_nums[''][1], mt.plur(raw_nums[''][1]))) # no PLUR for characters since we can assume an idea has more than one character
             for x in sections:
                 if x in raw_sections and raw_sections[x].strip() == sections[x].strip():
                     continue
