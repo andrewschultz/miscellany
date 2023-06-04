@@ -156,6 +156,20 @@ local_unblock_move = set()
 
 sect_move = defaultdict(lambda: defaultdict(int))
 
+class suffix_search:
+    def __init__(self, name, out_section):
+        section_type_cue = out_section[-1]
+        self.section_type = SUFFIX_EXACT
+        self.text_to_search = out_section[:-1]
+        if section_type_cue == '!':
+            self.section_type = SUFFIX_EXACT
+        elif section_type_cue == '@':
+            self.section_type = SUFFIX_ANYWHERE
+        elif section_type_cue == '&':
+            self.section_type = SUFFIX_START
+        else:
+            self.text_to_search = out_section
+
 def examples():
     print("dgrab.py s=pbn would actually sort things afterwards.")
     print("dff.py sr/st force sorting in regular or to-proc directory.")
@@ -528,14 +542,14 @@ def read_comment_cfg():
                         print("Duplicate suffix", u, "line", line_count)
                         any_warnings = True
                         continue
-                    suffixes[u] = ary[1]
+                    suffixes[u] = suffix_search(u, ary[1])
             elif prefix == "presuf" or prefix == "sufpre":
                 for u in entries:
                     if u in suffixes:
                         print("Duplicate suffix", u, "line", line_count)
                         any_warnings = True
                         continue
-                    suffixes[u] = ary[1]
+                    suffixes[u] = suffix_search(u, ary[1])
                 for u in entries:
                     if u in prefixes:
                         print("Duplicate prefix", u, "line", line_count)
@@ -687,16 +701,17 @@ SUFFIX_ANYWHERE = 0
 SUFFIX_START = 1
 SUFFIX_EXACT = 2
 
-def section_from_suffix(my_line, search_type = SUFFIX_ANYWHERE):
+def section_from_suffix(my_line):
     if '#' not in my_line and ' zz' not in my_line: return
     ml2 = re.sub(".*(#| zz)", "", my_line).strip().lower()
     for x in suffixes:
-        if search_type == SUFFIX_EXACT and ml2 == x:
-            return suffixes[x]
-        if search_type == SUFFIX_START and ml2.startswith(x):
-            return suffixes[x]
-        if search_type == SUFFIX_ANYWHERE and re.search(r'\b{}\b'.format(x), ml2):
-            return suffixes[x]
+        this_search = suffixes[x]
+        if this_search.section_type == SUFFIX_EXACT and ml2 == this_search.text_to_search:
+            return this_search.out_section
+        if this_search.section_type == SUFFIX_START and ml2.startswith(this_search.text_to_search):
+            return this_search.out_section
+        if this_search.section_type == SUFFIX_ANYWHERE and re.search(r'\b{}\b'.format(this_search.text_to_search), ml2):
+            return this_search.out_section
     return ""
 
 def smart_section(my_line):
@@ -764,7 +779,7 @@ def my_section(l):
     if mt.is_anagram(l, accept_comments = True): return 'ana'
     # if "~" in l: return 'ut'
     if not re.search("[^a-z]", l): return 'nam'
-    temp = section_from_suffix(l, search_type = SUFFIX_ANYWHERE)
+    temp = section_from_suffix(l)
     if temp:
         return temp
     return ""
@@ -1016,8 +1031,8 @@ def sort_raw(raw_long, open_temp_out = False):
                 if temp != current_section:
                     section_change += 1
                 continue
-            temp = section_from_suffix(line, search_type = SUFFIX_START)
             if temp:
+            temp = section_from_suffix(line)
                 if not keep_directive_text and section_from_suffix(line, search_type = SUFFIX_EXACT):
                     line = re.sub(" *#.*", "", line)
                 sections[temp] += line
