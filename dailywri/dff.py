@@ -308,7 +308,7 @@ def check_apostrophes_in_file(my_file, first_find_message = ''):
     elif xl[0] == 'o':
         mt.npo(my_file, change_lines[0], bail=False)
     else:
-        print(colorama.Fore.YELLOW + xl + "ignored." + mt.WTXT)
+        mt.warn(xl + "ignored.")
     return len(change_lines)
 
 def check_apostrophes_in_dir(dir_list = [ raw_daily_dir + "/to-proc", raw_drive_dir + "/to-proc", raw_keep_dir + "/to-proc", raw_daily_dir ]):
@@ -681,8 +681,9 @@ def is_spoonerism_rated(l):
         if probably_numerical(dig[0]):
             return False
         if ' ' in dig[0]:
-            if mt.uncommented_length(l) > len(double_digits) * 60:
-                print("NOTE: possible but very unlikely spoonerism check for", l)
+            if mt.uncommented_length(l) > len(double_digits) * 60 and '#nospoon' not in l:
+                mt.warn("NOTE: possible but very unlikely spoonerism check for", l)
+                mt.warn("Get rid of this warning with #nospoon")
                 return False # this prevents odd cases where I just throw out the number 77
             return True
     return False
@@ -760,9 +761,9 @@ def my_section(l):
     if '\t' in l or l.count('  ') > 2:
         if l.count('\t') == 0:
             if not space_to_tab_conversion:
-                print(colorama.Fore.Yellow + "LOOK OUT name section may require space-to-tab conversion with -tc" + mt.WTXT)
+                mt.warn("LOOK OUT name section may require space-to-tab conversion with -tc")
         elif l.count(' ') - l.count('\t') > 2:
-            print(colorama.Fore.Yellow + "LOOK OUT name section may have errant tab(s): {}".format(l.strip()) + mt.WTXT)
+            mt.warn("LOOK OUT name section may have errant tab(s): {}".format(l.strip()))
         return 'nam'
     if mt.is_palindrome(l): return 'pal'
     if '==' in l and not l.startswith('=='): return 'btp'
@@ -1000,7 +1001,7 @@ def sort_raw(raw_long, open_temp_out = False):
                 raw_sections[current_section] += line
             no_punc = mt.strip_punctuation(ll, other_chars_to_zap = '=', ignore_after = ['===='])
             if no_punc and no_punc in this_file_lines and not dupe_ignorable(no_punc):
-                print(colorama.Fore.YELLOW + "WARNING duplicate line {} in {} copies {}: {}".format(line_count, rbase, this_file_lines[no_punc], ll) + mt.WTXT)
+                mt.warn("WARNING duplicate line {} in {} copies {}: {}".format(line_count, rbase, this_file_lines[no_punc], ll))
                 dupe_edit_lines.append(line_count)
             else:
                 this_file_lines[no_punc] = line_count
@@ -1031,8 +1032,8 @@ def sort_raw(raw_long, open_temp_out = False):
                 if temp != current_section:
                     section_change += 1
                 continue
-            if temp:
             temp = section_from_suffix(line)
+            if temp and temp not in block_move_from_cfg[current_section]:
                 if not keep_directive_text and section_from_suffix(line, search_type = SUFFIX_EXACT):
                     line = re.sub(" *#.*", "", line)
                 sections[temp] += line
@@ -1114,9 +1115,9 @@ def sort_raw(raw_long, open_temp_out = False):
         t1 = sorted(list(set(new_names) - set(old_names)))
         t2 = sorted(list(set(old_names) - set(new_names)))
         if len(t1) > 0:
-            print(colorama.Fore.GREEN + "New names: {}".format(', '.join(["{}~{}".format(x, name_line[x]) for x in t1]) + colorama.Style.RESET_ALL))
+            mt.okay("New names: {}".format(', '.join(["{}~{}".format(x, name_line[x]) for x in t1])))
         if len(t2) > 0:
-            print(colorama.Fore.GREEN + "Old names deleted: {}".format(t2) + colorama.Style.RESET_ALL)
+            mt.okay("Old names deleted: {}".format(t2))
     if 'nam' in sections:
         sections['nam'] = re.sub("\n", "\t", sections['nam'].rstrip())
         sections['nam'] = "\t" + sections['nam'].lstrip()
@@ -1633,7 +1634,7 @@ if read_most_recent:
         if daily_count == daily_files_back:
             sort_raw(r)
             if read_most_recent and ask_to_copy_back:
-                print(colorama.Fore.YELLOW + "REMINDER: use APL and not APO to adjust apostrophes/spaces on latest file." + mt.WTXT)
+                mt.warn("REMINDER: use APL and not APO to adjust apostrophes/spaces on latest file.")
             print("Got to back of daily files! Exiting.")
             sys.exit()
     if daily_count == 0:
