@@ -3,7 +3,8 @@
 # sorts notes in daily files e.g. moves #RoL to RoL
 # todo: pull COMMENTS from DDD
 # todo: in a = b lines, flag both a and b and get all the comments. Have actual_info array along with my_comment_list
-# todo: if DFF'ing completed weekly file and new section is added, add **MODIFY DAILY INSTEAD (bumper) to start
+#
+# todo: ignore spacing e.g. if there are only blanks added/subtracted, we just search arrays [x for x in f.readlines if x.strip()] then compare
 
 import daily
 import codecs
@@ -911,6 +912,8 @@ def spaces_to_tabs(name_sect):
     return re.sub(" {2,}", "\t", name_sect)
 
 def speech_to_text_minor_tweaks(my_str):
+    if 'sttok' in my_str and '#' in my_str:
+        return my_str
     if ' .' in my_str or ' ,' in my_str: # this changes x ,y to x, y. The if-statement is to save regex time
         my_str = re.sub(r" ([,.])([a-zA-Z])", r'\1 \2', my_str)
     my_str = re.sub(r" +(,|\.[^.0-9]|$)", r'\1', my_str)
@@ -1161,7 +1164,7 @@ def sort_raw(raw_long, open_temp_out = False):
             fout.write("\n\n")
     fout.close()
     if found_speech_to_text:
-        print("You may want to run STT/apostrophe checking with -stt/-apo. There were {} prespaces found.".format(found_speech_to_text))
+        mt.warn("You may want to run STT/apostrophe checking with -stt/-apo or add #sttok at the end. There were {} prespaces found.".format(found_speech_to_text))
     mt.compare_alphabetized_lines(raw_long, temp_out_file, verbose = False, max_chars = -300, red_regexp = r"^[^\\\n$]", green_regexp = r"^([\\\n]|$)", show_bytes = True, compare_tabbed = True, verify_alphabetized_true = read_most_recent, case_insensitive = True, comment_note_level = mt.CAL_PASS_COMMENTS)
     for r in raw_sections:
         raw_sections[r] = raw_sections[r].rstrip()
