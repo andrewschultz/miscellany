@@ -159,17 +159,18 @@ sect_move = defaultdict(lambda: defaultdict(int))
 
 class suffix_search:
     def __init__(self, name, out_section):
-        section_type_cue = out_section[-1]
-        self.section_type = SUFFIX_EXACT
-        self.text_to_search = out_section[:-1]
-        if section_type_cue == '!':
-            self.section_type = SUFFIX_EXACT
-        elif section_type_cue == '@':
-            self.section_type = SUFFIX_ANYWHERE
-        elif section_type_cue == '&':
-            self.section_type = SUFFIX_START
+        search_type_cue = out_section[-1]
+        self.text_to_search = name
+        self.search_type = SUFFIX_EXACT
+        self.out_section = out_section[:-1]
+        if search_type_cue == '!':
+            self.search_type = SUFFIX_EXACT
+        elif search_type_cue == '@':
+            self.search_type = SUFFIX_ANYWHERE
+        elif search_type_cue == '&':
+            self.search_type = SUFFIX_START
         else:
-            self.text_to_search = out_section
+            self.out_section = out_section
 
 def examples():
     print("dgrab.py s=pbn would actually sort things afterwards.")
@@ -708,11 +709,11 @@ def section_from_suffix(my_line):
     ml2 = re.sub(".*(#| zz)", "", my_line).strip().lower()
     for x in suffixes:
         this_search = suffixes[x]
-        if this_search.section_type == SUFFIX_EXACT and ml2 == this_search.text_to_search:
+        if this_search.search_type == SUFFIX_EXACT and ml2 == this_search.text_to_search:
             return this_search.out_section
-        if this_search.section_type == SUFFIX_START and ml2.startswith(this_search.text_to_search):
+        if this_search.search_type == SUFFIX_START and ml2.startswith(this_search.text_to_search):
             return this_search.out_section
-        if this_search.section_type == SUFFIX_ANYWHERE and re.search(r'\b{}\b'.format(this_search.text_to_search), ml2):
+        if this_search.search_type == SUFFIX_ANYWHERE and re.search(r'\b{}\b'.format(this_search.text_to_search), ml2):
             return this_search.out_section
     return ""
 
@@ -1037,7 +1038,7 @@ def sort_raw(raw_long, open_temp_out = False):
                 continue
             temp = section_from_suffix(line)
             if temp and temp not in block_move_from_cfg[current_section]:
-                if not keep_directive_text and section_from_suffix(line, search_type = SUFFIX_EXACT):
+                if not keep_directive_text and section_from_suffix(line):
                     line = re.sub(" *#.*", "", line)
                 sections[temp] += line
                 continue
