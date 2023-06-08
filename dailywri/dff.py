@@ -1624,9 +1624,9 @@ if run_test_file:
 
 if not len(file_list):
     my_glob = "{}/{}".format(dir_to_scour, dailies_glob)
-    file_list = glob(my_glob)
+    file_list = mt.dailies_of(dir_to_scour, full_file_path = True)
     if verbose:
-        print("Globbing", my_glob)
+        print("Finding dailies in", dir_to_scour)
 
 if read_most_recent:
     daily_count = 0
