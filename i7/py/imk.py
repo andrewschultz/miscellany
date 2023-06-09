@@ -180,13 +180,18 @@ this_proj = i7.dir2proj()
 # this could be changed up so that we detect a space anywhere and also leave a github file
 
 if len(to_create) == 1:
+    if len(to_create[0]) > 6 and '-' in to_create[0]:
+        to_create[0] = to_create[0].replace('-', ' ')
+        mt.warn("Assuming forced file name. Replacing dash with space.")
     if ' ' in to_create[0]:
         if to_create[0].endswith('.i7x'):
             mt.warn("No need for extension!")
+            to_create[0] = to_create[0][:-4].title() + '.i7x'
         elif '.' in to_create[0]:
             mt.bailfail("Periods aren't allowed in the file name.")
         else:
             to_create[0] += '.i7x'
+            to_create[0] = '.'.join(to_create[0].title()
         full_file = os.path.join(i7.extdir, to_create[0])
         print("Forcing file name", full_file)
         write_up_file(full_file)
