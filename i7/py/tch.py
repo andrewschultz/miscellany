@@ -22,6 +22,9 @@ def tab_sort(q):
     columns = 0
     err_count = 0
     qb = os.path.basename(q)
+    if not os.path.exists(q):
+        mt.fail("{} doesn't exist but should according to i7p.txt. Skipping.".format(qb))
+        return False
     print("Tab sorting", qb)
     rolling_bracket_count = 0
     rolling_brace_count = 0
