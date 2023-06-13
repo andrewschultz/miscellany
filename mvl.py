@@ -11,7 +11,21 @@ import mytools as mt
 debug_try = False
 force_rewrite_link = False
 
-def github_move(file_name, this_proj = ''):
+def best_subdir_of(file_name):
+    if file_name.startswith('rbr-'):
+        return "/testing/branch"
+    if file_name.startswith('reg-'):
+        ret_val = "/testing"
+        if '-lone-' in file_name and os.path.exists(github_dir + "//standalone"):
+            ret_val += "/standalone"
+        elif '-thru-' in file_name:
+            ret_val += "/generated"
+        return ret_val
+    if file_name.endswith('.py'):
+        return "/utils"
+    return ""
+
+def github_move(file_name, this_proj = '', subdir = ''):
     changing_link = False
     if not os.path.exists(file_name):
         mt.fail("Can't find file", file_name)
@@ -27,24 +41,14 @@ def github_move(file_name, this_proj = ''):
     github_dir = i7.proj2dir(this_proj, to_github=True)
     if not github_dir:
         sys.exit("Can't find a github directory to move to. Check your current directory or modify i7p.txt or force a project with p=.\nNOTE: p= must come first as of 7/23 due to coding laziness.")
-    if os.path.islink(file_name):
-        mt.warn(file_name, "is already a link!")
-        return
-    if file_name.startswith('rbr-'):
-        github_dir += "/testing/branch"
-    if file_name.startswith('reg-'):
-        github_dir += "/testing"
-        if '-lone-' in file_name and os.path.exists(github_dir + "//standalone"):
-            github_dir += "/standalone"
-        elif '-thru-' in file_name:
-            github_dir += "/generated"
-    if file_name.endswith('.py'):
-        github_dir += "/utils"
+    if not subdir:
+        subdir = best_subdir_of(file_name)
     if not os.path.exists(github_dir):
         normdir = os.path.normpath(github_dir)
         mt.fail(normdir + " does not exist. Create it with ...")
         mt.failbail("mkdir " + normdir)
         sys.exit()
+    github_dir += subdir
     new_file = os.path.normpath("{}//{}".format(github_dir, file_name))
     file_name = mt.quote_spaced_file(file_name)
     new_file = mt.quote_spaced_file(new_file)
@@ -60,6 +64,7 @@ def github_move(file_name, this_proj = ''):
 cmd_count = 1
 
 force_project = ''
+force_subdir = ''
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
@@ -67,14 +72,16 @@ while cmd_count < len(sys.argv):
         debug_try = True
     elif arg.startswith('p='):
         force_project = arg[2:]
+    elif arg.startswith('s='):
+        force_subdir = arg[2:]
     elif '*' in arg:
         ary = glob.glob(arg)
         if not len(ary):
             mt.fail("Nothing in glob for", arg)
         else:
             for x in glob.glob(arg):
-                github_move(x, force_project)
+                github_move(x, force_project, force_subdir)
     else:
-        github_move(arg, force_project)
+        github_move(arg, force_project, force_subdir)
     cmd_count += 1
 
