@@ -1,5 +1,7 @@
+#
 # mvl.py
-# move file to its link
+# move non-github file to a github subdirectory
+#
 
 import os
 import i7
@@ -10,6 +12,14 @@ import mytools as mt
 
 debug_try = False
 force_rewrite_link = False
+
+def usage():
+    mt.warn("USAGE for mvl.py")
+    mt.warn('=' * 50)
+    print("d  : force debug/only show what commands to run")
+    print("s= : force subdir")
+    print("p= : force project")
+    sys.exit()
 
 def best_subdir_of(file_name):
     if file_name.startswith('rbr-'):
@@ -55,8 +65,9 @@ def github_move(file_name, this_proj = '', subdir = ''):
     move_cmd = "move {} {}".format(file_name, new_file)
     link_cmd = "mklink {} {}".format(file_name, new_file)
     if debug_try:
-        print(move_cmd)
-        print(link_cmd)
+        mt.warn("COMMANDS THAT WOULD BE RUN")
+        mt.warn(move_cmd)
+        mt.warn(link_cmd)
     else:
         x = os.system(move_cmd)
         y = os.system(link_cmd)
@@ -74,6 +85,8 @@ while cmd_count < len(sys.argv):
         force_project = arg[2:]
     elif arg.startswith('s='):
         force_subdir = arg[2:]
+    elif arg == '?':
+        usage()
     elif '*' in arg:
         ary = glob.glob(arg)
         if not len(ary):
