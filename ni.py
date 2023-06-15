@@ -149,8 +149,11 @@ while cmd_count < len(sys.argv):
         else:
             mt.fail(m, "is not a valid file or directory. You may need to fix the CFG file.")
             mt.npo(ni_cfg)
+    elif os.path.exists('c:/games/inform/{}.inform'.format(arg)):
+        mt.warn("Using project unassigned in i7p.txt: {}.".format(arg))
+        user_project = arg
     else:
-        usage("Bad parameter {}.".format(arg))
+        usage("Bad parameter {}. If you want to force a directory, you may want or need to use a backtick.".format(arg))
     cmd_count += 1
 
 if 'glo' in hfx_ary:
