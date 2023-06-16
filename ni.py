@@ -97,6 +97,8 @@ while cmd_count < len(sys.argv):
         goto_github = True
     elif arg == 't':
         get_main_source = True
+    elif arg == 'rbr':
+        get_rbr = True
     elif arg == '-':
         force_batch_move = True
     elif arg == 'm':
@@ -184,6 +186,11 @@ if get_notes:
     print("Opening {} notes...".format(to_project))
     mt.npo(notes_file, print_cmd = False, bail = False)
     source_opened = True
+
+if get_rbr:
+    rbr_file = i7.rbr(to_project)
+    print("Opening rbr file", rbr_file)
+    mt.npo(rbr_file, print_cmd = False, bail = False)
 
 for h in hfx_ary:
     this_file = i7.hdr(to_project, h)
