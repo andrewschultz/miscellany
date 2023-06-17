@@ -87,7 +87,7 @@ def read_special_commands():
 cmd_count = 1
 
 if len(sys.argv) == 1:
-    usage("No commands given")
+    mt.warn("No commands given to ni.py. Going to default directory. For usage, type ?")
 
 read_special_commands()
 
@@ -120,7 +120,7 @@ while cmd_count < len(sys.argv):
         else:
             mt.failbail("{} is not present.".format(temp_batch_file))
     elif arg in ( 'b', 'btf', 'bt', 'btf', 'tfb', 'tb' ):
-        if os.path_exists(temp_batch_file_backup):
+        if os.path.exists(temp_batch_file_backup):
             mt.okay("Opening backup temp batch file {}.".format(temp_batch_file_backup))
             mt.npo(temp_batch_file_backup, print_cmd = False)
         else:
@@ -148,6 +148,8 @@ while cmd_count < len(sys.argv):
         elif os.path.isdir(m):
             write_chdir_batch_file(m)
             sys.exit()
+        elif '{{}}' in m:
+            sys.exit("Write formatting code later.")
         else:
             mt.fail(m, "is not a valid file or directory. You may need to fix the CFG file.")
             mt.npo(ni_cfg)
