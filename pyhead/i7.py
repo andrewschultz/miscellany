@@ -175,11 +175,13 @@ def in_dict_or_abbrev(my_key, my_dict):
 
 inish = in_dict_or_abbrev
 
-def i7_code_sentences_of(x, strip_end_sentence = True, include_quotes = False):
+def i7_code_sentences_of(x, strip_end_sentence = True, include_quotes = False, include_comments = False):
     x = x.strip()
     if not include_quotes:
         x = re.sub(r'".*?"', "", x)
-        out_ary = x.split('.')
+        if not include_comments:
+            x = re.sub("\[.*?\]", "", x)
+        out_ary = [a.strip() for a in x.split('.')]
         if strip_end_sentence and len(out_ary) and not out_ary[-1].strip():
             out_ary = out_ary[:-1]
         return out_ary
