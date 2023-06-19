@@ -41,6 +41,7 @@ i7com = {} # combos e.g. opo = 3d and 4d
 i7comr = {} # combos reversed
 i7comord = defaultdict(lambda: defaultdict(int)) # ordered combos e.g. shuffling,roiling = 1,2 in stale tales slate
 i7hfx = {} # header mappings e.g. ta to tables
+i7hfxr = {} # header mappings reversed e.g. tables to tab or ta
 i7f = {} # which program files (x86)\inform header files are included by which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7fg = {} # which users\documents\github header files are included by which projects e.g. shuffling has Nudges,Random Text,Mistakes,Tables
 i7rn = {} # release numbers
@@ -1195,7 +1196,10 @@ with open(i7_cfg_file) as file:
             auth = this_data
             continue
         if this_var == 'headname':
-            for x in lla[1].split(","): i7hfx[x] = lla[0]
+            shortheadnames = lla[1].split(",")
+            for x in shortheadnames:
+                i7hfx[x] = lla[0]
+            i7hfxr[lla[0]] = shortheadnames
             continue
         if this_var == 'ignore':
             i7ignore.extend(my_parts[1].split(','))
