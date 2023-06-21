@@ -88,6 +88,7 @@ UNSPECIFIED = -1 # in case we demand a value
 DEBUG = 0
 BETA = 1
 RELEASE = 2
+NOWFAK = 3
 
 i7fi = { 'f': f_f, 'l': f_l, 'w': f_dic, 'b': f_dic }
 
@@ -397,6 +398,18 @@ def create_beta_source(my_proj, beta_proj = "beta", text_to_find = "beta testing
         os.remove(to_file)
         return
     print("Successfully toggled '{}' line in {} to {}".format(text_to_find, my_proj, beta_proj))
+
+def create_nowfak_source(my_proj, beta_proj = "beta"):
+    from_file = main_src(my_proj)
+    file = open(from_file, "r")
+    from_text = file.read()
+    file.close()
+    to_file = main_src(beta_proj)
+    f = open(to_file, "w", newline="\n")
+    f.write(from_text)
+    f.write("\n\nvolume redefining wfak\n\nto wfak: say \"[line break]\"\n\n");
+    f.close()
+    print("Tacked on WFAK redefinition to {} to make {}.".format(from_file, to_file))
 
 def qfi(x, base_only = True):
     if x in i7fi.keys(): return os.path.basename(i7fi[x]) if base_only else i7fi[x]
