@@ -27,6 +27,8 @@ get_notes = False
 goto_github = False
 hfx_ary = []
 user_project = ''
+rbr_wild_card = ''
+get_rbr = False
 
 temp_batch_file = "c:\\writing\\temp\\ni-temp.bat"
 temp_batch_file_backup = "c:\\writing\\temp\\ni-temp-backup.bat"
@@ -99,6 +101,9 @@ while cmd_count < len(sys.argv):
         get_main_source = True
     elif arg == 'rbr':
         get_rbr = True
+    elif arg.startswith('rbr='):
+        get_rbr = True
+        rbr_wild_card = arg[4:]
     elif arg == '-':
         force_batch_move = True
     elif arg == 'm':
@@ -190,7 +195,7 @@ if get_notes:
     source_opened = True
 
 if get_rbr:
-    rbr_file = i7.rbr(to_project)
+    rbr_file = i7.rbr(to_project, file_type = rbr_wild_card)
     print("Opening rbr file", rbr_file)
     mt.npo(rbr_file, print_cmd = False, bail = False)
 
