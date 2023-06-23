@@ -967,9 +967,13 @@ def combo_of(my_proj):
     #if x in i7x: return combo_of[i7x[x]]
     return my_proj
 
-def rbr(my_proj = dir2proj(), need_one = True, file_type = "thru"):
-    if not my_proj: my_proj = dir2proj()
-    if my_proj in i7xr: my_proj = i7xr[my_proj]
+def rbr(my_proj = dir2proj(), need_one = True, file_type = ""):
+    if not file_type:
+        file_type = "thru"
+    if not my_proj:
+        my_proj = dir2proj()
+    if my_proj in i7xr:
+        my_proj = i7xr[my_proj]
     elif my_proj not in i7x: return ""
     base_dir = proj2dir(my_proj)
     first_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(my_proj, file_type))
