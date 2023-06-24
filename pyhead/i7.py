@@ -977,12 +977,22 @@ def rbr(my_proj = dir2proj(), need_one = True, file_type = ""):
     elif my_proj not in i7x: return ""
     base_dir = proj2dir(my_proj)
     first_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(my_proj, file_type))
-    if os.path.exists(first_try): return first_try
+    if os.path.exists(first_try):
+        return first_try
+    if file_type != 'thru':
+        rbr_wildcard = os.path.join(base_dir, "rbr-*{}*.txt".format(file_type))
+        g = [os.path.basename(x) for x in glob.glob(rbr_wildcard)]
+        print(g)
+        if len(g) > 1:
+            mt.bailfail("BAILING. There is more than one RBR file covered by the wildcard {}:\n    {}.".format(file_type, ', '.join(g)))
+        elif len(g) == 1:
+            return os.path.join(base_dir, g[0])
     for x in i7x:
         if i7x[x] == i7x[my_proj]:
             next_try = os.path.join(base_dir, "rbr-{}-{}.txt".format(x, file_type))
-            if os.path.exists(next_try): return next_try
-    sys.exit("WARNING tried to get one file from rbr for {} and failed".format(my_proj))
+            if os.path.exists(next_try):
+                return next_try
+    mt.bailfail("BAILING. Tried to get one file from rbr for {}/{} and failed".format(my_proj, file_type))
 
 def read_latest_project():
     global latest_project_abbr
