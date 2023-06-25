@@ -9,6 +9,7 @@
 #
 # todo: map line of best fit of hourly deltas, then assume average is the value of the trendline at the most recent hour
 # todo: "L" batch file that goes back X files should see if there is a to-proc, and if current is read-only and X is not, go to it
+# todo: 2dy.py [4 digit number] opens nearby file ... maybe 3 digit?
 
 import glob
 import xml.etree.ElementTree as ET
@@ -32,7 +33,13 @@ from filecmp import cmp
 TOTAL_BYTES = 1
 HOURLY_BYTES = 2
 
-glob_string = "20*.txt"
+pnow = pendulum.now()
+this_year = pnow.year
+
+glob_string_this = "{}*.txt".format(this_year)
+glob_string_alt = "20*.txt"
+glob_string = ""
+glob_all = False
 
 #d = pendulum.now()
 d = pendulum.today()
@@ -899,6 +906,7 @@ def read_2dy_cfg():
     global max_days_new
     global min_days_new
     global glob_string
+    global glob_all
     global file_header
     global color_dict
     global minimum_seconds_between
@@ -936,15 +944,8 @@ def read_2dy_cfg():
                 min_days_new = int(data)
             elif prefix == 'minimum_seconds_between':
                 minimum_seconds_between = int(data)
-            elif prefix == 'glob':
-                glob_string = data
-                if not glob_string.endswith(".txt"):
-                    if glob_string.startswith("!"):
-                        glob_string = data[1:]
-                        print("! at beginning of line blocks adding .txt to file.")
-                    else:
-                        print("Tacking on .txt to glob in {} at line {}. Run with -e to add .txt.".format(my_sections_file, line_count))
-                        glob_string += '.txt'
+            elif prefix == 'glob_all':
+                glob_all = mt.truth_state_of(data)
             elif prefix == 'file_header':
                 file_header += data.replace("\\", "\n") + "\n"
             elif prefix in ( 'color', 'colors' ):
@@ -1013,6 +1014,10 @@ def read_2dy_cfg():
             print("NOTE: resorted goals array because custom this-week goals made it non-increasing.")
     if len(sect_ary) == 0:
         print("WARNING", my_sections_file, "has no default sections.")
+    if glob_all:
+        glob_string = glob_string_this
+    else:
+        glob_string = glob_string_alt
 
 def weekly_compare(files_back = 1):
     if files_back < 1:
