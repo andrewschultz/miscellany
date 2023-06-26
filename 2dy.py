@@ -1093,10 +1093,14 @@ while cmd_count < len(sys.argv):
         latest_daily = False
     elif arg[:2] == 'ms':
         minimum_seconds_between = num
-    elif arg == 'l': latest_daily = True
-    elif arg in ( 'nl', 'ln' ): latest_daily = False
-    elif arg == 'v': verbose = True
-    elif arg in ( 'nv', 'vn' ): verbose = False
+    elif arg == 'l':
+        latest_daily = True
+    elif arg in ( 'nl', 'ln' ):
+        latest_daily = False
+    elif arg == 'v':
+        verbose = True
+    elif arg in ( 'nv', 'vn' ):
+        verbose = False
     elif arg in ( 'ag', 'ga' ):
         show_all_goals = True
     elif mt.alfmatch( arg, 'agn' ):
@@ -1105,8 +1109,10 @@ while cmd_count < len(sys.argv):
         if arg == 'es':
             print(colorama.Fore.GREEN + "NOTE: if you wanted to edit the stats file, try ED instead." + colorama.Style.RESET_ALL)
         mt.npo(my_sections_file)
-    elif arg in ( 'em', 'ec', 'ce', 'me' ): mt.npo(__file__)
-    elif arg in ( 'ei', 'ie' ): mt.npo(information_file)
+    elif arg in ( 'em', 'ec', 'ce', 'me' ):
+        mt.npo(__file__)
+    elif arg in ( 'ei', 'ie' ):
+        mt.npo(information_file)
     elif mt.alpha_match('eit', arg) or arg in ( 'et', 'te' ):
         mt.eq_print("text of information file (edit with ie/ei)", equals_width = 20, color_info = colorama.Fore.YELLOW)
         os.system("type {}".format(os.path.normpath(information_file)))
@@ -1114,8 +1120,10 @@ while cmd_count < len(sys.argv):
     elif arg == 'eo': mt.npo(old_stats_file)
     elif arg in ( 'es', 'ed' ):
         mt.npo(stats_file)
-    elif arg == 'fs': force_stats = True
-    elif arg in ( 'p', 'tp', 'pt', 't'): move_to_proc()
+    elif arg == 'fs':
+        force_stats = True
+    elif arg in ( 'p', 'tp', 'pt', 't'):
+        move_to_proc()
     elif arg == 'x' and valid_num:
         if num < 1000:
             num *= 1000
@@ -1214,6 +1222,13 @@ while cmd_count < len(sys.argv):
     elif arg == 'ss': stat_sort()
     elif arg == 'qc':
         compare_thousands(quick_compare = True)
+    elif arg in ( 'lp', 'pl' ):
+        g = glob.glob("c:\\writing\\daily\\to-proc\\2*.txt")
+        g0 = [x for x in g if re.search("^[0-9]{8}\.txt$", os.path.basename(x))]
+        try:
+            mt.npo(g[-1])
+        except:
+            mt.bailfail("Somehow to_proc had no files to open.")
     elif arg in ( 'gk', 'kg' ): my_daily_dir = "c:/coding/perl/proj/from_keep"
     elif arg in ( 'gd', 'dg' ): my_daily_dir = "c:/coding/perl/proj/from_drive"
     elif arg in ( 'tk', 'kt' ): move_to_proc("c:/coding/perl/proj/from_keep")
