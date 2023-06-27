@@ -21,7 +21,7 @@ def usage():
     print("p= : force project")
     sys.exit()
 
-def best_subdir_of(file_name):
+def best_subdir_of(file_name, github_dir):
     if file_name.startswith('rbr-'):
         return "/testing/branch"
     if file_name.startswith('reg-'):
@@ -52,7 +52,7 @@ def github_move(file_name, this_proj = '', subdir = ''):
     if not github_dir:
         sys.exit("Can't find a github directory to move to. Check your current directory or modify i7p.txt or force a project with p=.\nNOTE: p= must come first as of 7/23 due to coding laziness.")
     if not subdir:
-        subdir = best_subdir_of(file_name)
+        subdir = best_subdir_of(file_name, github_dir)
     if not os.path.exists(github_dir):
         normdir = os.path.normpath(github_dir)
         mt.fail(normdir + " does not exist. Create it with ...")
@@ -62,8 +62,8 @@ def github_move(file_name, this_proj = '', subdir = ''):
     new_file = os.path.normpath("{}//{}".format(github_dir, file_name))
     file_name = mt.quote_spaced_file(file_name)
     new_file = mt.quote_spaced_file(new_file)
-    move_cmd = "move {} {}".format(file_name, new_file)
-    link_cmd = "mklink {} {}".format(file_name, new_file)
+    move_cmd = "move {} {} > NUL 2>&1".format(file_name, new_file)
+    link_cmd = "mklink {} {} > NUL 2>&1".format(file_name, new_file)
     if debug_try:
         mt.warn("COMMANDS THAT WOULD BE RUN")
         mt.warn(move_cmd)
@@ -71,6 +71,14 @@ def github_move(file_name, this_proj = '', subdir = ''):
     else:
         x = os.system(move_cmd)
         y = os.system(link_cmd)
+        if os.path.islink(file_name):
+            mt.okay("Created link {} successfully.".format(file_name))
+        else:
+            mt.fail("Failed to create link {}.".format(file_name))
+        if os.path.exists(file_name):
+            mt.okay("Created file {} successfully.".format(new_file))
+        else:
+            mt.fail("Failed to create file {}.".format(new_file))
 
 cmd_count = 1
 
