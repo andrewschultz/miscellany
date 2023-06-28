@@ -21,6 +21,14 @@ def usage():
     print("p= : force project")
     sys.exit()
 
+def glob_it(my_glob):
+    ary = glob.glob(my_glob)
+    if not len(ary):
+        mt.fail("Nothing in glob for", arg)
+    else:
+        for x in ary:
+            github_move(x, force_project, force_subdir)
+
 def best_subdir_of(file_name, github_dir):
     if file_name.startswith('rbr-'):
         return "/testing/branch"
@@ -93,15 +101,12 @@ while cmd_count < len(sys.argv):
         force_project = arg[2:]
     elif arg.startswith('s='):
         force_subdir = arg[2:]
+    elif arg == 'l':
+        glob_it("reg-*lone*.txt")
     elif arg == '?':
         usage()
     elif '*' in arg:
-        ary = glob.glob(arg)
-        if not len(ary):
-            mt.fail("Nothing in glob for", arg)
-        else:
-            for x in glob.glob(arg):
-                github_move(x, force_project, force_subdir)
+        glob_it(arg)
     else:
         github_move(arg, force_project, force_subdir)
     cmd_count += 1
