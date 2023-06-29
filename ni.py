@@ -141,7 +141,8 @@ while cmd_count < len(sys.argv):
         usage("USAGE")
     elif arg in i7.i7hfx or arg in i7.i7hfxr:
         hfx_ary.append(arg)
-    elif arg in i7.i7x:
+    elif arg.replace('`', '') in i7.i7x:
+        arg = arg.replace('`', '')
         if user_project:
             mt.bailfail("Defined 2 projects: {} and {}.".format(user_project, arg))
         user_project = arg
@@ -158,7 +159,8 @@ while cmd_count < len(sys.argv):
         else:
             mt.fail(m, "is not a valid file or directory. You may need to fix the CFG file.")
             mt.npo(ni_cfg)
-    elif os.path.exists('c:/games/inform/{}.inform'.format(arg)):
+    elif os.path.exists('c:/games/inform/{}.inform'.format(arg.replace('`', ''))):
+        arg = arg.replace('`', '')
         mt.warn("Using project unassigned in i7p.txt: {}.".format(arg))
         user_project = arg
     else:
