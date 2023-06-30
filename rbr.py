@@ -340,6 +340,17 @@ def reg_verify_all_dirs(open_unmarked = False):
         reg_verify_dir(open_unmarked, bail = False)
     sys.exit()
 
+def extraneous_brackets(line):
+    if line.startswith("#"):
+        return False
+    if ignore_next_bracket:
+        return False
+    if line.lower().startswith("[note"):
+        return False
+    if line.startswith('/'):
+        return False
+    return '[' in line or ']' in line
+
 def vet_potential_errors(line, line_count, cur_pot):
     global cur_flag_brackets
     if '[\']' in line or '[line break]' in line or '[paragraph break]' in line:
@@ -354,7 +365,7 @@ def vet_potential_errors(line, line_count, cur_pot):
     if '[if' in line or '[unless' in line or '[one of]' in line:
         print(cur_pot+1, "Control statement artifact in line", line_count, ":", line.strip()) # clean this code up for later error checking, into a function
         return True
-    if '[' in line and ']' in line and not line.startswith('#') and not ignore_next_bracket and not line.lower().startswith("[note"):
+    if extraneous_brackets(line):
         lmod = re.sub("^[^\[]*\[", "", line.strip())
         lmod = re.sub("\].*", "", lmod)
         lmod = "{:d} {:s}".format(line_count, lmod)
@@ -1201,13 +1212,20 @@ def get_file(fname):
         print("Just a warning.")
     return len(absent_files) + len(changed_files)
 
+def valid_point_check(my_line):
+    if line.startswith('by one point') or line.startswith('by a point'):
+        return True
+    if re.sub("^by [a-z]+ points", line):
+        return True
+    return False
+
 def scrape_cmds(my_file, my_cmds, add_after = True): # this looks for a point-scoring/point scoring command
     retval = False
     need_point = False
     add_edit = False
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
-            if 'by one point' in line and need_point:
+            if valid_point_check(line) and need_point:
                 if add_after:
                     add_edit = True
                 else:
@@ -1463,7 +1481,7 @@ if strict_name_force_on and strict_name_force_off:
 
 my_dir = os.getcwd()
 
-if my_dir == "c:\\games\\inform\\prt":
+if my_dir == i7.prt:
     sys.exit("Can't run from the {} directory. Move to an Inform source directory.".format(prt_color))
 
 if 'github' in my_dir.lower():
