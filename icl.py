@@ -169,6 +169,9 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     if this_build == i7.BETA:
         build_proj = 'beta'
         i7.create_beta_source(this_proj)
+    elif nowfak:
+        build_proj = 'beta'
+        i7.create_nowfak_source(this_proj)
     else:
         build_proj = this_proj
 
@@ -230,6 +233,11 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
         print("Copying from", os.path.abspath(binary_out), "to", beta_out)
         copy(binary_out, beta_out)
         to_run_after = beta_out
+    elif nowfak:
+        nowfak_out = "c:/games/inform/beta Materials/Release/nowfak-{}.{}".format(title_from_blurb('beta'), output_ext)
+        print("Copying from", os.path.abspath(binary_out), "to", nowfak_out)
+        copy(binary_out, nowfak_out)
+        to_run_after = nowfak_out
 
     if not this_blorb:
         print("Not making blorb file. Toggle with bl.")
@@ -289,10 +297,13 @@ while cmd_count < len(sys.argv):
         file_change_threshold = 60 * int(arg[:-1])
     elif arg[-1:] == 's' and arg[:-1].isdigit():
         file_change_threshold = int(arg[:-1])
-    elif mt.only_certain_letters("dbr", arg):
+    elif mt.only_certain_letters("dbrn", arg):
         what_to_build[i7.RELEASE] = 'r' in arg
         what_to_build[i7.DEBUG] = 'd' in arg
         what_to_build[i7.BETA] = 'b' in arg
+        if 'n' in arg:
+            nowfak = 'n' in arg
+            what_to_build[i7.RELEASE] = True
     elif arg == 'bl' or arg == 'blorb':
         to_blorb = True
     elif arg in ( 'bg', 'gb' ):
