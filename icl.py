@@ -40,7 +40,7 @@ to_blorb = False
 hide_stderr = False
 hide_stdout = False
 overwrite = True
-compiler_version = '633'
+compiler_version = '636'
 launch_after = False
 generic_blorb = False
 
@@ -324,6 +324,8 @@ while cmd_count < len(sys.argv):
         build_projects.extend([(my_proj, i7.DEBUG), (my_proj, i7.BETA), (my_proj, i7.RELEASE)])
     elif i7.main_abb(arg):
         my_proj = arg
+    elif arg.startswith('`') and i7.main_abb(arg[1:]):
+        my_proj = arg[1:]
     elif '/' in arg:
         y = arg.split("/")
         if len(y) != 2:
