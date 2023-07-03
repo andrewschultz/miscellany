@@ -69,6 +69,7 @@ npnq = mt.npnq
 f_dic = "c:/writing/dict/brit-1word.txt"
 f_f = "c:/writing/dict/firsts.txt"
 f_l = "c:/writing/dict/lasts.txt"
+inform_root = "c:\\games\\inform"
 prt_old = "c:/games/inform/prt"
 prt = "\\\\wsl.localhost\\Ubuntu\\home\\andrew\\prt"
 prt_temp = os.path.join(prt, "temp")
@@ -88,7 +89,6 @@ UNSPECIFIED = -1 # in case we demand a value
 DEBUG = 0
 BETA = 1
 RELEASE = 2
-NOWFAK = 3
 
 i7fi = { 'f': f_f, 'l': f_l, 'w': f_dic, 'b': f_dic }
 
