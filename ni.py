@@ -163,6 +163,12 @@ while cmd_count < len(sys.argv):
         arg = arg.replace('`', '')
         mt.warn("Using project unassigned in i7p.txt: {}.".format(arg))
         user_project = arg
+    elif os.path.exists('c:/games/inform/{}'.format(arg.replace('`', ''))):
+        arg = arg.replace('`', '')
+        mt.warn("Using project flat directory in i7p.txt: {}.".format(arg))
+        back_up_existing_temp()
+        write_chdir_batch_file(os.path.join(i7.inform_root, arg.replace('`', '')))
+        sys.exit()
     else:
         usage("Bad parameter {}. If you want to force a directory, you may want or need to use a backtick.".format(arg))
     cmd_count += 1
