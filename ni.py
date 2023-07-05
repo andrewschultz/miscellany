@@ -139,6 +139,14 @@ while cmd_count < len(sys.argv):
             mt.bailfail("Bad value {} for s=.".format(temp))
     elif arg == '?':
         usage("USAGE")
+    elif arg in ( '?c', 'c?' ):
+        conflicts = [x for x in i7.i7x if x in map_to ]
+        if len(conflicts):
+            for c in conflicts:
+                print("Conflict", c, map_to[c], i7.main_abb(c), i7.long_name(c))
+        else:
+            print("No conflicts.")
+        sys.exit()
     elif arg in i7.i7hfx or arg in i7.i7hfxr:
         hfx_ary.append(arg)
     elif arg.replace('`', '') in i7.i7x:
