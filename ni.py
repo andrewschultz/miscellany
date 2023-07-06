@@ -77,14 +77,19 @@ def read_special_commands():
             if len(a1) > 2:
                 mt.warn("WARNING line {} has >1 =.".format(len(a1)))
             a2 = a1[0].split(',')
-            if not os.path.exists(a1[1]):
-                mt.fail("NO SUCH FILE {} line {}".format(a1[1], line_count))
+            custom_file = a1[1]
+            if custom_file.startswith('ch:'): # custom header
+                custom_file = custom_file.replace('ch:', i7.extdir + '\\')
+                if '.' not in custom_file:
+                    custom_file = custom_file + '.i7x'
+            if not os.path.exists(custom_file):
+                mt.fail("NO SUCH FILE {} line {}".format(custom_file, line_count))
                 continue
             for a in a2:
                 if a in map_to:
                     mt.warn("Duplicate instance of {} in mapto file.".format(a))
                 else:
-                    map_to[a] = a1[1]
+                    map_to[a] = custom_file
 
 cmd_count = 1
 
