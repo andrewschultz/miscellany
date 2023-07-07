@@ -49,6 +49,16 @@ def usage(header="Generic usage writeup"):
     print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
     sys.exit()
 
+def nometa(my_list):
+    meta_commands = [ '?', '?c', 'c?', '`' ]
+    lc = [x.lower() for x in my_list]
+    if set([x.lower() for x in sys.argv]) & set(meta_commands):
+        return False
+    for x in lc:
+        if x.startswith('s='):
+            return False
+    return True
+
 def back_up_existing_temp(keep_original = False):
     if not os.path.exists(temp_batch_file):
         return
@@ -97,6 +107,9 @@ if len(sys.argv) == 1:
     mt.warn("No commands given to ni.py. Going to default directory. For usage, type ?")
 
 read_special_commands()
+
+if nometa(sys.argv[1:]):
+    print("NOTE: if this didn't open the file or directory you want, use backtick ` or check for conflicts with ?c / c?.")
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
