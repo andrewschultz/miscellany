@@ -39,6 +39,7 @@ map_to = defaultdict(str) # this maps command line arguments to a specific file 
 
 def usage(header="Generic usage writeup"):
     mt.okay(header)
+    mt.okay('=' * 50)
     print("This is a quasi-replacement for the batch file ni.bat.")
     print()
     mt.warn("Examples of usage:")
@@ -47,6 +48,9 @@ def usage(header="Generic usage writeup"):
     print("ni m opens up materials directory.")
     print()
     print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
+    print("ni ?c / c? lists conflicts between ni.py-specific keywords (use s=) and general projects.")
+    print()
+    print("A backtick can be used to bypass command line flags. There is no harm in including it.")
     sys.exit()
 
 def nometa(my_list):
