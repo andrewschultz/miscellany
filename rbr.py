@@ -96,6 +96,26 @@ exe_proj = ""
 
 default_rbrs = defaultdict(str)
 
+class branch_struct():
+
+    def __init__(self, line_of_text):
+        ary = line_of_text.split(',')
+        try:
+            self.list_of_abbrevs = ary[1].lower().split('/')
+            self.output_name = ary[0].lower()
+            self.description = ary[2]
+        except:
+            mt.fail("Failed to read following line. Bailing. We need output mame, abbrev list, description.")
+            mt.warn("    " + line_of_text.strip())
+            sys.exit()
+        self.currently_writing = True
+        self.hard_lock = False
+        self.current_buffer_string = ''
+        self.any_changes = False
+        self.branch_variables = defaultdict(int)
+
+branch_dictionary = defaultdict(branch_struct)
+
 def postopen_stub():
     print("Reminder that -np disables copy-over-post and -p enables it. Default is to copy the REG files over to the {} directory.".format(prt_color))
     mt.postopen_files()
@@ -281,9 +301,11 @@ def apostrophe_check(line, line_count, warns):
             apost_changes[a1[x]] += 1
     return True
 
-def reg_verify_file(my_file):
+def reg_verify_file(my_file, allow_edit = False):
     mb = os.path.basename(my_file)
-    positive_found = False
+    positive_found = fail_found = False
+    retval = 0
+    out_string = ''
     with codecs.open(my_file, encoding='utf8', errors='ignore') as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('##') and re.sub("^#+ (file name: *)?", "", line).startswith('reg'):
@@ -291,13 +313,23 @@ def reg_verify_file(my_file):
                     positive_found = True
                     continue
                 mt.fail("ERROR {} had mis-identifying line {} {}".format(mb, line_count, line.strip()))
-                return line_count
-    if not positive_found:
+                line = re.sub('reg-.*?txt', mb, line)
+                retval = line_count
+                fail_found = True
+            out_string += line.rstrip() + "\n"
+    if allow_edit and fail_found:
+        rbr_temp_header = "c:\\writing\\temp\\delete-rbrheader.txt"
+        f = open(rbr_temp_header, "w", encoding='utf8')
+        f.write(out_string)
+        f.close()
+        mt.wm(my_file, rbr_temp_header)
+        return 0
+    if not positive_found and not fail_found:
         mt.warn("WARNING {} had no positive test file identification.".format(mb))
         return -1
-    return 0
+    return retval
 
-def reg_verify_dir(open_unmarked = False, bail = True):
+def reg_verify_dir(open_unmarked = False, bail = True, allow_edit = False):
     max_open = 5
     cur_open = 0
     actual_open = 0
@@ -312,7 +344,7 @@ def reg_verify_dir(open_unmarked = False, bail = True):
         if g.endswith('.bak'):
             print(colorama.Fore.CYAN + "IGNORED backup file {}, which you probably want to delete.".format(g))
             continue
-        temp = reg_verify_file(g)
+        temp = reg_verify_file(g, allow_edit = allow_edit)
         if temp < 1 and not open_unmarked:
             continue
         elif temp == 0:
@@ -1457,6 +1489,8 @@ while count < len(sys.argv):
         reg_verify_dir(open_unmarked = False)
     elif arg in ( 'rva', 'vra' ):
         reg_verify_dir(open_unmarked = True)
+    elif arg in ( 'rve', 'vre' ):
+        reg_verify_dir(open_unmarked = True, allow_edit = True)
     elif mt.alfmatch('rv<d', arg):
         reg_verify_all_dirs(open_unmarked = False)
     elif mt.alfmatch('rv|ad', arg):
