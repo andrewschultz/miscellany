@@ -1491,6 +1491,14 @@ while count < len(sys.argv):
         reg_verify_dir(open_unmarked = True)
     elif arg in ( 'rve', 'vre' ):
         reg_verify_dir(open_unmarked = True, allow_edit = True)
+    elif arg == 'rv*':
+        for a in i7.i7xr:
+            try:
+                i7.go_proj(a)
+                reg_verify_dir(open_unmarked = True, allow_edit = True)
+            except:
+                pass
+        sys.exit()
     elif mt.alfmatch('rv<d', arg):
         reg_verify_all_dirs(open_unmarked = False)
     elif mt.alfmatch('rv|ad', arg):
