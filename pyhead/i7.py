@@ -731,6 +731,11 @@ def notes_file(x, suffix=''):
             return combo_try
     return os.path.join(sdir(x), notes_local)
 
+def fixes_file(x):
+    return os.path.join(proj2dir(x, to_github = True), 'fixes.txt')
+
+fix_file = fixes_file
+
 def walkthrough_file(x, extra_string = ""):
     if extra_string == 'base' or extra_string == 'wbase':
         file_short = "wbase.txt"
