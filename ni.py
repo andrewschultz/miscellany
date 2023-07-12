@@ -24,6 +24,7 @@ force_batch_move = False
 source_opened = False
 get_main_source = False
 get_notes = False
+get_fixes_file = False
 goto_github = False
 hfx_ary = []
 user_project = ''
@@ -132,6 +133,8 @@ while cmd_count < len(sys.argv):
         materials_subdir = True
     elif arg == 'no':
         get_notes = True
+    elif arg in ( 'fi', 'fix' ):
+        get_fixes_file = True
     elif arg in ( 'd', 'dtf', 'dt', 'tfd', 'td' ):
         if os.path.exists(temp_batch_file):
             os.remove(temp_batch_file)
@@ -223,6 +226,14 @@ if get_main_source:
     print("Opening {} main source {}...".format(to_project, main_source))
     mt.npo(main_source, print_cmd = False, bail = False)
     source_opened = True
+
+if get_fixes_file:
+    fix_file = i7.fixes_file(to_project)
+    if not os.path.exists(fix_file):
+        mt.fail("Can't open fixes file", fix_file, "as it does not exist.")
+    else:
+        mt.npo(fix_file, print_cmd = False, bail = False)
+        source_opened = True
 
 if get_notes:
     notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
