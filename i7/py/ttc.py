@@ -1239,7 +1239,16 @@ def read_cfg_file(this_cfg):
                 old_data = data
                 data = mt.string_expand(data, mt.mt_default_dict, force_lower = True)
             if prefix.startswith("$"):
-                mt.mt_default_dict[prefix[1:]] = data
+                if prefix.endswith("+"):
+                    var_name = prefix[1:-1]
+                    if var_name not in mt.mt_default_dict:
+                        mt.warn(var_name, "uses += but is not in the variable dictionary. So you may have a typo.")
+                        mt.mt_default_dict[var_name] = data
+                    else:
+                        mt.mt_default_dict[var_name] += ',' + data
+                else:
+                    var_name = prefix[1:]
+                    mt.mt_default_dict[var_name] = data
             elif prefix == 'abbr':
                 ary = data.split(",")
                 for a in ary:
