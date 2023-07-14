@@ -719,7 +719,8 @@ def get_table_cases(this_proj):
                         table_line_count = -1
                     continue
                 if table_header_next:
-                    header_compilation = ','.join([re.sub(" *\(.*", "", x) for x in line.strip().lower().split("\t")])
+                    headers = [re.sub(" *\(.*", "", x) for x in line.strip().lower().split("\t")]
+                    header_compilation = ','.join(headers)
                     table_header_next = False
                     table_line_count = 0
                     continue
@@ -744,23 +745,27 @@ def get_table_cases(this_proj):
                     subcase = ''
                     raw_case = ''
                     for x in my_generator.read_col_list:
-                        if x == -1:
+                        if x == 'linecount':
                             subcase += '-{}'.format(table_line_count)
                         else:
                             try:
-                                if columns[x] == 'a rule' or columns[x] == 'a thing':
-                                    columns[x] = '--'
+                                idx = headers.index(x)
+                            except:
+                                sys.exit("{} not in the list of table headers {}".format(x, headers))
+                            try:
+                                if columns[idx] == 'a rule' or columns[idx] == 'a thing':
+                                    columns[idx] = '--'
                             except:
                                 print("Too few columns", line_count, line.strip(), fb, "missing column", x)
                                 sys.exit()
-                            columns[x] = columns[x].replace('|', '-')
+                            columns[idx] = columns[idx].replace('|', '-')
                             try:
-                                if columns[x].startswith('"'):
-                                    columns[x] = re.sub(r'".*', '', columns[x][1:])
-                                subcase += '-{}'.format(columns[x]).replace('"', '')
-                                raw_case += '-{}'.format(old_columns[x]).replace('"', '')
+                                if columns[idx].startswith('"'):
+                                    columns[idx] = re.sub(r'".*', '', columns[idx][1:])
+                                subcase += '-{}'.format(columns[idx]).replace('"', '')
+                                raw_case += '-{}'.format(old_columns[idx]).replace('"', '')
                             except:
-                                print("WARNING: no column", x, "at", this_file, "line", line_count, "so calling the entry blank.")
+                                print("WARNING: no column", idx, x, "at", this_file, "line", line_count, "so calling the entry blank.")
                                 subcase += '-'
                                 mt.add_post(this_file, line_count)
                     if not subcase.replace('-', '') or subcase == '-a rule' or subcase == 'a thing':
