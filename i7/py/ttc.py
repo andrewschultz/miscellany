@@ -1596,6 +1596,28 @@ def add_rbr_testcase_nums(my_string):
     mt.wm(rbr_globals[0], adjust_out)
     sys.exit()
 
+def test_file_from_project(my_project):
+    first_try = os.path.join(ttc_dir, "ttc-{}.txt".format(my_project))
+    if os.path.exists(first_try):
+        return first_try
+    z = i7.long_name(my_project)
+    ret_val = ''
+    got_one = False
+    print(z)
+    if z not in i7.i7xa:
+        mt.warn("Could not derive project from current directory. Going with default of {}.".format(i7.curdef))
+        z = i7.long_name(i7.curdef)
+    for a in i7.i7xa[z]:
+        tempfile = os.path.join(ttc_dir, "ttc-{}.txt".format(a))
+        if os.path.exists(tempfile):
+            if got_one:
+                sys.exit("Ambiguous ... {} or {}.".format(tempfile, ret_val))
+            got_one = True
+            ret_val = tempfile
+    if not ret_val:
+        sys.exit("Could not find file for project {}.".format(my_project))
+    return ret_val
+
 already_included = defaultdict(bool)
 
 if 'ncb' in sys.argv:
@@ -1624,8 +1646,10 @@ while cmd_count < len(sys.argv):
             verbose_level = num
         else:
             verbose_level = 1
+    elif arg == '/':
+        mt.npo(test_file_from_project(i7.dir2proj()))
     elif arg[0] == '/':
-        if not arg[1:]:
+        if arg[1:] == 'm':
             mt.npo(ttc_cfg)
         proj_look = arg[1:]
         if proj_look not in i7.i7x:
@@ -1634,8 +1658,8 @@ while cmd_count < len(sys.argv):
         my_stuff = [x for x in i7.i7x if i7.i7x[x] == temp]
         current_cfg = ''
         for m in my_stuff:
-            this_cfg = os.path.join(ttc_dir, "ttc-{}.txt".format(m))
-            if os.path.exists(os.path.join(ttc_dir, "ttc-{}.txt".format(m))):
+            this_cfg = test_file_from_project(m)
+            if os.path.exists(this_cfg):
                 if current_cfg:
                     print("WARNING duplicate cfg")
                     print("FIRST", current_cfg)
