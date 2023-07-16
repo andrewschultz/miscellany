@@ -72,6 +72,7 @@ def usage():
     print("na = no to all except test cases, ns = no syntax, nt = no text.")
     print("ncd = don't collapse extra dashes.")
     print("q = quiet, no debug info and v[0-2] = debug info level.")
+    print("/ = open test file for this project, /m = open main file /proj = open proj's test file")
     print("?? = lists mistakes when everything seems right.")
     sys.exit()
 
@@ -530,7 +531,7 @@ def get_value_cases(this_proj):
                             if test_case_name not in return_dict:
                                 return_dict[test_case_name] = SimpleTestCase(suggested_text = 'BLATHER', command_text = 'DO SOMETHING', condition_text = '', expected_file = 'WHATEVER')
                             else:
-                                print("Ignoring duplicate test case {} line {}".format())
+                                print("Ignoring duplicate test case {} line {}".format(test_case_name, line_count))
     return return_dict
 
 def get_rule_cases(this_proj):
@@ -1022,7 +1023,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lon
                     if this_case_list[raw_case].found_yet == True and not this_case.startswith('#+'):
                         global_error_note = True
                         dupes_flagged += 1
-                        print("Duplicate test case #{} {} at {} line {} copies {}/{} (use + to note duplicate).".format(dupes_flagged, raw_case, base, line_count, this_case_list[raw_case].first_file_found, this_case_list[raw_case].first_line_found))
+                        print("Duplicate test case #{} {} at {} line {} copies {}{} (use + to note duplicate).".format(dupes_flagged, raw_case, base, line_count, this_case_list[raw_case].first_file_found + '/' if this_case_list[raw_case].first_file_found != my_rbr else '', this_case_list[raw_case].first_line_found))
                         mt.add_postopen(my_rbr, line_count)
                         this_file_dupes.append(line_count)
                     if raw_case not in this_case_list:
