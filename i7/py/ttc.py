@@ -787,10 +787,10 @@ def get_table_cases(this_proj):
                         else:
                             for c in my_generator.print_col_list:
                                 try:
-                                    temp_text = columns[c]
+                                    temp_text = columns[headers.index(c)]
                                     if temp_text.startswith('"'):
                                         temp_text = re.sub(r'".*', '', temp_text[1:])
-                                    possible_text += '-{}'.format(columns[c])
+                                    possible_text += '-{}'.format(columns[headers.index(c)])
                                 except:
                                     possible_text += '---'
                             possible_text = possible_text[1:]
@@ -1470,7 +1470,7 @@ def read_cfg_file(this_cfg):
                 this_regex_to_check = ''
                 this_print_col_list = []
                 this_print_absolute = ''
-                this_read_col_list = [ 0 ]
+                this_read_col_list = [ ]
                 this_ignore_blank_suggestions = False
                 generator_dict = defaultdict(str)
                 this_ignore_blank_print = False
@@ -1503,9 +1503,9 @@ def read_cfg_file(this_cfg):
                         elif generator_type == 'ignoreblankprint':
                             this_ignore_blank_print = int(generator_data)
                         elif generator_type == 'printfromcol':
-                            this_print_col_list = [ int(x) for x in generator_data.split(',') ]
+                            this_print_col_list = generator_data.split(',')
                         elif generator_type == 'readcol':
-                            this_read_col_list = [int(x) for x in generator_data.split(',')]
+                            this_read_col_list = generator_data.split(',')
                         elif generator_type == 'regcheck':
                             this_regex_to_check = generator_data
                         else:
