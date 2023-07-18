@@ -195,6 +195,18 @@ def renumber(entry, my_dict):
         candidate_entry = "{}-{}".format(entry, number_to_add)
     return candidate_entry
 
+def text_from_row_values(template_string, header_strings, row_strings):
+    retval = template_string
+    for count in range (0, len(header_strings)):
+        h0 = "{" + header_strings[count] + "}"
+        retval = retval.replace(h0, row_strings[count])
+    if '`' in template_string:
+        for count in range (0, len(header_strings)):
+            h0 = "{" + header_strings[count] + "`}"
+            retval = retval.replace(h0, re.sub("\|.*", "", row_strings[count]))
+    retval = retval.replace('\\n', '\n')
+    return retval
+
 def testcase_match(my_verb = ''):
     possible_verbs = [ 'n', 's', 'e', 'w', 'undo' ]
     guesses = defaultdict(str)
