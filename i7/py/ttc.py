@@ -84,7 +84,7 @@ class TestCaseGenerator:
         self.read_col_list = read_col_list
         self.print_col_list = print_col_list
         self.print_absolute = print_absolute
-        self.command_generator_list = command_generator_list
+        self.command_generator = command_generator
         self.fixed_command = fixed_command
         self.regex_to_check = regex_to_check
         self.ignore_blank_print = ignore_blank_print
@@ -829,10 +829,14 @@ def get_table_cases(this_proj):
                         temp_command = ''
                         if my_generator.fixed_command:
                             temp_command = my_generator.fixed_command
-                        elif my_generator.command_generator_list:
-                            for col in my_generator.command_generator_list:
-                                temp_command += ' ' + columns[col].replace('"', '').replace('|', '-') # we don't want to replace dashes with spaces because we want to note, yes, we want to change things
-                            temp_command = temp_command[1:]
+                        elif my_generator.command_generator:
+                            temp_command = my_generator.command_generator
+                            for h in range(0, len(headers)):
+                                h0 = "{" + headers[h] + "}"
+                                if h0 in temp_command:
+                                    temp_command = temp_command.replace(h0, columns[h])
+                            if '{{' in temp_command:
+                                mt.warn("Temp command {}/{} did not match to a header.".format(temp_command, my_generator.command_generator))
                         if my_generator.ignore_blank_print and not has_meaningful_content(possible_text):
                             continue
                         return_dict[test_case_name] = SimpleTestCase(possible_text, command_text = temp_command)
@@ -1503,7 +1507,7 @@ def read_cfg_file(this_cfg):
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
                         if generator_type == 'cmdgen':
-                            my_command_generator_list = [ int(x) for x in generator_data.split(',') ]
+                            my_command_generator = generator_data
                         elif generator_type == 'coltoprint':
                             my_col_print = [int(x) for x in generator_data.split(',')]
                         elif generator_type in ( 'fc', 'fixedcommand' ):
