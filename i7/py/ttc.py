@@ -996,11 +996,18 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lon
         this_file_dupes = []
         with open(my_rbr) as file:
             for (line_count, line) in enumerate(file, 1):
+                line = line.strip()
+                if line.startswith('#'):
+                    line = re.sub(" #.*", "", line)
                 if line.startswith("+#"):
                     print("BACKWARDS RETEST CASE {} line {}: {}".format(base, line_count, line.strip()))
                     mt.add_postopen(my_rbr, line_count)
                 if line.startswith("*"):
                     can_write_testcases = True
+                if line.endswith("@"):
+                    line = line.replace('@', '')
+                if line.endswith("#ok"):
+                    line = line.replace('#ok', '').rstrip()
                 if not can_write_testcases and valid_ttc(line, this_proj):
                     tests_in_header += 1
                     if pre_asterisk_warn:
@@ -1155,6 +1162,13 @@ def verify_case_placement(this_proj):
                 is_retest = False
                 if line_mod.startswith('+'):
                     is_retest = True
+                ignore_test_case_mapping = False
+                if line_mod.endswith("@"):
+                    ignore_test_case_mapping = True
+                    line_mod = line_mod[:-1].rstrip()
+                if line_mod.endswith("#ok"):
+                    ignore_test_case_mapping = True
+                    line_mod = line_mod[:-3].rstrip()
                 match_array = []
                 this_success = True
 #    for q in case_mapper[this_proj].mappers_in_order:
@@ -1166,7 +1180,7 @@ def verify_case_placement(this_proj):
                     if case_type == FIND_ABSOLUTE_CASE:
                         if t1 not in line_mod:
                             continue
-                        if case_file in fb:
+                        if ignore_test_case_mapping or case_file in fb:
                             match_array.append(t1)
                             break
                         else:
@@ -1177,7 +1191,7 @@ def verify_case_placement(this_proj):
                     elif case_type == FIND_REGEX_CASE:
                         if not re.search(t1, line_mod):
                             continue
-                        if re.search(case_file, fb):
+                        if ignore_test_case_mapping or re.search(case_file, fb):
                             match_array.append(t1)
                             break
                         else:
