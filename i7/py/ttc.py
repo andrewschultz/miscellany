@@ -160,6 +160,13 @@ verbose_level = 0
 def strip_end_comments(my_string):
     return re.sub("\[.*?\]$", "", my_string.strip())
 
+def quote_flatten(my_val):
+    if my_val.startswith('"') and my_val.endswith('"'):
+        return my_val[1:-1]
+    if my_val == 'a rule' or my_val == 'a thing':
+        return '--'
+    return my_val
+
 def test_case_of(x):
     temp = x.lower().replace('"', '').replace(' ', '-').replace('|', '-').replace('/', '-').replace('(', '').replace(')', '')
     return re.sub('--+', '-', temp)
