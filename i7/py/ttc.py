@@ -77,12 +77,12 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_col_list = [1], print_absolute = '', command_generator_list = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_from_col = '', print_absolute = '', command_generator = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
         self.read_col_list = read_col_list
-        self.print_col_list = print_col_list
+        self.print_from_col = print_from_col
         self.print_absolute = print_absolute
         self.command_generator = command_generator
         self.fixed_command = fixed_command
@@ -800,19 +800,13 @@ def get_table_cases(this_proj):
                         test_case_name = test_case_of(p + '-' + current_table + subcase)
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
-                        possible_text = ''
                         if my_generator.print_absolute:
                             possible_text = my_generator.print_absolute
                         else:
-                            for c in my_generator.print_col_list:
-                                try:
-                                    temp_text = columns[headers.index(c)]
-                                    if temp_text.startswith('"'):
-                                        temp_text = re.sub(r'".*', '', temp_text[1:])
-                                    possible_text += '-{}'.format(columns[headers.index(c)])
-                                except:
-                                    possible_text += '---'
-                            possible_text = possible_text[1:]
+                            possible_text = text_from_row_values(my_generator.print_from_col, headers, columns)
+                            for c in range (0, len(headers)):
+                                h0 = "{" + headers[c] + "}"
+                                possible_text = possible_text.replace(h0, i7.i7_text_convert(columns[c], erase_brackets = False, remove_end_quotes = True))
                         if test_case_name in table_specs[this_proj][this_file].okay_duplicate_counter:
                             table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] -= 1
                             if table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] < 0:
