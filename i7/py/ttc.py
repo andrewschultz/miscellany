@@ -759,45 +759,23 @@ def get_table_cases(this_proj):
                 table_line_count += 1
                 if not read_table_data:
                     continue
-                columns = line.strip().split('\t')
+                columns = [ quote_flatten(x) for x in line.strip().split('\t') ]
                 old_columns = list(columns)
                 for my_generator in these_table_gens:
-                    subcase = ''
-                    raw_case = ''
-                    for x in my_generator.read_col_list:
-                        if x == 'linecount':
-                            subcase += '-{}'.format(table_line_count)
-                        else:
-                            try:
-                                idx = headers.index(x)
-                            except:
-                                sys.exit("{} not in the list of table headers {}".format(x, headers))
-                            try:
-                                if columns[idx] == 'a rule' or columns[idx] == 'a thing':
-                                    columns[idx] = '--'
-                            except:
-                                print("Too few columns", line_count, line.strip(), fb, "missing column", x)
-                                sys.exit()
-                            columns[idx] = columns[idx].replace('|', '-')
-                            try:
-                                if columns[idx].startswith('"'):
-                                    columns[idx] = re.sub(r'".*', '', columns[idx][1:])
-                                subcase += '-{}'.format(columns[idx]).replace('"', '')
-                                raw_case += '-{}'.format(old_columns[idx]).replace('"', '')
-                            except:
-                                print("WARNING: no column", idx, x, "at", this_file, "line", line_count, "so calling the entry blank.")
-                                subcase += '-'
-                                mt.add_post(this_file, line_count)
-                    if not subcase.replace('-', '') or subcase == '-a rule' or subcase == 'a thing':
+                    sub_case = my_generator.read_col_list
+                    if '{linecount}' in sub_case:
+                        sub_case = sub_case.replace('{linecount}', str(table_line_count))
+                    sub_case = text_from_row_values(sub_case, headers, columns)
+                    if not sub_case.replace('-', ''):
                         continue
                     if collapse_extra_dashes:
-                        subcase = re.sub("--+", "-", subcase)
-                        subcase = re.sub("-+$", "", subcase)
+                        sub_case = re.sub("--+", "-", sub_case)
+                        sub_case = re.sub("-+$", "", sub_case)
                     for p in my_generator.prefix_list:
                         if my_generator.regex_to_check:
-                            if not re.search(my_generator.regex_to_check, raw_case):
+                            if not re.search(my_generator.regex_to_check, sub_case):
                                 continue
-                        test_case_name = test_case_of(p + '-' + current_table + subcase)
+                        test_case_name = test_case_of(p + '-' + current_table + '-' + sub_case)
                         if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
                             continue
                         if my_generator.print_absolute:
