@@ -77,11 +77,11 @@ def usage():
     sys.exit()
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], read_col_list = [0], print_from_col = '', print_absolute = '', command_generator = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], subcase_name_format = [0], print_from_col = '', print_absolute = '', command_generator = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
-        self.read_col_list = read_col_list
+        self.subcase_name_format = subcase_name_format
         self.print_from_col = print_from_col
         self.print_absolute = print_absolute
         self.command_generator = command_generator
@@ -762,7 +762,7 @@ def get_table_cases(this_proj):
                 columns = [ quote_flatten(x) for x in line.strip().split('\t') ]
                 old_columns = list(columns)
                 for my_generator in these_table_gens:
-                    sub_case = my_generator.read_col_list
+                    sub_case = my_generator.subcase_name_format
                     if '{linecount}' in sub_case:
                         sub_case = sub_case.replace('{linecount}', str(table_line_count))
                     sub_case = text_from_row_values(sub_case, headers, columns)
@@ -1477,9 +1477,9 @@ def read_cfg_file(this_cfg):
                 my_fixed_command = ''
                 my_command_generator_list = []
                 this_regex_to_check = ''
-                this_print_col_list = []
+                this_print_from_col = ''
                 this_print_absolute = ''
-                this_read_col_list = [ ]
+                this_subcase_name_format = [ ]
                 this_ignore_blank_suggestions = False
                 generator_dict = defaultdict(str)
                 this_ignore_blank_print = False
@@ -1512,9 +1512,11 @@ def read_cfg_file(this_cfg):
                         elif generator_type == 'ignoreblankprint':
                             this_ignore_blank_print = int(generator_data)
                         elif generator_type == 'printfromcol':
-                            this_print_col_list = generator_data.split(',')
-                        elif generator_type == 'readcol':
-                            this_read_col_list = generator_data.split(',')
+                            this_print_from_col = generator_data
+                        elif generator_type == 'readcol' or generator_type == 'subcase':
+                            if generator_type == 'readcol':
+                                mt.warn("Change readcol to subcase in {} line {}.".format(this_cfg, line_count))
+                            this_subcase_name_format = generator_data
                         elif generator_type == 'regcheck':
                             this_regex_to_check = generator_data
                         else:
@@ -1522,7 +1524,7 @@ def read_cfg_file(this_cfg):
                             if cfg_error_bail:
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
-                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, read_col_list = this_read_col_list, print_col_list = this_print_col_list, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator_list = my_command_generator_list, fixed_command = my_fixed_command, regex_to_check = this_regex_to_check, ignore_blank_print = this_ignore_blank_print)
+                    this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, subcase_name_format = this_subcase_name_format, print_from_col = this_print_from_col, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator = my_command_generator, fixed_command = my_fixed_command, regex_to_check = this_regex_to_check, ignore_blank_print = this_ignore_blank_print)
                     table_specs[cur_proj][cur_file].generators.append(this_generator)
                 except:
                     print("Exception reading CFG", line_count, data)
