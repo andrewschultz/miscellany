@@ -642,6 +642,8 @@ def get_rule_cases(this_proj):
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = test_case_of(my_prefix + '-' + this_rule + '-' + test_case_sub_name)
+                if test_case_full_name in table_specs[this_proj][this_file].untestables:
+                    continue
                 my_expected_file = rules_specs[this_proj][this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_proj][this_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
@@ -987,6 +989,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lon
                     line = line.replace('@', '')
                 if line.endswith("#ok"):
                     line = line.replace('#ok', '').rstrip()
+                    mt.warn("{} line {} has #ok syntax but should use @.".format(my_rbr, line_count))
                 if not can_write_testcases and valid_ttc(line, this_proj):
                     tests_in_header += 1
                     if pre_asterisk_warn:
