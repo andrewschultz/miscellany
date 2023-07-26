@@ -102,8 +102,8 @@ class SimpleTestCase:
 
 class ValuesPicker:
 
-    def __init__(self, which_command = 'CMD', expected_file = 'HINT', expected_text = 'TEXT'):
-        self.which_command = which_command
+    def __init__(self, command_template = 'CMD', expected_file = 'HINT', expected_text = 'TEXT'):
+        self.command_template = command_template
         self.expected_file = expected_file
         self.expected_text = expected_text
 
@@ -547,8 +547,12 @@ def get_value_cases(this_proj):
                     for m in my_stuff:
                         if txt in m:
                             test_case_name = 'testcase-values-{}'.format(m.replace(' ', '-').lower())
+                            likely_subject = m.replace('-', ' ').lower()
+                            likely_subject = re.sub("^.*?of ", "", likely_subject)
+                            likely_subject = re.sub(" (is|are) .*", "", likely_subject)
+                            my_command_template = value_specs[this_proj][this_file][txt].command_template.replace('{SUBJ}', likely_subject)
                             if test_case_name not in return_dict:
-                                return_dict[test_case_name] = SimpleTestCase(suggested_text = 'BLATHER', command_text = 'DO SOMETHING', condition_text = '', expected_file = 'WHATEVER')
+                                return_dict[test_case_name] = SimpleTestCase(suggested_text = value_specs[this_proj][this_file][txt].expected_text, command_text = my_command_template, condition_text = '', expected_file = value_specs[this_proj][this_file][txt].expected_file)
                             else:
                                 print("Ignoring duplicate test case {} line {}".format(test_case_name, line_count))
     return return_dict
@@ -1410,7 +1414,10 @@ def read_cfg_file(this_cfg):
                 ary = data.split('\t')
                 while len(ary) < 4:
                     ary.append('<UNDEF>')
-                value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(which_command = ary[1], expected_file = ary[2], expected_text = ary[3])
+                if '=' in ''.join(ary[1:]):
+                    mt.warn("Currently we use hardcoded values for value/values picker. So everything left of = is deleted. {} line {}".format(tb, line_count))
+                    ary = [ re.sub(".*=", "", x) for x in ary ]
+                value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
                 #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
             elif prefix == 'ignore':
                 ary = data.split(',')
