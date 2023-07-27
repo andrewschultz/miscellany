@@ -316,6 +316,10 @@ def reg_verify_file(my_file, allow_edit = False):
                 line = re.sub('reg-.*?txt', mb, line)
                 retval = line_count
                 fail_found = True
+            if line.startswith('# ') and 'reg-' in line and not positive_found:
+                mt.warn("ERROR {} needs ## to start, not # {} {}".format(mb, line_count, line.strip()))
+                line = line.replace('# ', '## ', 1)
+                fail_found = True
             out_string += line.rstrip() + "\n"
     if allow_edit and fail_found:
         rbr_temp_header = "c:\\writing\\temp\\delete-rbrheader.txt"
