@@ -646,8 +646,6 @@ def get_rule_cases(this_proj):
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = test_case_of(my_prefix + '-' + this_rule + '-' + test_case_sub_name)
-                if test_case_full_name in table_specs[this_proj][this_file].untestables:
-                    continue
                 my_expected_file = rules_specs[this_proj][this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_proj][this_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
@@ -800,14 +798,6 @@ def get_table_cases(this_proj):
                             if test_case_name not in dupe_dict:
                                 dupe_dict[test_case_name] = 1
                             dupe_dict[test_case_name] += 1
-                            continue
-                        elif test_case_name in table_specs[this_proj][this_file].untestables:
-                            if verbose_level > 0:
-                                print("UNTESTABLE ABSOLUTE", test_case_name)
-                            continue
-                        elif wild_card_match(test_case_name, table_specs[this_proj][this_file].untestable_regexes):
-                            if verbose_level > 0:
-                                print("UNTESTABLE REGEX", test_case_name)
                             continue
                         if possible_text.startswith('"') and possible_text.count('"') == 2:
                             possible_text = re.sub("\".*", "", possible_text[1:])
@@ -1748,6 +1738,22 @@ case_list = get_table_cases(my_proj)
 case_list.update(get_rule_cases(my_proj))
 case_list.update(get_mistakes(my_proj))
 case_list.update(get_value_cases(my_proj))
+
+case_copy = list(case_list)
+
+for c in case_copy:
+    for this_file in table_specs[my_proj]:
+        if c in table_specs[my_proj][this_file].untestables:
+            if verbose_level > 0:
+                print("UNTESTABLE ABSOLUTE", c)
+            case_list.pop(c, None)
+            continue
+        elif wild_card_match(c, table_specs[my_proj][this_file].untestable_regexes):
+            if verbose_level > 0:
+                print("UNTESTABLE REGEX", c)
+            case_list.pop(c, None)
+            continue
+
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
 
