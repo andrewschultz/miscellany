@@ -542,10 +542,14 @@ def get_value_cases(this_proj):
             for (line_count, line) in enumerate (file, 1):
                 if line.startswith('\t'):
                     continue
+                if line.startswith('to '):
+                    continue
                 my_stuff = i7.i7_code_sentences_of(line)
                 for txt in value_specs[this_proj][this_file]:
                     for m in my_stuff:
                         if txt in m:
+                            if txt + ' of' not in m:
+                                continue
                             test_case_name = 'testcase-values-{}'.format(m.replace(' ', '-').lower())
                             likely_subject = m.replace('-', ' ').lower()
                             likely_subject = re.sub("^.*?of ", "", likely_subject)
