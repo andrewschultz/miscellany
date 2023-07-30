@@ -1619,7 +1619,6 @@ def test_file_from_project(my_project):
     z = i7.long_name(my_project)
     ret_val = ''
     got_one = False
-    print(z)
     if z not in i7.i7xa:
         mt.warn("Could not derive project from current directory. Going with default of {}.".format(i7.curdef))
         z = i7.long_name(i7.curdef)
@@ -1631,7 +1630,12 @@ def test_file_from_project(my_project):
             got_one = True
             ret_val = tempfile
     if not ret_val:
-        sys.exit("Could not find file for project {}.".format(my_project))
+        mt.fail("Could not find file for project {}.".format(my_project))
+        mt.fail("Here is syntax to use to create a file:")
+        to_file = os.path.normpath(os.path.join(ttc_dir, "ttc-{}.txt".format(i7.main_abbr(my_project))))
+        from_file = i7.notes_file(my_project)
+        mt.fail("    notepad {}".format(to_file))
+        sys.exit()
     return ret_val
 
 already_included = defaultdict(bool)
