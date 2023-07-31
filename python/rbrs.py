@@ -11,6 +11,7 @@ from itertools import permutations
 import mytools as mt
 
 only_one_file = True
+add_creation_mark = True
 
 def usage(my_arg = '')
     print("Bad argument", my_arg)
@@ -145,12 +146,16 @@ def rbr_scramble(my_file, max_shuffles = 120):
     for this_perm in permutation_array:
         x2 = [str(a) for a in this_perm]
         file_array = my_file.split('-')
-        file_array.insert(1, 'scramble')
+        file_array.insert(2, 'scramble')
         file_array.insert(3, ''.join(x2))
         new_file = '-'.join(file_array)
         print("Writing", new_file)
         file_string = ''
         f = open(new_file, "w")
+        if add_creation_mark:
+            shuffle_ary = shuffles.split("\n")
+            shuffle_ary.insert(1, "# created with rbrs.py")
+            shuffles = '\n'.join(shuffle_ary)
         for x in range(0, len(shuffles)):
             f.write(fixed[x])
             f.write(modified_output(shuffles[this_perm[x]], this_perm))
@@ -172,6 +177,10 @@ while cmd_count < len(sys.argv):
         only_one_file = False
     elif arg == 'o':
         only_one_file = True
+    elif mt.alfmatch(arg, 'cmn'):
+        add_creation_mark = False
+    elif arg in ( 'cm', 'mc' ):
+        add_creation_mark = True
     else:
         usage(arg)
     cmd_count += 1
