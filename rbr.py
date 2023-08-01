@@ -1328,18 +1328,18 @@ with open(i7.rbr_config) as file:
         ll = lr.lower()
         if '>' in ll[1:] and '<' not in ll[1:]:
             print("WARNING: possible erroneous cut and paste. Line", lc, "may need line break before command prompt:", line.strip())
-        vars = wipe_first_word(ll)
+        var_array = wipe_first_word(ll)
         if ll.startswith('dupe'):
-            ja = vars.split("\t")
+            ja = var_array.split("\t")
             times[ja[0]] = int(ja[1])
             continue
         if ll.startswith('default'):
-            if def_proj == i7.main_abb(vars):
+            if def_proj == i7.main_abb(var_array):
                 mt.warn("NOTE: we are redefining the rbr-specific default in rbr.txt to the general default in i7p.txt. This is harmless overkill.")
-            def_proj = i7.main_abb(vars)
+            def_proj = i7.main_abb(var_array)
             continue
         if ll.startswith('project') or ll.startswith('projname'):
-            cur_proj = i7.main_abb(vars)
+            cur_proj = i7.main_abb(var_array)
             continue
         if ll.startswith('apostrophe'):
             apostrophes[cur_proj].extend(wipe_first_word(lr).split(','))
@@ -1352,7 +1352,7 @@ with open(i7.rbr_config) as file:
                 abbrevs[t2[0]][cur_proj] = t2[1]
             continue
         if ll.startswith('branchmain'):
-            default_rbrs[cur_proj] = vars
+            default_rbrs[cur_proj] = var_array
             continue
         if ll.startswith('branchcheck'):
             ary0 = ll[12:].split(',')
@@ -1364,9 +1364,9 @@ with open(i7.rbr_config) as file:
                     branch_check[cur_proj][y] = x[0]
             continue
         if ll.startswith('branchfiles'):
-            branch_list[cur_proj] = vars.split(",")
-            if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = vars.split(",")
-            if cur_proj in i7.i7x.keys(): branch_list[i7.i7x[cur_proj]] = vars.split(",")
+            branch_list[cur_proj] = var_array.split(",")
+            if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = var_array.split(",")
+            if cur_proj in i7.i7x.keys(): branch_list[i7.i7x[cur_proj]] = var_array.split(",")
             continue
         if ll.startswith("ignoreglobal"):
             if 'global' in ignores:
@@ -1387,7 +1387,7 @@ with open(i7.rbr_config) as file:
             ignores[cur_proj] = y[1].strip().split(",")
             continue
         if ll.startswith('montyfiles'):
-            mfi = vars.split("\t")
+            mfi = var_array.split("\t")
             for ll in mfi:
                 y = ll.split("=")
                 if '=' not in ll:
@@ -1398,7 +1398,7 @@ with open(i7.rbr_config) as file:
                     mwrites[y[0]][z0] = True
             continue
         if ll.startswith('monty'):
-            monties = vars.split(',')
+            monties = var_array.split(',')
             for x in monties:
                 if '=' not in x:
                     print(x, 'in line', line_count, ll, 'needs an =')
