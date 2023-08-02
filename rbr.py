@@ -99,7 +99,7 @@ default_rbrs = defaultdict(str)
 class branch_struct():
 
     def __init__(self, line_of_text):
-        ary = line_of_text.split(',')
+        ary = line_of_text.strip().split(',')
         try:
             self.list_of_abbrevs = ary[1].lower().split('/')
             self.output_name = ary[0].lower()
@@ -114,7 +114,30 @@ class branch_struct():
         self.any_changes = False
         self.branch_variables = defaultdict(int)
 
-branch_dictionary = defaultdict(branch_struct)
+    def write_line(self, line_to_write):
+        if self.hard_lock or not self.currently_writing:
+            return
+        self.current_buffer_string += line_to_write
+
+    def zap_extra_spaces(self):
+        self.current_buffer_string = self.current_buffer_string.replace('\n\n\n', '\n\n').lstrip()
+
+    def check_changes(self):
+        f = open(self.temp_out(), "w")
+        f.write(self.current_buffer_string)
+        f.close()
+        if cmp(self.out_file(), self.temp_out()):
+            return
+        mt.wm(self.out_file(), self.temp_out())
+        self.current_buffer_string = ''
+        print(vars(self))
+        sys.exit()
+
+    def out_file(self):
+        return os.path.join(i7.proj2dir(exe_proj), self.output_name)
+
+    def temp_out(self):
+        return "c:\\writing\\temp\\delnew-{}".format(self.output_name)
 
 def postopen_stub():
     print("Reminder that -np disables copy-over-post and -p enables it. Default is to copy the REG files over to the {} directory.".format(prt_color))
