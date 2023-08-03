@@ -644,6 +644,7 @@ def get_file(fname):
         sys.exit(in_file + " not found.")
     if (not ignore_unsaved_changes) and mt.is_npp_modified(fname):
         print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(os.path.basename(fname)))
+    local_branch_dict = defaultdict(branch_struct)
     check_main_file_change = False
     got_any_test_name = False
     dupe_val = 1
@@ -780,10 +781,26 @@ def get_file(fname):
                 if "#skip test checking" in line:
                     last_atted_command = ""
                 continue
+            if line.strip() == "==!" or line.strip() == "@!":
+                for b in local_branch_dict:
+                    local_branch_dict[b].currently_writing = not local_branch_dict[b].currently_writing
+                actives = [not x for x in actives]
+                continue
             if (line.startswith('@') and not line.startswith('@@')):
+                my_val = True
+                if line[1] == '!':
+                    my_val = False
+                    my_ary = line[2:].strip().split(',')
+                else:
+                    my_ary = line[1:].strip().split(',')
+                for b in local_branch_dict:
+                    local_branch_dict[b].currently_writing = my_val if (set(my_ary) & set(local_branch_dict[b].list_of_abbrevs)) else not my_val
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif line.startswith('@@') or not line.strip():
+                for b in local_branch_dict:
+                    local_branch_dict[b].write_line("\n")
+                    local_branch_dict[b].currently_writing = True
                 if at_section and last_atted_command:
                     if viable_untested(last_atted_command,untested_ignore):
                         untested_commands[last_atted_command].append(last_cmd_line)
@@ -938,6 +955,10 @@ def get_file(fname):
             if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
                 continue
             if line.startswith("file="):
+                temp_ary = line[5:].strip().split(',')
+                temp_idx = temp_ary[1].split('/')[0]
+                temp_branch = branch_struct(line[5:].strip())
+                local_branch_dict[temp_idx] = temp_branch
                 my_array = re.sub("^.*=", "", line.strip()).split(',')
                 long_name = prt_temp_loc(my_array[0])
                 file_array_base.append(my_array[0])
@@ -984,9 +1005,6 @@ def get_file(fname):
                 temp_ary = line[2:].strip().split("=")
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
                 last_atted_command = ''
-                continue
-            if line.strip() == "==!" or line.strip() == "@!":
-                actives = [not x for x in actives]
                 continue
             if re.search("^(=\{|@)", line):
                 line = replace_mapping(line, fname, line_count)
@@ -1158,6 +1176,18 @@ def get_file(fname):
                 mt.fail("  files= must be split up into lines.")
                 mt.fail("  the TSV (tab separated values) going to the end of each.")
                 mt.failbail("  CSV's in ~t2, etc. should be converted to slashes.")
+            for b in local_branch_dict:
+                myb = local_branch_dict[b]
+                if not myb.currently_writing and not myb.hard_lock:
+                    continue
+                line_write = re.sub("\*file", myb.output_name, line, 0, re.IGNORECASE)
+                line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
+                line_write = re.sub("\*description", myb.description, line_write, 0, re.IGNORECASE)
+                if "{$" in line_write:
+                    line_write = string_fill(line_write, line_count)
+                if "{" in line_write:
+                    line_write = fill_vars(line_write, ct, line_count, first_file)
+                local_branch_dict[b].current_buffer_string += line_write
             for ct in range(0, len(file_array)):
                 if actives[ct]:
                     this_file = file_array[ct]
@@ -1208,6 +1238,12 @@ def get_file(fname):
         file_array.append(dupe_file_name)
     if warns > 0 and not quiet:
         print(warns, "potential bad commands in {}.".format(fname))
+    for b in local_branch_dict:
+        local_branch_dict[b].zap_extra_spaces()
+        f = open(local_branch_dict[b].temp_out(), "w")
+        f.write(local_branch_dict[b].current_buffer_string)
+        f.close()
+        local_branch_dict[b].check_changes()
     if monty_process:
         for x in file_array:
             x2 = os.path.basename(x)
