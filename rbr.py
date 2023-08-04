@@ -119,6 +119,13 @@ class branch_struct():
             return
         self.current_buffer_string += line_to_write
 
+    def write_if_intersects(self, line_to_write, abbrev_array):
+        if self.intersects(abbrev_array):
+            self.currernt_buffer_string += line_to_write
+
+    def intersects(self, abbrev_array):
+        return not (not (set(abbrev_array) & set(self.list_of_abbrevs)))
+
     def zap_extra_spaces(self):
         self.current_buffer_string = self.current_buffer_string.replace('\n\n\n', '\n\n').lstrip()
 
@@ -794,7 +801,7 @@ def get_file(fname):
                 else:
                     my_ary = line[1:].strip().split(',')
                 for b in local_branch_dict:
-                    local_branch_dict[b].currently_writing = my_val if (set(my_ary) & set(local_branch_dict[b].list_of_abbrevs)) else not my_val
+                    local_branch_dict[b].currently_writing = my_val if local_branch_dict[b].intersects(my_ary) else not my_val
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif line.startswith('@@') or not line.strip():
