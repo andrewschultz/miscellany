@@ -832,8 +832,13 @@ def get_file(fname):
                         print("WARNING {} file {} line {} (last @/eq={}) has section {}, needs {} for comment {}.".format(warns_so_far, fname, line_count, lae, at_section if at_section else "<blank>", branch_check[exe_proj][x], line.strip()))
                         mt.add_postopen(fname, line_count, priority=7)
             if line.startswith("{--"): # very temporary array. One line (one-line) edit writing specific files before back to normal.
-                vta_before = re.sub("\}.*", "", line.strip())
-                vta_after = re.sub("^.*?\}", "", line.strip())
+                if not '}' in line:
+                    mt.warn("Line {} needs a }.".format(line_count))
+                    mt.add_post(fname, line_count)
+                    continue
+                line_ary = line[3:].split('}', 1)
+                vta_before = line_ary[0]
+                vta_after = line_ary[1].rstrip()
                 if not (vta_after.startswith('#') or vta_after.startswith('>')):
                     last_atted_command = ''
                 try:
@@ -846,6 +851,9 @@ def get_file(fname):
                     print("WARNING {} line {} needs \\\\ and not \\n for line-changes for temporary one-line edit.".format(fname, line_count))
                     mt.add_post(fname, line_count)
                 u = vta_after.replace("\\\\", "\n") + "\n"
+                paths_array = vta_before.split(',')
+                for b in local_branch_dict:
+                    local_branch_dict[b].write_if_intersects(u, paths_array)
                 for q in temp_file_fullname_array:
                     file_output[file_array[q]] += u
                 continue
