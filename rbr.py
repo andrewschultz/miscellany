@@ -649,8 +649,9 @@ def get_file(fname):
     global command_requirements
     if not os.path.isfile(fname):
         sys.exit(in_file + " not found.")
+    fb = os.path.basename(fname)
     if (not ignore_unsaved_changes) and mt.is_npp_modified(fname):
-        print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(os.path.basename(fname)))
+        print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(fb))
     local_branch_dict = defaultdict(branch_struct)
     check_main_file_change = False
     got_any_test_name = False
@@ -689,7 +690,6 @@ def get_file(fname):
     ignore_next_balance = False
     skip_apostrophe_check = False
     need_start_command = (start_command != '')
-    fb = os.path.basename(fname)
     is_last_blank = False
     last_line = ''
     old_grouping = ''
@@ -1496,7 +1496,6 @@ count = 1
 
 cmds_to_find = []
 
-projs = []
 poss_abbrev = []
 my_file_list = []
 
