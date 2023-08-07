@@ -108,7 +108,7 @@ class branch_struct():
             mt.fail("Failed to read following line. Bailing. We need output mame, abbrev list, description.")
             mt.warn("    " + line_of_text.strip())
             sys.exit()
-        self.currently_writing = True
+        self.currently_writing = False
         self.hard_lock = False
         self.current_buffer_string = ''
         self.any_changes = False
@@ -683,6 +683,7 @@ def get_file(fname):
     wrong_lines = []
     last_cmd_line = -1
     branch_variables.clear()
+    found_start = False
     balance_undos = False
     track_balance_undos = False
     ignore_extra_undos = False
@@ -805,9 +806,10 @@ def get_file(fname):
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
             elif line.startswith('@@') or not line.strip():
-                for b in local_branch_dict:
-                    local_branch_dict[b].write_line("\n")
-                    local_branch_dict[b].currently_writing = True
+                if found_start:
+                    for b in local_branch_dict:
+                        local_branch_dict[b].write_line("\n")
+                        local_branch_dict[b].currently_writing = True
                 if at_section and last_atted_command:
                     if viable_untested(last_atted_command,untested_ignore):
                         untested_commands[last_atted_command].append(last_cmd_line)
@@ -1193,6 +1195,9 @@ def get_file(fname):
                 mt.failbail("  CSV's in ~t2, etc. should be converted to slashes.")
             for b in local_branch_dict:
                 myb = local_branch_dict[b]
+                if not found_start and "*FILE" in line:
+                    found_start = True
+                    myb.currently_writing = True
                 if not myb.currently_writing and not myb.hard_lock:
                     continue
                 line_write = re.sub("\*file", myb.output_name, line, 0, re.IGNORECASE)
@@ -1236,6 +1241,9 @@ def get_file(fname):
                         for x in range(0, reps):
                             dupe_file.write("\n" + last_cmd + "\n")
                             dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
+    if not found_start:
+        mt.fail("Did not have start command *FILE. Not copying files over.")
+        return 0
     if need_start_command:
         print("WARNING: did not find start command {} anywhere in single-file branches, though it was specified on the command line.".format(start_command))
     if len(untested_commands):
