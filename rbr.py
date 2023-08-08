@@ -100,14 +100,20 @@ class branch_struct():
 
     def __init__(self, line_of_text):
         ary = line_of_text.strip().split(',')
+        self.stability_check = False
         try:
             self.list_of_abbrevs = ary[1].lower().split('/')
             self.output_name = ary[0].lower()
             self.description = ary[2]
         except:
-            mt.fail("Failed to read following line. Bailing. We need output mame, abbrev list, description.")
+            mt.fail("Failed to read following line. Bailing. We need output name, abbrev list, description, (optional flags).")
             mt.warn("    " + line_of_text.strip())
             sys.exit()
+        try:
+            if ary[3] == 'stable':
+                self.stability_check = True
+        except:
+            pass
         self.currently_writing = False
         self.hard_lock = False
         self.current_buffer_string = ''
@@ -135,7 +141,12 @@ class branch_struct():
         f.close()
         if cmp(self.out_file(), self.temp_out()):
             return
-        mt.wm(self.out_file(), self.temp_out())
+        if self.stability_check and not ignore_first_file_changes:
+            mt.fail("{} had changes. If they are acceptable, -f1.".format(self.out_file()))
+            mt.wm(self.out_file(), self.temp_out())
+            sys.exit()
+        else:
+            mt.wm(self.out_file(), self.temp_out())
         self.current_buffer_string = ''
         print(vars(self))
         sys.exit()
@@ -846,7 +857,7 @@ def get_file(fname):
                 try:
                     temp_file_fullname_array = abbrevs_to_ints(vta_before[3:].split(","), line_count)
                 except:
-                    mt.warn("Bad init-array line {}. Sample: file=reg-bbgg-thru-min.txt,min,minimum walkthrough".format(line_count))
+                    mt.warn("Bad init-array line {}. Sample: file=reg-bbgg-thru-min.txt,min,minimum walkthrough,stable".format(line_count))
                     mt.warn("    " + llo)
                     mt.npo(fname, line_count)
                 if "\\n" in line:
