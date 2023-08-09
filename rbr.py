@@ -148,7 +148,6 @@ class branch_struct():
         else:
             mt.wm(self.out_file(), self.temp_out())
         self.current_buffer_string = ''
-        print(vars(self))
         sys.exit()
 
     def out_file(self):
@@ -202,10 +201,10 @@ def make_new_reg(this_file, overwrite = False):
             mt.warn(github_file_name, "exists. Skipping. Use -o to overwrite.")
             return
     f = open(github_file_name, "w")
-    f.write("## reg-wp-lone-warpon.txt\n\
+    f.write("## r{}\n\
 ** game: /home/andrew/prt/debug-{}.z8\n\
 ** interpreter: /home/andrew/prt/dfrotz -m -w5000 -h25\n\n\
-* main\n\n".format(i7.dir2proj()))
+* main\n\n".format(local_file_name, i7.dir2proj()))
     f.close()
     mt.npo(github_file_name)
     sys.exit()
