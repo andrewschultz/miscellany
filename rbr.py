@@ -684,7 +684,6 @@ def get_file(fname):
     last_eq = 0
     warns_so_far = 0
     to_match.clear()
-    strict_name_local = False
     last_atted_command = ""
     untested_commands = defaultdict(list)
     untested_ignore = list(ignores['global'])
@@ -764,11 +763,11 @@ def get_file(fname):
             if temp:
                 print("WARNING bad command at line {} of {}: {} {}".format(line_count, fb, line_orig, temp))
                 mt.add_postopen(fname, line_count, priority=7)
-            if strict_name_force_on or (strict_name_local and not strict_name_force_off):
-                if line.startswith("==") or line.startswith("@"):
-                    if any(x.isdigit() for x in line):
-                        print("Strict name referencing (letters not numbers) failed {} line {}: {}".format(fname, line_count, line.strip()))
-                        mt.add_postopen(fname, line_count, priority=8)
+            if line.startswith("==") or line.startswith("@"):
+                if any(x.isdigit() for x in line):
+                    mt.warn("Numbers are not allowed in branch names. Use -a or -b instead of 1 or 2. {} {} attempt to create section failed.")
+                    mt.add_postopen(fname, line_count, priority=8)
+                    continue
             if llo.startswith("##nobalance"):
                 ignore_next_balance = True
             if llo.startswith("##balance undo"):
@@ -977,7 +976,8 @@ def get_file(fname):
                 if line.startswith("#--stable"):
                     check_main_file_change = True
                 if line.startswith("#--strict"):
-                    strict_name_local = True
+                    mt.warn("#--strict has been deprecated. What was strict is now standard: we use descriptions and not numbers, because it's easier.")
+                    mt.add_post(fname, line_count)
                 continue
             if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
                 continue
