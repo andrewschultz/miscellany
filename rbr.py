@@ -663,7 +663,6 @@ def get_file(fname):
     if (not ignore_unsaved_changes) and mt.is_npp_modified(fname):
         print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(fb))
     local_branch_dict = defaultdict(branch_struct)
-    check_main_file_change = False
     got_any_test_name = False
     dupe_val = 1
     warns = 0
@@ -974,7 +973,8 @@ def get_file(fname):
                 continue
             if line.startswith('#--'):
                 if line.startswith("#--stable"):
-                    check_main_file_change = True
+                    mt.warn("#--stable has been deprecated. Specifying a stable file or files should go in the flags instead.")
+                    mt.add_post(fname, line_count)
                 if line.startswith("#--strict"):
                     mt.warn("#--strict has been deprecated. What was strict is now standard: we use descriptions and not numbers, because it's easier.")
                     mt.add_post(fname, line_count)
@@ -1286,6 +1286,7 @@ def get_file(fname):
     if fatal_error:
         mt.fail("Found fatal error. Not copying files over.")
         return 0
+    past_first_file = False
     for x in file_array:
         f = open(x, "w")
         # modifications below to avoid extra spacing. While we could define in_header, sweeping things up with a REGEX is probably easier
@@ -1294,8 +1295,8 @@ def get_file(fname):
         #modified_output = re.sub("\n+\*\*", "\n**", modified_output) # get rid of spacing in the header
         f.write(modified_output)
         f.close()
-        if check_main_file_change:
-            check_main_file_change = False
+        if not past_first_file: #temporarily assume first file is strict no-change
+            past_first_file = True
             xb = os.path.basename(x)
             if not os.path.exists(xb):
                 mt.fail("I could not find {}. It should be in the temp directory. You may wish to disable --stable in the RBR file or type:".format(x))
