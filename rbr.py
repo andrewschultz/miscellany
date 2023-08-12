@@ -99,26 +99,41 @@ default_rbrs = defaultdict(str)
 class branch_struct():
 
     def __init__(self, line_of_text):
-        ary = line_of_text.strip().split(',')
         self.stability_check = False
-        try:
-            self.list_of_abbrevs = ary[1].lower().split('/')
-            self.output_name = ary[0].lower()
-            self.description = ary[2]
-        except:
-            mt.fail("Failed to read following line. Bailing. We need output name, abbrev list, description, (optional flags).")
-            mt.warn("    " + line_of_text.strip())
-            sys.exit()
-        try:
-            if ary[3] == 'stable':
-                self.stability_check = True
-        except:
-            pass
+
+        bail_after = False
+        ary = line_of_text.strip().split(',')
+
+        for vals in ary:
+            if '=' not in vals:
+                bail_after = True
+                mt.warn("WARNING comma separated line needs a=b. Possible values are file=, abbr=, desc=, flags=.")
+                mt.warn("    " + line_of_text.strip())
+                mt.warn("    " + vals)
+                continue
+            ary2 = vals.split('=')
+            if ary2[0] == 'file':
+                self.output_name = ary2[1].lower()
+            elif ary2[0] == 'abbr':
+                self.list_of_abbrevs = ary2[1].lower().split('/')
+            elif ary2[0] == 'desc':
+                self.description = ary2[1]
+            elif ary2[0] == 'flags':
+                flag_array = ary[1].split('/')
+                for f in flag_array:
+                    if f == 'stable':
+                        self.stability_check = True
+
         self.currently_writing = False
         self.hard_lock = False
+        self.in_header = True
+
         self.current_buffer_string = ''
         self.any_changes = False
         self.branch_variables = defaultdict(int)
+
+        if bail_after:
+            sys.exit()
 
     def write_line(self, line_to_write):
         if self.hard_lock or not self.currently_writing:
@@ -981,12 +996,10 @@ def get_file(fname):
                 continue
             if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
                 continue
-            if line.startswith("file="):
-                temp_ary = line[5:].strip().split(',')
-                temp_idx = temp_ary[1].split('/')[0]
-                temp_branch = branch_struct(line[5:].strip())
-                local_branch_dict[temp_idx] = temp_branch
-                my_array = re.sub("^.*=", "", line.strip()).split(',')
+            if "file=" in line and not found_start:
+                my_array = [re.sub("^.*?=", "", x) for x in line.strip().split(',')]
+                temp_idx = my_array[1].split('/')[0]
+                local_branch_dict[temp_idx] = branch_struct(line.strip())
                 long_name = prt_temp_loc(my_array[0])
                 file_array_base.append(my_array[0])
                 file_output[long_name] = ''
@@ -1205,9 +1218,13 @@ def get_file(fname):
                 mt.failbail("  CSV's in ~t2, etc. should be converted to slashes.")
             for b in local_branch_dict:
                 myb = local_branch_dict[b]
-                if not found_start and "*FILE" in line:
-                    found_start = True
-                    myb.currently_writing = True
+                if (myb.in_header):
+                    if ("*FILE" in line):
+                        found_start = True
+                        myb.in_header = False
+                        myb.currently_writing = True
+                    else:
+                        continue
                 if not myb.currently_writing and not myb.hard_lock:
                     continue
                 line_write = re.sub("\*file", myb.output_name, line, 0, re.IGNORECASE)
