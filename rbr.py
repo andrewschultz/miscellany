@@ -154,8 +154,10 @@ class branch_struct():
         f = open(self.temp_out(), "w")
         f.write(self.current_buffer_string)
         f.close()
+        if not os.path.exists(self.out_file()):
+            return 'New file created'
         if cmp(self.out_file(), self.temp_out()):
-            return
+            return 'Unchanged'
         if self.stability_check and not ignore_first_file_changes:
             mt.fail("{} had changes. If they are acceptable, -f1.".format(self.out_file()))
             mt.wm(self.out_file(), self.temp_out())
@@ -163,7 +165,8 @@ class branch_struct():
         else:
             mt.wm(self.out_file(), self.temp_out())
         self.current_buffer_string = ''
-        sys.exit()
+        return 'Changed'
+        sys.exit() # temporary, as we look to shift to the branch class
 
     def out_file(self):
         return os.path.join(i7.proj2dir(exe_proj), self.output_name)
@@ -1288,12 +1291,18 @@ def get_file(fname):
         file_array.append(dupe_file_name)
     if warns > 0 and not quiet:
         print(warns, "potential bad commands in {}.".format(fname))
+
+    categorizer = defaultdict(list)
     for b in local_branch_dict:
         local_branch_dict[b].zap_extra_spaces()
         f = open(local_branch_dict[b].temp_out(), "w")
         f.write(local_branch_dict[b].current_buffer_string)
         f.close()
-        local_branch_dict[b].check_changes()
+        categorizer[local_branch_dict[b].check_changes()].append(local_branch_dict[b].output_name)
+    for c in categorizer:
+        print(c, categorizer[c])
+    sys.exit()
+
     if monty_process:
         for x in file_array:
             x2 = os.path.basename(x)
