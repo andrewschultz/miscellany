@@ -543,17 +543,6 @@ def post_copy(in_file, file_array = []):
         elif len(my_file_list_valid) == 1:
             print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
 
-def examples():
-    print("===1,2,4 changes the active file list to #1, 2, 4 for example.")
-    print("==t5 means only use file 5 until next empty line. Then it switches back to what was there before. A second ==t wipes out the first saved array.")
-    print("==- inverts the active file list")
-    print("== ! - ^ 1,2,4 = all but numbers 1, 2, 4")
-    print("*FILE is replaced by the file name.")
-    print("#-- is a comment only for the branch file, with a few flags:")
-    print("  #--stable means the main file should be kept stable.")
-    print("  #--strict means strict section referencing (no magic numbers)")
-    sys.exit()
-
 def usage():
     print("-er = edit branch file (default = for directory you are in)")
     print("-e = edit rbr.txt")
@@ -1605,7 +1594,6 @@ while count < len(sys.argv):
         if exe_proj: sys.exit("Tried to define 2 projects. Do things one at a time.")
         exe_proj = i7.i7x[arg]
     elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
-    elif arg == 'x': examples()
     elif arg == 'gh': github_okay = True
     elif arg in ( 'rv', 'vr' ):
         reg_verify_dir(open_unmarked = False)
