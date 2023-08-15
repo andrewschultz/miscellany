@@ -135,10 +135,14 @@ class branch_struct():
         if bail_after:
             sys.exit()
 
-    def write_line(self, line_to_write):
+    def ready_to_write(self):
         if self.hard_lock or not self.currently_writing:
-            return
-        self.current_buffer_string += line_to_write
+            return False
+        return True
+
+    def write_line(self, line_to_write):
+        if self.ready_to_write():
+            self.current_buffer_string += line_to_write
 
     def write_if_intersects(self, line_to_write, abbrev_array):
         if self.intersects(abbrev_array):
@@ -148,7 +152,7 @@ class branch_struct():
         return not (not (set(abbrev_array) & set(self.list_of_abbrevs)))
 
     def zap_extra_spaces(self):
-        self.current_buffer_string = self.current_buffer_string.replace('\n\n\n', '\n\n').lstrip()
+        self.current_buffer_string = re.sub("(\n{3,})", "\n\n", self.current_buffer_string)
 
     def check_changes(self):
         f = open(self.temp_out(), "w")
