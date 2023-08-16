@@ -675,7 +675,6 @@ def get_file(fname):
         print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(fb))
     local_branch_dict = defaultdict(branch_struct)
     got_any_test_name = False
-    dupe_val = 1
     warns = 0
     last_cmd = ""
     file_output = defaultdict(str)
@@ -683,10 +682,8 @@ def get_file(fname):
     file_array = []
     file_array_base = []
     line_count = 0
-    dupe_file_name = ""
     temp_diverge = False
     if not quiet: print("Poking at", fname)
-    actives = []
     old_actives = []
     preproc_commands = []
     at_section = ''
@@ -811,7 +808,6 @@ def get_file(fname):
             if line.strip() == "==!" or line.strip() == "@!":
                 for b in local_branch_dict:
                     local_branch_dict[b].currently_writing = not local_branch_dict[b].currently_writing
-                actives = [not x for x in actives]
                 continue
             if (line.startswith('@') and not line.startswith('@@')):
                 my_val = True
@@ -840,9 +836,6 @@ def get_file(fname):
                         mt.fail("ERROR net undos at end of block that needs to be balanced = {}. Lines {}-{} file {}.{}".format(len(balance_trace), balance_start, line_count, fname, '' if track_balance_undos else ' Add TRACK/TRACE to balance undo comment to trace things.'))
                         mt.add_postopen(fname, line_count)
                     balance_undos = False
-                if line.startswith('@@'):
-                    actives = [True] * len(actives)
-                    continue
             if line.startswith('=='):
                 last_eq = line_count
             if line.startswith('#'):
@@ -919,35 +912,7 @@ def get_file(fname):
                             untested_ignore.append(x)
                 continue
             if line.startswith("~\t"):
-                eq_array = line.strip().lower().split("\t")
-                if len(eq_array) != 3:
-                    print("Bad equivalence array at line {} of file {}: needs exactly two tabs.".format(line_count, fb))
-                    mt.npo(fname, line_count)
-                ary2 = eq_array[1].split(",")
-                if eq_array[2][1:].isdigit(): # t0, t1, t2
-                    final_digit = int(eq_array[2][1:])
-                    if final_digit >= len(actives):
-                        print("FATAL ERROR: ~ maps to nonexistent file at line {} of {}. {} should not be more than {}.".format(line_count, fb, final_digit, len(actives)-1))
-                        mt.npo(fname, line_count)
-                    this_abbrev = eq_array[2]
-                else: # "verbs" when one file is, say, reg-roi-others-verbs.txt
-                    candidate = -1
-                    temp_array = [os.path.basename(x) for x in file_array]
-                    for t in range(0, len(temp_array)):
-                        if eq_array[2] in temp_array[t]:
-                            if candidate > -1:
-                                print("Two possible file name candidates for {} at line {}. Bailing.".format(eq_array[2], t))
-                                mt.npo(fname, line_count)
-                            candidate = t
-                    if candidate == -1:
-                        print("Found no text-to-number candidates at {} line {}'s right tab. Check that {} matches a file name in a files= line.".format(fb, line_count, eq_array[2]))
-                        mt.npo(fname, line_count)
-                    this_abbrev = "t{}".format(candidate)
-                for a in ary2:
-                    if a in to_match:
-                        print(to_match, "WARNING redefinition of shortcut {} at line {} of file {}".format(a, line_count, fb))
-                    to_match[a] = this_abbrev
-                continue
+                sys.exit("~ with tab spotted. Please rejig the file into the a=b,c=d format.")
             if bracket_ignore_next(line):
                 ignore_next_bracket = True
                 continue
@@ -990,8 +955,6 @@ def get_file(fname):
                     mt.warn("#--strict has been deprecated. What was strict is now standard: we use descriptions and not numbers, because it's easier.")
                     mt.add_post(fname, line_count)
                 continue
-            if line.startswith("##--stable") or line.startswith("##--strict"): # this is how i bookmark stuff that's not ready to go stable/strict yet so it doesn't seep into the test files
-                continue
             if "file=" in line and not found_start:
                 my_array = [re.sub("^.*?=", "", x) for x in line.strip().split(',')]
                 temp_idx = my_array[1].split('/')[0]
@@ -1010,7 +973,6 @@ def get_file(fname):
                 except:
                     mt.fail("{} line {} does not have 3 entries.".format(fname, line_count))
                     mt.npo(fname, line_count)
-                actives.append(True)
                 continue
             if line.startswith("files="):
                 for cmd in preproc_commands: os.system(cmd)
@@ -1023,12 +985,13 @@ def get_file(fname):
                         file_output[long_name] += '## truncated branches starting with line {}, so rerun without -sl\n'.format(start_line)
                     if start_command:
                         file_output[long_name] += '## truncated branches before command {}, so run withough -sc:\n'.format(start_command)
-                    actives.append(True)
                 continue
             if line.startswith("}}"):
                 if len(file_array) == 0:
                     mt.fail("RBR.PY requires }} variable meta-commands to be after files=, because even initialization is tricky.\nWe could, of course, have a list of initialized variables once file= hits, but that'd be a bit of programming I don't want to deal with right now.")
                     mt.npo(fname, line_count)
+                mt.fail("We will attack variables later.")
+                continue
                 branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
                 last_atted_command = ""
                 continue
@@ -1042,14 +1005,6 @@ def get_file(fname):
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
                 last_atted_command = ''
                 continue
-            if re.search("^(=\{|@)", line):
-                line = replace_mapping(line, fname, line_count)
-            if temp_diverge and not line.strip():
-                temp_diverge = False
-                for x in range(len(actives)):
-                    file_output[file_array[x]] += "\n"
-                actives = list(old_actives)
-                continue
             if line.strip() == "\\\\": line = "\n"
             if skip_apostrophe_check:
                 skip_apostrophe_check = False
@@ -1060,10 +1015,6 @@ def get_file(fname):
                 mt.add_postopen(fname, line_count, priority=5)
                 warns += 1
             ignore_next_bracket = False
-            if line.startswith("dupefile="):
-                dupe_file_name = i7.prt + "/temp/" + re.sub(".*=", "", line.lower().strip())
-                dupe_file = open(dupe_file_name, "w", newline="\n")
-                continue
             if re.search("^TSV(I)?[=:]", line): #tab separated values
                 if ' #' in line:
                     print('WARNING SPACES NOT TABS for TSV line', line_count)
@@ -1074,7 +1025,7 @@ def get_file(fname):
                     for x in range(0, len(l2)):
                         print(l2[x], '~', os.path.basename(file_array[x]) if x < len(file_array) else '?')
                     continue
-                elif not ignore_too_short and len(l2) < len(actives):
+                elif not ignore_too_short and len(l2) < 1:
                     print("WARNING line", line_count, "doesn't cover all files. Change TSV to TSVI to ignore this.")
                     print("TEXT:", line.strip())
                     for x in range(0, len(file_array)):
@@ -1082,9 +1033,6 @@ def get_file(fname):
                 for x in range(len(l2)):
                     file_output[file_array[x]] += l2[x] + "\n"
                 continue
-            if all_false(actives):
-                if always_be_writing and len(actives):
-                    sys.exit("No files written to at line " + line_count + ": " + line.strip())
             if line.startswith(">"):
                 if '#' in line:
                     line = re.sub(" *#.*", "", line) # eliminate comments from line -- we want to be able to GREP for comments if need be
@@ -1118,35 +1066,6 @@ def get_file(fname):
                         mt.add_postopen(fname, line_count, priority=10)
                     last_atted_command = no_parser(last_cmd)
                 last_cmd_line = line_count
-            if line.startswith("===a"):
-                actives = [True] * len(actives)
-                continue
-            if line.startswith("==!") or line.startswith("==-") or line.startswith("==^") or line.startswith("==!t") or line.startswith("@!"):
-                if not line.startswith("@!"):
-                    print("@! is the preferred syntax. ==!t, etc., should be deprecated or mapped to strings. Line {} of {}.".format(line_count, fname))
-                    line = re.sub("==(!|-|\^|t)", "", line)
-                else:
-                    line = line[2:]
-                actives = [True] * len(actives)
-                try:
-                    chgs = line.lower().strip()[temp_idx:].split(',')
-                    if len(chgs):
-                        for x in chgs:
-                            actives[name_or_num(x)] = False
-                    else:
-                        print("No elements in ==!/-/^ array, line", line_count)
-                except:
-                    sys.exit("Failed extracting not-(item) at line {}: {}".format(line_count, line.strip()))
-                continue
-            if line.startswith("==+"):
-                ll = line.lower().strip()[3:]
-                if len(ll) == 0:
-                    print("WARNING nothing added", line_count, line.lower().strip())
-                    continue
-                for x in ll.split(','):
-                    if x.isdigit():
-                        actives[int(x)] = True
-                continue
             if line.startswith("=one="):
                 la = line[5:].split("\t")
                 temp_actives = [False] * len(file_array)
@@ -1155,52 +1074,15 @@ def get_file(fname):
                 for x in range(0, len(file_array)):
                     if temp_actives[x]: file_output[x] += string_out
                 continue
-            if line.startswith("==t"):
-                if temp_diverge:
-                    mt.fail("ERROR: located second file branch array in {} with ==t at line {}: {}/{}".format(fname, line_count, line_orig, line.strip()))
-                    if not temp_diverge_warned:
-                        mt.fail("Output files will not be created as a safety measure.")
-                        print("    (to make a temporary branch, use brackets and dashes as so: {--F1,F2}")
-                        temp_diverge_warned = True
-                    fatal_error = True
-                    mt.add_postopen(fname, line_count)
-                old_actives = list(actives)
-                temp_diverge = True
-                ll = re.sub("^==t(!)?", "", line.lower().strip()).split(',')
-                if line.startswith("==t-"): print("WARNING ==t- should be ==t! for total searchable conformance and stuff.")
-                towhich = line.startswith("==t!") or line.startswith("==t-")
-                actives = [towhich] * len(file_array)
-                for x in ll:
-                    try:
-                        if x.isdigit(): actives[int(x)] = not towhich
-                    except:
-                        print("uh oh went out of array bounds trying to load file", x, "at line", line_count, "with only", len(actives) - 1, "as max")
-                        sys.exit()
+            if line.startswith("===") and not is_equals_header(line):
+                mt.warn("WARNING: unmatched triple-equals at {} line {}.".format(fb, line_count))
                 continue
-            if line.startswith("==c-"):
-                old_actives = list(actives)
-                class_name = ll[4:]
-                class_array = branch_classes[class_name].split(',')
-                actives = [False] * len(file_array)
-                for x in class_array:
-                    actives[int(x)] = True
-            if line.startswith("==c="):
-                class_array = ll[4:].split(':')
-                if len(class_array) != 2:
-                    sys.exit("Line", line_count, "needs exactly 1 : ... ", ll)
-                branch_classes[class_array[0]] = class_array[1]
-            if line.startswith("==="):
-                if not is_equals_header(line):
-                    if not line[3].isnumeric() and line[3] != '!': sys.exit("extra = in header {:s} line {:d}: {:s}".format(fname, line_count, line.strip()))
-                    ll = re.sub("^=+", "", line.lower().strip()).split(',')
-                    actives = [False] * len(file_array)
-                    for x in ll:
-                        if x.isdigit(): actives[int(x)] = True
-                    continue
             if line.startswith("==") and not is_equals_header(line):
-                print("Uh oh {} line {} may be a bad branch-file redirector: {}".format(fname, line_count, line.strip()))
+                mt.warn("Uh oh {} line {} may be a bad branch-file redirector: {}".format(fname, line_count, line.strip()))
                 warns += 1
-            if debug and line.startswith(">"): print(act(actives), line.strip())
+                continue
+            if debug and line.startswith(">"):
+                print("YES", ','.join([b for b in local_branch_dict if local_branch_dict[b].ready_to_write()]), "NO", ','.join([b for b in local_branch_dict if not local_branch_dict[b].ready_to_write()]), line.rstrip())
             if last_atted_command and not line.startswith("#") and not line.startswith(">"):
                 last_atted_command = ''
             first_file = True
@@ -1231,39 +1113,6 @@ def get_file(fname):
                 if "{" in line_write:
                     line_write = fill_vars(line_write, ct, line_count, first_file)
                 local_branch_dict[b].current_buffer_string += line_write
-            for ct in range(0, len(file_array)):
-                if actives[ct]:
-                    this_file = file_array[ct]
-                    if sum(actives) == 1:
-                        if need_start_command:
-                            if line.startswith('>') and start_command == line_orig[1:]:
-                                need_start_command = False
-                                print("Found start-command {} at line {}.".format(start_command, line_count))
-                            else:
-                                continue
-                        if start_line > line_count:
-                            continue
-                    line_write = re.sub("\*file", os.path.basename(this_file), line, 0, re.IGNORECASE)
-                    line_write = re.sub("\*fork", "GENERATOR FILE: " + os.path.basename(fname), line_write, 0, re.IGNORECASE)
-                    line_write = re.sub("\*description", file_descriptions[ct], line_write, 0, re.IGNORECASE)
-                    if "{$" in line_write:
-                        #print("BEFORE:", line_write.strip())
-                        line_write = string_fill(line_write, line_count)
-                        #print("AFTER:", line_write.strip())
-                    line_write_2 = fill_vars(line_write, ct, line_count, first_file)
-                    #if line_write != line_write_2: print(line_write, "changed to", line_write_2)
-                    file_output[this_file] += line_write_2
-                    first_file = False
-            if dupe_val < len(actives) and actives[dupe_val]:
-                if dupe_file_name:
-                    dupe_file.write(line)
-                    if 'Last Lousy Point' in line: dupe_file.write("!by one point\n")
-                    if 'by one point' in line or 'Last Lousy Point' in line:
-                        reps = 1
-                        if times[last_cmd[1:]] > 1: reps = times[last_cmd[1:]]
-                        for x in range(0, reps):
-                            dupe_file.write("\n" + last_cmd + "\n")
-                            dupe_file.write("!{:s}\n".format('Last Lousy Point' if 'Last Lousy Point' in line else 'by one point'))
     if not found_start:
         mt.fail("Did not have start command *FILE. Not copying files over.")
         return 0
@@ -1279,21 +1128,21 @@ def get_file(fname):
             print("{} ({}): {} at line{} {}.".format(cmd_count, total_count, u, mt.plur(len(untested_commands[u])), ", ".join([str(x) for x in untested_commands[u]])))
     elif not quiet:
         print("No potentially untested commands in {}.".format(fname))
-    if dupe_file_name:
-        dupe_file.close()
-        file_array.append(dupe_file_name)
     if warns > 0 and not quiet:
         print(warns, "potential bad commands in {}.".format(fname))
 
     categorizer = defaultdict(list)
+
     for b in local_branch_dict:
         local_branch_dict[b].zap_extra_spaces()
         f = open(local_branch_dict[b].temp_out(), "w")
         f.write(local_branch_dict[b].current_buffer_string)
         f.close()
         categorizer[local_branch_dict[b].check_changes()].append(local_branch_dict[b].output_name)
+
     for c in categorizer:
         print(c, categorizer[c])
+
     sys.exit()
 
     if monty_process:
