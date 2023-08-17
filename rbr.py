@@ -65,7 +65,6 @@ verify_nudges = False
 always_be_writing = False
 edit_main_branch = False
 debug = False
-monty_process = False
 force_all_regs = False
 strict_name_force_on = False
 strict_name_force_off = False
@@ -1145,12 +1144,6 @@ def get_file(fname):
 
     sys.exit()
 
-    if monty_process:
-        for x in file_array:
-            x2 = os.path.basename(x)
-            if x2 in mwrites.keys():
-                for y in mwrites[x2].keys():
-                    write_monty_file(x2, y)
     if fatal_error:
         mt.fail("Found fatal error. Not copying files over.")
         return 0
@@ -1403,7 +1396,6 @@ while count < len(sys.argv):
     elif arg[:2] in ( 'vn', 'nv', 'v'): verify_nudges = True
     elif arg == 'd': debug = True
     elif arg in ( 'nf', 'fn'): flag_all_brackets = False
-    elif arg == 'm': monty_process = True
     elif arg == 'q': quiet = True
     elif arg == 'su': show_unchanged = True
     elif arg in ( 'nsu', 'sun') : show_unchanged = False
