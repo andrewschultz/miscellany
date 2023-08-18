@@ -70,6 +70,7 @@ strict_name_force_on = False
 strict_name_force_off = False
 wrong_check = False
 show_unchanged = False
+look_through_winmerge = False
 
 max_undo_tracking = 10
 start_line = 0
@@ -158,17 +159,19 @@ class branch_struct():
         f.write(self.current_buffer_string)
         f.close()
         if not os.path.exists(self.out_file()):
-            return 'New file created'
+            return colorama.Fore.CYAN + 'New file created'
         if cmp(self.out_file(), self.temp_out()):
-            return 'Unchanged'
+            return colorama.Fore.YELLOW + 'Unchanged'
         if self.stability_check and not ignore_first_file_changes:
             mt.fail("{} had changes. If they are acceptable, -f1.".format(self.out_file()))
             mt.wm(self.out_file(), self.temp_out())
             sys.exit()
-        else:
+        elif look_through_winmerge:
             mt.wm(self.out_file(), self.temp_out())
-        self.current_buffer_string = ''
-        return 'Changed'
+            if os.path.getmtime(self.out_file()) > os.path.getmtime(self.temp_out()):
+                return colorama.Fore.RED + 'User inspected and changed'
+            return colorama.Fore.PURPLE + 'User inspected and unchanged'
+        return colorama.Fore.GREEN + 'Changed'
         sys.exit() # temporary, as we look to shift to the branch class
 
     def out_file(self):
@@ -1140,7 +1143,7 @@ def get_file(fname):
         categorizer[local_branch_dict[b].check_changes()].append(local_branch_dict[b].output_name)
 
     for c in categorizer:
-        print(c, categorizer[c])
+        print(c + ':', ', '.join(categorizer[c]) + colorama.Style.RESET_ALL)
 
     sys.exit()
 
@@ -1466,6 +1469,8 @@ while count < len(sys.argv):
             max_flag_brackets = int(arg[1:])
     elif arg[:2] == 's:' or arg[:2] == 's=':
         score_search(arg[2:])
+    elif arg == 'wm':
+        look_through_winmerge = True
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
