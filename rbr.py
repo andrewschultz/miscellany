@@ -477,43 +477,6 @@ def vet_potential_errors(line, line_count, cur_pot):
             return True
     return False
 
-def replace_mapping(x, my_f, my_l):
-    add_negation = False
-    if x.startswith('@'):
-        y = x[1:]
-        if y[0] == '!':
-            add_negation = True
-            y = y[1:]
-    else:
-        y = re.sub("=+\{", "", x.strip())
-        y = re.sub("\}.*", "", y)
-    y = re.sub(" *#.*", "", y) # strip out comments
-    y = y.strip()
-    if not y:
-        print("OOPS blank file-class-match {} line {}.")
-        mt.npo(my_f, my_l)
-        return
-    my_matches = []
-    for q in y.split(","):
-        if q != q.strip():
-            print("WARNING extra space {} line {} in file-mapping.".format(my_f, my_l))
-            q = q.strip()
-        if '@' in q:
-            print("WARNING {} line {} has extra @ for {} -- it is only needed at the start. I am removing it.".format(my_f, my_l, q))
-            q = q.replace('@', '')
-            mt.add_post(my_f, my_l, priority=6)
-        if q not in to_match.keys():
-            print("Oops, line {:d} of {:s} has undefined matching-class {:s}. Possible classes are {}".format(my_l, my_f, q, ', '.join(to_match)))
-            mt.add_post(my_f, my_l)
-            continue
-        to_append = to_match[q].replace('t', '')
-        if to_append in my_matches:
-            print("WARNING duplicate add-to line {} file {}".format(my_l, my_f))
-            mt.add_post(my_f, my_l, priority=8)
-        else:
-            my_matches.append(to_match[q].replace('t', ''))
-    return "==t{}{}".format("!" if add_negation else "", ",".join(my_matches))
-
 def search_for(x):
     a1 = glob.glob("reg-*.txt")
     a1 += glob.glob("rbr-*.txt")
