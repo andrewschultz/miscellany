@@ -170,7 +170,7 @@ class branch_struct():
             mt.wm(self.out_file(), self.temp_out())
             if os.path.getmtime(self.out_file()) > os.path.getmtime(self.temp_out()):
                 return colorama.Fore.RED + 'User inspected and changed'
-            return colorama.Fore.PURPLE + 'User inspected and unchanged'
+            return colorama.Fore.MAGENTA + 'User inspected and unchanged'
         return colorama.Fore.GREEN + 'Changed'
         sys.exit() # temporary, as we look to shift to the branch class
 
@@ -518,10 +518,8 @@ def usage():
     print("-c = edit rbr.py")
     print("-d = debug on")
     print("-f = flag all brackets")
-    print("-m = Monty process")
     print("-q = Quiet")
     print("-np = no copy over post, -p = copy over post (default)")
-    print("-x = list examples")
     print("shorthand or longterm project names accepted")
     sys.exit()
 
@@ -785,6 +783,7 @@ def get_file(fname):
                     local_branch_dict[b].currently_writing = my_val if local_branch_dict[b].intersects(my_ary) else not my_val
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
+                continue
             elif line.startswith('@@') or not line.strip():
                 if found_start:
                     for b in local_branch_dict:
