@@ -36,7 +36,6 @@ my_strings = defaultdict(str)
 branch_variables = defaultdict(list)
 branch_check = defaultdict(lambda: defaultdict(list))
 to_match = defaultdict(str)
-monty_detail = defaultdict(str)
 branch_list = defaultdict(list)
 times = defaultdict(int)
 abbrevs = defaultdict(lambda: defaultdict(str))
@@ -536,32 +535,6 @@ def act(a):
 
 def wipe_first_word(a):
     return re.sub(r'^[a-z]+([=:])?', "", a, 0, re.IGNORECASE)
-
-def write_monty_file(fname, testnum):
-    mytest = monty_detail[testnum]
-    new_file_name = re.sub("^reg", "rmo", fname)
-    new_file_name = re.sub("\.", "-{:s}-{:s}.".format(testnum, mytest), new_file_name)
-    from_file = prt_temp_loc(fname)
-    to_file = prt_temp_loc(new_file_name)
-    cmd_yet = False
-    f = open(new_file_name, "w", newline="\n")
-    with open(fname) as file:
-        for line in file:
-            if line.startswith('>') and not cmd_yet:
-                cmd_yet = True
-                f.write("#Test kickoff command for {:s} each turn\n>monty {:s}\n\n".format(mytest, testnum))
-            f.write(line)
-    f.close()
-    if not os.path.exists(to_file):
-        print('New file', new_file_name)
-        copy(from_file, to_file)
-    elif cmp(from_file, to_file):
-        print('Unchanged file', new_file_name)
-        return
-    else:
-        print('Modified file', new_file_name)
-        copy(from_file, to_file)
-    return
 
 def potentially_faulty_regex(test_line):
     if "|" in line or "\\" in line:
@@ -1305,30 +1278,10 @@ with open(i7.rbr_config) as file:
                 continue
             ignores[cur_proj] = y[1].strip().split(",")
             continue
-        if ll.startswith('montyfiles'):
-            mfi = var_array.split("\t")
-            for ll in mfi:
-                y = ll.split("=")
-                if '=' not in ll:
-                    print(ll, 'in line', lc, ll, 'needs an =')
-                    continue
-                z = y[1].split(',')
-                for z0 in z:
-                    mwrites[y[0]][z0] = True
-            continue
-        if ll.startswith('monty'):
-            monties = var_array.split(',')
-            for x in monties:
-                if '=' not in x:
-                    print(x, 'in line', line_count, ll, 'needs an =')
-                    continue
-                y = x.split("=")
-                monty_detail[y[0]] = y[1]
-            continue
         j = ll.split("\t")
         if len(j) < 2:
-            print("Need tab in", line.strip())
-        print(j)
+            mt.warn("Need tab in", line.strip())
+            continue
         hk = i7.lpro(j[0])
         branch_list[j[0]] = j[1]
         if hk:
