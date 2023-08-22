@@ -179,6 +179,43 @@ class branch_struct():
     def temp_out(self):
         return "c:\\writing\\temp\\delnew-{}".format(self.output_name)
 
+    def variable_adjust(self, var_line, err_stub):
+        if '+' not in var_line and '-' not in var_line and '=' not in var_line:
+            mt.fail("ERROR need +/-/= in variable-adjust {}.".format(err_stub))
+            return
+        temp = var_line.replace(' ', '')
+
+        my_var = re.sub("[-=\+].*", "", temp).upper()
+        my_op = re.sub(".*?([-=\+]+).*", r'\1', temp)
+        my_num = re.sub(".*?[-=\+]+", "", temp)
+
+        if my_var not in self.branch_variables:
+            if my_op != '=':
+                mt.warn("WARNING tried to operate on undeclared variable {} {}.".format(my_var, err_stub))
+                return
+            self.branch_variables[my_var] = int(my_num)
+
+        if my_num in branch_variables: # this is very bad at the moment as we could have VAR+=OTHERVAR, but for now we just use ==
+            my_num = self.branch_variables[my_num]
+        elif my_num:
+            my_num = int(my_num)
+        if my_op == "++":
+            self.branch_variables[my_var] += 1
+        elif my_op == "--":
+            self.branch_variables[my_var] -= 1
+        elif my_op == "=":
+            self.branch_variables[my_var] = my_num
+        elif my_op == "-=":
+            self.branch_variables[my_var] -= my_num
+        elif my_op == "+=":
+            self.branch_variables[my_var] += my_num
+        elif my_op == "=":
+            self.branch_variables[my_var] = my_num
+        else:
+            mt.warn("{} {} {}.".format("Unknown operator" if len(my_op) < 3 else "Likely badly formed variable adjust", my_var, err_stub))
+
+        return
+
 def postopen_stub():
     print("Reminder that -np disables copy-over-post and -p enables it. Default is to copy the REG files over to the {} directory.".format(prt_color))
     mt.postopen_files()
@@ -297,55 +334,6 @@ def score_search(my_search):
                 blank_before = False
     mt.post_open()
     mt.warnbail("No scoring/command string found for {}.".format(my_search))
-
-def branch_variable_adjust(var_line, err_stub, actives):
-    if '+' not in var_line and '-' not in var_line and '=' not in var_line:
-        print("ERROR need +/-/= in variable-adjust {}.".format(err_stub))
-        return
-    temp = var_line.replace(' ', '')
-    #print("temp", temp)
-    my_var = re.sub("[-=\+].*", "", temp).upper()
-    my_op = re.sub(".*?([-=\+]+).*", r'\1', temp)
-    text_num = re.sub(".*?[-=\+]+", "", temp)
-    #print("my_var", my_var)
-    #print("my_op", my_op)
-    #print("my_num", my_num)
-    if my_var not in branch_variables:
-        if my_op != '=':
-            print("WARNING tried to operate on undeclared variable {} {}.".format(my_var, err_stub))
-            return
-        for x in actives:
-            if not x:
-                print("WARNING tried to define a variable {} when not all files were active {}.".format(my_var, err_stub))
-                return
-        branch_variables[my_var] = [int(text_num)] * len(actives)
-    #print("Before:", my_var, branch_variables[my_var])
-    for q in range(0, len(actives)):
-        if not actives[q]: continue
-        if text_num:
-            if text_num in branch_variables: # this is very bad at the moment as we could have VAR+=OTHERVAR, but for now we just use ==
-                branch_variables[my_var][q] = branch_variables[text_num][q]
-                continue
-            else:
-                my_num = int(text_num)
-        else:
-            my_num = 0
-        if my_op == "++":
-            branch_variables[my_var][q] += 1
-        elif my_op == "--":
-            branch_variables[my_var][q] -= 1
-        elif my_op == "=":
-            branch_variables[my_var][q] = my_num
-        elif my_op == "-=":
-            branch_variables[my_var][q] -= my_num
-        elif my_op == "+=":
-            branch_variables[my_var][q] += my_num
-        elif my_op == "=":
-            branch_variables[my_var][q] = my_num
-        else:
-            print("{} {} {}.".format("Unknown operator" if len(my_op) < 3 else "Likely badly formed variable adjust", my_var, err_stub))
-    #print("After:", my_var, branch_variables[my_var])
-    return
 
 def apostrophe_check(line, line_count, warns):
     if line.startswith('#'):
@@ -927,9 +915,9 @@ def get_file(fname):
                 if len(file_array) == 0:
                     mt.fail("RBR.PY requires }} variable meta-commands to be after files=, because even initialization is tricky.\nWe could, of course, have a list of initialized variables once file= hits, but that'd be a bit of programming I don't want to deal with right now.")
                     mt.npo(fname, line_count)
-                mt.fail("We will attack variables later.")
-                continue
-                branch_variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname), actives)
+                    continue
+                for b in local_branch_dict:
+                    local_branch_dict[b].variable_adjust(line[2:].strip(), "at line {} in {}".format(line_count, fname))
                 last_atted_command = ""
                 continue
             if not len(file_array): continue # allows for comments at the start
