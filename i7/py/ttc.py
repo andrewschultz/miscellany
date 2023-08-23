@@ -145,13 +145,106 @@ class TestCaseMapper:
         self.mappers_in_order = []
         self.text_and_type_map = defaultdict(tuple)
 
+class FlexStringMatcher:
+
+    FLEXMATCH_UNDEFINED = -1
+    FLEXMATCH_ANYWHERE = 0
+    FLEXMATCH_STARTSWITH = 1
+    FLEXMATCH_BRANCH = 2
+    FLEXMATCH_REGEX = 3
+
+    def __init__(self, string_to_parse):
+        self.case_search_type = self.FLEXMATCH_UNDEFINED
+        self.main_string_to_parse = ''
+        self.branch_string_to_parse = ''
+        self.end_string_to_parse = ''
+
+        if string_to_parse.startswith('s:'):
+            self.main_string_to_parse = string_to_parse[2:]
+            self.case_search_type = self.FLEXMATCH_STARTSWITH
+        elif string_to_parse.startswith('r:'):
+            self.main_string_to_parse = string_to_parse[2:]
+            self.case_search_type = self.FLEXMATCH_REGEX
+        elif string_to_parse.startswith('b:'):
+            self.main_string_to_parse = string_to_parse[2:]
+            self.case_search_type = self.FLEXMATCH_BRANCH
+        elif '/' in string_to_parse:
+            self.case_search_type = self.FLEXMATCH_BRANCH
+            mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
+        else:
+            self.case_search_type = self.FLEXMATCH_ANYWHERE
+
+        if self.case_search_type == self.FLEXMATCH_BRANCH:
+            ary = string_to_parse.split('/')
+            if len(ary) < 3:
+                mt.warn("A flexmatch string has only 2 slashes: {}".format(string_to_parse))
+            self.main_string_to_parse = ary[0]
+            self.branch_strings_to_parse = ary[1:-1] if len(ary) > 2 else [ 'INVALID' ]
+            self.end_string_to_parse = ary[-1]
+            return
+
+        self.main_string_to_parse = string_to_parse
+
+        if self.case_search_type == self.FLEXMATCH_REGEX:
+            check_suspicious_regex(self.main_string_to_parse, 0)
+        else:
+            check_regex_in_absolute(self.main_string_to_parse, 0)
+
+    def got_match(self, string_to_match):
+        if self.case_search_type == self.FLEXMATCH_STARTSWITH:
+            return string_to_match.startswith(self.main_string)
+        elif self.case_search_type == self.FLEXMATCH_ANYWHERE:
+            return self.main_string_to_parse in string_to_match
+        elif self.case_search_type == self.FLEXMATCH_REGEX:
+            return re.search(self.main_string_to_parse, string_to_match)
+        elif self.case_search_type == self.FLEXMATCH_BRANCH:
+            for b in self.branch_strings_to_parse:
+                x = self.main_string_to_parse + b + self.end_string_to_parse
+                if x == string_to_match:
+                    return True
+            return False
+        mt.warn("Unidentified Flexmatch type for {}".format(self.main_string_to_parse))
+
+class TestCaseToFileMapper:
+
+    GOODMATCH = 1
+    NOMATCH = 0
+    BADMATCH = -1
+
+    def __init__(self, data):
+        ary = data.split(',')
+        self.case_from = FlexStringMatcher(ary[0])
+        self.file_to = FlexStringMatcher(ary[1])
+
+    def case_file_match(self, this_case, this_file):
+        if self.case_from.got_match(this_case):
+            if self.file_to.got_match(this_file):
+                return GOODMATCH
+            else:
+                return BADMATCH
+        return NOMATCH
+
+class UntestableCaseMapper:
+
+    def __init__(self, prefix, data, line_count = 0, this_cfg = 'no file specified'):
+        self.the_case = FlexStringMatcher(data)
+
+    def untestable_match(self, this_case):
+        return self.the_case.got_match(this_case)
+
+
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
 value_specs = defaultdict(lambda: defaultdict(lambda: defaultdict(ValuesPicker)))
 rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 file_abbrev_maps = defaultdict(lambda: defaultdict(str))
+
+#to delete eventually
 case_mapper = defaultdict(TestCaseMapper)
+
+case_to_file_mapper = defaultdict(lambda: defaultdict(CaseToFileMapper))
+untestable_case_mapper = defaultdict(list)
 
 test_case_matrices = defaultdict(list)
 
@@ -295,11 +388,11 @@ def starts_with_text(my_line, my_file):
         return False
     return my_line[0].isalpha()
 
-def check_regex_in_absolute(my_data, my_line_count):
+def check_regex_in_absolute(my_data, my_line_count = 0, my_file = '<UNKNOWN>'):
     if '*' in my_data or '^' in my_data or '$' in my_data:
         print("Possible regex appears in absolute definition {} at line {}.".format(my_data, my_line_count))
 
-def check_suspicious_regex(my_regex, my_line_count, my_file = '<UNKNOWN>'):
+def check_suspicious_regex(my_regex, my_line_count = 0, my_file = '<UNKNOWN>'):
     if '-*' in my_regex:
         print("-* in regex {} line {} may result in a too-greedy regex. Maybe change to -.*".format(my_file, my_line_count))
         mt.add_post(my_file, my_line_count)
@@ -1535,30 +1628,8 @@ def read_cfg_file(this_cfg):
                     print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text, 4th entry = columns that create command")
                     print("Also, make sure entries 2/3 are integers.")
                     sys.exit()
-            elif prefix in ( 'untestable', 'untestables' ):
-                ary = data.split(",")
-                for a in ary:
-                    check_regex_in_absolute(a, line_count)
-                    if a.startswith('#'):
-                        print("Stripping # from untestable at line", line_count)
-                        a = a[1:]
-                        mt.add_postopen(this_cfg, line_count, priority = 4)
-                    if a in table_specs[cur_proj][cur_file].untestables:
-                        print("Duplicate untestable", a)
-                        continue
-                    table_specs[cur_proj][cur_file].untestables.append(a)
-            elif prefix in ( 'untestabler' ):
-                ary = data.split(",")
-                for a in ary:
-                    check_suspicious_regex(a, line_count, this_cfg)
-                    if a.startswith('#'):
-                        print("Stripping # from untestable at line", line_count)
-                        a = a[1:]
-                        mt.add_postopen(this_cfg, line_count, priority = 4)
-                    if a in table_specs[cur_proj][cur_file].untestable_regexes:
-                        print("Duplicate regex", a, cur_proj, line_count)
-                        continue
-                    table_specs[cur_proj][cur_file].untestable_regexes.append(a)
+            elif prefix == 'untestable':
+                untestable_case_mapper[cur_proj].append(UntestableCaseMapper(prefix, data))
             else:
                 print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
     total_cfg_errors += local_cfg_errors
@@ -1750,17 +1821,11 @@ case_list.update(get_value_cases(my_proj))
 case_copy = list(case_list)
 
 for c in case_copy:
-    for this_file in table_specs[my_proj]:
-        if c in table_specs[my_proj][this_file].untestables:
+    for u in untestable_case_mapper[my_proj]:
+        if u.untestable_match(c):
             if verbose_level > 0:
-                print("UNTESTABLE ABSOLUTE", c)
-            case_list.pop(c, None)
-            continue
-        elif wild_card_match(c, table_specs[my_proj][this_file].untestable_regexes):
-            if verbose_level > 0:
-                print("UNTESTABLE REGEX", c)
-            case_list.pop(c, None)
-            continue
+                print("UNTESTABLE CASE: {}".format(c))
+            case_list.pop(c)
 
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
