@@ -1501,10 +1501,33 @@ def read_cfg_file(this_cfg):
                 ary = data.split('\t')
                 while len(ary) < 4:
                     ary.append('<UNDEF>')
-                if '=' in ''.join(ary[1:]):
-                    mt.warn("Currently we use hardcoded values for value/values picker. So everything left of = is deleted. {} line {}".format(tb, line_count))
-                    ary = [ re.sub(".*=", "", x) for x in ary ]
-                value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
+                my_cmd = '<CMD>'
+                my_file = 'myfile'
+                my_text = 'expected text'
+                my_token = 'source token'
+                eq = sum(['=' in x for x in ary])
+                if len(ary) != 4:
+                    mt.warn("values_picker needs 4 TSV elements. Skipping this. It may cause a lot of unexpected errors.")
+                    continue
+                if eq > 0 and eq < 4:
+                    mt.warn("value_picker either lists cases in order (source token, command, file abbreviation, rough text) or has token= cmd= file= text=. Skipping this. It may cause a lot of unexpected errors.")
+                    continue
+                if eq == 0:
+                    value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
+                else:
+                    for a in ary:
+                        a0 = a.split('=')
+                        if a0[0] == 'token':
+                            my_token = a0[1]
+                        elif a0[0] == 'cmd':
+                            my_cmd = a0[1]
+                        elif a0[0] == 'file':
+                            my_file = a0[1]
+                        elif a0[0] == 'text':
+                            my_text = a0[1]
+                        else:
+                            mt.warn("Unknown value_specs parameter {}.".format(ao[0]))
+                    value_specs[cur_proj][cur_file][my_token] = ValuesPicker(command_template = my_cmd, expected_file = my_file, expected_text = my_text)
                 #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
             elif prefix == 'ignore':
                 ary = data.split(',')
