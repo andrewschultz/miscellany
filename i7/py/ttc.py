@@ -124,8 +124,6 @@ class TablePicker:
         self.ignore = []
         self.ignore_wild = []
         self.stopper = ''
-        self.untestables = []
-        self.untestable_regexes = []
         self.okay_duplicate_counter = defaultdict(int)
         self.okay_duplicate_regexes = []
         self.absolute_string = []
@@ -1235,6 +1233,7 @@ def verify_case_placement(this_proj):
                 is_retest = False
                 if line_mod.startswith('+'):
                     is_retest = True
+                    line_mod = line_mod[1:]
                 ignore_test_case_mapping = False
                 if line_mod.endswith("@"):
                     ignore_test_case_mapping = True
@@ -1511,6 +1510,7 @@ def read_cfg_file(this_cfg):
                     continue
                 if eq > 0 and eq < 4:
                     mt.warn("value_picker either lists cases in order (source token, command, file abbreviation, rough text) or has token= cmd= file= text=. Skipping this. It may cause a lot of unexpected errors.")
+                    mt.warn("    " + ','.join(ary))
                     continue
                 if eq == 0:
                     value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
