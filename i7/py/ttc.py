@@ -1085,7 +1085,7 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lon
                         continue
                     pre_asterisk_warn = True
                     global_error_note = True
-                    print("WARNING test case still in header for copy/pasting {} line {}.".format(base, line_count))
+                    mt.warn("WARNING test case still in header for copy/pasting {} line {}.".format(base, line_count))
                     mt.add_postopen(my_rbr, line_count, priority=3) # high priority in reality but low priority since we know where the offending lines are: at the start of the file!
                     continue
                 if flag_spacing:
@@ -1278,13 +1278,13 @@ def verify_case_placement(this_proj):
                         line_mod = line_mod[1:]
                         case_type = 'retest'
                     unsorted += 1
-                    print("WARNING ({}) {} case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line_mod in case_list else 'invalid', case_type, fb, line_count, line_mod))
+                    mt.warn("WARNING ({}) {} case in reg* file pool has no assigned file-pattern: {} {} {}".format('valid' if line_mod in case_list else 'invalid', case_type, fb, line_count, line_mod))
                     mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 elif total_matches > 1:
                     double_sorted_cases += (total_matches == 2)
                     double_sorted_lines += 1
-                    print("WARNING {} case potentially sorted into two files:".format(case_type), line_mod, "line_mod", line_count, ' / '.join(match_array))
+                    mt.warn("WARNING {} case potentially sorted into two files:".format(case_type), line_mod, "line_mod", line_count, ' / '.join(match_array))
                     mark_rbr_open(file_name, line_count, line)
                     this_success = False
                 else:
@@ -1331,12 +1331,12 @@ def read_cfg_file(this_cfg):
             if line.startswith('<'):
                 ls = line.strip()
                 if not ls.endswith('>'):
-                    print("WARNING need <> at line {} in {}.".format(line_count, this_cfg))
+                    mt.warn("WARNING need <> at line {} in {}.".format(line_count, this_cfg))
                     continue
                 if '/' not in ls and '\\' not in ls:
                     file_to_find = os.path.normpath(os.path.join(ttc_dir, ls[1:-1]))
                     if file_to_find in already_included:
-                        print("WARNING duplicate inclusion of {} at {} line {}.".format(file_to_find, this_cfg, line_count))
+                        mt.warn("WARNING duplicate inclusion of {} at {} line {}.".format(file_to_find, this_cfg, line_count))
                         continue
                     if verbose_level > 0:
                         print("Checking through {}".format(file_to_find))
@@ -1422,14 +1422,14 @@ def read_cfg_file(this_cfg):
             elif prefix in ( 'rule_file', 'rules_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
-                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    mt.warn("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     if cfg_error_bail:
                         mt.add_postopen(this_cfg, line_count)
                         local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
                 if cur_file in rules_specs[cur_proj]:
-                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                     if cfg_error_bail:
                         mt.add_postopen(this_cfg, line_count)
                         local_cfg_errors += 1
@@ -1441,7 +1441,7 @@ def read_cfg_file(this_cfg):
                 my_regex = ""
                 for idx in range(1, len(ary)):
                     if '=' not in ary[idx]:
-                        print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                        mt.warn("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
                         if cfg_error_bail:
                             mt.add_postopen(this_cfg, line_count)
                             local_cfg_errors += 1
@@ -1473,14 +1473,14 @@ def read_cfg_file(this_cfg):
             elif prefix in ( 'table_file', 'tables_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
-                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    mt.warn("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     if cfg_error_bail:
                         mt.add_postopen(this_cfg, line_count)
                         local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
                 if cur_file in table_specs[cur_proj]:
-                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                     mt.add_postopen(this_cfg, line_count)
                 else:
                     table_specs[cur_proj][cur_file] = TablePicker()
@@ -1490,11 +1490,11 @@ def read_cfg_file(this_cfg):
                     if cfg_error_bail:
                         mt.add_postopen(this_cfg, line_count)
                         local_cfg_errors += 1
-                    print("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
+                    mt.warn("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     continue
                 cur_file = temp_cur_file
                 if cur_file in table_specs[cur_proj]:
-                    print("WARNING duplicate file {} at line {}".format(cur_file, line_count))
+                    mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                     mt.add_postopen(this_cfg, line_count)
             elif prefix in ( 'value_picker', 'values_picker' ):
                 ary = data.split('\t')
@@ -1534,13 +1534,13 @@ def read_cfg_file(this_cfg):
                 for d in ary:
                     check_regex_in_absolute(d, line_count)
                     if data in table_specs[cur_proj][cur_file].ignore:
-                        print("WARNING duplicate ignore", cur_file, line_count, d)
+                        mt.warn("WARNING duplicate ignore", cur_file, line_count, d)
                         mt.add_postopen(this_cfg, line_count)
                     else:
                         table_specs[cur_proj][cur_file].ignore.append(d)
             elif prefix in ( 'ignorew', 'igw' ):
                 if data in table_specs[cur_proj][cur_file].ignore_wild:
-                    print("WARNING duplicate ignore", cur_file, line_count, data)
+                    mt.warn("WARNING duplicate ignore", cur_file, line_count, data)
                     mt.add_postopen(this_cfg, line_count)
                 else:
                     table_specs[cur_proj][cur_file].ignore_wild.append(data)
@@ -1561,7 +1561,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'okdup':
                 ary = data.split(",")
                 if not cur_file:
-                    print("WARNING: you probably want to put an OKDUP in a specific file.")
+                    mt.warn("WARNING: you probably want to put an OKDUP in a specific file.")
                 for a in ary:
                     check_regex_in_absolute(a, line_count)
                     if '~' not in a:
@@ -1571,7 +1571,7 @@ def read_cfg_file(this_cfg):
                         table_specs[cur_proj][cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
             elif prefix == 'okdupr':
                 if not cur_file:
-                    print("WARNING: you probably want to put an OKDUP in a specific file.")
+                    mt.warn("WARNING: you probably want to put an OKDUP in a specific file.")
                 check_suspicious_regex(data, line_count, this_cfg)
                 table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
             elif prefix in ( 'oddcase', 'oddcases' ):
@@ -1579,10 +1579,10 @@ def read_cfg_file(this_cfg):
             elif prefix == 'project':
                 cur_proj = i7.long_name(data)
                 if not cur_proj:
-                    print("WARNING bad project specified line {}: {}".format(line_count, data))
+                    mt.warn("WARNING bad project specified line {}: {}".format(line_count, data))
                     mt.add_postopen(this_cfg, line_count)
                 if cur_proj in case_mapper:
-                    print("WARNING redefined case_mapper for {} line {} of {}.".format(cur_proj, line_count, this_cfg))
+                    mt.warn("WARNING redefined case_mapper for {} line {} of {}.".format(cur_proj, line_count, this_cfg))
                 else:
                     case_mapper[cur_proj] = TestCaseMapper()
             elif prefix == 'say':
@@ -1606,7 +1606,7 @@ def read_cfg_file(this_cfg):
                 try:
                     for idx in range(1, len(ary)):
                         if '=' not in ary[idx]:
-                            print("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
+                            mt.warn("WARNING no = {} line {} TSV entry {} = {}".format(tb, line_count, idx, ary[idx]))
                             if cfg_error_bail:
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
@@ -1615,7 +1615,7 @@ def read_cfg_file(this_cfg):
                         generator_type = sub_array[0]
                         generator_data = sub_array[1]
                         if generator_type in generator_dict:
-                            print("WARNING duplicate generator type {} line {} TSV entry {} = {}".format(generator_type, line_count, idx, generator_type))
+                            mt.warn("WARNING duplicate generator type {} line {} TSV entry {} = {}".format(generator_type, line_count, idx, generator_type))
                             if cfg_error_bail:
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
@@ -1640,7 +1640,7 @@ def read_cfg_file(this_cfg):
                         elif generator_type == 'regcheck':
                             this_regex_to_check = generator_data
                         else:
-                            print("WARNING unidentified start {} line {} TSV entry {} = {}".format(tb, line_count, idx, generator_type))
+                            mt.warn("WARNING unidentified start {} line {} TSV entry {} = {}".format(tb, line_count, idx, generator_type))
                             if cfg_error_bail:
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
@@ -1775,9 +1775,9 @@ while cmd_count < len(sys.argv):
             this_cfg = test_file_from_project(m)
             if os.path.exists(this_cfg):
                 if current_cfg:
-                    print("WARNING duplicate cfg")
-                    print("FIRST", current_cfg)
-                    print("NOW", this_cfg)
+                    mt.warn("WARNING re-defined CFGs in parameters")
+                    mt.warn("    FIRST", current_cfg)
+                    mt.warn("    NOW", this_cfg)
                 current_cfg = this_cfg
         if current_cfg:
             mt.npo(current_cfg)
