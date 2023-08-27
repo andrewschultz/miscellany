@@ -171,17 +171,17 @@ class FlexStringMatcher:
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
         else:
             self.case_search_type = self.FLEXMATCH_ANYWHERE
+            mt.warn("PEDANTRY: {} defaults to start_match (s:) ... you may wish to fill in brs:".format(string_to_parse))
+            self.main_string_to_parse = string_to_parse
 
         if self.case_search_type == self.FLEXMATCH_BRANCH:
-            ary = string_to_parse.split('/')
+            ary = self.main_string_to_parse.split('/')
             if len(ary) < 3:
                 mt.warn("A flexmatch string has only 2 slashes: {}".format(string_to_parse))
             self.main_string_to_parse = ary[0]
             self.branch_strings_to_parse = ary[1:-1] if len(ary) > 2 else [ 'INVALID' ]
             self.end_string_to_parse = ary[-1]
             return
-
-        self.main_string_to_parse = string_to_parse
 
         if self.case_search_type == self.FLEXMATCH_REGEX:
             check_suspicious_regex(self.main_string_to_parse, 0)
@@ -190,7 +190,7 @@ class FlexStringMatcher:
 
     def got_match(self, string_to_match):
         if self.case_search_type == self.FLEXMATCH_STARTSWITH:
-            return string_to_match.startswith(self.main_string)
+            return string_to_match.startswith(self.main_string_to_parse)
         elif self.case_search_type == self.FLEXMATCH_ANYWHERE:
             return self.main_string_to_parse in string_to_match
         elif self.case_search_type == self.FLEXMATCH_REGEX:
@@ -217,10 +217,10 @@ class TestCaseToFileMapper:
     def case_file_match(self, this_case, this_file):
         if self.case_from.got_match(this_case):
             if self.file_to.got_match(this_file):
-                return GOODMATCH
+                return self.GOODMATCH
             else:
-                return BADMATCH
-        return NOMATCH
+                return self.BADMATCH
+        return self.NOMATCH
 
 class UntestableCaseMapper:
 
@@ -241,7 +241,7 @@ file_abbrev_maps = defaultdict(lambda: defaultdict(str))
 #to delete eventually
 case_mapper = defaultdict(TestCaseMapper)
 
-case_to_file_mapper = defaultdict(lambda: defaultdict(CaseToFileMapper))
+case_to_file_mapper = defaultdict(list)
 untestable_case_mapper = defaultdict(list)
 
 test_case_matrices = defaultdict(list)
