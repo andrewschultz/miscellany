@@ -1813,7 +1813,11 @@ for c in case_copy:
         if u.untestable_match(c):
             if verbose_level > 0:
                 print("UNTESTABLE CASE: {}".format(c))
-            case_list.pop(c)
+            try:
+                case_list.pop(c)
+                break
+            except:
+                mt.warn("Tried to pop test case {} but failed.".format(c))
 
 case_test = verify_cases(my_proj, case_list)
 verify_case_placement(my_proj)
