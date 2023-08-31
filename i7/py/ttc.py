@@ -142,9 +142,10 @@ class FlexStringMatcher:
 
     FLEXMATCH_UNDEFINED = -1
     FLEXMATCH_ANYWHERE = 0
-    FLEXMATCH_STARTSWITH = 1
-    FLEXMATCH_BRANCH = 2
-    FLEXMATCH_REGEX = 3
+    FLEXMATCH_EXACTMATCH = 1
+    FLEXMATCH_STARTSWITH = 2
+    FLEXMATCH_BRANCH = 3
+    FLEXMATCH_REGEX = 4
 
     def __init__(self, string_to_parse):
         self.case_search_type = self.FLEXMATCH_UNDEFINED
@@ -158,6 +159,9 @@ class FlexStringMatcher:
         elif string_to_parse.startswith('r:'):
             self.main_string_to_parse = string_to_parse[2:]
             self.case_search_type = self.FLEXMATCH_REGEX
+        elif string_to_parse.startswith('x:'):
+            self.main_string_to_parse = string_to_parse[2:]
+            self.case_search_type = self.FLEXMATCH_EXACTMATCH
         elif string_to_parse.startswith('b:'):
             self.main_string_to_parse = string_to_parse[2:]
             self.case_search_type = self.FLEXMATCH_BRANCH
@@ -165,8 +169,8 @@ class FlexStringMatcher:
             self.case_search_type = self.FLEXMATCH_BRANCH
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
         else:
-            self.case_search_type = self.FLEXMATCH_ANYWHERE
-            mt.warn("PEDANTRY: {} defaults to start_match (s:) ... you may wish to fill in brs:".format(string_to_parse))
+            self.case_search_type = self.FLEXMATCH_EXACTMATCH
+            mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to fill in brsx:".format(string_to_parse))
             self.main_string_to_parse = string_to_parse
 
         if self.case_search_type == self.FLEXMATCH_BRANCH:
@@ -184,7 +188,9 @@ class FlexStringMatcher:
             check_regex_in_absolute(self.main_string_to_parse, 0)
 
     def got_match(self, string_to_match):
-        if self.case_search_type == self.FLEXMATCH_STARTSWITH:
+        if self.case_search_type == self.FLEXMATCH_EXACTMATCH:
+            return string_to_match == self.main_string_to_parse
+        elif self.case_search_type == self.FLEXMATCH_STARTSWITH:
             return string_to_match.startswith(self.main_string_to_parse)
         elif self.case_search_type == self.FLEXMATCH_ANYWHERE:
             return self.main_string_to_parse in string_to_match
