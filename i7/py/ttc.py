@@ -214,10 +214,12 @@ class TestCaseToFileMapper:
         ary = data.split(',')
         self.case_from = FlexStringMatcher(ary[0])
         self.file_to = FlexStringMatcher(ary[1])
+        self.times_used = 0
 
     def case_file_match(self, this_case, this_file):
         if self.case_from.got_match(this_case):
             if self.file_to.got_match(this_file):
+                self.times_used += 1
                 return self.GOODMATCH
             else:
                 return self.BADMATCH
@@ -1231,6 +1233,10 @@ def verify_case_placement(this_proj):
                 for t in case_to_file_mapper[this_proj]:
                     my_result = t.case_file_match(line_mod, file_name)
                     if my_result == TestCaseToFileMapper.BADMATCH:
+                        if ignore_test_case_mapping:
+                            match_array.append(t.case_from.main_string_to_parse + t.file_to.main_string_to_parse)
+                            t.times_used += 1
+                            break
                         print("Test case", line_mod, "sorted into wrong file", fb, "with search term", t.file_to.main_string_to_parse)
                         mark_rbr_open(file_name, line_count, line)
                         wrong_file += 1
@@ -1789,6 +1795,11 @@ if len(global_stray_table_org):
     print("Global stray table info")
     for g in global_stray_table_org:
         print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
+
+none_got = [ "{} {}".format(x.case_from.main_string_to_parse, x.file_to.main_string_to_parse) for x in case_to_file_mapper[my_proj] if not x.times_used]
+
+if none_got:
+    print("Unused test cases:", ', '.join(none_got))
 
 if my_cfg_errors:
     mt.warn("This is a warning to note CFG files had parsing errors. Remove NCB to keep the focus on what the errors are.")
