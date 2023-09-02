@@ -1296,6 +1296,7 @@ def read_cfg_file(this_cfg):
     already_included[this_cfg] = True
     tb = os.path.basename(this_cfg)
     local_cfg_errors = total_cfg_errors = 0
+    val_files = []
     with open(this_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
@@ -1416,7 +1417,7 @@ def read_cfg_file(this_cfg):
                     mt.add_postopen(this_cfg, line_count)
                 else:
                     table_specs[cur_proj][cur_file] = TablePicker()
-            elif prefix in ( 'value_file', 'values_file' ):
+            elif prefix in ( 'value_file', 'values_file', 'value_files', 'values_files' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
                     if cfg_error_bail:
@@ -1424,11 +1425,11 @@ def read_cfg_file(this_cfg):
                         local_cfg_errors += 1
                     mt.warn("WARNING could not get file from {} at {} line {}.".format(data, this_cfg, line_count))
                     continue
-                cur_file = temp_cur_file
-                if cur_file in table_specs[cur_proj]:
-                    mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
-                    mt.add_postopen(this_cfg, line_count)
+                val_files = [ inform_extension_file(x, cur_proj) for x in data.split(',') ]
+                val_files = [ x for x in val_files if x ]
             elif prefix in ( 'value_picker', 'values_picker' ):
+                if not len(val_files):
+                    mt.warn("Value_picker didn't have values_files defined for it line {} of {}.".format(line_count, this_cfg))
                 ary = data.split('\t')
                 while len(ary) < 4:
                     ary.append('<UNDEF>')
@@ -1445,7 +1446,8 @@ def read_cfg_file(this_cfg):
                     mt.warn("    " + ','.join(ary))
                     continue
                 if eq == 0:
-                    value_specs[cur_proj][cur_file][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
+                    for v in val_files:
+                        value_specs[cur_proj][v][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
                 else:
                     for a in ary:
                         a0 = a.split('=')
@@ -1459,7 +1461,8 @@ def read_cfg_file(this_cfg):
                             my_text = a0[1]
                         else:
                             mt.warn("Unknown value_specs parameter {}.".format(ao[0]))
-                    value_specs[cur_proj][cur_file][my_token] = ValuesPicker(command_template = my_cmd, expected_file = my_file, expected_text = my_text)
+                    for v in val_files:
+                        value_specs[cur_proj][v][my_token] = ValuesPicker(command_template = my_cmd, expected_file = my_file, expected_text = my_text)
                 #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
             elif prefix == 'ignore':
                 ary = data.split(',')
