@@ -12,10 +12,14 @@
 
 import sys
 import os
+import re
 from collections import defaultdict
+from shutil import move, copy
+
 import mytools as mt
 import i7
-from shutil import move, copy
+
+ghsubdir = defaultdict(str)
 
 to_project = i7.dir2proj()
 
@@ -30,6 +34,7 @@ hfx_ary = []
 user_project = ''
 rbr_wild_card = ''
 get_rbr = False
+git_subdir = ''
 
 temp_batch_file = "c:\\writing\\temp\\ni-temp.bat"
 temp_batch_file_backup = "c:\\writing\\temp\\ni-temp-backup.bat"
@@ -82,6 +87,17 @@ def read_special_commands():
     with open(ni_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             l = line.lower().strip()
+            if l.startswith("subdir"):
+                l = re.sub("^.*?:", "", l)
+                ary = l.split(',')
+                print(ary)
+                for a in ary:
+                    a2 = a.split('=')
+                    if a2[0] in ghsubdir:
+                        mt.warn("Skipping redefinition of github subdir {} at line {}.".format(l[0], line_count))
+                    else:
+                        ghsubdir[a2[0]] = a2[1]
+                continue
             if '=' not in l:
                 if '~' in l:
                     mt.warn("Line {} should have = not ~. Replacing.")
@@ -118,6 +134,19 @@ if nometa(sys.argv[1:]):
 
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
+    if '-' in arg:
+        if arg.count('-') > 1:
+            mt.bailfail("Only one dash can be used after a project.")
+        ary = arg.split('-')
+        if ary[1] in ghsubdir:
+            mt.okay("Going to subdir", ghsubdir[ary[1]])
+            git_subdir = ghsubdir[ary[1]]
+        else:
+            mt.warn("Invalid ghsubdir value", ary[1])
+        if not ary[0]:
+            cmd_count += 1
+            continue
+        arg = ary[0]
     if arg == 'gh':
         goto_github = True
     elif arg == 't':
@@ -185,7 +214,7 @@ while cmd_count < len(sys.argv):
         if os.path.isfile(m):
             mt.npo(map_to[arg])
         elif os.path.isdir(m):
-            write_chdir_batch_file(m)
+            write_chdir_batch_file(m + '\\' + git_subdir if git_subdir else m)
             sys.exit()
         elif '{{}}' in m:
             sys.exit("Write formatting code later.")
@@ -271,4 +300,4 @@ back_up_existing_temp()
 if (not force_batch_move) and source_opened:
     sys.exit()
 
-write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github, materials = materials_subdir))
+write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github, materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
