@@ -27,7 +27,8 @@ import traceback
 
 mt_default_dict = defaultdict(str)
 
-WTXT = colorama.Style.RESET_ALL
+TXT = WTXT = RESET = colorama.Style.RESET_ALL
+RESETCR = CRRESET = RESET + "\n"
 WARN = WARNED = CAUTION = colorama.Fore.YELLOW
 FAIL = FAILED = ERROR = STOP = colorama.Fore.RED
 SUCCESS = SUCCEED = PASS = GO = colorama.Fore.GREEN
