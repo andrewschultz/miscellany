@@ -35,7 +35,10 @@ SUCCESS = SUCCEED = PASS = GO = colorama.Fore.GREEN
 
 ########################string constants
 
-gh_dir = gitbase = 'c:/users/andrew/documents/github'
+gh_dir = gitbase = 'c:\\users\\andrew\\documents\\github'
+config_dir = os.path.join(gh_dir, "configs")
+notes_dir = os.path.join(config_dir, "notes")
+
 np_xml = 'C:/Users/Andrew/AppData/Roaming/Notepad++/session.xml'
 
 my_creds = "c:/coding/perl/proj/mycreds.txt"
