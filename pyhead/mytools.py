@@ -73,13 +73,18 @@ SORT_ALPHA_BACKWARD = -1
 SORT_ALPHA_NONE = 0
 SORT_ALPHA_FORWARD = 1
 
-def dailies_of(my_dir = "c:/writing/daily"):
-    try_1 = [os.path.basename(x) for x in glob.glob(my_dir + "/" + daily_wildcard)]
-    return [x for x in try_1 if re.search("^[0-9]{8}\.txt$", x)]
 
-def last_daily_of(my_dir = "c:/writing/daily", full_path = False):
-    if full_path:
-        return os.path.normpath(os.path.join(my_dir, dailies_of()[-1]))
+def dailies_of(my_dir = "c:/writing/daily", full_file_path = False):
+    try_1 = glob.glob(my_dir + "/" + daily_wildcard)
+    if not full_file_path:
+        try_1 = [os.path.basename(x) for x in try_1]
+    return [x for x in try_1 if re.search("[0-9]{8}\.txt$", x)]
+
+def last_daily_of(my_dir = "c:/writing/daily", to_process = False, full_return_path = False):
+    if to_process:
+        my_dir = os.path.join(my_dir, "to-proc")
+    if full_return_path:
+        return os.path.normpath(os.path.join(my_dir, dailies_of(my_dir)[-1]))
     return dailies_of()[-1]
 
 def github_root_of(my_path = os.getcwd()):
