@@ -141,6 +141,65 @@ def bail_if_not(f, file_desc = ""):
 def filelines_no_comments(file_stream):
     return [ x for x in file_stream.readlines() if x.strip() and not x.startswith('#') and not x.startswith(";") ]
 
+def errwrite(main_text, color = '', show_cr = True):
+    if color:
+        sys.stderr.write(color)
+    sys.stderr.write(main_text)
+    if color:
+        sys.stderr.write(WTXT)
+    if show_cr:
+        sys.stderr.write('\n')
+
+ew = errwrite
+
+def warn(*txt):
+    a = list(txt)
+    a[0] = WARN + str(a[0])
+    a[-1] = str(a[-1]) + WTXT
+    print(*a)
+
+def warnbail(*txt):
+    warn(*txt)
+    sys.exit()
+
+bailwarn = warnbail
+
+def fail(*txt):
+    a = list(txt)
+    a[0] = FAIL + str(a[0])
+    a[-1] = str(a[-1]) + WTXT
+    print(*a)
+
+def failbail(*txt):
+    fail(*txt)
+    sys.exit()
+
+bailfail = failbail
+
+def okay(*txt):
+    a = list(txt)
+    a[0] = PASS + str(a[0])
+    a[-1] = str(a[-1]) + WTXT
+    print(*a)
+
+def okaybail(*txt):
+    okay(*txt)
+    sys.exit()
+
+passbail = bailpass = bailokay = okaybail
+
+def cyan(*txt):
+    a = list(txt)
+    a[0] = PASS + str(a[0])
+    a[-1] = str(a[-1]) + WTXT
+    print(*a)
+
+def cyanbail(*txt):
+    okay(*txt)
+    sys.exit()
+
+bailcyan = cyanbail
+
 def is_alpha_match_special(my_string):
     return '>' in my_string or '<' in my_string or '|' in my_string
 
