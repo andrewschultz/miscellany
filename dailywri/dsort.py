@@ -9,6 +9,7 @@
 #
 # this grabs everything from a file
 # use dgrab to grab a specific sort of section, which is more flexible
+# dff.py is what supersedes it
 
 import daily
 import i7
@@ -18,6 +19,8 @@ import os
 from collections import defaultdict
 from shutil import copy
 import datetime
+
+import mytools as mt
 
 # the lower and upper bounds may be changed for testing etc.
 dir_to_proc = ""
@@ -300,6 +303,11 @@ gdrive_dir = "c:/coding/perl/proj/from_drive/drive_mod"
 gdrive_done = daily.to_proc(gdrive_dir)
 
 count = 1
+
+mt.warn("****************************************")
+mt.warn("****** WARNING USE DFF.PY INSTEAD ******")
+mt.warn("****************************************")
+
 while count < len(sys.argv):
     arg = sys.argv[count]
     if arg.startswith("-"): arg = arg[1:]
