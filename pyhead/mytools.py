@@ -1597,6 +1597,14 @@ def section_of(my_file, my_section_name, absolute_name = False, return_line_coun
 
 my_section_of = section_of
 
+def safemove(f1, f2, bail_on_fail = True):
+    if os.path.exists(f2):
+        warn("{} exists, not moving.".format(f2))
+        if bail_on_fail:
+            sys.exit()
+    shutil.move(f1, f2)
+    shutil.move(safe_temp)
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
