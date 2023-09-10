@@ -1605,6 +1605,15 @@ def safemove(f1, f2, bail_on_fail = True):
     shutil.move(f1, f2)
     shutil.move(safe_temp)
 
+def safeswap(f1, f2, bail_on_fail = True):
+    safe_temp = "c:/writing/temp/mt-safe-temp"
+    if os.path.exists(safe_temp):
+        sys.exit("Being extra cautious. {} exists. Delete before continuing.".format(safe_temp))
+    safemove(f1, safe_temp)
+    safemove(f2, f1)
+    safemove(safe_temp, f1)
+    mt.okay("Successfully switched {} and {}.".format(f1, f2))
+
 #####################################################basic main-program checking stuff
 
 if os.path.basename(main.__file__) == "mytools.py":
