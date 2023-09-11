@@ -31,7 +31,7 @@ TXT = WTXT = RESET = colorama.Style.RESET_ALL
 RESETCR = CRRESET = RESET + "\n"
 WARN = WARNED = CAUTION = colorama.Fore.YELLOW
 FAIL = FAILED = ERROR = STOP = colorama.Fore.RED
-SUCCESS = SUCCEED = PASS = GO = colorama.Fore.GREEN
+SUCCESS = SUCCEED = PASS = OKAY = GO = colorama.Fore.GREEN
 
 ########################string constants
 
@@ -57,6 +57,8 @@ file_extra_edit = defaultdict(lambda: defaultdict(int))
 daily_wildcard = "20*.txt"
 
 daily_warning_bumper = "**MODIFY DAILY INSTEAD(?)\n"
+daily_warning_bumper_nolb = daily_warning_bumper.strip()
+daily_warning_bumper_short = "**MODIFY"
 
 ########################date constants
 
@@ -923,9 +925,11 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             if (set1 or set2):
                 print_centralized(colorama.Fore.YELLOW + "TAB STRING DIFFERENCE" + WTXT)
             if set1:
-                print(colorama.Fore.RED + "    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]) + WTXT)
+                fail("    ORIG:", ', '.join(['{} idx {}'.format(x, tabbed_entries[0].index(x) + 1) for x in set1]))
             if set2:
-                print(colorama.Fore.GREEN + "     NEW:", ', '.join(['{} idx {}'.format(x, tabbed_entries[1].index(x) + 1) for x in set2]) + WTXT)
+                okay("     NEW:", ', '.join(['{} idx {}'.format(x, tabbed_entries[1].index(x) + 1) for x in set2]))
+            if '' in set1 or '' in set2:
+                warn("Search for \\t\\t or \\t$ if you need to weed out extraneous tabs.")
     if len(difs):
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
@@ -973,7 +977,7 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             sys.exit()
         return False
     elif verify_alphabetized_true:
-        print_centralized(colorama.Back.GREEN + "THERE ARE NO DIFFERENCES BETWEEN {} AND {}.".format(bn1, bn2) + WTXT)
+        print_centralized(colorama.Back.GREEN + "THERE ARE NO DIFFERENCES BETWEEN ALPHABETIZED VERSIONS OF {} AND {}.".format(bn1, bn2) + WTXT)
     if verbose:
         print("No shuffle-diffs")
     return True
@@ -1112,13 +1116,13 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
             sys.exit()
         else:
             return
-    if bail_after:
+    if bail_after and len(file_post_list):
         sys.exit()
     file_post_list.clear()
     if to_stderr:
         sys.stdout = old_stdout
 
-post_open = postopen = postopen_files
+post_open = postopen = openpost = open_post = postopen_files
 
 def open_source(bail = True):
     npo(main.__file__)
@@ -1590,7 +1594,7 @@ def section_of(my_file, my_section_name, absolute_name = False, return_line_coun
             if in_section:
                 section_string += line
     if not got_section:
-        print(colorama.Fore.YELLOW + "WARNING: could not find section {} in {}.".format(my_section_name, my_file) + WTXT)
+        warn("WARNING: could not find section {} in {}.".format(my_section_name, my_file))
     if return_line_count:
         return (section_string, start_line)
     return section_string
