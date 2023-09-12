@@ -105,19 +105,19 @@ def track_globals(main_file, global_file):
             if valid_global_variable(line):
                 x = re.sub(" .*", "", line.strip())
                 if x in dupe_set:
-                    print(colorama.Fore.YELLOW + "WARNING DUPLICATE {} {}".format(x, line_count) + colorama.Style.RESET_ALL)
+                    mt.warn("WARNING DUPLICATE {} {}".format(x, line_count))
                 else:
                     dupe_set.add(x)
                     globals.append(line)
             else:
                 non_globals.append(line)
     if not len(globals):
-        print(colorama.Fore.RED + "No globals found to shift over in {}.".format(main_file) + colorama.Style.RESET_ALL)
+        mt.okay("No globals found to shift over in {}.".format(main_file))
         return False
     if not os.path.exists(global_file):
         for x in globals:
             print(x, end='')
-        print("You may need to create a global file for", global_file)
+        mt.warn("You will need to create the file {} for me to create compares.".format(global_file))
         return False
     mout = open(new_main_temp, "w")
     gin = open(global_file, "r")
@@ -147,6 +147,7 @@ def track_globals(main_file, global_file):
         copy(main_file, new_main_temp)
         copy(global_file, new_global_temp)
     else:
+        mt.warn("To copy back automatically, use the -c flag.")
         mt.wm(main_file, new_main_temp)
         mt.wm(global_file, new_global_temp)
     return True
@@ -180,6 +181,6 @@ for fi in i7.i7f[this_proj]:
     results += track_definitions(fi, i7.hdr(this_proj, 'def'))
 
 if not results:
-    print(colorama.Back.GREEN + colorama.Fore.BLACK + "No changes were needed!" + colorama.Style.RESET_ALL)
+    mt.okay("No changes were needed!")
 else:
-    print(colorama.Back.RED + colorama.Fore.BLACK + "{} change{} needed!".format(results, mt.plur(results) + colorama.Style.RESET_ALL))
+    mt.fail("{} change{} needed!".format(results, mt.plur(results)))
