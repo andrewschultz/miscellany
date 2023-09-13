@@ -3,12 +3,15 @@
 import sys
 import re
 import os
+from shutil import copy
 import i7
 import mytools as mt
 import colorama
 
 new_main_temp = "c:/writing/temp/dglo-from.txt"
 new_global_temp = "c:/writing/temp/dglo-to.txt"
+
+copy_back = False
 
 def unsorted_start(my_line):
     if my_line.startswith("volume unsorted"):
@@ -175,6 +178,11 @@ else:
     this_proj = default_proj
 
 results = 0
+
+if this_proj not in i7.i7f:
+    if i7.main_abbr(this_proj) in i7.i7f:
+        sys.exit("Expand {} to its full name in i7p.txt.".format(this_proj))
+    sys.exit("Can't find project {}. Specify it on the command line or move to a directory with a project.".format(this_proj))
 
 for fi in i7.i7f[this_proj]:
     results += track_globals(fi, i7.hdr(this_proj, 'glo'))
