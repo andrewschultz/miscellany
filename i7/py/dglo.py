@@ -179,14 +179,28 @@ else:
 
 results = 0
 
+my_global = i7.hdr(this_proj, 'glo')
+my_defs = i7.hdr(this_proj, 'def')
+
+valid_files = os.path.exists(my_global) + os.path.exists(my_defs)
+
+if not valid_files:
+    mt.bailfail("We need to create a global or definitions file to be able to check anything: imk.py (PROJ) glo/def")
+
+if not os.path.exists(my_global):
+    mt.warn("No global file. Create it with imk.py (PROJ) glo")
+
+if not os.path.exists(my_defs):
+    mt.warn("No defs file. Create it with imk.py (PROJ) def")
+
 if this_proj not in i7.i7f:
     if i7.main_abbr(this_proj) in i7.i7f:
         sys.exit("Expand {} to its full name in i7p.txt.".format(this_proj))
     sys.exit("Can't find project {}. Specify it on the command line or move to a directory with a project.".format(this_proj))
 
 for fi in i7.i7f[this_proj]:
-    results += track_globals(fi, i7.hdr(this_proj, 'glo'))
-    results += track_definitions(fi, i7.hdr(this_proj, 'def'))
+    results += track_globals(fi, my_global)
+    results += track_definitions(fi, my_defs)
 
 if not results:
     mt.okay("No changes were needed!")
