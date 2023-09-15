@@ -32,6 +32,7 @@ def tab_sort(q):
     negative_braces_yet = False
     latest_bracket_even = 0
     latest_brace_even = 0
+    rolling_quote_count = 0
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
             rolling_bracket_count += line.count("[") - line.count("]")
@@ -70,6 +71,7 @@ def tab_sort(q):
                         break
                 print("ODD NUMBER OF QUOTES {} line {}:\n    entry {} text {}".format(qb, line_count, first_odd_quote, tary[first_odd_quote]))
                 mt.add_postopen_file_line(q, line_count)
+                rolling_quote_count += 1
             if columns:
                 l2 = re.sub("\t+ *\[.*", "", line.strip())
                 ll = len(re.split("\t+", l2))
@@ -91,10 +93,18 @@ def tab_sort(q):
                     else:
                         mt.warn("Columns in table entry are short of the header in line {} file {}.".format(throw_short_col_warn, q))
                     mt.add_post(q, line_count)
+    retval = False
+    if rolling_quote_count:
+        retval = True
     if rolling_bracket_count:
         print("*************uneven brackets in {}. Last OK at line {}.".format(qb, latest_bracket_even))
+        mt.add_post(q, latest_bracket_even)
+        retval = True
     if rolling_brace_count:
         print("*************uneven braces in {}. Last OK at line {}.".format(qb, latest_brace_even))
+        mt.add_post(q, latest_brace_even)
+        retval = True
+    return retval
 
 cmd_count = 1
 
@@ -121,10 +131,15 @@ if not project:
     elif default_project:
         print("Default project", default_project)
 
+total_brackets = 0
+
 if project in i7.i7f.keys():
     for q in i7.i7f[project]:
-        tab_sort(q)
+        total_brackets += tab_sort(q)
 else:
-    tab_sort(i7.src(project))
+    total_brackets += tab_sort(i7.src(project))
+
+if not total_brackets:
+    mt.okay("Brackets are all balanced!")
 
 mt.postopen_files()
