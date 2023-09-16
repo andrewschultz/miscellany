@@ -33,6 +33,7 @@ def tab_sort(q):
     latest_bracket_even = 0
     latest_brace_even = 0
     rolling_quote_count = 0
+    throw_short_col_warn = 0
     with open(q) as file:
         for (line_count, line) in enumerate(file, 1):
             rolling_bracket_count += line.count("[") - line.count("]")
@@ -60,6 +61,7 @@ def tab_sort(q):
                 get_tabs = False
                 l2 = re.sub("\t\[.*", "", line.strip())
                 columns = len(re.split("\t+", l2))
+                throw_short_col_warn = line_count
             if not line.strip():
                 columns = 0
             if line.count('"') % 2:
@@ -69,7 +71,7 @@ def tab_sort(q):
                     if tary[x].count('"') % 2:
                         first_odd_quote = x
                         break
-                print("ODD NUMBER OF QUOTES {} line {}:\n    entry {} text {}".format(qb, line_count, first_odd_quote, tary[first_odd_quote]))
+                mt.warn("ODD NUMBER OF QUOTES {} line {}:\n    entry {} text {}".format(qb, line_count, first_odd_quote, tary[first_odd_quote]))
                 mt.add_postopen_file_line(q, line_count)
                 rolling_quote_count += 1
             if columns:
@@ -91,7 +93,7 @@ def tab_sort(q):
                         print(err_count, "Culprit:", line.strip())
                         mt.add_postopen_file_line(q, line_count)
                     else:
-                        mt.warn("Columns in table entry are short of the header in line {} file {}.".format(throw_short_col_warn, q))
+                        mt.warn("Columns in table entry at line {} are short of the header in line {} file {}.".format(line_count, throw_short_col_warn, q))
                     mt.add_post(q, line_count)
     retval = False
     if rolling_quote_count:
