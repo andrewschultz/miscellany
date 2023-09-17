@@ -69,19 +69,32 @@ def zero_to_n_shuffle(q):
     q2 = list(range(0, len(q)))
     return Counter(q2) == Counter(q)
 
+def least_positive_not_in(my_array):
+    ret_val = 0
+    while ret_val in my_array:
+        ret_val += 1
+    return ret_val
+
 def ordering_of(my_base, this_header):
-    int_check = this_header[0].isdigit()
+    int_check = my_base[0].isdigit()
     return_array = []
-    for x in range(1, len(this_header)):
-        if this_header[x].isdigit() != int_check:
-            return [] # here, we make sure everything is an integer
-    for m in my_base:
-        m = re.sub(" *\(.*", "", m)
-        try:
-            return_array.append(this_header.index(m))
-        except:
-            #print(m, "not in array", this_header)
+    for x in range(1, len(my_base)):
+        if my_base[x].isdigit() != int_check:
+            mt.warn("I detected mix of integers and strings. Culprit was #{}: {}. Returning.".format(x, this_header[x]))
             return []
+    if int_check:
+        return_array = [int(x) for x in my_base]
+    else:
+        my_base = [ re.sub(" *\(.*\)", "", m) for m in my_base ] # get rid of (text) definitions
+        print(my_base)
+        for m in my_base:
+            try:
+                return_array.append(this_header.index(m))
+            except:
+                #print(m, "not in array", this_header)
+                return []
+    while len(return_array) < len(this_header):
+        return_array.append(least_positive_not_in(return_array))
     return return_array
 
 if len(sys.argv) == 1:
