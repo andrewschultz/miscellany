@@ -95,6 +95,11 @@ def ordering_of(my_base, this_header):
                 return []
     while len(return_array) < len(this_header):
         return_array.append(least_positive_not_in(return_array))
+    seen = set()
+    dupes = [x for x in return_array if x in seen or seen.add(x)]
+    if len(dupes):
+        mt.warn("Duplicate{} detected: {}".format(mt.plur(len(dupes)), ', '.join([str(x) for x in sorted(dupes)])))
+        return []
     return return_array
 
 if len(sys.argv) == 1:
