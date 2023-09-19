@@ -23,6 +23,8 @@ ghsubdir = defaultdict(str)
 
 to_project = i7.dir2proj()
 
+potential_alternates = { 'ta': [ 'ra' ] }
+
 materials_subdir = False
 force_batch_move = False
 source_opened = False
@@ -266,8 +268,13 @@ if get_fixes_file:
 
 if get_notes:
     notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
+    alt_notes_file = os.path.join(i7.ghbase, 'configs', 'notes', 'notes-{}.txt'.format(i7.main_abbr(to_project)))
     if not os.path.exists(notes_file):
-        mt.bailfail(notes_file, "does not exist. We may need to create it with noc or cno.")
+        if os.path.exists(alt_notes_file):
+            mt.warn(alt_notes_file, "exists but", notes_file, "does not, so going with config-repo file {}.".format(alt_notes_file))
+            notes_file = alt_notes_file
+        else:
+            mt.bailfail("{} does not exist, and neither does its config-repo sibling {}. We may need to create it with noc or cno.".format(notes_file, alt_notes_file))
     print("Opening {} notes...".format(to_project))
     mt.npo(notes_file, print_cmd = False, bail = False)
     source_opened = True
@@ -293,7 +300,16 @@ for h in hfx_ary:
             if os.path.exists(umbrella_file):
                 mt.warn(f"{to_project} had no {h} header, but the umbrella project {umbrella_proj} did. So I'm opening that.")
                 mt.npo(umbrella_file)
-        mt.bailfail("Could not open {}.".format(this_file))
+        if h in potential_alternates:
+            for p in potential_alternates[h]:
+                this_alt_file = i7.hdr(to_project, p)
+                print(this_alt_file)
+                if os.path.exists(this_alt_file):
+                    mt.warn("Opening alternate file", this_file)
+                    mt.npo(this_alt_file, bail=False, print_cmd = False)
+                    source_opened = True
+        if not source_opened:
+            mt.bailfail("Could not open {}.".format(this_file))
 
 back_up_existing_temp()
 
