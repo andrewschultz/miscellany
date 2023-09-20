@@ -58,6 +58,8 @@ i7ignore = [] # "bad projects" or ones not seen any more, to be ignored in searc
 i7bb = [] # list of bitbucket repos
 i7gh = [] # list of github repos
 
+adventuron_projects = set()
+
 ######################################################default variables
 
 auth = "Andrew Schultz"
@@ -1340,6 +1342,11 @@ with open(i7_cfg_file) as file:
                 i7x[my_l] = lla[0]
             i7xr[lla[0]] = l1[0]
             i7xa[lla[0]] = l1
+            continue
+        if this_var == 'adventuron':
+            ary = lla[0].split(',')
+            for a in ary:
+                adventuron_projects.add(a)
             continue
         if ":" in ll:
             print("WARNING: for I7 python, line {:d} has an unrecognized colon: {:s}".format(line_count, ll))
