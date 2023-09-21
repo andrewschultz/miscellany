@@ -1305,12 +1305,14 @@ with open(i7_cfg_file) as file:
             continue
         if this_var == 'headers':
             header_project = lla[0]
-            if header_project in i7com:
+            if header_project in i7x or header_project in i7com:
                 i7f[header_project] = []
                 i7fg[header_project] = []
-            else:
+            elif header_project in i7xr or header_project in i7comr:
                 i7f[header_project] = [ src(header_project) ]
                 i7fg[header_project] = [ gh_src(header_project) ]
+            else:
+                mt.warn("WARNING errant project {} line {} of i7p.txt.".format(header_project, line_count))
             for header_abbrev in l1:
                 main_project = gh_project = header_project
                 if '/' in header_abbrev:
