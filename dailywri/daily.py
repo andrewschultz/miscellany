@@ -52,6 +52,15 @@ glob_default = "da"
 
 open_on_warn = False
 
+def slashfree_equivalent(a, b):
+    return a.replace('\\', '/') == b.replace('\\', '/')
+
+def slashfree_dir_equivalent(this_dir, dir_list):
+    for d in dir_list:
+        if slashfree_equivalent(this_dir, d):
+            return True
+    return False
+
 def read_daily_abbrev():
     temp_dict = defaultdict(str)
     daily_dir_cfg = "c:/writing/scripts/daily-abbrev.txt"

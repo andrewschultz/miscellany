@@ -355,7 +355,7 @@ while count < len(sys.argv):
 
 if not dir_to_proc:
     x = os.getcwd()
-    if daily.slashy_equals(x, [gdrive_dir, daily_dir]):
+    if daily.slashfree_dir_equivalent(x, [gdrive_dir, daily_dir]):
         print("Using current directory", x)
         dir_to_proc = x
     else:
