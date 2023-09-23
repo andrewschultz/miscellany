@@ -81,6 +81,7 @@ show_blank_to_blank = True
 edit_blank_to_blank = True
 run_test_file = False
 ignore_duplicate = False
+header_verify = False
 
 force_speech_to_text = False
 
@@ -246,6 +247,35 @@ def relevant_daily_glob(my_dir):
 
 def add_apostrophe(match):
     return match.group(1) + convert_apos_case(match.group(2)) + match.group(3)
+
+def verify_header(my_file, must_have_mod_daily = False):
+    need_name_next = False
+    need_modify_next = False
+    retval = True
+    name_section = False
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('\\'):
+                if line.strip() == '\\nam':
+                    need_name_next = True
+                    continue
+                need_modify_next = True
+                continue
+            if need_name_next:
+                name_section = True
+                need_modify_next = True
+                need_name_next = False
+                continue
+            if need_modify_next:
+                if not line.startswith(mt.daily_warning_bumper):
+                    mt.warn("{} line {} needs to be a daily warning bumper.".format(my_file, line_count))
+                    retval = False
+                need_modify_next = False
+                continue
+            if name_section:
+                mt.warn("Name section with tabs should have ended {} but did not.".format(my_file))
+                return False
+    return retval
 
 def check_apostrophes_in_file(my_file, first_find_message = ''):
     #apostrophe_regex = r"[^a-z']({})[^a-z']".format("|".join(list(apostrophe_check)))
@@ -1521,6 +1551,10 @@ while cmd_count < len(sys.argv):
         daily_files_back = num_of
     elif arg == 'fc':
         force_copy = True
+    elif arg in ( 'hv', 'vh' ):
+        header_verify = True
+    elif arg in ( 'hvn', 'vhn', 'nhv', 'nvh' ):
+        header_verify = False
     elif arg in ( 'm=', 'mi=', 'mn=', 'min=' ):
         my_min_file = str(num)
         print("Minfile is now", my_min_file)
@@ -1666,6 +1700,8 @@ for fi in file_list:
         print(fi)
         continue
     print("Parsing file {} of {}: {}".format(list_count, len(file_list), fbn))
+    if header_verify:
+        verify_header(fi)
     files_done += sort_raw(fi)
     if files_done == max_files:
         print("Hit max_files of {}. You can change this with -f# or -fb#.".format(max_files))
