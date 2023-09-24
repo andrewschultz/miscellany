@@ -956,7 +956,7 @@ def speech_to_text_minor_tweaks(my_str):
 def dupe_ignorable(x, force_lower = False):
     if force_lower:
         x = x.lower()
-    if x.startswith("**modify daily instead"):
+    if x.startswith(mt.daily_warning_bumper_l):
         return True
     return False
 
@@ -982,6 +982,8 @@ def sort_raw(raw_long, open_temp_out = False):
     important = False
     in_header = True
     header_to_write = ""
+    if 'dff-clipboard' in raw_long:
+        header_to_write = "#clipboard file, sorted from dff-clipboard.txt\n"
     current_section = ''
     blank_edit_lines = []
     dupe_edit_lines = []
@@ -1010,6 +1012,8 @@ def sort_raw(raw_long, open_temp_out = False):
                 found_speech_to_text += 1
             if in_header:
                 if line.startswith("#"):
+                    if 'dff-clipboard.txt raw clipboard file' in line:
+                        continue
                     header_to_write += line
                     continue
                 if line.startswith("\\"):
@@ -1397,9 +1401,12 @@ while cmd_count < len(sys.argv):
     elif arg in ('cly', 'ycl'):
         clipboard_file = True
         open_raw = True
-    elif arg in ( 'clo', 'ocl'):
+    elif arg in ( 'cln', 'ncl'):
         clipboard_file = True
         open_raw = False
+    elif arg in ( 'clo', 'ocl'):
+        mt.npo(dff_clipboard)
+        sys.exit()
     elif arg[:2] == 'lb':
         local_block_move.update(arg[3:].split(","))
     elif arg[:2] == 'lu':
@@ -1645,6 +1652,7 @@ elif run_apostrophe_check == RUN_LATEST_APOSTROPHE:
 
 if clipboard_file:
     f = open(dff_clipboard, "w")
+    f.write("#dff-clipboard.txt raw clipboard file. check dff-temp.txt for the processed version\n")
     f.write(pyperclip.paste().replace('\r\n', '\n'))
     f.close()
     sort_raw(dff_clipboard, open_temp_out = True)
