@@ -252,7 +252,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
         header_color = colorama.Fore.GREEN if my_thou > last_thou else colorama.Fore.RED
         print(colorama.Fore.MAGENTA + "        Weekly start-of-day: {}.".format(' / '.join(daily_data_points))  + colorama.Fore.CYAN + " ({} done today)".format(my_size - int(daily_data_points[-1])) + colorama.Style.RESET_ALL)
         print(header_color + "        Thousands quick-delta: {} vs. {}.".format(my_thou, last_thou) + colorama.Style.RESET_ALL)
-        print(colorama.Fore.YELLOW + "        Overall delta: {} vs. {}.".format(my_size, last_size) + colorama.Style.RESET_ALL)
+        mt.warn("        Overall delta: {} vs. {}.".format(my_size, last_size))
         if my_thou <= last_thou:
             right_now = pendulum.now()
             bytes_to_go = (last_thou + 1) * 1000 - my_size
@@ -314,7 +314,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
     elif thousands < 0:
         print("Somehow, you dropped down a thousands-plateau from the top of the hour. Hooray, compaction scripts? At any rate you need {} bytes, or {:.2f} per minute (including seconds) for the next distant step up.".format(until_next, rate_for_next))
     else:
-        print(colorama.Fore.GREEN + "There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next) + colorama.Style.RESET_ALL)
+        mt.okay("There will be a new graph at the top of the hour+3. You eclipsed {} thousand{}. {:.2f} per minute (including seconds) for next. Or you need to get just under that, to sandbag.".format(thousands, mt.plur(thousands), rate_for_next))
     if bail:
         sys.exit()
 
@@ -334,7 +334,7 @@ def check_yearly_pace():
     this_wildcard = "{}*.txt".format(this_year)
     g = glob.glob(this_wildcard)
     if not len(g):
-        sys.exit(colorama.Fore.RED + "No projections because there are no files for this year yet, so they'd be even more nonsensical than usual." + mt.WTXT)
+        mt.bailfail("No projections because there are no files for this year yet, so they'd be even more nonsensical than usual.")
     last_year = pnow.year - 1
     year_start = pendulum.now().set(month=1,day=1,hour=0,minute=0,second=0)
     year_end = year_start.add(years=1)
@@ -353,7 +353,7 @@ def check_yearly_pace():
         total_bytes += this_file_bytes
         if verbose:
             print(f, "adds", this_file_bytes)
-    print(colorama.Fore.GREEN + "{} total bytes so far for {}".format(total_bytes, this_wildcard) + colorama.Style.RESET_ALL)
+    mt.okay("{} total bytes so far for {}".format(total_bytes, this_wildcard))
     print("{:.2f} bytes per day so far".format(total_bytes * 86400 / seconds_delta))
     print(colorama.Fore.CYAN + last_yearly_projection + colorama.Style.RESET_ALL)
     old_bytes_array = [int(x) for x in last_yearly_projection.split('/')]
@@ -366,14 +366,14 @@ def check_yearly_pace():
     if g[-1] < this_years_last_file:
         this_file_bytes = os.stat(g0[-1]).st_size
         total_bytes += this_file_bytes
-        print(colorama.Fore.GREEN + "Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes) + colorama.Style.RESET_ALL)
+        mt.okay("Adding last year's last-file to {}: {}, {} bytes, up to {} bytes total.".format(this_wildcard, g0[-1], this_file_bytes, total_bytes))
         find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes)
     if see_one_year_ago:
         g2 = [y for y in (g0 + g) if y >= pnow.subtract(days=371).format("YYYYMMDD")]
         total_bytes = sum([os.stat(x).st_size for x in g2])
-        print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[0], total_bytes) + colorama.Style.RESET_ALL)
-        print(colorama.Fore.GREEN + "Total bytes from new year's to now, using fragment: {}.".format(total_bytes - os.stat(g2[0]).st_size + yearly_fragment) + colorama.Style.RESET_ALL)
-        print(colorama.Fore.GREEN + "Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size) + colorama.Style.RESET_ALL)
+        mt.okay("Total bytes from {} to now: {}.".format(g2[0], total_bytes))
+        mt.okay("Total bytes from new year's to now, using fragment: {}.".format(total_bytes - os.stat(g2[0]).st_size + yearly_fragment))
+        mt.okay("Total bytes from {} to now: {}.".format(g2[1], total_bytes - os.stat(g2[0]).st_size))
         print('    bytes "lost" next week: {} has {}, {} has {}.'.format(g2[0], os.stat(g2[0]).st_size, g2[1], os.stat(g2[1]).st_size))
     if yearly_queries_this_week > 0:
         yearly_bytes_array.append(os.stat(g[-1]).st_size)
