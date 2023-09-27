@@ -361,8 +361,11 @@ def check_yearly_pace():
     cut_off_last_file = year_end.subtract(days=7)
     this_years_last_file = cut_off_last_file.format("YYYYMMDD") + ".txt"
     g0 = glob.glob("{}*.txt".format(last_year))
-    print("With fragment")
-    find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes + yearly_fragment)
+    if yearly_fragment == 0:
+        mt.warn("NOTE: yearly_fragment not defined in 2dy.txt, so we are skipping with-fragment calculations. 2dy.py -es to adjust it.")
+    else:
+        print("With fragment")
+        find_yearly_goals(yearly_goals_array, seconds_delta_gone, seconds_delta_ahead, total_bytes + yearly_fragment)
     if g[-1] < this_years_last_file:
         this_file_bytes = os.stat(g0[-1]).st_size
         total_bytes += this_file_bytes
