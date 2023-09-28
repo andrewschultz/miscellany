@@ -260,6 +260,7 @@ def compare_thousands(my_dir = "c:/writing/daily", bail = True, this_file = "", 
             time_goal = now_mod.set(minute=3, second=0).add(hours=1)
             second_delta = (time_goal - now_mod).in_seconds()
             print(colorama.Fore.CYAN + "        To hit the next thousands plateau: {} in {} seconds, {:.2f} per second and {:.2f} per minute.".format(bytes_to_go, second_delta, bytes_to_go / second_delta, 60 * bytes_to_go / second_delta) + colorama.Style.RESET_ALL)
+        cfg_change_notests(my_sections_file, 'weekly_queries_this_week', weekly_queries_this_week + 1)
         if bail:
             sys.exit()
         return
@@ -388,7 +389,6 @@ def check_yearly_pace():
     #cfg_change_notests(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
     mt.change_cfg_line(my_sections_file, 'yearly_queries_this_week', yearly_queries_this_week + 1)
     mt.change_cfg_line(my_sections_file, 'last_yearly_projection', '/'.join([str(x) for x in yearly_bytes_array]))
-    sys.exit()
 
 def dhms(my_int):
     my_int = abs(my_int)
@@ -819,7 +819,7 @@ def move_to_proc(my_dir = "c:/writing/daily"):
         if mt.is_daily(q):
             abs_q = os.path.abspath(q)
             if mt.is_npp_modified(abs_q):
-                temp = win32ui.MessageBox("{} is open in notepad. Save and click OK, or CANCEL.".format(abs_q), "Save {} first!".format(q), win32con.MB_OKCANCEL)
+                temp = win32ui.MessageBox("{} is open and unsaved in notepad. Save and click OK, or CANCEL.".format(abs_q), "Save {} first!".format(q), win32con.MB_OKCANCEL)
                 if temp == win32con.IDCANCEL:
                     temp_save_string += "\n" + q
                     continue
@@ -836,8 +836,8 @@ def move_to_proc(my_dir = "c:/writing/daily"):
                                 got_name = True
                             else:
                                 f.write(mt.daily_warning_bumper)
-                if got_name:
-                    f.write("\n\n" + mt.daily_warning_bumper)
+                if got_name: # note to self: daily bumpers are placed at the end of the section, because that's where they're inserted
+                    f.write("\n" + mt.daily_warning_bumper)
                 f.close()
                 os.chmod(q, S_IREAD|S_IRGRP|S_IROTH)
             else:
@@ -910,7 +910,6 @@ def read_2dy_cfg():
     global min_days_new
     global glob_string
     global glob_all
-    global file_header
     global color_dict
     global minimum_seconds_between
     global goals_and_stretch
