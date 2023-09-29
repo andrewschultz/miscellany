@@ -145,7 +145,8 @@ class FlexStringMatcher:
     FLEXMATCH_EXACTMATCH = 1
     FLEXMATCH_STARTSWITH = 2
     FLEXMATCH_BRANCH = 3
-    FLEXMATCH_REGEX = 4
+    FLEXMATCH_ONEOF = 4
+    FLEXMATCH_REGEX = 5
 
     def __init__(self, string_to_parse):
         self.case_search_type = self.FLEXMATCH_UNDEFINED
@@ -165,6 +166,9 @@ class FlexStringMatcher:
         elif string_to_parse.startswith('b:'):
             self.main_string_to_parse = string_to_parse[2:]
             self.case_search_type = self.FLEXMATCH_BRANCH
+        elif string_to_parse.startswith('o:') or string_to_parse.startswith('a:'):
+            self.main_string_to_parse = string_to_parse[2:]
+            self.case_search_type = self.FLEXMATCH_ONEOF
         elif '/' in string_to_parse:
             self.case_search_type = self.FLEXMATCH_BRANCH
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
@@ -196,6 +200,8 @@ class FlexStringMatcher:
             return self.main_string_to_parse in string_to_match
         elif self.case_search_type == self.FLEXMATCH_REGEX:
             return re.search(self.main_string_to_parse, string_to_match)
+        elif self.case_search_type == self.FLEXMATCH_ONEOF:
+            return string_to_match in self.main_string_to_parse.split('/')
         elif self.case_search_type == self.FLEXMATCH_BRANCH:
             for b in self.branch_strings_to_parse:
                 x = self.main_string_to_parse + b + self.end_string_to_parse
