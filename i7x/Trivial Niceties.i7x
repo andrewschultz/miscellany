@@ -55,6 +55,12 @@ To set the/-- pronoun him to (O - an object): (- LanguagePronouns-->6 = {O}; -).
 To set the/-- pronoun her to (O - an object): (- LanguagePronouns-->9 = {O}; -).
 To set the/-- pronoun them to (O - an object): (- LanguagePronouns-->12 = {O}; -).
 
+to set-all (O - an object):
+	set the pronoun it to O;
+	set the pronoun him to O;
+	set the pronoun her to O;
+	set the pronoun them to O;
+
 section transcripting stub
 
 [This makes a check for if the transcript is on. I use it to check if a person starts with * but transcripting is off. Thanks to Zarf!]
