@@ -15,6 +15,7 @@ include (-
 Global dashwarn = 0;
 Global aposwarn = 0;
 Global commawarn = 0;
+Global queswarn = 0;
 
 [
 	isComment;
@@ -37,6 +38,24 @@ Global commawarn = 0;
 #ifdef TARGET_GLULX;
 	buffer_length = (buffer-->0)+(1-1);
 #endif;
+
+	if ( (+ remove-punc-exclam +) == true)
+	{
+		for (ix=1 : ix<buffer_length : ix++)
+			if (buffer->(WORDSIZE+ix) == '?' || buffer->(WORDSIZE+ix) == '!')
+			{
+				buffer->(WORDSIZE+ix) = ' ';
+				found++;
+			}
+	}
+
+	if ((found > 0) && (queswarn == 0))
+	{
+		queswarn = 1;
+		print "NOTE: found a question mark/exclamation mark and eliminated it. You never need to use them marks in commands, even when dialogue seems appropriate. ", (string) Story, " will replace them without nagging you in the future.^^" ;
+	}
+
+	found = 0;
 
 	if ( (+ remove-commas +) == true)
 	{
