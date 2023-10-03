@@ -30,6 +30,7 @@ understand the command "swallow" as "slice".
 understand the command "sweep" as "slice".
 understand the command "thump" as "slice".
 understand the command "tie" as "slice".
+understand the command "throw" as "slice".
 understand the command "torture" as "slice".
 understand the command "touch" as "slice".
 understand the command "wipe" as "slice".

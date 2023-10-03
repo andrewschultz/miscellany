@@ -32,16 +32,21 @@ understand the command "shine" as something new.
 understand the command "sip" as something new.
 understand the command "skip" as something new.
 understand the command "slice" as something new.
-understand the command "slice" as something new.
 understand the command "sorry" as something new.
 understand the command "swallow" as something new.
+understand the command "speak" as something new.
 understand the command "sweep" as something new.
 understand the command "thump" as something new.
+understand the command "throw" as something new.
 understand the command "tie" as something new.
 understand the command "torture" as something new.
 understand the command "touch" as something new.
 understand the command "wipe" as something new.
 understand the command "wreck" as something new.
+
+understand the command "walk" as something new.
+understand the command "run" as something new.
+understand the command "pick" as something new.
 
 chapter wave is a special case
 
