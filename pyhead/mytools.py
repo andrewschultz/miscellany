@@ -109,9 +109,10 @@ def progfile_of(my_path): # largely deprecated with most apps now being up to da
         return os.sep.join(path_array)
     return my_path
 
-default_browser_exe = firefox_browser = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
+default_browser_exe = firefox_browser = firefox_string = progfile_of("c:\\Program Files\\Mozilla Firefox\\firefox.exe")
 chrome_browser_exe = progfile_of("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
 opera_browser_exe = "C:\\Users\\Andrew\\AppData\\Local\\Programs\\Opera\\opera.exe"
+bing_browser_exe = bing_string = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 
 npnq = progfile_of("c:\\program files\\notepad++\\notepad++.exe")
 np = '"{}"'.format(npnq)
