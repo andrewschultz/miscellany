@@ -72,12 +72,14 @@ def build_type(a):
     if a.startswith('r'): return i7.RELEASE
     sys.exit("Can't use build type with {}. B/D/R is required.".format(a))
 
-def title_from_blurb(my_proj):
+def title_from_blurb(my_proj, space_to_hyphen = False):
     blurb_file = "c:/games/inform/{}.inform/Release.blurb".format(i7.long_name(my_proj, use_given = True))
     with open(blurb_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if "[TITLE]" in line:
                 (prefix, data) = mt.cfg_data_split(line)
+                if space_to_hyphen:
+                    data = data.replace(' ', '-')
                 return data.replace('"', '')
     print("WARNING could not read blurb file", my_blurb)
     return ''
