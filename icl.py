@@ -233,12 +233,17 @@ def try_to_build(this_proj, this_build, this_blorb = False, overwrite = True, fi
     if this_build == i7.BETA:
         beta_out = "c:/games/inform/beta Materials/Release/beta-{}.{}".format(title_from_blurb('beta'), output_ext)
         print("Copying from", os.path.abspath(binary_out), "to", beta_out)
-        copy(binary_out, beta_out)
+        copy(os.path.abspath(binary_out), beta_out)
         to_run_after = beta_out
     elif nowfak:
-        nowfak_out = "c:/games/inform/beta Materials/Release/nowfak-{}.{}".format(title_from_blurb('beta'), output_ext)
+        base_name = "nowfak-{}.{}".format(title_from_blurb('beta'), output_ext)
+        nowfak_out = os.path.join("c:/games/inform/beta Materials/Release/", base_name)
+        nowfak_out_2 = os.path.join(i7.prt, base_name.replace(' ', '-'))
         print("Copying from", os.path.abspath(binary_out), "to", nowfak_out)
         copy(binary_out, nowfak_out)
+        print("Copying from", os.path.abspath(binary_out), "to", nowfak_out_2)
+        copy(binary_out, nowfak_out_2)
+        #os.system("copy {} {}".format(binary_out, nowfak_out_2))
         to_run_after = nowfak_out
 
     if not this_blorb:
