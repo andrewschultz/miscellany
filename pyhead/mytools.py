@@ -203,6 +203,13 @@ def cyanbail(*txt):
 
 bailcyan = cyanbail
 
+def check_for_admin():
+    if sys.platform.startswith('win'):
+        from win32com.shell import shell
+        if not shell.IsUserAnAdmin():
+            print("Need admin privileges!")
+            sys.exit()
+
 def is_alpha_match_special(my_string):
     return '>' in my_string or '<' in my_string or '|' in my_string
 
