@@ -7,6 +7,7 @@ volume I7 definition(s)
 remove-commas is a truth state that varies. remove-commas is true.
 remove-apostrophes is a truth state that varies. remove-apostrophes is true.
 remove-dashes is a truth state that varies. remove-dashes is true.
+remove-punc-exclam is a truth state that varies. remove-punc-exclam is true.
 
 volume I6 stuff
 
@@ -19,7 +20,7 @@ Global queswarn = 0;
 
 [
 	isComment;
-	if ((buffer->WORDSIZE == '*') || (buffer->WORDSIZE == ';') || (buffer->WORDSIZE == '!'))
+	if ((buffer->WORDSIZE == '*') || (buffer->WORDSIZE == ';') || (buffer->WORDSIZE == '!') || (buffer->WORDSIZE == '?'))
 	{
 		print "Comment noted. If you wanted this as a command, get rid of the starting character.^^";
 		rtrue;
@@ -33,10 +34,10 @@ Global queswarn = 0;
 	found = 0;
 
 #ifdef TARGET_ZCODE;
-	buffer_length = (buffer->1)+(WORDSIZE-1);
+	buffer_length = (buffer->1);
 #endif;
 #ifdef TARGET_GLULX;
-	buffer_length = (buffer-->0)+(1-1);
+	buffer_length = (buffer-->0);
 #endif;
 
 	if ( (+ remove-punc-exclam +) == true)
@@ -93,15 +94,11 @@ Global queswarn = 0;
 
 	found = 0;
 	iy = 0;
-	! print WORDSIZE;
-	! print " = word size.^";
 
 	if ( (+ remove-apostrophes +) == true )
 	{
 		for (ix=0 : ix<buffer_length : ix++)
 		{
-			! print buffer->(WORDSIZE+ix);
-			! print "^";
 			if (iy ~= ix)
 			{
 				buffer->(WORDSIZE+iy) = buffer->(WORDSIZE+ix);
@@ -119,6 +116,13 @@ Global queswarn = 0;
 
 	if (found > 0)
 	{
+		buffer->(WORDSIZE+iy) = 0;
+		#ifdef TARGET_ZCODE;
+			buffer->1 = buffer->1 - found;
+		#endif;
+		#ifdef TARGET_GLULX;
+			buffer-->0 = buffer-->0 - found;
+		#endif;
 		if (aposwarn == 0)
 		{
 			aposwarn = 1;
@@ -126,14 +130,6 @@ Global queswarn = 0;
 			print "[NOTE: found an apostrophe and removed it. You never need to use apostrophes in commands. ", (string) Story, " will eliminate apostrophes without nagging you in the future.]^^";
 			style roman;
 		}
-#ifdef TARGET_ZCODE;
-	buffer->1 = iy;
-	buffer->(WORDSIZE+iy-1) = 0;
-#endif;
-#ifdef TARGET_GLULX;
-	buffer-->0 = iy;
-	buffer->(WORDSIZE+iy) = 0;
-#endif;
 		! print "New command: ";
 	}
 	! print iy, " of ", buffer_length, " kept.^";
@@ -161,7 +157,7 @@ We shouldn't have to do more than include Punctuation Stripper to get it to run.
 
 The main tweaks to the code are in this rule. If all booleans were switched, this extension would have no effect. The most likely one to switch is remove-commas, so you can use "PERSON, COMMAND" if wanted.
 
-Note that commas and hyphens are replaced with spaces, but apostrophes are removed completely. This isn't a one-size-fits-all solution, but it seems the most likely to be what the player intended.
+Note that commas and hyphens and question marks and exclamation marks are replaced with spaces, but apostrophes are removed completely. This isn't a one-size-fits-all solution, but it seems the most likely to be what the player intended.
 
 	when play begins:
 		now remove-commas is false;
@@ -170,4 +166,4 @@ Note that commas and hyphens are replaced with spaces, but apostrophes are remov
 
 You also may wish to add this line in case rules conflict:
 
-	the punctuation-munge rule is listed first in the after reading a command rule.
+	the punctuation-munge rule is listed first in the after reading a command rulebook.
