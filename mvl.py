@@ -9,6 +9,9 @@ import sys
 import glob
 import colorama
 import mytools as mt
+from shutil import copy
+
+mt.check_for_admin()
 
 debug_try = False
 force_rewrite_link = False
@@ -67,6 +70,8 @@ def github_move(file_name, this_proj = '', subdir = ''):
         mt.failbail("mkdir " + normdir)
         sys.exit()
     github_dir += subdir
+    if not os.path.exists(github_dir):
+        mt.bailfail("Couldn't make directory", github_dir)
     new_file = os.path.normpath("{}//{}".format(github_dir, file_name))
     file_name = mt.quote_spaced_file(file_name)
     new_file = mt.quote_spaced_file(new_file)
