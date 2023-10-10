@@ -37,7 +37,7 @@ def best_subdir_of(file_name, github_dir):
         return "/testing/branch"
     if file_name.startswith('reg-'):
         ret_val = "/testing"
-        if '-lone-' in file_name and os.path.exists(github_dir + "//standalone"):
+        if '-lone-' in file_name and os.path.exists(github_dir + "/testing/standalone"):
             ret_val += "/standalone"
         elif '-thru-' in file_name:
             ret_val += "/generated"
@@ -55,7 +55,7 @@ def github_move(file_name, this_proj = '', subdir = ''):
         mt.warn(file_name, "is already a link.")
         if not force_rewrite_link:
             mt.warn("Use -f to rewrite the link.")
-        return
+            return
         changing_link = True
     if not this_proj:
         this_proj = i7.dir2proj()
