@@ -125,21 +125,18 @@ Func ReadProjectHash()
   $projHash = ObjCreate("Scripting.Dictionary")
 
   For $i = 1 to UBound($aInput) - 1
-	if StringLeft($aInput[$i], 1) == '#' Then
+	if StringLeft($aInput[$i], 8) <> "PROJMAP:" Then
 	  ContinueLoop
     EndIf
-	if StringInStr($aInput[$i], ":") Then
-	  ContinueLoop
-	EndIf
-    ; MsgBox ($MB_OK, "Line # " & $i, $aInput[$i])
-	if not StringInStr($aInput[$i], "=") Then
-	  ContinueLoop
-    EndIf
-	$my_ary = StringSplit($aInput[$i], "=")
+	$actual_data = StringMid($aInput[$i], 9)
+	$my_ary = StringSplit($actual_data, "=")
 	$my_from = StringSplit($my_ary[2], ",")
 	for $j = 1 to UBound($my_from) - 1
-      ; MsgBox ($MB_OK, "Line # " & $i, "From: " & $my_from[$j] & @CRLF & "To: " & $my_ary[1])
-	  $projHash.add($my_from[$j], $my_ary[1])
+	  if $projHash.exists($my_from[$j]) Then
+        MsgBox($MB_OK, "Line # " & $i, "From: " & $my_from[$j] & @CRLF & "To: " & $my_ary[1] & " duplicate key.", 15)
+      Else
+        $projHash.add($my_from[$j], $my_ary[1])
+	  EndIf
 	Next
   Next
 
