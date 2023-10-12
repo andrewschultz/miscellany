@@ -63,8 +63,8 @@ copy_link_only = False
 skip_temp_out = False
 bail_on_first_build_error = True
 build_before_zipping = False
-open_config_on_error = True
-auto_bail_on_cfg_error = True
+open_config_on_first_error = True
+auto_bail_on_cfg_error = False
 verbose = False
 copy_dropbox_after = False
 extract_after = False
@@ -201,13 +201,11 @@ def zipdir(path_from, path_to, zip_handle): # thanks https://stackoverflow.com/q
         for file in files:
             zip_write_nonzero_file(zip_handle, os.path.join(root, file), os.path.join(path_to, os.path.relpath(os.path.join(root, file), path_from)))
 
-def flag_cfg_error(line_count, bail_string = "No bail string specified", auto_bail = True):
+def flag_cfg_error(line_count, bail_string = "No bail string specified"):
     print(colorama.Fore.MAGENTA + colorama.Back.WHITE + bail_string + colorama.Style.RESET_ALL)
-    if open_config_on_error:
+    if open_config_on_first_error:
+        mt.warn("To eliminate bailing on first error, -noce or -nocfe.")
         mt.npo(zup_cfg, line_count)
-    if auto_bail_on_cfg_error:
-        print(colorama.Fore.RED + "Bailing after first error. To change this, set flag -bbn/nbb." + colorama.Style.RESET_ALL)
-        sys.exit()
 
 def flag_zip_build_error(bail_string):
     print(bail_string)
@@ -531,8 +529,10 @@ while cmd_count < len(sys.argv):
         force_version = True # force date = false
     elif arg in ( 'df', 'fd' ):
         force_version = False # force date = true
-    elif arg == 'oce':
-        open_config_on_error = True
+    elif arg in ( 'oce', 'ocfe' ):
+        open_config_on_first_error = True
+    elif arg in ( 'noce', 'nocfe' ):
+        open_config_on_first_error = False
     elif arg == 'sb':
         stamp_binaries = True
     elif mt.alfmatch('nbs', arg):
