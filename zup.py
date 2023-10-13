@@ -58,6 +58,7 @@ zup_cfg = "c:/writing/scripts/zup.txt"
 
 default_from_cfg = ""
 
+ignore_bailable_error = False
 copy_link = False
 copy_link_only = False
 skip_temp_out = False
@@ -229,6 +230,7 @@ def read_zup_txt():
     to_base_dir = ''
     release_replace_yet = False
     string_with_replacements_found = False
+    found_bailable_error = False
     cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
@@ -464,6 +466,12 @@ def read_zup_txt():
                     flag_cfg_error(line_count, "WARNING we probably need F= before a Windows-type file path at line {}".format(line_count))
                 else:
                     flag_cfg_error(line_count, "Unknown prefix {} line {}".format(prefix, line_count))
+    if found_bailable_error:
+        if ignore_bailable_error:
+            mt.warn("The parser found errors that may need to be fixed, but -nobail overrode them.")
+        else:
+            mt.fail("The parser found errors that may need to be fixed. Override this with -nobail.")
+            mt.open_post()
     print(zup_cfg, "read successfully...")
 
 cmd_count = 1
@@ -533,6 +541,8 @@ while cmd_count < len(sys.argv):
         open_config_on_first_error = True
     elif arg in ( 'noce', 'nocfe' ):
         open_config_on_first_error = False
+    elif arg == 'nobail':
+        ignore_bailable_error = True
     elif arg == 'sb':
         stamp_binaries = True
     elif mt.alfmatch('nbs', arg):
