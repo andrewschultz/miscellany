@@ -230,13 +230,16 @@ def read_zup_txt():
     to_base_dir = ''
     release_replace_yet = False
     string_with_replacements_found = False
+    non_default_version = False
     found_bailable_error = False
+    main_data_read = False
     cfg_string_table = defaultdict(str)
     with open(zup_cfg) as file:
         for (line_count, line) in enumerate(file, 1):
             if line.startswith(';'): break
             if line.startswith('#'): continue
             if not line.strip():
+                main_data_read = False
                 if cur_zip_proj: # maybe do something super verbose in here
                     cur_zip_proj = ''
                     current_file = ''
@@ -245,6 +248,7 @@ def read_zup_txt():
                     to_base_dir = ''
                     release_replace_yet = False
                     string_with_replacements_found = False
+                    non_default_version = False
                 continue
             if line.startswith("$"):
                 if string_with_replacements_found:
@@ -261,6 +265,10 @@ def read_zup_txt():
             if '%' in line:
                 line = line.replace('%', zups[proj_candidate].version)
                 release_replace_yet = True
+                if not non_default_version:
+                    mt.warn("Line {} has a % which defaults to 1, because it wasn't assigned.".format(line_count))
+                    mt.add_post(zup_cfg, line_count)
+                    found_bailable_error = True
             if '$' in line:
                 string_with_replacements_found = True
                 for x in re.findall("\$.*\$", line):
@@ -285,6 +293,20 @@ def read_zup_txt():
                 flag_cfg_error(line_count, "WARNING blank data at line {}.".format(line_count))
                 continue
 
+            # metadata first
+
+            if prefix in ( 'v', 'version' ):
+                if main_data_read:
+                    flag_cfg_error(line_count, "WARNING version assignment at line {} should be at the top of a chunk of commands for a project.".format(line_count))
+                    mt.add_post(zup_cfg, line_count)
+                    found_bailable_error = True
+                if re.search("[^0-9\.]", data):
+                    flag_cfg_error(line_count, "WARNING version must only contain integers or decimals at line {}".format(line_count))
+                zups[proj_candidate].version = data
+                non_default_version = True
+                continue
+
+            main_data_read = True
             # keep the below alphabetized
 
             if prefix == 'build':
@@ -410,6 +432,7 @@ def read_zup_txt():
                     flag_cfg_error(line_count, "Renaming outfile name for {} at line {}.".format(cur_zip_proj, line_count))
                 curzip.out_name = data
             elif prefix in ( 'proj', 'projx' ):
+                main_data_read = False
                 if data.endswith('b') and not data.endswith('-b'):
                     if data[:-1] in i7.i7x and data not in i7.i7x:
                         flag_cfg_error(line_count, "WARNING: likely beta build {} should end in -b, not just b.".format(data), auto_bail = False)
@@ -451,12 +474,6 @@ def read_zup_txt():
                     curzip.time_compare.append((time_array[0], time_array[1], time_msg))
                 else:
                     curzip.time_compare.append((time_array[1], time_array[0], time_msg))
-            elif prefix in ( 'v', 'version' ):
-                if release_replace_yet:
-                    flag_cfg_error(line_count, "WARNING version assignment at line {} should be above string assignment with %. I could program things so you don't have to, but I'm too lazy.".format(line_count))
-                if re.search("[^0-9\.]", data):
-                    flag_cfg_error(line_count, "WARNING version must only contain integers or decimals at line {}".format(line_count))
-                zups[proj_candidate].version = data
             else:
                 if line.startswith("/") or line.startswith("\\"):
                     flag_cfg_error(line_count, "WARNING we probably need F= before a relative file path at line {}".format(line_count))
