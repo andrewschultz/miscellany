@@ -228,6 +228,7 @@ def read_zup_txt():
     file_to_dir = ''
     current_file = ''
     to_base_dir = ''
+    files_to_redact = '' # Currently this feels Not Good Enough. It can be a regex.
     release_replace_yet = False
     string_with_replacements_found = False
     non_default_version = False
@@ -346,8 +347,11 @@ def read_zup_txt():
                     if len(wild_cards) == 0:
                         flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_array[0], cur_zip_proj, line_count))
                         continue
+                    if files_to_redact:
+                        wild_cards = [w for w in wild_cards if not re.search(files_to_redact, os.path.basename(w), flags=re.IGNORECASE)]
+                        #files_to_redact = ''
                     for x in wild_cards:
-                        add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.join(file_array[1], x) if len(file_array) > 1 else os.path.basename(x)), line_count)
+                        add_to_file_map(curzip.file_map, x, os.path.join(file_to_dir, os.path.join(file_array[1], os.path.basename(x)) if len(file_array) > 1 else os.path.basename(x)), line_count)
                     continue
                 if len(file_array) == 1:
                     add_to_file_map(curzip.file_map, file_array[0], os.path.join(to_base_dir, os.path.basename(file_array[0])), line_count)
@@ -364,6 +368,8 @@ def read_zup_txt():
                 file_to_dir = dir_array[1] if len(dir_array) > 1 else ''
                 if file_to_dir == '.':
                     file_to_dir = ''
+            elif prefix in ( 'redact', 'fr' ):
+                files_to_redact = data
             elif prefix in ( 'cs', 'sc' ):
                 ary = data.split("\t")
                 curzip.copy_over_stamped[ary[0]] = ary[1]
@@ -384,6 +390,9 @@ def read_zup_txt():
                     add_to_file_map(curzip.file_map, os.path.join(file_base_dir, data), to_file, line_count)
                     continue
                 wild_cards = glob.glob(os.path.join(file_base_dir, data))
+                if files_to_redact:
+                    wild_cards = [w for w in wild_cards if not re.search(files_to_redact, os.path.basename(w), flags=re.IGNORECASE)]
+                    files_to_redact = ''
                 if len(wild_cards) == 0:
                     flag_cfg_error(line_count, "No wild cards in {} for project {} at line {}.".format(file_base_dir, cur_zip_proj, line_count))
                     continue
