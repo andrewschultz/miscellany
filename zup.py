@@ -8,6 +8,8 @@
 #
 # todo: disable extract if zipfiles created? Clean build? (put old zip to backup)? Override timestamp check?
 # (track total # of projects actually successfully processed--if none, say so)
+#
+# expiration dates? Or "get done by" dates?
 
 import glob
 import re
@@ -454,6 +456,8 @@ def read_zup_txt():
                 proj_read_in = mt.chop_front(line.lower().strip())
                 proj_candidate = project_or_beta_name(proj_read_in, accept_alt_proj_name)
                 if proj_candidate:
+                    if proj_candidate in zups:
+                        flag_cfg_error(line_count, "WARNING: duplicate project {} at line {}.".format(proj_candidate, line_count))
                     cur_zip_proj = proj_candidate
                     #print("Reading:", cur_zip_proj)
                 else:
