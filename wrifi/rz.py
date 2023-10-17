@@ -8,6 +8,8 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import mytools as mt
 
+browser_string = mt.firefox_string
+
 rz_out = "c:/writing/temp/rz-out.txt"
 rz_backup = "c:/writing/temp/rz-back.txt"
 rz_cache = "c:/writing/temp/rz-cache.txt"
@@ -15,6 +17,8 @@ rz_cfg = "c:/writing/scripts/rz-cfg.txt"
 words_to_rhyme = []
 
 my_word = ''
+
+launch_bing = False
 
 use_cache = False
 to_web = False
@@ -181,6 +185,8 @@ while cmd_count < len(sys.argv):
         mt.npo(rz_backup)
     elif arg in ( 'co', 'oc' ):
         mt.npo(rz_cache)
+    elif arg == 'launchbing':
+        launch_bing = True
     elif re.search('^[obcl]{2,}$', arg):
         if 'b' in arg:
             mt.npo(rz_backup, bail=False)
@@ -201,7 +207,10 @@ if to_web:
     for w in words_to_rhyme:
         url = url_of(w, batch_convert = True)
         print("Hunting for rhymes of", w)
-        os.system("start {}".format(url))
+        if launch_bing:
+            os.system("\"{}\" {}".format(browser_string, url))
+        else:
+            os.system("start {}".format(url))
     sys.exit()
 
 if from_local:
