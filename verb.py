@@ -34,6 +34,8 @@ def usage():
         print(colorama.Style.RESET_ALL, end='')
     else:
         print("No samples. Maybe you should add some in the config file with sample:?")
+    print("Also, e edits the config file.")
+    print("A space or backtick in a verb name eliminates that space for the verb name e.g. do`this: do this -> dothising.")
     sys.exit()
 
 def add_clipboard_text(prefix, data):
@@ -46,6 +48,8 @@ def add_clipboard_text(prefix, data):
         my_action = ary[0]
     if not my_action.endswith("ing"):
         my_action += "ing"
+    my_action = my_action.replace(' ', '')
+    my_action = my_action.replace('`', '')
     this_string = "chapter {}\n\n".format(my_action)
     if prefix not in verb_types:
         if prefix and prefix != "out of world":
