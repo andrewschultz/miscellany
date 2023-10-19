@@ -40,6 +40,7 @@ main_suffixes = 'er,ing,s,es,ies,tion,ity,ant,ment,ism,age,ery'
 search_to_proc = False
 run_commands_after = False
 squash_duplicates = False
+any_duplicates = False
 
 verbose = False
 quiet_procedural_notes = False
@@ -368,6 +369,8 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
                     if squash_duplicates:
                         dupes_here += 1
                     else:
+                        global any_duplicates
+                        any_duplicates = True
                         mt.fail("    ({:5d}) DUPLICATE {}:".format(line_count, match_duplicates[sanitized_line]) + colorama.Style.RESET_ALL, line_out, "{} L{}".format(current_table, current_table_line) if current_table else "")
                 if post_open_matches:
                     mt.add_postopen(projfile, line_count)
@@ -783,6 +786,8 @@ while first_loop or user_input:
                     print(colorama.Back.MAGENTA + "      dgrab.py ld s={}".format(dp) + colorama.Style.RESET_ALL)
         if not post_open_matches and not file_open_regex:
             mt.warn("You can set the PO / OP flag to post-open the first occurrence in each file, or O= can specify regex of file names to open.")
+        if any_duplicates:
+            mt.warn("You can set the SD / DS flag to squash duplicates.")
         if file_open_regex and len(mt.file_post_list) == 0:
             mt.warn("The regex given {} did not open any files with the search text.".format(file_open_regex))
     else:
