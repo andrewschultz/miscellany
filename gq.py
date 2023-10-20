@@ -292,7 +292,7 @@ def find_text_in_file(match_string_raw, projfile, header_needed = []):
     match_string_array = [ match_string_of(x) for x in match_string_raw ]
     global found_overall
     global overall_nonduplicate
-    bf = i7.inform_short_name(projfile)
+    bf = mt.dash_to_title(i7.inform_short_name(projfile))
     if found_overall == max_overall:
         return -1
     dupes_here = 0
@@ -618,9 +618,9 @@ if not my_proj:
             sys.exit("Must be in a project directory or specify a project.")
         if default_from_cfg in i7.i7x:
             my_proj = i7.i7x[default_from_cfg]
-        print("Config file gives", my_proj, "as default project, so we'll use that, since the current directory isn't mapped to a valid project.")
+        mt.okay(f"Config file gives {my_proj} as default project, so we'll use that, since the current directory isn't mapped to a valid project.")
     else:
-        print("Using default project", default_from_cwd, "from current directory")
+        mt.okay(f"Using GQCFG.TXT default project {default_from_cwd} from current directory. It overrides the default in i7p.txt.")
         my_proj = default_from_cwd
 
 if my_proj in i7.i7comr:
@@ -656,6 +656,7 @@ while first_loop or user_input:
         sys.exit("You need to specify text to find.")
 
     matches_needed = len(match_string_raw)
+
     if user_specified_matches_needed:
         if user_specified_matches_needed > matches_needed:
             print("mn was bigger than the number of matches.")
@@ -681,6 +682,7 @@ while first_loop or user_input:
             if proj in i7.i7aux:
                 my_array.extend(i7.i7aux[proj])
         my_array = [os.path.realpath(x) for x in my_array]
+
         for projfile in my_array:
             if projfile in frequencies:
                 if not quiet_procedural_notes:
