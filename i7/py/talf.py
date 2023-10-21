@@ -30,6 +30,7 @@ onoff = ['off', 'on']
 
 table_default_file = "c:/writing/scripts/talf.txt"
 
+zap_duplicates = False
 check_apostrophes = True
 force_dupe_check = False
 popup_err = False
@@ -216,8 +217,16 @@ def process_table_array(sort_orders, table_rows, file_stream):
         # for y in table_rows: print(">>", y, "/", my_col, "/", my_type, "/", tab(y, my_col, my_type))
         table_rows = sorted(table_rows, key = lambda x:tab(x, my_col, my_type, zap_apostrophes), reverse=reverse_order)
         tr = []
-    for x in table_rows:
-        tr.append(tr_before[x])
+    if zap_duplicates:
+        trmod = [ table_rows[0] ]
+        for x in range(1, len(table_rows)):
+            if table_rows[x] != table_rows[x-1]:
+                trmod.append(table_rows[x])
+            else:
+                mt.warn("Duplicate element", table_rows[x])
+        for x in trmod:
+            tr.append(tr_before[x])
+        table_rows = list(trmod)
     if check_shifts:
         ret_val = note_deltas(tr)
         # print("After:")
@@ -536,6 +545,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'fl' or arg == 'lf': force_lower = True
     elif arg == 'fn' or arg == 'nf': force_lower = False
     elif arg == 'fd': force_dupe_check = True
+    elif arg in ( 'dz', 'zd' ):
+        zap_duplicates = True
     elif arg == '?': usage()
     else:
         print(arg, "is an invalid parameter.")
