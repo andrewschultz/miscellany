@@ -25,7 +25,7 @@ def tab_sort(q):
     if not os.path.exists(q):
         mt.fail("{} doesn't exist but should according to i7p.txt. Skipping.".format(qb))
         return False
-    print("Tab sorting", qb)
+    print("Checking tabs for file {} / {}".format(qb, q))
     rolling_bracket_count = 0
     rolling_brace_count = 0
     negative_brackets_yet = False
@@ -52,6 +52,7 @@ def tab_sort(q):
                 temp = re.sub("\t\t.*", "", line.strip())
                 tabcount = temp.count("\t")
                 print("Double tabs ({} in) in {} {}".format(tabcount, qb, line_count))
+                mt.add_postopen_file_line(q, line_count, priority = 4)
                 continue
             if line.startswith('table of'):
                 get_tabs = True
