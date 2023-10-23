@@ -252,9 +252,9 @@ def write_out_files(my_file):
     twiddle_file = twiddle_of(my_twiddle_projects[my_project].to_temp[my_file])
     f = open(twiddle_file, "w")
     got_line_delta = False
-    verify_written = defaultdict(bool)
+    global verify_written
     for s in section_text:
-        verify_written[s] = False
+        print(s, '~', my_twiddle_projects[my_project].to_file[s])
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("\\"):
@@ -287,13 +287,6 @@ def write_out_files(my_file):
             # if we are in a section, we already wrote the section text, so continue
             continue
     f.close()
-    local_bail = False
-    for s in verify_written:
-        if not verify_written[s] and s != 'blank':
-            print("Oh no! TWID.PY tried to write to section {} in {} but failed. This section may not exist. Bailing.".format(s, my_file))
-            local_bail = True
-    if local_bail: # in case there are 2 sections unwritten to. Unlikely, but we should check.
-        sys.exit()
     if got_line_delta:
         print("    ----> nld/ldn will remove section text line delta notifications.")
     if cmp(my_file, twiddle_file): # just bail if nothing happened
@@ -465,7 +458,6 @@ while cmd_count < len(sys.argv):
 
 if not my_project:
     gdp = guess_default_project()
-    sys.exit(gdp)
     if gdp:
         print("Going with guessed project", gdp)
         my_project = gdp
@@ -633,6 +625,10 @@ if catastrophic_bail:
 
 from_to_local = list(set(my_twiddle_projects[my_project].from_file.values()) | set(my_twiddle_projects[my_project].to_file.values()))
 
+verify_written = defaultdict(bool)
+for s in section_text:
+    verify_written[s] = False
+
 for x in from_to_local:
     if write_out_files(x) == NO_CHANGES:
         continue
@@ -643,6 +639,14 @@ for x in from_to_local:
     if print_stats:
         print("Orig:", os.stat(x).st_size, x)
         print("New:", os.stat(twiddle_of(to_of_x)).st_size, twiddle_of(to_of_x))
+
+local_bail = False
+for s in verify_written:
+    if not verify_written[s] and s != 'blank':
+        mt.fail("Oh no! TWID.PY tried to write to section {} in {} but failed. This section may not exist. Bailing.".format(s, my_file))
+        local_bail = True
+if local_bail: # in case there are 2 sections unwritten to. Unlikely, but we should check.
+    sys.exit()
 
 if not copy_over:
     print("-co to copy over")
