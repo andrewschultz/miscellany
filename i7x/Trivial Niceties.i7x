@@ -160,9 +160,9 @@ to decide what number is abs of (n - a number):
 	if n < 0, decide on 0 - n;
 	decide on n;
 
-to decide which number is boolval of (ts - a truth state): [boolval of x + boolval of y simplifies "to decide what number is quests-solved"] [binval or binary also ... put this in so I can search easily if I forget]
-	if ts is true, decide on 1;
-	decide on 0;
+[boolval of x + boolval of y simplifies "to decide what number is quests-solved"] [binval or binary also ... put this in so I can search easily if I forget] [thanks to Zed Lopez for the simplification]
+
+to decide what number is boolval of (ts - a truth state): (- {ts} -).
 
 book style abbreviations
 
@@ -238,7 +238,7 @@ carry out scning:
 	now screenread is false;
 	the rule succeeds;
 
-chapter banishing
+chapter banishing - not for release
 
 banishing is an action applying to one visible thing.
 
