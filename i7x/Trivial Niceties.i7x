@@ -339,22 +339,36 @@ definition: a direction (called thedir) is vertical:
 	if thedir is up or thedir is down, yes;
 	no;
 
-chapter dtoging - not for release
+chapter debug toggling - not for release
 
 [ * toggles debug state ]
 
-dtoging is an action out of world.
+to debug-to (ts - a truth state):
+	say "Debug is [if ts is debug-state]already[else]now[end if]";
+	now debug-state is ts;
+	say "[on-off of debug-state].";
 
-understand the command "dtog/debug/db" as something new.
+section off
 
-understand "dtog" as dtoging.
-understand "debug" as dtoging.
-understand "db" as dtoging.
+doffing is an action out of world.
 
-carry out dtoging:
-	now debug-state is whether or not debug-state is false;
-	say "Debug-state is now [on-off of debug-state].";
-	the rule succeeds;
+understand the command "doff" as something new.
+
+understand "doff" as doffing.
+
+carry out doffing:
+	debug-to false;
+
+section on
+
+doning is an action out of world.
+
+understand the command "don" as something new.
+
+understand "don" as doffing.
+
+carry out doning:
+	debug-to true;
 
 chapter drop-player-at
 
