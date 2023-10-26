@@ -274,15 +274,15 @@ volume yes-no substitutes
 
 chapter complex consents
 
-debug-auto-yes is a truth state that varies.
-
 yn-auto is a number that varies.
 
 to decide whether the player dir-consents:
 	if debug-state is true:
+		say "in debug, yn-auto = [yn-auto].";
 		if yn-auto is 2, decide yes;
 		if yn-auto is 0, decide no;
-	if the player consents, decide yes;
+	if the player consents:
+		decide yes;
 	decide no;
 
 section debug - not for release
@@ -395,24 +395,22 @@ to decide whether the player no-consents:
 	(- YesOrNoExt(0) -).
 
 to decide whether the player switch-consents:
-	(- YesOrNoDebugForce( (+ debug-auto-yes +) ) -)
+	(- YesOrNoDebugForce( (+ yn-auto +) ) -)
 
 Include (-
 
 [ YesOrNoDebugForce yn;
-	if ( (+ debug-state +) == 1)
-	{
-	    return ( (+ debug-auto-yes +) );
-	}
+	if ( (+ yn-auto +) == 2 ) return true;
+	if ( (+ yn-auto +) == 0 ) return false;
 	return YesOrNo();
 ];
 
 [ YesOrNoExt yn;
-	if ( (+ debug-state +) == 1)
-	{
-	    return yn;
-	}
+	#ifdef DEBUG;
+	return yn;
+	#ifnot;
 	return YesOrNo();
+	#endif;
 ];
 
 -)
