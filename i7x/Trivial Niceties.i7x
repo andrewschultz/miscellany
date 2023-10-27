@@ -83,6 +83,8 @@ section avoid line breaks in consider/follow
 
 To process (RL - a rule): (- ProcessRulebook({RL}, 0, true); -)
 
+To abide-nlb (RL - a rule): (- if (ProcessRulebook({RL}, 0, true)) rtrue; -) - in to only.
+
 To skip upcoming rulebook break: (- say__pc = say__pc | PARA_NORULEBOOKBREAKS; -). [this is when a weird line break pops up because Inform thinks it should after a rule, and you don't want it to. Often seen when writing a list of stuff after processing/considering/following rules and nothing gets printed out.]
 
 book I figured this out! Yay!
