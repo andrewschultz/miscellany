@@ -475,6 +475,22 @@ carry out fging:
 
 volume debug printing
 
+chapter dt (debug text, from i6)
+
+Include (-
+[ InDebug;
+#ifdef DEBUG;
+return true;
+#ifnot;
+return false;
+#endif;
+];
+-).
+
+to decide whether in-debug: (- InDebug() -)
+
+to dt (t - text): if in-debug, say "[t]";
+
 chapter Glulx d/dl/dn (for Glulx only)
 
 to d (myt - indexed text):
