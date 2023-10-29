@@ -127,11 +127,16 @@ waited-yet is a truth state that varies.
 
 ignore-wait is a truth state that varies.
 
+to wfas:
+	say "[line break]";
+	if in-debug, continue the action;
+	wfak;
+
 to wfak:
 	if debug-state is true, continue the action;
 	if ignore-wait is false:
 		if any-key-yet is false:
-			say "[i][bracket][b]NOTE[r][i]: when the prompt does not appear, it means you need to push any key to continue[close bracket][r]";
+			say "[i][bracket][b]NOTE[r][i]: when the prompt does not appear, it means you need to press any key to continue[close bracket][r]";
 			now any-key-yet is true;
 			wait for any key;
 			say "[paragraph break]";
@@ -472,6 +477,10 @@ carry out fging:
 	if the room noun of location of player is nowhere, say "That doesn't lead anywhere.";
 	move player to the room noun of location of player;
 	the rule succeeds.
+
+volume i6 weirdness
+
+[ to say character number (N - a number): (- print (char) {N}; -) ]
 
 volume debug printing
 
