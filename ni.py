@@ -30,6 +30,7 @@ force_batch_move = False
 source_opened = False
 get_main_source = False
 get_notes = False
+get_auto_inf = False # get generated i6 code?
 get_fixes_file = False
 goto_github = False
 hfx_ary = []
@@ -164,6 +165,8 @@ while cmd_count < len(sys.argv):
         materials_subdir = True
     elif arg == 'no':
         get_notes = True
+    elif arg in ( 'au', 'inf' ):
+        get_auto_inf = True
     elif arg in ( 'fi', 'fix' ):
         get_fixes_file = True
     elif arg in ( 'd', 'dtf', 'dt', 'tfd', 'td' ):
@@ -265,6 +268,14 @@ if get_fixes_file:
     else:
         mt.npo(fix_file, print_cmd = False, bail = False)
         source_opened = True
+
+if get_auto_inf:
+    converted_i6_source = os.path.join(i7.proj2dir(to_project), "..", "Build", "auto.inf")
+    if os.path.exists(converted_i6_source):
+        mt.npo(converted_i6_source, print_cmd = False, bail = False)
+        source_opened = True
+    else:
+        mt.bailfail("Could not find converted i6 source for {}.".format(to_project))
 
 if get_notes:
     notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
