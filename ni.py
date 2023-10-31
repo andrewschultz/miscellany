@@ -6,6 +6,8 @@
 #
 # remember to check i7clash.py ni.py frequently as I add commands
 #
+# remember to check ni.txt if you wish to add a github subdir
+#
 # also, ni-remaining.bat will have a lot of stuff for special commands
 # we want to go through them. This is intended to be a can-opener.
 # special case: STS UNI universal (don't expand STS to stale-tales-slate? Or change the name? Or make i7.hdr(x) look for lower case as well or give it an option?)
@@ -55,6 +57,7 @@ def usage(header="Generic usage writeup"):
     print("ni t opens the source file in the current directory.")
     print("ni vf ta opens up VVFF's tables.")
     print("ni m opens up materials directory.")
+    print("ni gra opens up graphics directory.")
     print()
     print("ni otf / dtf = opens / deletes temp file. Shorthand is o, while b opens the backup temp file from the previous run.")
     print("ni ?c / c? lists conflicts between ni.py-specific keywords (use s=) and general projects.")
@@ -93,13 +96,14 @@ def read_special_commands():
             if l.startswith("subdir"):
                 l = re.sub("^.*?:", "", l)
                 ary = l.split(',')
-                print(ary)
                 for a in ary:
                     a2 = a.split('=')
-                    if a2[0] in ghsubdir:
-                        mt.warn("Skipping redefinition of github subdir {} at line {}.".format(l[0], line_count))
-                    else:
-                        ghsubdir[a2[0]] = a2[1]
+                    a3 = a2[0].split('/')
+                    for abb in a3:
+                        if abb in ghsubdir:
+                            mt.warn("Skipping redefinition of github subdir {} at line {}.".format(l[0], line_count))
+                        else:
+                            ghsubdir[abb] = a2[1]
                 continue
             if '=' not in l:
                 if '~' in l:
@@ -328,3 +332,6 @@ if (not force_batch_move) and source_opened:
     sys.exit()
 
 write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github, materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
+
+if goto_github and not git_subdir:
+    mt.warn("GitHub subdir can be specified after dash e.g. gra for graphics.")
