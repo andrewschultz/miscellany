@@ -602,12 +602,21 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
+def is_adventuron(x):
+    x0 = long_name(x)
+    return x0 in adventuron_projects or proj2dir(x0) in adventuron_projects
+
+def source_basename(x):
+    if is_adventuron(x):
+        return "source_code.adv"
+    return "story.ni"
+
 def gh_src(x = os.getcwd(), give_source = True):
     temp = proj_exp(x, to_github = True)
     if temp in i7gx:
         temp = i7gx[temp]
     retval = os.path.join(mt.gh_dir, temp)
-    if give_source: retval = os.path.join(retval, "story.ni")
+    if give_source: retval = os.path.join(retval, source_basename(x))
     return os.path.normpath(retval)
 
 github_source = gh_source = github_src = gh_src
@@ -666,7 +675,7 @@ def auto_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
 
 def main_src(x = os.getcwd(), return_nonexistent = True):
-    main_path = os.path.normpath(os.path.join(sdir(x), "story.ni"))
+    main_path = os.path.normpath(os.path.join(sdir(x, to_github = is_adventuron(x)), source_basename(x)))
     if return_nonexistent or os.path.exists(main_path):
         return main_path
     return ""
