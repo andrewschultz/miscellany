@@ -296,10 +296,12 @@ def column_from_file(file_name, table_name, column_name):
 
 mult_columns_from_header_file = column_from_file
 
-def i7_text_convert(my_string, erase_brackets = True, bracket_replace = '/', ignore_array = [], color_punc_change = False):
+def i7_text_convert(my_string, remove_end_quotes = False, erase_brackets = True, bracket_replace = '/', ignore_array = [], color_punc_change = False):
     #temp = re.sub(r"'(?![\]a-z])", '"', my_string, flags=re.IGNORECASE)
     #temp = re.sub(r"(?<![\[a-z])'", '"', temp, flags=re.IGNORECASE)
     iglo = [x.lower() for x in ignore_array]
+    if remove_end_quotes and my_string.startswith('"') and my_string.endswith('"'):
+        my_string = my_string[1:-1]
     temp = my_string.replace("[']", mt.green_of("'", color_punc_change))
     temp = re.sub(r"([!.])'", r'\1' + mt.green_of(r'"', color_punc_change), temp)
     if erase_brackets:
