@@ -875,8 +875,17 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
         return ""
     return x2
 
-def inform_short_name(my_file, acknowledge_dailies = True):
+def inform_short_name(my_file, acknowledge_dailies = True, cut_off = ''):
+    if cut_off:
+        my_file = re.sub(cut-off + ".*", "", my_file)
     retval = os.path.basename(my_file)
+    if retval == 'source_code.adv':
+        return '{} Adventuron source'.format(dir2proj(my_file))
+    if retval == 'notes.txt':
+        return 'Notes for {}'.format(dir2proj(my_file).replace('-', ' ').title()) # collapse this into a function
+    if retval.startswith("notes-"):
+        base = re.sub("\..*", "", retval[6:])
+        return "{} notes".format(long_name(base, strip_dashes = True).title()) # notes-wp.txt or notes.txt in wp directory. Both cases. We could use readlink to see it through.
     if retval.startswith('reg-') or retval.startswith('rbr-'):
         return retval
     if 'i7x' in retval:
@@ -896,10 +905,9 @@ def inform_short_name(my_file, acknowledge_dailies = True):
             return "({}daily) {}".format('current ' if 'to-proc' not in my_file else '', retval)
         else:
             return "(YYYYMMDD notes) {}".format(retval)
-    if retval.startswith("notes-"):
-        base = re.sub("\..*", "", retval[6:])
-        return "{} notes".format(long_name(base, strip_dashes = True).title())
     return '* ({})'.format(retval)
+
+descriptive_name = i7_short_name = inform_short_name
 
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
