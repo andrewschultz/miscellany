@@ -912,7 +912,7 @@ descriptive_name = i7_short_name = inform_short_name
 def proj2root(x = dir2proj()):
     return "c:\\games\\inform\\{:s}.inform".format(proj_exp(x))
 
-def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True, optional_prefix = ''):
+def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = False, bail_if_nothing = False, default_subdir = True, optional_prefix = '', graphics = False):
     if x.startswith(optional_prefix):
         x = x.replace(optional_prefix, '')
     if not x:
@@ -938,7 +938,10 @@ def proj2dir(x = dir2proj(), my_subdir = "", to_github = False, materials = Fals
             sys.exit("Didn't find github repo to dir2proj for {}. Bailing.".format(x))
         else:
             return ''
-        return os.path.join(mt.gh_dir, temp)
+        temp_return = os.path.join(mt.gh_dir, temp)
+        if graphics:
+            temp_return = os.path.join(temp_return, "graphics")
+        return temp_return
     return "c:\\games\\inform\\{}{}{}".format(proj_exp(x), " Materials" if materials else ".inform", ("\\" + my_subdir) if my_subdir else "")
 
 sdir = p2d = proj2dir
@@ -1244,6 +1247,9 @@ with open(i7_cfg_file) as file:
         lla = my_parts[1].split("=")
         try:
             l1 = lla[1].split(',')
+            for x in l1:
+                if x != x.strip():
+                    mt.warn("i7p.txt line {} {} needs whitespace removed.".format(line_count, l1))
         except:
             l1 = []
         if this_var in ( 'author', 'auth', 'authname' ):
@@ -1358,7 +1364,7 @@ with open(i7_cfg_file) as file:
                 mt.warn("Redefining main project {} map at line {} of i7p.txt.".format(lla[0], line_count))
             for my_l in l1:
                 if my_l in i7x:
-                    mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], l0[0]))
+                    mt.fail("PLEASE FIX ASAP: we have a duplicate project abbreviation {} at line {} which mapped to {} and then {}.".format(my_l, line_count, i7x[my_l], lla[0]))
                     continue
                 i7x[my_l] = lla[0]
             i7xr[lla[0]] = l1[0]
