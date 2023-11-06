@@ -211,6 +211,16 @@ def check_for_admin(bail = True):
             if bail:
                 sys.exit()
 
+def emergency_file_of(my_file, time_format = "HH-mm-ss"):
+    emer = "c:/writing/emergency"
+    bn = os.path.basename(my_file)
+    if not time_format:
+        return os.path.normpath(os.path.join(emer, bn))
+    add_time = pendulum.now().format(time_format)
+    ary = bn.split('.')
+    ary[0] += '-as-of-' + add_time
+    return os.path.normpath(os.path.join(emer, '.'.join(ary)))
+
 def is_alpha_match_special(my_string):
     return '>' in my_string or '<' in my_string or '|' in my_string
 
