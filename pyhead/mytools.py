@@ -328,6 +328,18 @@ def cheap_html(text_str, out_file = "c:/writing/temp/temp-htm.htm", title="HTML 
 	f.close()
 	if launch: os.system(out_file)
 
+def file_to_url(file_name):
+    if file_name.startswith("file:/"):
+        return file_name
+    x = os.path.abspath(file_name)
+    return "file:///" + x.replace('\\', '/')
+
+def url_to_file(file_name):
+    if not file_name.startswith("file:/"):
+        return file_name
+    x = re.sub("^file:[/]+", "", file_name)
+    return os.path.normpath(x)
+
 def num_value_from_text(my_line, my_index = 0):
     nums = re.findall("[0-9]+", my_line)
     try:
