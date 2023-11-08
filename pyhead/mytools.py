@@ -1400,6 +1400,17 @@ def text_to_browser(my_text, delete_immediately = True, bail = False):
     if bail:
         sys.exit()
 
+def slash_to_regex(my_string):
+    return '(' + my_string.strip().replace('/', '|').replace('_', ' ') + ')'
+
+def generate_all_poss(my_string, return_array = False): # this converts slash notation a/b/c to parentheses (a|b|c) to process with regex
+    import exrex
+    temp = re.sub("(/)?[a-z]+(/[a-z]+)+(/)?", lambda x: slash_to_regex(x.group()), my_string)
+    regex_poss = exrex.generate(temp)
+    if return_array:
+        return [x.split(' ') for x in regex_poss]
+    return regex_poss
+
 COMMENT_COMBINE_NONE = 0
 COMMENT_COMBINE_CASE_SENSITIVE = 1
 COMMENT_COMBINE_CASE_INSENSITIVE = 2
