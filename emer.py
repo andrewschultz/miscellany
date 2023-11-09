@@ -43,14 +43,20 @@ def usage(heading="Basic EMER.PY usage"):
     print("Emer.py nps copies over the notepad sessions file.")
     sys.exit()
 
-def delete_old_files(short_to_delete, days_back, test_mode = False):
+def delete_old_files(short_to_delete, days_back, daily_files = False, test_mode = False):
     deleted_files = 0
     this_time = time.time()
-    base_file = os.path.basename(shortcuts[short_to_delete])
-    base_file_array = base_file.split('.', -1)
-    base_search_string = base_file_array[0] + "-"
+    if daily_files:
+        regex_start = "[0-9]{8,}-"
+        base_file_array = [ regex_start, 'txt' ]
+        base_search_string = '2'
+    else:
+        base_file = os.path.basename(shortcuts[short_to_delete])
+        base_file_array = base_file.split('.', -1)
+        base_search_string = base_file_array[0] + "-"
+        regex_start = base_search_string
     glob_string = os.path.join(emergency_dir, base_search_string + "*")
-    regex_search_string = base_search_string + "[0-9]{4}(-[0-9]{2})+"
+    regex_search_string = regex_start + "[-0-9]{4}(-[0-9]{2})+"
     if len(base_file_array) > 1:
         regex_search_string += "\." + base_file_array[1]
     regex_search_string = '^{}$'.format(regex_search_string)
@@ -113,7 +119,10 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 if delete_files:
-    delete_old_files(my_short, delete_days, test_mode = test_mode)
+    if find_daily:
+        delete_old_files("", delete_days, daily_files = find_daily, test_mode = True)
+    else:
+        delete_old_files(my_short, delete_days, test_mode = test_mode)
 
 if find_daily:
     my_type = 'h'
