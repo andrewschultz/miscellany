@@ -27,6 +27,8 @@ days_back = 0
 this_header = "Daily Github commits "
 total_count = 0
 
+my_time_out = 0
+
 windows_popup_box = False
 look_for_cmd = False
 look_for_cmd_force = False
@@ -192,8 +194,9 @@ def read_cmd_line():
     global look_for_cmd
     global look_for_cmd_force
     global run_cmd
+    global my_time_out
     while cmd_count < len(sys.argv):
-        arg = mt.nohy(sys.argv[cmd_count])
+        (arg, num, is_num) = mt.parameter_with_number(sys.argv[cmd_count])
         if arg =='p':
             windows_popup_box = True
         elif arg == 'pn' or arg == 'np':
@@ -218,6 +221,10 @@ def read_cmd_line():
             check_commit_validity()
         elif arg == 'nr':
             run_cmd = False
+        elif arg == 't':
+            if not is_num:
+                sys.exit("You need a number after t for popup message time.")
+            my_time_out = num
         elif arg == '?':
             usage()
         else:
@@ -282,4 +289,5 @@ for f in sorted(final_count):
 
 out_string = "TOTALS: {}\n".format(total_count) + out_string
 out_string = out_string.rstrip()
-mt.win_or_print(out_string, this_header, windows_popup_box, bail = True)
+
+mt.win_or_print(out_string, this_header, windows_popup_box, bail = True, time_out = my_time_out)
