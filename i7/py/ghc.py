@@ -82,20 +82,20 @@ def copy_source_to_github(my_proj, copy_timestamps_misaligned = False):
         else:
             return
     if filecmp.cmp(my_main, my_gh):
-        print(my_main, "and", my_gh, "are equivalent. Not copying.")
+        mt.warn(my_main, "and", my_gh, "are equivalent. Not copying.")
         return # not an error, so no bail-on-error
     if reverse_copy:
         (my_main, my_gh) = (my_gh, my_main)
     if os.stat(my_main).st_mtime < os.stat(my_gh).st_mtime:
-        print("WARNING timestamp for from-file is after timestamp for to-file. Ignore with -i or reverse with -r.")
-        print("    ----> from: {}".format(my_main))
-        print("    ---->   to: {}".format(my_gh))
+        mt.warn("WARNING timestamp for from-file is after timestamp for to-file. Ignore with -i or reverse with -r.")
+        mt.warn("    ----> from: {}".format(my_main))
+        mt.warn("    ---->   to: {}".format(my_gh))
         if not copy_timestamps_misaligned:
             if bail_on_error:
                 sys.exit()
             else:
                 return
-    print("Copying", my_main, "to", my_gh)
+    mt.okay("Copying", my_main, "to", my_gh)
     shutil.copy(my_main, my_gh)
 
 cmd_count = 1
