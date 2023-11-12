@@ -20,6 +20,8 @@ from collections import defaultdict
 import subprocess
 import pendulum
 
+ghd_htm = "c:/writing/temp/github-daily-from-ghd.htm"
+
 ignorables = [ 'misc', 'writing', 'configs' ]
 
 days_back = 0
@@ -33,6 +35,7 @@ windows_popup_box = False
 look_for_cmd = False
 look_for_cmd_force = False
 run_cmd = True
+write_to_html = False
 
 projects = defaultdict(list)
 final_count = defaultdict(lambda: defaultdict(list))
@@ -195,6 +198,7 @@ def read_cmd_line():
     global look_for_cmd_force
     global run_cmd
     global my_time_out
+    global write_to_html
     while cmd_count < len(sys.argv):
         (arg, num, is_num) = mt.parameter_with_number(sys.argv[cmd_count])
         if arg =='p':
@@ -221,6 +225,8 @@ def read_cmd_line():
             check_commit_validity()
         elif arg == 'nr':
             run_cmd = False
+        elif arg in ( 'hw', 'wh' ):
+            write_to_html = True
         elif arg == 't':
             if not is_num:
                 sys.exit("You need a number after t for popup message time.")
@@ -289,5 +295,15 @@ for f in sorted(final_count):
 
 out_string = "TOTALS: {}\n".format(total_count) + out_string
 out_string = out_string.rstrip()
+
+if write_to_html:
+    f = open(ghd_htm, "w")
+    f.write("<html><title>GHD.TXT RESULTS</title><body>
+    f.write(this_header + "<br /><br />\n")
+    f.write(out_string.replace('\n', '<br />\n'))
+    f.write("</body></html>")
+    f.close()
+    mt.file_in_browser(ghd_txt)
+    sys.exit()
 
 mt.win_or_print(out_string, this_header, windows_popup_box, bail = True, time_out = my_time_out)
