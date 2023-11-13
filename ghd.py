@@ -20,6 +20,7 @@ from collections import defaultdict
 import subprocess
 import pendulum
 
+ghd_txt = "c:/writing/temp/github-daily-from-ghd.txt"
 ghd_htm = "c:/writing/temp/github-daily-from-ghd.htm"
 
 ignorables = [ 'misc', 'writing', 'configs' ]
@@ -35,6 +36,7 @@ windows_popup_box = False
 look_for_cmd = False
 look_for_cmd_force = False
 run_cmd = True
+write_to_text = False
 write_to_html = False
 
 projects = defaultdict(list)
@@ -198,6 +200,7 @@ def read_cmd_line():
     global look_for_cmd_force
     global run_cmd
     global my_time_out
+    global write_to_text
     global write_to_html
     while cmd_count < len(sys.argv):
         (arg, num, is_num) = mt.parameter_with_number(sys.argv[cmd_count])
@@ -225,6 +228,8 @@ def read_cmd_line():
             check_commit_validity()
         elif arg == 'nr':
             run_cmd = False
+        elif arg == 'w':
+            write_to_text = True
         elif arg in ( 'hw', 'wh' ):
             write_to_html = True
         elif arg == 't':
@@ -295,6 +300,14 @@ for f in sorted(final_count):
 
 out_string = "TOTALS: {}\n".format(total_count) + out_string
 out_string = out_string.rstrip()
+
+if write_to_text:
+    f = open(ghd_txt, "w")
+    f.write(this_header + "\n\n")
+    f.write(out_string)
+    f.close()
+    mt.file_in_browser(ghd_txt)
+    sys.exit()
 
 if write_to_html:
     f = open(ghd_htm, "w")
