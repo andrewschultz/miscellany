@@ -23,7 +23,8 @@
 # todo: hrcheck use taskscheduler ~1 hour after
 #
 # How to set up on a new computer to run every half hour:
-# schtasks /create /SC MINUTE /MO 30 /TN hrcheck /TR py c:\writing\scripts\hrcheck.py 0:33 /st 06:03
+
+basic_string = "schtasks /create /SC MINUTE /MO 30 /TN hrcheck /TR py c:\\writing\\scripts\\hrcheck.py 0:33 /st 06:03"
 
 import sys
 import os
@@ -113,6 +114,13 @@ def last_day_of_month(date):
     y = x.add(months=1)
     return (y-x).days
 
+def sysusage():
+    print("To get HRCHECK task running again:")
+    mt.okay(basic_string)
+    print("To kill HRCHECK:")
+    mt.fail("schtaks /delete /TN hrcheck")
+    sys.exit()
+
 def usage():
     print("=" * 50)
     print("hh = normalizes to half hour e.g. :12 or :18 look for both :00 and :15 tipoffs. nh/hn turns it off.")
@@ -122,6 +130,7 @@ def usage():
     print("0 = Monday, 6 = Sunday for days of week. 1-31 for days of month.")
     print("v = verbose")
     print("f/s(c):(string) = find string in file, c = look in comments too")
+    print("?? = see command to re-start a task")
     print(' ' * 20, '====MAIN STUFF TO RUN====')
     print(colorama.Fore.YELLOW + "rp/p/r decides whether to print or run current commands")
     print("e=edit main file, ea=edit all ex=edit extra ep=edit private" + colorama.Style.RESET_ALL)
@@ -562,6 +571,9 @@ while count < len(sys.argv):
             cmds_to_ignore.append(z)
     elif arg == '?':
         usage()
+        sys.exit()
+    elif arg == '??':
+        sysusage()
         sys.exit()
     else:
         print("Bad argument", count, arg)
