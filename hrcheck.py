@@ -32,6 +32,7 @@ import datetime
 import re
 import calendar
 import time
+import subprocess
 import pendulum
 import mytools as mt
 import colorama
@@ -314,8 +315,12 @@ def read_hourly_check(a):
 
 def check_print_run(x, msg="(no message)"):
     if not x: return 0
+    spawn_it = False
     if print_cmd: print("***running", msg, x)
     if run_cmd:
+        if x.startswith("spawn:"):
+            spawn_it = True
+            x = x[6:]
         if x.startswith("message:"):
             mt.text_to_browser(re.sub("^.*?:", "", x))
         if x.startswith("+host"):
@@ -323,17 +328,19 @@ def check_print_run(x, msg="(no message)"):
         elif x.startswith("-host"):
             mt.hosts_file_toggle(re.sub(".*[ \t]", "", x), allow_website_access = False, set_read_after = True)
         elif x.startswith("http"):
-            if '^&' in x:
-                x = x.replace('^&', '&')
-                print("WARNING: get rid of ^& and replace with &, as we are using os.startfile for websites and not os.system.")
-            os.startfile(x)
+            import webbrowser
+            print("Opening {} in default browser...".format(x))
+            webbrowser.open(x)
         elif x.startswith("t2b:"):
             mt.open_in_browser(x[4:])
         else:
             for y in cmds_to_ignore:
                 if y in x:
                     return 0
-            os.system(x)
+            if spawn_it:
+                os.startfile(x)
+            else:
+                os.system(x)
     return 1
 
 def carve_up(q, msg):
