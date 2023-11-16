@@ -24,6 +24,8 @@ quiet = True
 in_loop = False
 squash_errors = False
 
+unix_newline = False
+
 default_proj = ''
 my_proj = i7.dir2proj()
 
@@ -232,7 +234,7 @@ def write_dont_print(my_file):
     first_table_yet = False
     current_sortable = ''
     sortable_stuff = defaultdict(str)
-    fout = open(ott_temp, "w", newline="\n")
+    fout = open(ott_temp, "w", newline="\n" if unix_newline else "\r\n")
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if need_header:
@@ -377,6 +379,8 @@ while cmd_count < len(sys.argv):
     elif arg == 'es':
         mt.npo("c:/writing/scripts/ott.py")
         quiet = False
+    elif arg == 'u':
+        unix_newline = True
     elif arg == '?':
         usage()
     elif i7.main_abb(arg):
@@ -406,6 +410,7 @@ for x in files_to_check[my_proj]:
     for o in onces[my_proj]:
         onces[my_proj][o] = False
     if write_out:
+        print("Writing {} Unix newline, toggled with -u.".format("with" if unix_newline else "without"))
         write_dont_print(x)
 
 #for y in tables_to_check[my_proj]:
