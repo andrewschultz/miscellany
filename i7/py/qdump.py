@@ -5,8 +5,7 @@
 #
 # arguments: qdump.py (project or abbreviation)
 #
-# to do: cfg file to spin off ignored?
-#        optionally get rid of line count?
+# to do: optionally get rid of line count?
 
 import sys
 import os
@@ -14,9 +13,8 @@ import re
 import i7
 import mytools as mt
 
-ignored = [ 'trivial niceties', 'intro restore skip', 'old school verb total carnage', 'basic screen effects', 'property checking' ]
-
-global_include = set()
+global_ignore = set()
+already_parsed = set()
 
 show_lines = False
 
@@ -57,12 +55,13 @@ def short_look(file_name):
     return os.path.basename(file_name.lower()).replace('.i7x', '')
 
 def headers_of(my_file):
-    if my_file in global_include:
-        return set()
-    global_include.add(my_file)
+    print("Headers in", my_file)
     base_match = short_look(my_file)
-    if base_match in ignored:
+    if base_match in global_ignore:
         return set()
+    if base_match in already_parsed:
+        return set()
+    already_parsed.add(base_match)
     this_set = set()
     with open(my_file) as file:
         for (line_count, line) in enumerate (file, 1):
@@ -76,7 +75,7 @@ def headers_of(my_file):
                 mt.fail("Skipping line", lls)
                 continue
             x_match = short_look(x)
-            if x not in global_include and x_match not in ignored:
+            if x not in global_ignore and x_match not in already_parsed:
                 this_set.add(x)
                 this_set = this_set | headers_of(x)
     return this_set
@@ -87,7 +86,26 @@ def main_and_headers(file_names):
         new_set = new_set | headers_of(f)
     return new_set
 
+def get_cfg():
+    qdump_cfg = "c:/writing/scripts/qdump.txt"
+    if not os.path.exists(qdump_cfg):
+        mt.warn("Could not open {} ... you may get more header files than you want.")
+    with open(qdump_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if line.startswith('#'):
+                continue
+            if line.startswith(';'):
+                break
+            if not '=' in line:
+                mt.warn("Line {} in {} needs =.".format(line_count, qdump_cfg))
+            ary = line.lower().strip().split('=')
+            myopt = ary[0]
+            a2 = ary[1].split(',')
+            if myopt in ('ignore', 'ignored'):
+                global_ignore.add(set(a2))
+
 project_specified = ''
+
 
 cmd_count = 1
 
