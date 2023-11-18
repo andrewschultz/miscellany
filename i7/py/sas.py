@@ -37,6 +37,8 @@ track_extension_files = True
 
 post_open = False
 
+wild_card = 'story.ni'
+
 local_max_open = 5
 cmd_count = 0
 
@@ -163,7 +165,7 @@ for x in param_array:
     if len(x) > 2:
         if my_string:
             sys.exit("Can only parse one string at once. {} cannot replace {}.".format(arg, my_string))
-        elif x.startswith('r=') or x.startswith('a='):
+        elif x.startswith('r=') or x.startswith('a=') or x.startswith('s='):
             pass
         else:
             my_string = x
@@ -201,6 +203,10 @@ while cmd_count < len(param_array):
     elif arg in ( 'e', 'x' ):
         track_story_files = False
         track_extension_files = True
+    elif arg.startswith( 'w=' ):
+        if arg == 'w=':
+            sys.exit("We need a value for the wildcard.")
+        my_wildcard = arg[2:]
     elif arg == 'meta':
         my_sections = [ 'abouting', 'creditsing', 'verbsing' ]
     elif arg.startswith("s="):
@@ -238,13 +244,18 @@ if track_story_files:
             continue
         temp = os.path.realpath(d)
         if temp in done_dict:
-            print(temp, "already covered by another symlink")
+            mt.warm(temp, "already covered by another symlink")
             continue
-        my_ni_file = os.path.join(d, "source", "story.ni")
-        if not os.path.exists(my_ni_file):
-            print("WARNING no story file", my_ni_file)
+        this_wild_card = os.path.join(d, "source", wild_card)
+        sub_glob = glob.glob(this_wild_card)
+        if not len(sub_glob):
+            if wild_card == 'story.ni':
+                mt.fail("WARNING no file {}, but there should be".format(this_wild_card))
+            elif '*' in wild_card:
+                mt.fail("WARNING nothing matches wildcard", wild_card)
             continue
-        look_for_string(my_string, my_ni_file, sections=my_sections)
+        for sg in sub_glob:
+            look_for_string(my_string, sg, sections=my_sections)
 
 if track_extension_files:
     ary = glob.glob("C:/Program Files (x86)/Inform 7/Inform7/Extensions/Andrew Schultz/*.i7x")
