@@ -95,13 +95,22 @@ def crude_check_line_shifts(f1, f2):
         sys.exit()
     print("Crude differences between {0} and {1}: {2} shifts, {3} total line-delta.".format(f1b, f2b, total_diff, line_diff))
 
-def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
+def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False, remove_starting_comment = True, remove_starting_apostrophes = True): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
     # print(a, b, c, zap_apostrophes)
-    if leave_between_parens: a = re.sub("[\(\)]", "", a)
-    else: a = re.sub("\([^\)]*\)", "", a)
-    if force_lower and 'u' not in c: a = a.lower()
-    elif 'k' in c: pass
-    elif 'l' in c: a = a.lower()
+    if remove_starting_comment:
+        a = re.sub("^\"\[.*?\]", "\"", a)
+    if remove_starting_apostrophes and (a[0] == "'" or a[1] == "'"):
+        a = a.replace("'", '', 2)
+    if leave_between_parens:
+        a = re.sub("[\(\)]", "", a)
+    else:
+        a = re.sub("\([^\)]*\)", "", a)
+    if force_lower and 'u' not in c:
+        a = a.lower()
+    elif 'k' in c:
+        pass
+    elif 'l' in c:
+        a = a.lower()
     ary = re.split("\t+", a)
     orig = ary[b]
     ret = ary[b]
