@@ -342,6 +342,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     need_extra_head = False
     in_sortable_table = False
     in_table = False
+    continuation = False
     if verbose: print("Inspecting", f)
     temp_out = open(f2, "w", newline="\n")
     has_default = f in default_sort.keys()
@@ -402,10 +403,17 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     continue
             if not in_table and line.startswith('table of '):
                 in_table = True
-                cur_table = got_match(line, table_sort[f])
+                continuation = '(continued)' in line.lower()
+                cur_table = got_match(line.lower(), table_sort[f])
                 match_table = re.sub(" *\[.*", "", line.lower().strip())
                 if cur_table:
-                    need_to_catch[f].pop(cur_table)
+                    try:
+                        need_to_catch[f].pop(cur_table)
+                    except:
+                        if continuation:
+                            mt.okay("Noting table continuation for {}.".format(cur_table))
+                        else:
+                            mt.warn("Could not remove {} from need-to-catch. It is not labeled as a table or continuation.".format(cur_table))
                     # print("Zapping", cur_table, "from", f)
                     what_to_split = table_sort[f][cur_table]
                     what_to_sort = what_to_split.split(',')
