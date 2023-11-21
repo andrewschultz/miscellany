@@ -306,10 +306,10 @@ def read_table_and_default_file():
     if found_unknown:
         sys.exit("Fix unknown prefixes in talf.txt and rerun.")
 
-def got_match(full_table_line, target_dict):
+def got_match(full_table_line, target_dict, force_lower_case = True):
     for elt in target_dict.keys():
         if elt in full_table_line:
-            return elt
+            return elt.lower() if force_lower_case else elt
     return ''
 
 def table_alf_one_file(f, launch=False, copy_over=False):
@@ -344,7 +344,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
     in_table = False
     continuation = False
     if verbose: print("Inspecting", f)
-    temp_out = open(f2, "w", newline="\n")
+    temp_out = open(f2, "w", newline="\n" if f.endswith('.ni') else "\r\n")
     has_default = f in default_sort.keys()
     tabs_this_table = 0
     err_line.clear()
@@ -401,7 +401,7 @@ def table_alf_one_file(f, launch=False, copy_over=False):
                     temp_out.write(line)
                     in_table = False
                     continue
-            if not in_table and line.startswith('table of '):
+            if not in_table and line.lower().startswith('table of '):
                 in_table = True
                 continuation = '(continued)' in line.lower()
                 cur_table = got_match(line.lower(), table_sort[f])
