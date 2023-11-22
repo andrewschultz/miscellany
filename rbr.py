@@ -1038,9 +1038,9 @@ def get_file(fname):
                 if "{" in line_write:
                     line_write = fill_vars(line_write, ct, line_count, first_file)
                 local_branch_dict[b].current_buffer_string += line_write
-    if not found_start:
+    if not found_start and fb.startswith('rbr'):
         mt.fail("Did not have start command *FILE. Not copying files over.")
-        return 0
+        return []
     if need_start_command:
         print("WARNING: did not find start command {} anywhere in single-file branches, though it was specified on the command line.".format(start_command))
     if len(untested_commands):
