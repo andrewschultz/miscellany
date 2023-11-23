@@ -70,6 +70,7 @@ strict_name_force_off = False
 wrong_check = False
 show_unchanged = False
 look_through_winmerge = False
+test_only = False
 
 max_undo_tracking = 10
 start_line = 0
@@ -1372,6 +1373,8 @@ while count < len(sys.argv):
             max_flag_brackets = int(arg[1:])
     elif arg[:2] == 's:' or arg[:2] == 's=':
         score_search(arg[2:])
+    elif arg in ( 't', 'te', 'test' ):
+        test_only = True
     elif arg == 'wm':
         look_through_winmerge = True
     else:
