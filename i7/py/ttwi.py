@@ -75,11 +75,18 @@ def least_positive_not_in(my_array):
         ret_val += 1
     return ret_val
 
+def is_integer(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 def ordering_of(my_base, this_header):
-    int_check = my_base[0].isdigit()
+    int_check = is_integer(my_base[0])
     return_array = []
     for x in range(1, len(my_base)):
-        if my_base[x].isdigit() != int_check:
+        if is_integer(my_base[x]) != int_check:
             mt.warn("I detected mix of integers and strings. Culprit was #{}: {}. Returning.".format(x, this_header[x]))
             return []
     if int_check:
