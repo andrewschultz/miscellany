@@ -56,7 +56,9 @@ def print_examples():
 def usage():
     print("=" * 40, "USAGE")
     print("A comma separated value denotes the new order of rows. To shift the first 5 over left, it would be 1,2,3,4,0. You can also give column names.")
-    print("We also need a for all tables, a table name or a regex. A slash indicates a regex. 'table of' is not needed to start.")
+    print("-a flips columns for all tables, but we can also type a table name or regex. You can put the table name in quotes or use a dash.")
+    print("A slash at the start denotes a regex. Also, \"table of\" is not needed to start.")
+    print()
     print("Currently you have to have a permutation of (0, ..., n) as the program does not fill the other numbers in.")
     print("-c/-2c = to clipboard.")
     print("-u/-w toggles newline.")
@@ -150,7 +152,7 @@ while count < len(sys.argv):
         switch_array_base = arg.split(',')
     elif re.search("[a-z]", arg):
         if arg.startswith("table-of-"):
-            print("No need to start the table name with table-of-.")
+            mt.warn("No need to start the table name with table-of-, but no harm either.")
             table_to_find = arg
         else:
             table_to_find = ("table of " + arg).lower()
