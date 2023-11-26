@@ -13,6 +13,7 @@ import pyperclip
 import i7
 import mytools as mt
 from filecmp import cmp
+from shutil import copy
 
 write_for_compare = True
 ttwi_temp = "c:/writing/temp/ttwi-after.txt"
@@ -92,7 +93,7 @@ def ordering_of(my_base, this_header):
             mt.warn("I detected mix of integers and strings. Culprit was #{}: {}. Returning.".format(x, this_header[x]))
             return []
     if int_check:
-        return_array = [int(x) for x in my_base]
+        return_array = [int(x) % len(this_header) for x in my_base]
     else:
         my_base = [ re.sub(" *\(.*\)", "", m) for m in my_base ] # get rid of (text) definitions
         print(my_base)
@@ -118,7 +119,8 @@ if len(sys.argv) == 1:
 while count < len(sys.argv):
     arg = sys.argv[count].lower()
     if arg[0] == '-':
-        arg = arg[1:]
+        if not re.search('[0-9],', arg[1:]):
+            arg = arg[1:]
     if arg == 'c' or arg == '2c':
         to_clipboard = True
     elif arg == 'a':
