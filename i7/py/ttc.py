@@ -247,9 +247,6 @@ rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
 table_specs = defaultdict(lambda: defaultdict(TablePicker))
 file_abbrev_maps = defaultdict(lambda: defaultdict(str))
 
-#to delete eventually
-case_mapper = defaultdict(TestCaseMapper)
-
 case_to_file_mapper = defaultdict(list)
 untestable_case_mapper = defaultdict(list)
 
@@ -1522,10 +1519,6 @@ def read_cfg_file(this_cfg):
                 if not cur_proj:
                     mt.warn("WARNING bad project specified line {}: {}".format(line_count, data))
                     mt.add_postopen(this_cfg, line_count)
-                if cur_proj in case_mapper:
-                    mt.warn("WARNING redefined case_mapper for {} line {} of {}.".format(cur_proj, line_count, this_cfg))
-                else:
-                    case_mapper[cur_proj] = TestCaseMapper()
             elif prefix == 'say':
                 say_equivalents[cur_proj] = data
             elif prefix == 'stopper':
