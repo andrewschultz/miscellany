@@ -942,6 +942,9 @@ def change_dir_if_needed(new_dir = ''):
         print("Changing to", new_dir)
         os.chdir(new_dir)
 
+def expected_file(my_case, this_proj):
+    return "n/a"
+
 def clean_up_spaces(this_proj, prefix = 'rbr'):
     change_dir_if_needed()
     glob_string = prefix + "-*.txt"
@@ -1526,10 +1529,9 @@ def read_cfg_file(this_cfg):
             elif prefix in ('gen', 'generator', 'table'):
                 ary = data.split("\t")
                 my_prefixes = [ 'ttc' ]
-                my_command_generator_list = []
                 this_col_list = []
                 my_fixed_command = ''
-                my_command_generator_list = []
+                my_command_generator = ''
                 this_regex_to_check = ''
                 this_print_from_col = ''
                 this_print_absolute = ''
