@@ -231,6 +231,9 @@ class TestCaseToFileMapper:
                 return self.BADMATCH
         return self.NOMATCH
 
+    def from_to_string(self):
+        return "{}/{}".format(self.case_from.main_string_to_parse, self.file_to.main_string_to_parse)
+
 class UntestableCaseMapper:
 
     def __init__(self, prefix, data, line_count = 0, this_cfg = 'no file specified'):
@@ -1240,7 +1243,7 @@ def verify_case_placement(this_proj):
                     my_result = t.case_file_match(line_mod, file_name)
                     if my_result == TestCaseToFileMapper.BADMATCH:
                         if ignore_test_case_mapping:
-                            match_array.append(t.case_from.main_string_to_parse + t.file_to.main_string_to_parse)
+                            match_array.append(t.from_to_string())
                             t.times_used += 1
                             break
                         print("Test case", line_mod, "sorted into wrong file", fb, "with search term", t.file_to.main_string_to_parse)
@@ -1249,7 +1252,7 @@ def verify_case_placement(this_proj):
                         this_success = False
                         break
                     elif my_result == TestCaseToFileMapper.GOODMATCH:
-                        match_array.append(t.case_from.main_string_to_parse + t.file_to.main_string_to_parse)
+                        match_array.append(t.from_to_string())
                         break
                 total_matches = len(match_array)
                 if total_matches == 0:
@@ -1800,7 +1803,7 @@ if len(global_stray_table_org):
     for g in global_stray_table_org:
         print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
 
-none_got = [ "{} {}".format(x.case_from.main_string_to_parse, x.file_to.main_string_to_parse) for x in case_to_file_mapper[my_proj] if not x.times_used]
+none_got = [ x.from_to_string() for x in case_to_file_mapper[my_proj] if not x.times_used]
 
 if none_got:
     print("Unused test cases:", ', '.join(none_got))
