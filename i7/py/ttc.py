@@ -174,7 +174,7 @@ class FlexStringMatcher:
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
         else:
             self.case_search_type = self.FLEXMATCH_EXACTMATCH
-            mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to fill in brsx:".format(string_to_parse))
+            mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to fill in [brsx]: for branch/regex/start/exact match".format(string_to_parse))
             self.main_string_to_parse = string_to_parse
 
         if self.case_search_type == self.FLEXMATCH_BRANCH:
@@ -1241,11 +1241,13 @@ def verify_case_placement(this_proj):
                 this_success = True
                 for t in case_to_file_mapper[this_proj]:
                     my_result = t.case_file_match(line_mod, file_name)
+                    #print(vars(t.case_from), vars(t.file_to))
                     if my_result == TestCaseToFileMapper.BADMATCH:
                         if ignore_test_case_mapping:
                             match_array.append(t.from_to_string())
                             t.times_used += 1
                             break
+                        #print('*', vars(t.case_from), vars(t.file_to))
                         print("Test case", line_mod, "sorted into wrong file", fb, "with search term", t.file_to.main_string_to_parse)
                         mark_rbr_open(file_name, line_count, line)
                         wrong_file += 1
@@ -1448,10 +1450,11 @@ def read_cfg_file(this_cfg):
                 my_token = 'source token'
                 eq = sum(['=' in x for x in ary])
                 if len(ary) != 4:
-                    mt.warn("values_picker needs 4 TSV elements. Skipping this. It may cause a lot of unexpected errors.")
+                    mt.warn("values_picker needs 4 tab separated values. Skipping the line below to avoid errors.")
+                    mt.warn("    " + ','.join(ary))
                     continue
                 if eq > 0 and eq < 4:
-                    mt.warn("value_picker either lists cases in order (source token, command, file abbreviation, rough text) or has token= cmd= file= text=. Skipping this. It may cause a lot of unexpected errors.")
+                    mt.warn("value_picker needs either to list cases in order (source token, command, file abbreviation, rough text) or have token= cmd= file= text= in tab separated values. Skipping this. It may cause a lot of unexpected errors.")
                     mt.warn("    " + ','.join(ary))
                     continue
                 if eq == 0:
@@ -1576,6 +1579,8 @@ def read_cfg_file(this_cfg):
                             if generator_type == 'readcol':
                                 mt.warn("Change readcol to subcase in {} line {}.".format(this_cfg, line_count))
                             this_subcase_name_format = generator_data
+                            if ' ' in this_subcase_name_format:
+                                mt.warn("subcase should probably have dash and not space {} file {} line {}.".format(generator_data, tb, line_count))
                         elif generator_type == 'regcheck':
                             this_regex_to_check = generator_data
                         else:
@@ -1806,7 +1811,9 @@ if len(global_stray_table_org):
 none_got = [ x.from_to_string() for x in case_to_file_mapper[my_proj] if not x.times_used]
 
 if none_got:
-    print("Unused test cases:", ', '.join(none_got))
+    mt.warn("Unused case-maps:", ', '.join(none_got))
+else:
+    mt.okay("All case-maps were used!")
 
 if my_cfg_errors:
     mt.warn("This is a warning to note CFG files had parsing errors. Remove NCB to keep the focus on what the errors are.")
