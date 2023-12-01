@@ -59,6 +59,8 @@ daily_wildcard = "20*.txt"
 daily_warning_bumper = "**MODIFY DAILY INSTEAD(?)\n"
 daily_warning_bumper_nolb = daily_warning_bumper.strip()
 daily_warning_bumper_short = "**MODIFY"
+daily_warning_l = daily_warning_bumper_nolb.lower()
+daily_warning_bumper_short_l = daily_warning_bumper_l = daily_warning_bumper_short.lower()
 
 ########################date constants
 
@@ -75,6 +77,8 @@ SORT_ALPHA_BACKWARD = -1
 SORT_ALPHA_NONE = 0
 SORT_ALPHA_FORWARD = 1
 
+def wordlength(my_int, check_valid = False):
+    return "c:\\writing\\dict\\words-{}.txt".format(my_int)
 
 def dailies_of(my_dir = "c:/writing/daily", full_file_path = False):
     try_1 = glob.glob(my_dir + "/" + daily_wildcard)
