@@ -779,12 +779,14 @@ def compare_unshuffled_lines(fpath1, fpath2): # true if identical, false if not
 
 cu = cul = compare_unshuffled_lines
 
-def lines_of(file_name, read_blanks = True):
+def lines_of(file_name, read_blanks = True, strip_end = False):
     f = open(file_name, "r")
     temp = f.readlines()
     f.close()
     if not read_blanks:
         temp = [x for x in lines_of if x.strip()]
+    if strip_end:
+        temp = [x.strip() for x in temp]
     return temp
 
 def line_count_of(file_name, read_blanks = True):
