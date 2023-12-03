@@ -900,7 +900,11 @@ def first_string_diff(string_1, string_2):
         return min_length
     return -1
 
-def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False, sections_to_ignore = [], case_insensitive = False): # returns true if identical (option to get rid of blanks,) false if not
+CAL_NOTE_COMMENTS = 0
+CAL_PASS_COMMENTS = 1
+CAL_IGNORE_COMMENTS = 2
+
+def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = False, verbose = True, max_chars = 0, mention_blanks = True, red_regexp = '', green_regexp = '', show_bytes = False, verify_alphabetized_true = True, compare_tabbed = False, sections_to_ignore = [], case_insensitive = False, comment_note_level = CAL_NOTE_COMMENTS): # returns true if identical (option to get rid of blanks,) false if not
     if verbose:
         print("Comparing alphabetized lines: {} vs {}.".format(f1, f2))
     if f1 == f2:
@@ -908,29 +912,34 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
         return True
     freq = defaultdict(int)
     total = defaultdict(int)
-    f1_ary = lines_of(f1)
-    f2_ary = lines_of(f2)
+    f1_ary = lines_of(f1, strip_end = True)
+    f2_ary = lines_of(f2, strip_end = True)
     if case_insensitive:
         f1_ary = [x.lower() for x in f1_ary]
         f2_ary = [x.lower() for x in f2_ary]
-    ignore_stuff = False
+    comment_1 = [re.sub(" *#.*", "", x) for x in f1_ary]
+    comment_2 = [re.sub(" *#.*", "", x) for x in f2_ary]
+    if comment_note_level == CAL_IGNORE_COMMENTS:
+        f1_ary = list(comment_1)
+        f2_ary = list(comment_2)
+    ignore_this_section = False
     for line in f1_ary:
         for q in sections_to_ignore:
             if line.startswith(q):
-                ignore_stuff = True
+                ignore_this_section = True
         if not line.strip():
-            ignore_stuff = False
-        if ignore_stuff:
+            ignore_this_section = False
+        if ignore_this_section:
             continue
         freq[line.lower().strip()] += 1
         total[line.lower().strip()] += 1
     for line in f2_ary:
         for q in sections_to_ignore:
             if line.startswith(q):
-                ignore_stuff = True
+                ignore_this_section = True
         if not line.strip():
-            ignore_stuff = False
-        if ignore_stuff:
+            ignore_this_section = False
+        if ignore_this_section:
             continue
         freq[line.lower().strip()] -= 1
         total[line.lower().strip()] += 1
@@ -968,6 +977,14 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
             if '' in set1 or '' in set2:
                 warn("Search for \\t\\t or \\t$ if you need to weed out extraneous tabs.")
     if len(difs):
+        comment_noted = []
+        for j in difs:
+            if not '#' in j:
+                continue
+            temp = re.sub(" *#.*", "", j)
+            if (j in f1_ary and temp in f2_ary) or (j in f2_ary and temp in f1_ary):
+                comment_noted.append(j)
+                comment_noted.append(temp)
         for j in sorted(difs):
             if freq[j] > 0 : left += 1
             else: right += 1
@@ -981,9 +998,6 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                 if not any_extra_lines:
                     print("=" * 20 + " BEGIN DIFFERENCES " + "=" * 20)
                     any_extra_lines = True
-                print_string = "{}{}{}".format(bn1 if freq[j] > 0 else ' ' * len(bn1), '<<<<' if freq[j] > 0 else '>>>>', bn2 if freq[j] < 0 else ' ' * len(bn2))
-                print_string += " Extra Line {}".format("<blank>" if not j2 else j2)
-                print_string += " / {:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2) # different # of >>/<< to make eyeball comparisons (if necessary) easier
                 color_flags = 0
                 if red_regexp:
                     if re.search(red_regexp, j):
@@ -995,7 +1009,15 @@ def compare_alphabetized_lines(f1, f2, bail = False, max = 0, ignore_blanks = Fa
                         color_flags |= 2
                     elif not green_regexp:
                         color_flags |= 1
-                color_array = [ colorama.Fore.WHITE, colorama.Fore.RED, colorama.Fore.GREEN, colorama.Fore.YELLOW ]
+                if not j.strip():
+                    color_flags = 3
+                elif comment_note_level == CAL_PASS_COMMENTS and j.strip():
+                    if freq[j] and j in comment_noted:
+                        color_flags = 4
+                color_array = [ colorama.Fore.WHITE, colorama.Fore.RED, colorama.Fore.GREEN, colorama.Fore.YELLOW, colorama.Fore.CYAN ]
+                print_string = "{}{}{}".format(bn1 if freq[j] > 0 else ' ' * len(bn1), '<<<<' if freq[j] > 0 else '>>>>', bn2 if freq[j] < 0 else ' ' * len(bn2))
+                print_string += " {} {}".format('COMMENT DIFF' if color_flags == 4 else 'Extra line', "<blank>" if not j2 else j2)
+                print_string += " / {:d} diff ({:d} vs {:d}) in {:s}".format(abs(freq[j]), (total[j]-abs(freq[j]))//2, (total[j]+abs(freq[j]))//2, bn1 if freq[j] > 0 else bn2) # different # of >>/<< to make eyeball comparisons (if necessary) easier
                 print_string = color_array[color_flags] + print_string + WTXT
                 print(print_string)
             elif max and totals == max + 1:
