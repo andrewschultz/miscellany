@@ -1480,8 +1480,9 @@ def comment_combine(my_lines, cr_at_end = True, conflate_duplicates = COMMENT_CO
 
 comcom = comment_combine
 
-def zap_comment(my_line, zap_spaces_before = True, zap_brackets = True):
-    temp = re.sub("#.*", "", my_line)
+def zap_comment(my_line, zap_spaces_before = True, zap_brackets = True, starting_character = '#'):
+    search_string = starting_character + ".*"
+    temp = re.sub(search_string, "", my_line)
     if zap_spaces_before:
         temp = temp.strip()
     if zap_brackets:
