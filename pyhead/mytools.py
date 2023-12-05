@@ -1637,6 +1637,12 @@ def follow_link(x):
         temp = temp[4:]
     return temp
 
+def line_to_section(my_line):
+    if not my_line.startswith("\\"):
+        fail("Called line_to_section on {}.".format(my_line.strip()))
+        return my_line.strip()
+    return re.sub("=.*", "", my_line[1:].strip())
+
 def section_of(my_file, my_section_name, absolute_name = False, return_line_count = True, return_header = True):
     got_section = False
     in_section = False
