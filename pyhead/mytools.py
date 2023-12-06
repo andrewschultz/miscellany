@@ -1132,9 +1132,8 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
     if max_opens and allow_first_as_extra:
         a = files_to_post[0]
         amax = max(file_post_list[a])
-        print(a, amax)
         this_max = max([max(file_post_list[x]) for x in files_to_post])
-        if amax != this_max:
+        if amax <= this_max:
             file_post_list[a][this_max] = file_post_list[a][amax]
             max_opens += 1
     if sort_by_max_priority:
