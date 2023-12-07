@@ -124,6 +124,13 @@ np = '"{}"'.format(npnq)
 def on_off(my_truth_state):
     return "on" if my_truth_state else "off"
 
+def dash_to_title(my_string, capitalize_all = False):
+    if capitalize_all:
+        ary = [x.title() for x in re.split("[- ]", my_string)]
+    else:
+        ary = [x.title() for x in my_string.split('-')]
+    return ' '.join(ary)
+
 def string_expand(my_string, my_expand_dictionary = mt_default_dict, force_lower = True):
     if '$' not in my_string:
         return my_string
