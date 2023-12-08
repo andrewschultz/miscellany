@@ -437,6 +437,8 @@ def modified_size_of(my_file):
 def is_npp_modified(my_file): # see if a file is unsaved in notepad++
     quick_basename = os.path.basename(my_file).lower()
     parse_successful = False
+    if not os.path.exists(my_file):
+        return False
     while not parse_successful:
         try:
             e = ET.parse(np_xml)
@@ -446,6 +448,8 @@ def is_npp_modified(my_file): # see if a file is unsaved in notepad++
             messageBox(None, "Error reading Notepad++ tabs.\n\nYou may need to wait to try again, especially if you just edited something.", "Try again!", 0x0)
     for elem in e.iter('File'):
         this_np_file = elem.get("filename")
+        if not os.path.exists(this_np_file):
+            return False
         if quick_basename not in this_np_file.lower(): continue # this speeds stuff up slightly
         if os.path.samefile(this_np_file, os.path.abspath(my_file)):
             bfp = elem.get("backupFilePath")
