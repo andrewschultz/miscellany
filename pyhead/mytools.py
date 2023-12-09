@@ -1105,7 +1105,7 @@ def open_this(bail = True):
         if bail:
             sys.exit()
 
-def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10, note_open_try = True):
+def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_nonpositive_line = True, priority = 10, note_open_try = False):
     if file_line <= 0 and reject_nonpositive_line: return
     if type(file_name) != str:
         print(colorama.Fore.RED + "WARNING: YOU PROBABLY TRIED TO SEND A FILE STREAM TO ADD_POSTOPEN")
@@ -1125,6 +1125,8 @@ def add_postopen_file_line(file_name, file_line = 1, rewrite = False, reject_non
             file_extra_edit[file_name] = 1
     if rewrite or file_name not in file_post_list or priority not in file_post_list[file_name]:
         file_post_list[file_name][priority] = file_line
+    if note_open_try:
+        warn("Queueing {} line {}.".format(file_name, file_line))
 
 add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file_line
 
