@@ -1133,7 +1133,7 @@ add_open = add_post = add_postopen = add_post_open = addpost = add_postopen_file
 NOTE_EMPTY = 1
 BAIL_ON_EMPTY = 2
 
-def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, sort_by_max_priority = False, min_priority = 0, empty_flags = 0, to_stderr = True, allow_first_as_extra = False):
+def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unopened = True, full_file_paths = False, test_run = False, blank_message = "There weren't any files slated for opening/editing.", sort_type = SORT_ALPHA_NONE, sort_by_max_priority = False, min_priority = 0, empty_flags = 0, to_stderr = True, allow_first_as_extra = False, show_extra_openings = True):
     if to_stderr:
         old_stdout = sys.stdout
         sys.stdout = sys.stderr
@@ -1168,11 +1168,12 @@ def postopen_files(bail_after = True, max_opens = 0, sleep_time = 0.1, show_unop
             got_yet[x] = True
             m = max(file_post_list[x])
             bnx = os.path.basename(x)
-            if x in file_extra_edit:
-                print("    {} additional suggested line-opening{} for {} {} ignored. If you're searching for errors, you may have to run things again.".format(file_extra_edit[x], plur(file_extra_edit[x]), bnx, plur(file_extra_edit[x], [ 'were', 'was' ])))
-            el = len(file_post_list[x])
-            if el > 1:
-                print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
+            if show_extra_openings:
+                if x in file_extra_edit:
+                    print("    {} additional suggested line-opening{} for {} {} ignored. If you're searching for errors, you may have to run things again.".format(file_extra_edit[x], plur(file_extra_edit[x]), bnx, plur(file_extra_edit[x], [ 'were', 'was' ])))
+                el = len(file_post_list[x])
+                if el > 1:
+                    print("Errors of {} different priorities were found in {}, so the first/last one may not be flagged. Just the most important one.".format(el, bnx))
             if test_run:
                 print("Would've opened", x, "at line", file_post_list[x][m])
             else:
@@ -1208,8 +1209,33 @@ def open_source_config(bail = True):
 
 oc = o_c = open_config = open_source_config
 
-def create_temp_alf(file_1, file_2, comments, spaces, ignorable_strings=[]):
-    l = sorted(open(file_1).readlines())
+def lump_tabs(file_1):
+    tablump = "c:/writing/temp/tablump.txt"
+    fout = open(tablump, 'w')
+    tabs = []
+    lowers = []
+    all_dupes = []
+    total_dupes = 0
+    with open(file_1) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if '\t' not in line:
+                fout.write(line)
+                continue
+            to_add = [x for x in line.strip().split('\t') if x and x.lower() not in lowers]
+            dupes = [x for x in line.strip().split('\t') if x and x.lower() in lowers]
+            total_dupes += len(dupes)
+            all_dupes.extend([x for x in dupes if x not in all_dupes])
+            tabs.extend(to_add)
+            lowers.extend([x.lower() for x in to_add])
+    fout.write('\t'.join(tabs))
+    fout.close()
+    if all_dupes:
+        print("Dupes", len(all_dupes), "Total dupes", total_dupes, all_dupes)
+    wm(file_1, tablump)
+    sys.exit()
+
+def create_temp_alf(file_1, file_2, comments = False, spaces = False, end_comments = True, force_lower_case = False, ignorable_strings=[]):
+    l = sorted(open(file_1).readlines(), key=str.casefold)
     f2 = open(file_2, "w")
     for x in l:
         if x.strip() not in ignorable_strings: continue
