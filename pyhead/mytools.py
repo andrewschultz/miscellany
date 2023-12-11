@@ -1283,19 +1283,20 @@ def quote_spaced_file(my_file):
         return '"' + my_file + '"'
     return my_file
 
-def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, show_winmerge = True, acknowledge_comparison = True, quiet = True, ignorable_strings=[]):
+def alfcomp(x1, x2, bail_on_show_winmerge = True, comments = True, spaces = False, end_comments = False, force_lower_case = False, show_winmerge = True, acknowledge_comparison = True, quiet = True, ignorable_strings=[]):
     a1 = "c:/writing/temp/alpha-1.txt"
     a2 = "c:/writing/temp/alpha-2.txt"
     if acknowledge_comparison and not quiet:
         print("Alphabetical comparison: {} vs {}".format(x1, x2))
-    create_temp_alf(x1, a1, comments, spaces)
-    create_temp_alf(x2, a2, comments, spaces)
+    create_temp_alf(x1, a1, comments, spaces, end_comments, force_lower_case)
+    create_temp_alf(x2, a2, comments, spaces, end_comments, force_lower_case)
     temp = cmp(a1, a2)
     if show_winmerge and not temp:
         wm(a1, a2)
         os.remove(a1)
         os.remove(a2)
-        if bail_on_show_winmerge: sys.exit()
+        if bail_on_show_winmerge:
+            sys.exit()
     return temp
 
 def first_diff(x1, x2, one_based = True):
