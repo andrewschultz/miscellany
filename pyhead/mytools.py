@@ -1238,9 +1238,13 @@ def create_temp_alf(file_1, file_2, comments = False, spaces = False, end_commen
     l = sorted(open(file_1).readlines(), key=str.casefold)
     f2 = open(file_2, "w")
     for x in l:
-        if x.strip() not in ignorable_strings: continue
+        if x.strip() in ignorable_strings: continue
         if spaces == False and not x.strip(): continue
         if comments == False and x.startswith("#"): continue
+        if not end_comments and '#' in x:
+            x = re.sub(" *#.*", "", x)
+        if force_lower_case:
+            x = x.lower()
         f2.write(x)
     f2.close()
 
