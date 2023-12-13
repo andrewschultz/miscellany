@@ -616,6 +616,16 @@ def no_colon(x):
 def no_equals(x):
     return chop_front(x, '=')
 
+def val_from_cfg(my_cfg, my_value): # possible additions: debug text, bail on not finding
+    with open(my_cfg) as file:
+        for (line_count, line) in enumerate (file, 1):
+            ll = line.lower().strip()
+            a = re.split("[:=]", ll, 1)
+            if a[0] != my_value:
+                continue
+            return a[1]
+    return ''
+
 def change_cfg_line(file_name, var_to_change, new_value, delimiter = '=', report_error = True, print_success = False, allow_adding_line = False):
     var_to_change = var_to_change.lower()
     out_file = "c:/writing/temp/mytools_cfg_changed.txt"
