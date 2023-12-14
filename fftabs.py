@@ -76,7 +76,7 @@ for f in files:
             my_url = t['entries'][i]['url']
             my_title = t['entries'][i]['title']
             title_of[my_url] = my_title
-            print(count, my_url, my_title)
+            print(count, my_url, my_title.encode(sys.stdout.encoding, errors='replace'))
             dupe_page[my_url] += 1
             my_domain = domain_of(my_url)
             domain_count[my_domain] += 1

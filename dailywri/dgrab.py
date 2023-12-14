@@ -580,7 +580,7 @@ def send_mapping(sect_name, file_name, change_files = False):
                         remain_written = True
                     continue
                 if write_next_blank and not line.strip():
-                    print("Will start writing at line", line_count)
+                    print("We will start writing to the section at line {}. We count {} total lines.".format(line_count, sect_text.count("\n")))
                     if sect_name in daily.timestamps or force_timestamp:
                         f.write('# start {} {}\n'.format(fn, my_date_for_file))
                     f.write(sect_text)

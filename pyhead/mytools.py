@@ -155,7 +155,7 @@ def bail_if_not(f, file_desc = ""):
 def filelines_no_comments(file_stream):
     return [ x for x in file_stream.readlines() if x.strip() and not x.startswith('#') and not x.startswith(";") ]
 
-def errwrite(main_text, color = '', show_cr = True):
+def errwrite(main_text, color = WARN, show_cr = True):
     if color:
         sys.stderr.write(color)
     sys.stderr.write(main_text)
