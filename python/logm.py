@@ -27,6 +27,7 @@ push_after_commit = False
 no_verify = False
 actual_time_commit_stamp = False
 suppress_batch_nudge = False
+only_show_last = False
 
 by_end_of_month = False
 by_end_of_week = False
@@ -60,9 +61,9 @@ def usage(arg = ""):
     my_time = pendulum.today().subtract(seconds=min_before * 60 + sec_before)
     time_str = my_time.format("HH:mm:ss ZZ")
     print("=" * 50)
-    print("a tries for auto date, ao says today is okay")
-    print("at puts actual timestamp on a past-dated commit")
-    print("r or x executes the command")
+    mt.okay("a tries for auto date, ao says today is okay")
+    mt.okay("at puts actual timestamp on a past-dated commit")
+    mt.okay("r or x executes the command")
     print("p(project name) specifies the project name e.g. pmisc, though p = git push after git commit")
     print("l at the end runs git log too")
     print("fl gets the next missing date from the log. For instance, if the last commit is on October 14, it will be October 15.")
@@ -71,6 +72,7 @@ def usage(arg = ""):
     print("nv = --no-verify as sometimes I may not want to copy over the very latest changes")
     print("s# specifies seconds before midnight in addition to minutes")
     print("so# specifies *only* seconds before midnight, setting minutes to 0")
+    mt.okay("osl/ol only shows the last")
     print("! specifies a random number of seconds before midnight, from 1 to 600. Default is {:d} for a time of {:s}.".format(min_before * 60 + sec_before,
  time_str))
     print("A commit message can be put in quotes, and it needs a space.")
@@ -270,6 +272,8 @@ while count < len(sys.argv):
         no_verify = True
     elif arg == 'ea':
         by_end_of_week = by_end_of_month = by_end_of_year = True
+    elif arg in ( 'ol', 'osl' ):
+        only_show_last = True
     elif re.search(r'e(o?)[wmy]+', arg):
         by_end_of_week = 'w' in arg
         by_end_of_month = 'm' in arg
@@ -317,6 +321,8 @@ if auto_date:
             else:
                 print("Last commit-space is back {} day{}.".format(days, '' if days == 1 else 's'))
                 if days == 0: break
+                if only_show_last:
+                    sys.exit()
                 if not (by_end_of_week or by_end_of_month or by_end_of_year): break
                 if by_end_of_week:
                     per_day_metrics(days, 'week')
