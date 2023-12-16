@@ -19,6 +19,8 @@ import codecs
 import re
 import mytools as mt
 
+good_files = [ 'story.ni', 'source_code.adv' ]
+
 skip_single_words = False
 errors_only = False
 
@@ -53,6 +55,12 @@ def ext_2_brax(file_name):
     if file_name.endswith('xvn'): return False # Marnix Van Den Bos's XVAN system. For the sample game Escape.
     if file_name.endswith('ni'): return True
     return False
+
+def which_of():
+    for x in good_files:
+        if os.path.exists(x):
+            return x
+    sys.exit("Could not find a valid source file.")
 
 def file_read_clipboard(my_file):
     the_array = []
@@ -196,9 +204,8 @@ while count < len(sys.argv):
             usage('Bad argument {}'.format(arg))
     count += 1
 
-if not file_name: file_name = "story.ni" # could search for a bunch of different names ... or not
-
-if not os.path.exists(file_name): sys.exit("Can't find file {}".format(file_name))
+if not file_name:
+    file_name = which_of()
 
 if rub_brackets_from_file:
     rub_brackets = ext_2_brax(file_name)
