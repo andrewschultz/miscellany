@@ -8,8 +8,8 @@ import i7
 import mytools as mt
 import colorama
 
-new_main_temp = "c:/writing/temp/dglo-from.txt"
-new_global_temp = "c:/writing/temp/dglo-to.txt"
+new_from_temp = "c:/writing/temp/dglo-from.txt"
+new_to_temp = "c:/writing/temp/dglo-to.txt"
 
 copy_back = False
 
@@ -69,10 +69,10 @@ def track_definitions(main_file, defs_file):
     if not len(defs):
         print(colorama.Fore.YELLOW + "No definitions found to shift over in {}.".format(main_file) + colorama.Style.RESET_ALL)
         return False
-    mout = open(new_main_temp, "w")
+    mout = open(new_from_temp, "w")
     gin = open(defs_file, "r")
     global_in_lines = gin.readlines()
-    gout = open(new_global_temp, "w")
+    gout = open(new_to_temp, "w")
     written_yet = False
     for i in global_in_lines:
         gout.write(i)
@@ -93,8 +93,13 @@ def track_definitions(main_file, defs_file):
     gin.close()
     gout.close()
     mout.close()
-    mt.wm(main_file, new_main_temp)
-    mt.wm(defs_file, new_global_temp)
+    if copy_back:
+        copy(new_from_temp, main_file)
+        copy(new_to_temp, defs_file)
+    else:
+        mt.warn("To copy back automatically, use the -c flag.")
+        mt.wm(main_file, new_from_temp)
+        mt.wm(defs_file, new_to_temp)
     return True
 
 def track_globals(main_file, global_file):
@@ -122,10 +127,10 @@ def track_globals(main_file, global_file):
             print(x, end='')
         mt.warn("You will need to create the file {} for me to create compares.".format(global_file))
         return False
-    mout = open(new_main_temp, "w")
+    mout = open(new_from_temp, "w")
     gin = open(global_file, "r")
     global_in_lines = gin.readlines()
-    gout = open(new_global_temp, "w")
+    gout = open(new_to_temp, "w")
     written_yet = False
     for i in global_in_lines:
         gout.write(i)
@@ -147,12 +152,12 @@ def track_globals(main_file, global_file):
     gout.close()
     mout.close()
     if copy_back:
-        copy(main_file, new_main_temp)
-        copy(global_file, new_global_temp)
+        copy(new_from_temp, main_file)
+        copy(new_to_temp, global_file)
     else:
         mt.warn("To copy back automatically, use the -c flag.")
-        mt.wm(main_file, new_main_temp)
-        mt.wm(global_file, new_global_temp)
+        mt.wm(main_file, new_from_temp)
+        mt.wm(global_file, new_to_temp)
     return True
 
 default_proj = i7.dir2proj()
