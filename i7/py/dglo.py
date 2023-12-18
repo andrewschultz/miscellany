@@ -51,10 +51,12 @@ def track_definitions(main_file, defs_file):
     non_defs = []
     dupe_set = set()
     in_definitions = False
+    total_definitions = 0
     with open(main_file) as file:
         for (line_count, line) in enumerate (file, 1):
             if valid_definition(line):
                 in_definitions = True
+                total_definitions += 1
             if in_definitions:
                 defs.append(line)
             else:
@@ -69,6 +71,7 @@ def track_definitions(main_file, defs_file):
     if not len(defs):
         print(colorama.Fore.YELLOW + "No definitions found to shift over in {}.".format(main_file) + colorama.Style.RESET_ALL)
         return False
+    mt.okay("Shifting over {} definition{} in {}.".format(total_definitions, 's' if total_definitions > 1 else '', main_file))
     mout = open(new_from_temp, "w")
     gin = open(defs_file, "r")
     global_in_lines = gin.readlines()
