@@ -64,12 +64,10 @@ def track_definitions(main_file, defs_file):
             if not line.strip():
                 in_definitions = False
     if not os.path.exists(defs_file):
-#        for x in defs:
-#            print(x, end='')
-        print("You may need to create a defs file for", defs_file)
+        mt.warn("You will need to create the file {} for me to try to move definitions over from {}.".format(defs_file, main_file))
         return False
     if not len(defs):
-        print(colorama.Fore.YELLOW + "No definitions found to shift over in {}.".format(main_file) + colorama.Style.RESET_ALL)
+        mt.warn("No definitions found to shift over in {}.".format(main_file))
         return False
     mt.okay("Shifting over {} definition{} in {}.".format(total_definitions, 's' if total_definitions > 1 else '', main_file))
     mout = open(new_from_temp, "w")
@@ -80,11 +78,15 @@ def track_definitions(main_file, defs_file):
     for i in global_in_lines:
         gout.write(i)
         if unsorted_start(i):
+            gout.write("\n")
             for x in defs:
                 gout.write(x)
             written_yet = True
     if not written_yet:
-        print("write-over ops usually require UNSORTED.")
+        mt.warn("I could not find a CHAPTER/BOOK UNSORTED line in {}. If you don't include one, things will be lumped at the end of the file.".format(defs_file))
+#        for x in defs:
+#            print(x, end='')
+        gout.write("\n")
         for x in defs:
             gout.write(x)
     last_blank = False
@@ -123,12 +125,13 @@ def track_globals(main_file, global_file):
             else:
                 non_globals.append(line)
     if not len(globals):
-        mt.okay("No globals found to shift over in {}.".format(main_file))
+        mt.warn("No globals found to shift over in {}.".format(main_file))
         return False
+    mt.okay("Shifting over {} global{} in {}.".format(len(globals), 's' if len(globals) > 1 else '', main_file))
     if not os.path.exists(global_file):
+        mt.warn("You will need to create the file {} for me to try to move global variables over from {}.".format(global_file, main_file))
         for x in globals:
             print(x, end='')
-        mt.warn("You will need to create the file {} for me to create compares.".format(global_file))
         return False
     mout = open(new_from_temp, "w")
     gin = open(global_file, "r")
@@ -138,11 +141,13 @@ def track_globals(main_file, global_file):
     for i in global_in_lines:
         gout.write(i)
         if unsorted_start(i):
+            gout.write("\n")
             for x in globals:
                 gout.write(x)
             written_yet = True
     if not written_yet:
-        print("write-over ops usually require UNSORTED.")
+        mt.warn("I could not find a CHAPTER/BOOK UNSORTED line in {}. If you don't include one, things will be lumped at the end of the file. They are listed below.".format(global_file))
+        gout.write("\n")
         for x in globals:
             gout.write(x)
     last_blank = False
@@ -170,7 +175,7 @@ cmd_count = 1
 
 while cmd_count < len(sys.argv):
     arg = mt.nohy(sys.argv[cmd_count])
-    if arg == 'c':
+    if arg in ( 'c', 'co' ):
         copy_back = True
     elif i7.main_abb(arg):
         arg = i7.long_name(arg)
