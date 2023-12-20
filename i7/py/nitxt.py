@@ -25,6 +25,7 @@ skip_single_words = False
 errors_only = False
 
 count = 0
+total_words = 0
 
 default_word_list = []
 
@@ -100,11 +101,12 @@ def get_text(file_name, get_include, only_get_include_files = False):
     global include_files
     this_table = ''
     fb = os.path.basename(file_name)
+    rough_word_count = 0
     with codecs.open(file_name, "r", "utf-8") as file:
     # with open(file_name) as file:
         cur_line = ""
         for (line_count, line) in enumerate(file, 1):
-            if "understand" in line and "mistake" not in line:
+            if line.startswith("understand") and "mistake" not in line:
                 continue
             if line.startswith("test ") and " with " in line:
                 continue
@@ -112,10 +114,6 @@ def get_text(file_name, get_include, only_get_include_files = False):
                 this_table = re.sub("\[.*", "", line).strip()
             if not line.strip():
                 this_table = ''
-            if '  ' in line:
-                lq = ''.join(line.split('"')[1:2:])
-                if '  ' in lq:
-                    print("Double-space at line", line_count, "index", line.find("  "), line.strip())
             if get_include and re.search("^include .* by andrew schultz", line, re.IGNORECASE):
                 inclu = re.sub("Include +", "", line.strip(), 0, re.IGNORECASE)
                 inclu = re.sub(" by %s.*" % my_name, "", inclu, 0, re.IGNORECASE)
@@ -124,6 +122,12 @@ def get_text(file_name, get_include, only_get_include_files = False):
                     print("Re-included", inclu)
                 include_files.append(inclu)
                 #print("Should also read", inclu)
+            if only_get_include_files:
+                continue
+            if '  ' in line:
+                lq = ''.join(line.split('"')[1::2])
+                if '  ' in lq:
+                    print("Double-space at line", line_count, "index", line.find("  "), line.strip())
             if line.rstrip().endswith("/"):
                 # print("CONTINUANCE ENDS WITH /: line", line_count, line.rstrip())
                 cur_line += line.strip()[:-1]
@@ -150,7 +154,17 @@ def get_text(file_name, get_include, only_get_include_files = False):
                 for f in forbidden_words:
                     if f.lower() in temp.lower():
                         forbidden_lines.append("Forbidden word {} present in {} at line {}: {}.\n".format(f, fb, line_count, y))
+                if '  ' not in y:
+                    rough_word_count += y.count(' ')
+                word_array = re.split("[ /-]+", temp)
+                for w in word_array:
+                    if not w:
+                        continue
+                    w = re.sub("[^a-zA-Z]", "", w)
+                    tally[w.lower()] += 1
             cur_line = ""
+    print("Rough word count:", rough_word_count)
+    return rough_word_count
 
 count = 1
 file_name = ""
@@ -214,9 +228,9 @@ if len(words_to_find):
     for x in words_to_find:
         word_dict[x] = 0
     word_dict = find_words(file_name, word_dict)
-    get_text(file_name, True, only_get_include_files = True)
+    total_words += get_text(file_name, True, only_get_include_files = True)
 else:
-    get_text(file_name, True)
+    total_words += get_text(file_name, True)
 
 for x in include_files:
     xb = os.path.basename(x)
@@ -241,7 +255,7 @@ for x in include_files:
     if len(words_to_find):
         word_dict = find_words(x, word_dict)
     else:
-        get_text(x, False)
+        total_words += get_text(x, False)
 
 if len(words_to_find):
     maxes = [x for x in word_dict if word_dict[x] >= 5]
@@ -256,3 +270,5 @@ if len(forbidden_words):
             sys.stderr.write(x)
     else:
         print("Forbidden words were all redacted!")
+
+print("Total rough word count:", total_words)
