@@ -19,6 +19,10 @@ import codecs
 import re
 import mytools as mt
 
+see_misspelled = False
+
+tally = defaultdict(int)
+
 good_files = [ 'story.ni', 'source_code.adv' ]
 
 skip_single_words = False
@@ -62,6 +66,16 @@ def which_of():
         if os.path.exists(x):
             return x
     sys.exit("Could not find a valid source file.")
+
+def count_misspelled(my_dict):
+    word_dict = defaultdict(int)
+    with open(mt.words_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            l = line.strip().lower()
+            word_dict[l] = 1
+    for m in my_dict:
+        if m not in word_dict:
+            print(m, "not in dictionary, seen {} times.".format(my_dict[m]))
 
 def file_read_clipboard(my_file):
     the_array = []
@@ -198,6 +212,8 @@ while count < len(sys.argv):
         author_only = True
     elif arg == 'eo':
         errors_only = True
+    elif arg == 'ms':
+        see_misspelled = True
     elif arg[:2] == 'cd':
         words_to_find = default_word_list
     elif arg[:2] == 'c=':
@@ -272,3 +288,8 @@ if len(forbidden_words):
         print("Forbidden words were all redacted!")
 
 print("Total rough word count:", total_words)
+
+if see_misspelled:
+    count_misspelled(tally)
+else:
+    print("ms flag sees what words are misspelled, as a small bonus.")
