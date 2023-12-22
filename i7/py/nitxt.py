@@ -1,7 +1,8 @@
 # nitxt.py
 #
-# gets Inform 7 game text between the quotes--or any extension of source code
-# it does this for story.ni as well as the files in the header
+# originally just extacted game text between quotes but now can get game text size in words or misspelled words
+#
+# it does this for story.ni as well as the non-common files in the header
 #
 # usage: optional file name (e.g. for escape.xvn)
 # -nr / -rn / -rb = toggles whether or not to rub what is between brackets, which overrides extension settings
@@ -53,7 +54,7 @@ def usage(header = 'main usage'):
     print('=' * 20, header, '=' * 20)
     print("Main usage is nitxt.py f=(forbidden word)")
     print("Usage for STS is nitxt.py -tests,random +sts")
-    print("c= / cd checks with a text file. The default is", default_word_list)
+    print("c= / cd checks with a text file. The default forbidden word list is", default_word_list)
     sys.exit()
 
 def ext_2_brax(file_name):
