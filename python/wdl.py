@@ -113,6 +113,9 @@ def process_input(my_input):
                 cond_match = smart_append(cond_match, y)
         elif y == 'u':
             match_only_unique = True
+        elif y.endswith('.py') and len(y) != 5:
+            print("OOPS likely command slipped in, skipping:", y)
+            continue
         else:
             print("Bad string", y)
             bad_string = True
@@ -141,8 +144,12 @@ def process_input(my_input):
     for w in sorted(word_freq, key=word_freq.get):
         if word_freq[w]:
             print(('===> ' + w.upper() if w in in_word else w), let_freq[w], word_freq[w])
+    answers_left = set(to_add).intersection(set(wordle))
+    good_guess_answers = set(words).intersection(set(wordle))
     print_best_remaining(my_lets, word_freq, to_add, show_total_poss = True, known_letters = known_letters, header_string = 'Guesses with all known letters')
+    print_best_remaining(my_lets, word_freq, answers_left, show_total_poss = True, known_letters = known_letters, header_string = 'Possible answers with all known letters')
     print_best_remaining(my_lets, word_freq, known_letters = known_letters, header_string = 'Best guesses to eliminate words')
+    print_best_remaining(my_lets, word_freq, good_guess_answers, known_letters = known_letters, header_string = 'Possible answers to eliminate words')
 
 with open("c:/writing/dict/wordle.txt") as file:
     for (line_count, line) in enumerate (file, 1):
