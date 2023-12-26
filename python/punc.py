@@ -133,7 +133,7 @@ def caps_check(my_string, capitalize_type, line_count):
             my_string = my_string.upper()
     return my_string
 
-def apply_table_rules_to_line(my_line, table_rubric, line_count):
+def apply_table_rules_to_line(my_line, table_rubric, line_count, punc_ok = '[puncok]', caps_ok = '[capsok]'):
     errs = 0
     return_string = my_line
     line_divs = my_line.strip().split("\t")
@@ -146,8 +146,8 @@ def apply_table_rules_to_line(my_line, table_rubric, line_count):
         punc_needed = ary[2]
         quotes_needed = ary[3]
         orig_to_check = text_to_check = line_divs[col_num].strip()
-        ignore_punc = "[puncok]" in my_line.lower()
-        ignore_caps = "[capsok]" in my_line.lower()
+        ignore_punc = punc_ok in my_line.lower()
+        ignore_caps = caps_ok in my_line.lower()
         error_printed_this_line_yet = False
         if not text_to_check.startswith("\""):
             print("Column", col_num, "failed to start with a quote")
@@ -204,6 +204,7 @@ def process_file_punc(my_proj, this_file):
     current_table = ""
     current_rubric = ""
     table_cols = defaultdict(int)
+    ignore_table = False
     with open(this_file) as file:
         for (line_count, line) in enumerate(file, 1):
             if header_next:
