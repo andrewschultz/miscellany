@@ -1027,6 +1027,12 @@ def get_file(fname):
                         found_start = True
                         myb.in_header = False
                         myb.currently_writing = True
+                    elif ("*NOHEADER" in line):
+                        found_start = True
+                        myb.in_header = False
+                        myb.currently_writing = True
+                        print(line_count, "started")
+                        continue
                     else:
                         continue
                 if not myb.currently_writing and not myb.hard_lock:
