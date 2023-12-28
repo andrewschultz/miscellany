@@ -741,8 +741,12 @@ def get_file(fname):
                     my_ary = line[2:].strip().split(',')
                 else:
                     my_ary = line[1:].strip().split(',')
+                my_ary = set(my_ary)
                 for b in local_branch_dict:
                     local_branch_dict[b].currently_writing = my_val if local_branch_dict[b].intersects(my_ary) else not my_val
+                    my_ary = my_ary - set(local_branch_dict[b].list_of_abbrevs)
+                if len(my_ary):
+                    mt.warn("Bad file abbrev {} at {}.".format(my_ary, line_count))
                 at_section = mt.zap_comment(line[1:].lower().strip()) # fall through, because this is for verifying file validity--also @specific is preferred to ==t2
                 last_at = line_count
                 continue
