@@ -931,7 +931,10 @@ def get_file(fname):
             if line.startswith("{{"):
                 print("WARNING line starting with {{ may need to start with } instead.", fname, line_count)
             if line.startswith("}$"):
-                temp_ary = line[2:].strip().split("=")
+                temp_ary = line[2:].strip().replace('\\n', '\r\n').split("=")
+                if temp_ary[0] in my_strings:
+                    mt.warn("Redefinition of {} at line {}.".format(temp_ary[0], line_count))
+                    mt.add_post(fname, line_count)
                 my_strings[temp_ary[0]] = '='.join(temp_ary[1:])
                 last_atted_command = ''
                 continue
