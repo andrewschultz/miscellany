@@ -1212,7 +1212,7 @@ def internal_postproc_stuff(anything_changed):
 cur_proj = ""
 mwrites = defaultdict(lambda: defaultdict(bool))
 
-def_proj = i7.curdef
+def_proj = i7.main_abb(i7.curdef)
 
 with open(i7.rbr_config) as file:
     for (lc, line) in enumerate(file, 1):
