@@ -54,6 +54,7 @@ rbr_wild_card = ''
 
 branch_timestamp_skip_check = True
 
+flag_double_cursor = False
 ignore_unsaved_changes = False
 ignore_first_file_changes = False
 force_postproc = False
@@ -991,7 +992,10 @@ def get_file(fname):
                             print("Net undos over {} in balanced block line {} file {}--Inform may not be able to go that far back.".format(max_undo_tracking, line_count, fname))
                             mt.add_postopen(fname, line_count)
                 if line.startswith(">>"):
-                    print("ERROR: double prompt at line", line_count, "of", fname)
+                    if flag_double_cursor:
+                        print("ERROR: double prompt at line", line_count, "of", fname)
+                    else:
+                        line = re.sub("^>+", ">", line)
                 last_cmd = line.lower().strip()
                 if at_section:
                     if last_atted_command and viable_untested(last_atted_command,untested_ignore):
@@ -1360,6 +1364,8 @@ while count < len(sys.argv):
         exe_proj = i7.i7x[arg]
     elif can_make_rbr(arg, verbose = True): in_file = can_make_rbr(arg)
     elif arg == 'gh': github_okay = True
+    elif arg in ('fdc', 'dcf'):
+        flag_double_cursor = True
     elif arg in ( 'rv', 'vr' ):
         reg_verify_dir(open_unmarked = False)
     elif arg in ( 'rva', 'vra' ):
