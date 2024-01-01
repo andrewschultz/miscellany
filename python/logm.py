@@ -232,10 +232,10 @@ while count < len(sys.argv):
         push_after_commit = False
     elif arg[0] == 'p':
         if proj_shift_yet:
-            print("WARNING shifting from project", proj_shift_yet)
+            mt.warn("WARNING re-shifting from project", proj_shift_yet)
         proj_shift_yet = i7.proj_exp(arg[1:])
         if not proj_shift_yet:
-            sys.exit("No such project or abbreviation {:s}".format(arg[1:]))
+            mt.bailfail("No such project or abbreviation {:s}".format(arg[1:]))
     elif arg_no_num == 'm':
         try:
             min_before = int(arg[1:])
@@ -283,6 +283,9 @@ while count < len(sys.argv):
     elif arg == '?': usage()
     else: usage(arg)
     count += 1
+
+if base_dir_needed not in os.getcwd().lower():
+    mt.bailfail("You need to go to {:s} or a child directory to edit a git log meaningfully, or you can use -p(project) or (project).".format(base_dir_needed))
 
 my_time = pendulum.today()
 
@@ -338,9 +341,6 @@ if proj_shift_yet:
     ghdir = os.path.join(base_dir_needed, proj_shift_yet if proj_shift_yet not in i7.i7gx.keys() else i7.i7gx[proj_shift_yet])
     print("Forcing to", ghdir)
     os.chdir(ghdir)
-
-if base_dir_needed not in os.getcwd().lower():
-    sys.exit("You need to go to {:s} or a child directory to edit a git log meaningfully, or you can use -p(project) or (project).".format(base_dir_needed))
 
 if sec_before > 60 and min_before > 0: sys.exit(">60 seconds + minutes may be confusing. Use -so to remove this.")
 if min_before > 60 or sec_before > 3600: sys.exit("Minutes and/or seconds are too high. 3600 sec is the limit, and you have {:d}.".format(min_before * 60 + sec_before))
