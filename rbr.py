@@ -160,6 +160,8 @@ class branch_struct():
         f.write(self.current_buffer_string)
         f.close()
         if not os.path.exists(self.out_file()):
+            if not look_through_winmerge:
+                copy(self.temp_out(), self.out_file())
             return colorama.Fore.CYAN + 'New file created'
         if cmp(self.out_file(), self.temp_out()):
             return colorama.Fore.YELLOW + 'Unchanged'
@@ -172,8 +174,8 @@ class branch_struct():
             if os.path.getmtime(self.out_file()) > os.path.getmtime(self.temp_out()):
                 return colorama.Fore.RED + 'User inspected and changed'
             return colorama.Fore.MAGENTA + 'User inspected and unchanged'
+        copy(self.temp_out(), self.out_file())
         return colorama.Fore.GREEN + 'Changed'
-        sys.exit() # temporary, as we look to shift to the branch class
 
     def out_file(self):
         return os.path.join(i7.proj2dir(exe_proj), self.output_name)
