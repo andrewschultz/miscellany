@@ -1076,6 +1076,9 @@ def get_file(fname):
     if warns > 0 and not quiet:
         print(warns, "potential bad commands in {}.".format(fname))
 
+    if fatal_error:
+        mt.fail("Found fatal error. Not copying files over.")
+        return []
     categorizer = defaultdict(list)
 
     for b in local_branch_dict:
@@ -1083,70 +1086,26 @@ def get_file(fname):
         f = open(local_branch_dict[b].temp_out(), "w")
         f.write(local_branch_dict[b].current_buffer_string)
         f.close()
-        categorizer[local_branch_dict[b].check_changes()].append(local_branch_dict[b].output_name)
+        a = local_branch_dict[b].check_changes()
+        categorizer[a].append(local_branch_dict[b].output_name)
+
+    if flag_wrong_at_end:
+       print(colorama.Fore.CYAN + "{} line{} containing WRONG {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end), mt.plur(flag_wrong_at_end, [ 'were', 'was' ])) + colorama.Style.RESET_ALL)
+
+    if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
+        mt.bail("Uh oh. You don't have any test name specified with a line like * main-thru for {}".format(fname))
+
+    if len(categorizer) == 1 and colorama.Fore.YELLOW + 'Unchanged' in categorizer:
+        mt.warn(f"Nothing was changed in this run for {fname}!")
+        return []
+
+    return_array = []
 
     for c in categorizer:
-        print(c + ':', ', '.join(categorizer[c]) + colorama.Style.RESET_ALL)
+        if c != colorama.Fore.YELLOW + "Unchanged":
+            return_array.extend(categorizer[c])
 
-    sys.exit()
-
-    if fatal_error:
-        mt.fail("Found fatal error. Not copying files over.")
-        return 0
-    past_first_file = False
-    for x in file_array:
-        f = open(x, "w")
-        # modifications below to avoid extra spacing. While we could define in_header, sweeping things up with a REGEX is probably easier
-        modified_output = re.sub("\n{3,}", "\n\n", file_output[x]) # get rid of extra carriage return spacing
-        modified_output = re.sub("^\n+", "", modified_output) # get rid of spacing at the start
-        #modified_output = re.sub("\n+\*\*", "\n**", modified_output) # get rid of spacing in the header
-        f.write(modified_output)
-        f.close()
-        if not past_first_file: #temporarily assume first file is strict no-change
-            past_first_file = True
-            xb = os.path.basename(x)
-            if not os.path.exists(xb):
-                mt.fail("I could not find {}. It should be in the temp directory. You may wish to disable --stable in the RBR file or type:".format(x))
-                mt.fail("    copy {} {}".format(x, xb))
-                sys.exit()
-            if not cmp(x, xb):
-                if not ignore_first_file_changes:
-                    mt.fail("#--stable was set. Difference(s) found in main file {}, which was meant to be stable. Windiff-ing then exiting. Use -f1 to allow these changes.".format(xb))
-                    mt.wm(x, xb)
-                    sys.exit()
-                else:
-                    mt.warn("Difference(s) found in main file {} but overriden by -f1 command line parameter.".format(xb))
-        xb = os.path.basename(x)
-        prt_mirror = os.path.join(i7.prt, xb)
-        if not os.path.exists(xb):
-            new_files[fname].append(xb)
-            try:
-                copy(x, xb)
-            except:
-                print("Could not copy temp file", x, "to local file", xb)
-                if os.path.islink(xb):
-                    print("The problem might be a symlink directed to the wrong file or directory. Look for typos or a forgotten c: at the start.")
-        elif not os.path.exists(prt_mirror):
-            absent_files[fname].append((xb, prt_mirror))
-        elif cmp(x, xb):
-            unchanged_files[fname].append(xb)
-        else:
-            if xb in changed_files:
-                print("Oh no! two RBR files seem to point to", xb)
-                continue
-            changed_files[fname].append(xb)
-            copy(x, xb)
-        os.remove(x)
-        file_output.pop(x)
-    for x in file_output:
-        mt.fail("WARNING: there may be leftover output for the file_output key {}.".format(x))
-    if flag_wrong_at_end:
-       print(colorama.Fore.CYAN + "{} WRONG line{} {} found. Use -wc to track them and potentially open the first error.".format(flag_wrong_at_end, mt.plur(flag_wrong_at_end)
-       , mt.plur(flag_wrong_at_end, [ 'were', 'was' ])) + colorama.Style.RESET_ALL)
-    if not got_any_test_name and os.path.basename(fname).startswith('rbr'):
-        print("Uh oh. You don't have any test name specified with * main-thru for {}".format(fname))
-        print("Just a warning.")
-    return len(absent_files) + len(changed_files)
+    return return_array
 
 def valid_point_check(my_line):
     if line.startswith('by one point') or line.startswith('by a point'):
