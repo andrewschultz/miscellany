@@ -596,8 +596,10 @@ def get_file(fname):
     global changed_files
     global ignore_next_bracket
     global command_requirements
+    global my_strings
     if not os.path.isfile(fname):
         sys.exit(in_file + " not found.")
+    my_strings.clear()
     fb = os.path.basename(fname)
     if (not ignore_unsaved_changes) and mt.is_npp_modified(fname):
         print("It looks like {} has been modified without saving. You may wish to run the script. -iuc overrides this.".format(fb))
@@ -1056,7 +1058,7 @@ def get_file(fname):
                 if "{$" in line_write:
                     line_write = string_fill(line_write, line_count)
                 if "{" in line_write:
-                    line_write = fill_vars(line_write, ct, line_count, first_file)
+                    line_write = fill_vars(line_write, 0, line_count, first_file)
                 local_branch_dict[b].current_buffer_string += line_write
     if not found_start and fb.startswith('rbr'):
         mt.fail("Did not have start command *FILE. Not copying files over.")
@@ -1079,6 +1081,7 @@ def get_file(fname):
     if fatal_error:
         mt.fail("Found fatal error. Not copying files over.")
         return []
+
     categorizer = defaultdict(list)
 
     for b in local_branch_dict:
