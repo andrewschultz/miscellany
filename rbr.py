@@ -95,6 +95,7 @@ in_file = ""
 in_dir = os.getcwd()
 exe_proj = ""
 
+default_rbr_from_config = ''
 default_rbrs = defaultdict(str)
 
 class branch_struct():
@@ -1230,6 +1231,9 @@ with open(i7.rbr_config) as file:
             if cur_proj in i7.i7xr.keys(): branch_list[i7.i7xr[cur_proj]] = var_array.split(",")
             if cur_proj in i7.i7x.keys(): branch_list[i7.i7x[cur_proj]] = var_array.split(",")
             continue
+        if ll.startswith("defaultrbr"):
+            y = ll.split('=')
+            default_rbr_from_config = y[1]
         if ll.startswith("ignoreglobal"):
             if 'global' in ignores:
                 print("Redef of IGNOREGLOBAL at line {}.".format(lc))
@@ -1456,21 +1460,32 @@ if edit_individual_files:
     for mf in my_file_list: os.system(mf)
     sys.exit()
 
-if not len(my_file_list):
-    my_file_list = list(branch_list[exe_proj])
-    if len(my_file_list) == 0:
-        print("No valid files specified. Checking rbr- glob.")
-        my_file_list = glob.glob("rbr-*")
-        if not len(my_file_list) and os.path.exists("testing"):
+def get_rbr_list():
+    default_rbr_general = 'rbr-{}-thru.txt'.format(i7.dir2proj(os.getcwd(), to_abbrev = True))
+    default_rbr_specific = default_rbr_from_config.format(i7.dir2proj(os.getcwd(), to_abbrev = True))
+    local_branch_list = list(branch_list[exe_proj])
+    if len(local_branch_list) == 0:
+        if default_rbr_specific and os.path.exists(default_rbr_specific):
+            mt.warn("No valid files specified. Going with RBR file as specified in config.")
+            return [default_rbr_specific]
+        if default_rbr_general and os.path.exists(default_rbr_general):
+            mt.warn("No valid files specified. Going with default general RBR file for folder {}.".format(default_rbr_general))
+            return [default_rbr_general]
+        if os.path.exists("testing"):
             print("Looking in testing subdir")
             os.chdir("testing")
-            my_file_list = glob.glob("rbr-*")
-        if len(my_file_list) == 0: sys.exit("No files found in rbr- glob. Bailing.")
-        elif len(my_file_list) == 1: print("Only one rbr- file found ({}). Going with that.".format(my_file_list[0]))
-        else:
-            sys.exit("Can't handle multiple rbr files yet. I found {}".format(', '.join(my_file_list)))
     else:
-        print("No valid files specified on command line. Going with default", ', '.join(branch_list[exe_proj]))
+        print("Looking in testing subdir.")
+    rbr_glob = glob.glob("rbr-*")
+    if len(rbr_glob) == 0:
+        sys.exit("No files found in rbr-* glob. Bailing.")
+    elif len(rbr_glob) == 1:
+        print("Regular files weren't found. Going with only rbr- file present: ({}).".format(rbr_glob[0]))
+        return rbr_glob
+    sys.exit("Can't handle multiple rbr files yet. This would be nice to have, but I generally just concentrate on one at a time.\nFiles found were: {}".format(', '.join(rbr_glob)))
+
+if not len(my_file_list):
+    my_file_list = get_rbr_list()
 
 if cmds_to_find:
     for x in my_file_list:
