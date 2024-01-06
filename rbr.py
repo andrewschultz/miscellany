@@ -1157,7 +1157,8 @@ def internal_postproc_stuff(anything_changed):
         total_csv += show_csv(unchanged_files, "unchanged file")
     if anything_changed or force_postproc:
         run_postproc = defaultdict(bool)
-        if not anything_changed: print("Forcing postproc even though nothing changed.")
+        if not anything_changed:
+            print("Forcing postproc even though nothing changed.")
         to_proc = []
         for x in new_files:
             to_proc += list(new_files[x])
@@ -1198,7 +1199,7 @@ with open(i7.rbr_config) as file:
             continue
         if ll.startswith('default'):
             if def_proj == i7.main_abb(var_array):
-                mt.warn("NOTE: we are redefining the rbr-specific default in rbr.txt to the general default in i7p.txt. This is harmless overkill.")
+                mt.warn("NOTE: we are redefining the rbr-specific default project in rbr.txt to the general default in i7p.txt. This is harmless overkill.")
             def_proj = i7.main_abb(var_array)
             continue
         if ll.startswith('project') or ll.startswith('projname'):
@@ -1403,7 +1404,7 @@ if not exe_proj: # I moved this and chdir above if in_file. It should be okay, b
     else:
         if not def_proj:
             sys.exit("No default project defined, and I could not determine anything from the current directory or command line. Bailing.")
-        print("Going with default", def_proj)
+        print("Going with i7.py default project {}.".format(def_proj))
         exe_proj = def_proj
 
 old_dir = os.getcwd()
