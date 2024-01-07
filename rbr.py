@@ -148,7 +148,7 @@ class branch_struct():
 
     def write_if_intersects(self, line_to_write, abbrev_array):
         if self.intersects(abbrev_array):
-            self.currernt_buffer_string += line_to_write
+            self.current_buffer_string += line_to_write
 
     def intersects(self, abbrev_array):
         return not (not (set(abbrev_array) & set(self.list_of_abbrevs)))
@@ -308,7 +308,7 @@ def fill_vars(my_line, file_idx, line_count, print_errs):
             if qt in my_strings:
                 mt.okay("    Maybe just add a $ to {} as there is such a string variable.".format(qt))
             continue
-        my_line = re.sub(q, str(branch_variables[q[1:-1]][file_idx]), my_line)
+        my_line = re.sub(q, str(branch_variables[q[1:-1]]), my_line)
     return my_line
 
 def string_fill(var_line, line_count):
@@ -1399,7 +1399,7 @@ my_file_list_valid = []
 if not exe_proj: # I moved this and chdir above if in_file. It should be okay, but I note it for later reference.
     myd = os.getcwd()
     if i7.dir2proj(myd):
-        exe_proj = i7.dir2proj(myd, True)
+        exe_proj = i7.dir2proj(myd, to_abbrev = True)
         print("Going with project from current directory", exe_proj)
     else:
         if not def_proj:
