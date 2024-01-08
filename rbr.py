@@ -484,25 +484,9 @@ def search_for(x):
 
 def post_copy(in_file, file_array = []):
     if copy_over_post:
-        if force_all_regs:
-            print("Copying all files over to {} directory.".format(prt_color))
-            for q in file_array: copy(q, os.path.join(i7.prt, os.path.basename(q)))
-        elif len(changed_files.keys()):
-            print("Copying changed files over to {} directory.".format(prt_color))
-            for q in list(changed_files.keys()):
-                mt.okay(q, "=>", ', '.join(changed_files[q]))
-                for r in changed_files[q]:
-                    copy(r, os.path.join(i7.prt, os.path.basename(r)))
-                #changed_files.pop(q)
-        elif len(absent_files.keys()):
-            print("Copying files not in {} over to {} directory.".format(prt_color, prt_color))
-            for q in list(absent_files.keys()):
-                mt.okay(q, "=>", ', '.join([x[1] for x in absent_files[q]]))
-                for r in absent_files[q]:
-                    copy(r[0], r[1])
-                #absent_files.pop(q)
-        elif len(my_file_list_valid) == 1:
-            print(colorama.Fore.YELLOW + "No files copied over to {} directory.".format(prt_color + colorama.Fore.YELLOW) + colorama.Style.RESET_ALL, "Try -fp or -pf to force copying of all files encompassed by", in_file)
+        for f in file_array:
+            print(f, '=>', os.path.join(i7.prt, os.path.basename(f)))
+            copy(f, os.path.join(i7.prt, os.path.basename(f)))
 
 def usage():
     print("-er = edit branch file (default = for directory you are in)")
@@ -1420,8 +1404,8 @@ if in_file:
     else:
         my_file_list_valid = [in_file]
         temp = get_file(in_file)
-        post_copy(in_file)
-        internal_postproc_stuff(temp > 0)
+        post_copy(in_file, temp)
+        internal_postproc_stuff(len(temp) > 0)
         postopen_stub()
     sys.exit()
 
@@ -1512,8 +1496,7 @@ for x in my_file_list_valid:
     if rbr_wild_card and rbr_wild_card not in x:
         print("Skipping", x, "which does not match wild card.")
         continue
-    sweeping_changes += get_file(x)
-    post_copy(x)
+    post_copy(x, get_file(x))
 
 if len(apost_changes):
     print("FLAGGED APOSTROPHE CHANGES/SUGGESTIONS/FREQUENCY (#OK-APOSTROPHE or #APOSTROPHE-OK to allow")
