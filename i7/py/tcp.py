@@ -9,7 +9,7 @@ import pyperclip
 
 temp_file = "c:\\writing\\temp\\from_webpage_transcript.txt"
 
-max_width = 100
+default_max_width = 75
 default_breaks_after = 7
 assigned_max_width = 0
 assigned_breaks_after = 0
@@ -46,18 +46,26 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg.isdigit():
-        max_width = int(arg)
+        if assigned_max_width:
+            mt.warn("Reassigned max_width from {} to {}.".format(assigned_max_width, arg))
+        assigned_max_width = int(arg)
     elif (arg.replace('b', '').isdigit()):
         my_num = int(arg.replace('b', ''))
         if assigned_breaks_after:
             mt.warn("Reassigned max_width from {} to {}.".format(assigned_breaks_after, my_num))
         assigned_breaks_after = my_num
     elif (arg.replace('w', '').isdigit()):
-        max_width = int(arg)
+        if assigned_max_width:
+            mt.warn("Reassigned max_width from {} to {}.".format(assigned_max_width, arg.replace('w', '')))
+        assigned_max_width = int(arg)
         print("TRIVIA: You don't need a w before or after a number to establish width. It is chosen by default.")
     else:
         sys.exit("Need a # for max_width or #b/b# for carriage returns before extra break.")
     cmd_count += 1
+
+if not assigned_max_width:
+    mt.warn("Going with default max-width of", default_max_width)
+    assigned_max_width = default_max_width
 
 if not assigned_breaks_after:
     mt.warn("Going with default max-width of", default_breaks_after)
