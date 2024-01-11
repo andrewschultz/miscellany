@@ -6,13 +6,16 @@ import os
 import sys
 import re
 import pyperclip
+import mytools as mt
 
-temp_file = "c:\\writing\\temp\\from_webpage_transcript.txt"
+base_temp_file = "c:\\writing\\temp\\from_webpage_transcript.txt"
+var_temp_file = base_temp_file.replace(".txt", "-{}.txt")
 
 default_max_width = 75
 default_breaks_after = 7
 assigned_max_width = 0
 assigned_breaks_after = 0
+temp_number = 0
 
 x = pyperclip.paste()
 ary = x.split("\r\n")
@@ -59,9 +62,16 @@ while cmd_count < len(sys.argv):
             mt.warn("Reassigned max_width from {} to {}.".format(assigned_max_width, arg.replace('w', '')))
         assigned_max_width = int(arg)
         print("TRIVIA: You don't need a w before or after a number to establish width. It is chosen by default.")
+    elif (arg[0] == 't') and arg[1:].isdigit():
+        temp_number = int(arg[1:])
     else:
         sys.exit("Need a # for max_width or #b/b# for carriage returns before extra break.")
     cmd_count += 1
+
+if temp_number:
+    my_temp_file = var_temp_file.format(temp_number)
+else:
+    my_temp_file = base_temp_file
 
 if not assigned_max_width:
     mt.warn("Going with default max-width of", default_max_width)
@@ -93,9 +103,10 @@ for a in ary:
 copy_string = spacing_stuff(copy_string_array, assigned_max_width, assigned_breaks_after)
 
 if to_file:
-    f = open(temp_file, "w")
+    print("Writing to", my_temp_file)
+    f = open(my_temp_file, "w")
     f.write(copy_string)
     f.close()
-    os.system(temp_file)
+    os.system(my_temp_file)
 else:
     print(copy_string)
