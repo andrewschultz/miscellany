@@ -26,9 +26,12 @@ sl = len(my_stuff)
 
 if sl == 0: print(usage_str)
 
-if '?' in my_stuff[0]:
-    usage()
-    exit()
+try:
+    if '?' in my_stuff[0]:
+        usage()
+        sys.exit()
+except:
+    pass
 
 if len(my_stuff) == 1:
     x = i7.dir2proj(os.getcwd())
