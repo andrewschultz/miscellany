@@ -11,12 +11,13 @@ import re
 import os
 import sys
 import i7
+import mytools as mt
 
 def usage():
     print("You can define a project and header, but if you are already in a source directory, you only need to define a header.")
     print(", ".join(["{:s}->{:s}".format(x, i7.i7hfx[x]) for x in sorted(i7.i7hfx)]))
     print(", ".join(["{:s}->{:s}".format(x, i7.i7nonhdr[x]) for x in sorted(i7.i7nonhdr)]))
-    exit()
+    sys.exit()
 
 usage_str = "You need a header file or abbreviation, or you need a project/header file combination. You can also specify a trizbort file with TR. ? gives more details."
 
@@ -24,14 +25,12 @@ my_stuff = sys.argv[1:]
 
 sl = len(my_stuff)
 
-if sl == 0: print(usage_str)
-
 try:
     if '?' in my_stuff[0]:
         usage()
         sys.exit()
 except:
-    pass
+    mt.bailfail(usage_str)
 
 if len(my_stuff) == 1:
     x = i7.dir2proj(os.getcwd())
@@ -48,7 +47,7 @@ elif len(my_stuff) == 2:
         print("Going header-project instead of project-header")
         my_stuff.reverse()
 else:
-    print("Too many arguments.")
+    mt.warn("Too many arguments. You really only need a header file and/or project file.")
     sys.exit(usage_str)
 
 if not i7.proj_exp(my_stuff[0], False):
@@ -62,11 +61,12 @@ if 'tr' in my_stuff:
             to_open = os.readlink(to_open)
         print("Opening", to_open)
         os.system(to_open)
-        exit()
+        sys.exit()
 else:
     to_open = i7.src_file(my_stuff[0], my_stuff[1])
 
-if not to_open: sys.exit("{:s} is not a valid header file name or abbreviation.".format(my_stuff[1]))
+if not to_open:
+    sys.exit("{:s} is not a valid header file name or abbreviation.".format(my_stuff[1]))
 
 if os.path.exists(to_open):
     print("Opening", to_open)
