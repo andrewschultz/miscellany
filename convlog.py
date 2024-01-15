@@ -1,4 +1,9 @@
+# convlog.py
+# converts reg-(wildcard)-*.txt transcripts to test results
+#
 # logfile's format is 0=file 1=errors 2=time run finished 3=time taken
+# NOTE prt.py says what to copy over
+#      prc.py should be edited if script is changed
 
 import mytools as mt
 import re
@@ -154,7 +159,7 @@ def find_binary_in(a_file):
         for (line_count, line) in enumerate (file, 1):
             if 'game:' in line.lower():
                 raw = re.sub(".*: *", "", line.strip())
-                raw = re.sub(".*prt", i7.prt, raw)
+                raw = re.sub(".*[\\\/]", "", raw)
                 return raw
     print("Warning no game file found in {}".format(a_file))
     return ''
@@ -325,7 +330,6 @@ for a in to_delete:
     print("    convlog.py d={}".format(a))
 if len(to_delete):
     print("    convlog.py d={}".format(','.join(to_delete)))
-
 
 never_pass = [x for x in last_errs if x not in last_success]
 still_errs = [x for x in last_errs if x in last_success and last_run[x] > last_success[x]]
