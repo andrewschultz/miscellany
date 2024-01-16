@@ -1,10 +1,13 @@
 #ialf.py
 #
-#a section sorter and reporter
+#a section sorter and reporter for daily/weekly file sections
 #
 #replaces perl alphabetizer for BTP/Alec Smart
 #also organizes spoonerisms
 #
+# not really useful since
+#   1. alphabetization is low priority
+#   2. more important organizers out there
 
 import i7
 import sys
@@ -18,7 +21,7 @@ copy_back = False
 compare_it = True
 
 show_sections_instead = False
-default_proj = 'tm'
+default_proj = 'cw'
 proj = ''
 
 count = 1
@@ -120,7 +123,7 @@ def process_sections(a, loc_func, show_sections_instead):
     f = open(tf, "w")
     backslash_yet = False
     current_section = ""
-    print(main_sect.keys())
+    print("Main section keys:", main_sect.keys())
     with open(a) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith("\\"):
@@ -169,12 +172,14 @@ current_section_full = defaultdict(str)
 
 if not proj:
     proj = default_proj
-    print("Going with", default_proj)
+    mt.warn("No user project defined. Going with {}.".format(default_proj))
 
 if proj == 'btp' or proj == 'as' or proj == 'ss':
     process_sections(i7.smart, alec_smart_org, show_sections_instead)
-elif proj == 'tm' or proj == 'sw': process_sections(i7.spoon, spoonerism_org, show_sections_instead)
-else: sys.exit("Undefined project " + proj)
+elif proj == 'cw' or proj == 'ws':
+    process_sections(i7.spoon, spoonerism_org, show_sections_instead)
+else:
+    sys.exit("Undefined project " + proj)
 
 #show_sections(i7.smart)
 #show_sections(i7.spoon)
