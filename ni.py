@@ -331,7 +331,10 @@ back_up_existing_temp()
 if (not force_batch_move) and source_opened:
     sys.exit()
 
-write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github, materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
+if (not goto_github) and i7.is_adventuron(user_project):
+    mt.warn("Adventuron-only project, so we are using github directory.")
+
+write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github | i7.is_adventuron(user_project), materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
 
 if goto_github and not git_subdir:
     mt.warn("GitHub subdir can be specified after dash e.g. gra for graphics.")
