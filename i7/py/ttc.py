@@ -22,12 +22,10 @@ from string import ascii_lowercase
 from shutil import copy
 from filecmp import cmp
 
-rbr_globals = []
-
-ttc_base = "ttc.txt"
+my_proj = ''
 ttc_dir = "c:/Users/Andrew/Documents/github/configs/ttc"
 
-ttc_cfg = os.path.normpath(os.path.join(ttc_dir, ttc_base))
+rbr_globals = []
 
 got_cfg_errors = False
 
@@ -245,13 +243,13 @@ class UntestableCaseMapper:
 
 odd_cases = defaultdict(list)
 extra_project_files = defaultdict(list)
-value_specs = defaultdict(lambda: defaultdict(lambda: defaultdict(ValuesPicker)))
-rules_specs = defaultdict(lambda: defaultdict(RulesPicker))
-table_specs = defaultdict(lambda: defaultdict(TablePicker))
-file_abbrev_maps = defaultdict(lambda: defaultdict(str))
+value_specs = defaultdict(lambda: defaultdict(ValuesPicker))
+rules_specs = defaultdict(RulesPicker)
+table_specs = defaultdict(TablePicker)
+file_abbrev_maps = defaultdict(str)
 
-case_to_file_mapper = defaultdict(list)
-untestable_case_mapper = defaultdict(list)
+case_to_file_mapper = []
+untestable_case_mapper = []
 
 test_case_matrices = defaultdict(list)
 
@@ -634,8 +632,8 @@ def ignorable_line(my_line, this_proj):
 def get_value_cases(this_proj):
     global global_error_note
     return_dict = defaultdict(bool)
-    for this_file in value_specs[this_proj]:
-        if not value_specs[this_proj][this_file]:
+    for this_file in value_specs:
+        if not value_specs[this_file]:
             return return_dict
         fb = os.path.basename(this_file)
         with open(this_file) as file:
@@ -645,7 +643,7 @@ def get_value_cases(this_proj):
                 if line.startswith('to '):
                     continue
                 my_stuff = i7.i7_code_sentences_of(line)
-                for txt in value_specs[this_proj][this_file]:
+                for txt in value_specs[this_file]:
                     for m in my_stuff:
                         if txt in m:
                             if txt + ' of' not in m:
@@ -654,9 +652,9 @@ def get_value_cases(this_proj):
                             likely_subject = m.replace('-', ' ').lower()
                             likely_subject = re.sub("^.*?of ", "", likely_subject)
                             likely_subject = re.sub(" (is|are) .*", "", likely_subject)
-                            my_command_template = value_specs[this_proj][this_file][txt].command_template.replace('{SUBJ}', likely_subject)
+                            my_command_template = value_specs[this_file][txt].command_template.replace('{SUBJ}', likely_subject)
                             if test_case_name not in return_dict:
-                                return_dict[test_case_name] = SimpleTestCase(suggested_text = value_specs[this_proj][this_file][txt].expected_text, command_text = my_command_template, condition_text = '', expected_file = value_specs[this_proj][this_file][txt].expected_file)
+                                return_dict[test_case_name] = SimpleTestCase(suggested_text = value_specs[this_file][txt].expected_text, command_text = my_command_template, condition_text = '', expected_file = value_specs[this_file][txt].expected_file)
                             else:
                                 print("Ignoring duplicate test case {} line {}".format(test_case_name, line_count))
     return return_dict
@@ -668,27 +666,27 @@ def get_rule_cases(this_proj):
     in_rules = False
     any_if_yet = False
     ifs_depth_array = []
-    for this_file in rules_specs[this_proj]:
+    for this_file in rules_specs:
         scan_current_text = True
-        if len(rules_specs[this_proj][this_file].rules_on_lines) or len(rules_specs[this_proj][this_file].rules_off_lines):
+        if len(rules_specs[this_file].rules_on_lines) or len(rules_specs[this_file].rules_off_lines):
             scan_current_text = False
         fb = os.path.basename(this_file)
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
                 if not line.strip():
                     in_rules = False
-                for x in rules_specs[this_proj][this_file].rules_on_lines:
+                for x in rules_specs[this_file].rules_on_lines:
                     if line.startswith(x):
                         scan_current_text = True
-                        rules_specs[this_proj][this_file].rules_on_found[x] = True
-                for x in rules_specs[this_proj][this_file].rules_off_lines:
+                        rules_specs[this_file].rules_on_found[x] = True
+                for x in rules_specs[this_file].rules_off_lines:
                     if line.startswith(x):
                         scan_current_text = False
-                        rules_specs[this_proj][this_file].rules_off_found[x] = True
+                        rules_specs[this_file].rules_off_found[x] = True
                 if not scan_current_text:
                     continue
                 if not in_rules:
-                    my_prefix = rule_test_prefix(line, rules_specs[this_proj][this_file].valid_hint_regexes)
+                    my_prefix = rule_test_prefix(line, rules_specs[this_file].valid_hint_regexes)
                     if not my_prefix:
                         continue
                     ifs_depth_array = []
@@ -750,18 +748,18 @@ def get_rule_cases(this_proj):
                 if not fixed_case_name:
                     test_case_sub_name = '-'.join(ifs_depth_array)
                 test_case_full_name = test_case_of(my_prefix + '-' + this_rule + '-' + test_case_sub_name)
-                my_expected_file = rules_specs[this_proj][this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_proj][this_file].regex_to_abbr else 'undef'
+                my_expected_file = rules_specs[this_file].regex_to_abbr[my_prefix] if my_prefix in rules_specs[this_file].regex_to_abbr else 'undef'
                 if test_case_full_name not in return_dict:
                     return_dict[test_case_full_name] = SimpleTestCase(suggested_text = what_said, command_text = 'rule-cmd', condition_text = '', expected_file = my_expected_file)
                 else:
                     return_dict[test_case_full_name].suggested_text += "\n" + what_said
-        for x in rules_specs[this_proj][this_file].rules_on_found:
-            if not rules_specs[this_proj][this_file].rules_on_found[x]:
+        for x in rules_specs[this_file].rules_on_found:
+            if not rules_specs[this_file].rules_on_found[x]:
                 mt.warn("WARNING: rules-on token {} not found in {}.".format(x, fb))
-        for x in rules_specs[this_proj][this_file].rules_off_found:
-            if not rules_specs[this_proj][this_file].rules_off_found[x]:
+        for x in rules_specs[this_file].rules_off_found:
+            if not rules_specs[this_file].rules_off_found[x]:
                 mt.warn("WARNING: rules-off token {} not found in {}.".format(x, fb))
-        if scan_current_text and len(rules_specs[this_proj][this_file].rules_off_found):
+        if scan_current_text and len(rules_specs[this_file].rules_off_found):
             mt.warn("WARNING: scan-current-text is on at end of file with rules_on and rules_off markers.")
     return return_dict
 
@@ -798,7 +796,7 @@ def get_table_cases(this_proj):
                 continue
             f0 = 'testcase-' + '-'.join(f)
             return_dict[f0] = SimpleTestCase(command_text = this_matrix.out_verb, expected_file = this_matrix.out_file, suggested_text=this_matrix.out_text)
-    for this_file in table_specs[this_proj]:
+    for this_file in table_specs:
         if verbose_level > 0:
             print("Reading file", this_file, "for test cases...")
         in_table = False
@@ -811,27 +809,27 @@ def get_table_cases(this_proj):
         table_lines_undecided = 0
         table_overall_undecided = 0
         tables_found = defaultdict(bool)
-        dupe_orig = table_specs[this_proj][this_file].okay_duplicate_counter.copy()
+        dupe_orig = table_specs[this_file].okay_duplicate_counter.copy()
         these_table_gens = []
         dupe_dict = defaultdict(int)
         header_compilation = "<unknown>"
         with open(this_file) as file:
             for (line_count, line) in enumerate (file, 1):
-                if table_specs[this_proj][this_file].stopper and table_specs[this_proj][this_file].stopper in line:
+                if table_specs[this_file].stopper and table_specs[this_file].stopper in line:
                     break
                 if not in_table:
                     if not line.startswith("table of"):
                         continue
                     current_table = re.sub("[ \t]+\[.*", "", line.strip())
                     current_table = re.sub("[ \t]+\(continued\).*", "", current_table)
-                    if wild_card_match(current_table, table_specs[this_proj][this_file].ignore_wild):
+                    if wild_card_match(current_table, table_specs[this_file].ignore_wild):
                         continue
-                    if current_table in table_specs[this_proj][this_file].ignore:
+                    if current_table in table_specs[this_file].ignore:
                         continue
                     in_table = True
                     stray_table = False
                     these_table_gens = []
-                    for tg in table_specs[this_proj][this_file].generators:
+                    for tg in table_specs[this_file].generators:
                         if tg.exact_match:
                             if line.strip().lower() == tg.match_string:
                                 these_table_gens.append(tg)
@@ -884,7 +882,7 @@ def get_table_cases(this_proj):
                             if not re.search(my_generator.regex_to_check, sub_case):
                                 continue
                         test_case_name = test_case_of(p + '-' + current_table + '-' + sub_case)
-                        if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_proj][this_file].okay_duplicate_regexes):
+                        if test_case_name in return_dict and wild_card_match(test_case_name, table_specs[this_file].okay_duplicate_regexes):
                             continue
                         if my_generator.print_absolute:
                             possible_text = my_generator.print_absolute
@@ -893,9 +891,9 @@ def get_table_cases(this_proj):
                             for c in range (0, len(headers)):
                                 h0 = "{" + headers[c] + "}"
                                 possible_text = possible_text.replace(h0, i7.i7_text_convert(columns[c], erase_brackets = False, remove_end_quotes = True))
-                        if test_case_name in table_specs[this_proj][this_file].okay_duplicate_counter:
-                            table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] -= 1
-                            if table_specs[this_proj][this_file].okay_duplicate_counter[test_case_name] < 0:
+                        if test_case_name in table_specs[this_file].okay_duplicate_counter:
+                            table_specs[this_file].okay_duplicate_counter[test_case_name] -= 1
+                            if table_specs[this_file].okay_duplicate_counter[test_case_name] < 0:
                                 print("POTENTIAL ERROR: too many duplicate listings for {} in {}. Check okdup statement.".format(test_case_name, this_file))
                         elif test_case_name in return_dict:
                             print("POTENTIAL ERROR: source code provided duplicate test case/column entry {} at line {} of {}. Use okdup/okdupr if this is correct, or try the code below.".format(test_case_name, line_count, fb))
@@ -929,13 +927,13 @@ def get_table_cases(this_proj):
             print("=============================CFG FILE INFO SUGGESTIONS (replace ~ with \t)")
         for dd in dupe_dict:
             mt.okay("okdup={}~{}".format(dd, dupe_dict[dd]))
-        for dupe in table_specs[this_proj][this_file].okay_duplicate_counter:
-            if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] == 0:
+        for dupe in table_specs[this_file].okay_duplicate_counter:
+            if table_specs[this_file].okay_duplicate_counter[dupe] == 0:
                 continue
             if not any_dupes_yet:
                 any_dupes_yet = True
                 mt.warn("NOTE: we count the number of duplicates, not the total number of occurrences.")
-            print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_proj][this_file].okay_duplicate_counter[dupe] < 0 else 'few', dupe, abs(table_specs[this_proj][this_file].okay_duplicate_counter[dupe]), dupe_orig[dupe]))
+            print("Too {} duplicates for entry {}: off by {}, should have {}.".format('many' if table_specs[this_file].okay_duplicate_counter[dupe] < 0 else 'few', dupe, abs(table_specs[this_file].okay_duplicate_counter[dupe]), dupe_orig[dupe]))
     return return_dict
 
 def change_dir_if_needed(new_dir = ''):
@@ -1146,12 +1144,12 @@ def verify_cases(this_proj, this_case_list, my_globs = [ 'rbr-*.txt', 'reg-*-lon
             cases_printed += 1
             if show_suggested_file:
                 my_abbrev = this_case_list[m].expected_file if this_case_list[m].expected_file else expected_file(m, this_proj)
-                if my_abbrev in file_abbrev_maps[my_proj]:
-                    my_abbrev = file_abbrev_maps[my_proj][my_abbrev]
+                if my_abbrev in file_abbrev_maps:
+                    my_abbrev = file_abbrev_maps[my_abbrev]
                 else:
                     alt_abbrev = re.sub(".*-", "", my_abbrev).replace('.txt', '')
-                    if alt_abbrev in file_abbrev_maps[my_proj]:
-                        my_abbrev = file_abbrev_maps[my_proj][alt_abbrev]
+                    if alt_abbrev in file_abbrev_maps:
+                        my_abbrev = file_abbrev_maps[alt_abbrev]
                 if my_abbrev == last_abbrev:
                     print('\\\\')
                 else:
@@ -1239,7 +1237,7 @@ def verify_case_placement(this_proj):
                     line_mod = line_mod[:-3].rstrip()
                 match_array = []
                 this_success = True
-                for t in case_to_file_mapper[this_proj]:
+                for t in case_to_file_mapper:
                     my_result = t.case_file_match(line_mod, file_name)
                     #print(vars(t.case_from), vars(t.file_to))
                     if my_result == TestCaseToFileMapper.BADMATCH:
@@ -1347,9 +1345,9 @@ def read_cfg_file(this_cfg):
                 ary = data.split(",")
                 for a in ary:
                     ary2 = a.split('=')
-                    file_abbrev_maps[cur_proj][ary2[0]] = ary2[1]
+                    file_abbrev_maps[ary2[0]] = ary2[1]
             elif prefix == 'casemap':
-                case_to_file_mapper[cur_proj].append(TestCaseToFileMapper(data))
+                case_to_file_mapper.append(TestCaseToFileMapper(data))
             elif prefix == 'code_to_ignore':
                 if '\t' in data:
                     ignorable_rule_lines[cur_proj].extend(data.split('\t'))
@@ -1372,13 +1370,13 @@ def read_cfg_file(this_cfg):
                         local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
-                if cur_file in rules_specs[cur_proj]:
+                if cur_file in rules_specs:
                     mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                     if cfg_error_bail:
                         mt.add_postopen(this_cfg, line_count)
                         local_cfg_errors += 1
                 else:
-                    rules_specs[cur_proj][cur_file] = RulesPicker()
+                    rules_specs[cur_file] = RulesPicker()
             elif prefix in ( 'rule_picker', 'rules_picker' ):
                 ary = data.split('\t')
                 my_to_file = "unknown"
@@ -1402,18 +1400,18 @@ def read_cfg_file(this_cfg):
                     mt.warn("Rules specs needs a regex line {}.".format(line_count))
                     mt.add_postopen(this_cfg, line_count)
                     continue
-                rules_specs[cur_proj][cur_file].valid_hint_regexes[ary[0]].append(my_regex)
-                rules_specs[cur_proj][cur_file].regex_to_abbr[my_regex] = my_to_file
+                rules_specs[cur_file].valid_hint_regexes[ary[0]].append(my_regex)
+                rules_specs[cur_file].regex_to_abbr[my_regex] = my_to_file
             elif prefix in ( 'rules_yes', 'rule_yes', 'rules_on', 'rule_on' ):
                 ary = data.split('\t')
-                rules_specs[cur_proj][cur_file].rules_on_lines.extend(ary)
+                rules_specs[cur_file].rules_on_lines.extend(ary)
                 for a in ary:
-                    rules_specs[cur_proj][cur_file].rules_on_found[a] = False
+                    rules_specs[cur_file].rules_on_found[a] = False
             elif prefix in ( 'rules_no', 'rule_no', 'rules_off', 'rule_off' ):
                 ary = data.split('\t')
-                rules_specs[cur_proj][cur_file].rules_off_lines.extend(ary)
+                rules_specs[cur_file].rules_off_lines.extend(ary)
                 for a in ary:
-                    rules_specs[cur_proj][cur_file].rules_off_found[a] = False
+                    rules_specs[cur_file].rules_off_found[a] = False
             elif prefix in ( 'table_file', 'tables_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
@@ -1423,11 +1421,11 @@ def read_cfg_file(this_cfg):
                         local_cfg_errors += 1
                     continue
                 cur_file = temp_cur_file
-                if cur_file in table_specs[cur_proj]:
+                if cur_file in table_specs:
                     mt.warn("WARNING duplicate file {} at line {}".format(cur_file, line_count))
                     mt.add_postopen(this_cfg, line_count)
                 else:
-                    table_specs[cur_proj][cur_file] = TablePicker()
+                    table_specs[cur_file] = TablePicker()
             elif prefix in ( 'value_file', 'values_file', 'value_files', 'values_files' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
                 if not temp_cur_file:
@@ -1459,7 +1457,7 @@ def read_cfg_file(this_cfg):
                     continue
                 if eq == 0:
                     for v in val_files:
-                        value_specs[cur_proj][v][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
+                        value_specs[v][ary[0]] = ValuesPicker(command_template = ary[1], expected_file = ary[2], expected_text = ary[3])
                 else:
                     for a in ary:
                         a0 = a.split('=')
@@ -1474,23 +1472,23 @@ def read_cfg_file(this_cfg):
                         else:
                             mt.warn("Unknown value_specs parameter {}.".format(ao[0]))
                     for v in val_files:
-                        value_specs[cur_proj][v][my_token] = ValuesPicker(command_template = my_cmd, expected_file = my_file, expected_text = my_text)
+                        value_specs[v][my_token] = ValuesPicker(command_template = my_cmd, expected_file = my_file, expected_text = my_text)
                 #SimpleTestCase(suggested_text = suffix, command_text = full_commands.replace('-', ' '), condition_text = conditions, expected_file = 'mis')
             elif prefix == 'ignore':
                 ary = data.split(',')
                 for d in ary:
                     check_regex_in_absolute(d, line_count)
-                    if data in table_specs[cur_proj][cur_file].ignore:
+                    if data in table_specs[cur_file].ignore:
                         mt.warn("WARNING duplicate ignore", cur_file, line_count, d)
                         mt.add_postopen(this_cfg, line_count)
                     else:
-                        table_specs[cur_proj][cur_file].ignore.append(d)
+                        table_specs[cur_file].ignore.append(d)
             elif prefix in ( 'ignorew', 'igw' ):
-                if data in table_specs[cur_proj][cur_file].ignore_wild:
+                if data in table_specs[cur_file].ignore_wild:
                     mt.warn("WARNING duplicate ignore", cur_file, line_count, data)
                     mt.add_postopen(this_cfg, line_count)
                 else:
-                    table_specs[cur_proj][cur_file].ignore_wild.append(data)
+                    table_specs[cur_file].ignore_wild.append(data)
             elif prefix in ( 'matrix', 'matrixr' ):
                 temp_in_ary = data.split("\t")
                 temp_out_array = []
@@ -1512,15 +1510,15 @@ def read_cfg_file(this_cfg):
                 for a in ary:
                     check_regex_in_absolute(a, line_count)
                     if '~' not in a:
-                        table_specs[cur_proj][cur_file].okay_duplicate_counter[a] = 2
+                        table_specs[cur_file].okay_duplicate_counter[a] = 2
                     else:
                         a2 = a.split("~")
-                        table_specs[cur_proj][cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
+                        table_specs[cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
             elif prefix == 'okdupr':
                 if not cur_file:
                     mt.warn("WARNING: you probably want to put an OKDUP in a specific file.")
                 check_suspicious_regex(data, line_count, this_cfg)
-                table_specs[cur_proj][cur_file].okay_duplicate_regexes.append(data)
+                table_specs[cur_file].okay_duplicate_regexes.append(data)
             elif prefix in ( 'oddcase', 'oddcases' ):
                 odd_cases[cur_proj].extend(data.split(','))
             elif prefix == 'project':
@@ -1531,7 +1529,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'say':
                 say_equivalents[cur_proj] = data
             elif prefix == 'stopper':
-                table_specs[cur_proj][cur_file].stopper = data
+                table_specs[cur_file].stopper = data
             elif prefix in ('gen', 'generator', 'table'):
                 ary = data.split("\t")
                 my_prefixes = [ 'ttc' ]
@@ -1589,14 +1587,14 @@ def read_cfg_file(this_cfg):
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
                     this_generator = TestCaseGenerator(match_string = ary[0], exact_match = 'table' in prefix, subcase_name_format = this_subcase_name_format, print_from_col = this_print_from_col, print_absolute = this_print_absolute, prefix_list = my_prefixes, command_generator = my_command_generator, fixed_command = my_fixed_command, regex_to_check = this_regex_to_check, ignore_blank_print = this_ignore_blank_print)
-                    table_specs[cur_proj][cur_file].generators.append(this_generator)
+                    table_specs[cur_file].generators.append(this_generator)
                 except:
                     print("Exception reading CFG", line_count, data)
                     print("You *may* need 2 tabs above. 1st entry = tables, 2nd entry = columns that create the test case name, 3rd entry = rough text, 4th entry = columns that create command")
                     print("Also, make sure entries 2/3 are integers.")
                     sys.exit()
             elif prefix == 'untestable':
-                untestable_case_mapper[cur_proj].append(UntestableCaseMapper(prefix, data))
+                untestable_case_mapper.append(UntestableCaseMapper(prefix, data))
             else:
                 print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
     total_cfg_errors += local_cfg_errors
@@ -1682,13 +1680,9 @@ if 'ncb' in sys.argv:
     sys.argv.remove('ncb')
     cfg_error_bail = False
 
-my_cfg_errors = read_cfg_file(ttc_cfg)
+my_proj = i7.dir2proj(to_abbrev = True)
 
-if my_cfg_errors and cfg_error_bail: # we could do this in the function, but what if there is more than one error file?
-    print(my_cfg_errors)
-    mt.post_open()
-
-my_proj = i7.dir2proj()
+default_test_file = test_file_from_project(i7.dir2proj())
 
 cmd_count = 1
 
@@ -1705,6 +1699,8 @@ while cmd_count < len(sys.argv):
         else:
             verbose_level = 1
     elif arg == '/':
+        if not test_file_from_project(i7.dir2proj):
+            mt.bailfail("Can't open project-specific test file, as I can't determine the project.")
         mt.npo(test_file_from_project(i7.dir2proj()))
     elif arg[0] == '/':
         if arg[1:] == 'm':
@@ -1766,29 +1762,36 @@ while cmd_count < len(sys.argv):
         print("BAD ARGUMENT", arg)
         usage()
 
-all_specs = set(list(table_specs)).union(set(list(rules_specs)))
-
 if not my_proj:
-    sys.exit("You need to be in a valid project directory or specify a project.")
+    my_proj = i7.dir2proj(to_abbrev = True)
+    if not my_proj:
+        sys.exit("Unable to find a project. You need to be in a valid project directory or specify a valid project.")
 
-if my_proj not in all_specs:
-    print("{} not in table_specs or rules_specs.".format('<BLANK PROJECT>' if not my_proj else my_proj))
-    print("Here is which are:", ', '.join(sorted(all_specs)))
-    sys.exit()
+full_proj = i7.long_name(my_proj)
+
+ttc_base = "ttc-{}.txt".format(my_proj)
+
+ttc_cfg = os.path.normpath(os.path.join(ttc_dir, ttc_base))
+
+my_cfg_errors = read_cfg_file(ttc_cfg)
+
+if my_cfg_errors and cfg_error_bail: # we could do this in the function, but what if there is more than one error file?
+    print(my_cfg_errors)
+    mt.post_open()
 
 if alphabetize:
     alphabetize_my_rbrs(my_proj)
     sys.exit()
 
-case_list = get_table_cases(my_proj)
-case_list.update(get_rule_cases(my_proj))
-case_list.update(get_mistakes(my_proj))
-case_list.update(get_value_cases(my_proj))
+case_list = get_table_cases(full_proj)
+case_list.update(get_rule_cases(full_proj))
+case_list.update(get_mistakes(full_proj))
+case_list.update(get_value_cases(full_proj))
 
 case_copy = list(case_list)
 
 for c in case_copy:
-    for u in untestable_case_mapper[my_proj]:
+    for u in untestable_case_mapper:
         if u.untestable_match(c):
             if verbose_level > 0:
                 print("UNTESTABLE CASE: {}".format(c))
@@ -1808,7 +1811,7 @@ if len(global_stray_table_org):
     for g in global_stray_table_org:
         print(g, len(global_stray_table_org[g]), global_stray_table_org[g][:5])
 
-none_got = [ x.from_to_string() for x in case_to_file_mapper[my_proj] if not x.times_used]
+none_got = [ x.from_to_string() for x in case_to_file_mapper if not x.times_used]
 
 if none_got:
     mt.warn("Unused case-maps:", ', '.join(none_got))
