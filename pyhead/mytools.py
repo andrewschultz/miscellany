@@ -47,10 +47,10 @@ hosts_file = "C:/Windows/System32/drivers/etc/hosts"
 
 title_words = ["but", "by", "a", "the", "in", "if", "is", "it", "as", "of", "on", "to", "or", "sic", "and", "at", "an", "oh", "for", "be", "not", "no", "nor", "into", "with", "from", "over"]
 
-words_file = 'c:/writing/dict/words-from-dwyl.txt'
-old_words_file = 'c:/writing/dict/brit-1word.txt'
-first_name_file = 'c:/writing/dict/firsts.txt'
-last_name_file = 'c:/writing/dict/lasts.txt'
+words_file = word_file = 'c:/writing/dict/words-from-dwyl.txt'
+old_words_file = old_word_file = 'c:/writing/dict/brit-1word.txt'
+first_name_file = first_name_file = 'c:/writing/dict/firsts.txt'
+last_name_file = last_name_file = 'c:/writing/dict/lasts.txt'
 
 file_post_list = defaultdict(lambda: defaultdict(int))
 file_extra_edit = defaultdict(lambda: defaultdict(int))
