@@ -29,6 +29,7 @@ in_if = defaultdict(list)
 bracketed = defaultdict(list)
 defined = defaultdict(list)
 
+my_file = "source_code.adv"
 def best_levenshtein(my_string):
     min_distance = 22
     min_array = []
@@ -55,7 +56,7 @@ def ignore_count(var_string):
         return True
     return False
 
-with open("source_code.adv") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         l = line.lower().strip()
         if l.startswith('cc_'):
@@ -65,7 +66,7 @@ with open("source_code.adv") as file:
             my_lines_var[variable_name] = []
             my_text[variable_name] = variable_name[3:].replace('_', ' ')
 
-with open("source_code.adv") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         for l in my_lines_raw:
             if my_text[l] in line.lower():
@@ -73,7 +74,7 @@ with open("source_code.adv") as file:
             if l in line.lower():
                 my_lines_var[l].append(line_count)
 
-with open("source_code.adv") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         if 'dynamic_integer' in line:
             continue
@@ -90,7 +91,7 @@ with open("source_code.adv") as file:
             #print(u, line_count)
             bracketed[u].append(line_count)
 
-with open("source_code.adv") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         if "\t" in line:
             mt.warn("Tab in line {}. It should be replaced with 4 spaces.".format(line_count))
@@ -117,7 +118,7 @@ count = 0
 
 y = set(defined) - set(bracketed) - set(ignored)
 
-with open("source_code.adv") as file:
+with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         all_words = []
         if line.strip().startswith('#'):
