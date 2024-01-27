@@ -7,6 +7,7 @@
 
 import sys
 import re
+from shutil import copy
 import mytools as mt
 from collections import defaultdict
 
@@ -29,7 +30,9 @@ in_if = defaultdict(list)
 bracketed = defaultdict(list)
 defined = defaultdict(list)
 
+cmd_count = 1
 my_file = "source_code.adv"
+temp_file = "c:/writing/temp/source_code_notabs.adv"
 def best_levenshtein(my_string):
     min_distance = 22
     min_array = []
@@ -55,6 +58,35 @@ def ignore_count(var_string):
     if var_string.startswith('hub'):
         return True
     return False
+
+def remove_tabs(autowrite = True):
+    big_string = ''
+    tab_lines = 0
+    with open(my_file) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if '\t' in line:
+                line = line.replace('\t', '    ')
+                tab_lines += 1
+            big_string += line
+    if not tab_lines:
+        mt.bailfail("Found no tabs to replace.")
+    if not autowrite:
+        input("Hit return to overwrite.")
+    f = open(temp_file, "w")
+    f.write(big_string)
+    f.close()
+    copy(temp_file, my_file)
+    sys.exit("Overwrote successfully.")
+
+while cmd_count < len(sys.argv):
+    arg = sys.argv[cmd_count].lower()
+    if arg.startswith('-'):
+        arg = arg[1:]
+    if arg == 'r':
+        remove_tabs()
+    else:
+        sys.exit(f"Invalid parameter {arg}")
+    cmd_count += 1
 
 with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
