@@ -126,7 +126,8 @@ with open(my_file) as file:
 with open(my_file) as file:
     for (line_count, line) in enumerate (file, 1):
         if "\t" in line:
-            mt.warn("Tab in line {}. It should be replaced with 4 spaces.".format(line_count))
+            mt.warn("Tab(s) in line {}. You can replace \\t with four spaces in notepad, or you can can rewrite/fix this with cch.py -r.".format(line_count))
+            mt.add_post(my_file, line_count)
         if ": string" not in line and ": dynamic_string" not in line and ": integer" not in line:
             continue
         if line.strip().startswith(":"):
@@ -200,3 +201,5 @@ for d in sorted(z):
 
 if not count:
     mt.okay("All things bracketed are defined!")
+
+mt.post_open()
