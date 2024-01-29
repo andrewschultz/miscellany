@@ -95,7 +95,7 @@ def crude_check_line_shifts(f1, f2):
         sys.exit()
     print("Crude differences between {0} and {1}: {2} shifts, {3} total line-delta.".format(f1b, f2b, total_diff, line_diff))
 
-def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False, remove_starting_comment = True, remove_starting_apostrophes = True): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
+def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False, remove_starting_comment = True, remove_starting_apostrophes = True, remove_trailing_punc = True): # b = boolean i = integer q = quote l = lower case u=keep upper cse for sorting e=e# for BTP a=activation of
     # print(a, b, c, zap_apostrophes)
     if remove_starting_comment:
         a = re.sub("^\"\[.*?\]", "\"", a)
@@ -111,6 +111,8 @@ def tab(a, b, c, zap_apostrophes = False, leave_between_parens = False, remove_s
         pass
     elif 'l' in c:
         a = a.lower()
+    if remove_trailing_punc:
+        a = re.sub("[.,!']", "", a)
     ary = re.split("\t+", a)
     orig = ary[b]
     ret = ary[b]
