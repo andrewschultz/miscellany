@@ -119,7 +119,10 @@ def bail_if_not_auto_ok():
     sys.exit("Set -ao to say auto-today is okay and commit with the current time.")
 
 def get_date_delt(x, throw_error = False):
-    if x.count(' ') > 1: return False
+    if x.count(' ') > 1:
+        return False
+    if not re.search("[0-9]/[0-9]", x):
+        return False
     ary = re.split("[-/]", x)
     if len(ary) < 2 or len(ary) > 3:
         if throw_error:
