@@ -32,6 +32,7 @@ force_batch_move = False
 source_opened = False
 get_main_source = False
 get_notes = False
+create_notes = False
 get_auto_inf = False # get generated i6 code?
 get_fixes_file = False
 goto_github = False
@@ -169,6 +170,8 @@ while cmd_count < len(sys.argv):
         materials_subdir = True
     elif arg == 'no':
         get_notes = True
+    elif arg in ( 'noc', 'cno' ):
+        create_notes = True
     elif arg in ( 'au', 'inf' ):
         get_auto_inf = True
     elif arg in ( 'fi', 'fix' ):
@@ -280,6 +283,16 @@ if get_auto_inf:
         source_opened = True
     else:
         mt.bailfail("Could not find converted i6 source for {}.".format(to_project))
+
+if create_notes:
+    my_notes_file = os.path.normpath(i7.orig_notes_file(to_project, print_warning = False, return_nonexisting_file = True))
+    if os.path.exists(my_notes_file):
+        mt.warnbail(my_notes_file, "already exists!")
+    f = open(my_notes_file, "w")
+    f.write("#bring ideas over with dgrab.py s={} da\n".format(i7.main_abb(to_project)))
+    f.close()
+    mt.okaybail("    mklink \"{}\" \"{}\"".format(my_notes_file, os.path.normpath(i7.orig_notes_file(to_project, return_nonexisting_file = True))))
+    sys.exit()
 
 if get_notes:
     notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
