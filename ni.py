@@ -295,16 +295,13 @@ if create_notes:
     sys.exit()
 
 if get_notes:
-    notes_file = os.path.join(i7.proj2dir(to_project), "notes.txt")
-    alt_notes_file = os.path.join(i7.ghbase, 'configs', 'notes', 'notes-{}.txt'.format(i7.main_abbr(to_project)))
-    if not os.path.exists(notes_file):
-        if os.path.exists(alt_notes_file):
-            mt.warn(alt_notes_file, "exists but", notes_file, "does not, so going with config-repo file {}.".format(alt_notes_file))
-            notes_file = alt_notes_file
-        else:
-            mt.bailfail("{} does not exist, and neither does its config-repo sibling {}. We may need to create it with noc or cno.".format(notes_file, alt_notes_file))
+    my_notes_file = i7.orig_notes_file(to_project, return_nonexisting_file = True)
+    if not os.path.exists(my_notes_file):
+        mt.fail("Failed to find notes file for {}.".format(to_project))
+        mt.fail("We may need to create {} with noc or cno. Then as admin, run this command:".format(my_notes_file))
+        mt.bailfail("    mklink {} {}".format(my_notes_file, i7.orig_notes_file(to_project, return_nonexisting_file = True)))
     print("Opening {} notes...".format(to_project))
-    mt.npo(notes_file, print_cmd = False, bail = False)
+    mt.npo(my_notes_file, print_cmd = False, bail = False)
     source_opened = True
 
 if get_rbr:
@@ -344,10 +341,10 @@ back_up_existing_temp()
 if (not force_batch_move) and source_opened:
     sys.exit()
 
-if (not goto_github) and i7.is_adventuron(user_project):
+if (not goto_github) and i7.is_adventuron_proj(user_project):
     mt.warn("Adventuron-only project, so we are using github directory.")
 
-write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github | i7.is_adventuron(user_project), materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
+write_chdir_batch_file(i7.proj2dir(to_project, to_github = goto_github | i7.is_adventuron_proj(user_project), materials = materials_subdir) + ('' if not git_subdir else '\\' + git_subdir))
 
 if goto_github and not git_subdir:
     mt.warn("GitHub subdir can be specified after dash e.g. gra for graphics.")
