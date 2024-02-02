@@ -676,6 +676,12 @@ def uuid_value(x):
 def auto_file(x):
     return os.path.normpath(os.path.join(proj2root(x), "auto.inf"))
 
+def is_adventuron_source(x):
+    return x.endswith('.adv')
+
+def is_inform_source(x):
+    return x.endswith('.ni')
+
 def main_src(x = os.getcwd(), return_nonexistent = True):
     main_path = os.path.normpath(os.path.join(sdir(x, to_github = is_adventuron(x)), source_basename(x)))
     if return_nonexistent or os.path.exists(main_path):
