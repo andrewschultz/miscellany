@@ -486,6 +486,17 @@ def file_len_eq(f1, f2, bail = True, launch = False):
         return False
     return True
 
+def rule_of(my_line):
+    l = my_line.strip()
+    l = re.sub("  +", " ", l)
+    if 'this is the' not in l:
+        return ''
+    l = re.sub(".*this is the *", "", l)
+    if ' rule' not in l:
+        return ''
+    l = re.sub(" rule.*", "", l)
+    return l
+
 def audit_table_rows(file_name, ignore_trivial = True, ignore_specific = [], ignore_glob = [], only_glob = [], show_params = False, parse_string_parameters = True, open_after_priority = 10):
     if type(ignore_specific) == str:
         ignore_specific = ignore_specific.split(",") if parse_string_parameters else [ignore_specific]
