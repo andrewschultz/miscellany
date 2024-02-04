@@ -1059,6 +1059,13 @@ def read_latest_project():
 
 read_latest_proj = read_latest_project
 
+def website_of(my_proj):
+    m = main_abbr(my_proj)
+    if not m:
+        mt.warn("Could not find main abbreviation for", my_proj)
+        return ''
+    my_site = repo_base + "/" + intermediate
+
 def write_latest_project(proj_to_write, give_success_feedback = True):
     file_write_string = ''
     any_diff = False
