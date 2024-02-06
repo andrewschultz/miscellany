@@ -753,13 +753,37 @@ def invis_file(x, warning=False):
     if warning: print("WARNING no invisiclues file for", x)
     return ""
 
-def notes_file(x, suffix=''):
-    notes_local = "notes{}.txt".format('-' + suffix if suffix else '')
-    if x in i7com:
-        combo_try = "c:/Users/Andrew/Documents/github/configs/notes/notes-{}.txt".format(main_abb(x))
-        if os.path.exists(combo_try):
-            return combo_try
-    return os.path.join(sdir(x), notes_local)
+def orig_notes_file(x, print_warning = False, return_nonexisting_file = True):
+    if x in i7com or x in i7x:
+        to_return = "c:/Users/Andrew/Documents/github/configs/notes/notes-{}.txt".format(main_abb(x))
+        if os.path.exists(to_return) or return_nonexisting_file:
+            return to_return
+    if print_warning:
+        mt.warn("Could not find a project for {}.".format(x))
+    return ''
+
+def notes_file_link(x, suffix='', return_nonexisting_file = True):
+    notes_base = "notes{}.txt".format('-' + suffix if suffix else '')
+    notes_local = os.path.join(sdir(x, to_github = is_adventuron_proj(x)), notes_base)
+    if os.path.exists(notes_local) or return_nonexisting_file:
+        return notes_local
+    return ''
+
+def notes_file(x, local_first = True, print_warning = False, return_nonexisting_file = True):
+    temp_1 = notes_file_link(x, return_nonexisting_file = True)
+    temp_2 = orig_notes_file(x, print_warning = print_warning, return_nonexisting_file = True)
+    if local_first:
+        if os.path.exists(temp_1) or return_nonexisting_file:
+            return temp_1
+    if os.path.exists(temp_2) or return_nonexisting_file:
+        return temp_2
+    if os.path.exists(temp_1) or return_nonexisting_file:
+        return temp_1
+    if print_warning:
+        mt.warn("Tried to find notes file for {} but failed.".format(x))
+    if return_nonexisting_file:
+        return temp_2
+    return ''
 
 def fixes_file(x):
     return os.path.join(proj2dir(x, to_github = True), 'fixes.txt')
