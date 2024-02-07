@@ -615,12 +615,8 @@ def remove_quotes(x):
 
 rq = remove_quotes
 
-def is_adventuron(x):
-    x0 = long_name(x)
-    return x0 in adventuron_projects or proj2dir(x0) in adventuron_projects
-
-def source_basename(x):
-    if is_adventuron(x):
+def source_basename(x = os.getcwd()):
+    if is_adventuron_dir(x) or is_adventuron_proj(x):
         return "source_code.adv"
     return "story.ni"
 
@@ -694,7 +690,7 @@ def is_inform_source(x):
     return x.endswith('.ni')
 
 def main_src(x = os.getcwd(), return_nonexistent = True):
-    main_path = os.path.normpath(os.path.join(sdir(x, to_github = is_adventuron(x)), source_basename(x)))
+    main_path = os.path.normpath(os.path.join(sdir(x, to_github = is_adventuron_dir_proj(x)), source_basename(x)))
     if return_nonexistent or os.path.exists(main_path):
         return main_path
     return ""
@@ -915,6 +911,18 @@ def dir2proj(x = os.getcwd(), to_abbrev = False, empty_if_unmatched = True, retu
     if empty_if_unmatched and x2 not in i7xr:
         return ""
     return x2
+
+def is_adventuron_proj(x = dir2proj()):
+    x0 = long_name(x)
+    return x0 in adventuron_projects
+
+def is_adventuron_dir_proj(x):
+    if '/' in x or '\\' in x:
+        return is_adventuron_dir(x)
+    return is_adventuron_proj(x)
+
+def is_adventuron_dir(x = os.getcwd()):
+    return proj2dir(x) in adventuron_projects
 
 def inform_short_name(my_file, acknowledge_dailies = True, cut_off = ''):
     if cut_off:
