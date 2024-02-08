@@ -91,7 +91,12 @@ found_command = False
 
 with open(infile) as f:
     for (line_count, line) in enumerate(f, 1):
-        if line[:1] == '>':
+        if line[:1] == '*':
+            if found_line_err == 1:
+                big_output_string += this_turn
+            big_output_string += line
+            this_turn = ''
+        elif line[:1] == '>':
             if found_line_err == 1:
                 big_output_string += '----------------line {:d}-{:d}----------------\n'.format(last_cmd, line_count) + this_turn
                 try:
@@ -103,8 +108,9 @@ with open(infile) as f:
                 found_line_err = 0
                 moveBuffer = ''
                 last_output_string = big_output_string
-            elif not found_command:
-                big_output_string = this_turn
+            else:
+                if not found_command:
+                    big_output_string = "TEST RESULTS FOR {}\n".format(os.path.basename(infile))
             found_command = True
             last_cmd = line_count
             this_turn = ''
@@ -128,7 +134,7 @@ if found_line_err == 1:
         pass
     last_output_string = big_output_string
 else:
-    last_output_string += "\n==================cut off early==================\n"
+    last_output_string += "\n==================command(s) that passed have been cut off==================\n"
 
 if found_err:
     f1 = open(outfile, 'w')
