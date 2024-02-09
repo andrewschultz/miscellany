@@ -346,7 +346,7 @@ def apostrophe_check(line, line_count, warns):
     apost_line = i7.text_convert(line, erase_brackets = False, ignore_array = apostrophes[exe_proj], color_punc_change = True)
     if line == apost_line:
         return False
-    print(warns + 1, "Possible apostrophe-to-quote change needed line", line_count)
+    print(warns + 1, "Possible apostrophe-to-quote change needed line", line_count, "though you can also #OK-APOSTROPHE before or at the end")
     print("  Before:", line.strip())
     print("   After:", apost_line.strip())
     a1 = line.split(' ')
@@ -437,7 +437,7 @@ def extraneous_brackets(line):
         return False
     if ignore_next_bracket:
         return False
-    if line.lower().startswith("[note"):
+    if line.lower().startswith("[note") or line.lower().startswith("[your score has just"):
         return False
     if line.startswith('/'):
         return False
@@ -818,6 +818,9 @@ def get_file(fname):
             if line.startswith("#OK-APOSTROPHE") or line.startswith("#APOSTROPHE-OK") or line.startswith("#OK APOSTROPHE") or line.startswith("#APOSTROPHE OK"):
                 skip_apostrophe_check = True
                 continue
+            if line.endswith("OK-APOSTROPHE:"):
+                line = re.sub("^OK-APOSTROPHE: *", "", line)
+                skip_apostrophe_check = True
             if line.startswith("ALSO-IGNORE:") or line.startswith("ALSO_IGNORE"):
                 l = re.sub("^.*?:", "", line.strip().lower())
                 if not l:
