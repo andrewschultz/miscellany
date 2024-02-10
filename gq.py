@@ -671,7 +671,7 @@ while first_loop or user_input:
     for proj in proj_umbrella:
         if proj not in i7.i7f:
             if os.path.exists(i7.main_src(proj)):
-                if not quiet_procedural_notes:
+                if not quiet_procedural_notes and not i7.is_adventuron_proj(proj):
                     print("No project header-file exists for {}. But there is a story file. So I am using that.".format(proj))
                 my_array = [ i7.main_src(proj) ]
             else:
@@ -715,7 +715,7 @@ while first_loop or user_input:
                 if proj in i7.i7com:
                     print("Skipping absent combo-project notes file for {}. However, we are scanning individual project notes files.".format(proj))
                 else:
-                    print("Skipping absent combo-project notes file for {}. Maybe we should have one?".format(proj))
+                    print("Skipping absent combo-project notes file for {}. Maybe we should have one at {} or create it with ni(.py) nco?".format(proj, notes_file))
                 continue
             if i7.inform_short_name(notes_file) in frequencies: # STS files overlap
                 continue
