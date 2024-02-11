@@ -71,7 +71,9 @@ def github_move(file_name, this_proj = '', subdir = ''):
         sys.exit()
     github_dir += subdir
     if not os.path.exists(github_dir):
-        mt.bailfail("Couldn't make directory", github_dir)
+        mt.fail("Couldn't find directory", github_dir)
+        mt.fail("I'm being safe here, so create it with")
+        mt.bailfail("mkdir", github_dir)
     new_file = os.path.normpath("{}//{}".format(github_dir, file_name))
     file_name = mt.quote_spaced_file(file_name)
     new_file = mt.quote_spaced_file(new_file)
