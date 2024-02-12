@@ -32,19 +32,21 @@ def glob_it(my_glob):
         for x in ary:
             github_move(x, force_project, force_subdir)
 
-def best_subdir_of(file_name, github_dir):
+def best_subdir_of(file_name, github_dir, windows_dir = True):
+    ret_val = ''
     if file_name.startswith('rbr-'):
-        return "/testing/branch"
-    if file_name.startswith('reg-'):
+        ret_val = "/testing/branch"
+    elif file_name.startswith('reg-'):
         ret_val = "/testing"
         if '-lone-' in file_name and os.path.exists(github_dir + "/testing/standalone"):
             ret_val += "/standalone"
         elif '-thru-' in file_name:
             ret_val += "/generated"
-        return ret_val
-    if file_name.endswith('.py'):
-        return "/utils"
-    return ""
+    elif file_name.endswith('.py'):
+        ret_val = "/utils"
+    if windows_dir:
+        ret_val = ret_val.replace('/', '\\')
+    return ret_val
 
 def github_move(file_name, this_proj = '', subdir = ''):
     changing_link = False
