@@ -1,4 +1,8 @@
 import sys
+import re
+from collections import defaultdict
+import mytools as mt
+
 bracket_count = 0
 last_line = 0
 
@@ -11,7 +15,15 @@ try:
 except:
     debug = False
 
-from collections import defaultdict
+def leftbrackets(line):
+    return (line.count('{') - line.count('{('))
+
+def rightbrackets(line):
+    return (line.count('}') - line.count(')}'))
+
+def bracketdelta(line):
+    return leftbrackets(line) - rightbrackets(line)
+
 
 bracket_last_line = defaultdict(int)
 
