@@ -84,6 +84,10 @@ ghbase = "c:\\Users\\Andrew\\Documents\\github"
 gloco = "c:\\Users\\Andrew\\Documents\\github\\gloco"
 rbr_config = 'c:/writing/scripts/rbr.txt'
 
+adventuron_base_main = adventuron_main = adv_main = "source_code.adv"
+adventuron_temp = "c:\\writing\\temp\\source_code_temp.adv" # used for modifying Adventuron source
+i7_base_main = i7_main = "story.ni"
+
 # these are default values for binaries--debug is assumed to be most important
 # since it is the one I'll be using the most.
 # beta is used for automation.
@@ -617,8 +621,8 @@ rq = remove_quotes
 
 def source_basename(x = os.getcwd()):
     if is_adventuron_dir(x) or is_adventuron_proj(x):
-        return "source_code.adv"
-    return "story.ni"
+        return adventuron_base_main
+    return i7_base_main
 
 def gh_src(x = os.getcwd(), give_source = True):
     temp = proj_exp(x, to_github = True)
@@ -741,7 +745,7 @@ def hdr(main_project, header_file_name, base=False, github=False, github_project
         return '{:s}\{:s}\{:s}'.format(mt.gh_dir, dict_val_or_similar(dict_val_or_similar(github_project, i7gx), i7x), base_file_name)
     return temp
 
-headerfile = header = hdrfile = hdr_file = hfile = hdr
+header_file = headerfile = header = hdrfile = hdr_file = hfile = hdr
 
 def invis_file(x, warning=False):
     try_1 = "c:/writing/scripts/invis/{:s}.txt".format(i7xr[x] if x in i7xr.keys() else x)
