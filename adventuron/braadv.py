@@ -29,10 +29,12 @@ bracket_last_line = defaultdict(int)
 
 with open("source_code.adv") as file:
     for (line_count, line) in enumerate (file, 1):
-        bracket_count += (line.count('{') - line.count('{('))
-        bracket_count -= (line.count('}') - line.count(')}'))
+        bracket_count += bracketdelta(line)
         if bracket_count == 0:
             last_line = line_count
+        if line.rstrip() == '}' and bracket_count != 0:
+            mt.warn("Solo bracket does not have level 0.")
+            mt.add_post("source_code.adv", line_count)
         if debug:
             print(line_count, bracket_count, line.rstrip())
         if 'subroutine' in line or see_all:
@@ -43,3 +45,5 @@ if bracket_count:
         print("Last line with {} bracket{}: {}".format(s, 's' if s > 1 else '', line_count))
 else:
     print("Brackets all match!")
+
+mt.post_open()
