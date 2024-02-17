@@ -7,11 +7,14 @@ bracket_count = 0
 last_line = 0
 
 debug = False
+indent = False
 see_all = True
 
 try:
     if sys.argv[1] == 'd':
         debug = True
+    elif sys.argv[1] == 'i':
+        indent = True
 except:
     debug = False
 
@@ -24,6 +27,42 @@ def rightbrackets(line):
 def bracketdelta(line):
     return leftbrackets(line) - rightbrackets(line)
 
+def starting_spaces_of(line):
+    count = 0
+    while count < len(line):
+        if line[count] != ' ':
+            break
+        count += 1
+    return count
+
+def indent_check():
+    bracket_count = 0
+    big_string = ''
+    any_changes = False
+    with open("source_code.adv") as file:
+        for (line_count, line) in enumerate (file, 1):
+            bracketless = re.sub("\{.*?\}", "", line)
+            bracket_count -= rightbrackets(bracketless)
+            if starting_spaces_of(line) != 3 * bracket_count and line.strip():
+                mt.warn("Bad indent line {}".format(line_count))
+                l0 = (3 * bracket_count * ' ') + line.lstrip()
+                big_string += l0
+                any_changes = True
+            else:
+                big_string += line
+            bracket_count += leftbrackets(bracketless)
+    if not any_changes:
+        mt.okaybail("Indents all correct!")
+    f = open("c:/writing/temp/source_code_temp.adv", "w")
+    f.write(big_string)
+    f.close()
+    #mt.wm("c:/writing/temp/source_code_temp.adv", "source_code.adv")
+    #sys.exit()
+    copy("c:/writing/temp/source_code_temp.adv", "source_code.adv")
+    mt.okaybail("Successfully copied correctly indented file over.")
+
+if indent:
+    indent_check()
 
 bracket_last_line = defaultdict(int)
 
