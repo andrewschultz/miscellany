@@ -69,6 +69,24 @@ def usage():
     print("?? = lists mistakes when everything seems right.")
     sys.exit()
 
+def open_test_file(proj_look):
+    if proj_look not in i7.i7x:
+        sys.exit("No i7x key for {}.".format(proj_look))
+    temp = i7.i7x[proj_look]
+    my_stuff = [x for x in i7.i7x if i7.i7x[x] == temp]
+    current_cfg = ''
+    for m in my_stuff:
+        this_cfg = test_file_from_project(m)
+        if os.path.exists(this_cfg):
+            if current_cfg:
+                mt.warn("WARNING re-defined CFGs in parameters")
+                mt.warn("    FIRST", current_cfg)
+                mt.warn("    NOW", this_cfg)
+            current_cfg = this_cfg
+    if current_cfg:
+        mt.npo(current_cfg)
+    sys.exit("No CFGs found for {}.".format(temp))
+
 class TestCaseGenerator:
     def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], subcase_name_format = [0], print_from_col = '', print_absolute = '', command_generator = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
         self.match_string = match_string
@@ -1705,23 +1723,7 @@ while cmd_count < len(sys.argv):
     elif arg[0] == '/':
         if arg[1:] == 'm':
             mt.npo(ttc_cfg)
-        proj_look = arg[1:]
-        if proj_look not in i7.i7x:
-            sys.exit("No i7x key for {}.".format(proj_look))
-        temp = i7.i7x[proj_look]
-        my_stuff = [x for x in i7.i7x if i7.i7x[x] == temp]
-        current_cfg = ''
-        for m in my_stuff:
-            this_cfg = test_file_from_project(m)
-            if os.path.exists(this_cfg):
-                if current_cfg:
-                    mt.warn("WARNING re-defined CFGs in parameters")
-                    mt.warn("    FIRST", current_cfg)
-                    mt.warn("    NOW", this_cfg)
-                current_cfg = this_cfg
-        if current_cfg:
-            mt.npo(current_cfg)
-        sys.exit("No CFGs found for {}.".format(temp))
+        open_test_file(arg[1:])
     elif mt.alfmatch(arg, 'ncd'):
         collapse_extra_dashes = False
     elif arg in ( 'a', 'alf' ):
