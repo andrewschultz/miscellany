@@ -1760,9 +1760,16 @@ while cmd_count < len(sys.argv):
         usage()
     elif arg == '??':
         usage()
+    elif arg.startswith('`'):
+        arg = arg[1:]
+        my_proj = i7.main_abbr(arg)
+        print("Assigned project", arg)
     else:
-        print("BAD ARGUMENT", arg)
-        usage()
+        my_proj = i7.main_abbr(arg)
+        if not my_proj:
+            print("BAD ARGUMENT", arg)
+            usage()
+        print("Assigned project", my_proj)
 
 if not my_proj:
     my_proj = i7.dir2proj(to_abbrev = True)
