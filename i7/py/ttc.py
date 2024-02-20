@@ -1698,9 +1698,7 @@ if 'ncb' in sys.argv:
     sys.argv.remove('ncb')
     cfg_error_bail = False
 
-my_proj = i7.dir2proj(to_abbrev = True)
-
-default_test_file = test_file_from_project(i7.dir2proj())
+my_proj = ''
 
 cmd_count = 1
 
@@ -1775,6 +1773,8 @@ if not my_proj:
     my_proj = i7.dir2proj(to_abbrev = True)
     if not my_proj:
         sys.exit("Unable to find a project. You need to be in a valid project directory or specify a valid project.")
+
+default_test_file = test_file_from_project(my_proj)
 
 full_proj = i7.long_name(my_proj)
 
