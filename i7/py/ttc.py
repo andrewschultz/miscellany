@@ -1324,6 +1324,7 @@ def read_cfg_file(this_cfg):
     tb = os.path.basename(this_cfg)
     local_cfg_errors = total_cfg_errors = 0
     val_files = []
+    update_nag_flag = False
     with open(this_cfg) as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
@@ -1614,7 +1615,10 @@ def read_cfg_file(this_cfg):
             elif prefix == 'untestable':
                 untestable_case_mapper.append(UntestableCaseMapper(prefix, data))
             else:
-                print("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
+                mt.warn("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
+                if not update_nag_flag and prefix.startswith("untestable") or prefix.startswith("casemap"):
+                    print("You will probably want to update to =x: or =r:.")
+                    update_nag_flag = True
     total_cfg_errors += local_cfg_errors
     if local_cfg_errors > 0:
         mt.fail("Errors ({}) were found in {}. Setting -ncb disables cfg error bail, which is on by default.".format(local_cfg_errors, ' / '.join([os.path.basename(x) for x in mt.file_post_list])))
