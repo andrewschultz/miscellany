@@ -189,8 +189,12 @@ class FlexStringMatcher:
             self.case_search_type = self.FLEXMATCH_BRANCH
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
         else:
-            self.case_search_type = self.FLEXMATCH_EXACTMATCH
-            mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to fill in [brsx]: for branch/regex/start/exact match".format(string_to_parse))
+            if '*' in string_to_parse:
+                mt.warn("PEDANTRY: {} is assigned to start_match (r:) since it has an asterisk ... you may wish to specify exactly [brsx]: for branch/regex/start/exact match".format(string_to_parse))
+                self.case_search_type = self.FLEXMATCH_REGEX
+            else:
+                mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to to specify exactly [brsx]: for branch/regex/start/exact match".format(string_to_parse))
+                self.case_search_type = self.FLEXMATCH_EXACTMATCH
             self.main_string_to_parse = string_to_parse
 
         if self.case_search_type == self.FLEXMATCH_BRANCH:
