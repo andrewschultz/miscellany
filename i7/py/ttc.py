@@ -164,7 +164,7 @@ class FlexStringMatcher:
     FLEXMATCH_ONEOF = 4
     FLEXMATCH_REGEX = 5
 
-    def __init__(self, string_to_parse):
+    def __init__(self, string_to_parse, line_count = 0):
         self.case_search_type = self.FLEXMATCH_UNDEFINED
         self.main_string_to_parse = ''
         self.branch_string_to_parse = ''
@@ -190,10 +190,10 @@ class FlexStringMatcher:
             mt.warn("Put b: before string {} to specify a branch string.".format(string_to_parse))
         else:
             if '*' in string_to_parse:
-                mt.warn("PEDANTRY: {} is assigned to start_match (r:) since it has an asterisk ... you may wish to specify exactly [brsx]: for branch/regex/start/exact match".format(string_to_parse))
+                mt.warn("PEDANTRY: at line {}, {} is assigned to start_match (r:) since it has an asterisk ... you may wish to specify exactly [brsx]: for branch/regex/start/exact match".format(line_count, string_to_parse))
                 self.case_search_type = self.FLEXMATCH_REGEX
             else:
-                mt.warn("PEDANTRY: {} defaults to start_match (x:) ... you may wish to to specify exactly [brsx]: for branch/regex/start/exact match".format(string_to_parse))
+                mt.warn("PEDANTRY: at line {}, {} defaults to start_match (x:) ... you may wish to to specify exactly [brsx]: for branch/regex/start/exact match".format(line_count, string_to_parse))
                 self.case_search_type = self.FLEXMATCH_EXACTMATCH
             self.main_string_to_parse = string_to_parse
 
@@ -236,10 +236,10 @@ class TestCaseToFileMapper:
     NOMATCH = 0
     BADMATCH = -1
 
-    def __init__(self, data):
+    def __init__(self, data, line_count = 0):
         ary = data.split(',')
-        self.case_from = FlexStringMatcher(ary[0])
-        self.file_to = FlexStringMatcher(ary[1])
+        self.case_from = FlexStringMatcher(ary[0], line_count)
+        self.file_to = FlexStringMatcher(ary[1], line_count)
         self.times_used = 0
 
     def case_file_match(self, this_case, this_file):
@@ -257,7 +257,7 @@ class TestCaseToFileMapper:
 class UntestableCaseMapper:
 
     def __init__(self, prefix, data, line_count = 0, this_cfg = 'no file specified'):
-        self.the_case = FlexStringMatcher(data)
+        self.the_case = FlexStringMatcher(data, line_count)
 
     def untestable_match(self, this_case):
         return self.the_case.got_match(this_case)
@@ -1370,7 +1370,7 @@ def read_cfg_file(this_cfg):
                     ary2 = a.split('=')
                     file_abbrev_maps[ary2[0]] = ary2[1]
             elif prefix == 'casemap':
-                case_to_file_mapper.append(TestCaseToFileMapper(data))
+                case_to_file_mapper.append(TestCaseToFileMapper(data, line_count))
             elif prefix == 'code_to_ignore':
                 if '\t' in data:
                     ignorable_rule_lines[cur_proj].extend(data.split('\t'))
@@ -1382,7 +1382,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'extra':
                 for x in data.split(','):
                     if re.search('^reg.*-lone-.*txt', x):
-                        mt.warn("WARNING possible redundant test file ... reg-lone is covered in the big glob, so duplicate cases may be erroneously flagged.")
+                        mt.warn("WARNING line {} possible redundant test file ... reg-lone is covered in the big glob, so duplicate cases may be erroneously flagged. You don't need to add them per table or file, only per project.".format(line_count))
                     extra_project_files[cur_proj].append(x)
             elif prefix in ( 'rule_file', 'rules_file' ):
                 temp_cur_file = inform_extension_file(data, cur_proj)
@@ -1617,7 +1617,7 @@ def read_cfg_file(this_cfg):
                     print("Also, make sure entries 2/3 are integers.")
                     sys.exit()
             elif prefix == 'untestable':
-                untestable_case_mapper.append(UntestableCaseMapper(prefix, data))
+                untestable_case_mapper.append(UntestableCaseMapper(prefix, data, line_count))
             else:
                 mt.warn("Invalid prefix", prefix, "line", line_count, "overlooked data", data)
                 if not update_nag_flag and prefix.startswith("untestable") or prefix.startswith("casemap"):
