@@ -1138,6 +1138,23 @@ def show_csv(my_dict, my_msg):
         ret_val += lmd
     return ret_val
 
+def find_search_terms(my_term, my_file_list, first_term_only = True):
+    g = glob.glob(my_file_list)
+    term_is_regex = '.' in my_term or '*' in my_term
+    for f in g:
+        print("Searching", f)
+        with open(f) as file:
+            for (line_count, line) in enumerate (file, 1):
+                if not line.startswith("#t"):
+                    continue
+                if ((term_is_regex) and re.search(my_term, line) or (not term_is_regex and my_term in line)):
+                    print("Match {} line {}: {}".format(f, line_count, line.strip()))
+                    mt.add_post(f, line_count)
+                    if first_term_only:
+                        break
+
+find_test_cases = find_search_terms
+
 def internal_postproc_stuff(anything_changed):
     total_csv = show_csv(new_files, "new file") + show_csv(changed_files, "changed file")
     if show_unchanged:
@@ -1352,6 +1369,16 @@ while count < len(sys.argv):
         test_only = True
     elif arg == 'wm':
         look_through_winmerge = True
+    elif arg.startswith('ftc'):
+        if len(arg) == 3:
+            mt.bailfail("FTC needs = and : then a REGEX search argument.")
+        if arg[3].isalpha():
+            mt.bailfail("You need a separator after FTC before the REGEX search argument.")
+        search_term = arg[4:]
+        find_test_cases(search_term, "rbr-*.txt")
+        find_test_cases(search_term, "reg-*-lone-*.txt")
+        mt.post_open()
+        mt.bailwarn("Found nothing matching.")
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
