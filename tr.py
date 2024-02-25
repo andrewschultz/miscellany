@@ -74,9 +74,19 @@ clip_text = ""
 for x in my_triz:
     exe = "c:/tech/trizbort/trizbort.exe"
     if type(x) == str:
-        tf = i7.triz(x)
+        tf1 = i7.triz(x, in_trizbort_directory = True)
+        tf2 = i7.triz(x, in_trizbort_directory = False)
         if x == 'txt':
             exe = mt.npnq
+        if os.path.exists(tf1):
+            tf = tf1
+        elif os.path.exists(tf2):
+            tf = tf2
+        else:
+            mt.warn("Uh oh, neither location worked for {}:".format(x))
+            mt.warn("    " + tf1)
+            mt.warn("    " + tf2)
+            continue
     else:
         tf = i7.i7trizmaps[x[0]][x[1]]
     if not os.path.exists(tf):

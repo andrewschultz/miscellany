@@ -814,12 +814,16 @@ def test_file(x):
 
 tefi = test_file
 
-def triz_map_of(x):
+def triz_map_of(x, in_trizbort_directory = False):
     x2 = proj_exp(x)
     base_name = dictish(x2, i7triz)
     if not base_name:
         base_name = dictish(x2, i7x)
-    return os.path.join(triz_dir, "{:s}.trizbort".format(base_name))
+    if in_trizbort_directory:
+        dir_name = triz_dir
+    else:
+        dir_name = proj2dir(x, to_github = True)
+    return os.path.join(dir_name, "{:s}.trizbort".format(base_name))
 
 triz = triz_file = triz_map = triz_map_of
 
