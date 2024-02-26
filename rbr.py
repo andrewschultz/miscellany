@@ -203,7 +203,10 @@ class branch_struct():
         if my_num in branch_variables: # this is very bad at the moment as we could have VAR+=OTHERVAR, but for now we just use ==
             my_num = self.branch_variables[my_num]
         elif my_num:
-            my_num = int(my_num)
+            try:
+                my_num = int(my_num)
+            except:
+                mt.warn("Line {} has {} which should be an integer but isn't.".format(var_line, my_num))
         if my_op == "++":
             self.branch_variables[my_var] += 1
         elif my_op == "--":
@@ -299,12 +302,12 @@ def should_be_nudge(x):
     return False
 
 def fill_vars(my_line, file_idx, line_count, print_errs):
-    for q in re.findall("\{[A-Z][A-Z0-9]+\}", my_line):
+    for q in re.findall("\{#[A-Z][A-Z0-9]+\}", my_line):
         #print(q, q[1:-1], branch_variables[q[1:-1]], branch_variables[q[1:-1]][file_idx])
-        qt = q[1:-1]
+        qt = q[2:-1]
         if qt not in branch_variables:
             if print_errs:
-                mt.warn("Bad variable", qt, "at", line_count)
+                mt.warn("Bad variable", qt, "at", line_count, "not in", branch_variables)
             if qt in my_strings:
                 mt.okay("    Maybe just add a $ to {} as there is such a string variable.".format(qt))
             continue
@@ -316,6 +319,7 @@ def string_fill(var_line, line_count):
     for q in re.findall("\{\$[A-Z][A-Z0-9]+\}", var_line):
         q0 = q[2:-1]
         if q0 not in my_strings:
+            mt.warn(my_strings)
             mt.warn("WARNING line {} unrecognized string {}.".format(line_count, q0)) #?? printed more than once e.g. put in a bogus string at end
             if q0 in branch_variables:
                 mt.okay("    Maybe just get rid of the leading $ as there is a numerical variable {}.".format(q0))
@@ -1045,7 +1049,7 @@ def get_file(fname):
                 line_write = re.sub("\*description", myb.description, line_write, 0, re.IGNORECASE)
                 if "{$" in line_write:
                     line_write = string_fill(line_write, line_count)
-                if "{" in line_write:
+                if "{#" in line_write:
                     line_write = fill_vars(line_write, 0, line_count, first_file)
                 local_branch_dict[b].current_buffer_string += line_write
     if not found_start and fb.startswith('rbr'):
@@ -1353,16 +1357,8 @@ while count < len(sys.argv):
             except:
                 pass
         sys.exit()
-    elif mt.alfmatch('rv<d', arg):
-        reg_verify_all_dirs(open_unmarked = False)
-    elif mt.alfmatch('rv|ad', arg):
-        reg_verify_all_dirs(open_unmarked = True)
-    elif arg == '?': usage()
-    elif arg in abbrevs.keys(): poss_abbrev.append(arg)
-    elif arg[0] == 'f':
-        flag_all_brackets = True
-        if arg[1:].isdigit():
-            max_flag_brackets = int(arg[1:])
+    elif arg in abbrevs.keys():
+        poss_abbrev.append(arg)
     elif arg[:2] == 's:' or arg[:2] == 's=':
         score_search(arg[2:])
     elif arg in ( 't', 'te', 'test' ):
@@ -1379,6 +1375,16 @@ while count < len(sys.argv):
         find_test_cases(search_term, "reg-*-lone-*.txt")
         mt.post_open()
         mt.bailwarn("Found nothing matching.")
+    elif arg[:2] == 'fb' and arg[2:].isdigit(): # NOTE: everything with fuzzy searching must stay at the end. Otherwise it will interfere with stuff like FTC. Obviously we also want to be careful adding any fuzzy searching.
+        flag_all_brackets = True
+        if arg[2:].isdigit():
+            max_flag_brackets = int(arg[2:])
+    elif mt.alfmatch('rv<d', arg):
+        reg_verify_all_dirs(open_unmarked = False)
+    elif mt.alfmatch('rv|ad', arg):
+        reg_verify_all_dirs(open_unmarked = True)
+    elif arg == '?':
+        usage()
     else:
         print("Bad argument", count, arg)
         print("Possible projects: ", ', '.join(sorted(branch_list.keys())))
