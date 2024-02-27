@@ -88,7 +88,7 @@ def open_test_file(proj_look):
     sys.exit("No CFGs found for {}.".format(temp))
 
 class TestCaseGenerator:
-    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], subcase_name_format = [0], print_from_col = '', print_absolute = '', command_generator = [], fixed_command = '', regex_to_check = '', ignore_blank_print = False):
+    def __init__(self, match_string = '<unmatchable string>', exact_match = True, prefix_list = [ 'ttc' ], subcase_name_format = '', print_from_col = '', print_absolute = '', command_generator = '', fixed_command = '', regex_to_check = '', ignore_blank_print = False):
         self.match_string = match_string
         self.exact_match = exact_match
         self.prefix_list = prefix_list
