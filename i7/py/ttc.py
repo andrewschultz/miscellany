@@ -208,6 +208,7 @@ class FlexStringMatcher:
 
         if self.case_search_type == self.FLEXMATCH_REGEX:
             check_suspicious_regex(self.main_string_to_parse, 0)
+            check_absolute_in_regex(self.main_string_to_parse, line_count)
         else:
             check_regex_in_absolute(self.main_string_to_parse, 0)
 
@@ -418,6 +419,14 @@ def starts_with_text(my_line, my_file):
 def check_regex_in_absolute(my_data, my_line_count = 0, my_file = '<UNKNOWN>'):
     if '*' in my_data or '^' in my_data or '$' in my_data:
         print("Possible regex appears in absolute definition {} at line {}.".format(my_data, my_line_count))
+
+def check_absolute_in_regex(my_data, my_line_count = 0, my_file = '<UNKNOWN>'):
+    if re.search("^[0-9][a-z]-", my_data):
+        print("Possible absolute string appears in regex definition {} at line {}.".format(my_data, my_line_count))
+
+def check_rx_xr_switches(my_data, my_line_count = 0, my_file = '<UNKNOWN>'):
+    check_absolute_in_regex(my_data, my_line_count, my_file)
+    check_regex_in_absolute(my_data, my_line_count, my_file)
 
 def check_suspicious_regex(my_regex, my_line_count = 0, my_file = '<UNKNOWN>'):
     if '-*' in my_regex:
@@ -1500,6 +1509,7 @@ def read_cfg_file(this_cfg):
             elif prefix == 'ignore':
                 ary = data.split(',')
                 for d in ary:
+                    check_absolute_in_regex(d, line_count)
                     check_regex_in_absolute(d, line_count)
                     if data in table_specs[cur_file].ignore:
                         mt.warn("WARNING duplicate ignore", cur_file, line_count, d)
@@ -1531,6 +1541,7 @@ def read_cfg_file(this_cfg):
                 if not cur_file:
                     mt.warn("WARNING: you probably want to put an OKDUP in a specific file.")
                 for a in ary:
+                    check_absolute_in_regex(a, line_count)
                     check_regex_in_absolute(a, line_count)
                     if '~' not in a:
                         table_specs[cur_file].okay_duplicate_counter[a] = 2
