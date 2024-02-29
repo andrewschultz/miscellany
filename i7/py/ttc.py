@@ -798,7 +798,7 @@ def csv_or_range(x, throw_warning = False):
     if x.startswith('o='):
         throw_warning = False
     if ',' in x:
-        return x.split(',')
+        return [x.strip() for x in x.split(',')]
     if '~' in x:
         step = 1
         temp = [int(y) for y in x.split('~')]
@@ -876,7 +876,7 @@ def get_table_cases(this_proj):
                         table_line_count = -1
                     continue
                 if table_header_next:
-                    headers = [re.sub(" *\(.*", "", x) for x in line.strip().lower().split("\t")]
+                    headers = [re.sub(" *\(.*", "", x).strip() for x in line.strip().lower().split("\t")] # table headers need to account for my_text (topic) or whatever
                     header_compilation = ','.join(headers)
                     table_header_next = False
                     table_line_count = 0
@@ -1546,7 +1546,7 @@ def read_cfg_file(this_cfg):
                     if '~' not in a:
                         table_specs[cur_file].okay_duplicate_counter[a] = 2
                     else:
-                        a2 = a.split("~")
+                        a2 = re.split("[~ \t]", a)
                         table_specs[cur_file].okay_duplicate_counter[a2[0]] = int(a2[1])
             elif prefix == 'okdupr':
                 if not cur_file:
@@ -1593,7 +1593,7 @@ def read_cfg_file(this_cfg):
                             if cfg_error_bail:
                                 mt.add_postopen(this_cfg, line_count)
                                 local_cfg_errors += 1
-                        if generator_type == 'cmdgen':
+                        if generator_type in ( 'cmdgen', 'cmd' ):
                             my_command_generator = generator_data
                         elif generator_type == 'coltoprint':
                             my_col_print = [int(x) for x in generator_data.split(',')]
@@ -1693,7 +1693,7 @@ def test_file_from_project(my_project):
     ret_val = ''
     got_one = False
     if z not in i7.i7xa:
-        mt.warn("Could not derive project from current directory. Going with default of {}.".format(i7.curdef))
+        mt.warn("Could not derive project from current directory or command line parameters. Going with default of {}.".format(i7.curdef))
         z = i7.long_name(i7.curdef)
     for a in i7.i7xa[z]:
         tempfile = os.path.join(ttc_dir, "ttc-{}.txt".format(a))
