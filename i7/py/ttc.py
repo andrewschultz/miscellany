@@ -327,7 +327,10 @@ def text_from_row_values(template_string, header_strings, row_strings):
     retval = template_string
     for count in range (0, len(header_strings)):
         h0 = "{" + header_strings[count] + "}"
-        retval = retval.replace(h0, row_strings[count])
+        if count < row_strings:
+            retval = retval.replace(h0, row_strings[count])
+        else:
+            retval = retval.replace(h0, '-')
     if '`' in template_string:
         for count in range (0, len(header_strings)):
             h0 = "{" + header_strings[count] + "`}"
@@ -921,7 +924,10 @@ def get_table_cases(this_proj):
                             possible_text = text_from_row_values(my_generator.print_from_col, headers, columns)
                             for c in range (0, len(headers)):
                                 h0 = "{" + headers[c] + "}"
-                                possible_text = possible_text.replace(h0, i7.i7_text_convert(columns[c], erase_brackets = False, remove_end_quotes = True))
+                                if c < len(columns):
+                                    possible_text = possible_text.replace(h0, i7.i7_text_convert(columns[c], erase_brackets = False, remove_end_quotes = True))
+                                else:
+                                    possible_text = possible_text.replace(h0, '-')
                         if test_case_name in table_specs[this_file].okay_duplicate_counter:
                             table_specs[this_file].okay_duplicate_counter[test_case_name] -= 1
                             if table_specs[this_file].okay_duplicate_counter[test_case_name] < 0:
