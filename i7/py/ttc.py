@@ -207,10 +207,10 @@ class FlexStringMatcher:
             return
 
         if self.case_search_type == self.FLEXMATCH_REGEX:
-            check_suspicious_regex(self.main_string_to_parse, 0)
+            check_suspicious_regex(self.main_string_to_parse, line_count)
             check_absolute_in_regex(self.main_string_to_parse, line_count)
         else:
-            check_regex_in_absolute(self.main_string_to_parse, 0)
+            check_regex_in_absolute(self.main_string_to_parse, line_count)
 
     def got_match(self, string_to_match):
         if self.case_search_type == self.FLEXMATCH_EXACTMATCH:
@@ -1572,7 +1572,7 @@ def read_cfg_file(this_cfg):
                 table_specs[cur_file].stopper = data
             elif prefix in ('gen', 'generator', 'table'):
                 ary = data.split("\t")
-                my_prefixes = [ 'ttc' ]
+                my_prefixes = [ 'testcase' ]
                 this_col_list = []
                 my_fixed_command = ''
                 my_command_generator = ''
