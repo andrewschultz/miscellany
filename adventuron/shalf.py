@@ -5,6 +5,7 @@ indents = 3
 
 #default we can change
 bonus_point = False
+add_command = False
 
 cmd_words = []
 
@@ -16,6 +17,8 @@ while cmd_count < len(sys.argv):
         if indents:
             sys.exit("Re-redefined default 3-spaces before.")
         indents = arg
+    elif arg in ( 'ac', 'ca' ):
+        add_command = True
     elif arg == 'b':
         bonus_point = True
     elif arg == 'c': # core
@@ -44,6 +47,9 @@ print()
 print("   puz_{} : dynamic_string {{( opt_color_coding ? \"<{} {}<#f80>>\" : \"{} {}\" )}} ;".format(my_point, cmd_words[0], cmd_words[1], cmd_words[0], cmd_words[1]))
 print()
 
+if (add_command):
+    print(sbstring[:-3] + "on_command {")
+
 print(sbstring + ": match \"{} {}\" {{".format(cmd_words[0], cmd_words[1]))
 print(sbstring + "   : if ({}) {{".format(my_point))
 print(sbstring + "      : print \"Already done!\" ;")
@@ -67,3 +73,7 @@ print(sbstring + "      : gosub \"say_half{}\" ;".format('_b' if bonus_point els
 print(sbstring + "      : done ;")
 print(sbstring + "   }")
 print(sbstring + "}")
+
+if (add_command):
+    print(sbstring[:-3] + "}")
+
