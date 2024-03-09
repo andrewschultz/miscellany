@@ -35,21 +35,35 @@ def starting_spaces_of(line):
         count += 1
     return count
 
+bad_sections = [ 'connections', 'collections' ]
+bad_sections = [ 'connections' ]
+
+def valid_section(my_section):
+    return not my_section in bad_sections
+
 def indent_check():
     bracket_count = 0
     big_string = ''
     any_changes = False
+    this_section = ''
     with open("source_code.adv") as file:
         for (line_count, line) in enumerate (file, 1):
+            if bracket_count == 0:
+                if '{' in line:
+                    header = re.sub("\{.*", "", line).strip()
+                    this_section = header
+            if line[0] == '}':
+                this_section = ''
             bracketless = re.sub("\{.*?\}", "", line)
             bracket_count -= rightbrackets(bracketless)
-            if starting_spaces_of(line) != 3 * bracket_count and line.strip():
-                mt.warn("Bad indent line {}".format(line_count))
-                l0 = (3 * bracket_count * ' ') + line.lstrip()
-                big_string += l0
-                any_changes = True
-            else:
-                big_string += line
+            if valid_section(this_section):
+                if starting_spaces_of(line) != 3 * bracket_count and line.strip():
+                    mt.warn("Bad indent section {} line {} have {} need {}.".format(this_section, line_count, starting_spaces_of(line), 3 * bracket_count))
+                    l0 = (3 * bracket_count * ' ') + line.lstrip()
+                    big_string += l0
+                    any_changes = True
+                else:
+                    big_string += line
             bracket_count += leftbrackets(bracketless)
     if not any_changes:
         mt.okaybail("Indents all correct!")
