@@ -1,6 +1,7 @@
 import sys
 import re
 from collections import defaultdict
+from shutil import copy
 import mytools as mt
 
 bracket_count = 0
@@ -86,7 +87,7 @@ with open("source_code.adv") as file:
         if bracket_count == 0:
             last_line = line_count
         if line.rstrip() == '}' and bracket_count != 0:
-            mt.warn("Solo bracket does not have level 0.")
+            mt.warn("Solo bracket line {} does not have level 0.".format(line_count))
             mt.add_post("source_code.adv", line_count)
         if debug:
             print(line_count, bracket_count, line.rstrip())
@@ -98,5 +99,8 @@ if bracket_count:
         print("Last line with {} bracket{}: {}".format(s, 's' if s > 1 else '', line_count))
 else:
     print("Brackets all match!")
+
+if not indent_check:
+    print("Indent check with -i.")
 
 mt.post_open()
