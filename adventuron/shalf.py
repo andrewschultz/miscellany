@@ -14,9 +14,12 @@ cmd_count = 1
 while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count]
     if arg.isdigit():
-        if indents:
-            sys.exit("Re-redefined default 3-spaces before.")
-        indents = arg
+        if int(arg) >= 10:
+            my_index = arg
+        else:
+            if indents != -1:
+                sys.exit("Re-redefined default 3-spaces before.")
+            indents = int(arg)
     elif arg in ( 'ac', 'ca' ):
         add_command = True
     elif arg == 'b':
@@ -30,8 +33,8 @@ while cmd_count < len(sys.argv):
 if len(cmd_words) != 2:
     sys.exit("Need 2 command words. You have {}, {}.".format(len(cmd_words), ' '.join(cmd_words)))
 
-if not indents:
-    print("Going with default indents", default_indents)
+if indents == -1:
+    sys.stderr.write("Going with default indents {}\n".format(default_indents))
     indents = default_indents
 
 sbstring = ' ' * (3 * indents)
