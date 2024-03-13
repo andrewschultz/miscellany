@@ -35,6 +35,8 @@ while cmd_count < len(sys.argv):
         bonus_point = False
     elif (arg[0] in 'n', 'm') and arg[1:].isdigit():
         my_index = arg[1:]
+    elif arg[:3] == 'if=':
+        if_case = arg[3:]
     else:
         cmd_words.extend(arg.split('-'))
     cmd_count += 1
@@ -50,6 +52,10 @@ if my_index == 'x':
     sys.stderr.write("Remember, you can say n# to give a number variable.")
 
 sys.stderr.flush()
+
+if if_case:
+    indents += 1
+
 sbstring = ' ' * (3 * indents)
 
 bonus_prefix = 'bonus_' if bonus_point else ''
@@ -65,6 +71,9 @@ print()
 
 if (add_command):
     print(sbstring[:-3] + "on_command {")
+
+if (if_case):
+    print(sbstring[:-3] + ": if ({}) {{".format(if_case))
 
 print(sbstring + ": match \"{} {}\" {{".format(cmd_words[0], cmd_words[1]))
 print(sbstring + "   : if ({}) {{".format(my_point))
@@ -92,5 +101,8 @@ print(sbstring + "   }")
 print(sbstring + "}")
 
 if (add_command):
+    print(sbstring[:-3] + "}")
+
+if (if_case):
     print(sbstring[:-3] + "}")
 
