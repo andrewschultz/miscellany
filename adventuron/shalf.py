@@ -37,6 +37,8 @@ while cmd_count < len(sys.argv):
         my_index = arg[1:]
     elif arg[:3] == 'if=':
         if_case = arg[3:]
+    elif arg.startswith('/'):
+        pre_text = arg[1:].replace('/', '_')
     else:
         cmd_words.extend(arg.split('-'))
     cmd_count += 1
@@ -62,11 +64,14 @@ bonus_prefix = 'bonus_' if bonus_point else ''
 
 my_point = "{}point_{}_{}".format(bonus_prefix, cmd_words[0], cmd_words[1])
 
+if not pre_text:
+    pre_text = '_'.join(cmd_words)
+
 # no need for spaces
 print("   {} : boolean \"false\" ; # {}".format(my_point, my_index.zfill(2)))
 print()
 
-print("   puz_{} : dynamic_string {{( opt_color_coding ? \"<{} {}<#f80>>\" : \"{} {}\" )}} ;".format(my_point, cmd_words[0], cmd_words[1], cmd_words[0], cmd_words[1]))
+print("   puz_point_{} : dynamic_string {{( opt_color_coding ? \"<{}<#f80>>\" : \"{}\" )}} ; # {}".format(pre_text, pre_text.replace('_', ' '), pre_text.replace('_', ' '), my_index.zfill(2)))
 print()
 
 if (add_command):
