@@ -75,7 +75,7 @@ print("   puz_point_{} : dynamic_string {{( opt_color_coding ? \"<{}<#f80>>\" : 
 print()
 
 if (add_command):
-    print(sbstring[:-3] + "on_command {")
+    print(sbstring[:-3] + "on_command {{")
 
 if (if_case):
     print(sbstring[:-3] + ": if ({}) {{".format(if_case))
@@ -95,6 +95,7 @@ print(sbstring + "}")
 print(sbstring + ": if (!{}) {{".format(my_point, cmd_words[0], cmd_words[1]))
 print(sbstring + "   : match \"{} _;_ {}\" {{".format(cmd_words[0], cmd_words[1]))
 print(sbstring + "      : set_integer var=\"tempint\" \"{}\" ;".format(my_index))
+print(sbstring + "      : set_boolean var=\"already_got_command\" {{( think_{}_{} && !point_{}_{} )}} ; # this is optional. Delete if point does not rely on any other variables.".format(cmd_words[0], cmd_words[1], cmd_words[0], cmd_words[1]))
 print(sbstring + "      : set_false \"first_half\" ;")
 print(sbstring + "      : match \"{} _\" {{".format(cmd_words[0]))
 print(sbstring + "         : set_true \"first_half\" ;")
