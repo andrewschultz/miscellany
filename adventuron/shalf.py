@@ -39,6 +39,10 @@ while cmd_count < len(sys.argv):
         if_case = arg[3:]
     elif arg.startswith('/'):
         pre_text = arg[1:].replace('/', '_')
+    elif arg.startswith('r='):
+        my_room = arg[2:]
+        if my_room[0].isdigit():
+            my_room = 'r' + my_room
     else:
         cmd_words.extend(arg.split('-'))
     cmd_count += 1
@@ -60,9 +64,10 @@ if if_case:
 
 sbstring = ' ' * (3 * indents)
 
-bonus_prefix = 'bonus_' if bonus_point else ''
+bonus_prefix_maincode = 'bonus_' if bonus_point else ''
+bonus_prefix_defs = '_bonus' if bonus_point else '_core'
 
-my_point = "{}point_{}_{}".format(bonus_prefix, cmd_words[0], cmd_words[1])
+my_point = "{}point_{}_{}".format(bonus_prefix_maincode, cmd_words[0], cmd_words[1])
 
 if not pre_text:
     pre_text = '_'.join(cmd_words)
