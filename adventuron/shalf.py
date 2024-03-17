@@ -117,3 +117,21 @@ if (add_command):
 if (if_case):
     print(sbstring[:-3] + "}")
 
+if show_half_clues:
+    print("          #tried_combo{}".format(bonus_prefix_defs))
+    print("         \"false\",")
+    print("          #situations{}".format(bonus_prefix_defs))
+    print("         \"{{here_{}}}\",".format(my_room))
+    print("          #think_first{}".format(bonus_prefix_defs))
+    print("         \"<{}<#f80>>\",".format(cmd_words[0].upper()))
+    print("          #think_second{}".format(bonus_prefix_defs))
+    print("         \"<{}<#f80>>\",".format(cmd_words[1].upper()))
+    print("          #got_first{}".format(bonus_prefix_defs))
+    print("         \"false\",")
+    print("          #got_second{}".format(bonus_prefix_defs))
+    print("         \"false\",")
+    if bonus_point:
+        print("          #bonus_not_found_text{}".format(bonus_prefix_defs))
+        print("         \"<unfound yet<#123>>\",")
+        print("          #bonus_half_status".format(bonus_prefix_defs))
+        print("         \"0\",")
