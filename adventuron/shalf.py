@@ -1,3 +1,7 @@
+# shalf.py
+# score-half code generator for Adventuron
+# this gives variable definitions as well as code for handling specific cases
+
 import sys
 
 default_indents = 3
@@ -15,6 +19,16 @@ my_room = 'r99'
 
 if_case = ''
 cmd_words = []
+
+def usage():
+    print("ac = add on_command before/after code")
+    print("b = bonus point, c = core, core is default")
+    print("n/m# = my index #")
+    print("if = if case before e.g. point_w1_w2. Can use dash.")
+    print("nh/hn/sh/hs = hide half clue code.")
+    print("Sample command:")
+    print("shalf.py me-growth r0414 /meager-oath n23 | clip")
+    sys.exit()
 
 cmd_count = 1
 
@@ -43,6 +57,8 @@ while cmd_count < len(sys.argv):
         my_room = arg[2:]
         if my_room[0].isdigit():
             my_room = 'r' + my_room
+    elif arg == '?':
+        usage()
     else:
         cmd_words.extend(arg.split('-'))
     cmd_count += 1
