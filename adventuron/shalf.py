@@ -50,9 +50,9 @@ while cmd_count < len(sys.argv):
     elif (arg[0] in 'n', 'm') and arg[1:].isdigit():
         my_index = arg[1:]
     elif arg[:3] == 'if=':
-        if_case = arg[3:]
+        if_case = arg[3:].replace('-', '_')
     elif arg.startswith('/'):
-        pre_text = arg[1:].replace('/', '_')
+        pre_text = arg[1:].replace('/', '_').replace('-', '_')
     elif arg.startswith('r='):
         my_room = arg[2:]
         if my_room[0].isdigit():
