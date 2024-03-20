@@ -57,6 +57,8 @@ while cmd_count < len(sys.argv):
         my_room = arg[2:]
         if my_room[0].isdigit():
             my_room = 'r' + my_room
+    elif arg.startswith('r') and arg[1:].isdigit():
+        my_room = arg
     elif arg == '?':
         usage()
     else:
