@@ -12,6 +12,7 @@ bonus_point = False
 add_command = False
 
 show_half_clues = True
+think_code = False
 
 pre_text = ''
 my_index='100'
@@ -47,6 +48,8 @@ while cmd_count < len(sys.argv):
         bonus_point = True
     elif arg == 'c': # core
         bonus_point = False
+    elif arg == 'th':
+        think_code = True
     elif (arg[0] in 'n', 'm') and arg[1:].isdigit():
         my_index = arg[1:]
     elif arg[:3] == 'if=':
@@ -104,6 +107,15 @@ if (if_case):
     print(sbstring[:-3] + ": if ({}) {{".format(if_case))
 
 print(sbstring + ": match \"{} {}\" {{".format(cmd_words[0], cmd_words[1]))
+
+if think_code:
+    print(sbstring + "   : if (!point_special_condition) {")
+    print(sbstring + "      : print \"You need to do something first!\" ;")
+    print(sbstring + "      : set_true \"think_{}_{}\" ;".format(cmd_words[0], cmd_words[1]))
+    print(sbstring + "      : gosub \"note_thinks\" ;")
+    print(sbstring + "      : done ;")
+    print(sbstring + "   }")
+
 print(sbstring + "   : if ({}) {{".format(my_point))
 print(sbstring + "      : print \"Already done!\" ;")
 print(sbstring + "      : done ;")
