@@ -52,6 +52,8 @@ while cmd_count < len(sys.argv):
         think_code = True
     elif (arg[0] in 'n', 'm') and arg[1:].isdigit():
         my_index = arg[1:]
+    elif arg in ('nh', 'hn', 'ns', 'sn'):
+        show_half_clues = False
     elif arg[:3] == 'if=':
         if_case = arg[3:].replace('-', '_')
     elif arg.startswith('/'):
@@ -94,10 +96,10 @@ if not pre_text:
     pre_text = '_'.join(cmd_words)
 
 # no need for spaces
-print("   {} : boolean \"false\" ; # {}".format(my_point, my_index.zfill(2)))
+print("   puz_point_{} : dynamic_string {{( opt_color_coding ? \"<{}<#f80>>\" : \"{}\" )}} ; # {}".format(pre_text, pre_text.replace('_', ' '), pre_text.replace('_', ' '), my_index.zfill(2)))
 print()
 
-print("   puz_point_{} : dynamic_string {{( opt_color_coding ? \"<{}<#f80>>\" : \"{}\" )}} ; # {}".format(pre_text, pre_text.replace('_', ' '), pre_text.replace('_', ' '), my_index.zfill(2)))
+print("   {} : boolean \"false\" ; # {}".format(my_point, my_index.zfill(2)))
 print()
 
 if (add_command):
