@@ -3,9 +3,12 @@
 # this gives variable definitions as well as code for handling specific cases
 
 import sys
+import mytools as mt
 
 default_indents = 3
 indents = -1
+
+the_source = "source_code.adv"
 
 #default we can change
 bonus_point = False
@@ -31,6 +34,25 @@ def usage():
     print("shalf.py me-growth r0414 /meager-oath n23 | clip")
     sys.exit()
 
+def look_for_default():
+    alreadys = 0
+    narras = 0
+    with open(the_source) as file:
+        for (line_count, line) in enumerate (file, 1):
+            if '"Already done!"' in line:
+                mt.add_post(the_source, line_count)
+                mt.warn("Default post-reject in line", line_count)
+                alreadys += 1
+            if '"Narrative text."' in line:
+                mt.add_post(the_source, line_count)
+                mt.warn("Default narrative text in line", line_count)
+                narras += 1
+    if alreadys + narras:
+        print("{} alreadys to replace, {} narrative texts.".format(alreadys, narras))
+    else:
+        sys.exit("Nothing found!")
+    mt.post_open(bail_after=False)
+
 cmd_count = 1
 
 while cmd_count < len(sys.argv):
@@ -48,6 +70,13 @@ while cmd_count < len(sys.argv):
         bonus_point = True
     elif arg == 'c': # core
         bonus_point = False
+    elif arg == 'l':
+        while 1:
+            look_for_default()
+            x = input("Hit any key to look again.")
+            if not x:
+                sys.exit()
+            mt.clear_post(the_source)
     elif arg == 'th':
         think_code = True
     elif (arg[0] in 'n', 'm') and arg[1:].isdigit():
