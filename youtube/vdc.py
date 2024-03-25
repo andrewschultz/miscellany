@@ -14,6 +14,7 @@ apple_base_folder = "c:\\emu\\appleold"
 
 cmd_count = 1
 copy_string = ''
+copy_first_back = False
 copy_last_back = False
 copy_saved_back = False
 
@@ -22,7 +23,7 @@ last_folder = ''
 
 def read_dirs_files():
     global last_folder
-    with open("c:/writing/scripts/nibcpy.txt") as file:
+    with open("c:/writing/scripts/vdc.txt") as file:
         for (line_count, line) in enumerate (file, 1):
             if line.startswith('#'):
                 continue
@@ -45,6 +46,9 @@ while cmd_count < len(sys.argv):
     arg = sys.argv[cmd_count].lower()
     if arg == 'r':
         copy_saved_back = True
+    elif arg == 'f':
+        copy_first_back = True
+        copy_saved_back = True
     elif arg == 'l':
         copy_last_back = True
         copy_saved_back = True
@@ -55,6 +59,17 @@ while cmd_count < len(sys.argv):
     cmd_count += 1
 
 file_name_templates = diskmaps[last_folder]
+
+if copy_first_back:
+    if copy_string:
+        sys.stderr.write("F option overrides copy_string. Use R to copy back a disk image other than the last.")
+    first_prefix = diskmaps[last_folder][0]
+    first_prefix = re.sub("%.*", "", first_prefix)
+    print("First prefix", first_prefix)
+    g = glob.glob(diskmaps[last_folder][0].replace('%', '*'))
+    this_version = re.sub("\..*", "", g[0])
+    print("This version", this_version[len(first_prefix):])
+    copy_string = this_version[len(first_prefix):]
 
 if copy_last_back:
     if copy_string:
